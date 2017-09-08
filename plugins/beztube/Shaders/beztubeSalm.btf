@@ -1,0 +1,1063 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="beztubeSalm">
+  <snippet name="Tube.defs" type="string">
+    <![CDATA[
+#ifndef TUBE_DEFS
+#define TUBE_DEFS
+
+#define WIP 0
+#define COLOR 1
+#define SMOOTH_NORMAL 2
+#define HARD_NORMAL 3
+#define HARD_NORMAL_WF 4
+#define BLUE_WF 5
+#define LIT_COLOR 6
+
+#if ( SHADING_STYLE == HARD_NORMAL_WF || SHADING_STYLE == BLUE_WF )
+	#define CALC_WIREFRAME
+#endif
+
+#if ( SHADING_STYLE == HARD_NORMAL || SHADING_STYLE == HARD_NORMAL_WF || SHADING_STYLE == BLUE_WF )
+	#define CALC_HARD_NORMALS
+#endif
+
+
+#define float2 vec2
+#define float3 vec3
+#define float4 vec4
+
+#define float3x3 mat3x3
+#define float4x4 mat4x4
+
+float saturate(float x) { return clamp(x, 0.0, 1.0); }
+vec2 saturate(vec2 x) { return clamp(x, vec2(0.0), vec2(1.0)); }
+vec3 saturate(vec3 x) { return clamp(x, vec3(0.0), vec3(1.0)); }
+vec4 saturate(vec4 x) { return clamp(x, vec4(0.0), vec4(1.0)); }
+
+#define lerp(a, b, l) mix(a, b, l)
+#define mul(a, b) (a * b)
+
+
+const float Pi = 3.141592653589793238462643383279502884197169399375105820974944592;
+const float Pi2 = Pi * 2.0;
+const float Rcp3 = 1.0 / 3.0;
+
+
+const uint VRingVertexCount = VRING_VERTEX_COUNT;
+const uint VRingCount = VRING_COUNT;
+
+const uint BottomCVId = VRingVertexCount * VRingCount;
+const uint TopCVId = BottomCVId + 1;
+
+const float TopVRingId_f = float(VRingCount) - 1.0;
+const float RcpTopVRingId_f = 1.0 / TopVRingId_f;
+const float RcpVRingVertexCount_f = 1.0 / float(VRingVertexCount);
+// const float RcpMaxLId = 1.0 / 31.0;
+
+// const uint SegmentSize = 1 + 16;
+const uint SegmentSize = 1 + VRingCount / 2;
+const uint NodeSize = 4;
+
+// UBO of viewport settings
+layout (std140, binding = 0) uniform StaticBuffer
+{
+  float2 PixelCount;
+};
+
+// UBO of camera settings
+layout (std140, binding = 1) uniform PerFrameBuffer
+{
+  float4x4 ViewProjMat;
+  float3 CamPos;
+};
+
+// SSBO of tubes data
+layout (std140, packed, binding = 2) buffer TubesData
+{
+  float4 TubesBuffer[4096];
+};
+
+struct TubeNode
+{
+	float3 Pos;
+	float  Rad;
+
+	float3 PTan;
+	float  RTan;
+	
+	float3 Col;
+	uint   BaseLayerId;
+	
+	float3 CTan;
+	float  EndNodeFlag;
+};
+
+TubeNode TubeNode_Load(uint off)
+{
+	float4 v0 = TubesBuffer[off];
+	float4 v1 = TubesBuffer[off + 1];
+	float4 v2 = TubesBuffer[off + 2];
+	float4 v3 = TubesBuffer[off + 3];
+
+	TubeNode node;
+	
+	node.Pos 			= v0.xyz;
+	node.Rad 			= v0.w;
+	
+	node.PTan 			= v1.xyz;
+	node.RTan 			= v1.w;
+	
+	node.Col 			= v2.xyz;
+	// node.BaseLayerId 	= asuint(v2.w);
+	node.BaseLayerId 	= 0;
+	
+	node.CTan 			= v3.xyz;
+	node.EndNodeFlag 	= v3.w;
+	
+	return node;
+}
+
+struct Tube
+{
+	TubeNode Start;
+	TubeNode End;
+	
+	uint BaseLayerId;
+	float EndNodeFlag;
+};
+
+Tube CreateTestTube()
+{
+	Tube tube;
+
+	{
+		tube.Start.Pos = float3(0.0);
+		tube.Start.Rad = 0.3;
+		
+		tube.Start.PTan = float3(4.0);
+		tube.Start.RTan = 4.0;
+		
+		tube.Start.Col = float3(0.5);
+		tube.Start.BaseLayerId = 0;
+		
+		tube.Start.CTan = float3(6.0, 4.0, 3.0);
+		tube.Start.EndNodeFlag = 0.0;
+	}
+	
+	{
+		tube.End.Pos = float3(4.0, 0.0, 0.0);
+		tube.End.Rad = 0.3;
+		
+		tube.End.PTan = float3(4.0, 4.0, 0.0);
+		tube.End.RTan = -1.0;
+		
+		tube.End.Col = float3(0.5);
+		tube.End.BaseLayerId = 0;
+		
+		tube.End.CTan = float3(6.0, 4.0, 3.0);
+		tube.End.EndNodeFlag = 0.0;
+	}
+	
+	tube.BaseLayerId = 0;
+	tube.EndNodeFlag = 0.0;
+	
+	return tube;
+}
+
+Tube Tube_Load(uint off)
+{
+	// return CreateTestTube();
+	
+	Tube tube;
+	
+	tube.Start = TubeNode_Load(off);
+	tube.End   = TubeNode_Load(off + NodeSize);
+	
+	tube.BaseLayerId = tube.Start.BaseLayerId;
+	tube.EndNodeFlag = tube.Start.EndNodeFlag;
+	
+	return tube;
+}
+
+
+float EvalCSpline(float p1, float t1, float p2, float t2, float l)
+{
+	float h1 = p1 + t1 * Rcp3;
+	float h2 = p2 - t2 * Rcp3;
+	
+	float a1 = lerp(p1, h1, l);
+	float a2 = lerp(h1, h2, l);
+	float a3 = lerp(h2, p2, l);
+	
+	float b1 = lerp(a1, a2, l);
+	float b2 = lerp(a2, a3, l);
+	
+	// return lerp(p1, p2, l);
+	return lerp(b1, b2, l);
+}
+
+float3 EvalCSpline(float3 p1, float3 t1, float3 p2, float3 t2, float l)
+{
+	float3 h1 = p1 + t1 * Rcp3;
+	float3 h2 = p2 - t2 * Rcp3;
+	
+	float3 a1 = lerp(p1, h1, l);
+	float3 a2 = lerp(h1, h2, l);
+	float3 a3 = lerp(h2, p2, l);
+	
+	float3 b1 = lerp(a1, a2, l);
+	float3 b2 = lerp(a2, a3, l);
+	
+	// return lerp(p1, p2, l);
+	return lerp(b1, b2, l);
+}
+
+float3 EvalCSplineTangent(float3 p1, float3 t1, float3 p2, float3 t2, float l)
+{			
+	float3 h1 = p1 + t1 * Rcp3;
+	float3 h2 = p2 - t2 * Rcp3;
+	
+	float3 a1 = lerp(p1, h1, l);
+	float3 a2 = lerp(h1, h2, l);
+	float3 a3 = lerp(h2, p2, l);
+	
+	float3 b1 = lerp(a1, a2, l);
+	float3 b2 = lerp(a2, a3, l);
+	
+	return (b2 - b1) * 3.0;
+}
+
+float EvalCSplineTangent(float p1, float t1, float p2, float t2, float l)
+{			
+	float h1 = p1 + t1 * Rcp3;
+	float h2 = p2 - t2 * Rcp3;
+	
+	float a1 = lerp(p1, h1, l);
+	float a2 = lerp(h1, h2, l);
+	float a3 = lerp(h2, p2, l);
+	
+	float b1 = lerp(a1, a2, l);
+	float b2 = lerp(a2, a3, l);
+	
+	return (b2 - b1) * 3.0;
+}
+
+float3 EvalPosCurve(Tube tube, float l)
+{
+	return EvalCSpline(tube.Start.Pos, tube.Start.PTan, tube.End.Pos, tube.End.PTan, l);
+}
+
+float3 EvalPTanCurve(Tube tube, float l)
+{
+	return EvalCSplineTangent(tube.Start.Pos, tube.Start.PTan, tube.End.Pos, tube.End.PTan, l);
+}
+
+float EvalRadCurve(Tube tube, float l)
+{
+	return EvalCSpline(tube.Start.Rad, tube.Start.RTan, tube.End.Rad, tube.End.RTan, l);
+}
+
+float EvalRTanCurve(Tube tube, float l)
+{
+	return EvalCSplineTangent(tube.Start.Rad, tube.Start.RTan, tube.End.Rad, tube.End.RTan, l);
+}
+
+float3 EvalColCurve(Tube tube, float l)
+{
+	return EvalCSpline(tube.Start.Col, tube.Start.CTan, tube.End.Col, tube.End.CTan, l);
+}
+
+float3 ProjToPlane(float3 vec, float3 n)
+{
+	return vec - n * dot(vec, n) / dot(n, n);
+}
+
+
+float3 CalcSurfaceNormal(Tube tube, float3 ovec, float l)
+{
+	float delta = 0.001;
+	
+	float l1 = l - delta;
+	float3 p1 = EvalPosCurve(tube, l1);
+	float3 t1 = EvalPTanCurve(tube, l1);
+	float  r1 = EvalRadCurve(tube, l1); 
+	float  dr = EvalRTanCurve(tube, l); 
+	
+	float3 n1 = ProjToPlane(ovec, t1);
+	
+	
+	float l2 = l + delta;
+	float3 p2 = EvalPosCurve( tube, l2);
+	float3 t2 = EvalPTanCurve(tube, l2);
+	float  r2 = EvalRadCurve( tube, l2); 
+
+	float3 n2 = ProjToPlane(ovec, t2);
+	// ovec2 = normalize(ovec2);
+	
+	float3 surfTan = (p2 + n2 * r2) - (p1 + n1 * r1);
+	// surfTan = normalize(surfTan);
+	
+	// return ovec;
+	// return normalize(-t * dr*0.125 + ovec);
+	// return normalize((normalize(t + ovec * dr) * (dot(normalize(t + ovec * dr), t)))- t);
+
+	// return normalize(normalize(ovec) - dr * t1 / dot(t1, t1));
+	return normalize(ProjToPlane(ovec, surfTan));
+}
+
+const float Gamma = 2.2;
+const float RcpGamma = 1.0 / Gamma;
+
+float3 GammaDecode(float3 col) { return pow(col, float3(Gamma)); }
+float3 GammaEncode(float3 col) { return pow(saturate(col), float3(RcpGamma)); }
+
+float SinDot(float2 a, float2 b)
+{
+	return a.x * b.y - a.y * b.x;
+}
+
+int ToInt(bool cond) { return cond ? 1 : 0; }
+float ToFloat(bool cond) { return cond ? 1.0 : 0.0; }
+
+float3 CompleteVec(float2 xy)
+{
+	return float3(xy, sqrt(1.0 - saturate(dot(xy, xy))));
+}
+
+#endif
+]]>
+  </snippet>
+
+  <snippet name="Tube.defines" type="string">
+    <![CDATA[REPLACED_BY_CODE
+
+// Info: these are going to be reset by the source code
+
+// #define USE_PER_VERTEX_NORMALS
+// #define CAPS
+
+#define SHADING_STYLE 1
+#define CAPS
+#define USE_BACKPATCHCULLING
+#define USE_FINE_CAPS_TESSELLATION
+#define VRING_VERTEX_COUNT 8
+#define VRING_COUNT 12
+]]>
+  </snippet>
+
+  <shader name="Tube.vs">
+    <snippet type="version">440</snippet>
+    <snippet name="Tube.defines" />
+    <snippet name="Tube.defs" />
+    <snippet type="string">
+      <![CDATA[
+#ifndef TUBE_DEFS
+	#error [Tube.vs depends on: Tube.defs]
+#endif
+
+in uint gl_VertexID;
+in uint gl_InstanceID;
+out vec3 vPos;
+
+#define VId gl_VertexID
+#define IId gl_InstanceID
+
+out VS_OUT
+{
+	float3 Pos; 
+	uint Id; 
+	
+	float3 LPos; 
+	float Cull;
+	
+	float3 OVec1; 	
+	
+#ifdef CAPS	
+	bool CVFlag;
+#endif
+	
+	float EyeFac;
+	float MaxEdgeLen;
+} Out;
+
+
+void main()
+{
+	uint x = VId % VRingVertexCount;
+	uint y = VId / VRingVertexCount;
+		
+	float lx = float(x) * RcpVRingVertexCount_f * Pi2;
+	float ly = float(y);
+	
+	float3 Pos;
+	Pos.y = ly;
+	Pos.x = cos(lx);
+	Pos.z = sin(lx);
+	
+#ifdef CAPS
+	bool bottomCVFlag = VId == BottomCVId;
+	bool topCVFlag = VId == TopCVId;
+
+	if(bottomCVFlag) { Pos = float3(0.0); ly = 0.0; }
+	else 
+	if(topCVFlag)    { Pos = float3(0.0, TopVRingId_f, 0.0); ly = TopVRingId_f; }
+	
+	Out.CVFlag = bottomCVFlag || topCVFlag;
+#endif
+	
+	uint segmentOff = IId * SegmentSize;
+	uint tubeOff = uint(TubesBuffer[segmentOff].x);
+	
+	Tube tube = Tube_Load(tubeOff);
+	
+	Out.Id = tubeOff;
+	Out.Pos = Pos.xyz;
+	Out.LPos = Pos;
+
+
+	uint lId = y;
+	float l = Pos.y * RcpTopVRingId_f; 
+	{
+		float lId_f = lId;
+		
+		
+		float3 ovec1;
+		float3 ovec2;
+		float3 tangent;
+		
+		// #define EVAL_TFRAMES_MANUALLY
+		
+		#ifdef EVAL_TFRAMES_MANUALLY
+		{
+			// float3 c[4];
+			// CurveHParasToPolyCoeffs(tube.Start.Pos, tube.Start.PTan, tube.End.Pos, tube.End.PTan, c);
+		
+			ovec1 = float3(1.0, 0.0, 0.0);
+			tangent = float3(0.0, 1.0, 0.0);
+			
+			for(float i = 0.0; i <= lId_f; ++i)
+			{
+				float l0 = i * RcpTopVRingId_f;
+				
+				float3 t = EvalPTanCurve(tube, l0);
+				// float3 t = EvalPolyD1(l0, c);
+				// t = EvalCSplineTangent(tube.Pos1, tube.PTan1, tube.Pos2, tube.PTan2, l0);
+				// float3 t = EvalPolyD1(l0, tube.PosA, tube.PosB, tube.PosC, tube.PosD);
+				// t.z = 0.0;
+				// lt = float3(0.0, 1.0, 0.0);
+				// ovec1 = float3(1.0, 0.0, 0.0);
+				
+				// Quat q = Quat::New(tangent, t);		
+				// ovec1 = Rotate(ovec1, q);
+				
+				ovec1 = ovec1 - t * dot(ovec1, t) / dot(t, t);
+				ovec1 = normalize(ovec1);
+				
+				tangent = t;
+			}
+		}
+		#else
+		{
+			// tangent = EvalPolyD1(l, c);
+			tangent = EvalPTanCurve(tube, l);
+
+			float4 vec = TubesBuffer[segmentOff + 1 + (lId >> 1)];	
+			if((lId & 1) != 0) vec.xy = vec.zw;
+		
+			ovec1 = CompleteVec(float2(vec.x, abs(vec.y) - 2.0));
+			if(vec.y < 0.0) ovec1.z = -ovec1.z;
+		}
+		#endif
+		
+		// ovec1 = -normalize(GetOrthoVec(tangent));
+		
+		ovec2 = cross(tangent, ovec1);
+		ovec2 = normalize(ovec2);
+		
+		float3 ovec = ovec2 * Pos.z - ovec1 * Pos.x;
+
+		float r = EvalRadCurve(tube, l);
+		float3 p = EvalPosCurve(tube, l);
+			
+		float3 normal = CalcSurfaceNormal(tube, ovec, l);
+		// Out.Normal = ovec;
+	
+	#ifdef CAPS
+		if(Out.CVFlag) 
+		{
+			r = 0.0;
+			
+			// bool tan0ZeroCond = tube.Start.PTan.x == 0.0 && tube.Start.PTan.y == 0.0 && tube.Start.PTan.z == 0.0;
+			// bool tan1ZeroCond = tube.End.PTan.x   == 0.0 && tube.End.PTan.y   == 0.0 && tube.End.PTan.z   == 0.0;
+			
+			// if(tan0ZeroCond && tan1ZeroCond)
+			// {
+				// normal = tube.End.Pos - tube.Start.Pos;
+			// }
+			// else if(bottomCVFlag && tan0ZeroCond)
+			// {
+				// normal = (tube.End.Pos - tube.End.PTan * Rcp3) - tube.Start.Pos;
+			// }
+			// else if(topCVFlag && tan1ZeroCond)
+			// {
+				// normal = tube.End.Pos - (tube.Start.Pos + tube.Start.PTan * Rcp3);
+			// }
+			// else
+			normal = bottomCVFlag ? -tube.Start.PTan : tube.End.PTan;
+			
+			// if(bottomCVFlag) normal = -normal;
+			normal =  normalize(normal);
+		}
+	#endif
+		
+		Out.Pos = p + ovec * r;
+
+		float3 eyeVec = normalize(CamPos - Out.Pos);
+		
+		// finer tessellation for silhouettes
+		Out.EyeFac = 1.0 - abs(dot(eyeVec, normal));
+		Out.EyeFac = saturate(Out.EyeFac * 1.2);
+		Out.EyeFac *= Out.EyeFac * Out.EyeFac;
+
+		
+		Out.OVec1 = ovec1;
+	
+	#ifdef USE_BACKPATCHCULLING
+		// control point normal facing away from camera -> belonging patch migh get culled
+		Out.Cull = dot(eyeVec, normal) < 0.0 ? 1.0 : 0.0;
+		// Out.Cull = 0.0;
+	#else
+		Out.Cull = 0.0;
+	#endif
+		
+	#ifdef CAPS
+		// force patch cull for invisible caps
+		if(bottomCVFlag && tube.Start.EndNodeFlag == 0.0) Out.Cull = 4.0;
+		if(topCVFlag    && tube.End.EndNodeFlag   == 0.0) Out.Cull = 4.0;
+		// if(bottomCVFlag) Out.Cull = 4.0;
+		// if(topCVFlag   ) Out.Cull = 4.0;
+	#endif	
+	
+	#ifdef USE_FINE_CAPS_TESSELLATION
+		// finer tessellation for cap seam
+		if((ly == 0.0 && tube.Start.EndNodeFlag != 0.0) || 
+		   (ly == TopVRingId_f && tube.End.EndNodeFlag  != 0.0))
+		   {
+				Out.MaxEdgeLen = 4.0;// seam
+		   }
+		   else
+		   {
+				Out.MaxEdgeLen = 32.0;// default
+		   }
+	#else
+		Out.MaxEdgeLen = 32.0;
+	#endif
+	}	
+}
+]]>
+    </snippet>
+  </shader>
+  <shader name="Tube.tc">
+    <snippet type="version">440</snippet>
+    <snippet name="Tube.defines" />
+    <snippet name="Tube.defs" />
+    <snippet type="string">
+      <![CDATA[
+#ifndef TUBE_DEFS
+	#error [Tube.tc depends on: Tube.defs]
+#endif
+
+float2 EvalScreenSpacePosition(float3 Pos)
+{
+	float4 pPos = mul(float4(Pos, 1.0), ViewProjMat);
+	
+	return pPos.xy / pPos.w;
+}
+
+float EvalScreenSpaceW(float3 Pos)
+{
+	float4 pPos = mul(float4(Pos, 1.0), ViewProjMat);
+	
+	return pPos.w;
+}
+
+float EvalSSTessFac(float3 Pos0, float3 Pos1, float maxEdgeLen)
+{
+	float2 sPos0 = EvalScreenSpacePosition(Pos0);
+	float2 sPos1 = EvalScreenSpacePosition(Pos1);
+	
+	float len = length((sPos1 - sPos0) * PixelCount.xy * 0.5);
+
+	return 1.0 + len / maxEdgeLen;
+	return max(len / maxEdgeLen, 1.0);
+}
+
+float EvalSSTessFac2(float3 Pos0, float3 Pos1, float maxEdgeLen)
+{
+	float3 PosM = (Pos0 + Pos1) * 0.5;
+	float len = length(Pos0 - Pos1) / EvalScreenSpaceW(PosM);
+	
+	len *= max(PixelCount.x, PixelCount.y) * 0.5;
+
+	return 1.0 + len / maxEdgeLen;
+	return max(len / maxEdgeLen, 1.0);
+}
+
+
+in VS_OUT
+{
+	float3 Pos; 
+	uint Id; 
+	
+	float3 LPos; 
+	float Cull;
+	
+	float3 OVec1; 		
+#ifdef CAPS	
+	bool CVFlag;
+#endif
+	
+	float EyeFac;
+	float MaxEdgeLen;
+} In[];
+
+out TC_OUT
+{
+	float3 Pos; 	
+	uint Id; 
+	
+	float3 LPos;
+#ifdef CAPS	
+	float CVInfluence;
+#endif
+	
+	float3 OVec1; 	
+#ifdef CAPS	
+	bool CapPatchFlag;	
+#endif
+
+#ifdef CALC_WIREFRAME	
+	float2 UV;
+#endif
+} Out[];
+
+
+#define ID gl_InvocationID
+#define Edges gl_TessLevelOuter
+#define Inner gl_TessLevelInner
+
+layout(vertices = 4) out;
+void main()
+{
+	// back patch culling / hidden cap patch culling
+	if(In[0].Cull + In[1].Cull + In[2].Cull + In[3].Cull > 3.0) 
+	{
+		Edges[0] = 0.0;
+		Edges[1] = 0.0;
+		Edges[2] = 0.0;
+		Edges[3] = 0.0;
+		
+		Inner[0] = 0.0;
+		Inner[1] = 0.0;
+		
+		return;
+	}
+	
+    Out[ID].Pos    = In[ID].Pos;
+    Out[ID].LPos   = In[ID].LPos;
+	Out[ID].OVec1  = In[ID].OVec1;
+    Out[ID].Id     = In[ID].Id;
+
+#ifdef CAPS	
+    Out[ID].CVInfluence = In[ID].CVFlag ? 1.0 : 0.0;
+    Out[ID].CapPatchFlag = false;
+#endif
+
+#ifdef CALC_WIREFRAME
+	Out[ID].UV  = float2(ToFloat((ID & 1) == (ID >> 1)), ToFloat((ID >> 1) == 0));
+#endif
+	
+    if (ID == 0) 
+    {		
+	#ifdef CAPS
+		Out[ID].CapPatchFlag = In[0].CVFlag || In[1].CVFlag || In[2].CVFlag || In[3].CVFlag;
+	#endif
+	
+		// silhouette tessellation
+		float maxEdgeLenS = 8.0;
+		float maxTessFacS = 7.0;
+		
+		float _edges[4];
+		
+		_edges[0] = min(EvalSSTessFac2(In[3].Pos, In[0].Pos, maxEdgeLenS), maxTessFacS);
+		_edges[1] = min(EvalSSTessFac2(In[0].Pos, In[1].Pos, maxEdgeLenS), maxTessFacS);
+		_edges[2] = min(EvalSSTessFac2(In[1].Pos, In[2].Pos, maxEdgeLenS), maxTessFacS);
+		_edges[3] = min(EvalSSTessFac2(In[2].Pos, In[3].Pos, maxEdgeLenS), maxTessFacS);
+		
+		_edges[0] = lerp(1.0, _edges[0], max(In[3].EyeFac, In[0].EyeFac));
+		_edges[1] = lerp(1.0, _edges[1], max(In[0].EyeFac, In[1].EyeFac));
+		_edges[2] = lerp(1.0, _edges[2], max(In[1].EyeFac, In[2].EyeFac));
+		_edges[3] = lerp(1.0, _edges[3], max(In[2].EyeFac, In[3].EyeFac));
+
+		
+		// float maxEdgeLen = 32.0;
+		// float maxTessFac = 5.0;
+		
+		// Edges[0] = max(Edges[0], min(EvalSSTessFac(In[3].Pos, In[0].Pos, maxEdgeLen), maxTessFac));
+		// Edges[1] = max(Edges[1], min(EvalSSTessFac(In[0].Pos, In[1].Pos, maxEdgeLen), maxTessFac));
+		// Edges[2] = max(Edges[2], min(EvalSSTessFac(In[1].Pos, In[2].Pos, maxEdgeLen), maxTessFac));
+		// Edges[3] = max(Edges[3], min(EvalSSTessFac(In[2].Pos, In[3].Pos, maxEdgeLen), maxTessFac));
+		
+		// body tessellation
+		float maxTessFac = 5.0;
+		
+		float maxEdgeLen0 = max(In[3].MaxEdgeLen, In[0].MaxEdgeLen);
+		float maxEdgeLen1 = max(In[0].MaxEdgeLen, In[1].MaxEdgeLen);
+		float maxEdgeLen2 = max(In[1].MaxEdgeLen, In[2].MaxEdgeLen);
+		float maxEdgeLen3 = max(In[2].MaxEdgeLen, In[3].MaxEdgeLen);
+		
+		_edges[0] = max(_edges[0], min(EvalSSTessFac(In[3].Pos, In[0].Pos, maxEdgeLen0), maxTessFac));
+		_edges[1] = max(_edges[1], min(EvalSSTessFac(In[0].Pos, In[1].Pos, maxEdgeLen1), maxTessFac));
+		_edges[2] = max(_edges[2], min(EvalSSTessFac(In[1].Pos, In[2].Pos, maxEdgeLen2), maxTessFac));
+		_edges[3] = max(_edges[3], min(EvalSSTessFac(In[2].Pos, In[3].Pos, maxEdgeLen3), maxTessFac));
+		
+		// Inner[0] = max(max(Edges[0], Edges[1]), max(Edges[2], Edges[3]));
+		// Inner[1] = Inner[0];
+		
+		Edges[0] = _edges[0];
+		Edges[1] = _edges[1];
+		Edges[2] = _edges[2];
+		Edges[3] = _edges[3];
+		
+		Inner[1] = max(_edges[0], _edges[2]);
+		Inner[0] = max(_edges[1], _edges[3]);
+		
+		
+	#ifdef CAPS	
+		// base tessellation for caps (except seams)
+		if(In[3].CVFlag || In[0].CVFlag) Edges[0] = 1.0;
+		if(In[0].CVFlag || In[1].CVFlag) Edges[1] = 1.0;
+		if(In[1].CVFlag || In[2].CVFlag) Edges[2] = 1.0;
+		if(In[2].CVFlag || In[3].CVFlag) Edges[3] = 1.0;
+		
+		if(In[0].CVFlag || In[1].CVFlag || In[2].CVFlag || In[3].CVFlag) 
+		{
+			Inner[1] = 1.0;
+			Inner[0] = 1.0;
+		}
+	#endif	
+		
+		// float tessellationAmount = 7.0;
+
+		// Edges[0] = tessellationAmount;
+		// Edges[1] = tessellationAmount;
+		// Edges[2] = tessellationAmount;
+		// Edges[3] = tessellationAmount;
+
+		// Inner[0] = tessellationAmount;
+		// Inner[1] = tessellationAmount;
+    }
+}
+]]>
+    </snippet>
+  </shader>
+  <shader name="Tube.te">
+    <snippet type="version">440</snippet>
+    <snippet name="Tube.defines" />
+    <snippet name="Tube.defs" />
+    <snippet type="string">
+      <![CDATA[
+#ifndef TUBE_DEFS
+	#error [Tube.te depends on: Tube.defs]
+#endif
+
+in TC_OUT
+{
+	float3 Pos; 	
+	uint Id; 
+	
+	float3 LPos;
+#ifdef CAPS	
+	float CVInfluence;
+#endif
+	
+	float3 OVec1; 	
+#ifdef CAPS	
+	bool CapPatchFlag;	
+#endif
+
+#ifdef CALC_WIREFRAME
+	float2 UV;
+#endif
+} In[];
+
+out TE_OUT
+{
+	float3 Pos;
+	float L;
+
+#ifdef USE_PER_VERTEX_NORMALS	
+	float3 Normal;	 	
+#endif
+
+	flat uint Id; 
+
+#ifdef CAPS	
+	flat bool CapPatchFlag;	
+#endif
+
+#ifdef CALC_WIREFRAME	
+	float2 UV;
+#endif
+} Out;
+
+#define BILERP(IN, MEM, UV) lerp(lerp(IN[0].MEM, IN[1].MEM, UV.x), lerp(IN[3].MEM, IN[2].MEM, UV.x), UV.y)
+
+float3 GetOrthoVec(float3 v)
+{
+    return abs(v.x) > abs(v.z) ? float3(-v.y, v.x, 0.0f) : float3(0.0f, -v.z, v.y);
+}
+
+layout(quads, fractional_odd_spacing, ccw) in;
+void main()
+{	
+	float2 uv = gl_TessCoord.xy;
+
+	
+	Out.Id = In[0].Id;
+	Tube tube = Tube_Load(In[0].Id);
+	
+	
+	float3 lPos = BILERP(In, LPos, uv);
+
+	float  l = lPos.y * RcpTopVRingId_f;
+	float3 p = EvalPosCurve(tube, l);
+	float  r = EvalRadCurve(tube, l); 
+	
+	
+	float3 wPos;
+	
+#ifdef CAPS
+	Out.CapPatchFlag = In[0].CapPatchFlag;
+	
+	if(In[0].CapPatchFlag)
+	{
+		wPos = BILERP(In, Pos, uv);
+		
+	#ifdef USE_PER_VERTEX_NORMALS
+		Out.Normal = normalize(cross(In[1].Pos - In[0].Pos, In[2].Pos - In[0].Pos));
+	#endif
+	
+		bool noCVInfluenceCond = BILERP(In, CVInfluence, uv) == 0.0;
+		
+		if(noCVInfluenceCond)
+		wPos = p + r * normalize(wPos - p);
+	}
+	else
+#endif
+	{
+		lPos.xz = normalize(lPos.xz);
+
+		float3 tangent = normalize(EvalPTanCurve(tube, l));
+		float3 ovec1 = normalize(lerp(
+		normalize(ProjToPlane(In[0].OVec1, tangent)), 
+		normalize(ProjToPlane(In[2].OVec1, tangent)), uv.x));
+		
+		// ovec1 = normalize(GetOrthoVec(tangent));
+		
+		float3 ovec2 = cross(tangent, ovec1);
+			// ovec2 = normalize(ovec2);
+			
+		float3 ovec = ovec2 * lPos.z - ovec1 * lPos.x;
+		// ovec = normalize(BILERP(In, Pos, uv) - p);
+		// ovec = normalize(ProjToPlane(BILERP(In, Pos, uv) - p, tangent));
+
+		wPos = p + ovec * r;
+	
+	#ifdef USE_PER_VERTEX_NORMALS
+		Out.Normal = CalcSurfaceNormal(tube, ovec, l);
+	#endif
+	}
+	
+	Out.L = l;
+	Out.Pos = wPos;
+	
+#ifdef CALC_WIREFRAME
+	Out.UV = BILERP(In, UV, uv);
+#endif
+	
+	gl_Position = mul(float4(wPos, 1.0), ViewProjMat);
+}
+]]>
+    </snippet>
+  </shader>
+  <shader name="Tube.fs">
+    <snippet type="version">440</snippet>
+    <snippet name="Tube.defines" />
+    <snippet name="Tube.defs" />
+    <snippet type="string">
+      <![CDATA[
+#ifndef TUBE_DEFS
+	#error [Tube.fs depends on: Tube.defs]
+#endif
+
+float RescaleToSSDist(float x)
+{
+	return x / length(float2(dFdx(x), dFdy(x)));
+}
+
+in TE_OUT
+{
+	float3 Pos;
+	float L;
+
+#ifdef USE_PER_VERTEX_NORMALS	
+	float3 Normal;
+#endif
+
+	flat uint Id; 
+
+#ifdef CAPS	
+	flat bool CapPatchFlag;	
+#endif
+
+#ifdef CALC_WIREFRAME
+	float2 UV;	
+#endif
+} In;
+
+out vec4 FragColor;
+ 
+void main()
+{	
+	// float3 wPos = In.Pos;
+	
+	Tube tube = Tube_Load(In.Id);
+	// Tube tube = CreateTestTube();
+
+	float3 col  = EvalColCurve(tube, In.L);
+	
+	float3 p = EvalPosCurve(tube, In.L);
+	float3 t = EvalPTanCurve(tube, In.L);
+	float  r = EvalRadCurve(tube, In.L); 
+
+	// float3 ovec = normalize(In.Pos - p);
+	float3 ovec = normalize(ProjToPlane(In.Pos - p, t));
+
+	float3 wPos = p + ovec * r;
+	float3 normal = CalcSurfaceNormal(tube, ovec, In.L);
+		
+#ifdef CAPS
+	if(In.CapPatchFlag)
+	{
+		wPos = In.Pos;
+		normal = normalize(cross(dFdx(wPos), dFdy(wPos)));
+
+	#ifdef INVERT_COLOR_FOR_CAPS
+		// col = float3(1.0) - col;
+	#endif
+	}
+#endif
+
+#ifdef USE_PER_VERTEX_NORMALS
+	wPos = In.Pos;
+	normal = In.Normal;
+#endif
+	 // normal = normalize(In.Normal);
+	// normal = normalize(cross(dFdx(wPos), dFdy(wPos)));
+// wPos = In.Pos;
+		// normal = In.Normal;
+		
+	float3 eyeVec = normalize(CamPos - wPos);
+	
+	float rim = saturate(dot(eyeVec, normal));
+	
+	// FragColor.rgb = float3(rim);
+	// FragColor.rgb = normal*0.5+0.5;
+	// return;
+	
+	
+#ifdef CALC_HARD_NORMALS
+wPos = In.Pos;
+	float3 hnormal = normalize(cross(dFdx(wPos), dFdy(wPos)));
+	float hrim = saturate(dot(eyeVec, hnormal));
+#endif
+
+#ifdef CALC_WIREFRAME	
+	float quadEdge = min(min(RescaleToSSDist(In.UV.x), RescaleToSSDist(In.UV.y)), min(RescaleToSSDist(1.0 - In.UV.x), RescaleToSSDist(1.0 - In.UV.y)));
+	float triEdge  = min(RescaleToSSDist(In.UVW.x), min(RescaleToSSDist(In.UVW.y), RescaleToSSDist(In.UVW.z)));
+		
+	triEdge  = saturate(saturate(triEdge - 0.125) + 0.4);
+#endif
+
+	
+#if SHADING_STYLE == COLOR
+	FragColor.rgb = col;
+	FragColor.rgb *= rim;
+	
+#elif SHADING_STYLE == LIT_COLOR
+	float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
+	
+	float NdL = dot(lightDir, normal);
+	float diff = saturate(NdL);
+	float back = -NdL * 0.5 + 0.5;
+	float3 H = normalize(eyeVec + normal);
+	float HdN = dot(normal, H);
+	float spec = pow(saturate(HdN), 100.0) * diff * 10.0;
+	// float fresnel = pow(1.0 - rim, 5.0/(1.0 - abs(dot(normalize(t), eyeVec)) * 0.8));
+	float fresnel = pow(1.0 - rim, 15.0);
+	// float LdT = dot(normalize(t), lightDir);
+	// float cfac = 1.0 / (1.0 - abs(LdT));
+	
+	// FragColor.rgb = float3(exp2(-(float3(1.0) - clamp(col, float3(0.01), float3(0.99))) * (-NdL * 0.5 + 0.5) * (50.00 * 1.0)));
+	// FragColor.rgb = lerp(FragColor.rgb, col, diff);
+	// FragColor.rgb = float3(1.0 - abs(LdT));
+	// FragColor.rgb = float3(fresnel);
+	fresnel *= 0.5;
+	fresnel *= 1.0 - diff;
+	// fresnel *= (1.0 - abs(dot(normalize(t), eyeVec)) * 0.99);
+	// fresnel *= ((dot(lightDir, -eyeVec) * 0.5 + 0.5));
+	// diff *= 1.0 - sqrt(rim);// * 2.0;
+	// diff *= (1.0 - (1.0 - rim) * (1.0 - rim));
+	// FragColor.rgb = col * (diff + col * back * 0.05) + fresnel;
+	FragColor.rgb = col * (diff + col * back * 0.05 + fresnel);
+	// FragColor.rgb = float3(1.0 - abs(dot(normalize(t), eyeVec)));
+	// FragColor.rgb = col * (diff + back * 0.05);
+	
+#elif SHADING_STYLE == SMOOTH_NORMAL
+	FragColor.rgb = GammaDecode(normal * 0.5 + 0.5);
+	FragColor.rgb *= rim;
+	
+#elif SHADING_STYLE == HARD_NORMAL	
+	FragColor.rgb = GammaDecode(hnormal * 0.5 + 0.5);
+	FragColor.rgb *= hrim;
+
+#elif SHADING_STYLE == HARD_NORMAL_WF
+	quadEdge = saturate(quadEdge - 0.5);
+
+	FragColor.rgb = GammaDecode(hnormal * 0.5 + 0.5);	
+	FragColor.rgb *= triEdge;
+	FragColor.rgb *= quadEdge;
+	FragColor.rgb *= hrim;
+
+#elif SHADING_STYLE == BLUE_WF
+	// FragColor.rgb = lerp(lerp(float3(0.0, 0.2, 1.0), float3(triEdge), quadEdge),float3(1.0, 0.2, 0.1) * 0.8,  (1.0 - hrim) * (1.0 - hrim));
+	quadEdge = saturate(quadEdge - 0.333);
+	
+	float3 scol = float3(0.0, 0.2, 1.0);
+	// float3 scol = float3(1.0, 0.2, 0.1);
+	// triEdge = 1.0;
+	FragColor.rgb = lerp(lerp(scol, float3(1.0), (triEdge)), scol * 0.8,  (1.0 - hrim)) * quadEdge;
+
+#elif SHADING_STYLE == WIP
+	FragColor.rgb = lerp(float3(1.0), float3(1.0, 0.3, 0.1), rim);
+	
+#endif
+		// FragColor.rgb = lerp(float3(0.3, 0.4, 1.0), float3(1.0), triEdge) * quadEdge; 
+
+	// FragColor = float4(GammaEncode(FragColor.rgb), 1.0);
+}
+]]>
+    </snippet>
+  </shader>
+</btf>
