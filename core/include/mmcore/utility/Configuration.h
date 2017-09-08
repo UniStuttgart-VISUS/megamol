@@ -20,7 +20,7 @@
 #include "vislib/Pair.h"
 #include "vislib/String.h"
 #include "vislib/SingleLinkedList.h"
-
+#include "mmcore/LuaState.h"
 
 namespace megamol {
 namespace core {
@@ -47,6 +47,9 @@ namespace xml {
 
         /** only ConfigurationXMLParser may set values */
         friend class megamol::core::utility::xml::ConfigurationParser;
+
+        /** LuaState is the new configuration, so it may set values */
+        friend class megamol::core::LuaState;
 
 
         /**

@@ -15,11 +15,14 @@
 
 #include "mmcore/LuaState.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/utility/Configuration.h"
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/Log.h"
+#include "vislib/sys/Path.h"
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 extern "C" {
 #include "lua.h"
@@ -31,6 +34,19 @@ extern "C" {
 
 /*****************************************************************************/
 
+bool iequals(const std::string& one, const std::string& other) {
+    size_t size = one.size();
+    if (other.size() != size) {
+        return false;
+    }
+    for (unsigned int i = 0; i < size; ++i) {
+        if (tolower(one[i]) != tolower(other[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = mmLogInfo,"
 "  mmLog = mmLog,"
@@ -39,6 +55,14 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmGetConfiguration = mmGetConfiguration,"
 "  mmGetOS = mmGetOS,"
 "  mmGetMachineName = mmGetMachineName,"
+"  mmSetAppDir = mmSetAppDir,"
+"  mmAddShaderDir = mmAddShaderDir,"
+"  mmAddResourceDir = mmAddResourceDir,"
+"  mmPluginLoaderInfo = mmPluginLoaderInfo,"
+"  mmSetLogFile = mmSetLogFile,"
+"  mmSetLogLevel = mmSetLogLevel,"
+"  mmSetEchoLevel = mmSetEchoLevel,"
+"  mmSetConfigValue = mmSetConfigValue,"
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -149,11 +173,32 @@ void megamol::core::LuaState::printStack() {
     }
 }
 
-/*
-* megamol::core::LuaState::LuaState
-*/
-megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
-        coreInst(inst) {
+
+bool megamol::core::LuaState::checkConfiguring(const std::string where) {
+    if (this->conf != nullptr) {
+        return true;
+    } else {
+        std::string err = where + "is only legal when reading the configuration";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+}
+
+
+bool megamol::core::LuaState::checkRunning(const std::string where) {
+    if (this->coreInst != nullptr) {
+        return true;
+    } else {
+        std::string err = where + "is only legal when MegaMol is running";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+}
+
+
+void megamol::core::LuaState::commonInit() {
     if (L != nullptr) {
 
         // push API
@@ -167,6 +212,17 @@ megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
         lua_register(L, "mmGetBitWidth", &dispatch<&LuaState::GetBitWidth>);
         lua_register(L, "mmGetConfiguration", &dispatch<&LuaState::GetConfiguration>);
         lua_register(L, "mmGetMachineName", &dispatch<&LuaState::GetMachineName>);
+
+        lua_register(L, "mmSetAppDir", &dispatch<&LuaState::SetAppDir>);
+        lua_register(L, "mmAddShaderDir", &dispatch<&LuaState::AddShaderDir>);
+        lua_register(L, "mmAddResourceDir", &dispatch<&LuaState::AddResourceDir>);
+        lua_register(L, "mmPluginLoaderInfo", &dispatch<&LuaState::PluginLoaderInfo>);
+
+        lua_register(L, "mmSetLogFile", &dispatch<&LuaState::SetLogFile>);
+        lua_register(L, "mmSetLogLevel", &dispatch<&LuaState::SetLogLevel>);
+        lua_register(L, "mmSetEchoLevel", &dispatch<&LuaState::SetEchoLevel>);
+
+        lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -201,6 +257,21 @@ megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
         lua_rawset(L, -3);
         lua_pop(L, 1);
     }
+}
+
+
+/*
+* megamol::core::LuaState::LuaState
+*/
+megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
+        coreInst(inst), conf(nullptr) {
+    this->commonInit();
+}
+
+
+megamol::core::LuaState::LuaState(utility::Configuration *conf) : L(luaL_newstate()), 
+    coreInst(nullptr), conf(conf) {
+    this->commonInit();
 }
 
 
@@ -249,6 +320,14 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::str
 }
 
 
+bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName) {
+    std::ifstream input(fileName, std::ios::in);
+    std::stringstream buffer;
+    buffer << input.rdbuf();
+    return RunString(envName, buffer.str());
+}
+
+
 bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script) {
     if (L != nullptr) {
         USES_CHECK_LUA;
@@ -264,6 +343,11 @@ bool megamol::core::LuaState::RunString(const std::string& envName, const std::s
 
 
 bool megamol::core::LuaState::RunFile(const std::string& fileName) {
+    return RunFile("megamol_env", fileName);
+}
+
+
+bool megamol::core::LuaState::RunFile(const std::wstring& fileName) {
     return RunFile("megamol_env", fileName);
 }
 
@@ -349,4 +433,138 @@ int megamol::core::LuaState::LogInfo(lua_State *L) {
     lua_insert(L, 1); // prepend mmLog function to all arguments
     CHECK_LUA(lua_pcall(L, lua_gettop(L) - 1, 0, 0)); // run
     return 0;
+}
+
+
+int megamol::core::LuaState::SetAppDir(lua_State *L) {
+    if (this->checkConfiguring("mmSetAppDir")) {
+        // TODO do we need to make an OS-dependent path here?
+        auto p = luaL_checkstring(L, 1);
+        this->conf->appDir = vislib::StringW(p);
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::AddShaderDir(lua_State *L) {
+    if (this->checkConfiguring("mmAddShaderDir")) {
+        // TODO do we need to make an OS-dependent path here?
+        auto p = luaL_checkstring(L, 1);
+        this->conf->AddShaderDirectory(p);
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::AddResourceDir(lua_State *L) {
+    if (this->checkConfiguring("mmAddResourceDir")) {
+        // TODO do we need to make an OS-dependent path here?
+        auto p = luaL_checkstring(L, 1);
+        this->conf->AddResourceDirectory(p);
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::PluginLoaderInfo(lua_State *L) {
+    if (this->checkConfiguring("mmPluginLoaderInfo")) {
+        // TODO do we need to make an OS-dependent path here?
+        auto p = luaL_checkstring(L, 1);
+        auto f = luaL_checkstring(L, 2);
+        std::string a = luaL_checkstring(L, 3);
+        bool inc = true;
+        if (iequals(a, "include")) {
+            inc = true;
+        } else if (iequals(a, "exclude")) {
+            inc = false;
+        } else {
+            lua_pushstring(L, "the third parameter of mmPluginLoaderInfo must be"
+                " 'include' or 'exclude'.");
+            lua_error(L);
+        }
+        this->conf->AddPluginLoadInfo(vislib::TString(p), vislib::TString(f), inc);
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetLogFile(lua_State *L) {
+    if (this->checkConfiguring("mmSetLogFile")) {
+        // TODO do we need to make an OS-dependent path here?
+        auto p = luaL_checkstring(L, 1);
+        if (!megamol::core::utility::Configuration::logFilenameLocked) {
+            if (this->conf->instanceLog != nullptr) {
+            this->conf->instanceLog->SetLogFileName(vislib::sys::Path::Resolve(p),
+                USE_LOG_SUFFIX);
+            }
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetLogLevel(lua_State *L) {
+    if (this->checkConfiguring("mmSetLogLevel")) {
+        auto l = luaL_checkstring(L, 1);
+        if (!megamol::core::utility::Configuration::logLevelLocked) {
+            if (this->conf->instanceLog != nullptr) {
+                this->conf->instanceLog->SetLevel(parseLevelAttribute(l));
+            }
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetEchoLevel(lua_State *L) {
+    if (this->checkConfiguring("mmSetEchoLevel")) {
+        auto l = luaL_checkstring(L, 1);
+        if (!megamol::core::utility::Configuration::logEchoLevelLocked) {
+            if (this->conf->instanceLog != nullptr) {
+                this->conf->instanceLog->SetEchoLevel(parseLevelAttribute(l));
+            }
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetConfigValue(lua_State *L) {
+    if (this->checkConfiguring("mmSetConfigValue")) {
+        auto name = luaL_checkstring(L, 1);
+        auto value = luaL_checkstring(L, 1);
+        this->conf->setConfigValue(name, value);
+    }
+    return 0;
+}
+
+
+UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
+    UINT retval = vislib::sys::Log::LEVEL_ERROR;
+    if (iequals(attr, "error")) {
+        retval = vislib::sys::Log::LEVEL_ERROR;
+    } else if (iequals(attr, "warn")) {
+        retval = vislib::sys::Log::LEVEL_WARN;
+    } else if (iequals(attr, "warning")) {
+        retval = vislib::sys::Log::LEVEL_WARN;
+    } else if (iequals(attr, "info")) {
+        retval = vislib::sys::Log::LEVEL_INFO;
+    } else if (iequals(attr, "none")) {
+        retval = vislib::sys::Log::LEVEL_NONE;
+    } else if (iequals(attr, "null")) {
+        retval = vislib::sys::Log::LEVEL_NONE;
+    } else if (iequals(attr, "zero")) {
+        retval = vislib::sys::Log::LEVEL_NONE;
+    } else if (iequals(attr, "zero")) {
+        retval = vislib::sys::Log::LEVEL_ALL;
+    } else if (iequals(attr, "*")) {
+        retval = vislib::sys::Log::LEVEL_ALL;
+    } else {
+        try {
+            retval = std::stoi(attr);
+        } catch (...) {
+            retval = vislib::sys::Log::LEVEL_ERROR;
+        }
+    }
+    return retval;
 }
