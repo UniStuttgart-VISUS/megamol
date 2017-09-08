@@ -532,7 +532,7 @@ int megamol::core::LuaState::SetEchoLevel(lua_State *L) {
 int megamol::core::LuaState::SetConfigValue(lua_State *L) {
     if (this->checkConfiguring("mmSetConfigValue")) {
         auto name = luaL_checkstring(L, 1);
-        auto value = luaL_checkstring(L, 1);
+        auto value = luaL_checkstring(L, 2);
         this->conf->setConfigValue(name, value);
     }
     return 0;
