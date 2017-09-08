@@ -164,20 +164,40 @@ namespace megamol {
             *
             * @param x 
             * @param y
-            * @param o (=origin)
-            * @param m (=manipulator)
+            * @param kfCamPos
+            * @param manipPos
+            * @param t
+            * @param camPos
+            * @param radius
             *
             * @return True if point is hit.
             */
-            bool processPointHit(float x, float y, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> manipPos, manipulatorType t);
+            bool processPointHit(float x, float y, vislib::math::Point<GLfloat, 3> kfCamPos, vislib::math::Point<GLfloat, 3> manipPos, manipulatorType t, 
+                                 vislib::math::Point<GLfloat, 3> camPos, float radius);
 
-            /** Render 2D circle facing to the camera position */
-            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos, vislib::math::Vector<float, 3> col);
+            /** Render 2D circle facing to the camera position 
+            *
+            * @param radius
+            * @param subdiv
+            * @param camPos
+            * @param centerPos
+            * @param col
+            *
+            */
+            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos, 
+                                vislib::math::Vector<float, 4> col);
 
             /**********************************************************************
             * variables
             **********************************************************************/
 
+            // font rendering
+#ifdef USE_SIMPLE_FONT
+            vislib::graphics::gl::SimpleFont  theFont;
+#else
+            vislib::graphics::gl::OutlineFont theFont;
+#endif
+            // ...
             struct manipulator {
                 bool                           active;
                 manipulatorType                type;
@@ -186,21 +206,18 @@ namespace megamol {
                 vislib::math::Vector<float, 3> ssManipulatorPos;
             };
 
-            // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
-
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-            vislib::math::Rectangle<int>  viewport;
-            unsigned int                  interpolSteps;
-            bool                          toggleManipulator;
-            manipulator                   currentManipulator;
-            float                         maxAnimTime;
-            vislib::math::Point<float, 3> bboxCenter;
-            bool                          showHelpText;
+            vislib::math::Dimension<int, 2>  viewportSize;
+            unsigned int                     interpolSteps;
+            bool                             toggleManipulator;
+            manipulator                      currentManipulator;
+            float                            maxAnimTime;
+            vislib::math::Point<float, 3>    bboxCenter;
+            bool                             showHelpText;
+            vislib::math::Point<float, 3>    camWorldPos;
+            float                            circleRadius;
+            unsigned int                     circleSubDiv;
+            float                            lineWidth;
 
             /**********************************************************************
             * callback stuff
@@ -218,7 +235,7 @@ namespace megamol {
 			
             /** Amount of interpolation steps between keyframes */
             core::param::ParamSlot stepsParam;
-            /** Param to toggle to manipulation mode of position or camera lookup */
+            /**  */
             core::param::ParamSlot toggleManipulateParam;
             /**  */
             core::param::ParamSlot toggleHelpTextParam;

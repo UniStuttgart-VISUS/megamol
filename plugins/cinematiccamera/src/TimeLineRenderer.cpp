@@ -76,7 +76,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->markerSize       = 30.0f;
     this->currentRulerMode = RULER_FIXED_FONT;
     this->fontSize         = 20.0f;
-    this->segmentSize     = 10.0f;
+    this->segmentSize      = 10.0f;
 
 
     this->moveTimeLineParam.SetParameter(new param::ButtonParam('t'));
@@ -214,6 +214,14 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
+
     bool adaptFontSize = false;
     bool adaptSegSize  = false;
 
@@ -223,6 +231,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         adaptFontSize = true;
         adaptSegSize = true;
     }
+
     // Get scaling factor
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
@@ -269,6 +278,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         adaptFontSize = true;
     }
 
+    // Initialise font
     if (!this->theFont.Initialise()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
@@ -322,8 +332,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         currentSegSize   = this->adaptSegSize / this->scaleFac;
         currentRulerFrac = this->tlLength / this->totalTime * currentSegSize;
     }
-    else { // this->currentRulerMode == RULER_FIXED_SEGMENT
-
+    else { // RULER_FIXED_SEGMENT
         // Adapt font size if necessary
         if (adaptFontSize) {
             vislib::StringA tmpStr;
@@ -346,28 +355,26 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         currentRulerFrac = this->tlLength / this->totalTime * this->segmentSize;
     }
 
-	// Get the diagram color (inverse background color)
-	float bgColor[4];
-	float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-	for (unsigned int i = 0; i < 4; i++) {
-		fgColor[i] -= bgColor[i];
-	}
+    float        frameFrac      = this->tlLength / this->totalTime;
+    float        maxAnimTime    = ccc->getMaxAnimTime();
+    unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalTime / maxAnimTime));
 
     // Opengl setup
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
+
+    GLfloat tmpLw;
+    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.5f);
 
-    float        frameFrac      = this->tlLength / this->totalTime;
-    float        maxAnimTime    = ccc->getMaxAnimTime();
-    unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalTime / maxAnimTime));
-    glColor3fv(fgColor);
     glBegin(GL_LINES);
+        glColor4fv(fgColor);
+
         // Draw time line
         glVertex2fv(this->tlStartPos.PeekComponents());
         glVertex2fv(this->tlEndPos.PeekComponents());
+
         // Draw ruler lines
         glVertex2f(this->tlStartPos.GetX(),                  this->tlStartPos.GetY() + (this->devY / this->scaleFac));
         glVertex2f(this->tlStartPos.GetX(),                  this->tlStartPos.GetY() - (this->devY / this->scaleFac));
@@ -377,17 +384,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             glVertex2f(this->tlStartPos.GetX() + f, this->tlStartPos.GetY());
             glVertex2f(this->tlStartPos.GetX() + f, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
         }
+
         // Draw marker when animation repeats
-        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_ANIM_REPEAT).PeekComponents());
+        glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_ANIM_REPEAT, bgColor).PeekComponents());
         for (unsigned int i = 1; i <= repeatAnimTime; i++) {
             glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
             glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
         }
     glEnd();
 
-
     // Draw time captions
-    glColor3fv(fgColor);
+    glColor4fv(fgColor);
     tmpStr.Format("%.2f ", 0.0f);
     strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
     this->theFont.DrawString(this->tlStartPos.GetX() - strWidth, this->tlStartPos.GetY(), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
@@ -404,7 +411,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->theFont.DrawString(this->tlStartPos.GetX() + f - strWidth/2.0f, this->tlStartPos.GetY() - 1.0f - (this->devY / this->scaleFac), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
 
-	// Draw keyframes
+	// Draw markers for existing keyframes in array
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
     if (keyframes == NULL) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is NULL.");
@@ -412,18 +419,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
     Keyframe s = ccc->getSelectedKeyframe();
     if (keyframes->Count() > 0) {
-        // draw the defined keyframes
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
             CallCinematicCamera::colType cMode = ((*keyframes)[i] == s) ? (CallCinematicCamera::colType::COL_KEYFRAME_SELECT) : (CallCinematicCamera::colType::COL_KEYFRAME);
-            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(cMode));
+            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(cMode, bgColor));
         }
     }
 
-    // Draw interpolated selected keyframe
+    // Draw interpolated selected keyframe marker
     if (!keyframes->Contains(s)) {
         float x = this->tlStartPos.GetX() + s.getTime() * frameFrac;
         glLineWidth(4.0f);
-        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT).PeekComponents());
+        glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT, bgColor).PeekComponents());
         glBegin(GL_LINES);
             glVertex2f(x, this->tlStartPos.GetY() + (this->markerSize / this->scaleFac));
             glVertex2f(x, this->tlStartPos.GetY());
@@ -432,8 +438,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw dragged keyframe
     if (this->aktiveDragDrop) {
-        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_DRAG));
+        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_DRAG, bgColor));
     }
+
+    // Reset line width
+    glLineWidth(tmpLw);
 
 	return true;
 }
@@ -442,17 +451,19 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 /*
 * cinematiccamera::TimeLineRenderer::DrawKeyframeMarker
 */
-void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 3> color) {
+void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 4> color) {
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     this->markerTextures[0]->Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glColor3fv(color.PeekComponents());
+    glColor4fv(color.PeekComponents());
     glBegin(GL_QUADS);
         glTexCoord2f(1.0f, 1.0f);
         glVertex2f(posX - (this->markerSize/ (2.0f*this->scaleFac)), posY);
@@ -507,7 +518,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 		for (unsigned int i = 0; i < keyframes->Count(); i++){
 			float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
 			if ((x < (posX + offset)) && (x > (posX - offset))) {
-                // Set keyframe as selected
+                // Set hit keyframe as selected
 				ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
 				if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
                 hit = true;
@@ -550,7 +561,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
     else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
         consume = true; // Consume all right click events
 
-        // Update time of dragged keyframe. Only for locally stred dragged keyframe -> just for drawing
+        // Update time of dragged keyframe. Only for locally stored dragged keyframe -> just for drawing
         if (this->aktiveDragDrop) {
             float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
             if (x < this->tlStartPos.GetX()) {
@@ -565,6 +576,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
     else if (!(flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
         consume = true; // Consume all right click events
 
+        // Drop currently dragged keyframe
         if (this->aktiveDragDrop) {
             float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
             if (x <= this->tlStartPos.GetX()) {
@@ -575,7 +587,6 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             }
 
             ccc->setDropTime(st);
-
             if (!(*ccc)(CallCinematicCamera::CallForDropKeyframe)) return false;
             this->aktiveDragDrop = false;
         }

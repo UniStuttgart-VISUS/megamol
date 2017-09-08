@@ -65,8 +65,6 @@ namespace megamol {
 			* @return 'true' if the module is available, 'false' otherwise.
 			*/
 			static bool IsAvailable(void) {
-                if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
-                    return false;
                 if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
                     return false;
 				return true;
@@ -98,12 +96,12 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            vislib::math::Point<float, 3> bboxCenter; 
-            float        currentViewTime;
-            Keyframe     shownKeyframe;
-            float        maxAnimTime;
-            int          cineWidth;
-            int          cineHeight;
+            float    currentViewTime;
+            Keyframe shownKeyframe;
+            int      cineWidth;
+            int      cineHeight;
+            float    maxAnimTime;
+            vislib::math::Point<float, 3> bboxCenter;
             vislib::graphics::gl::FramebufferObject fbo;
 
             /**********************************************************************

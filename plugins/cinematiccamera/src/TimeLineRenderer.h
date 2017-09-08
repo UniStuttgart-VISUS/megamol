@@ -162,11 +162,11 @@ namespace megamol {
             * functions
             **********************************************************************/
 
-            /** Loading texture of keyframe marker. */
+            /** Loading texture for keyframe marker. */
             bool LoadTexture(vislib::StringA filename);
 
             /** Draw the keyframe marker. */
-            void DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 3> color);
+            void DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 4> color);
 
 
             /**********************************************************************
@@ -186,13 +186,13 @@ namespace megamol {
             /** move time line parameter */
             megamol::core::param::ParamSlot moveTimeLineParam;
 
-            /** move time line parameter */
+            /**  */
             megamol::core::param::ParamSlot rulerModeParam;
 
-            /** time line resolution parameter */
+            /**  */
             megamol::core::param::ParamSlot rulerFixedSegParam;
 
-            /** time line resolution parameter */
+            /**  */
             megamol::core::param::ParamSlot rulerFixedFontParam;
 		};
 

@@ -26,16 +26,16 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
     // initialise color table
     this->colorTable.Clear();
     this->colorTable.AssertCapacity(100);
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.4f, 0.4f, 1.0f)); // COL_SPLINE          = 0,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.7f, 0.7f, 1.0f)); // COL_KEYFRAME        = 1,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.1f, 0.1f, 1.0f)); // COL_KEYFRAME_SELECT = 2,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.1f, 0.1f, 1.0f)); // COL_KEYFRAME_DRAG   = 3,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.3f, 0.8f, 0.8f)); // COL_MANIP_LOOKAT    = 4,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.8f, 0.0f, 0.8f)); // COL_MANIP_UP        = 5,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.8f, 0.1f, 0.0f)); // COL_MANIP_X_AXIS    = 6,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.0f)); // COL_MANIP_Y_AXIS    = 7,
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.1f, 0.8f, 0.0f)); // COL_MANIP_Z_AXIS    = 8
-    this->colorTable.Add(vislib::math::Vector<float, 3>(0.8f, 0.0f, 0.0f)); // COL_ANIM_REPEAT     = 9
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.4f, 0.4f, 1.0f, 1.0f)); // COL_SPLINE          = 0,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.7f, 0.7f, 1.0f, 1.0f)); // COL_KEYFRAME        = 1,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.1f, 0.1f, 1.0f, 1.0f)); // COL_KEYFRAME_SELECT = 2,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.1f, 0.1f, 1.0f, 1.0f)); // COL_KEYFRAME_DRAG   = 3,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.3f, 0.8f, 0.8f, 1.0f)); // COL_MANIP_LOOKAT    = 4,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.8f, 0.0f, 0.8f, 1.0f)); // COL_MANIP_UP        = 5,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.8f, 0.1f, 0.0f, 1.0f)); // COL_MANIP_X_AXIS    = 6,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.8f, 0.8f, 0.0f, 1.0f)); // COL_MANIP_Y_AXIS    = 7,
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.1f, 0.8f, 0.0f, 1.0f)); // COL_MANIP_Z_AXIS    = 8
+    this->colorTable.Add(vislib::math::Vector<float, 4>(0.8f, 0.0f, 0.0f, 1.0f)); // COL_ANIM_REPEAT     = 9
 
 }
 
@@ -53,6 +53,14 @@ CallCinematicCamera::~CallCinematicCamera(void) {
 /*
 * CallCinematicCamera::getColor
 */
-vislib::math::Vector<float, 3> CallCinematicCamera::getColor(CallCinematicCamera::colType  c) {
-    return this->colorTable[(int)c];
+vislib::math::Vector<float, 4> CallCinematicCamera::getColor(CallCinematicCamera::colType  c, float bgColor[4]) {
+
+    vislib::math::Vector<float, 4> outColor = this->colorTable[(int)c];
+    // Relative luminance 
+    float Y    = 0.2126*bgColor[0] + 0.7152*bgColor[1] + 0.0722*bgColor[2];
+    float invY = 1.0f - Y;
+
+
+
+    return outColor;
 }

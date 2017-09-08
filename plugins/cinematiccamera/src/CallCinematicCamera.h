@@ -220,7 +220,7 @@ namespace megamol {
             };
 
             /** */
-            vislib::math::Vector<float, 3> getColor(CallCinematicCamera::colType  c);
+            vislib::math::Vector<float, 4> getColor(CallCinematicCamera::colType  c, float bgColor[4]);
 
 
 		private:
@@ -240,7 +240,7 @@ namespace megamol {
             SmartPtr<graphics::CameraParameters>   cameraParam;
             float                                  maxAnimTime;
             vislib::math::Point<float, 3>          bboxCenter;
-            Array<vislib::math::Vector<float, 3> > colorTable;
+            Array<vislib::math::Vector<float, 4> > colorTable;
 
 		};
 

@@ -58,11 +58,19 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     toggleHelpTextParam(  "03 Toggle help text", "Show/hide help text with key assignments.")
     {
 
+    // init variables
+    this->modelViewProjMatrix.SetIdentity();
+    this->currentManipulator.active = false;
     this->interpolSteps     = 20;
     this->toggleManipulator = false;
     this->maxAnimTime       = 1.0f;
     this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->showHelpText      = false;
+
+    // Constant values (ONLY CHANGE HERE)
+    this->circleRadius      = 0.15f;
+    this->circleSubDiv      = 20;
+    this->lineWidth         = 2.5f;
 
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->slaveRendererSlot);
@@ -79,12 +87,9 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    // init variables
-    this->modelViewProjMatrix.SetIdentity();
-    this->viewport.SetNull();
-
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
+
 }
 
 /*
@@ -99,7 +104,7 @@ CinematicRenderer::~CinematicRenderer(void) {
 */
 
 bool CinematicRenderer::create(void) {
-	// intentionally empty
+
 	return true;
 }
 
@@ -108,6 +113,7 @@ bool CinematicRenderer::create(void) {
 * CinematicRenderer::release
 */
 void CinematicRenderer::release(void) {
+
 	// intentionally empty
 }
 
@@ -196,6 +202,8 @@ bool CinematicRenderer::Render(Call& call) {
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == NULL) return false;
 
+    this->camWorldPos = cr3d->GetCameraParameters()->Position();
+
     // Update parameter
     if (this->stepsParam.IsDirty()) {
         this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
@@ -232,7 +240,7 @@ bool CinematicRenderer::Render(Call& call) {
     *oc = *cr3d;
     oc->SetTime(selectTime);
 
-    // Call original renderer.
+    // Call slave renderer.
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     (*oc)(0);
@@ -248,12 +256,22 @@ bool CinematicRenderer::Render(Call& call) {
     math::ShallowMatrix<GLfloat, 4, math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
     // Compute modelViewProjMatrix matrix
     this-> modelViewProjMatrix = projMatrix * modelViewMatrix;
+
     // Get current viewport
-    this->viewport = cr3d->GetViewport();
+    this->viewportSize = cr3d->GetViewport().GetSize();
+
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
+    // Draw spline and manipulators always in foreground
     glClear(GL_DEPTH_BUFFER_BIT);
 
     // Get pointer to keyframes array
@@ -269,9 +287,9 @@ bool CinematicRenderer::Render(Call& call) {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
 
-        glLineWidth(2.5f);
-        float        circleRadius = 0.15f;
-        unsigned int circleSubDiv = 20;
+        GLfloat tmpLw;
+        glGetFloatv(GL_LINE_WIDTH, &tmpLw);
+        glLineWidth(this->lineWidth);
 
         // Get the selected Keyframe
         Keyframe s = ccc->getSelectedKeyframe();
@@ -287,7 +305,7 @@ bool CinematicRenderer::Render(Call& call) {
         }
         // Draw spline
         math::Point<float, 3> tmpP;
-        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_SPLINE).PeekComponents());
+        glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_SPLINE, bgColor).PeekComponents());
         glBegin(GL_LINE_STRIP);
             for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
                 tmpP = (*interpolKeyframes)[i];
@@ -299,10 +317,10 @@ bool CinematicRenderer::Render(Call& call) {
             // Draw fixed keyframe
             tmpP = (*keyframes)[i].getCamPosition();
             if (tmpP == s.getCamPosition()) {
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT, bgColor));
             }
             else {
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME, bgColor));
             }
         }
 
@@ -312,7 +330,7 @@ bool CinematicRenderer::Render(Call& call) {
         math::Point<float, 3>  sLaP = s.getCamLookAt();
         glBegin(GL_LINES);
             // LookAt vector at keyframe position
-            glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT).PeekComponents());
+            glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT, bgColor).PeekComponents());
             glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
             glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
         glEnd();
@@ -321,11 +339,11 @@ bool CinematicRenderer::Render(Call& call) {
         if (selIndex < 0) {
             glBegin(GL_LINES);
                 // Up vector at camera position
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + sUpV.GetX(), sPosP.GetY() + sUpV.GetY(), sPosP.GetZ() + sUpV.GetZ());
             glEnd();
-            this->renderCircle2D(circleRadius/2.0f, circleSubDiv, camPosP, sPosP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT));
+            this->renderCircle2D(this->circleRadius/2.0f, this->circleSubDiv, camPosP, sPosP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT, bgColor));
         }
         else { //(selIndex >= 0) 
             // Draw up and lookat manipulator as default
@@ -337,60 +355,64 @@ bool CinematicRenderer::Render(Call& call) {
                 laV.Normalise();
                 glBegin(GL_LINES);
                 // Up vector at camera position
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + sUpV.GetX(), sPosP.GetY() + sUpV.GetY(), sPosP.GetZ() + sUpV.GetZ());
 
                 // LookAt
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + laV.GetX(), sPosP.GetY() + laV.GetY(), sPosP.GetZ() + laV.GetZ());
 
                 // lookat x-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS, bgColor).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX() + 1.0f, sLaP.GetY(), sLaP.GetZ());
 
                 // lookat y-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS, bgColor).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX(), sLaP.GetY() + 1.0f, sLaP.GetZ());
 
                 // lookat z-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS, bgColor).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ() + 1.0f);
                 glEnd();
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + sUpV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + laV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sPosP + sUpV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sPosP + laV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS, bgColor));
             }
             else { // Draw axis for position manipulation
                 glBegin(GL_LINES);
                 // keyframe pos x-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + 1.0f, sPosP.GetY(), sPosP.GetZ());
                 // keyframe pos y-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX(), sPosP.GetY() + 1.0f, sPosP.GetZ());
 
                 // keyframe  pos z-axis
-                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS).PeekComponents());
+                glColor4fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS, bgColor).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ() + 1.0f);
                 glEnd();
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS));
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS, bgColor));
+                this->renderCircle2D(this->circleRadius, this->circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS, bgColor));
             }
             ///////////////////////////////////////////
             //// ADD CODE FOR NEW MAIPULATOR HERE /////
             ///////////////////////////////////////////
         }
+
+        // Reset line width
+        glLineWidth(tmpLw);
+
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
     }
@@ -400,22 +422,18 @@ bool CinematicRenderer::Render(Call& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0.0f, (float)this->viewport.GetSize().GetWidth(), 0.0f, (float)this->viewport.GetSize().GetHeight(), -1.0, 1.0);
+    glOrtho(0.0f, (float)this->viewportSize.GetWidth(), 0.0f, (float)this->viewportSize.GetHeight(), -1.0, 1.0);
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    // Get the diagram color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-    glColor3fv(fgColor);
-    float fontSize = this->viewport.GetSize().GetWidth()*0.025f; // 2.5% of viewport width
+
+    glColor4fv(fgColor);
+    float fontSize = this->viewportSize.GetWidth()*0.025f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
     float strWidth = this->theFont.LineWidth(fontSize, "------------------------------------------");
     if (this->showHelpText) {
@@ -432,7 +450,9 @@ bool CinematicRenderer::Render(Call& call) {
     else {
         tmpStr += "[h] Show help text.\n";
     }
-    this->theFont.DrawString(10.0f, this->viewport.GetSize().GetHeight() - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(10.0f, this->viewportSize.GetHeight() - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -456,7 +476,6 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
-
     // on leftclick
     if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
 
@@ -472,7 +491,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             // Current camera position
             math::Point<float, 3>  cPosP = (*keyframes)[i].getCamPosition();
             // Check if position of current keyframe is hit by mouse
-            if (this->processPointHit(x, y, cPosP, cPosP, manipulatorType::NONE)) {
+            if (this->processPointHit(x, y, cPosP, cPosP, manipulatorType::NONE, this->camWorldPos, this->circleRadius)) {
                 ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
                 if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
                 return true; // no further checking has to be done (?)
@@ -497,19 +516,19 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             laV.Normalise();
             math::Point<float, 3> laManiP = posP + laV;
 
-            if (this->processPointHit(x, y, posP, uManiP, manipulatorType::CAM_UP)) { 
+            if (this->processPointHit(x, y, posP, uManiP, manipulatorType::CAM_UP, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, posP, laManiP, manipulatorType::CAM_POS)) {
+            else if (this->processPointHit(x, y, posP, laManiP, manipulatorType::CAM_POS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, laP, xLaManiP, manipulatorType::LOOKAT_X_AXIS)) {
+            else if (this->processPointHit(x, y, laP, xLaManiP, manipulatorType::LOOKAT_X_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, laP, yLaManiP, manipulatorType::LOOKAT_Y_AXIS)) {
+            else if (this->processPointHit(x, y, laP, yLaManiP, manipulatorType::LOOKAT_Y_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, laP, zLaManiP, manipulatorType::LOOKAT_Z_AXIS)) {
+            else if (this->processPointHit(x, y, laP, zLaManiP, manipulatorType::LOOKAT_Z_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
         }
@@ -518,13 +537,13 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             math::Point<float, 3> xCamManiP = math::Point<float, 3>(posP.GetX() + 1.0f, posP.GetY(), posP.GetZ());
             math::Point<float, 3> yCamManiP = math::Point<float, 3>(posP.GetX(), posP.GetY() + 1.0f, posP.GetZ());
             math::Point<float, 3> zCamManiP = math::Point<float, 3>(posP.GetX(), posP.GetY(), posP.GetZ() + 1.0f);
-            if (this->processPointHit(x, y, posP, xCamManiP, manipulatorType::CAM_X_AXIS)) {
+            if (this->processPointHit(x, y, posP, xCamManiP, manipulatorType::CAM_X_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, posP, yCamManiP, manipulatorType::CAM_Y_AXIS)) {
+            else if (this->processPointHit(x, y, posP, yCamManiP, manipulatorType::CAM_Y_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
-            else if (this->processPointHit(x, y, posP, zCamManiP, manipulatorType::CAM_Z_AXIS)) {
+            else if (this->processPointHit(x, y, posP, zCamManiP, manipulatorType::CAM_Z_AXIS, this->camWorldPos, this->circleRadius)) {
                 consume = true;
             }
         }
@@ -577,61 +596,31 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             }
             else if (this->currentManipulator.type == manipulatorType::CAM_UP) {
 
-                // Get updated screen space position of currently selected and manipulated keyframe
-                // World space position of keyframe
-                math::Vector<float, 4> wsPosV = math::Vector<float, 4>(posP.GetX(), posP.GetY(), posP.GetZ(), 1.0f);
-                // Screen space position
-                math::Vector<float, 4> kfSSPosV = this->modelViewProjMatrix * wsPosV;
-                // Division by 'w'
-                kfSSPosV = kfSSPosV / kfSSPosV.GetW();
-                // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
-                math::Vector<float, 3> kfSSVec;
-                kfSSVec.SetX((kfSSPosV.GetX() + 1.0f) / 2.0f * this->viewport.GetSize().GetWidth());
-                kfSSVec.SetY(math::Abs(kfSSPosV.GetY() - 1.0f) / 2.0f * this->viewport.GetSize().GetHeight()); // flip y-axis
-                kfSSVec.SetZ(0.0f);
-
-                // Get updated screen space position of the up vector of the currently selected and manipulated keyframe
-                // World space position of up vector
-                wsPosV = math::Vector<float, 4>(posP.GetX() + upV.GetX(), posP.GetY() + upV.GetY(), posP.GetZ() + upV.GetZ(), 1.0f);
-                // Screen space position
-                math::Vector<float, 4> upSSPosV = this->modelViewProjMatrix * wsPosV;
-                // Division by 'w'
-                upSSPosV = upSSPosV / upSSPosV.GetW();
-                // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
-                math::Vector<float, 3> upSSVec;
-                upSSVec.SetX((upSSPosV.GetX() + 1.0f) / 2.0f * this->viewport.GetSize().GetWidth());
-                upSSVec.SetY(math::Abs(upSSPosV.GetY() - 1.0f) / 2.0f * this->viewport.GetSize().GetHeight()); // flip y-axis
-                upSSVec.SetZ(0.0f);
-
-                math::Vector<float, 3> maniSSVec = upSSVec - kfSSVec;
-
                 // Define rotation direction depending on camera position and keyframe position
-                view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-                if (oc == NULL) return false;
-                math::Point<float, 3>  worldCamPosP  = oc->GetCameraParameters()->Position();
-                math::Vector<float, 3> worldCamPosV  = math::Vector<float, 3>(worldCamPosP.GetX(), worldCamPosP.GetY(), worldCamPosP.GetZ());
+                math::Vector<float, 3> worldCamPosV = math::Vector<float, 3>(this->camWorldPos.GetX(), this->camWorldPos.GetY(), this->camWorldPos.GetZ());
                 bool                   cwRot    = ((worldCamPosV - laV).Norm() > (worldCamPosV - posV).Norm());
                 math::Vector<float, 3> ssUpVec = math::Vector<float, 3>(0.0f, 0.0f, 1.0f);
                 if (!cwRot) {
                     ssUpVec.SetZ(-1.0f);
                 }
-                math::Vector<float, 3> rightVec = maniSSVec.Cross(ssUpVec);
 
-                math::Vector<float, 3> oldMouse   = math::Vector<float, 3>(x, y, 0.0f) - this->currentManipulator.ssKeyframePos;
-                math::Vector<float, 3> newMouse   = this->currentManipulator.lastMouse - this->currentManipulator.ssKeyframePos;
-                math::Vector<float, 3> deltaMouse = newMouse - oldMouse;
+                math::Vector<float, 3> ssManiVec  = this->currentManipulator.lastMouse - this->currentManipulator.ssKeyframePos;
+                ssManiVec.Normalise();
+                math::Vector<float, 3> ssRightVec = ssManiVec.Cross(ssUpVec);
+                math::Vector<float, 3> deltaMouse = math::Vector<float, 3>(x, y, 0.0f) - this->currentManipulator.lastMouse;
 
                 sensitivity /= 2.0f;
-                lineDiff = (newMouse - oldMouse).Norm() * sensitivity;
-                if (rightVec.Dot(maniSSVec + deltaMouse) < 0.0f) {
+                lineDiff = math::Abs(deltaMouse.Norm()) * sensitivity;
+                if (ssRightVec.Dot(ssManiVec + deltaMouse) < 0.0f) {
                     lineDiff *= -1.0f;
                 }
 
                 /* rotate up vector aroung lookat vector with the "Rodrigues' rotation formula" */
-                float                  t = lineDiff;    // => theta angle                  
-                math::Vector<float, 3> k = laV;         // => rotation axis = camera lookat
-                math::Vector<float, 3> v = upV;         // => vector to rotate       
+                float                  t = lineDiff;       // => theta angle                  
+                math::Vector<float, 3> k = (posV - laV);   // => rotation axis = camera lookat
+                math::Vector<float, 3> v = upV;            // => vector to rotate       
                 upV = v * cos(t) + k.Cross(v) * sin(t) + k * (k.Dot(v)) * (1.0f - cos(t));
+
                 ccc->setSelectedKeyframeUp(upV);
             }
             else if (this->currentManipulator.type == manipulatorType::CAM_POS) {
@@ -672,10 +661,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
 /*
 * CinematicRenderer::checkPointHit
 */
-bool CinematicRenderer::processPointHit(float x, float y, vislib::math::Point<float, 3> camPos, vislib::math::Point<float, 3> manipPos, manipulatorType t) {
-
-    // (Rectangular) Offset around point within point is hit
-    float selectOffset = 15.0f;
+bool CinematicRenderer::processPointHit(float x, float y, vislib::math::Point<float, 3> kfCamPos, vislib::math::Point<float, 3> manipPos, manipulatorType t, vislib::math::Point<GLfloat, 3> camPos, float radius) {
 
     // Transform manipulator position from world space to screen space
     // World space position
@@ -685,11 +671,30 @@ bool CinematicRenderer::processPointHit(float x, float y, vislib::math::Point<fl
     // Division by 'w'
     manSSPosV = manSSPosV / manSSPosV.GetW();
     // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
-    manSSPosV.SetX((manSSPosV.GetX() + 1.0f) / 2.0f * this->viewport.GetSize().GetWidth());
-    manSSPosV.SetY(math::Abs(manSSPosV.GetY() - 1.0f) / 2.0f * this->viewport.GetSize().GetHeight()); // flip y-axis
+    manSSPosV.SetX((manSSPosV.GetX() + 1.0f) / 2.0f * this->viewportSize.GetWidth());
+    manSSPosV.SetY(math::Abs(manSSPosV.GetY() - 1.0f) / 2.0f * this->viewportSize.GetHeight()); // flip y-axis
 
     // Clear previous manipulator selection
     this->currentManipulator.active = false;
+
+    // Offset around point within point is hit
+    vislib::math::Vector<float, 3> normalV = vislib::math::Vector<float, 3>(camPos.GetX() - manipPos.GetX(), camPos.GetY() - manipPos.GetY(), camPos.GetZ() - manipPos.GetZ());
+    normalV.Normalise();
+    // Get arbitary vector vertical to normalVec
+    vislib::math::Vector<float, 3> rotV = vislib::math::Vector<float, 3>(normalV.GetZ(), 0.0f, -(normalV.GetX()));
+    rotV.ScaleToLength(radius);
+    // World space position
+    wsPosV = math::Vector<float, 4>(manipPos.GetX() + rotV.GetX(), manipPos.GetY() + rotV.GetY(), manipPos.GetZ() + rotV.GetZ(), 1.0f);
+    // Screen space position
+    math::Vector<float, 4> rotSSPosV = this->modelViewProjMatrix * wsPosV;
+    // Division by 'w'
+    rotSSPosV = rotSSPosV / rotSSPosV.GetW();
+    // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
+    rotSSPosV.SetX((rotSSPosV.GetX() + 1.0f) / 2.0f * this->viewportSize.GetWidth());
+    rotSSPosV.SetY(math::Abs(rotSSPosV.GetY() - 1.0f) / 2.0f * this->viewportSize.GetHeight()); // flip y-axis
+
+    float selectOffset = (manSSPosV - rotSSPosV).Norm();
+
 
     // Check if mouse position lies within offset quad around manipulator position
     if (((manSSPosV.GetX() < x + selectOffset) && (manSSPosV.GetX() > x - selectOffset)) &&
@@ -697,14 +702,14 @@ bool CinematicRenderer::processPointHit(float x, float y, vislib::math::Point<fl
 
         // Transform camera position from world space to screen space
         // World space position
-        wsPosV = math::Vector<float, 4>(camPos.GetX(), camPos.GetY(), camPos.GetZ(), 1.0f);
+        wsPosV = math::Vector<float, 4>(kfCamPos.GetX(), kfCamPos.GetY(), kfCamPos.GetZ(), 1.0f);
         // Screen space position
         math::Vector<float, 4> kfSSPosV = this->modelViewProjMatrix * wsPosV;
         // Division by 'w'
         kfSSPosV = kfSSPosV / kfSSPosV.GetW();
         // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
-        kfSSPosV.SetX((kfSSPosV.GetX() + 1.0f) / 2.0f * this->viewport.GetSize().GetWidth());
-        kfSSPosV.SetY(math::Abs(kfSSPosV.GetY() - 1.0f) / 2.0f * this->viewport.GetSize().GetHeight()); // flip y-axis
+        kfSSPosV.SetX((kfSSPosV.GetX() + 1.0f) / 2.0f * this->viewportSize.GetWidth());
+        kfSSPosV.SetY(math::Abs(kfSSPosV.GetY() - 1.0f) / 2.0f * this->viewportSize.GetHeight()); // flip y-axis
 
         // Set current manipulator values
         if (t != manipulatorType::NONE) { // camera position marker is no manipulator
@@ -723,7 +728,7 @@ bool CinematicRenderer::processPointHit(float x, float y, vislib::math::Point<fl
 /*
 * CinematicRenderer::renderCircle2D
 */
-void CinematicRenderer::renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<float, 3> camPos, vislib::math::Point<float, 3> centerPos, vislib::math::Vector<float, 3> col) {
+void CinematicRenderer::renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<float, 3> camPos, vislib::math::Point<float, 3> centerPos, vislib::math::Vector<float, 4> col) {
 
     vislib::math::Vector<float, 3> normalV = vislib::math::Vector<float, 3>(centerPos.GetX() - camPos.GetX(), centerPos.GetY() - camPos.GetY(), centerPos.GetZ() - camPos.GetZ());
     normalV.Normalise();
@@ -740,7 +745,7 @@ void CinematicRenderer::renderCircle2D(float radius, unsigned int subdiv, vislib
     math::Vector<float, 3> k = normalV;                 // rotation axis = camera lookat
     float                  t = 2.0f*(float)(CC_PI) / (float)subdiv; // theta angle for rotation   
 
-    glColor3fv(col.PeekComponents());
+    glColor4fv(col.PeekComponents());
     glBegin(GL_TRIANGLE_FAN);
         glVertex3f(0.0f, 0.0f, 0.0f);
         for (unsigned int i = 0; i <= subdiv; i++) {

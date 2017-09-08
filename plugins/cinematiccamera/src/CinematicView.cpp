@@ -64,7 +64,9 @@ CinematicView::CinematicView(void) : View3D(),
     this->MakeSlotAvailable(&this->cinematicWidthParam);
 
     // TEMPORARY HACK #########################################################
-    // Disable parameter slot -> 'TAB'-key is needed in cinematic renderer to enable mouse selection
+    // Disable following parameter slot for this view
+    // -> 'TAB'-key is needed in view3D of cinematic renderer to enable 
+    //    mouse selection for manipulatiors
     this->enableMouseSelectionSlot.MakeUnavailable();
 }
 
@@ -74,8 +76,8 @@ CinematicView::CinematicView(void) : View3D(),
 */
 CinematicView::~CinematicView(void) {
 
-    //this->fbo.Disable();
-    //this->fbo.Release();
+    this->fbo.Disable();
+    this->fbo.Release();
 }
 
 
@@ -116,7 +118,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return;
     }
 
-    // Time is set by running ANIMATION from view (e.g. anim::play parameter)
+    // If time is set by running ANIMATION from view (e.g. anim::play parameter)
     float animTime    = static_cast<float>(context.Time);
     float repeat      = floorf(this->currentViewTime / this->maxAnimTime) * this->maxAnimTime;
     if (this->currentViewTime != (animTime + repeat)) {
@@ -141,7 +143,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         // Updated call data 
         if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
     }
-    else { // Time is set by SELECTED KEYFRAME
+    // If time is set by SELECTED KEYFRAME
+    else { 
         // wrap time if total time exceeds animation time of data set
         float selectTime     = ccc->getSelectedKeyframe().getTime();
         float selectAnimTime = selectTime - (floorf(selectTime / this->maxAnimTime) * this->maxAnimTime);
@@ -153,9 +156,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Set camera parameters of selected keyframe for this view
     // but ONLY if selected keyframe differs to last locally stored and shown keyframe
-    Keyframe s = ccc->getSelectedKeyframe(); // maybe updated
+    Keyframe s = ccc->getSelectedKeyframe(); // maybe updated from obove
     vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
-    // Every camera parameter has be compared separatly because euqality of cameras only checks pointer equality
+    // Every camera parameter has be compared separatly because euqality of cameras only checks for pointer equality
     if ((this->shownKeyframe.getTime()             != s.getTime())   ||
         (this->shownKeyframe.getCamPosition()      != p->Position()) ||
         (this->shownKeyframe.getCamLookAt()        != p->LookAt())   ||
@@ -176,8 +179,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->shownKeyframe.setCamera(c);
     }
 
-    // Propagate camera parameter to keyframe keeper
-    ccc->setCameraParameter(this->cam.Parameters());
+    // Propagate camera parameters to keyframe keeper (not the following sky box camera params!)
+    ccc->setCameraParameter(this->camParams);
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
     // Get camera parameters
@@ -215,10 +218,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Viewport stuff ---------------------------------------------------------
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int  vpWidth   = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
-    int  vpHeight   = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
+    int   vpWidth   = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
+    int   vpHeight  = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
     float vpRatio   = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    // Calculate fbo width and height
     float fboWidth  = vpWidth;
     float fboHeight = vpHeight;
     if (cineRatio > vpRatio) {
@@ -229,7 +233,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Render to texture ------------------------------------------------------------
-    // Suppress TRACE output of fbo.Enable() and >fbo.Create()
+    // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
@@ -289,17 +293,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glViewport(vp[0], vp[1], vp[2], vp[3]);
     glOrtho(0.0f, static_cast<float>(vpWidth), 0.0f, static_cast<float>(vpHeight), -1.0, 1.0);
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
 
     // Draw texture
-    float wHalfVp    = static_cast<float>(vpWidth) / 2.0f;
-    float hHalfVp    = static_cast<float>(vpHeight) / 2.0f;
-    float wHalfFbo   = static_cast<float>(fboWidth) / 2.0f;
-    float hHalfFbo   = static_cast<float>(fboHeight) / 2.0f;
+    float right  = static_cast<float>(vpWidth + fboWidth) / 2.0f;
+    float left   = static_cast<float>(vpWidth - fboWidth) / 2.0f;
+    float bottom = static_cast<float>(vpHeight - fboHeight) / 2.0f;
+    float up     = static_cast<float>(vpHeight + fboHeight) / 2.0f;
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     this->fbo.BindColourTexture();
@@ -309,22 +312,24 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(wHalfVp - wHalfFbo, hHalfVp - hHalfFbo);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(wHalfVp + wHalfFbo, hHalfVp - hHalfFbo);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(wHalfVp + wHalfFbo, hHalfVp + hHalfFbo);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(wHalfVp - wHalfFbo, hHalfVp + hHalfFbo);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(left,  bottom);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(right, bottom);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(right, up);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(left,  up);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
-    // Draw letter box quads in fgColor
     // Get the foreground color (inverse background color)
+    // (set in Base::Render(context) )
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
     for (unsigned int i = 0; i < 4; i++) {
         fgColor[i] -= bgColor[i];
     }
+
+    // Draw letter box quads in fgColor
     int x = 0;
     int y = 0;
     if (fboWidth < vpWidth) {
@@ -335,7 +340,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         x = vpWidth;
         y = (static_cast<int>(static_cast<float>(vpHeight - fboHeight) / 2.0f));
     }
-    glColor3fv(fgColor);
+    glColor4fv(fgColor);
     glBegin(GL_QUADS);
         glVertex2i(0, 0);
         glVertex2i(x, 0);
