@@ -555,7 +555,7 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
         retval = vislib::sys::Log::LEVEL_NONE;
     } else if (iequals(attr, "zero")) {
         retval = vislib::sys::Log::LEVEL_NONE;
-    } else if (iequals(attr, "zero")) {
+    } else if (iequals(attr, "all")) {
         retval = vislib::sys::Log::LEVEL_ALL;
     } else if (iequals(attr, "*")) {
         retval = vislib::sys::Log::LEVEL_ALL;
