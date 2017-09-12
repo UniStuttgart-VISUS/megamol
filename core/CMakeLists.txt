@@ -27,18 +27,14 @@ if(BUILD_CORE)
   include(ExternalProject)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external)
-  set(ZMQ_VER "4-2-2")
-  string(REPLACE "-" "." ZMQ_TAG ${ZMQ_VER})
+  set(ZMQ_VER "4_2_2")
+  string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
-  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-    set(ZMQ_LIBNAME "libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}")
-  else()
-    set(ZMQ_LIBNAME "libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}")
-  endif()
+  set(ZMQ_LIBNAME debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
   ExternalProject_Add(extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
   )
   message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
 
