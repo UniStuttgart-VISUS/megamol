@@ -46,6 +46,7 @@ add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 # add directory structure for visual studio
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
 ###############################

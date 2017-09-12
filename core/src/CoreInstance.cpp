@@ -119,7 +119,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         factories::AbstractAssemblyInstance(),
         preInit(new PreInit), config(),
-        shaderSourceFactory(config), log(),
+        shaderSourceFactory(config), log(), lua(nullptr),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
@@ -180,8 +180,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
 //#endif
 
-
-
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 }
 
@@ -225,6 +223,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // finally plugins
     delete this->plugins;
     this->plugins = nullptr;
+
+    delete this->lua;
+    this->lua = nullptr;
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
@@ -292,6 +293,16 @@ void megamol::core::CoreInstance::Initialise(void) {
         }
     }
     vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
+
+    this->lua = new LuaState(this);
+    if (!this->lua->StateOk()) {
+        throw vislib::IllegalStateException(
+            "Cannot initalise Lua", __FILE__, __LINE__);
+    }
+    lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
+        "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
+        "' mode on ', mmGetMachineName(), '.')");
+    //lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
     if (this->preInit->IsConfigFileSet()) {
@@ -548,17 +559,6 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
                 }
                 this->preInit->SetConfigFile(
                     utility::APIValueUtil::AsStringW(type, value));
-                break;
-            case MMC_INITVAL_CFGSET:
-                if (!utility::APIValueUtil::IsStringType(type)) {
-                    return MMC_ERR_TYPE;
-                }
-                this->config.ActivateConfigSet(
-                    utility::APIValueUtil::AsStringW(type, value));
-                this->log.WriteMsg(250,
-                    "Configuration Set \"%s\" added to be activated\n",
-                    utility::APIValueUtil::AsStringA(type, value)
-                    .PeekBuffer());
                 break;
             case MMC_INITVAL_LOGFILE:
                 if (!utility::APIValueUtil::IsStringType(type)) {
@@ -2103,7 +2103,6 @@ void megamol::core::CoreInstance::addProject(
         megamol::core::utility::xml::XmlReader& reader) {
     using vislib::sys::Log;
     utility::ProjectParser parser(this);
-    parser.SetConfigSetProvider(&this->config);
     if (parser.Parse(reader)) {
         // success, add project elements
         std::shared_ptr<ViewDescription> vd;

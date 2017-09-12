@@ -35,9 +35,6 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
         _T("'True' or 'False' to activate or deactivate the command line startup echo."))),
     configFile(0, _T("configfile"), _T("Specifies the configuration file to load."), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("path"), _T("The configuration file to load."))),
-    configSet(_T('c'), _T("config"), _T("Specifies a configuration set to be activated. You can activate multiple configuration sets."), 
-        ParserOption::FLAG_NULL, ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), 
-        _T("The name of the configuration set to be activated."))),
     configValue(_T('o'), _T("configval"), _T("Overrides a value (potentially set) in the config file."), ParserOption::FLAG_NULL,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("cfgvar"), _T("the name of the config value"))
         ->Add(ParserOption::STRING_VALUE, _T("cfgval"), _T("the value to set"))),
@@ -92,7 +89,6 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->cmdLineFile);
 
     this->parser.AddOption(&this->configFile);
-    this->parser.AddOption(&this->configSet);
     this->parser.AddOption(&this->configValue);
 
     this->parser.AddOption(&this->logFile);
@@ -235,27 +231,6 @@ bool megamol::console::utility::CmdLineParser::EchoCmdLine(void) const {
     } catch(...) {
     }
     return cmdLineEchoDef;
-}
-
-
-/*
- * megamol::console::utility::CmdLineParser::ConfigSets
- */
-vislib::TMultiSz
-megamol::console::utility::CmdLineParser::ConfigSets(void) const {
-    vislib::TMultiSz retval;
-    ParserArgument *arg = this->configSet.GetFirstOccurrence();
-    while (arg != NULL) {
-        retval.Append(arg->GetValueString());
-        while (true) {
-            arg = this->parser.NextArgument(arg);
-            if (arg == NULL) break;
-            if ((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
-                && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) continue;
-            if (*arg->GetOption() == this->configSet) break;
-        }
-    }
-    return retval;
 }
 
 

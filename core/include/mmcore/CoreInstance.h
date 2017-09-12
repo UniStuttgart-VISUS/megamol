@@ -48,6 +48,7 @@
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/AbstractAssemblyInstance.h"
+#include "mmcore/LuaState.h"
 
 #include <memory>
 
@@ -941,6 +942,9 @@ namespace plugins {
 
         /** The log object */
         vislib::sys::Log log;
+
+        /** The Lua state */
+        megamol::core::LuaState *lua;
 
         /** The manager of the builtin view descriptions */
         megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;

@@ -20,7 +20,7 @@
 #include "vislib/Pair.h"
 #include "vislib/String.h"
 #include "vislib/SingleLinkedList.h"
-
+#include "mmcore/LuaState.h"
 
 namespace megamol {
 namespace core {
@@ -39,7 +39,7 @@ namespace xml {
     /**
      * Class hold the data of the MegaMol xml configuration file
      */
-    class MEGAMOLCORE_API Configuration : public xml::ConditionalParser::ConfigSetProvider {
+    class MEGAMOLCORE_API Configuration {
     public:
 
         /** only Entry may create Configuration objects */
@@ -47,6 +47,9 @@ namespace xml {
 
         /** only ConfigurationXMLParser may set values */
         friend class megamol::core::utility::xml::ConfigurationParser;
+
+        /** LuaState is the new configuration, so it may set values */
+        friend class megamol::core::LuaState;
 
 
         /**
@@ -211,23 +214,6 @@ namespace xml {
 			this->setConfigValue(name, val);
 			return true;
 		}
-
-        /**
-         * Activates the configuration set specified. This must be performed
-         * before the configuration file is parsed!
-         *
-         * @param set The configuration set to be activated.
-         */
-        void ActivateConfigSet(const vislib::StringW& set);
-
-        /**
-         * Answer wether or not the given config set is active.
-         *
-         * @param set The name of the config set to test.
-         *
-         * @return 'true' if the given config set is active, 'false' otherwise.
-         */
-        virtual bool IsConfigSetActive(const vislib::StringW& set) const;
 
         /**
          * Answers wether a configuration value with the specified name is set.
@@ -701,9 +687,6 @@ namespace xml {
          * is only valid under certain conditions.
          */
         vislib::sys::Log *instanceLog;
-
-        /** The list of active config sets */
-        vislib::SingleLinkedList<vislib::StringW> configSets;
 
         /** map of generic configuration values */
         vislib::Map<ConfigValueName, vislib::StringW> configValues;
