@@ -16,7 +16,50 @@ if(BUILD_CORE)
 
   # include lua sources
   add_subdirectory(lua)
+
+  if (MSVC_IDE)
+    set (MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
+  else ()
+    set (MSVC_TOOLSET "")
+  endif ()
+
+  # include ZMQ
+  include(ExternalProject)
+
+  set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external)
+  set(ZMQ_VER "4-2-2")
+  string(REPLACE "-" "." ZMQ_TAG ${ZMQ_VER})
+  string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
+  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    set(ZMQ_LIBNAME "libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}")
+  else()
+    set(ZMQ_LIBNAME "libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}")
+  endif()
+  ExternalProject_Add(extlibzmq
+    GIT_REPOSITORY https://github.com/zeromq/libzmq.git
+    GIT_TAG ${ZMQ_TAG}
+    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+  )
+  message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
+
+  # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
+  if(UNIX)
+    set(ZMQCPP_INSTALL "cp")
+    set(ZMQCPP_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+  else()
+    set(ZMQCPP_INSTALL_CMD "powershell")
+    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+  endif()
   
+  ExternalProject_Add(extlibcppzmq
+    GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
+    GIT_TAG ${ZMQ_TAG}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
+  )
+
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -50,8 +93,9 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
-  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIBNAME})
+  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include)
+  link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
   if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
