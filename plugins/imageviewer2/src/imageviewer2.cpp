@@ -12,7 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "imageviewer2\ImageViewer.h"
+#include "imageviewer2/ImageViewer.h"
 
 
 /* anonymous namespace hides this type from any other object files */

@@ -11,6 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   if(UNIX)
     find_package(JPEG REQUIRED)
+    add_definitions(-DXMD_H) # prevents typedef conflict
   endif()
 
   set(LIBS vislib core glload ${JPEG_LIBRARIES})

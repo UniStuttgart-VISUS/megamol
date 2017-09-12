@@ -27,12 +27,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
    
-  if(UNIX)
-    list(REMOVE_ITEM source_files
-      "src/ErosionField.cpp"
-      )
-  endif()
-
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
