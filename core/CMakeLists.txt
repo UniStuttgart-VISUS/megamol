@@ -52,6 +52,7 @@ if(BUILD_CORE)
   endif()
   
   ExternalProject_Add(extlibcppzmq
+    DEPENDS extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
     GIT_TAG ${ZMQ_TAG}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
