@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER imageviewer2 EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer2 plugin" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer2 plugin" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(imageviewer2)
