@@ -150,8 +150,6 @@ namespace megamol {
             bool CallForDragKeyframe(core::Call& c); 
             /** Callback for dropping selected keyframe */
             bool CallForDropKeyframe(core::Call& c);
-            /** Callback for updating selected keyframe with new given camera parameters */
-            bool CallForManipulateSelectedKeyframe(core::Call& c);
 
             /**********************************************************************
             * parameters

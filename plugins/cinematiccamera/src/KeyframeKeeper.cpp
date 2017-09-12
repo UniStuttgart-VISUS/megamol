@@ -81,9 +81,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
         CallCinematicCamera::FunctionName(CallCinematicCamera::CallForDropKeyframe), &KeyframeKeeper::CallForDropKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForManipulateSelectedKeyframe), &KeyframeKeeper::CallForManipulateSelectedKeyframe);
-
 	this->MakeSlotAvailable(&this->cinematicCallSlot);
 
 
@@ -236,29 +233,11 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     else {
         this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
     }
-    this->updateEditParameters(this->selectedKeyframe);
 
-	return true;
-}
-
-
-/*
-* KeyframeKeeper::CallForManipulateSelectedKeyframe
-*/
-bool KeyframeKeeper::CallForManipulateSelectedKeyframe(core::Call& c) {
-
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
-
-    // Get keyframe at new time
-    Keyframe s = ccc->getSelectedKeyframe();
-    this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
-
-    // Apply camera changes to existing keyframe
+    // Apply changes to existing keyframe
     int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
     if (selIndex >= 0) {
-        this->selectedKeyframe = s;
-        if (this->replaceKeyframe(s)) {
+        if (this->replaceKeyframe(this->selectedKeyframe)) {
             this->refreshInterpolCamPos(this->interpolSteps);
             if (this->sameSpeed) {
                 this->setSameSpeed();
@@ -267,7 +246,7 @@ bool KeyframeKeeper::CallForManipulateSelectedKeyframe(core::Call& c) {
     }
     this->updateEditParameters(this->selectedKeyframe);
 
-    return true;
+	return true;
 }
 
 

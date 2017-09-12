@@ -32,6 +32,8 @@
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
 
+#include "Manipulator3D.h"
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -140,53 +142,6 @@ namespace megamol {
 
 		private:
 
-            // enumeration of manipulator types
-            enum manipulatorType {
-                NONE          = 0,
-                CAM_X_AXIS    = 1,
-                CAM_Y_AXIS    = 2,
-                CAM_Z_AXIS    = 3,
-                CAM_POS       = 4,
-                CAM_UP        = 5,
-                LOOKAT_X_AXIS = 6,
-                LOOKAT_Y_AXIS = 7,
-                LOOKAT_Z_AXIS = 8
-            };
-
-
-            /**********************************************************************
-            * functions
-            **********************************************************************/
-
-            /**
-            * Check if mouse position hits point (as vector) in world space 
-            * coordinates within some offset.
-            *
-            * @param x 
-            * @param y
-            * @param kfCamPos
-            * @param manipPos
-            * @param t
-            * @param camPos
-            * @param radius
-            *
-            * @return True if point is hit.
-            */
-            bool processPointHit(float x, float y, vislib::math::Point<GLfloat, 3> kfCamPos, vislib::math::Point<GLfloat, 3> manipPos, manipulatorType t, 
-                                 vislib::math::Point<GLfloat, 3> camPos, float radius);
-
-            /** Render 2D circle facing to the camera position 
-            *
-            * @param radius
-            * @param subdiv
-            * @param camPos
-            * @param centerPos
-            * @param col
-            *
-            */
-            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos, 
-                                vislib::math::Vector<float, 4> col);
-
             /**********************************************************************
             * variables
             **********************************************************************/
@@ -197,27 +152,12 @@ namespace megamol {
 #else
             vislib::graphics::gl::OutlineFont theFont;
 #endif
-            // ...
-            struct manipulator {
-                bool                           active;
-                manipulatorType                type;
-                vislib::math::Vector<float, 3> lastMouse;
-                vislib::math::Vector<float, 3> ssKeyframePos;
-                vislib::math::Vector<float, 3> ssManipulatorPos;
-            };
-
-            vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-            vislib::math::Dimension<int, 2>  viewportSize;
             unsigned int                     interpolSteps;
-            bool                             toggleManipulator;
-            manipulator                      currentManipulator;
             float                            maxAnimTime;
             vislib::math::Point<float, 3>    bboxCenter;
+            bool                             toggleManipulator;
             bool                             showHelpText;
-            vislib::math::Point<float, 3>    camWorldPos;
-            float                            circleRadius;
-            unsigned int                     circleSubDiv;
-            float                            lineWidth;
+            Manipulator3D                    manipulator;
 
             /**********************************************************************
             * callback stuff

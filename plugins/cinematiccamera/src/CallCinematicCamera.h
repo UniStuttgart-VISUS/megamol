@@ -44,7 +44,6 @@ namespace megamol {
 			static const unsigned int CallForSetCameraForKeyframe       = 4;
             static const unsigned int CallForDragKeyframe               = 5;
             static const unsigned int CallForDropKeyframe               = 6;
-            static const unsigned int CallForManipulateSelectedKeyframe = 7;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -70,7 +69,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 8;
+				return 7;
 			}
 
 			/**
@@ -89,10 +88,8 @@ namespace megamol {
 					case CallForSetCameraForKeyframe:       return "CallForSetCameraForKeyframe";
                     case CallForDragKeyframe:               return "CallForDragKeyframe";
                     case CallForDropKeyframe:               return "CallForDropKeyframe";
-                    case CallForManipulateSelectedKeyframe: return "CallForManipulateSelectedKeyframe";
 					default: return "";
 				}
-				
 			}
 
 			/** Ctor */
@@ -128,21 +125,12 @@ namespace megamol {
             inline void setSelectedKeyframeTime(float t) { 
                 this->selectedKeyframe.setTime(t);
             }
-            inline void setSelectedKeyframePosition(vislib::math::Point<float, 3> p) {
-                this->selectedKeyframe.setCameraPosition(p);
-            }
-            inline void setSelectedKeyframeUp(vislib::math::Vector<float, 3> u) {
-                this->selectedKeyframe.setCameraUp(u);
-            }
-            inline void setSelectedKeyframeLookAt(vislib::math::Point<float, 3> u) {
-                this->selectedKeyframe.setCameraLookAt(u);
+            inline void setSelectedKeyframe(Keyframe k) {
+                this->selectedKeyframe = k;
             }
 
             inline Keyframe getSelectedKeyframe() {
                 return this->selectedKeyframe;
-            }
-            inline void setSelectedKeyframe(Keyframe k) {
-                this->selectedKeyframe = k;
             }
 
 
@@ -202,27 +190,6 @@ namespace megamol {
                 return this->bboxCenter;
             }
 
-            // COLORS
-
-            // enumeration of color types
-            enum colType {
-                COL_SPLINE          = 0,
-                COL_KEYFRAME        = 1,
-                COL_KEYFRAME_SELECT = 2,
-                COL_KEYFRAME_DRAG   = 3,
-                COL_MANIP_LOOKAT    = 4,
-                COL_MANIP_UP        = 5,
-                COL_MANIP_X_AXIS    = 6,
-                COL_MANIP_Y_AXIS    = 7,
-                COL_MANIP_Z_AXIS    = 8,
-                COL_ANIM_REPEAT     = 9,
-                NUM_OF_COL          = 10
-            };
-
-            /** */
-            vislib::math::Vector<float, 4> getColor(CallCinematicCamera::colType  c, float bgColor[4]);
-
-
 		private:
 
             /**********************************************************************
@@ -240,7 +207,6 @@ namespace megamol {
             SmartPtr<graphics::CameraParameters>   cameraParam;
             float                                  maxAnimTime;
             vislib::math::Point<float, 3>          bboxCenter;
-            Array<vislib::math::Vector<float, 4> > colorTable;
 
 		};
 

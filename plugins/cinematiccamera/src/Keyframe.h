@@ -51,8 +51,21 @@ namespace megamol {
 
             /** */
 			bool operator==(Keyframe const& rhs){
-				return ((this->camera == rhs.camera) && (this->time == rhs.time));
+				return ((this->camera.Parameters()->Position() == rhs.camera.Parameters()->Position()) &&
+                    (this->camera.Parameters()->LookAt() == rhs.camera.Parameters()->LookAt()) &&
+                    (this->camera.Parameters()->Up() == rhs.camera.Parameters()->Up()) &&
+                    (this->camera.Parameters()->ApertureAngle() == rhs.camera.Parameters()->ApertureAngle()) &&
+                    (this->time == rhs.time));
 			}
+
+            /** */
+            bool operator!=(Keyframe const& rhs) {
+                return ((this->camera.Parameters()->Position() != rhs.camera.Parameters()->Position()) ||
+                    (this->camera.Parameters()->LookAt() != rhs.camera.Parameters()->LookAt()) ||
+                    (this->camera.Parameters()->Up() != rhs.camera.Parameters()->Up()) ||
+                    (this->camera.Parameters()->ApertureAngle() != rhs.camera.Parameters()->ApertureAngle()) ||
+                    (this->time != rhs.time));
+            }
 
             /** */
 			vislib::math::Point<FLOAT, 3> getCamPosition(){

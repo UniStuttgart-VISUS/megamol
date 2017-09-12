@@ -101,6 +101,7 @@ namespace megamol {
             int      cineWidth;
             int      cineHeight;
             float    maxAnimTime;
+            int      vpW, vpH;
             vislib::math::Point<float, 3> bboxCenter;
             vislib::graphics::gl::FramebufferObject fbo;
 

@@ -55,6 +55,8 @@ CinematicView::CinematicView(void) : View3D(),
     this->bboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->cineWidth       = 1920;
     this->cineHeight      = 1080;
+    this->vpW             = 0;
+    this->vpH             = 0;
 
     // init parameters
     this->cinematicHeightParam.SetParameter(new param::IntParam(this->cineHeight, 1));
@@ -94,14 +96,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
     
-    // Update paramters
+    // Reset fbo only if necessary
+    bool resetFBO = false;
+
+   // Update paramters
     if (this->cinematicHeightParam.IsDirty()) {
         this->cinematicHeightParam.ResetDirty();
         this->cineWidth = this->cinematicHeightParam.Param<param::IntParam>()->Value();
+        resetFBO = true;
     }
     if (this->cinematicWidthParam.IsDirty()) {
         this->cinematicWidthParam.ResetDirty();
         this->cineHeight = this->cinematicWidthParam.Param<param::IntParam>()->Value();
+        resetFBO = true;
     }
 
     // Check for new max anim time
@@ -157,14 +164,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Set camera parameters of selected keyframe for this view
     // but ONLY if selected keyframe differs to last locally stored and shown keyframe
     Keyframe s = ccc->getSelectedKeyframe(); // maybe updated from obove
-    vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
     // Every camera parameter has be compared separatly because euqality of cameras only checks for pointer equality
-    if ((this->shownKeyframe.getTime()             != s.getTime())   ||
-        (this->shownKeyframe.getCamPosition()      != p->Position()) ||
-        (this->shownKeyframe.getCamLookAt()        != p->LookAt())   ||
-        (this->shownKeyframe.getCamUp()            != p->Up())       ||
-        (this->shownKeyframe.getCamApertureAngle() != p->ApertureAngle())) {
-
+    if (this->shownKeyframe != s) {
+        vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
         this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
         this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
 
@@ -190,7 +192,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::math::Vector<float, 3> camUp       = cp->Up();
     vislib::math::Vector<float, 3> camFront    = cp->Front();
     vislib::math::Point<float, 3>  camLookAt   = cp->LookAt();
-    float                          camAperture = cp->ApertureAngle();
     float                          tmpDist     = cp->FocalDistance();
 
     // Adjust cam to selected skybox side
@@ -216,15 +217,22 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }   
 
     // Viewport stuff ---------------------------------------------------------
+
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth   = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
-    int   vpHeight  = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
+    int   vpWidth  = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
+    int   vpHeight = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
+    // Check for viewport changes
+    if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
+        this->vpW = vpWidth;
+        this->vpH = vpHeight;
+        resetFBO = true;
+    }
     float vpRatio   = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
     // Calculate fbo width and height
-    float fboWidth  = vpWidth;
-    float fboHeight = vpHeight;
+    int fboWidth  = vpWidth;
+    int fboHeight = vpHeight;
     if (cineRatio > vpRatio) {
         fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
     }
@@ -233,31 +241,34 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Render to texture ------------------------------------------------------------
-    // Suppress TRACE output of fbo.Enable() and fbo.Create()
+
+// Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-    if (!this->fbo.IsValid()) {
+
+    if (resetFBO || (!this->fbo.IsValid())) {
+        if (this->fbo.IsValid()) {
+            this->fbo.Release();
+        }
         if (!this->fbo.Create(fboWidth, fboHeight, GL_RGBA32F, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception("[CINEMATIC VIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
     }
-    if (this->fbo.IsValid()) {
-        if (this->fbo.Enable() != GL_NO_ERROR) {
-            throw vislib::Exception("[CINEMATIC VIEW] Cannot enable Framebuffer object.", __FILE__, __LINE__);
-            return;
-        }
-    }
-    else {
-        throw vislib::Exception("[CINEMATIC VIEW] Framebuffer object is not valid.", __FILE__, __LINE__);
+
+    if (this->fbo.Enable() != GL_NO_ERROR) {
+        throw vislib::Exception("[CINEMATIC VIEW] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
-    // Reset TRACE output level
+
+// Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
+
+    glDisable(GL_TEXTURE_2D); // Necessary because of artefacts (when bounding box is hidden ???)
 
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
     int fboVp[4] = { 0, 0, fboWidth, fboHeight };
@@ -320,16 +331,20 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
-    // Get the foreground color (inverse background color)
-    // (set in Base::Render(context) )
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
 
-    // Draw letter box quads in fgColor
+    // Draw letter box  -------------------------------------------------------
+    // Get the background color of this view
+    float bgColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    // Adapt letter box color depending on relative luminance 
+    float relLum = 0.2126f*bgColor[0] + 0.7152f*bgColor[1] + 0.0722f*bgColor[2];
+    float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    if (relLum > 0.5f) {
+        for (unsigned int i = 0; i < 3; i++) {
+            lbColor[i] = 0.0f;
+        }
+    }
+    // Calculate position of texture
     int x = 0;
     int y = 0;
     if (fboWidth < vpWidth) {
@@ -340,7 +355,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         x = vpWidth;
         y = (static_cast<int>(static_cast<float>(vpHeight - fboHeight) / 2.0f));
     }
-    glColor4fv(fgColor);
+    // Draw letter box quads in letter box Color
+    glColor4fv(lbColor);
     glBegin(GL_QUADS);
         glVertex2i(0, 0);
         glVertex2i(x, 0);
@@ -357,5 +373,4 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    this->fbo.Release();
 }
