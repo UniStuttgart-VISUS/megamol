@@ -26,12 +26,12 @@ if(BUILD_CORE)
   # include ZMQ
   include(ExternalProject)
 
-  set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external)
+  set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
   set(ZMQ_VER "4_2_2")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
   if (MSVC)
-    set(ZMQ_LIB debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
+    set(ZMQ_LIB debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib" CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
   else()
     set(ZMQ_SO "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq.so")
@@ -61,6 +61,8 @@ if(BUILD_CORE)
     BUILD_COMMAND ""
     INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
   )
+
+  add_subdirectory(remoteconsole)
 
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
