@@ -156,10 +156,18 @@ namespace utility {
         int SetEchoLevel(lua_State *L);
 
         /**
-         *mmSetConfigValue(string name, string value): set configuration value 'name'
+         * mmSetConfigValue(string name, string value): set configuration value 'name'
          * to 'value'.
          */
         int SetConfigValue(lua_State *L);
+
+        // ** MegaMol API provided for runtime manipulation
+
+        /**
+         * mmGetModuleParams(string name): list all parameters of a module
+         * along with their description, type and value.
+         */
+        int GetModuleParams(lua_State *L);
 
     private:
 

@@ -19,6 +19,8 @@
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/UTF8Encoder.h"
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -59,6 +61,7 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmAddShaderDir = mmAddShaderDir,"
 "  mmAddResourceDir = mmAddResourceDir,"
 "  mmPluginLoaderInfo = mmPluginLoaderInfo,"
+"  mmGetModuleParams = mmGetModuleParams,"
 "  mmSetLogFile = mmSetLogFile,"
 "  mmSetLogLevel = mmSetLogLevel,"
 "  mmSetEchoLevel = mmSetEchoLevel,"
@@ -567,4 +570,73 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
         }
     }
     return retval;
+}
+
+
+int megamol::core::LuaState::GetModuleParams(lua_State *L) {
+    if (this->checkRunning("mmGetModuleParams")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (!anoc) {
+            lua_pushstring(L, "GetModuleParams: no root");
+            lua_error(L);
+            return 0;
+        }
+        Module::const_ptr_type mod = Module::dynamic_pointer_cast(const_cast<AbstractNamedObjectContainer*>(anoc.get())->FindNamedObject(paramName));
+        if (!mod) {
+            lua_pushstring(L, "GetModuleParams: module not found");
+            lua_error(L);
+            return 0;
+        }
+
+        std::stringstream answer;
+        vislib::StringA name(mod->FullName());
+        answer << name << "\1";
+        AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+        se = mod->ChildList_End();
+        for (si = mod->ChildList_Begin(); si != se; ++si) {
+            const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
+            if (slot != NULL) {
+                //name.Append("::");
+                //name.Append(slot->Name());
+
+                answer << slot->Name() << "\1";
+
+                vislib::StringA descUTF8;
+                vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
+                answer << descUTF8 << "\1";
+
+                auto psp = slot->Parameter();
+                if (psp.IsNull()) {
+                    std::ostringstream err;
+                    err << "GetModuleParams: ParamSlot " << slot->FullName() << " does seem to hold no parameter";
+                    lua_pushstring(L, err.str().c_str());
+                    lua_error(L);
+                }
+
+                vislib::RawStorage pspdef;
+                psp->Definition(pspdef);
+                // not nice, but we make HEX (base64 would be better, but I don't care)
+                std::string answer2(pspdef.GetSize() * 2, ' ');
+                for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
+                    uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                    uint8_t bh[2] = { static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16) };
+                    for (unsigned int j = 0; j < 2; ++j) answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
+                }
+                answer << answer2 << "\1";
+
+                vislib::StringA valUTF8;
+                vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+
+                answer << valUTF8 << "\1";
+            }
+        }
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
 }
