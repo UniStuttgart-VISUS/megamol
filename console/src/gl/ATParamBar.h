@@ -73,6 +73,8 @@ namespace gl {
             static void TW_CALL twCallback(ButtonParam *prm);
         };
 
+        class FlexEnumParam;
+
         class ValueParam : public Param {
         protected:
             ValueParam(std::shared_ptr<Param> src, TwBar* bar, TwType type, std::stringstream& def);
@@ -81,6 +83,7 @@ namespace gl {
         private:
             static void TW_CALL twSetCallback(const void *value, ValueParam *clientData);
             static void TW_CALL twGetCallback(void *value, ValueParam *clientData);
+            friend class FlexEnumParam;
         };
 
         class StringParam : public ValueParam {
@@ -116,8 +119,8 @@ namespace gl {
             virtual void Get(void *value);
         private:
             static TwType makeMyFlexEnumType(void* hParam, const std::vector<unsigned char>& desc);
-            static void parseFlexEnumDesc(std::vector<TwEnumVal>& outValues, const std::vector<unsigned char>& desc);
-            static std::vector<std::shared_ptr<vislib::StringA> > enumStrings;
+            void parseFlexEnumDesc(std::vector<TwEnumVal>& outValues, const std::vector<unsigned char>& desc);
+            std::vector<std::shared_ptr<vislib::StringA> > enumStrings;
         };
 
         class FloatParam : public ValueParam {

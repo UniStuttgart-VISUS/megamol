@@ -8,12 +8,14 @@ option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   project(mmstd_datatools)
 
-  find_package(OpenMP)
+  if(UNIX)
+    find_package(OpenMP)
+  endif()
 
   set(LIBS vislib core glload)
   include_directories("include" "src" "3rd/nanoflann")
 
-  if (OPENMP_FOUND)
+  if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
 
@@ -25,12 +27,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
    
-  if(UNIX)
-    list(REMOVE_ITEM source_files
-      "src/ErosionField.cpp"
-      )
-  endif()
-
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
