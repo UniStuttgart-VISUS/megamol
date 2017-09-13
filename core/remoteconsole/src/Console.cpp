@@ -73,7 +73,10 @@ void interactiveConsole(Connection &conn) {
         std::getline(cin, command);
 
         // todo broken
-        if (command == "open") {
+        std::string opCode;
+        std::istringstream iss(command);
+        std::getline(iss, opCode, ' ');
+        if (opCode == "open") {
             //  OPEN [host]              -  Establishes connection to the host
             if (conn.Disconnect()) {
                 cout << "Socket closed" << endl
@@ -81,7 +84,7 @@ void interactiveConsole(Connection &conn) {
             }
             try {
                 std::string host;
-                cin >> host;
+                std::getline(iss, host);
                 cout << "Connecting \"" << host << "\" ... ";
 
                 bool rv = conn.Connect(host);
@@ -101,7 +104,7 @@ void interactiveConsole(Connection &conn) {
                     << endl;
             }
 
-        } else if (command == "close") {
+        } else if (opCode == "close") {
             //  CLOSE                    -  Closes connection to the host
             if (conn.Disconnect()) {
                 cout << "Socket closed" << endl
@@ -111,7 +114,7 @@ void interactiveConsole(Connection &conn) {
                     << endl;
             }
 
-        } else if (command == "status") {
+        } else if (opCode == "status") {
             //  STATUS                   -  Informs about the current connection
             cout << "Socket " << (conn.Connected() ? "connected" : "not connected") << endl
                 << endl;
