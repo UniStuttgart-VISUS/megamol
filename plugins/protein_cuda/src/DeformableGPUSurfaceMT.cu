@@ -11,7 +11,6 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "DeformableGPUSurfaceMT.h"
-#ifdef WITH_CUDA
 
 //#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
 //    printf("WARNING! Not using atomics!\n");
@@ -10238,5 +10237,3 @@ bool DeformableGPUSurfaceMT::ComputeMeshLaplacianDiff(
 
     return ::CheckForCudaError();
 }
-
-#endif // WITH_CUDA

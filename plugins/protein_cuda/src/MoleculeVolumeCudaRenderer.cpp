@@ -7,8 +7,6 @@
 
 #include "stdafx.h"
 
-#ifdef WITH_CUDA
-
 #define _USE_MATH_DEFINES 1
 
 #include "MoleculeVolumeCudaRenderer.h"
@@ -1339,5 +1337,3 @@ void MoleculeVolumeCudaRenderer::writeVolumeRAW() {
 
     delete[] color;
 }
-
-#endif // WITH_CUDA

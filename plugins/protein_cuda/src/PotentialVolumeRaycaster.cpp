@@ -16,8 +16,6 @@
 #include "stdafx.h"
 #include "PotentialVolumeRaycaster.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
@@ -1629,7 +1627,3 @@ bool PotentialVolumeRaycaster::updateParams() {
 
     return true;
 }
-
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-

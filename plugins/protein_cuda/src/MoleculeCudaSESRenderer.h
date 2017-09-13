@@ -3,9 +3,6 @@
  *
  * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #ifndef MEGAMOL_MOLRENCUDASES_H_INCLUDED
 #define MEGAMOL_MOLRENCUDASES_H_INCLUDED
 #if (_MSC_VER > 1000)
@@ -507,5 +504,3 @@ namespace protein_cuda {
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_MOLRENCUDASES_H_INCLUDED */
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

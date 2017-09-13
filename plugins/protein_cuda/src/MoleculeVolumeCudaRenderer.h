@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifdef WITH_CUDA
-
 #ifndef MEGAMOLPROTEIN_MOLVOLCUDARENDERER_H_INCLUDED
 #define MEGAMOLPROTEIN_MOLVOLCUDARENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -325,5 +323,3 @@ namespace protein_cuda {
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_MOLVOLCUDARENDERER_H_INCLUDED
-
-#endif // WITH_CUDA

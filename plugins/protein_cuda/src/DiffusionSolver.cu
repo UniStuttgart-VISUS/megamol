@@ -11,8 +11,6 @@
 #include "stdafx.h"
 #include "DiffusionSolver.h"
 
-#ifdef WITH_CUDA
-
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"
 
@@ -655,5 +653,3 @@ bool DiffusionSolver::CalcTwoWayGVF(
 
     return true;
 }
-
-#endif // WITH_CUDA

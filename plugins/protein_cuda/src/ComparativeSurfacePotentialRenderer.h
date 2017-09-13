@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #ifndef MMPROTEINCUDAPLUGIN_POTENTIALVOLUMERENDERERCUDA_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_POTENTIALVOLUMERENDERERCUDA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -1060,4 +1058,3 @@ private:
 } // namespace megamol
 
 #endif // MMPROTEINCUDAPLUGIN_ComparativeSurfacePotentialRenderer_H_INCLUDED
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))

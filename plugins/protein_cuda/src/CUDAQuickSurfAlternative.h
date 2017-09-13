@@ -20,8 +20,6 @@
 #ifndef CUDAQUICKSURFALTERNATIVE_H
 #define CUDAQUICKSURFALTERNATIVE_H
 
-#ifdef WITH_CUDA
-
 #include <vector_types.h>
 #include <cuda_runtime_api.h>
 #include <helper_cuda.h>
@@ -109,8 +107,6 @@ struct Vertex
 
   ~CUDAQuickSurfAlternative(void);
 };
-
-#endif // WITH_CUDA
 
 #endif
 

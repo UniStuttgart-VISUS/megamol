@@ -368,7 +368,7 @@ bool QuickSESRenderer::Render(Call& call) {
     // DEBUG
 	glPointSize(5.0f);
     glBegin( GL_POINTS);
-    for( int i = 0; i < mol->AtomCount(); i++ ) {
+    for( unsigned int i = 0; i < mol->AtomCount(); i++ ) {
         glColor3fv( &atomColorTable.PeekElements()[3*i]);
         glVertex3fv( &posInter[4*i]);
     }
@@ -441,8 +441,8 @@ void QuickSESRenderer::UpdateParameters(const MolecularDataCall *mol) {
 
 bool QuickSESRenderer::calcSurf(MolecularDataCall *mol, const float *pos) {
 	// tmp variables
-	int i;
-	float mincoord[3], maxcoord[3];
+	//int i;
+	//float mincoord[3], maxcoord[3];
 	float numvoxels[3];
 	// get grid spacing 
 	float gridspacing = this->gridSpacingParam.Param<param::FloatParam>()->Value();
@@ -451,9 +451,9 @@ bool QuickSESRenderer::calcSurf(MolecularDataCall *mol, const float *pos) {
 	bbox.EnforcePositiveSize();
 
 	// compute the real grid dimensions from the selected atoms
-	numvoxels[0] = (int)ceil(bbox.Width() / gridspacing);
-	numvoxels[1] = (int)ceil(bbox.Height() / gridspacing);
-	numvoxels[2] = (int)ceil(bbox.Depth() / gridspacing);
+	numvoxels[0] = static_cast<float>((int)ceil(bbox.Width() / gridspacing));
+	numvoxels[1] = static_cast<float>((int)ceil(bbox.Height() / gridspacing));
+	numvoxels[2] = static_cast<float>((int)ceil(bbox.Depth() / gridspacing));
 	
 	CUDAQuickSES *cqs = (CUDAQuickSES *)this->cudaqses;
 

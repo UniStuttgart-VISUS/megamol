@@ -27,9 +27,6 @@ using namespace megamol;
 using namespace vislib;
 using namespace vislib::math;
 
-
-#ifdef WITH_CUDA
-
 /*
  * protein:CritPoints::GetCritPoints
  */
@@ -580,6 +577,3 @@ vislib::math::Vector<float, 3> protein_cuda::CritPoints::sampleUniGridNearestNei
 
     return vislib::math::Vector<float, 3>(vecRes.x, vecRes.y, vecRes.z);
 }
-
-
-#endif // WITH_CUDA

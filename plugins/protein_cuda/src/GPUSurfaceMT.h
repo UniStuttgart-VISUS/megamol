@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifdef WITH_CUDA
-
 #ifndef MMPROTEINCUDAPLUGIN_GPUSURFACEMT_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_GPUSURFACEMT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -281,4 +279,3 @@ private:
 } // namespace megamol
 
 #endif // MMPROTEINCUDAPLUGIN_GPUSURFACEMT_H_INCLUDED
-#endif // WITH_CUDA

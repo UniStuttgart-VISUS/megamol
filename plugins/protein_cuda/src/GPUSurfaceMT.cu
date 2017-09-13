@@ -11,8 +11,6 @@
 #include "stdafx.h"
 #include "GPUSurfaceMT.h"
 
-#ifdef WITH_CUDA
-
 #include "cuda_error_check.h"
 #include "HostArr.h"
 #include "sort_triangles.cuh"
@@ -3450,5 +3448,3 @@ GPUSurfaceMT& GPUSurfaceMT::operator=(const GPUSurfaceMT &rhs) {
     return *this;
 
 }
-
-#endif // WITH_CUDA

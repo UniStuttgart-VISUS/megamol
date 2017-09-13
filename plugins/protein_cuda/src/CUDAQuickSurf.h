@@ -20,8 +20,6 @@
 #ifndef CUDAQUICKSURF_H
 #define CUDAQUICKSURF_H
 
-#ifdef WITH_CUDA
-
 #include <vector_types.h>
 
 // Write file for Daniel Kauker (puxel)
@@ -126,8 +124,6 @@ private:
 	cudaError SortTrianglesDevice(uint triaCnt, triangleCustom * vertices, 
 		triangleCustom* verticesCopy, triangleCustom* colors, triangleCustom* normals);
 };
-
-#endif // WITH_CUDA
 
 #endif
 

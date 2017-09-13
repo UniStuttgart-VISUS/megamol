@@ -17,6 +17,7 @@
 #include "ComparativeSurfacePotentialRenderer.cuh"
 #include "constantGridParams.cuh"
 
+#include "helper_math.h"
 #include "interpol.cuh"
 #include <cstdio>
 #include <cassert>

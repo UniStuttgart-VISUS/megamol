@@ -11,8 +11,6 @@
 #include "ProteinVariantMatch.h"
 #include <algorithm>
 
-#ifdef WITH_CUDA
-
 #pragma warning(push)
 #pragma warning(disable : 4258)
 
@@ -837,8 +835,6 @@ bool ProteinVariantMatch::computeMatch(param::ParamSlot& p) {
     return true;
 }
 
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 /*
  * ProteinVariantMatch::computeMatchSurfMapping
  */
@@ -1856,8 +1852,6 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
     return true;
 }
 
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
 
 /*
  * ProteinVariantMatch::getRMS
@@ -2189,5 +2183,3 @@ void ProteinVariantMatch::updatParams() {
     }
 }
 #pragma warning(pop)
-
-#endif // WITH_CUDA

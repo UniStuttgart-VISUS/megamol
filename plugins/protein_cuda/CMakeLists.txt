@@ -11,18 +11,13 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   project(protein_cuda LANGUAGES CXX CUDA)
 
   #NVCC options
-  if(NOT MSVC)
-    if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
-      list(APPEND CUDA_NVCC_FLAGS "--std c++11")
-    endif()
-  endif()
-  list(APPEND CUDA_NVCC_FLAGS "-03")
-  list(APPEND CUDA_NVCC_FLAGS "-gencode")
-  list(APPEND CUDA_NVCC_FLAGS "-arch=compute_30, code=sm_30")
+  set(CMAKE_CUDA_STANDARD 11)
+  list(APPEND CMAKE_CUDA_FLAGS " -O3")
+  list(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30")
+  list(APPEND CMAKE_CUDA_STANDARD_LIBRARIES " cufft.lib")
   
   set(LIBS vislib core mmstd_trisoup protein_calls glload)
   include_directories("include" "src" "src/helper_includes")
-
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -42,6 +37,11 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
 
   #remove all items contained in the cuda_helpers from the normal headers
   list(REMOVE_ITEM header_files cuda_helpers)
+
+  #remove special files from the build
+  list(REMOVE_ITEM cuda_source_files "src/cuenergy.cu")
+  list(REMOVE_ITEM cuda_source_files "src/gpu_poisson_solver.cu")
+  list(REMOVE_ITEM cuda_source_files "src/particles_kernel.cu")
 
   if(UNIX)
     list(REMOVE_ITEM source_files

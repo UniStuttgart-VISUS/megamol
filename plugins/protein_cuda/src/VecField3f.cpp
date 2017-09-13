@@ -9,10 +9,7 @@
 
 
 #include "stdafx.h"
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 #define _USE_MATH_DEFINES 1
-
-#endif
 
 #include "VecField3f.h"
 #include "protein_calls/Interpol.h"
@@ -241,8 +238,6 @@ void VecField3f::SearchCritPoints(unsigned int maxBisections,
     //printf("Null points found: %u\n", static_cast<unsigned int>(this->critPoints.Count())); // DEBUG
 }
 
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 void VecField3f::SearchCritPointsCUDA(unsigned int maxItNewton,
         float stepNewton, float epsNewton) {
     using namespace vislib;
@@ -301,7 +296,6 @@ void VecField3f::SearchCritPointsCUDA(unsigned int maxItNewton,
 
     delete[] cellCoords;
 }
-#endif
 
 
 /* VecField3f::SetDim */

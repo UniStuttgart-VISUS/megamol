@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #ifndef MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 
@@ -83,4 +81,3 @@ inline bool cudaSafeCall(cudaError err, const char *file, const int line ) {
 }
 
 #endif // MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))

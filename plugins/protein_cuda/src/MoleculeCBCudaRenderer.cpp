@@ -7,8 +7,6 @@
 #include "stdafx.h"
 #include "MoleculeCBCudaRenderer.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #define _USE_MATH_DEFINES 1
 #define SFB_DEMO
 
@@ -1946,5 +1944,3 @@ void MoleculeCBCudaRenderer::writeAtomPositionsVBO( MolecularDataCall *mol) {
     if( newlyGenerated )
         cudaGLRegisterBufferObject( this->atomPosVBO);
 }
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

@@ -8,7 +8,6 @@
 #ifndef MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
 
-#ifdef WITH_CUDA
 #include "CUDAFieldTopology.cuh"
 #include <vector_types.h>
 
@@ -17,7 +16,7 @@
 #include "helper_functions.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
-#endif
+
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Vector.h"
@@ -273,7 +272,6 @@ public:
     void SearchCritPoints(unsigned int maxBisections, unsigned int maxItNewton,
             float stepNewton, float epsNewton);
 
-#ifdef WITH_CUDA
     /**
      * Search null points and classify them according to their Eigenvalues. The
      * bisection is done using CUDA.
@@ -286,7 +284,6 @@ public:
      */
     void SearchCritPointsCUDA(unsigned int maxItNewton, float stepNewton,
             float epsNewton);
-#endif
 
     /**
      * Sets the dimensions/ the extent of the grid and make a deep copy of the

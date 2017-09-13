@@ -18,16 +18,12 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/view/Renderer3DModule.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #include "cuda_runtime.h"
 #include "helper_cuda.h"
 #include "helper_math.h"
 
 //#include <cudpp/cudpp.h>
 #include "filter_cuda.cuh"
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 
 namespace megamol {
@@ -241,9 +237,6 @@ namespace protein_cuda {
         /** Contains positions of non-solvent atoms */
         float *atmPosProt;
         
-        
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-        
         /** CUDA **/ 
         
         //CUDPPHandle sortHandle;
@@ -264,10 +257,6 @@ namespace protein_cuda {
         int *atomVisibilityD;
         
         int *neighbourCellPosD;
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
-
     };
 
 

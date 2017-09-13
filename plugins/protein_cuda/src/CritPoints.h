@@ -20,8 +20,6 @@
 
 namespace megamol {
 namespace protein_cuda {
-    
-#ifdef WITH_CUDA
 
 /**
  * Computes critical points in a 3D uniform vector field.
@@ -109,8 +107,6 @@ private:
             vislib::math::Vector<float, 3> pos);
 
 };
-
-#endif // WITH_CUDA
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */

@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #ifndef MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 
@@ -149,4 +147,3 @@ private:
 } // namespace megamol
 
 #endif // MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))

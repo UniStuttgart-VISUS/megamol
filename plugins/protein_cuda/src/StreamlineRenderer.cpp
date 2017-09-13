@@ -11,8 +11,6 @@
 #include "stdafx.h"
 #include "StreamlineRenderer.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #include "VBODataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "cuda_error_check.h"
@@ -606,6 +604,3 @@ void StreamlineRenderer::updateParams() {
     }
 
 }
-
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))

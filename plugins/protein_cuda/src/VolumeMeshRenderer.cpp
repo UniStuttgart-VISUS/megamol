@@ -8,8 +8,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#ifdef WITH_CUDA
-
 //#define TEST
 #include "VolumeMeshRenderer.h"
 #include "protein_calls/IntSelectionCall.h"
@@ -3371,5 +3369,3 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
 
     return true;
 }
-
-#endif

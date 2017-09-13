@@ -21,8 +21,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #include <cuda_gl_interop.h>
 
 #include "filter_cuda.cuh"
@@ -30,8 +28,6 @@
 #include "particleSystem.cuh"
 
 #include <vector_types.h>
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
 using namespace megamol;
 using namespace megamol::core;
@@ -99,8 +95,6 @@ Filter::Filter(void) : core::Module(),
     this->atomVisibility = NULL;
     this->atmPosProt     = NULL;
     this->isSolventAtom  = NULL;
-    
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 
     this->MakeSlotAvailable(&this->gridSizeParam);
     
@@ -119,9 +113,6 @@ Filter::Filter(void) : core::Module(),
     this->atomVisibilityD = NULL;
     
     this->neighbourCellPosD = NULL;
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
 }
 
 
@@ -149,8 +140,6 @@ void Filter::release(void) {
     if(this->atomVisibility != NULL) delete[] this->atomVisibility;
     if(this->atmPosProt != NULL) delete[] this->atmPosProt;
     if(this->isSolventAtom != NULL) delete[] this->isSolventAtom;
-    
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 	
     if(this->atomPosD != NULL) checkCudaErrors(cudaFree(this->atomPosD));
     if(this->atomPosProtD != NULL) checkCudaErrors(cudaFree(this->atomPosProtD));
@@ -169,9 +158,6 @@ void Filter::release(void) {
     if(this->neighbourCellPosD != NULL) checkCudaErrors(cudaFree(this->neighbourCellPosD));
     
     //cudppDestroyPlan(this->sortHandle);
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
 }
 
 
@@ -339,8 +325,6 @@ void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
     
         if(this->atmPosProt != NULL) delete[] this->atmPosProt;
         this->atmPosProt = new float[(this->atmCnt - this->solvAtmCnt)*3];
-    
-#if (defined(WITH_CUDA) && (WITH_CUDA))
         
         // Set parameters
         
@@ -450,8 +434,6 @@ void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
         
         checkCudaErrors(cudaMemcpy(this->isSolventAtomD, this->isSolventAtom, 
             sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice));
-    
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
     }
 }
 
@@ -645,8 +627,6 @@ void Filter::setHierarchicalVisibility(const megamol::protein_calls::MolecularDa
 void Filter::filterSolventAtomsAlt(float *atomPos) {
     
     using namespace vislib::sys;
-    
-#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
 
     this->getProtAtoms(atomPos);
 
@@ -707,39 +687,6 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
     // Copy visibility information from device to host
     checkCudaErrors(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
         sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
-
-#else // CPU
-
-    unsigned int at, b;
-    for(at = 0; at < this->atmCnt; at++) {
-        
-        if(this->isSolventAtom[at]) {
-            
-            // Check whether there are non-solvent atoms within the range
-            this->atomVisibility[at] = 0;            
-            for(b = 0; b < this->atmCnt; b++) {
-                if(!this->isSolventAtom[b]) {
-                    if(sqrt(pow(atomPos[3*at+0]-atomPos[3*b+0], 2)
-                              + pow(atomPos[3*at+1]-atomPos[3*b+1], 2)
-                              + pow(atomPos[3*at+2]-atomPos[3*b+2], 2)) 
-                                <= this->solvRadiusParam.Param<param::FloatParam>()->Value()) {
-                        
-                        this->atomVisibility[at] = 1;
-                        break;
-                    }
-                }
-            }           
-        }
-        else { 
-            
-            // Non-solvent atoms are visible
-            this->atomVisibility[at] = 1; 
-
-        }
-    }
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
 }
 
 
@@ -750,8 +697,6 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
 void Filter::filterSolventAtoms(float *atomPos) {
 
     using namespace vislib::sys;
-    
-#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
 
     setFilterParams(&this->params);
 
@@ -822,39 +767,6 @@ void Filter::filterSolventAtoms(float *atomPos) {
     // Copy visibility information from device to host
     checkCudaErrors(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
         sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
-
-#else // CPU
-
-    unsigned int at, b;
-    for(at = 0; at < this->atmCnt; at++) {
-        
-        if(this->isSolventAtom[at]) {
-            
-            // Check whether there are non-solvent atoms within the range
-            this->atomVisibility[at] = 0;            
-            for(b = 0; b < this->atmCnt; b++) {
-                if(!this->isSolventAtom[b]) {
-                    if(sqrt(pow(atomPos[3*at+0]-atomPos[3*b+0], 2)
-                              + pow(atomPos[3*at+1]-atomPos[3*b+1], 2)
-                              + pow(atomPos[3*at+2]-atomPos[3*b+2], 2)) 
-                                <= this->solvRadiusParam.Param<param::FloatParam>()->Value()) {
-                        
-                        this->atomVisibility[at] = 1;
-                        break;
-                    }
-                }
-            }           
-        }
-        else { 
-            
-            // Non-solvent atoms are visible
-            this->atomVisibility[at] = 1; 
-
-        }
-    }
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
 }
 
 

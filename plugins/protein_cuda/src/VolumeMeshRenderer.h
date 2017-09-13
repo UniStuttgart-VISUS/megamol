@@ -11,8 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#ifdef WITH_CUDA
-
 #include "VolumeMeshRenderer.cuh"
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "protein_calls/DiagramCall.h"
@@ -535,7 +533,5 @@ namespace protein_cuda {
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // WITH_CUDA
 
 #endif // MEGAMOLCORE_VOLUMEMESHRENDERER_H_INCLUDED

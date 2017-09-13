@@ -7,8 +7,6 @@
 
 #include "stdafx.h"
 
-#ifdef WITH_CUDA
-
 #define _USE_MATH_DEFINES 1
 
 #include "QuickSurfMTRenderer.h"
@@ -661,6 +659,3 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall *mol, float *posInter,
         return 1;
     }
 }
-
-
-#endif // WITH_CUDA

@@ -11,8 +11,6 @@
 #include "stdafx.h"
 #include "ComparativeMolSurfaceRenderer.h"
 
-#ifdef WITH_CUDA
-
 //#define USE_TIMER
 //#define VERBOSE
 
@@ -4530,5 +4528,3 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
     return true;
 }
 #endif // USE_PROCEDUAL_DATA
-#endif // WITH_CUDA
-

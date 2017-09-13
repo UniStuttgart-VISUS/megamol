@@ -11,7 +11,6 @@
 #include "stdafx.h"
 #include "ComparativeFieldTopologyRenderer.h"
 
-#ifdef WITH_CUDA
 #include <cmath>
 #include <ctime>
 
@@ -674,18 +673,10 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 //                this->ClassName()); // DEBUG
 //        time_t t = clock(); // DEBUG
 //
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
 //        this->efield0.SearchCritPointsCUDA(
 //                this->critPointsNewtonMaxSteps,
 //                this->critPointsNewtonStepsize,
 //                this->critPointsNewtonEps);
-//#else
-//        this->efield0.SearchCritPoints(
-//                this->critPointsMaxBisections,
-//                this->critPointsNewtonMaxSteps,
-//                this->critPointsNewtonStepsize,
-//                this->critPointsNewtonEps);
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 //
 //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... #0 done, %u null points found (%f s)",
 //                this->ClassName(),
@@ -693,18 +684,10 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 //                (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 //        t = clock(); // DEBUG
 //
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
 //        this->efield1.SearchCritPointsCUDA(
 //                this->critPointsNewtonMaxSteps,
 //                this->critPointsNewtonStepsize,
 //                this->critPointsNewtonEps);
-//#else
-//        this->efield1.SearchCritPoints(
-//                this->critPointsMaxBisections,
-//                this->critPointsNewtonMaxSteps,
-//                this->critPointsNewtonStepsize,
-//                this->critPointsNewtonEps);
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 //
 //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... #1 done, %u null points found (%f s)",
 //                this->ClassName(),        // Set attribute pointers
@@ -716,18 +699,10 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 //                this->ClassName()); // DEBUG
 //        t = clock(); // DEBUG
 //
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
 //        this->egradfield0.SearchCritPointsCUDA(
 //                this->critPointsNewtonMaxSteps,
 //                this->critPointsNewtonStepsize,
 //                this->critPointsNewtonEps);
-//#else
-//        this->egradfield0.SearchCritPoints(
-//                this->critPointsMaxBisections,
-//                this->critPointsNewtonMaxSteps,
-//                this->critPointsNewtonStepsize,
-//                this->critPointsNewtonEps);
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 //
 //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... #0 done, %u null points found (%f s)",
 //                this->ClassName(),
@@ -735,18 +710,10 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 //                (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 //        t = clock(); // DEBUG
 //
-//#if (defined(WITH_CUDA) && (WITH_CUDA))
 //        this->egradfield1.SearchCritPointsCUDA(
 //                this->critPointsNewtonMaxSteps,
 //                this->critPointsNewtonStepsize,
 //                this->critPointsNewtonEps);
-//#else
-//        this->egradfield1.SearchCritPoints(
-//                this->critPointsMaxBisections,
-//                this->critPointsNewtonMaxSteps,
-//                this->critPointsNewtonStepsize,
-//                this->critPointsNewtonEps);
-//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 //
 //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... #1 done, %u null points found (%f s)",
 //                this->ClassName(),
@@ -2578,5 +2545,3 @@ void ComparativeFieldTopologyRenderer::updateParams() {
         this->texPosZSlot.ResetDirty();
     }
 }
-
-#endif // WITH_CUDA

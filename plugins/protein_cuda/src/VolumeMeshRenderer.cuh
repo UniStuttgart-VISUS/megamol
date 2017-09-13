@@ -7,8 +7,6 @@
 #ifndef MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED
 #define MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED
 
-#ifdef WITH_CUDA
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <thrust/functional.h>
@@ -230,7 +228,5 @@ cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uin
 
 extern "C"
 cudaError SortTrianglesDevice( uint triaCnt, float4x3 *vertices, float4x3 *verticesCopy, float4x3 *colors, float4x3 *normals);
-
-#endif // WITH_CUDA
 
 #endif // MEGAMOLPROTEIN_VOLUMEMESHRENDERER_CUH_INCLUDED

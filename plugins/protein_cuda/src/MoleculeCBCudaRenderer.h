@@ -4,8 +4,6 @@
  * Copyright (C) 2010 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #ifndef MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
 #define MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
 #if (_MSC_VER > 1000)
@@ -333,5 +331,3 @@ namespace protein_cuda {
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_MOLSURFACERENDERERCONTOURBUILDUP_CUDA_H_INCLUDED */
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

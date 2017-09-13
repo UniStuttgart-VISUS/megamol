@@ -7,8 +7,6 @@
 
 #include "stdafx.h"
 
-#ifdef WITH_CUDA
-
 #define WRITE_DIAGRAM_FILE
 
 #define _USE_MATH_DEFINES 1
@@ -910,6 +908,3 @@ void QuickSurfRenderer2::getClipData(float *clipDat, float *clipCol) {
         clipCol[3] = 1.0f;
     }
 }
-
-
-#endif // WITH_CUDA

@@ -1,8 +1,6 @@
 #ifndef CUDAQUICKSURFARRAY_H
 #define CUDAQUICKSURFARRAY_H
 
-#ifdef WITH_CUDA
-
 #include <vector_types.h>
 
 // Write file for Daniel Kauker (puxel)
@@ -53,8 +51,6 @@ struct Vertex
 
   ~CUDAQuickSurfArray(void);
 };
-
-#endif // WITH_CUDA
 
 #endif
 

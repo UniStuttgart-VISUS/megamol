@@ -13,7 +13,6 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#ifdef WITH_CUDA
 
 namespace megamol {
 namespace protein_cuda {
@@ -112,5 +111,4 @@ private:
 } // namespace protein_cuda
 } // namespace megamol
 
-#endif // WITH_CUDA
 #endif // MMPROTEINCUDAPLUGIN_DIFFUSIONSOLVER_H_INCLUDED

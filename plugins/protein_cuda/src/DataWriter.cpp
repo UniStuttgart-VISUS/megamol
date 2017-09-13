@@ -10,9 +10,6 @@
 #include "stdafx.h"
 #include "DataWriter.h"
 
-
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #define _USE_MATH_DEFINES 1
 
 #include <fstream>
@@ -2153,5 +2150,3 @@ bool protein_cuda::DataWriter::PutCubeVol(protein_calls::CrystalStructureDataCal
     this->jobDone = true;
     return true;
 }
-
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))

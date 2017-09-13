@@ -13,8 +13,6 @@
 #include "stdafx.h"
 #include "CrystalStructureVolumeRenderer.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #define _USE_MATH_DEFINES 1
 
 #define CALC_GRID 1
@@ -4370,5 +4368,3 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
 
     return true;
 }
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */
