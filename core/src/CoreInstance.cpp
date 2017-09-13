@@ -75,6 +75,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
+#include "mmcore/utility/LuaHostService.h"
 
 /*****************************************************************************/
 
@@ -166,6 +167,9 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
     for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
+
+    megamol::core::utility::LuaHostService::ID = 
+        this->InstallService<megamol::core::utility::LuaHostService>();
 
     // Normalize timer with time offset to something less crappy shitty hateworthy
     this->timeOffset = -this->GetCoreInstanceTime();
