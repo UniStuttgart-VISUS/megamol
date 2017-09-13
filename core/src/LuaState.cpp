@@ -25,6 +25,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include "vislib/sys/sysfunctions.h"
 
 extern "C" {
 #include "lua.h"
@@ -318,17 +319,27 @@ bool megamol::core::LuaState::LoadEnviromentString(const std::string& envString)
 
 bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    return RunString(envName, buffer.str(), result);
+    if (!input.fail()) {
+        std::stringstream buffer;
+        buffer << input.rdbuf();
+        return RunString(envName, buffer.str(), result);
+    } else {
+        return false;
+    }
 }
 
 
 bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName, std::string& result) {
-    std::ifstream input(fileName, std::ios::in);
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    return RunString(envName, buffer.str(), result);
+    vislib::sys::File input;
+    if (input.Open(fileName.c_str(), vislib::sys::File::AccessMode::READ_ONLY,
+        vislib::sys::File::ShareMode::SHARE_READ, vislib::sys::File::CreationMode::OPEN_ONLY)) {
+        vislib::StringA contents;
+        vislib::sys::ReadTextFile(contents, input);
+        input.Close();
+        return RunString(envName, std::string(contents), result);
+    } else {
+        return false;
+    }
 }
 
 
