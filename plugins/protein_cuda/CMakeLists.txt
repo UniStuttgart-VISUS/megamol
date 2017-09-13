@@ -12,11 +12,10 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
 
   #NVCC options
   set(CMAKE_CUDA_STANDARD 11)
-  list(APPEND CMAKE_CUDA_FLAGS " -O3")
-  list(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30")
-  list(APPEND CMAKE_CUDA_STANDARD_LIBRARIES " cufft.lib")
-  
-  set(LIBS vislib core mmstd_trisoup protein_calls glload)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
+  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
+
+  set(LIBS vislib core mmstd_trisoup protein_calls glload cufft)
   include_directories("include" "src" "src/helper_includes")
 
   # Build MegaMol Plugin
