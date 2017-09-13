@@ -64,28 +64,28 @@ namespace utility {
         /**
          * Run a script file, sandboxed in the environment provided.
          */
-        bool RunFile(const std::string& envName, const std::string& fileName);
+        bool RunFile(const std::string& envName, const std::string& fileName, std::string& result);
         /**
          * Run a script file, sandboxed in the environment provided.
          */
-        bool RunFile(const std::string& envName, const std::wstring& fileName);
+        bool RunFile(const std::string& envName, const std::wstring& fileName, std::string& result);
         /**
          * Run a script string, sandboxed in the environment provided.
          */
-        bool RunString(const std::string& envName, const std::string& script);
+        bool RunString(const std::string& envName, const std::string& script, std::string& result);
         
         /**
          * Run a script file, sandboxed in the standard megamol_env.
          */
-        bool RunFile(const std::string& fileName);
+        bool RunFile(const std::string& fileName, std::string& result);
         /**
          * Run a script file, sandboxed in the standard megamol_env.
          */
-        bool RunFile(const std::wstring& fileName);
+        bool RunFile(const std::wstring& fileName, std::string& result);
         /**
          * Run a script string, sandboxed in the standard megamol_env.
          */
-        bool RunString(const std::string& script);
+        bool RunString(const std::string& script, std::string& result);
 
         /**
          * Answer whether the wrapped lua state is valid

@@ -51,6 +51,7 @@ bool iequals(const std::string& one, const std::string& other) {
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = mmLogInfo,"
+"  error = error,"
 "  mmLog = mmLog,"
 "  mmLogInfo = mmLogInfo,"
 "  mmGetBitWidth = mmGetBitWidth,"
@@ -315,48 +316,68 @@ bool megamol::core::LuaState::LoadEnviromentString(const std::string& envString)
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName) {
+bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
     std::stringstream buffer;
     buffer << input.rdbuf();
-    return RunString(envName, buffer.str());
+    return RunString(envName, buffer.str(), result);
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName) {
+bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
     std::stringstream buffer;
     buffer << input.rdbuf();
-    return RunString(envName, buffer.str());
+    return RunString(envName, buffer.str(), result);
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script) {
+bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
     if (L != nullptr) {
-        USES_CHECK_LUA;
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
-        CHECK_LUA(lua_pcall(L, 0, LUA_MULTRET, 0));
-        return true;
+        int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
+        if (ret != LUA_OK) {
+            const char *err = lua_tostring(L, -1); // get error from top of stack...
+            //vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
+            result = std::string(err);
+            lua_pop(L, 1); // and remove it.
+            return false;
+        } else {
+            // as a result, we still expect a string, if anything
+            int n = lua_gettop(L);
+            if (n > 0) {
+                if (n > 2) {
+                    vislib::sys::Log::DefaultLog.WriteError("Lua execution returned more than one value");
+                    return false;
+                } else {
+                    const char *res = lua_tostring(L, 1);
+                    result = std::string(res);
+                    lua_pop(L, 1); // and remove it.
+                    return true;
+                }
+            }
+            return true;
+        }
     } else {
         return false;
     }
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& fileName) {
-    return RunFile("megamol_env", fileName);
+bool megamol::core::LuaState::RunFile(const std::string& fileName, std::string& result) {
+    return RunFile("megamol_env", fileName, result);
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::wstring& fileName) {
-    return RunFile("megamol_env", fileName);
+bool megamol::core::LuaState::RunFile(const std::wstring& fileName, std::string& result) {
+    return RunFile("megamol_env", fileName, result);
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& script) {
-    return RunString("megamol_env", script);
+bool megamol::core::LuaState::RunString(const std::string& script, std::string& result) {
+    return RunString("megamol_env", script, result);
 }
 
 
