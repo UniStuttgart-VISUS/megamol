@@ -8,207 +8,26 @@
 
 void printGreeting() {
     std::cout << std::endl
-        << "MegaMol SimpleParamRemote ConClient" << std::endl
-        << "Copyright 2016 by MegaMol Team, TU Dresden" << std::endl
+        << "MegaMol Remote Lua Console Client" << std::endl
+        << "Copyright 2017 by MegaMol Team" << std::endl
         << std::endl;
-}
-
-void printHelp() {
-    using std::cout;
-    using std::endl;
-
-    printGreeting();
-
-    cout << "Syntax:" << endl
-        << "\tConClient.exe [-o host [-s file [-k] ] ]" << endl
-        << endl;
-    cout << "\t-o [host]  -  Establishes connection the specified host" << endl
-        << "\t-s [file]  -  opens the specified text file and treats each line as command to be sent to the host." << endl
-        << "\t              You may only use the four commands from the last command block (see below)." << endl
-        << "\t-k         -  Keeps the interactive command prompt open after the script file was executed." << endl
-        << endl;
-
-    cout << "Commands:" << endl
-        << endl
-        << "\tOPEN [host]              -  Establishes connection to the host" << endl
-        << "\tCLOSE                    -  Closes connection to the host" << endl
-        << "\tSTATUS                   -  Informs about the current connection" << endl
-        << endl
-        << "\tHELP                     -  Prints command line syntax and this info" << endl
-        << "\tEXIT                     -  Closes this program" << endl
-        << endl
-        << "\tQUERYPARAMS              -  Answers all parameter names" << endl
-        << "\tGETTYPE [name]           -  Answers the type descriptor of one parameter" << endl
-        << "\tGETDESC [name]           -  Answers the human-readable description of one parameter" << endl
-        << "\tGETVALUE [name]          -  Answers the value of one parameter" << endl
-        << "\tSETVALUE [name] [value]  -  Sets the value of one parameter" << endl
-        << "\tGETPROCESSID             -  Answers the native process id of the host (if protocol MMSPRHOSTINFO is supported)" << endl
-        << endl
-        << "\tGETMODULEPARAMS [name]   -  Lists all parameters of a module along with their description, type, and value" << endl
-        << "\tQUERYMODULES             -  Lists all instantiated modules along with their description and type" << endl
-        << "\tQUERYCALLS               -  Lists all instantiated calls along with their description and typee" << endl
-        << endl;
 }
 
 namespace {
 
-template<class T>
-bool execCommand(Connection& conn, std::string command, T& paramStream) {
+bool execCommand(Connection& conn, std::string command) {
     using std::cout;
     using std::endl;
     using std::string;
 
-    if (command == "QUERYPARAMS") {
-        //  QUERYPARAMS              -  Answers all parameter names
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-
-        cout << "Reply: " << endl
-            << conn.sendCommand(command) << endl
+    if (!conn.Connected()) {
+        cout << "Socket not connected" << endl
             << endl;
-
-    } else if (command == "GETTYPE") {
-        //  GETTYPE [name]           -  Answers the type descriptor of one Parameter
-        string name;
-        paramStream >> name;
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-
-        command += " " + name;
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "GETDESC") {
-        //  GETDESC [name]           -  Answers the human-readable description of one parameter
-        string name;
-        paramStream >> name;
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-
-        command += " " + name;
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "GETVALUE") {
-        //  GETVALUE [name]          -  Answers the value of one Parameter
-        string name;
-        paramStream >> name;
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-
-        command += " " + name;
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "SETVALUE") {
-        //  SETVALUE [name] [value]  -  Sets the value of one Parameter
-        string name, value, vx;
-        paramStream >> name >> value;
-        std::getline(paramStream, vx);
-        value += vx;
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-
-        command += " " + name + " " + value;
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "GETPROCESSID") {
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-        if (!conn.supportProtocol("MMSPRHOSTINFO")) {
-            cout << "Host does not support MMSPRHOSTINFO protocol" << endl
-                << endl;
-            return false;
-        }
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "GETMODULEPARAMS") {
-        string name;
-        paramStream >> name;
-
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-        if (!conn.supportProtocol("MMSPR2")) {
-            cout << "Host does not support MMSPR2 protocol" << endl
-                << endl;
-            return false;
-        }
-
-        command += " " + name;
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "QUERYMODULES") {
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-        if (!conn.supportProtocol("MMSPR2")) {
-            cout << "Host does not support MMSPR2 protocol" << endl
-                << endl;
-            return false;
-        }
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else if (command == "QUERYCALLS") {
-
-        if (!conn.Connected()) {
-            cout << "Socket not connected" << endl
-                << endl;
-            return false;
-        }
-        if (!conn.supportProtocol("MMSPR2")) {
-            cout << "Host does not support MMSPR2 protocol" << endl
-                << endl;
-            return false;
-        }
-
-        std::cout << "Reply: " << endl
-            << conn.sendCommand(command) << std::endl
-            << std::endl;
-
-    } else {
         return false;
     }
-
+    cout << "Reply: " << endl
+        << conn.sendCommand(command) << endl
+        << endl;
     return true;
 }
 
@@ -229,12 +48,7 @@ void runScript(Connection& conn, const std::string& scriptfile) {
 
         cout << line << endl;
 
-        std::stringstream linestream(line);
-        std::string command;
-        linestream >> command;
-        for (char& c : command) c = std::toupper(c);
-
-        if (!execCommand(conn, command, linestream)) {
+        if (!execCommand(conn, line)) {
             cout << "\tFailed" << endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -256,10 +70,10 @@ void interactiveConsole(Connection &conn) {
     while (running) {
         std::string command;
         cout << "> ";
-        cin >> command;
-        for (char& c : command) c = std::toupper(c);
+        std::getline(cin, command);
 
-        if (command == "OPEN") {
+        // todo broken
+        if (command == "open") {
             //  OPEN [host]              -  Establishes connection to the host
             if (conn.Disconnect()) {
                 cout << "Socket closed" << endl
@@ -287,7 +101,7 @@ void interactiveConsole(Connection &conn) {
                     << endl;
             }
 
-        } else if (command == "CLOSE") {
+        } else if (command == "close") {
             //  CLOSE                    -  Closes connection to the host
             if (conn.Disconnect()) {
                 cout << "Socket closed" << endl
@@ -297,21 +111,13 @@ void interactiveConsole(Connection &conn) {
                     << endl;
             }
 
-        } else if (command == "STATUS") {
+        } else if (command == "status") {
             //  STATUS                   -  Informs about the current connection
             cout << "Socket " << (conn.Connected() ? "connected" : "not connected") << endl
                 << endl;
 
-        } else if (command == "HELP") {
-            //  HELP                     -  Prints command line syntax and this info
-            printHelp();
-
-        } else if (command == "EXIT") {
-            //  EXIT                     -  Closes this program
-            running = false; // leave loop
-
         } else {
-            if (!execCommand(conn, command, cin)) {
+            if (!execCommand(conn, command)) {
                 cout << "ERR unknown command" << endl
                     << endl;
             }

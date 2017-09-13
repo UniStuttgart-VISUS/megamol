@@ -137,7 +137,9 @@ void megamol::core::utility::LuaHostService::serve() {
 
             std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
             std::string reply = makeAnswer(request_str);
-            //if (reply.empty()) reply = "ERR";
+            //if (reply.empty()) {
+            //    reply = "ERR";
+            //}
             socket.send(reply.data(), reply.size());
         }
 
@@ -157,29 +159,14 @@ void megamol::core::utility::LuaHostService::serve() {
 
 std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string& req) {
 
-    if (req.empty()) return "";
+    if (req.empty()) return std::string("Null Command.");
 
-    // TODO run Lua!
-
-    //auto firstSpace = std::find(req.begin(), req.end(), ' ');
-    //std::string command;
-    //std::string params;
-    //if (firstSpace == req.end()) {
-    //    command = req;
-    //    params.clear();
-    //} else {
-    //    command = req.substr(0, std::distance(req.begin(), firstSpace));
-    //    params = req.substr(std::distance(req.begin(), firstSpace) + 1);
-    //}
-    //for (char& c : command) c = std::toupper(c);
-
-    //auto cmdFunc = commandMap.find(command);
-    //if (cmdFunc != commandMap.end()) {
-    //    return cmdFunc->second(mgAccess, params);
-
-    //} else {
-    //    return "ERR REQINVALID unknown request";
-    //}
-
-    //return "ERR generic";
+    std::string result;
+    int ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
+    if (ok) {
+        vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+    }
+    return result;
 }

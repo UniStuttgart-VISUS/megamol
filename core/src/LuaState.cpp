@@ -68,6 +68,7 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmSetLogLevel = mmSetLogLevel,"
 "  mmSetEchoLevel = mmSetEchoLevel,"
 "  mmSetConfigValue = mmSetConfigValue,"
+"  mmGetModuleParams = mmGetModuleParams,"
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -228,6 +229,8 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, "mmSetEchoLevel", &dispatch<&LuaState::SetEchoLevel>);
 
         lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
+
+        lua_register(L, "mmGetModuleParams", &dispatch<&LuaState::GetModuleParams>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
