@@ -215,6 +215,9 @@ namespace utility {
         bool getParamSlot(const std::string routine, const char *paramName,
             core::param::ParamSlot **out);
 
+        /** gets a string from the stack position i. returns false if it's not a string */
+        bool getString(int i, std::string& out);
+
         /** print the stack somewhat */
         void printStack();
 

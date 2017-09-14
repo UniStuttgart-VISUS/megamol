@@ -276,6 +276,16 @@ void megamol::core::LuaState::commonInit() {
 }
 
 
+bool megamol::core::LuaState::getString(int i, std::string& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TSTRING) {
+        auto *res = lua_tostring(L, i);
+        out = std::string(res);
+        return true;
+    }
+    return false;
+}
+
 /*
 * megamol::core::LuaState::LuaState
 */
@@ -367,18 +377,28 @@ bool megamol::core::LuaState::RunString(const std::string& envName, const std::s
             lua_pop(L, 1); // and remove it.
             return false;
         } else {
+            bool good = true;
             // as a result, we still expect a string, if anything
             int n = lua_gettop(L);
             if (n > 0) {
                 if (n > 2) {
                     vislib::sys::Log::DefaultLog.WriteError("Lua execution returned more than one value");
-                    return false;
+                    good = false;
                 } else {
-                    const char *res = lua_tostring(L, 1);
-                    result = std::string(res);
-                    lua_pop(L, 1); // and remove it.
-                    return true;
+                    std::string res;
+                    // we are not in a Lua callback, so making lua throw (luaL_checkstring) is not a good idea!
+                    if (getString(1, res)) {
+                        result = res;
+                    } else {
+                        result = "Error: Result is a non-string";
+                        vislib::sys::Log::DefaultLog.WriteError("Lua execution returned non-string");
+                        good = false;
+                    } 
                 }
+                // clean up stack!
+                for (int i = 1; i <= n; i++)
+                    lua_pop(L, 1);
+                return good;
             }
             return true;
         }
