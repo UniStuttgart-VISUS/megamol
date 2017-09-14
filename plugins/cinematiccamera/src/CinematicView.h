@@ -1,10 +1,14 @@
 /*
 *CinematicView.h
+*
 */
 
+///////////////////////////////////////////////////////////////////////////////
+///// DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp" /////
+///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MEGAMOL_CINEMATICCAMERA_CinematicView_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_CinematicView_H_INCLUDED
+#ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
+#define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,9 +22,10 @@
 #include "vislib/Serialisable.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/sys/FastFile.h"
 
 #include "Keyframe.h"
-
+#include "png.h"
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -96,14 +101,94 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            float    currentViewTime;
-            Keyframe shownKeyframe;
-            int      cineWidth;
-            int      cineHeight;
-            float    maxAnimTime;
-            int      vpW, vpH;
-            vislib::math::Point<float, 3> bboxCenter;
+            float                                   currentViewTime;
+            Keyframe                                shownKeyframe;
+            int                                     cineWidth;
+            int                                     cineHeight;
+            int                                     fps;
+            float                                   maxAnimTime;
+            int                                     vpW, vpH;
+            vislib::math::Point<float, 3>           bboxCenter;
             vislib::graphics::gl::FramebufferObject fbo;
+            bool                                    resetFbo;
+            bool                                    rendering;
+            CinematicView::SkyboxSides              sbSide;
+            vislib::TString                         folder;
+
+            struct pngData {
+                BYTE                  *buffer;
+                vislib::sys::FastFile  file;
+                unsigned int           width;
+                unsigned int           height;
+                unsigned int           bpp;
+                vislib::TString        filename;
+                unsigned int           cnt;
+                png_structp            ptr;
+                png_infop              infoptr;
+                float                  time;
+            } pngdata;
+
+            /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            /** Render to file functions */
+            bool rtf_setup();
+
+            /** */
+            bool rtf_set_time_and_camera();
+
+            /** */
+            bool rtf_create_frame();
+
+            /** */
+            bool rtf_write_frame();
+
+            /** */
+            bool rtf_finish();
+
+            /**
+            * My error handling function for png export
+            *
+            * @param pngPtr The png structure pointer
+            * @param msg The error message
+            */
+            static void PNGAPI CinematicView::pngError(png_structp pngPtr, png_const_charp msg) {
+                throw vislib::Exception(msg, __FILE__, __LINE__);
+            }
+
+            /**
+            * My error handling function for png export
+            *
+            * @param pngPtr The png structure pointer
+            * @param msg The error message
+            */
+            static void PNGAPI CinematicView::pngWarn(png_structp pngPtr, png_const_charp msg) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    "Png-Warning: %s\n", msg);
+            }
+
+            /**
+            * My write function for png export
+            *
+            * @param pngPtr The png structure pointer
+            * @param buf The pointer to the buffer to be written
+            * @param size The number of bytes to be written
+            */
+            static void PNGAPI CinematicView::pngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
+                vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+                f->Write(buf, size);
+            }
+
+            /**
+            * My flush function for png export
+            *
+            * @param pngPtr The png structure pointer
+            */
+            static void PNGAPI CinematicView::pngFlush(png_structp pngPtr) {
+                vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+                f->Flush();
+            }
 
             /**********************************************************************
             * callback
@@ -119,12 +204,18 @@ namespace megamol {
             /** */
 			core::param::ParamSlot selectedSkyboxSideParam;
             /** */
-            core::param::ParamSlot cinematicHeightParam;
+            core::param::ParamSlot resHeightParam;
             /** */
-            core::param::ParamSlot cinematicWidthParam;
+            core::param::ParamSlot resWidthParam;
+            /** */
+            core::param::ParamSlot fpsParam;
+            /** */
+            core::param::ParamSlot renderParam;
+            /** */
+            core::param::ParamSlot folderParam;
 		};
 
 	} /* end namespace cinematiccamera */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_CinematicView_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED */

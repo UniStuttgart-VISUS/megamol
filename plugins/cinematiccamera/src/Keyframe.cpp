@@ -15,12 +15,12 @@ using namespace megamol::cinematiccamera;
 Keyframe::Keyframe() {
 
     this->camera = vislib::graphics::Camera();
-    this->time = 0.0f;
+    this->time   = 0.0f;
 }
 Keyframe::Keyframe(vislib::graphics::Camera c, float t) {
 
 	this->camera = c;
-    this->time = t;
+    this->time   = t;
 }
 
 

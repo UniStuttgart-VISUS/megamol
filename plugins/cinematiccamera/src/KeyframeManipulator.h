@@ -1,11 +1,13 @@
 /*
-* Manipulator3D.h
+* KeyframeManipulator.h
+*
 */
 
-
-#ifndef MEGAMOL_CINEMATICCAMERA_MANIPULATOR_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_MANIPULATOR_H_INCLUDED
+#ifndef MEGAMOL_CINEMATICCAMERA_KEYFRAME_MANIP_H_INCLUDED
+#define MEGAMOL_CINEMATICCAMERA_KEYFRAME_MANIP_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CinematicCamera/CinematicCamera.h"
 #include "Keyframe.h"
@@ -20,15 +22,15 @@
 namespace megamol {
     namespace cinematiccamera {
 
-        class Manipulator3D {
+        class KeyframeManipulator {
 
         public:
 
             /** CTOR */
-            Manipulator3D();
+            KeyframeManipulator(void);
 
             /** DTOR */
-            ~Manipulator3D();
+            ~KeyframeManipulator(void);
 
             // enumeration of manipulator types
             enum manipType {
@@ -47,12 +49,12 @@ namespace megamol {
                // Add new manipulator type before NONE ...
 
             /** */
-            bool update(vislib::Array<Manipulator3D::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
+            bool update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         vislib::math::Dimension<int, 2> vps, vislib::math::Point<float, 3> wcp, 
                         vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm);
 
             /** */
-            bool draw();
+            bool draw(void);
 
             /** */
             int checkKfPosHit(float x, float y);
@@ -108,6 +110,7 @@ namespace megamol {
             vislib::math::Vector<float, 3>   skfPos;
             vislib::math::Vector<float, 3>   skfUp;
             vislib::math::Vector<float, 3>   skfLookAt;
+            Keyframe                         sKeyframe;
 
             vislib::Array<manipPosData>      sArray;
             vislib::math::Vector<float, 2>   skfSsPos;
@@ -117,7 +120,7 @@ namespace megamol {
             // ...
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::math::Dimension<int, 2>  viewportSize;
-            vislib::math::Vector<float, 3>    worldCamPos;
+            vislib::math::Vector<float, 3>   worldCamPos;
             bool                             isDataSet;
             bool                             isDataDirty;
 
@@ -128,7 +131,7 @@ namespace megamol {
             **********************************************************************/
 
             /** */
-            void calculateCircleVertices();
+            void calculateCircleVertices(void);
 
             /** */
             void drawCircle(vislib::math::Vector<float, 3> pos, float factor);
@@ -140,10 +143,11 @@ namespace megamol {
             vislib::math::Vector<float, 2> getScreenSpace(vislib::math::Vector<float, 3> wp);
 
             /** */
-            bool updateSKfManipulators();
+            bool updateSKfManipulators(void);
 
         };
 
     } /* end namespace cinematiccamera */
 } /* end namespace megamol */
-#endif /* MEGAMOL_CINEMATICCAMERA_MANIPULATOR_H_INCLUDED */
+
+#endif /* MEGAMOL_CINEMATICCAMERA_KEYFRAME_MANIP_H_INCLUDED */

@@ -1,11 +1,13 @@
 /*
  *Keyframe.h
+ *
  */
-
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATICCAMERA_KEYFRAME_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CinematicCamera/CinematicCamera.h"
 
@@ -13,7 +15,6 @@
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
 #include "vislib/math/Vector.h"
-
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -50,6 +51,7 @@ namespace megamol {
 			}
 
             /** */
+            // Compare the relevant values and not just the pointer to the camera parameters
 			bool operator==(Keyframe const& rhs){
 				return ((this->camera.Parameters()->Position() == rhs.camera.Parameters()->Position()) &&
                     (this->camera.Parameters()->LookAt() == rhs.camera.Parameters()->LookAt()) &&
@@ -57,8 +59,14 @@ namespace megamol {
                     (this->camera.Parameters()->ApertureAngle() == rhs.camera.Parameters()->ApertureAngle()) &&
                     (this->time == rhs.time));
 			}
+            /*
+            bool operator==(Keyframe const& rhs) {
+                return ((this->camera == rhs.camera) && (this->time == rhs.time));
+            }
+            */
 
             /** */
+            // Compare the relevant values and not just the pointer to the camera parameters
             bool operator!=(Keyframe const& rhs) {
                 return ((this->camera.Parameters()->Position() != rhs.camera.Parameters()->Position()) ||
                     (this->camera.Parameters()->LookAt() != rhs.camera.Parameters()->LookAt()) ||
@@ -66,6 +74,11 @@ namespace megamol {
                     (this->camera.Parameters()->ApertureAngle() != rhs.camera.Parameters()->ApertureAngle()) ||
                     (this->time != rhs.time));
             }
+            /*
+            bool operator!=(Keyframe const& rhs) {
+                return (!(this->camera == rhs.camera) || (this->time != rhs.time));
+            }
+            */
 
             /** */
 			vislib::math::Point<FLOAT, 3> getCamPosition(){

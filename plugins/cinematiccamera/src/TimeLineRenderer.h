@@ -1,8 +1,6 @@
 /*
 * TimeLineRenderer.h
 *
-* Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED
@@ -24,7 +22,6 @@
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
-
 
 namespace megamol {
 	namespace cinematiccamera {

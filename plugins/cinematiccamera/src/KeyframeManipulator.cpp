@@ -1,47 +1,65 @@
 /**
-* Manipulator3D.cpp
+* KeyframeManipulator.cpp
+*
 */
 
 #include "stdafx.h"
-#include "Manipulator3D.h"
+#include "KeyframeManipulator.h"
 
 #include "vislib/sys/Log.h"
-
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::cinematiccamera;
 
-
 #ifndef CC_PI
     #define CC_PI 3.1415926535897
 #endif
 
-
 /*
-* Manipulator3D::Manipulator3D
+* KeyframeManipulator::KeyframeManipulator
 */
-Manipulator3D::Manipulator3D() {
+KeyframeManipulator::KeyframeManipulator(void) :
+    sKeyframe()
+    {
+
+    // init variables
+    this->activeType          = manipType::NONE;
+    this->lastMousePos        = vislib::math::Vector<float, 2>();
+    this->skfPos              = vislib::math::Vector<float, 3>();
+    this->skfUp               = vislib::math::Vector<float, 3>();
+    this->skfLookAt           = vislib::math::Vector<float, 3>();
+    this->skfSsPos            = vislib::math::Vector<float, 2>();
+    this->skfSsLookAt         = vislib::math::Vector<float, 2>();
+    this->sKeyframeInArray    = false;;
+    this->modelViewProjMatrix = vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>();
+    this->viewportSize        = vislib::math::Dimension<int, 2>();
+    this->worldCamPos         = vislib::math::Vector<float, 3>();
+    this->isDataDirty         = true;
+    this->kfArray.Clear();
+    this->sArray.Clear();
+    this->circleVertices.Clear();
+
     this->isDataSet = false;
 }
 
 
 /*
-* Manipulator3D::~Manipulator3D
+* KeyframeManipulator::~KeyframeManipulator
 */
-Manipulator3D::~Manipulator3D() {
+KeyframeManipulator::~KeyframeManipulator(void) {
     // intentionally empty
 }
 
 
 /*
-* Manipulator3D::Manipulator3D
+* KeyframeManipulator::KeyframeManipulator
 */
-bool Manipulator3D::update(vislib::Array<Manipulator3D::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, vislib::math::Dimension<int, 2> vps,
+bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, vislib::math::Dimension<int, 2> vps,
                            vislib::math::Point<float, 3> wcp, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm) {
 
     if (kfa == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[MANIPULATOR3D] [Update] Pointer to keyframe array is NULL.");
+        vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
         return false;
     }
 
@@ -60,10 +78,21 @@ bool Manipulator3D::update(vislib::Array<Manipulator3D::manipType> am, vislib::A
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
-    vislib::SmartPtr<vislib::graphics::CameraParameters> p = skf.getCamParameters();
-    if ((this->skfPos    != p->Position()) ||
-        (this->skfUp     != p->Up())       ||
-        (this->skfLookAt != p->LookAt())   || recalcKf) {
+    if ((this->sKeyframe != skf) || recalcKf) {
+
+        vislib::SmartPtr<vislib::graphics::CameraParameters> p = skf.getCamParameters();
+        if (p.IsNull()) {
+            throw vislib::Exception("[KEYFRAME MANIPULATOR] [update] Camera parameter pointer is NULL.", __FILE__, __LINE__);
+        }
+
+        vislib::graphics::Camera c;
+        c.Parameters()->SetPosition(p->Position());
+        c.Parameters()->SetLookAt(p->LookAt());
+        c.Parameters()->SetUp(p->Up());
+        c.Parameters()->SetApertureAngle(p->ApertureAngle());
+
+        this->sKeyframe.setTime(skf.getTime());
+        this->sKeyframe.setCamera(c);
 
         // Check if selected keyframe exists in keyframe array
         this->sKeyframeInArray = false;
@@ -125,9 +154,9 @@ bool Manipulator3D::update(vislib::Array<Manipulator3D::manipType> am, vislib::A
 
 
 /*
-* Manipulator3D::updateSKfManipulators
+* KeyframeManipulator::updateSKfManipulators
 */
-bool Manipulator3D::updateSKfManipulators() {
+bool KeyframeManipulator::updateSKfManipulators() {
 
     // Update screen space positions
     this->skfSsPos    = this->getScreenSpace(this->skfPos);
@@ -155,7 +184,7 @@ bool Manipulator3D::updateSKfManipulators() {
                                                       tmpkfS.wsPos.Normalise();
                                                       tmpkfS.wsPos += this->skfPos;
                                                       break;
-            default: vislib::sys::Log::DefaultLog.WriteError("[MANIPULATOR3D] [Update] Bug: %i", i); return false;
+            default: vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Bug: %i", i); return false;
         }
         tmpkfS.ssPos     = this->getScreenSpace(tmpkfS.wsPos);
         tmpkfS.offset    = (this->getScreenSpace(tmpkfS.wsPos + this->circleVertices[1]) - tmpkfS.ssPos).Norm();
@@ -167,12 +196,12 @@ bool Manipulator3D::updateSKfManipulators() {
 
 
 /*
-* Manipulator3D::checkKfPosHit
+* KeyframeManipulator::checkKfPosHit
 */
-int Manipulator3D::checkKfPosHit(float x, float y) {
+int KeyframeManipulator::checkKfPosHit(float x, float y) {
 
     if (!isDataSet) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[MANIPULATOR3D] [checkForHit] Data is not set. Please call 'update' first.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
         return false;
     }
 
@@ -196,12 +225,12 @@ int Manipulator3D::checkKfPosHit(float x, float y) {
 
 
 /*
-* Manipulator3D::checkManipHit
+* KeyframeManipulator::checkManipHit
 */
-bool Manipulator3D::checkManipHit(float x, float y) {
+bool KeyframeManipulator::checkManipHit(float x, float y) {
 
     if (!isDataSet) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[MANIPULATOR3D] [checkForHit] Data is not set. Please call 'update' first.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
         return false;
     }
 
@@ -225,12 +254,12 @@ bool Manipulator3D::checkManipHit(float x, float y) {
 }
 
 /*
-* Manipulator3D::ProcessManipHit
+* KeyframeManipulator::ProcessManipHit
 */
-bool Manipulator3D::processManipHit(float x, float y) {
+bool KeyframeManipulator::processManipHit(float x, float y) {
 
     if (!isDataSet) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[MANIPULATOR3D] [processManipHit] Data is not set. Please call 'update' first.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [processManipHit] Data is not set. Please call 'update' first.");
         return false;
     }
 
@@ -241,7 +270,7 @@ bool Manipulator3D::processManipHit(float x, float y) {
 
     unsigned int index = static_cast<unsigned int>(this->activeType);
     if (index >= static_cast<unsigned int>(NUM_OF_SELECTED_MANIP)) {
-        vislib::sys::Log::DefaultLog.WriteError("[MANIPULATOR3D] [processManipHit] Bug"); 
+        vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [processManipHit] Bug"); 
         return false;
     }
 
@@ -293,7 +322,7 @@ bool Manipulator3D::processManipHit(float x, float y) {
         vislib::math::Vector<float, 3> tmpSsRight    = tmpSsMani.Cross(tmpSsUp);
         vislib::math::Vector<float, 3> tmpDeltaMouse = vislib::math::Vector<float, 3>(x - this->lastMousePos.GetX(), y - this->lastMousePos.GetY(), 0.0f);
 
-        lineDiff = vislib::math::Abs(tmpDeltaMouse.Norm()) * this->sensitivity / 2.0f;
+        lineDiff = vislib::math::Abs(tmpDeltaMouse.Norm()) * this->sensitivity / 4.0f; // Adjust sensitivity of rotation here ...
         if (tmpSsRight.Dot(tmpSsMani + tmpDeltaMouse) < 0.0f) {
             lineDiff *= -1.0f;
         }
@@ -313,35 +342,35 @@ bool Manipulator3D::processManipHit(float x, float y) {
 
 
 /*
-* Manipulator3D::getManipulatedPos
+* KeyframeManipulator::getManipulatedPos
 */
-vislib::math::Point<float, 3> Manipulator3D::getManipulatedPos() {
+vislib::math::Point<float, 3> KeyframeManipulator::getManipulatedPos(void) {
     return vislib::math::Point<float, 3>(this->skfPos.GetX(), this->skfPos.GetY(), this->skfPos.GetZ());
 }
 
 
 /*
-* Manipulator3D::getManipulatedUp
+* KeyframeManipulator::getManipulatedUp
 */
-vislib::math::Vector<float, 3> Manipulator3D::getManipulatedUp() {
+vislib::math::Vector<float, 3> KeyframeManipulator::getManipulatedUp(void) {
     return this->skfUp;
 }
 
 
 /*
-* Manipulator3D::getManipulatedLookAt
+* KeyframeManipulator::getManipulatedLookAt
 */
-vislib::math::Point<float, 3> Manipulator3D::getManipulatedLookAt() {
+vislib::math::Point<float, 3> KeyframeManipulator::getManipulatedLookAt(void) {
     return vislib::math::Point<float, 3>(this->skfLookAt.GetX(), this->skfLookAt.GetY(), this->skfLookAt.GetZ());
 }
 
 
 /*
-* Manipulator3D::getScreenSpace
+* KeyframeManipulator::getScreenSpace
 *
 * Transform position from world space to screen space
 */
-vislib::math::Vector<float, 2> Manipulator3D::getScreenSpace(vislib::math::Vector<float, 3> wp) {
+vislib::math::Vector<float, 2> KeyframeManipulator::getScreenSpace(vislib::math::Vector<float, 3> wp) {
 
     // World space position
     vislib::math::Vector<float, 4> wsPos = vislib::math::Vector<float, 4>(wp.GetX(), wp.GetY(), wp.GetZ(), 1.0f);
@@ -359,9 +388,9 @@ vislib::math::Vector<float, 2> Manipulator3D::getScreenSpace(vislib::math::Vecto
 
 
 /*
-* Manipulator3D::initCircleVertices
+* KeyframeManipulator::initCircleVertices
 */
-void Manipulator3D::calculateCircleVertices() {
+void KeyframeManipulator::calculateCircleVertices(void) {
 
     this->circleVertices.Clear();
     this->circleVertices.AssertCapacity(this->circleSubDiv);
@@ -386,12 +415,12 @@ void Manipulator3D::calculateCircleVertices() {
 
 
 /*
-* Manipulator3D::Draw
+* KeyframeManipulator::Draw
 */
-bool Manipulator3D::draw() {
+bool KeyframeManipulator::draw(void) {
 
     if (!isDataSet) {
-        vislib::sys::Log::DefaultLog.WriteError("[MANIPULATOR3D] [draw] Data is not set. Please call 'update' first.");
+        vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [draw] Data is not set. Please call 'update' first.");
         return false;
     }
 
@@ -426,9 +455,9 @@ bool Manipulator3D::draw() {
     float mxColor[4] = {0.8f, 0.1f, 0.0f, 1.0f }; // Color for MANIPULATOR X-AXIS
     float myColor[4] = {0.8f, 0.8f, 0.0f, 1.0f }; // Color for MANIPULATOR Y-AXIS
     float mzColor[4] = {0.1f, 0.8f, 0.0f, 1.0f }; // Color for MANIPULATOR Z-AXIS
-    // Adapt colors depending on relative luminance 
-    float relLum = 0.2126f*bgColor[0] + 0.7152f*bgColor[1] + 0.0722f*bgColor[2];
-    if (relLum < 0.5f) {
+    // Adapt colors depending on  Lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L < 0.5f) {
         float tmp;
         // Swap keyframe colors
         for (unsigned int i = 0; i < 4; i++) {
@@ -466,7 +495,7 @@ bool Manipulator3D::draw() {
                 case (manipType::SELECTED_KF_LOOKAT_X):   glColor4fv(mxColor);  this->drawManipulator(this->skfLookAt, this->sArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_LOOKAT_Y):   glColor4fv(myColor);  this->drawManipulator(this->skfLookAt, this->sArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_LOOKAT_Z):   glColor4fv(mzColor);  this->drawManipulator(this->skfLookAt, this->sArray[i].wsPos); break;
-                default: vislib::sys::Log::DefaultLog.WriteError("[MANIPULATOR3D] [draw] Bug.");  break;
+                default: vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [draw] Bug.");  break;
                 }
             }
         }
@@ -497,9 +526,9 @@ bool Manipulator3D::draw() {
 
 
 /*
-* Manipulator3D::drawCircle
+* KeyframeManipulator::drawCircle
 */
-void Manipulator3D::drawCircle(vislib::math::Vector<float, 3> pos, float factor) {
+void KeyframeManipulator::drawCircle(vislib::math::Vector<float, 3> pos, float factor) {
 
     glBegin(GL_TRIANGLE_FAN);
     for (unsigned int i = 0; i < static_cast<unsigned int>(circleVertices.Count()); i++) {
@@ -510,9 +539,9 @@ void Manipulator3D::drawCircle(vislib::math::Vector<float, 3> pos, float factor)
 
 
 /*
-* Manipulator3D::drawManipulator
+* KeyframeManipulator::drawManipulator
 */
-void Manipulator3D::drawManipulator(vislib::math::Vector<float, 3> kp, vislib::math::Vector<float, 3> mp) {
+void KeyframeManipulator::drawManipulator(vislib::math::Vector<float, 3> kp, vislib::math::Vector<float, 3> mp) {
 
     this->drawCircle(mp, 1.0f);
     glBegin(GL_LINES);

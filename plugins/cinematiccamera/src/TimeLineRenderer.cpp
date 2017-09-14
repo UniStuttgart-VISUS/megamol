@@ -1,8 +1,6 @@
 /*
 * TimeLineRenderer.cpp
 *
-* Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
 */
 
 #include "stdafx.h"
@@ -29,12 +27,10 @@
 #include "TimeLineRenderer.h"
 #include "CallCinematicCamera.h"
 
-
 //#define _USE_MATH_DEFINES
 
 using namespace megamol::core;
 using namespace megamol::cinematiccamera;
-
 
 
 /*
@@ -51,13 +47,13 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 #ifndef USE_SIMPLE_FONT
 	theFont(vislib::graphics::gl::FontInfo_Verdana),
 #endif // USE_SIMPLE_FONT
-	markerTextures(0), dragDropKeyframe()
+	dragDropKeyframe()
 	{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
-    // Init variables
+    // init variables
     this->tlStartPos       = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->tlEndPos         = vislib::math::Vector<float, 2>(0.0f, 1.0f);
     this->tlLength         = (this->tlEndPos - this->tlStartPos).Norm();
@@ -71,14 +67,14 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->adaptSegSize     = 10.0f;
     this->initScaleFac     = 1.0f;
     this->scaleFac         = 1.0f;
-
     this->moveTimeLine     = false;
     this->markerSize       = 30.0f;
     this->currentRulerMode = RULER_FIXED_FONT;
     this->fontSize         = 20.0f;
     this->segmentSize      = 10.0f;
+    this->markerTextures.Clear();
 
-
+    // init parameters
     this->moveTimeLineParam.SetParameter(new param::ButtonParam('t'));
     this->MakeSlotAvailable(&this->moveTimeLineParam);
 
@@ -94,14 +90,11 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->rulerFixedFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.0f));
 
     // Comment the following lines to hide parameters
-    /*
-    this->MakeSlotAvailable(&this->markerSizeParam);
-    */
-    /**/
+
+    //this->MakeSlotAvailable(&this->markerSizeParam);
     this->MakeSlotAvailable(&this->rulerModeParam);
     this->MakeSlotAvailable(&this->rulerFixedSegParam);
     this->MakeSlotAvailable(&this->rulerFixedFontParam);
-    /**/
 }
 
 
@@ -219,7 +212,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is NULL.");
         return false;
     }
-    Keyframe s = ccc->getSelectedKeyframe();
+
+    Keyframe skf = ccc->getSelectedKeyframe();
 
     bool adaptFontSize = false;
     bool adaptSegSize  = false;
@@ -367,9 +361,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float kColor[4]    = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME 
     float dkmColor[4]  = { 0.5f, 0.5f, 1.0f, 1.0f }; // Color for SELECTED KEYFRAME 
     float skColor[4]   = { 0.1f, 0.1f, 1.0f, 1.0f }; // Color for SELECTED KEYFRAME 
-    // Adapt colors depending on relative luminance 
-    float relLum = 0.2126f*bgColor[0] + 0.7152f*bgColor[1] + 0.0722f*bgColor[2];
-    if (relLum < 0.5f) {
+    // Adapt colors depending on  Lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L < 0.5f) {
         float tmp;
         // Swap keyframe colors
         for (unsigned int i = 0; i < 4; i++) {
@@ -402,7 +396,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Draw markers for existing keyframes in array
     if (keyframes->Count() > 0) {
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            if ((*keyframes)[i] == s) {
+            if ((*keyframes)[i] == skf) {
                 glColor4fv(skColor);
             }
             else {
@@ -444,8 +438,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     glEnd();
     // Draw interpolated selected keyframe marker
-    if (!keyframes->Contains(s)) {
-        float x = this->tlStartPos.GetX() + s.getTime() * frameFrac;
+    if (!keyframes->Contains(skf)) {
+        float x = this->tlStartPos.GetX() + skf.getTime() * frameFrac;
         glLineWidth(5.0f);
         glColor4fv(skColor);
         glBegin(GL_LINES);

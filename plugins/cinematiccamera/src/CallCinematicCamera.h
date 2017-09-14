@@ -20,12 +20,6 @@
 
 #include "Keyframe.h"
 
-#include <iostream>
-
-
-using namespace vislib;
-
-
 namespace megamol {
 	namespace cinematiccamera {
 
@@ -167,10 +161,10 @@ namespace megamol {
             }
 
             // CAMERA PARAMETER
-            inline void setCameraParameter(SmartPtr<graphics::CameraParameters> c) {
+            inline void setCameraParameter(vislib::SmartPtr<vislib::graphics::CameraParameters> c) {
                 this->cameraParam = c;
             }
-            inline SmartPtr<graphics::CameraParameters> getCameraParameter() {
+            inline vislib::SmartPtr<vislib::graphics::CameraParameters> getCameraParameter() {
                 return this->cameraParam;
             }
 
@@ -197,14 +191,14 @@ namespace megamol {
             **********************************************************************/
 
 			// Pointer to array of keyframes
-			Array<Keyframe>				          *keyframes;
-            Array<math::Point<float, 3> >         *interpolCamPos;
+            vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
+            vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
+			vislib::Array<Keyframe>				  *keyframes;
             unsigned int                           interpolSteps;
-			math::Cuboid<float>		              *boundingbox;
+            vislib::math::Cuboid<float>		      *boundingbox;
             Keyframe						       selectedKeyframe;
             float                                  dropTime;
 			float								   totalTime;
-            SmartPtr<graphics::CameraParameters>   cameraParam;
             float                                  maxAnimTime;
             vislib::math::Point<float, 3>          bboxCenter;
 

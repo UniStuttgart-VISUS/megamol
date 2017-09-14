@@ -1,12 +1,10 @@
 /*
 * CinematicRenderer.h
 *
-* Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOLCORE_CinematicRenderer_H_INCLUDED
-#define MEGAMOLCORE_CinematicRenderer_H_INCLUDED
+#ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED
+#define MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -32,8 +30,7 @@
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
 
-#include "Manipulator3D.h"
-
+#include "KeyframeManipulator.h"
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -157,7 +154,7 @@ namespace megamol {
             vislib::math::Point<float, 3>    bboxCenter;
             bool                             toggleManipulator;
             bool                             showHelpText;
-            Manipulator3D                    manipulator;
+            KeyframeManipulator                    manipulator;
 
             /**********************************************************************
             * callback stuff
@@ -184,4 +181,4 @@ namespace megamol {
 	} /* end namespace cinematiccamera */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CinematicRenderer_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED */

@@ -1,10 +1,7 @@
 /*
 * CinematicRenderer.cpp
 *
-* Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
 */
-
 
 #include "stdafx.h"
 
@@ -40,7 +37,6 @@ using namespace megamol::core::view;
 using namespace megamol::cinematiccamera;
 using namespace vislib;
 
-
 /*
 * CinematicRenderer::CinematicRenderer
 */
@@ -63,6 +59,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->showHelpText      = false;
 
+    // init parameters
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->slaveRendererSlot);
 
@@ -220,11 +217,11 @@ bool CinematicRenderer::Render(Call& call) {
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     // Set animation time based on selected keyframe ('disables' animation via view3d)
-    Keyframe s = ccc->getSelectedKeyframe();
+    Keyframe skf = ccc->getSelectedKeyframe();
     // Wrap time
-    float selectTime = s.getTime();
-    float frameCnt = static_cast<float>(oc->TimeFramesCount());
-    selectTime = selectTime - (floorf(selectTime / frameCnt) * frameCnt);
+    float selectTime = skf.getTime();
+    float frameCnt   = static_cast<float>(oc->TimeFramesCount());
+    selectTime       = selectTime - (floorf(selectTime / frameCnt) * frameCnt);
 
     *oc = *cr3d;
     oc->SetTime(selectTime);
@@ -264,23 +261,23 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Manipulators
-    vislib::Array<Manipulator3D::manipType> availManip;
+    vislib::Array<KeyframeManipulator::manipType> availManip;
     availManip.Clear();
-    availManip.Add(Manipulator3D::manipType::KEYFRAME_POS);
+    availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
     if (this->toggleManipulator) {
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_POS_X);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_POS_Y);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_POS_Z);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
     }
     else {
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_UP);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_LOOKAT_X);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_LOOKAT_Y);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_LOOKAT_Z);
-        availManip.Add(Manipulator3D::manipType::SELECTED_KF_POS_LOOKAT);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
+        availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
     }
     // Update manipulator data
-    this->manipulator.update(availManip, keyframes, s, viewportSize, cr3d->GetCameraParameters()->Position(), modelViewProjMatrix);
+    this->manipulator.update(availManip, keyframes, skf, viewportSize, cr3d->GetCameraParameters()->Position(), modelViewProjMatrix);
     // Draw manipulators
     this->manipulator.draw();
 
@@ -293,9 +290,9 @@ bool CinematicRenderer::Render(Call& call) {
     }
     // COLORS
     float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
-    // Adapt colors depending on relative luminance 
-    float relLum = 0.2126f*bgColor[0] + 0.7152f*bgColor[1] + 0.0722f*bgColor[2];
-    if (relLum < 0.5f) {
+    // Adapt colors depending on  Lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L < 0.5f) {
         // not used so far
     }
 
@@ -353,20 +350,20 @@ bool CinematicRenderer::Render(Call& call) {
     glLoadIdentity();
 
     glEnable(GL_POLYGON_SMOOTH);
-    glDisable(GL_DEPTH_TEST);
     glColor4fv(fgColor);
     float fontSize = viewportSize.GetWidth()*0.025f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
-    float strWidth = this->theFont.LineWidth(fontSize, "------------------------------------------");
+    float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------");
     if (this->showHelpText) {
-        tmpStr += "[tab] Move/Select mode.\n";
+        tmpStr += "[t] Timeline: Move or Select/Drag&Drop mode.\n";
+        tmpStr += "[tab] Move or Select mode.\n";
         tmpStr += "[m] Toggle keyframe manipulators.\n";
         tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[r] Replace selected keyframe.\n";
+        tmpStr += "[c] Change selected keyframe.\n";
         tmpStr += "[d] Delete selected keyframe.\n";
-        tmpStr += "[l] Reset keyframe lookat vector.\n";
+        tmpStr += "[l] Reset Look-At of selected keyframe.\n";
         tmpStr += "[s] Save keyframes to file.\n";
-        tmpStr += "[t] Timeline move/select mode.\n";
+        tmpStr += "[r] Start/Stop rendering animation.\n";
         tmpStr += "[h] Hide help text.\n";
     }
     else {
@@ -422,11 +419,11 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         
         // Check if manipulator is selected
         if (this->manipulator.checkManipHit(x, y)) {
-            Keyframe s = ccc->getSelectedKeyframe();
-            s.setCameraPosition(this->manipulator.getManipulatedPos());
-            s.setCameraLookAt(this->manipulator.getManipulatedLookAt());
-            s.setCameraUp(this->manipulator.getManipulatedUp());
-            ccc->setSelectedKeyframe(s);
+            Keyframe skf = ccc->getSelectedKeyframe();
+            skf.setCameraPosition(this->manipulator.getManipulatedPos());
+            skf.setCameraLookAt(this->manipulator.getManipulatedLookAt());
+            skf.setCameraUp(this->manipulator.getManipulatedUp());
+            //ccc->setSelectedKeyframe(skf);
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
         }
@@ -436,11 +433,11 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         
         // Apply changes on selected manipulator
         if (this->manipulator.processManipHit(x, y)) {
-            Keyframe s = ccc->getSelectedKeyframe();
-            s.setCameraPosition(this->manipulator.getManipulatedPos());
-            s.setCameraLookAt(this->manipulator.getManipulatedLookAt());
-            s.setCameraUp(this->manipulator.getManipulatedUp());
-            ccc->setSelectedKeyframe(s);
+            Keyframe skf = ccc->getSelectedKeyframe();
+            skf.setCameraPosition(this->manipulator.getManipulatedPos());
+            skf.setCameraLookAt(this->manipulator.getManipulatedLookAt());
+            skf.setCameraUp(this->manipulator.getManipulatedUp());
+            //ccc->setSelectedKeyframe(s);
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
         }

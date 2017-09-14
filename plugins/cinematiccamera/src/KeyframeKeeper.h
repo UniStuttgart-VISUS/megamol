@@ -22,10 +22,6 @@
 
 #include "Keyframe.h"
 
-
-using namespace vislib;
-
-
 namespace megamol {
 	namespace cinematiccamera {
 
@@ -85,8 +81,8 @@ namespace megamol {
             /** Add new keyframe to keyframe array. */
             bool addKeyframe(Keyframe kf);
 
-            /** Replace existing keyframe in keyframe array.*/
-            bool replaceKeyframe(Keyframe kf);
+            /** change existing keyframe in keyframe array.*/
+            bool changeKeyframe(Keyframe kf);
 
             /** Delete keyframe from keyframe array.*/
             bool deleteKeyframe(Keyframe kf);
@@ -101,11 +97,10 @@ namespace megamol {
             void refreshInterpolCamPos(unsigned int s);
 
             /** Updating edit parameters without setting them dirty.*/
-            void updateEditParameters(Keyframe k);
+            void updateEditParameters(Keyframe kf, bool setDirty);
 
-            /** Set speed between al keyframes to same speed 
-             *  Uses interpolSteps for approximation of keyframe positions 
-             *  
+            /** Set speed between all keyframes to same speed 
+             *  Uses interpolSteps for approximation of path between keyframe positions 
              */
             void setSameSpeed();
 
@@ -114,15 +109,15 @@ namespace megamol {
             **********************************************************************/
 
             // Variables shared/updated with call
-            Array<Keyframe>                      keyframes;
-            Array<math::Point<float, 3> >        interpolCamPos;
-            math::Cuboid<float>                  boundingBox;
+            vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
+            vislib::Array<vislib::math::Point<float, 3> > interpolCamPos;
+            vislib::Array<Keyframe>              keyframes;
+            vislib::math::Cuboid<float>          boundingBox;
             Keyframe                             selectedKeyframe;
             Keyframe                             dragDropKeyframe;
             float                                totalTime;
             float                                maxAnimTime;
             unsigned int                         interpolSteps;
-            SmartPtr<graphics::CameraParameters> cameraParam; 
             vislib::math::Point<float, 3>        bboxCenter;
 
             // Variables only used in keyframe keeper
@@ -138,13 +133,13 @@ namespace megamol {
 
 			/** Callback for updating parameters of the keyframe keeper */
 			bool CallForGetUpdatedKeyframeData(core::Call& c);
-			/** Callback for applying total time of animation */
+			/** Callback for  */
 			bool CallForSetAnimationData(core::Call& c);
-			/** Callback for calculating new interpolated camera positions */
+			/** Callback for  */
 			bool CallForInterpolatedCamPos(core::Call& c);
-			/** Callback for updating selected keyframe at new given time */
+			/** Callback for  */
 			bool CallForSetSelectedKeyframe(core::Call& c);
-			/** Callback for updating current camera parameters for new keyframe */
+			/** Callback for  */
 			bool CallForSetCameraForKeyframe(core::Call& c);
             /** Callback for dragging selected keyframe */
             bool CallForDragKeyframe(core::Call& c); 
@@ -158,7 +153,7 @@ namespace megamol {
             /** */
             core::param::ParamSlot addKeyframeParam;
             /** */
-            core::param::ParamSlot replaceKeyframeParam;
+            core::param::ParamSlot changeKeyframeParam;
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
