@@ -523,7 +523,7 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
         std::string res;
         ok = lua.RunFile(file.PeekBuffer(), res);
         if (ok) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", res.c_str());
+            //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", res.c_str());
         } else {
             vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", res.c_str());
         }

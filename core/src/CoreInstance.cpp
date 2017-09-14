@@ -308,7 +308,7 @@ void megamol::core::CoreInstance::Initialise(void) {
         "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
         "' mode on ', mmGetMachineName(), '.')", result);
     if (ok) {
-        vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+        //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
     }

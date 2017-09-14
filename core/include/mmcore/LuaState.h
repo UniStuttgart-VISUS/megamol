@@ -164,6 +164,9 @@ namespace utility {
 
         // ** MegaMol API provided for runtime manipulation / Configurator live connection
 
+        /** answer the ProcessID of the running MegaMol */
+        int GetProcessID(lua_State *L);
+
         /**
          * mmGetModuleParams(string name): list all parameters of a module
          * along with their description, type and value.

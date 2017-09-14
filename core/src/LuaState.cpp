@@ -26,6 +26,7 @@
 #include <fstream>
 #include <algorithm>
 #include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/Process.h"
 
 extern "C" {
 #include "lua.h"
@@ -68,6 +69,7 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmSetLogLevel = mmSetLogLevel,"
 "  mmSetEchoLevel = mmSetEchoLevel,"
 "  mmSetConfigValue = mmSetConfigValue,"
+"  mmGetProcessID = mmGetProcessID,"
 "  mmGetModuleParams = mmGetModuleParams,"
 "  mmGetParamType = mmGetParamType,"
 "  mmGetParamDescription = mmGetParamDescription,"
@@ -234,6 +236,7 @@ void megamol::core::LuaState::commonInit() {
 
         lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
 
+        lua_register(L, "mmGetProcessID", &dispatch<&LuaState::GetProcessID>);
         lua_register(L, "mmGetModuleParams", &dispatch<&LuaState::GetModuleParams>);
         lua_register(L, "mmGetParamType", &dispatch<&LuaState::GetParamType>);
         lua_register(L, "mmGetParamDescription", &dispatch<&LuaState::GetParamDescription>);
@@ -390,7 +393,7 @@ bool megamol::core::LuaState::RunString(const std::string& envName, const std::s
                     if (getString(1, res)) {
                         result = res;
                     } else {
-                        result = "Error: Result is a non-string";
+                        result = "Result is a non-string";
                         vislib::sys::Log::DefaultLog.WriteError("Lua execution returned non-string");
                         good = false;
                     } 
@@ -636,6 +639,17 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
 }
 
 
+int megamol::core::LuaState::GetProcessID(lua_State *L) {
+    if (this->checkRunning("mmGetProcessID")) {
+        vislib::StringA str;
+        unsigned int id = vislib::sys::Process::CurrentID();
+        str.Format("%u", id);
+        lua_pushstring(L, str.PeekBuffer());
+        return 1;
+    }
+}
+
+
 int megamol::core::LuaState::GetModuleParams(lua_State *L) {
     if (this->checkRunning("mmGetModuleParams")) {
         auto paramName = luaL_checkstring(L, 1);
@@ -839,7 +853,8 @@ int megamol::core::LuaState::SetParamValue(lua_State *L) {
             vislib::UTF8Encoder::Decode(val, paramValue);
 
             if (psp->ParseValue(val)) {
-                return 0;
+                lua_pushstring(L, psp->ValueString());
+                return 1;
             } else {
                 lua_pushstring(L, "SetParamValue: ParseValue failed");
                 lua_error(L);

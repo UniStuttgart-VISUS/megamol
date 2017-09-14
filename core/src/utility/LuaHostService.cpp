@@ -164,9 +164,10 @@ std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string
     std::string result;
     int ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
-        vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+        //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+        result = "Error: " + result;
     }
     return result;
 }
