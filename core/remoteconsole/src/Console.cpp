@@ -44,12 +44,15 @@ void runScript(Connection& conn, const std::string& scriptfile) {
     std::ifstream file(scriptfile);
     while (!file.eof()) {
         std::string line;
-        if (std::getline(file, line).eof()) break;
+        //if (std::getline(file, line).eof()) break;
+        std::getline(file, line);
 
         cout << line << endl;
 
-        if (!execCommand(conn, line)) {
-            cout << "\tFailed" << endl;
+        if (!line.empty()) {
+            if (!execCommand(conn, line)) {
+                cout << "\tFailed" << endl;
+            }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
