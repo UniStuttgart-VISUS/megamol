@@ -69,6 +69,10 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmSetEchoLevel = mmSetEchoLevel,"
 "  mmSetConfigValue = mmSetConfigValue,"
 "  mmGetModuleParams = mmGetModuleParams,"
+"  mmGetParamType = mmGetParamType,"
+"  mmGetParamDescription = mmGetParamDescription,"
+"  mmGetParamValue = mmGetParamValue,"
+"  mmSetParamValue = mmSetParamValue,"
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -231,6 +235,10 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
 
         lua_register(L, "mmGetModuleParams", &dispatch<&LuaState::GetModuleParams>);
+        lua_register(L, "mmGetParamType", &dispatch<&LuaState::GetParamType>);
+        lua_register(L, "mmGetParamDescription", &dispatch<&LuaState::GetParamDescription>);
+        lua_register(L, "mmGetParamValue", &dispatch<&LuaState::GetParamValue>);
+        lua_register(L, "mmSetParamValue", &dispatch<&LuaState::SetParamValue>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -672,6 +680,155 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
         }
         lua_pushstring(L, answer.str().c_str());
         return 1;
+    }
+    return 0;
+}
+
+
+bool megamol::core::LuaState::getParamSlot(const std::string routine, const char *paramName, core::param::ParamSlot **out) {
+
+    AbstractNamedObjectContainer::const_ptr_type root = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(this->coreInst->ModuleGraphRoot());
+    if (!root) {
+        std::string err = routine + ": no root";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(paramName);
+    if (!obj) {
+        std::string err = routine + ": parameter name " + paramName + " not found";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    *out = dynamic_cast<core::param::ParamSlot*>(obj.get());
+    if (*out == nullptr) {
+        std::string err = routine + ": parameter name " + paramName + " did not refer to a ParamSlot";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    return true;
+}
+
+
+int megamol::core::LuaState::GetParamType(lua_State *L) {
+    if (this->checkRunning("mmGetParamType")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamType", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "GetParamType: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::RawStorage pspdef;
+            psp->Definition(pspdef);
+            // not nice, but we make HEX (base64 would be better, but I don't care)
+            std::string answer(pspdef.GetSize() * 2, ' ');
+            for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
+                uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                uint8_t bh[2] = { static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16) };
+                for (unsigned int j = 0; j < 2; ++j) answer[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
+            }
+
+            lua_pushstring(L, answer.c_str());
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::GetParamDescription(lua_State *L) {
+    if (this->checkRunning("mmGetParamDescription")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamDescription", paramName, &ps)) {
+
+            vislib::StringA valUTF8;
+            vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
+
+            lua_pushstring(L, valUTF8);
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::GetParamValue(lua_State *L) {
+    if (this->checkRunning("mmGetParamValue")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamValue", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "GetParamValue: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::StringA valUTF8;
+            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+
+            lua_pushstring(L, valUTF8);
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetParamValue(lua_State *L) {
+    if (this->checkRunning("mmSetParamValue")) {
+        auto paramName = luaL_checkstring(L, 1);
+        auto paramValue = luaL_checkstring(L, 2);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("SetParamValue", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "SetParamValue: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::TString val;
+            vislib::UTF8Encoder::Decode(val, paramValue);
+
+            if (psp->ParseValue(val)) {
+                return 0;
+            } else {
+                lua_pushstring(L, "SetParamValue: ParseValue failed");
+                lua_error(L);
+                return 0;
+            }
+        } else {
+            // the error is already thrown
+            return 0;
+        }
     }
     return 0;
 }

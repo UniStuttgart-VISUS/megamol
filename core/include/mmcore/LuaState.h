@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <string>
+#include "mmcore/param/ParamSlot.h"
 
 struct lua_State; // lua includes should stay in the core
 
@@ -161,13 +162,34 @@ namespace utility {
          */
         int SetConfigValue(lua_State *L);
 
-        // ** MegaMol API provided for runtime manipulation
+        // ** MegaMol API provided for runtime manipulation / Configurator live connection
 
         /**
          * mmGetModuleParams(string name): list all parameters of a module
          * along with their description, type and value.
          */
         int GetModuleParams(lua_State *L);
+
+        /**
+         * mmGetParamType(string name): get the type of a specific parameter.
+         */
+        int GetParamType(lua_State *L);
+
+        /**
+        * mmGetParamDescription(string name): get the description of a specific parameter.
+        */
+        int GetParamDescription(lua_State *L);
+
+        /**
+         * mmGetParamValue(string name): get the value of a specific parameter.
+         */
+        int GetParamValue(lua_State *L);
+
+        /**
+         * mmSetParamValue(string name, string value):
+         * set the value of a specific parameter.
+         */
+        int SetParamValue(lua_State *L);
 
     private:
 
@@ -185,6 +207,13 @@ namespace utility {
 
         /** all of the Lua startup code */
         void commonInit();
+
+        /**
+         * shorthand to ask graph for the param slot, returned in 'out'.
+         * WARNING: assumes the graph is ALREADY LOCKED!
+         */
+        bool getParamSlot(const std::string routine, const char *paramName,
+            core::param::ParamSlot **out);
 
         /** print the stack somewhat */
         void printStack();
