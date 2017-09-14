@@ -5,3 +5,7 @@ external/**/*
 share/**/*
 lib/**/*
 issues/**/*
+configurator/.vs/
+configurator/bin/
+configurator/MegaMolConf/obj/
+configurator/packages/
