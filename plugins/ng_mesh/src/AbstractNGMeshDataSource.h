@@ -13,6 +13,8 @@
 
 #include "mmcore/CalleeSlot.h"
 
+#include "ng_mesh/CallNGMeshRenderBatches.h"
+
 namespace megamol {
 namespace ngmesh {
 
@@ -22,10 +24,40 @@ namespace ngmesh {
 		AbstractNGMeshDataSource();
 		~AbstractNGMeshDataSource();
 
+	protected:
+
+		/**
+		* Implementation of 'Create'.
+		*
+		* @return 'true' on success, 'false' otherwise.
+		*/
+		virtual bool create(void);
+
+		/**
+		* Gets the data from the source.
+		*
+		* @param caller The calling call.
+		*
+		* @return 'true' on success, 'false' on failure.
+		*/
+		virtual bool getDataCallback(core::Call& caller);
+
+		/**
+		* Gets the data from the source.
+		*
+		* @param caller The calling call.
+		*
+		* @return 'true' on success, 'false' on failure.
+		*/
+		virtual bool getExtentCallback(core::Call& caller);
+
+
+		CallNGMeshRenderBatches::RenderBatchesData m_render_batches;
+
 	private:
 
 		/** The slot for requesting data */
-		CalleeSlot getDataSlot;
+		megamol::core::CalleeSlot getDataSlot;
 
 
 	};
