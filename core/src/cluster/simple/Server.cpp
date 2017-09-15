@@ -400,7 +400,9 @@ bool cluster::simple::Server::create(void) {
  * cluster::simple::Server::release
  */
 void cluster::simple::Server::release(void) {
-    this->GetCoreInstance()->UnregisterParamUpdateListener(this);
+    if (this->GetCoreInstance() != nullptr) {
+        this->GetCoreInstance()->UnregisterParamUpdateListener(this);
+    }
     this->disconnectView();
     if (this->camUpdateThread.IsRunning()) {
         this->camUpdateThread.Join();
