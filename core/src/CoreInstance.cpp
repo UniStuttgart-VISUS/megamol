@@ -295,7 +295,7 @@ void megamol::core::CoreInstance::Initialise(void) {
     vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
 
     this->lua = new LuaState(this);
-    if (!this->lua->StateOk()) {
+    if (this->lua == nullptr || !this->lua->StateOk()) {
         throw vislib::IllegalStateException(
             "Cannot initalise Lua", __FILE__, __LINE__);
     }

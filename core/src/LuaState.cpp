@@ -23,6 +23,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include "vislib/sys/sysfunctions.h"
 
 extern "C" {
 #include "lua.h"
@@ -314,17 +315,27 @@ bool megamol::core::LuaState::LoadEnviromentString(const std::string& envString)
 
 bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName) {
     std::ifstream input(fileName, std::ios::in);
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    return RunString(envName, buffer.str());
+    if (!input.fail()) {
+        std::stringstream buffer;
+        buffer << input.rdbuf();
+        return RunString(envName, buffer.str());
+    } else {
+        return false;
+    }
 }
 
 
 bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName) {
-    std::ifstream input(fileName, std::ios::in);
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    return RunString(envName, buffer.str());
+    vislib::sys::File input;
+    if (input.Open(fileName.c_str(), vislib::sys::File::AccessMode::READ_ONLY,
+        vislib::sys::File::ShareMode::SHARE_READ, vislib::sys::File::CreationMode::OPEN_ONLY)) {
+        vislib::StringA contents;
+        vislib::sys::ReadTextFile(contents, input);
+        input.Close();
+        return RunString(envName, std::string(contents));
+    } else {
+        return false;
+    }
 }
 
 
@@ -555,7 +566,7 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
         retval = vislib::sys::Log::LEVEL_NONE;
     } else if (iequals(attr, "zero")) {
         retval = vislib::sys::Log::LEVEL_NONE;
-    } else if (iequals(attr, "zero")) {
+    } else if (iequals(attr, "all")) {
         retval = vislib::sys::Log::LEVEL_ALL;
     } else if (iequals(attr, "*")) {
         retval = vislib::sys::Log::LEVEL_ALL;
