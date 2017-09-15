@@ -59,7 +59,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->tlLength         = (this->tlEndPos - this->tlStartPos).Norm();
     this->devY             = 0.1f;
     this->devX             = 0.1f;
-    this->totalTime        = 1.0f;
+    this->totalAnimTime    = 1.0f;
     this->lastMouseX       = 0.0f;
     this->lastMouseY       = 0.0f;
     this->aktiveDragDrop   = false;
@@ -72,6 +72,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->currentRulerMode = RULER_FIXED_FONT;
     this->fontSize         = 20.0f;
     this->segmentSize      = 10.0f;
+    this->redoAdaptation   = true;
     this->markerTextures.Clear();
 
     // init parameters
@@ -81,7 +82,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->markerSizeParam.SetParameter(new param::FloatParam(this->markerSize, 1.0f));
 
     param::EnumParam *sbs = new param::EnumParam(this->currentRulerMode);
-    sbs->SetTypePair(RULER_FIXED_FONT, "Fixed Font");
+    sbs->SetTypePair(RULER_FIXED_FONT,    "Fixed Font");
     sbs->SetTypePair(RULER_FIXED_SEGMENT, "Fixed Segmentation");
     this->rulerModeParam << sbs;
 
@@ -89,8 +90,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
     this->rulerFixedFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.0f));
 
-    // Comment the following lines to hide parameters
-
+///NB:   Comment the following lines to hide parameters
     //this->MakeSlotAvailable(&this->markerSizeParam);
     this->MakeSlotAvailable(&this->rulerModeParam);
     this->MakeSlotAvailable(&this->rulerFixedSegParam);
@@ -149,44 +149,10 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     float tmpLength    = this->tlLength;
     this->tlLength     = (this->tlEndPos - this->tlStartPos).Norm();
 
+    // Do adaptation only if there are changes in the time line length
     if (tmpLength != this->tlLength) {
-
-        this->initScaleFac = 1.0f;
-
-        if (this->currentRulerMode == RULER_FIXED_FONT) {
-            // Adapt segemnt size if necessary
-            vislib::StringA tmpStr;
-            tmpStr.Format("%.2f", this->totalTime);
-            float strWidth     = this->theFont.LineWidth(this->fontSize, tmpStr);
-            this->adaptSegSize = this->totalTime; // reset to max value
-            float deltaSegSize = this->totalTime / 1000.0f; // one per mille steps
-            float timeFrac     = this->tlLength / this->totalTime * this->adaptSegSize;
-            while (timeFrac*0.7f > strWidth) {
-                this->adaptSegSize = this->adaptSegSize - deltaSegSize;
-                if (this->adaptSegSize < 0.0f) {
-                    this->adaptSegSize = deltaSegSize;
-                    break;
-                }
-                timeFrac = this->tlLength / this->totalTime * this->adaptSegSize;
-            }
-        }
-        else { // this->currentRulerMode == RULER_FIXED_SEGMENT
-            // Get suitable font size if length changed
-            vislib::StringA tmpStr;
-            tmpStr.Format("%.2f", this->totalTime);
-            float timeFrac       = this->tlLength / this->totalTime * this->segmentSize;
-            this->adaptFontSize  = 32.0f; //reset to max value
-            float deltaFontSize  = 0.1f;
-            float strWidth       = this->theFont.LineWidth(this->adaptFontSize, tmpStr);
-            while (strWidth > timeFrac*0.7f) {
-                this->adaptFontSize = this->adaptFontSize - deltaFontSize;
-                if (this->adaptFontSize < 0.0f) {
-                    this->adaptFontSize = deltaFontSize;
-                    break;
-                }
-                strWidth = this->theFont.LineWidth(this->adaptFontSize, tmpStr);
-            }
-        }
+        this->initScaleFac = 1.0f; // Reset scaling factor
+        this->redoAdaptation = true;
     }
 
 	return true;
@@ -213,16 +179,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         return false;
     }
 
-    Keyframe skf = ccc->getSelectedKeyframe();
-
-    bool adaptFontSize = false;
-    bool adaptSegSize  = false;
-
     // Get maximum time 
-    if (this->totalTime != ccc->getTotalTime()) {
-        this->totalTime = ccc->getTotalTime();
-        adaptFontSize = true;
-        adaptSegSize = true;
+    if (this->totalAnimTime != ccc->getTotalAnimTime()) {
+        this->totalAnimTime = ccc->getTotalAnimTime();
+        this->redoAdaptation = true;
     }
 
     // Get scaling factor
@@ -233,8 +193,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
     if (this->scaleFac != (modelViewMatrix_column[0]/this->initScaleFac)) {
         this->scaleFac = modelViewMatrix_column[0] / this->initScaleFac;
-        adaptFontSize = true;
-        adaptSegSize = true;
+        this->redoAdaptation = true;
     }
 
     // Update parameters
@@ -249,26 +208,21 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (this->rulerModeParam.IsDirty()) {
         this->rulerModeParam.ResetDirty();
         this->currentRulerMode = static_cast<rulerMode>(this->rulerModeParam.Param<param::EnumParam>()->Value());
-        if (this->currentRulerMode == RULER_FIXED_FONT) {
-            adaptSegSize = true;
-        }
-        else { // RULER_FIXED_SEGMENT
-            adaptFontSize = true;
-        }
+        this->redoAdaptation = true;
     }
     if (this->rulerFixedFontParam.IsDirty()) {
         this->rulerFixedFontParam.ResetDirty();
         this->fontSize = this->rulerFixedFontParam.Param<param::FloatParam>()->Value();
-        adaptSegSize = true;
+        this->redoAdaptation = true;
     }
     if (this->rulerFixedSegParam.IsDirty()) {
         this->rulerFixedSegParam.ResetDirty();
         this->segmentSize = this->rulerFixedSegParam.Param<param::FloatParam>()->Value();
-        if (this->segmentSize > this->totalTime) {
-            this->segmentSize = this->totalTime;
+        if (this->segmentSize > this->totalAnimTime) {
+            this->segmentSize = this->totalAnimTime;
             this->rulerFixedSegParam.Param<param::FloatParam>()->SetValue(this->segmentSize);
         }
-        adaptFontSize = true;
+        this->redoAdaptation = true;
     }
 
     // Initialise font
@@ -284,21 +238,21 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float currentSegSize;
     float currentRulerFrac;
     if (this->currentRulerMode == RULER_FIXED_FONT) {
-        // Adapt segemnt size if necessary
-        if (adaptSegSize) {
+        // Adapt segement size if necessary
+        if (this->redoAdaptation) {
             vislib::StringA tmpStr;
-            tmpStr.Format("%.2f", this->totalTime);
-            float strWidth     = this->theFont.LineWidth(this->fontSize / this->scaleFac, tmpStr);
-            this->adaptSegSize = this->totalTime; // reset to max value
-            float deltaSegSize = this->totalTime / 1000.0f; // one per mille steps
-            float rulerFrac    = this->tlLength / this->totalTime * this->adaptSegSize / this->scaleFac;
-            while (rulerFrac*0.7f > strWidth) {
+            tmpStr.Format("%.2f ", this->totalAnimTime);
+            float strWidth = this->theFont.LineWidth(this->fontSize / this->scaleFac, tmpStr);
+            this->adaptSegSize = this->totalAnimTime; // reset to max value
+            float deltaSegSize = this->totalAnimTime / 1000.0f; // one per mille steps
+            float rulerFrac = this->tlLength / this->totalAnimTime * this->adaptSegSize / this->scaleFac;
+            while (rulerFrac*0.8f > strWidth) {
                 this->adaptSegSize = (this->adaptSegSize - deltaSegSize);
                 if (this->adaptSegSize < 0.0f) {
                     this->adaptSegSize = deltaSegSize;
                     break;
                 }
-                rulerFrac = this->tlLength / this->totalTime * this->adaptSegSize / this->scaleFac;
+                rulerFrac = this->tlLength / this->totalAnimTime * this->adaptSegSize / this->scaleFac;
             }
             // Rounding
             this->adaptSegSize /= this->scaleFac;
@@ -321,21 +275,22 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 this->adaptSegSize /= tmpFac;
             }
             this->adaptSegSize *= this->scaleFac;
+            this->redoAdaptation = false;
         }
         currentFontSize  = this->fontSize / this->scaleFac;
         currentSegSize   = this->adaptSegSize / this->scaleFac;
-        currentRulerFrac = this->tlLength / this->totalTime * currentSegSize;
+        currentRulerFrac = this->tlLength / this->totalAnimTime * currentSegSize;
     }
     else { // RULER_FIXED_SEGMENT
         // Adapt font size if necessary
-        if (adaptFontSize) {
+        if (this->redoAdaptation) {
             vislib::StringA tmpStr;
-            tmpStr.Format("%.2f", this->totalTime);
+            tmpStr.Format("%.2f ", this->totalAnimTime);
             this->adaptFontSize = 32.0f; //reset to max value
             float deltaFontSize = 0.1f;
             float strWidth      = this->theFont.LineWidth(this->adaptFontSize, tmpStr);
-            float rulerFrac     = this->tlLength / this->totalTime * this->segmentSize;
-            while (strWidth > rulerFrac*0.7f) {
+            float rulerFrac     = this->tlLength / this->totalAnimTime * this->segmentSize;
+            while (strWidth > rulerFrac*0.8f) {
                 this->adaptFontSize = this->adaptFontSize - deltaFontSize;
                 if (this->adaptFontSize < 0.0f) {
                     this->adaptFontSize = deltaFontSize;
@@ -343,10 +298,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 }
                 strWidth = this->theFont.LineWidth(this->adaptFontSize, tmpStr);
             }
+            this->redoAdaptation = false;
         }
         currentFontSize = this->adaptFontSize;
         currentSegSize = this->segmentSize;
-        currentRulerFrac = this->tlLength / this->totalTime * this->segmentSize;
+        currentRulerFrac = this->tlLength / this->totalAnimTime * this->segmentSize;
     }
 
     // Get the foreground color (inverse background color)
@@ -388,9 +344,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
-    float        frameFrac = this->tlLength / this->totalTime;
-    float        maxAnimTime = ccc->getMaxAnimTime();
-    unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalTime / maxAnimTime));
+    float        frameFrac      = this->tlLength / this->totalAnimTime;
+    float        totalSimTime   = ccc->getTotalSimTime();
+    unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalAnimTime / totalSimTime));
+    Keyframe     skf            = ccc->getSelectedKeyframe();
 
     glDisable(GL_POLYGON_SMOOTH);
     // Draw markers for existing keyframes in array
@@ -402,13 +359,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             else {
                 glColor4fv(kColor);
             }
-            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY());
+            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getAnimTime() * frameFrac, this->tlStartPos.GetY());
         }
     }
     // Draw dragged keyframe
     if (this->aktiveDragDrop) {
         glColor4fv(dkmColor); // Color for DRAGGED KEYFRAME MARKER
-        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY());
+        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getAnimTime() * frameFrac, this->tlStartPos.GetY());
     }
 
     glEnable(GL_LINE_SMOOTH);
@@ -417,8 +374,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glColor4fv(armColor);
     glBegin(GL_LINES);
     for (unsigned int i = 1; i <= repeatAnimTime; i++) {
-        glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
-        glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
+        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
+        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
     }
     glEnd();
     // Draw time line
@@ -439,7 +396,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glEnd();
     // Draw interpolated selected keyframe marker
     if (!keyframes->Contains(skf)) {
-        float x = this->tlStartPos.GetX() + skf.getTime() * frameFrac;
+        float x = this->tlStartPos.GetX() + skf.getAnimTime() * frameFrac;
         glLineWidth(5.0f);
         glColor4fv(skColor);
         glBegin(GL_LINES);
@@ -455,7 +412,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
     this->theFont.DrawString(this->tlStartPos.GetX() - strWidth, this->tlStartPos.GetY(), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
 
-    tmpStr.Format(" %.2f", this->totalTime);
+    tmpStr.Format(" %.2f", this->totalAnimTime);
     strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
     this->theFont.DrawString(this->tlEndPos.GetX() , this->tlStartPos.GetY(), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
 
@@ -525,7 +482,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is NULL.");
         return false;
     }
-    float maxTime = ccc->getTotalTime();
+    float maxTime = ccc->getTotalAnimTime();
 
 	// on leftclick, check if a keyframe is hit and set the selected keyframe
 	if (!this->moveTimeLine && (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN)) { 
@@ -540,11 +497,11 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 		//Check all keyframes if they are hit
         bool hit = false;
 		for (unsigned int i = 0; i < keyframes->Count(); i++){
-			float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
+			float posX = this->tlStartPos.GetX() + (*keyframes)[i].getAnimTime() / maxTime * this->tlLength;
 			if ((x < (posX + offset)) && (x > (posX - offset))) {
                 // Set hit keyframe as selected
-				ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
-				if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+				ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+				if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
                 hit = true;
                 break; // Exit loop on hit
 			}
@@ -555,7 +512,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             // Set an interpolated keyframe as selected
             float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
             ccc->setSelectedKeyframeTime(st);
-			if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+			if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         }
 
         // Store current mouse position for detecting continuous mouse movement
@@ -571,13 +528,13 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
         //Check all keyframes if they are hit
         this->aktiveDragDrop = false;
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
+            float posX = this->tlStartPos.GetX() + (*keyframes)[i].getAnimTime() / maxTime * this->tlLength;
             if ((x < (posX + (this->markerSize / (2.0f*this->scaleFac)))) && (x > (posX - (this->markerSize / (2.0f*this->scaleFac))))) {
                 // Store hit keyframe locally
                 this->dragDropKeyframe = (*keyframes)[i];
                 this->aktiveDragDrop   = true;
-                ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
-                if (!(*ccc)(CallCinematicCamera::CallForDragKeyframe)) return false;
+                ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
                 break; // Exit loop on hit
             }
         }
@@ -592,9 +549,9 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                 st = 0.0f;
             }
             if (x > this->tlEndPos.GetX()) {
-                st = this->totalTime;
+                st = this->totalAnimTime;
             }
-            this->dragDropKeyframe.setTime(st);
+            this->dragDropKeyframe.setAnimTime(st);
         }
     }
     else if (!(flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
@@ -607,11 +564,10 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                 st = 0.0f;
             }
             if (x >= this->tlEndPos.GetX()) {
-                st = this->totalTime;
+                st = this->totalAnimTime;
             }
-
             ccc->setDropTime(st);
-            if (!(*ccc)(CallCinematicCamera::CallForDropKeyframe)) return false;
+            if (!(*ccc)(CallCinematicCamera::CallForSetDropKeyframe)) return false;
             this->aktiveDragDrop = false;
         }
     }

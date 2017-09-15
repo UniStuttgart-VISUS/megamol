@@ -18,9 +18,9 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
     selectedKeyframe(), cameraParam()
     {
 
-    this->totalTime        = 1.0f;
+    this->totalAnimTime    = 1.0f;
     this->interpolSteps    = 10;
-    this->maxAnimTime      = 1.0f;
+    this->totalSimTime     = 1.0f;
     this->dropTime         = 0.0f;
     this->bboxCenter       = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
 }

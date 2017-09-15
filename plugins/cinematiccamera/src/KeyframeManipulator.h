@@ -66,11 +66,7 @@ namespace megamol {
             bool processManipHit(float x, float y);
 
             /** */
-            vislib::math::Point<float, 3> getManipulatedPos();
-            /** */
-            vislib::math::Vector<float, 3> getManipulatedUp();
-            /** */
-            vislib::math::Point<float, 3> getManipulatedLookAt();
+            Keyframe getManipulatedKeyframe(void);
 
         private:
 
@@ -78,23 +74,14 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            const float                      circleRadius = 0.15f;
-            const unsigned int               circleSubDiv = 20;
-            const float                      lineWidth    = 2.5;
-            // Relationship between mouse movement and length changes of coordinates
-            const float                      sensitivity  = 0.01f; 
-
-            manipType                        activeType;
-            vislib::math::Vector<float, 2>   lastMousePos;
-
             // Class for manipulator values
             class manipPosData {
             public:
                 // Comparison needed for use in vislib::Array
                 bool operator==(manipPosData const& rhs) {
-                    return ((this->wsPos == rhs.wsPos) && 
-                            (this->ssPos == rhs.ssPos) &&
-                            (this->offset == rhs.offset));
+                    return ((this->wsPos == rhs.wsPos) &&
+                        (this->ssPos == rhs.ssPos) &&
+                        (this->offset == rhs.offset));
                 }
                 // Variables
                 vislib::math::Vector<float, 3> wsPos;   // position in world space
@@ -103,21 +90,26 @@ namespace megamol {
                 bool                           available;
             };
 
+
+            // Some fixed values
+            const float                      circleRadius = 0.15f;
+            const unsigned int               circleSubDiv = 20;
+            const float                      lineWidth    = 2.5;
+            const float                      sensitivity  = 0.01f; // Relationship between mouse movement and length changes of coordinates
+
             // Positions of keyframes
-            vislib::Array<manipPosData>      kfArray;
+            vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions
 
             // Selected keyframe
-            vislib::math::Vector<float, 3>   skfPos;
-            vislib::math::Vector<float, 3>   skfUp;
-            vislib::math::Vector<float, 3>   skfLookAt;
-            Keyframe                         sKeyframe;
+            Keyframe                         selectedKf;   // Copy of currently selected Keyframe
+            vislib::Array<manipPosData>      manipArray;   // Array of manipulators for selected keyframe
+            vislib::math::Vector<float, 2>   sKfSsPos;     // Screen space position of selected keyframe
+            vislib::math::Vector<float, 2>   sKfSsLookAt;  // Screen space lookat of selected keyframe
+            bool                             sKfInArray;   // Inidcates if selected keyframe exists in keyframe array
+            manipType                        activeType;   // Indicates the type of the active selected manipulator
+            vislib::math::Vector<float, 2>   lastMousePos;
 
-            vislib::Array<manipPosData>      sArray;
-            vislib::math::Vector<float, 2>   skfSsPos;
-            vislib::math::Vector<float, 2>   skfSsLookAt;
-            bool                             sKeyframeInArray;
 
-            // ...
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::math::Dimension<int, 2>  viewportSize;
             vislib::math::Vector<float, 3>   worldCamPos;
@@ -143,7 +135,16 @@ namespace megamol {
             vislib::math::Vector<float, 2> getScreenSpace(vislib::math::Vector<float, 3> wp);
 
             /** */
-            bool updateSKfManipulators(void);
+            bool updateManipulators(void);
+
+            /** Convert Point to Vector*/
+            inline vislib::math::Vector<float, 3> P2V(vislib::math::Point<float, 3> p) {
+                return vislib::math::Vector<float, 3>(p.X(), p.Y(), p.Z());
+            }
+            /** Convert Vector to Point*/
+            inline vislib::math::Point<float, 3> V2P(vislib::math::Vector<float, 3> v) {
+                return vislib::math::Point<float, 3>(v.X(), v.Y(), v.Z());
+            }
 
         };
 

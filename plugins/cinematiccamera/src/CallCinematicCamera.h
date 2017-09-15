@@ -32,12 +32,13 @@ namespace megamol {
 
 			/** function name for getting all Keyframes */
 			static const unsigned int CallForGetUpdatedKeyframeData     = 0;
-			static const unsigned int CallForSetAnimationData           = 1;
-			static const unsigned int CallForInterpolatedCamPos         = 2;
-			static const unsigned int CallForSetSelectedKeyframe        = 3;
-			static const unsigned int CallForSetCameraForKeyframe       = 4;
-            static const unsigned int CallForDragKeyframe               = 5;
-            static const unsigned int CallForDropKeyframe               = 6;
+            static const unsigned int CallForGetSelectedKeyframeAtTime  = 1;
+			static const unsigned int CallForGetInterpolCamPositions    = 2;
+            static const unsigned int CallForSetSelectedKeyframe        = 3;
+            static const unsigned int CallForSetSimulationData          = 4;
+			static const unsigned int CallForSetCameraForKeyframe       = 5;
+            static const unsigned int CallForSetDragKeyframe            = 6;
+            static const unsigned int CallForSetDropKeyframe            = 7;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -63,7 +64,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 7;
+				return 8;
 			}
 
 			/**
@@ -76,12 +77,13 @@ namespace megamol {
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
 					case CallForGetUpdatedKeyframeData:     return "CallForGetUpdatedKeyframeData";
-					case CallForSetAnimationData:           return "CallForSetAnimationData";
-					case CallForInterpolatedCamPos:         return "CallForInterpolatedCamPos";
-					case CallForSetSelectedKeyframe:        return "CallForSetSelectedKeyframe";
+					case CallForGetInterpolCamPositions:    return "CallForGetInterpolCamPositions";
+                    case CallForGetSelectedKeyframeAtTime:  return "CallForGetSelectedKeyframeAtTime";
+                    case CallForSetSelectedKeyframe:        return "CallForSetSelectedKeyframe";
+                    case CallForSetSimulationData:          return "CallForSetSimulationData";
 					case CallForSetCameraForKeyframe:       return "CallForSetCameraForKeyframe";
-                    case CallForDragKeyframe:               return "CallForDragKeyframe";
-                    case CallForDropKeyframe:               return "CallForDropKeyframe";
+                    case CallForSetDragKeyframe:            return "CallForSetDragKeyframe";
+                    case CallForSetDropKeyframe:            return "CallForSetDropKeyframe";
 					default: return "";
 				}
 			}
@@ -105,19 +107,9 @@ namespace megamol {
                 this->keyframes = kfs;
             }
 
-
-            // BOUNDINGBOX
-            inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
-                this->boundingbox = bbx;
-            }
-            inline vislib::math::Cuboid<float> *getBoundingBox() {
-                return this->boundingbox;
-            }
-
-
-            // SELECTED KEYFRAME
+            // SELECTED KEYFRAME 
             inline void setSelectedKeyframeTime(float t) { 
-                this->selectedKeyframe.setTime(t);
+                this->selectedKeyframe.setAnimTime(t);
             }
             inline void setSelectedKeyframe(Keyframe k) {
                 this->selectedKeyframe = k;
@@ -127,6 +119,13 @@ namespace megamol {
                 return this->selectedKeyframe;
             }
 
+            // BOUNDINGBOX
+            inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
+                this->boundingbox = bbx;
+            }
+            inline vislib::math::Cuboid<float> *getBoundingBox() {
+                return this->boundingbox;
+            }
 
             // INTERPOLATED KEYFRAME
             inline void setInterpolationSteps(unsigned int s) {
@@ -136,39 +135,38 @@ namespace megamol {
                 return this->interpolSteps;
             }
 
-			inline vislib::Array<vislib::math::Point<float, 3> >* getInterpolatedCamPos(){
+			inline vislib::Array<vislib::math::Point<float, 3> >* getInterpolCamPositions(){
 				return this->interpolCamPos;
 			}
-            inline void setInterpolatedCamPos(vislib::Array<vislib::math::Point<float, 3> >* k){
+            inline void setInterpolCamPositions(vislib::Array<vislib::math::Point<float, 3> >* k){
                 this->interpolCamPos = k;
             }
 
-
-            // TOTAL TIME
-            inline void setTotalTime(float f) {
-                this->totalTime = f;
+            // TOTAL ANIMATION TIME
+            inline void setTotalAnimTime(float f) {
+                this->totalAnimTime = f;
             }
-			inline float getTotalTime(){
-				return this->totalTime;
+			inline float getTotalAnimTime(){
+				return this->totalAnimTime;
 			}
 
-            // MAXIMUM ANIMATION TIME
-            inline void setMaxAnimTime(float f) {
-                this->maxAnimTime = f;
+            // TOTAL SIMULATION TIME
+            inline void setTotalSimTime(float f) {
+                this->totalSimTime = f;
             }
-            inline float getMaxAnimTime() {
-                return this->maxAnimTime;
+            inline float getTotalSimTime() {
+                return this->totalSimTime;
             }
 
-            // CAMERA PARAMETER
-            inline void setCameraParameter(vislib::SmartPtr<vislib::graphics::CameraParameters> c) {
+            // CAMERA PARAMETERS
+            inline void setCameraParameters(vislib::SmartPtr<vislib::graphics::CameraParameters> c) {
                 this->cameraParam = c;
             }
-            inline vislib::SmartPtr<vislib::graphics::CameraParameters> getCameraParameter() {
+            inline vislib::SmartPtr<vislib::graphics::CameraParameters> getCameraParameters() {
                 return this->cameraParam;
             }
 
-            // TIME of DRAG and DROP KEYFRAME
+            // DROP OF DRAGGED KEYFRAME
             inline void setDropTime(float t) {
                 this->dropTime = t;
             }
@@ -193,14 +191,14 @@ namespace megamol {
 			// Pointer to array of keyframes
             vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
             vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
-			vislib::Array<Keyframe>				  *keyframes;
-            unsigned int                           interpolSteps;
-            vislib::math::Cuboid<float>		      *boundingbox;
-            Keyframe						       selectedKeyframe;
-            float                                  dropTime;
-			float								   totalTime;
-            float                                  maxAnimTime;
-            vislib::math::Point<float, 3>          bboxCenter;
+			vislib::Array<Keyframe>				          *keyframes;
+            vislib::math::Cuboid<float>		              *boundingbox;
+            unsigned int                                   interpolSteps;
+            Keyframe						               selectedKeyframe;
+            float                                          dropTime;
+			float								           totalAnimTime;
+            float                                          totalSimTime;
+            vislib::math::Point<float, 3>                  bboxCenter;
 
 		};
 

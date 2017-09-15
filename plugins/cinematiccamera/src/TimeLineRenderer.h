@@ -140,7 +140,7 @@ namespace megamol {
             vislib::math::Vector<float, 2> tlEndPos;
             float                          tlLength;
             float                          devX, devY;
-            float                          totalTime;
+            float                          totalAnimTime;
             float                          lastMouseX;
             float                          lastMouseY;
             Keyframe                       dragDropKeyframe;
@@ -154,6 +154,7 @@ namespace megamol {
             rulerMode                      currentRulerMode;
             float                          initScaleFac;
             float                          scaleFac;
+            bool                           redoAdaptation;
 
             /**********************************************************************
             * functions

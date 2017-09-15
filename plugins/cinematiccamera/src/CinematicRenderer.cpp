@@ -55,7 +55,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     // init variables
     this->interpolSteps     = 20;
     this->toggleManipulator = false;
-    this->maxAnimTime       = 1.0f;
+    this->totalSimTime       = 1.0f;
     this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->showHelpText      = false;
 
@@ -144,28 +144,20 @@ bool CinematicRenderer::GetExtents(Call& call) {
     math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
     math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
 
-    if (ccc->getKeyframes() == NULL) {
-        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Mouse Event] Pointer to keyframe array is NULL.");
+    // Get bounding box of spline.
+    math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
+    if (bboxCCC == NULL)  {
+        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
         return false;
     }
-    if (ccc->getKeyframes()->Count() > 0) {
-        // Get bounding box of spline.
-        math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
-        if (bboxCCC != NULL) {
-            bboxCR3D.Union(*bboxCCC);
-            cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
-        }
-        else {
-            sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
-            return false;
-        }
-    }
+    bboxCR3D.Union(*bboxCCC);
+    cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
     // Check for bounding box center before extending it by keyframes
     this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
     if (this->bboxCenter != ccc->getBboxCenter()) {
         ccc->setBboxCenter(this->bboxCenter);
-        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return false;
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
     }
 
     // Apply new boundingbox 
@@ -189,12 +181,14 @@ bool CinematicRenderer::Render(Call& call) {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == NULL) return false;
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     // Update parameter
     if (this->stepsParam.IsDirty()) {
         this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
         ccc->setInterpolationSteps(this->interpolSteps);
-        if (!(*ccc)(CallCinematicCamera::CallForInterpolatedCamPos)) return false;
+        if (!(*ccc)(CallCinematicCamera::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
     if (this->toggleManipulateParam.IsDirty()) {
@@ -207,24 +201,21 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Check for new max anim time
-    this->maxAnimTime = static_cast<float>(oc->TimeFramesCount());
-    if (this->maxAnimTime != ccc->getMaxAnimTime()) {
-        ccc->setMaxAnimTime(this->maxAnimTime);
-        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return false;
+    this->totalSimTime = static_cast<float>(oc->TimeFramesCount());
+    if (this->totalSimTime != ccc->getTotalSimTime()) {
+        ccc->setTotalSimTime(this->totalSimTime);
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
     }
-
-    // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     // Set animation time based on selected keyframe ('disables' animation via view3d)
     Keyframe skf = ccc->getSelectedKeyframe();
-    // Wrap time
-    float selectTime = skf.getTime();
-    float frameCnt   = static_cast<float>(oc->TimeFramesCount());
-    selectTime       = selectTime - (floorf(selectTime / frameCnt) * frameCnt);
+    // Wrap animation time to simulation time
+    float simTime  = skf.getAnimTime();
+    float frameCnt = static_cast<float>(oc->TimeFramesCount());
+    simTime = simTime - (floorf(simTime / frameCnt) * frameCnt);
 
     *oc = *cr3d;
-    oc->SetTime(selectTime);
+    oc->SetTime(simTime);
 
     // Call slave renderer.
     glMatrixMode(GL_MODELVIEW);
@@ -254,7 +245,7 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Get pointer to interpolated keyframes array
-    Array<math::Point<float, 3> > *interpolKeyframes = ccc->getInterpolatedCamPos();
+    Array<math::Point<float, 3> > *interpolKeyframes = ccc->getInterpolCamPositions();
     if (interpolKeyframes == NULL) {
         sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to interpolated camera positions array is NULL.");
         return false;
@@ -316,7 +307,7 @@ bool CinematicRenderer::Render(Call& call) {
     // Draw spline
     math::Point<float, 3> tmpP;
     glColor4fv(sColor);
-    // Adding points at vertex ends for better line anti-aliasing
+///NB:   Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);
     glPointSize(1.5f);
     glBegin(GL_POINTS);
@@ -357,13 +348,14 @@ bool CinematicRenderer::Render(Call& call) {
     if (this->showHelpText) {
         tmpStr += "[t] Timeline: Move or Select/Drag&Drop mode.\n";
         tmpStr += "[tab] Move or Select mode.\n";
-        tmpStr += "[m] Toggle keyframe manipulators.\n";
+        tmpStr += "[m] Toggle Keyframe manipulators.\n";
         tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[c] Change selected keyframe.\n";
-        tmpStr += "[d] Delete selected keyframe.\n";
-        tmpStr += "[l] Reset Look-At of selected keyframe.\n";
-        tmpStr += "[s] Save keyframes to file.\n";
+        tmpStr += "[c] Change view of sel. Keyframe.\n";
+        tmpStr += "[d] Delete sel. Keyframe.\n";
+        tmpStr += "[l] Reset Look-At of sel. Keyframe.\n";
+        tmpStr += "[s] Save Keyframes to file.\n";
         tmpStr += "[r] Start/Stop rendering animation.\n";
+        tmpStr += "[v] Same velocity between all Keyframes.\n";
         tmpStr += "[h] Hide help text.\n";
     }
     else {
@@ -391,10 +383,11 @@ bool CinematicRenderer::Render(Call& call) {
 
 /*
 * CinematicRenderer::MouseEvent
+*
+* !!! ONLY triggered when "TAB" is pressed = > parameter 'enableMouseSelection' in View3D
+*
 */
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-
-    // !!! ONLY triggered when "TAB" is pressed => parameter 'enableMouseSelection' in View3D
 
     bool consume = false;
 
@@ -412,18 +405,14 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         // Check if new keyframe position is selected
         int index = this->manipulator.checkKfPosHit(x, y);
         if (index >= 0) {
-            ccc->setSelectedKeyframeTime((*keyframes)[index].getTime());
-            if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+            ccc->setSelectedKeyframeTime((*keyframes)[index].getAnimTime());
+            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
             consume = true;
         }
         
         // Check if manipulator is selected
         if (this->manipulator.checkManipHit(x, y)) {
-            Keyframe skf = ccc->getSelectedKeyframe();
-            skf.setCameraPosition(this->manipulator.getManipulatedPos());
-            skf.setCameraLookAt(this->manipulator.getManipulatedLookAt());
-            skf.setCameraUp(this->manipulator.getManipulatedUp());
-            //ccc->setSelectedKeyframe(skf);
+            ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
         }
@@ -433,15 +422,10 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         
         // Apply changes on selected manipulator
         if (this->manipulator.processManipHit(x, y)) {
-            Keyframe skf = ccc->getSelectedKeyframe();
-            skf.setCameraPosition(this->manipulator.getManipulatedPos());
-            skf.setCameraLookAt(this->manipulator.getManipulatedLookAt());
-            skf.setCameraUp(this->manipulator.getManipulatedUp());
-            //ccc->setSelectedKeyframe(s);
+            ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
         }
-        
     }
     
     return consume;

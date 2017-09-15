@@ -25,119 +25,103 @@ namespace megamol {
 
 			/** CTOR */
             Keyframe();
-            Keyframe(vislib::graphics::Camera c, float t);
+            Keyframe(float t);
+            Keyframe(float t, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up,
+                     vislib::math::Point<float, 3> lookat, float aperture);
 
 			/** DTOR */
 			~Keyframe();
 
             /** */
-			vislib::graphics::Camera getCamera(){
-				return this->camera;
-			}
-
-            /** */
-			void setCamera(vislib::graphics::Camera c) {
-				this->camera = c;
-			}
-
-            /** */
-			float getTime(){
-				return time;
-			}
-
-            /** */
-			void setTime(float t) {
-				this->time = t;
-			}
-
-            /** */
-            // Compare the relevant values and not just the pointer to the camera parameters
 			bool operator==(Keyframe const& rhs){
-				return ((this->camera.Parameters()->Position() == rhs.camera.Parameters()->Position()) &&
-                    (this->camera.Parameters()->LookAt() == rhs.camera.Parameters()->LookAt()) &&
-                    (this->camera.Parameters()->Up() == rhs.camera.Parameters()->Up()) &&
-                    (this->camera.Parameters()->ApertureAngle() == rhs.camera.Parameters()->ApertureAngle()) &&
-                    (this->time == rhs.time));
+				return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime));
 			}
-            /*
-            bool operator==(Keyframe const& rhs) {
-                return ((this->camera == rhs.camera) && (this->time == rhs.time));
-            }
-            */
 
             /** */
-            // Compare the relevant values and not just the pointer to the camera parameters
             bool operator!=(Keyframe const& rhs) {
-                return ((this->camera.Parameters()->Position() != rhs.camera.Parameters()->Position()) ||
-                    (this->camera.Parameters()->LookAt() != rhs.camera.Parameters()->LookAt()) ||
-                    (this->camera.Parameters()->Up() != rhs.camera.Parameters()->Up()) ||
-                    (this->camera.Parameters()->ApertureAngle() != rhs.camera.Parameters()->ApertureAngle()) ||
-                    (this->time != rhs.time));
+                return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime));
             }
-            /*
-            bool operator!=(Keyframe const& rhs) {
-                return (!(this->camera == rhs.camera) || (this->time != rhs.time));
+
+            ///// GET /////
+
+            /** */
+            float getAnimTime() {
+                return animTime;
             }
-            */
-
             /** */
-			vislib::math::Point<FLOAT, 3> getCamPosition(){
-				return this->camera.Parameters()->Position();
+			vislib::math::Point<float, 3> getCamPosition(){
+                return this->camera.position;
 			}
-
             /** */
-			vislib::math::Point<FLOAT, 3> getCamLookAt(){
-				return this->camera.Parameters()->LookAt();
+			vislib::math::Point<float, 3> getCamLookAt(){
+                return this->camera.lookat;
 			}
-
             /** */
-			vislib::math::Vector<FLOAT, 3> getCamUp(){
-				return this->camera.Parameters()->Up();
+			vislib::math::Vector<float, 3> getCamUp(){
+                return this->camera.up;
 			}
-
             /** */
 			float getCamApertureAngle(){
-				return this->camera.Parameters()->ApertureAngle();
-			}
-			
-            /** */
-			vislib::SmartPtr<vislib::graphics::CameraParameters> getCamParameters(){
-				return this->camera.Parameters();
+                return this->camera.apertureangle;
 			}
 
+            ///// SET /////
+
+            /** */
+            void setAnimTime(float t) {
+                this->animTime = t;
+            }
             /** */
 			void setCameraPosition(vislib::math::Point <float, 3> pos){
-                this->camera.Parameters()->SetPosition(pos);
+                this->camera.position = pos;
 			}
-
             /** */
 			void setCameraLookAt(vislib::math::Point <float, 3> look){
-                this->camera.Parameters()->SetLookAt(look);
+                this->camera.lookat = look;
 			}
-
             /** */
 			void setCameraUp(vislib::math::Vector<float, 3> up){
-                this->camera.Parameters()->SetUp(up);
+                this->camera.up = up;
+			}
+            /** */
+			void setCameraApertureAngele(float apertureangle){
+                this->camera.apertureangle = apertureangle;
 			}
 
-            /** */
-			void setCameraApertureAngele(float appertureAngle){
-                this->camera.Parameters()->SetApertureAngle(appertureAngle);
-			}
+            ///// SERIALISATION /////
 
-            /** */
-			void setCameraParameters(vislib::SmartPtr<vislib::graphics::CameraParameters> params){
-                this->camera.SetParameters(params);
-			}			
+            /** Serialise */
+            void serialise(vislib::Serialiser& serialiser);
+
+            /** Deserialise */
+            void deserialise(vislib::Serialiser& serialiser);
 
 		private:
+
+            /**********************************************************************
+            * classes
+            **********************************************************************/
+
+            // Own camera class without nasty smart pointer foobar :-P
+            class Camera {
+            public:
+                bool operator==(Keyframe::Camera const& rhs) {
+                    return ((this->lookat == rhs.lookat) && (this->position == rhs.position) && 
+                            (this->apertureangle == rhs.apertureangle) && (this->up == rhs.up));
+                }
+                vislib::math::Vector<float, 3> up;
+                vislib::math::Point<float, 3>  position;
+                vislib::math::Point<float, 3>  lookat;
+                float                          apertureangle;
+            };
 
             /**********************************************************************
             * variables
             **********************************************************************/
 
-			vislib::graphics::Camera camera;
-			float                    time;
+			float                    animTime;
+            Keyframe::Camera         camera;
+
 
 		};
 

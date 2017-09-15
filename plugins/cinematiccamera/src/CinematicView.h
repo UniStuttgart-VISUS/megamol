@@ -106,26 +106,27 @@ namespace megamol {
             int                                     cineWidth;
             int                                     cineHeight;
             int                                     fps;
-            float                                   maxAnimTime;
+            float                                   totalSimTime;
             int                                     vpW, vpH;
             vislib::math::Point<float, 3>           bboxCenter;
             vislib::graphics::gl::FramebufferObject fbo;
             bool                                    resetFbo;
             bool                                    rendering;
             CinematicView::SkyboxSides              sbSide;
-            vislib::TString                         folder;
 
             struct pngData {
                 BYTE                  *buffer;
                 vislib::sys::FastFile  file;
                 unsigned int           width;
                 unsigned int           height;
-                unsigned int           bpp;
+                unsigned int           bpp; 
+                vislib::TString        path;
                 vislib::TString        filename;
                 unsigned int           cnt;
                 png_structp            ptr;
                 png_infop              infoptr;
                 float                  time;
+                bool                   lock;
             } pngdata;
 
             /**********************************************************************
@@ -193,14 +194,12 @@ namespace megamol {
             /**********************************************************************
             * callback
             **********************************************************************/
-
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;
 
             /**********************************************************************
             * parameters
             **********************************************************************/
-
             /** */
 			core::param::ParamSlot selectedSkyboxSideParam;
             /** */
@@ -211,8 +210,6 @@ namespace megamol {
             core::param::ParamSlot fpsParam;
             /** */
             core::param::ParamSlot renderParam;
-            /** */
-            core::param::ParamSlot folderParam;
 		};
 
 	} /* end namespace cinematiccamera */

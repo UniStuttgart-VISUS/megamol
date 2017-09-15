@@ -16,6 +16,7 @@
 
 #include "vislib/math/Rectangle.h"
 #include "vislib/Trace.h"
+#include "vislib/sys/Path.h"
 
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
@@ -36,7 +37,6 @@ CinematicView::CinematicView(void) : View3D(),
     resWidthParam(            "Cinematic::03 Width", "Set resolution of cineamtic view in vertical direction."), 
     resHeightParam(           "Cinematic::04 Height","Set resolution of cineamtic view in horizontal direction."),
     fpsParam(                 "Cinematic::05 FPS", "Set frames per second the animation should be rendered."),
-    folderParam(              "Cinematic::05 Folder", "Folder where the frames should be stored."),
     shownKeyframe()
     {
 
@@ -47,7 +47,7 @@ CinematicView::CinematicView(void) : View3D(),
     this->vpW             = 0;
     this->vpH             = 0;
     this->currentViewTime = 0.0f;     
-    this->maxAnimTime     = 1.0f;
+    this->totalSimTime    = 1.0f;
     this->bboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->sbSide          = CinematicView::SkyboxSides::SKYBOX_NONE;
     this->cineWidth       = 1920;
@@ -55,7 +55,6 @@ CinematicView::CinematicView(void) : View3D(),
     this->fps             = 24;
     this->rendering       = false;
     this->resetFbo        = true;
-    this->folder          = "";
 
     // init png data struct
     this->pngdata.bpp      = 3;
@@ -67,6 +66,8 @@ CinematicView::CinematicView(void) : View3D(),
     this->pngdata.buffer   = NULL;
     this->pngdata.ptr      = NULL;
     this->pngdata.infoptr  = NULL;
+    this->pngdata.filename = "";
+    this->pngdata.lock     = true;
     //this->pngdata.file;
 
     // init parameters
@@ -92,9 +93,6 @@ CinematicView::CinematicView(void) : View3D(),
 
     this->renderParam.SetParameter(new param::ButtonParam('r'));
     this->MakeSlotAvailable(&this->renderParam);
-
-    this->folderParam.SetParameter(new param::FilePathParam(static_cast<vislib::TString>(this->folder)));
-    this->MakeSlotAvailable(&this->folderParam);
 
     // TEMPORARY HACK #########################################################
     // Disable following parameter slot for this view
@@ -155,8 +153,22 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
+    // Check for new max anim time
+    this->totalSimTime = static_cast<float>(cr3d->TimeFramesCount());
+    if (this->totalSimTime != ccc->getTotalSimTime()) {
+        ccc->setTotalSimTime(this->totalSimTime);
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
+    }
+
+    // Check for new bounding box center
+    this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
+    if (this->bboxCenter != ccc->getBboxCenter()) {
+        ccc->setBboxCenter(this->bboxCenter);
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
+    }
+
+    bool loadNewCamParams = false;
     // Update parameters ------------------------------------------------------
-    bool setCamParam = false;
     if (this->selectedSkyboxSideParam.IsDirty()) {
         this->selectedSkyboxSideParam.ResetDirty();
         if (this->rendering) {
@@ -165,7 +177,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
         else {
             this->sbSide = static_cast<CinematicView::SkyboxSides>(this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
-            setCamParam = true;
+            loadNewCamParams = true;
         }
     }
     if (this->resHeightParam.IsDirty()) {
@@ -200,17 +212,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             this->fps = this->fpsParam.Param<param::IntParam>()->Value();
         }
     }
-    if (this->folderParam.IsDirty()) {
-        this->folderParam.ResetDirty();
-        vislib::TString tmpfolder = this->folderParam.Param<param::FilePathParam>()->Value();
-        if (this->pngdata.file.IsDirectory(tmpfolder.PeekBuffer())) {
-            this->folder = this->folderParam.Param<param::FilePathParam>()->Value();
-        }
-        else {
-            this->folderParam.Param<param::FilePathParam>()->SetValue(this->folder);
-            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [folderParam] No valid folder name given.");
-        }
-    }
     if (this->renderParam.IsDirty()) {
         this->renderParam.ResetDirty();
         if (!this->rendering) {
@@ -222,39 +223,26 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
 
-    // Camera and time settings -----------------------------------------------
+    // Time settings -----------------------------------------------
     if (this->rendering) {
         this->rtf_set_time_and_camera();
+        loadNewCamParams = true;
     }
     else {
-        // Check for new max anim time
-        this->maxAnimTime = static_cast<float>(cr3d->TimeFramesCount());
-        if (this->maxAnimTime != ccc->getMaxAnimTime()) {
-            ccc->setMaxAnimTime(this->maxAnimTime);
-            if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return;
-        }
-
-        // Check for new bounding box center
-        this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
-        if (this->bboxCenter != ccc->getBboxCenter()) {
-            ccc->setBboxCenter(this->bboxCenter);
-            if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return;
-        }
-
         // If time is set by running ANIMATION from view (e.g. anim::play parameter)
         float animTime   = static_cast<float>(context.Time);
-        float repeatTime = floorf(this->currentViewTime / this->maxAnimTime) * this->maxAnimTime;
+        float repeatTime = floorf(this->currentViewTime / this->totalSimTime) * this->totalSimTime;
         if (this->currentViewTime != (animTime + repeatTime)) {
             // Select the keyframe based on the current animation time.
             if (this->currentViewTime < (animTime + repeatTime)) {
                 this->currentViewTime = repeatTime + animTime;
             }
             else { // animTime < tmpAnimTime -> animation time restarts from 0
-                this->currentViewTime = repeatTime + this->maxAnimTime + animTime;
+                this->currentViewTime = repeatTime + animTime;
             }
 
             // Reset view time and animation time to beginning if total time is reached
-            if (this->currentViewTime > ccc->getTotalTime()) {
+            if (this->currentViewTime > ccc->getTotalAnimTime()) {
                 param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
                 animTimeParam->Param<param::FloatParam>()->SetValue(0.0f, true);
                 this->currentViewTime = 0.0f;
@@ -262,87 +250,79 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
             ccc->setSelectedKeyframeTime(this->currentViewTime);
             // Update selected keyframe
-            if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return;
-            // Updated call data 
-            if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
+            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
+
+            loadNewCamParams = true;
         }
         // If time is set by SELECTED KEYFRAME
         else {
             // wrap time if total time exceeds animation time of data set
-            float selectTime = ccc->getSelectedKeyframe().getTime();
-            float selectAnimTime = selectTime - (floorf(selectTime / this->maxAnimTime) * this->maxAnimTime);
+            float selectTime = ccc->getSelectedKeyframe().getAnimTime();
+            float selectAnimTime = selectTime - (floorf(selectTime / this->totalSimTime) * this->totalSimTime);
             // Set animation time based on selected keyframe (GetSlot(2)= this->animTimeSlot)
             param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
             animTimeParam->Param<param::FloatParam>()->SetValue(selectAnimTime, true);
             this->currentViewTime = selectTime;
         }
+    }
 
-        // Set camera parameters of selected keyframe for this view
-        // but ONLY if selected keyframe differs to last locally stored and shown keyframe
-        Keyframe skf = ccc->getSelectedKeyframe(); // maybe updated from obove
-        // Every camera parameter has be compared separatly because euqality of cameras only checks for pointer equality
-        if ((this->shownKeyframe != skf) || setCamParam) {
-            vislib::SmartPtr<vislib::graphics::CameraParameters> p = skf.getCamParameters();
-            if (p.IsNull()) {
-                throw vislib::Exception("[CINEMATIC VIEW] [render] Camera parameter pointer is NULL.", __FILE__, __LINE__);
+    // Set camera parameters of selected keyframe for this view
+    // but only if selected keyframe differs to last locally stored and shown keyframe.
+    // Load new camera setting from selected keyframe when skybox side changes or rendering 
+    // or animation loaded new slected keyframe.
+    Keyframe skf = ccc->getSelectedKeyframe();
+    if ((this->shownKeyframe != skf) || loadNewCamParams) {
+        this->shownKeyframe = skf;
+
+        this->cam.Parameters()->SetView(skf.getCamPosition(), skf.getCamLookAt(), skf.getCamUp());
+        this->cam.Parameters()->SetApertureAngle(skf.getCamApertureAngle());
+        loadNewCamParams = true;
+    }
+
+    // Apply showing skybox side ONLY if new camera parameters are set
+    if (loadNewCamParams) {
+
+        // Adjust cam to selected skybox side
+        if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
+            // Get camera parameters
+            vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
+            vislib::math::Point<float, 3>  camPos    = cp->Position();
+            vislib::math::Vector<float, 3> camRight  = cp->Right();
+            vislib::math::Vector<float, 3> camUp     = cp->Up();
+            vislib::math::Vector<float, 3> camFront  = cp->Front();
+            vislib::math::Point<float, 3>  camLookAt = cp->LookAt();
+            float                          tmpDist   = cp->FocalDistance();
+
+            // set aperture angle to 90 deg
+            cp->SetApertureAngle(90.0f);
+            if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
             }
-
-            this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
-            this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
-
-            // Set current camera for shown keyframe
-            // ! Creating a hard copy of camera parameters is necessary here 
-            vislib::graphics::Camera c;
-            c.Parameters()->SetPosition(p->Position());
-            c.Parameters()->SetLookAt(p->LookAt());
-            c.Parameters()->SetUp(p->Up());
-            c.Parameters()->SetApertureAngle(p->ApertureAngle());
-            this->shownKeyframe.setTime(skf.getTime());
-            this->shownKeyframe.setCamera(c);
-        }
-
-        // Propagate camera parameters to keyframe keeper (not the following sky box camera params!)
-        ccc->setCameraParameter(this->camParams);
-        if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
-    }
-
-    // Adjust cam to selected skybox side
-    if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
-
-        // Get camera parameters
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->camParams;
-        vislib::math::Point<float, 3>  camPos    = cp->Position();
-        vislib::math::Vector<float, 3> camRight  = cp->Right();
-        vislib::math::Vector<float, 3> camUp     = cp->Up();
-        vislib::math::Vector<float, 3> camFront  = cp->Front();
-        vislib::math::Point<float, 3>  camLookAt = cp->LookAt();
-        float                          tmpDist   = cp->FocalDistance();
-
-        // set aperture angle to 90 deg
-        cp->SetApertureAngle(90.0f);
-        if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-            cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
-        }
-        else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-            cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
-        }
-        else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-            cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
-        }
-        else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-            cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
-        }
-        else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-            cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
+            }
+            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
+            }
+            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
+            }
+            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+            }
         }
     }
 
+
+    // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
+    ccc->setCameraParameters(this->cam.Parameters());
+    if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
     // Viewport stuff ---------------------------------------------------------
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
-    int   vpHeight = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
+    int   vpWidth = vp[2] - vp[0];  // or cr3d->GetViewport().GetSize().GetHeight();
+    int   vpHeight = vp[3] - vp[1]; // or cr3d->GetViewport().GetSize().GetWidth();
 
     float vpRatio = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
@@ -375,14 +355,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     int fboVp[4] = { 0, 0, fboWidth, fboHeight };
     this->overrideViewport = fboVp;
     // Set new viewport settings for camera
-    this->camParams->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
    
 
     // Render to texture ------------------------------------------------------------
 
-    //glDisable(GL_TEXTURE_2D); // Necessary because of artefacts (when bounding box is hidden ?)
-
-    // CREATE NEW FRAME FOR FILE
+    // Create new frame for file
     if (this->rendering) {
         this->rtf_create_frame();
     }
@@ -407,7 +385,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         throw vislib::Exception("[CINEMATIC VIEW] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
-
 // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
@@ -430,11 +407,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Reset override viewport
     this->overrideViewport = NULL; 
 
-    // WRITE FRAME TO FILE
+    // Write frame to file
     if (this->rendering) {
         this->rtf_write_frame();
     }
-
 
     // Draw final image -------------------------------------------------------
     glMatrixMode(GL_MODELVIEW);
@@ -528,7 +504,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+
+    // Unlock renderer after first frame
+    if (this->rendering && this->pngdata.lock) {
+        this->pngdata.lock = false;
+    }
+
 }
+
 
 
 /*
@@ -540,7 +523,6 @@ bool CinematicView::rtf_setup() {
     this->pngdata.bpp       = 3;
     this->pngdata.width     = static_cast<unsigned int>(this->cineWidth);
     this->pngdata.height    = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.filename  = "";
     this->pngdata.cnt       = 0;
     this->pngdata.time      = 0.0f;
     this->pngdata.buffer    = NULL;
@@ -548,11 +530,30 @@ bool CinematicView::rtf_setup() {
     this->pngdata.infoptr   = NULL;
     //this->pngdata.file;
 
+    // Create new folder
+    time_t t = std::time(0); // get time now
+    struct tm *now = std::localtime(&t);
+    vislib::StringA frameFolder;
+    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+    this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
+    this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
+    vislib::sys::Path::MakeDirectory(this->pngdata.path);
+
+    // Set current time stamp to file name
+    this->pngdata.filename.Format("frame_%i%i%i-%i%i%i_", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+
     // Create new byte buffer
     this->pngdata.buffer = new BYTE[this->pngdata.width * this->pngdata.height * this->pngdata.bpp];
     if (this->pngdata.buffer == NULL) {
         throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
+
+    // Reset animation time to zero
+    param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
+    animTimeParam->Param<param::FloatParam>()->SetValue(0.0f, true);
+    // Lock rendering and wait for one frame to get the new animation time applied 
+///NB:   Otherwise first frame is not set right -> just for high resolutions ?
+    this->pngdata.lock = true;
 
     this->rendering = true;
     this->resetFbo  = true;
@@ -567,45 +568,36 @@ bool CinematicView::rtf_setup() {
 */
 bool CinematicView::rtf_set_time_and_camera() {
 
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (!ccc) return false;
+    if (!this->pngdata.lock) {
+        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        if (!ccc) return false;
 
-    if ((this->pngdata.time < 0.0f) || (this->pngdata.time > ccc->getTotalTime())) {
-        throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Invalid animation time.", __FILE__, __LINE__);
+        if ((this->pngdata.time < 0.0f) || (this->pngdata.time > ccc->getTotalAnimTime())) {
+            throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Invalid animation time.", __FILE__, __LINE__);
+        }
+
+        // Get selected keyframe for current animation time
+        ccc->setSelectedKeyframeTime(this->pngdata.time);
+        // Update selected keyframe
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+
+        // Set current animation time for simulation
+        float tmpAnimTime = this->pngdata.time;
+        if (this->pngdata.time >= this->totalSimTime) {
+            float repeatTime = floorf(this->pngdata.time / this->totalSimTime) * this->totalSimTime;
+            tmpAnimTime -= repeatTime;
+        }
+        param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
+        animTimeParam->Param<param::FloatParam>()->SetValue(tmpAnimTime, true);
+
+        // Increase to next time step
+        this->pngdata.time += (1.0f / static_cast<float>(this->fps));
+
+        // Finish rendering if max anim time is reached
+        if (this->pngdata.time > ccc->getTotalAnimTime()) {
+            this->rtf_finish();
+        }
     }
-
-    // Get camera of keyframe for current animation time
-    ccc->setSelectedKeyframeTime(this->pngdata.time);
-    // Update selected keyframe
-    if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
-    // Updated call data 
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
-    // Get new selected keyframe
-    Keyframe skf = ccc->getSelectedKeyframe();
-    vislib::SmartPtr<vislib::graphics::CameraParameters> p = skf.getCamParameters();
-    if (p.IsNull()) {
-        throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Camera parameter pointer is NULL.", __FILE__, __LINE__);
-    }
-    this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
-    this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
-
-    // Set current animation time for simulation
-    float tmpAnimTime = this->pngdata.time;
-    if (this->pngdata.time >= this->maxAnimTime) {
-        float repeatTime = floorf(this->pngdata.time / this->maxAnimTime) * this->maxAnimTime;
-        tmpAnimTime -= repeatTime;
-    }
-    param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
-    animTimeParam->Param<param::FloatParam>()->SetValue(tmpAnimTime, true);
-
-    // Increase to next time step
-    this->pngdata.time += (1.0f / static_cast<float>(this->fps));
-
-    // Finish rendering if max anim time is reached
-    if (this->pngdata.time > ccc->getTotalTime()) {
-        this->rtf_finish();
-    }
-
     return true;
 }
 
@@ -615,40 +607,34 @@ bool CinematicView::rtf_set_time_and_camera() {
 */
 bool CinematicView::rtf_create_frame() {
 
-    // Create new filename with time stamp
-    time_t t = std::time(0);  // get time now
-    struct tm *now = std::localtime(&t);
-    this->pngdata.filename.Format("%06i_frame_%f_-_%i%i%i-%i%i%i.png", this->pngdata.cnt, (this->pngdata.time - (1.0f / static_cast<float>(this->fps))), 
-                                                                       (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+    if (!this->pngdata.lock) {
+        // Create new filename with time stamp
+        time_t t = std::time(0);  // get time now
+        struct tm *now = std::localtime(&t);
+        vislib::StringA tmpFilename;
+        tmpFilename.Format("time_%f_-_%06i.png", (this->pngdata.time - (1.0f / static_cast<float>(this->fps))), this->pngdata.cnt);
+        tmpFilename.Prepend(this->pngdata.filename);
 
-    if (!this->folder.IsEmpty()) {
-        vislib::TString folderSep = "/";
-// Check for OS dependent folder sperator
-#if defined(_WIN32) || defined(_WIN64)
-        folderSep = "\\";
-#endif // defined(_WIN32) || defined(_WIN64)
-        this->pngdata.filename.Prepend(folderSep);
-        this->pngdata.filename.Prepend(this->folder);
-    }
+        // open final image file
+        if (!this->pngdata.file.Open(vislib::sys::Path::Concatenate(this->pngdata.path, tmpFilename),
+            vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
+            throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot open output file", __FILE__, __LINE__);
+        }
 
-    // open final image file
-    if (!this->pngdata.file.Open(this->pngdata.filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
-        throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot open output file", __FILE__, __LINE__);
-    }
+        // init png lib
+        this->pngdata.ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, &this->pngError, &this->pngWarn);
+        if (this->pngdata.ptr == NULL) {
+            throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png structure", __FILE__, __LINE__);
+        }
+        this->pngdata.infoptr = png_create_info_struct(this->pngdata.ptr);
+        if (this->pngdata.infoptr == NULL) {
+            throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png info", __FILE__, __LINE__);
+        }
+        png_set_write_fn(this->pngdata.ptr, static_cast<void*>(&this->pngdata.file), &this->pngWrite, &this->pngFlush);
+        png_set_IHDR(this->pngdata.ptr, this->pngdata.infoptr, this->pngdata.width, this->pngdata.height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-    // init png lib
-    this->pngdata.ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, &this->pngError, &this->pngWarn);
-    if (this->pngdata.ptr == NULL) {
-        throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png structure", __FILE__, __LINE__);
+        this->pngdata.cnt++;
     }
-    this->pngdata.infoptr = png_create_info_struct(this->pngdata.ptr);
-    if (this->pngdata.infoptr == NULL) {
-        throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png info", __FILE__, __LINE__);
-    }
-    png_set_write_fn(this->pngdata.ptr, static_cast<void*>(&this->pngdata.file), &this->pngWrite, &this->pngFlush);
-    png_set_IHDR(this->pngdata.ptr, this->pngdata.infoptr, this->pngdata.width, this->pngdata.height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-    this->pngdata.cnt++;
 
     return true;
 }
@@ -659,42 +645,45 @@ bool CinematicView::rtf_create_frame() {
 */
 bool CinematicView::rtf_write_frame() {
 
-    if (fbo.GetColourTexture(this->pngdata.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
-        throw vislib::Exception("[CINEMATIC VIEW] [writeTextureToPng] Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
-    }
-
-    BYTE** rows = NULL;
-
-    try {
-        rows = new BYTE*[this->cineHeight];
-        for (UINT i = 0; i < this->pngdata.height; i++) {
-            rows[this->pngdata.height - (1 + i)] = this->pngdata.buffer + this->pngdata.bpp * i * this->pngdata.width;
+    if (!this->pngdata.lock) {
+        if (fbo.GetColourTexture(this->pngdata.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+            throw vislib::Exception("[CINEMATIC VIEW] [writeTextureToPng] Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
         }
-        png_set_rows(this->pngdata.ptr, this->pngdata.infoptr, rows);
 
-        png_write_png(this->pngdata.ptr, this->pngdata.infoptr, PNG_TRANSFORM_IDENTITY, NULL);
+        BYTE** rows = NULL;
 
-        ARY_SAFE_DELETE(rows);
-    }
-    catch (...) {
-        if (rows != NULL) {
+        try {
+            rows = new BYTE*[this->cineHeight];
+            for (UINT i = 0; i < this->pngdata.height; i++) {
+                rows[this->pngdata.height - (1 + i)] = this->pngdata.buffer + this->pngdata.bpp * i * this->pngdata.width;
+            }
+            png_set_rows(this->pngdata.ptr, this->pngdata.infoptr, rows);
+
+            png_write_png(this->pngdata.ptr, this->pngdata.infoptr, PNG_TRANSFORM_IDENTITY, NULL);
+
             ARY_SAFE_DELETE(rows);
         }
-        throw;
-    }
-
-    if (this->pngdata.ptr != NULL) {
-        if (this->pngdata.infoptr != NULL) {
-            png_destroy_write_struct(&this->pngdata.ptr, &this->pngdata.infoptr);
+        catch (...) {
+            if (rows != NULL) {
+                ARY_SAFE_DELETE(rows);
+            }
+            throw;
         }
-        else {
-            png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)NULL);
+
+        if (this->pngdata.ptr != NULL) {
+            if (this->pngdata.infoptr != NULL) {
+                png_destroy_write_struct(&this->pngdata.ptr, &this->pngdata.infoptr);
+            }
+            else {
+                png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)NULL);
+            }
         }
+
+        try { this->pngdata.file.Flush(); }
+        catch (...) {}
+        try { this->pngdata.file.Close(); }
+        catch (...) {}
     }
-
-    try { this->pngdata.file.Flush(); } catch (...) { }
-    try { this->pngdata.file.Close(); } catch (...) { }
-
     return true;
 }
 

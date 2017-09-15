@@ -72,6 +72,29 @@ namespace megamol {
 		private:
 
             /**********************************************************************
+            * variables
+            **********************************************************************/
+
+            // Variables shared/updated with call
+            vislib::Array<vislib::math::Point<float, 3> > interpolCamPos;
+            vislib::Array<Keyframe>              keyframes;
+            vislib::math::Cuboid<float>          boundingBox;
+            Keyframe                             selectedKeyframe;
+            Keyframe                             dragDropKeyframe;
+            float                                totalAnimTime;
+            float                                totalSimTime;
+            unsigned int                         interpolSteps;
+            vislib::math::Point<float, 3>        bboxCenter;
+
+            vislib::math::Vector<float, 3>       camViewUp;
+            vislib::math::Point<float, 3>        camViewPosition;
+            vislib::math::Point<float, 3>        camViewLookat;
+            float                                camViewApertureangle;
+
+            // Variables only used in keyframe keeper
+            vislib::StringA                      filename;
+
+            /**********************************************************************
             * functions
             ***********************************************************************/
 
@@ -88,10 +111,10 @@ namespace megamol {
             bool deleteKeyframe(Keyframe kf);
 
             /** Load keyframes from file.*/
-            void loadKeyframes();
+            void loadKeyframes(void);
 
             /** Save keyframes to file.*/
-            void saveKeyframes();
+            void saveKeyframes(void);
 
             /** Refresh interpolated camera positions (called when keyframe array changes). */
             void refreshInterpolCamPos(unsigned int s);
@@ -102,28 +125,7 @@ namespace megamol {
             /** Set speed between all keyframes to same speed 
              *  Uses interpolSteps for approximation of path between keyframe positions 
              */
-            void setSameSpeed();
-
-            /**********************************************************************
-            * variables
-            **********************************************************************/
-
-            // Variables shared/updated with call
-            vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
-            vislib::Array<vislib::math::Point<float, 3> > interpolCamPos;
-            vislib::Array<Keyframe>              keyframes;
-            vislib::math::Cuboid<float>          boundingBox;
-            Keyframe                             selectedKeyframe;
-            Keyframe                             dragDropKeyframe;
-            float                                totalTime;
-            float                                maxAnimTime;
-            unsigned int                         interpolSteps;
-            vislib::math::Point<float, 3>        bboxCenter;
-
-            // Variables only used in keyframe keeper
-            vislib::StringA                      filename;
-            bool                                 sameSpeed;
-            float                                totVelocity;
+            void setSameSpeed(void);
 
             /**********************************************************************
             * callback stuff
@@ -134,17 +136,19 @@ namespace megamol {
 			/** Callback for updating parameters of the keyframe keeper */
 			bool CallForGetUpdatedKeyframeData(core::Call& c);
 			/** Callback for  */
-			bool CallForSetAnimationData(core::Call& c);
+			bool CallForSetSimulationData(core::Call& c);
 			/** Callback for  */
-			bool CallForInterpolatedCamPos(core::Call& c);
+			bool CallForGetInterpolCamPositions(core::Call& c);
 			/** Callback for  */
 			bool CallForSetSelectedKeyframe(core::Call& c);
+            /** */
+            bool CallForGetSelectedKeyframeAtTime(core::Call& c);
 			/** Callback for  */
 			bool CallForSetCameraForKeyframe(core::Call& c);
             /** Callback for dragging selected keyframe */
-            bool CallForDragKeyframe(core::Call& c); 
+            bool CallForSetDragKeyframe(core::Call& c); 
             /** Callback for dropping selected keyframe */
-            bool CallForDropKeyframe(core::Call& c);
+            bool CallForSetDropKeyframe(core::Call& c);
 
             /**********************************************************************
             * parameters
@@ -157,7 +161,7 @@ namespace megamol {
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
-            core::param::ParamSlot  setKeyframesToSameSpeed;
+            core::param::ParamSlot setKeyframesToSameSpeed;
 			/**param for current keyframe Time */
 			core::param::ParamSlot editCurrentTimeParam;
 			/**param for current keyframe Position */
@@ -167,7 +171,7 @@ namespace megamol {
 			/**param for current keyframe Up */
 			core::param::ParamSlot editCurrentUpParam;
             /** */
-            core::param::ParamSlot setTotalTimeParam;
+            core::param::ParamSlot setTotalAnimTimeParam;
             /** */
             core::param::ParamSlot saveKeyframesParam;
             /** */
