@@ -32,12 +32,12 @@ megamol::console::JobManager::~JobManager(void) {
 /*
  * megamol::console::JobManager::JobManager
  */
-megamol::console::JobManager::JobManager(void) : jobs() {
+megamol::console::JobManager::JobManager(void) : jobs(), terminating(false) {
     // intentionally empty
 }
 
 bool megamol::console::JobManager::IsAlive(void) const {
-    return !jobs.empty();
+    return !jobs.empty() && !terminating;
 }
 
 void megamol::console::JobManager::Update(bool force) {
@@ -51,7 +51,7 @@ void megamol::console::JobManager::Update(bool force) {
     bool cleaning = false;
 
     for (std::shared_ptr<Job> j : jobs) {
-        if (!j->started) j->Start();
+        if (!j->started && !terminating) j->Start();
         if (!j->IsRunning()) cleaning = true;
     }
 
@@ -72,7 +72,8 @@ void megamol::console::JobManager::Shutdown(void) {
     for (std::shared_ptr<Job> j : jobs) {
         if (j->IsRunning()) ::mmcTerminateJob(j->hJob);
     }
-    Update(true);
+    terminating = true;
+    while (!jobs.empty()) Update(true);
 }
 
 bool megamol::console::JobManager::InstantiatePendingJob(void *hCore) {
