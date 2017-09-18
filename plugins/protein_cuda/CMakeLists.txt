@@ -15,9 +15,17 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
 
-  set(LIBS vislib core mmstd_trisoup protein_calls glload cufft)
-  include_directories("include" "src" "src/helper_includes")
 
+  
+  set(LIBS vislib core mmstd_trisoup protein_calls glload cufft)
+  if(MSVC)
+    include_directories("include" "src" "src/helper_includes")
+  else()
+    get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
+    include_directories("include" "src" "src/helper_includes" ${CUDA_BIN_DIR}/../include)
+    add_definitions(-D__CUDACC__)
+  endif()
+  
   # Build MegaMol Plugin
   # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
