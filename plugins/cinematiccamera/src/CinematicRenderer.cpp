@@ -44,7 +44,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     slaveRendererSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
 #ifndef USE_SIMPLE_FONT
-    theFont(vislib::graphics::gl::FontInfo_Verdana),
+    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
     stepsParam(           "01 Spline subdivision", "Amount of interpolation steps between keyframes"),
     toggleManipulateParam("02 Toggle manipulator", "Toggle between position manipulation or lookup manipulation."),
@@ -296,6 +296,7 @@ bool CinematicRenderer::Render(Call& call) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -340,22 +341,29 @@ bool CinematicRenderer::Render(Call& call) {
     glPushMatrix();
     glLoadIdentity();
 
+    // Draw help text in front of bounding box rendered by view
+    glTranslatef(0.0f, 0.0f, 1.0f);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
     glEnable(GL_POLYGON_SMOOTH);
+///NB:   Has to be disabled for filled font rendering (e.g. forgotten in SimpleMoleculeRenderer)
+    glDisableClientState(GL_COLOR_ARRAY); 
     glColor4fv(fgColor);
-    float fontSize = viewportSize.GetWidth()*0.025f; // 2.5% of viewport width
+    float fontSize = viewportSize.GetWidth()*0.03f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
     float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------");
     if (this->showHelpText) {
-        tmpStr += "[t] Timeline: Move or Select/Drag&Drop mode.\n";
+        tmpStr += "[t] Timeline - Move or Select/Drag&Drop mode.\n";
         tmpStr += "[tab] Move or Select mode.\n";
-        tmpStr += "[m] Toggle Keyframe manipulators.\n";
+        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
         tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[c] Change view of sel. Keyframe.\n";
-        tmpStr += "[d] Delete sel. Keyframe.\n";
-        tmpStr += "[l] Reset Look-At of sel. Keyframe.\n";
+        tmpStr += "[c] Change view of selected Keyframe.\n";
+        tmpStr += "[d] Delete selected Keyframe.\n";
+        tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
         tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[r] Start/Stop rendering animation.\n";
-        tmpStr += "[v] Same velocity between all Keyframes.\n";
+        tmpStr += "[r] Start/Stop rendering complete animation.\n";
+        tmpStr += "[v] Set same velocity between all Keyframes.\n";
         tmpStr += "[h] Hide help text.\n";
     }
     else {

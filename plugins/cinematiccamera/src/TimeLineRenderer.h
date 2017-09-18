@@ -16,12 +16,15 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
+
+// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {

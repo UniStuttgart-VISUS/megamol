@@ -45,7 +45,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     rulerFixedFontParam( "Ruler::03 Fixed font size", "The fixed font size for adaptive ruler segmentation."),
 
 #ifndef USE_SIMPLE_FONT
-	theFont(vislib::graphics::gl::FontInfo_Verdana),
+	theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
 	dragDropKeyframe()
 	{
@@ -138,16 +138,24 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
     cr->SetBoundingBox(cr->GetViewport());
 
-    // Set time line position in percentage of viewport
-    this->devX         = cr->GetViewport().GetSize().GetWidth()  / 100.0f * 5.0f; // DO CHANGES HERE
-    this->devY         = cr->GetViewport().GetSize().GetHeight() / 100.0f * 5.0f; // DO CHANGES HERE
-    this->markerSize   = (this->devX > this->devY) ? (this->devX/2.0f) : (this->devY); // DO CHANGES HERE
+    // Set time line position depending on font size
+    vislib::StringA tmpStr;
+    tmpStr.Format(" %.2f ", this->totalAnimTime);
+    float strWidth  = this->theFont.LineWidth(this->adaptFontSize / this->scaleFac, tmpStr); // RULER_FIXED_SEGMENT
+    float strHeight = this->theFont.LineHeight(this->adaptFontSize / this->scaleFac);        // RULER_FIXED_SEGMENT
+    if (this->currentRulerMode == RULER_FIXED_FONT) {
+        strWidth  = this->theFont.LineWidth(this->fontSize , tmpStr);
+        strHeight = this->theFont.LineHeight(this->fontSize);
+    }
+    this->devX         = strWidth; 
+    this->devY         = strHeight/2.0f;
+    this->markerSize   = strHeight*1.5f;
 
     this->tlStartPos   = vislib::math::Vector<float, 2>(this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
     this->tlEndPos     = vislib::math::Vector<float, 2>(cr->GetViewport().GetSize().GetWidth() - this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
 
-    float tmpLength    = this->tlLength;
-    this->tlLength     = (this->tlEndPos - this->tlStartPos).Norm();
+    float tmpLength = this->tlLength;
+    this->tlLength  = (this->tlEndPos - this->tlStartPos).Norm();
 
     // Do adaptation only if there are changes in the time line length
     if (tmpLength != this->tlLength) {
@@ -188,10 +196,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Get scaling factor
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    if (this->initScaleFac == 1.0f) {
+    // Set current scaling factor as default
+    if (this->initScaleFac == 1.0f) { 
         this->initScaleFac = modelViewMatrix_column[0];
     }
-    if (this->scaleFac != (modelViewMatrix_column[0]/this->initScaleFac)) {
+    // Only considering relative changes of the scaling factor
+    if (this->scaleFac != (modelViewMatrix_column[0] / this->initScaleFac)) {
         this->scaleFac = modelViewMatrix_column[0] / this->initScaleFac;
         this->redoAdaptation = true;
     }
@@ -336,6 +346,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -349,8 +360,21 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalAnimTime / totalSimTime));
     Keyframe     skf            = ccc->getSelectedKeyframe();
 
-    glDisable(GL_POLYGON_SMOOTH);
+    // Draw marker when animation repeats
+    /*
+    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(5.0f);
+    glColor4fv(armColor);
+    glBegin(GL_LINES);
+    for (unsigned int i = 1; i <= repeatAnimTime; i++) {
+        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
+        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
+    }
+    glEnd();
+    */
+
     // Draw markers for existing keyframes in array
+    glDisable(GL_POLYGON_SMOOTH);
     if (keyframes->Count() > 0) {
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
             if ((*keyframes)[i] == skf) {
@@ -368,16 +392,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getAnimTime() * frameFrac, this->tlStartPos.GetY());
     }
 
-    glEnable(GL_LINE_SMOOTH);
-    // Draw marker when animation repeats
-    glLineWidth(5.0f);
-    glColor4fv(armColor);
-    glBegin(GL_LINES);
-    for (unsigned int i = 1; i <= repeatAnimTime; i++) {
-        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
-        glVertex2f(this->tlStartPos.GetX() + frameFrac*totalSimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
-    }
-    glEnd();
     // Draw time line
     glLineWidth(2.5f);
     glColor4fv(fgColor);
@@ -405,8 +419,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glEnd();
     }
 
-    glEnable(GL_POLYGON_SMOOTH);
     // Draw time captions
+    glEnable(GL_POLYGON_SMOOTH);
+    ///NB:   Has to be disabled for filled font rendering (e.g. forgotten in SimpleMoleculeRenderer)
+    glDisableClientState(GL_COLOR_ARRAY);
     glColor4fv(fgColor);
     tmpStr.Format("%.2f ", 0.0f);
     strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
@@ -416,12 +432,18 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
     this->theFont.DrawString(this->tlEndPos.GetX() , this->tlStartPos.GetY(), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
 
+    tmpStr = "animation time";
+    strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
+    this->theFont.DrawString(this->tlStartPos.GetX() + this->tlLength/2.0f - strWidth/2.0f, this->tlStartPos.GetY() - 2.0f*this->theFont.LineHeight(currentFontSize) - (this->devY/this->scaleFac), 
+                            strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+
     float timeStep = currentSegSize;
     for (float f = currentRulerFrac; f < (this->tlLength - (currentRulerFrac /100.0f)); f = f + currentRulerFrac) {
         tmpStr.Format("%.2f ", timeStep);
         timeStep += currentSegSize;
         strWidth = this->theFont.LineWidth(currentFontSize, tmpStr);
-        this->theFont.DrawString(this->tlStartPos.GetX() + f - strWidth/2.0f, this->tlStartPos.GetY() - 1.0f - (this->devY / this->scaleFac), strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+        this->theFont.DrawString(this->tlStartPos.GetX() + f - strWidth/2.0f, this->tlStartPos.GetY() - (this->devY / this->scaleFac), 
+                                strWidth, 1.0f, currentFontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
 
     // Reset opengl 

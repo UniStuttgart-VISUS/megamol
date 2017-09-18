@@ -376,6 +376,11 @@ void KeyframeManipulator::calculateCircleVertices(void) {
 
     // Get normal for plane the cirlce lies on
     vislib::math::Vector<float, 3> normal = this->worldCamPos;
+    // Check if world camera position is zero ...
+    if (normal.IsNull()) {
+        normal.SetZ(1.0f);
+        vislib::sys::Log::DefaultLog.WriteError("[OJHHH].");
+    }
     normal.Normalise();
     // Get arbitary vector vertical to normal
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
@@ -412,6 +417,9 @@ bool KeyframeManipulator::draw(void) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_DEPTH_TEST);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

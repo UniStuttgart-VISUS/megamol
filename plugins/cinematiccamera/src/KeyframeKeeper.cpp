@@ -357,15 +357,18 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->changeKeyframeParam.ResetDirty();
 
         // Get current camera for selected keyframe
-        this->selectedKeyframe.setCameraUp(this->camViewUp);
-        this->selectedKeyframe.setCameraPosition(this->camViewPosition);
-        this->selectedKeyframe.setCameraLookAt(this->camViewLookat);
-        this->selectedKeyframe.setCameraApertureAngele(this->camViewApertureangle);
-
-        this->updateEditParameters(this->selectedKeyframe, false);
+        Keyframe tmpKf;
+        tmpKf.setCameraUp(this->camViewUp);
+        tmpKf.setCameraPosition(this->camViewPosition);
+        tmpKf.setCameraLookAt(this->camViewLookat);
+        tmpKf.setCameraApertureAngele(this->camViewApertureangle);
+        tmpKf.setAnimTime(this->selectedKeyframe.getAnimTime());
 
         // change existing keyframe
-        this->changeKeyframe(this->selectedKeyframe);
+        if (this->changeKeyframe(tmpKf)) {
+            this->selectedKeyframe = tmpKf;
+            this->updateEditParameters(this->selectedKeyframe, false);
+        }
     }
 
     // deleteSelectedKeyframeParam --------------------------------------------
@@ -671,7 +674,7 @@ bool KeyframeKeeper::changeKeyframe(Keyframe kf) {
             return true;
         }
     }
-    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [change Keyframe] Found no keyframe to change.");
+    vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [change Keyframe] Found no keyframe to change.");
     return false;
 }
 
