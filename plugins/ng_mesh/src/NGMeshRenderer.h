@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D.h"
 
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 #include "VertexLayout.h"
@@ -103,6 +103,32 @@ namespace ngmesh {
 		* @return The return value of the function.
 		*/
 		bool GetExtents(core::Call& call);
+
+		/**
+		 * Access to render batches data via data call
+		 */
+		CallNGMeshRenderBatches* getData();
+
+		/**
+		 *
+		 */
+		void addRenderBatch(CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data,
+							CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data,
+							CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data,
+							CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
+							CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params);
+
+		/**
+		 *
+		 */
+		void updateRenderBatch(size_t																idx,
+								CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data,
+								CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data,
+								CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data,
+								CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
+								CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params,
+								uint32_t															update_flags);
+
 
 		/**
 		* The render callback.
@@ -195,14 +221,14 @@ namespace ngmesh {
 		public:
 			template<typename VertexContainer, typename IndexContainer>
 			Mesh(VertexContainer const& vertices,
-				IndexContainer const& indices,
-				VertexLayout const& vertex_descriptor,
-				GLenum indices_type = GL_UNSIGNED_INT,
-				GLenum usage = GL_STATIC_DRAW,
-				GLenum mesh_type = GL_TRIANGLES)
+				IndexContainer const&	indices,
+				VertexLayout const&		vertex_descriptor,
+				GLenum					indices_type = GL_UNSIGNED_INT,
+				GLenum					usage = GL_STATIC_DRAW,
+				GLenum					primitive_type = GL_TRIANGLES)
 				: m_vbo<VertexContainer>(GL_ARRAY_BUFFER, vertices, usage),
 				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage),
-				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_mesh_type(mesh_type)
+				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
 
@@ -236,17 +262,17 @@ namespace ngmesh {
 				}
 			}
 
-			Mesh(GLvoid const* vertex_data,
-				GLsizeiptr vertex_data_byte_size,
-				GLvoid const* index_data,
-				GLsizeiptr index_data_byte_size,
+			Mesh(GLvoid const*		vertex_data,
+				GLsizeiptr			vertex_data_byte_size,
+				GLvoid const*		index_data,
+				GLsizeiptr			index_data_byte_size,
 				VertexLayout const& vertex_descriptor,
-				GLenum indices_type = GL_UNSIGNED_INT,
-				GLenum usage = GL_STATIC_DRAW,
-				GLenum mesh_type = GL_TRIANGLES)
+				GLenum				indices_type = GL_UNSIGNED_INT,
+				GLenum				usage = GL_STATIC_DRAW,
+				GLenum				primitive_type = GL_TRIANGLES)
 				: m_vbo(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage),
 				m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
-				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_mesh_type(mesh_type)
+				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
 
@@ -257,7 +283,7 @@ namespace ngmesh {
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
 					glEnableVertexAttribArray(attrib_idx);
-					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.byte_size, (GLvoid*)attribute.offset);
+					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.byte_size, reinterpret_cast<GLvoid*>(attribute.offset));
 
 					attrib_idx++;
 				}
@@ -294,27 +320,42 @@ namespace ngmesh {
 				glBindVertexArray(m_va_handle);
 			}
 
+			GLenum getIndicesType() const
+			{
+				return m_indices_type;
+			}
+
+			GLenum getPrimitiveType() const
+			{
+				return m_primitive_type;
+			}
+
+			GLsizeiptr getVertexBufferByteSize() const { return m_vbo.getByteSize(); }
+			GLsizeiptr getIndexBufferByteSize() const { return m_ibo.getByteSize(); }
+
 			Mesh(const Mesh &cpy) = delete;
 			Mesh(Mesh&& other) = delete;
 			Mesh& operator=(Mesh&& rhs) = delete;
 			Mesh& operator=(const Mesh& rhs) = delete;
 
 		private:
-			BufferObject m_vbo;
-			BufferObject m_ibo;
-			GLuint m_va_handle;
+			BufferObject	m_vbo;
+			BufferObject	m_ibo;
+			GLuint			m_va_handle;
 
-			VertexLayout m_vertex_descriptor;
+			VertexLayout	m_vertex_descriptor;
 
-			GLuint m_indices_cnt;
-			GLenum m_indices_type;
-			GLenum m_usage;
-			GLenum m_mesh_type;
+			GLuint			m_indices_cnt;
+			GLenum			m_indices_type;
+			GLenum			m_usage;
+			GLenum			m_primitive_type;
 		};
 
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
 		struct RenderBatch
 		{
+			GLsizei							draw_cnt;
+
 			std::unique_ptr<GLSLShader>		shader_prgm;
 			std::unique_ptr<Mesh>			mesh;
 			std::unique_ptr<BufferObject>	draw_commands;
@@ -322,10 +363,10 @@ namespace ngmesh {
 			std::unique_ptr<BufferObject>	mtl_shader_params;
 		};
 
+		/** List of render batches ready for dispatching */
 		std::vector<RenderBatch> m_render_batches;
 
-
-		/** MolecularDataCall caller slot */
+		/** Render batches caller slot */
 		megamol::core::CallerSlot m_renderBatches_callerSlot;
 	};
 
