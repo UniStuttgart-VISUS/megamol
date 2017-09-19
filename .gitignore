@@ -1,6 +1,7 @@
-build
-bin
-include
-share
-lib
-issues
+build/**/*
+bin/**/*
+include/**/*
+external/**/*
+share/**/*
+lib/**/*
+issues/**/*
