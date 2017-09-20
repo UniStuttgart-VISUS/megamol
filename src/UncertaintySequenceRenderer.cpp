@@ -762,7 +762,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         // when no selection call is present clear selection anyway ...
         if (this->clearResSelectionParam.IsDirty()) {
             this->clearResSelectionParam.ResetDirty();
-            for (int i = 0; i < this->selection.Count(); i++) {
+            for (int i = 0; i < static_cast<int>(this->selection.Count()); i++) {
                 this->selection[i] = false;
             }
         }

@@ -1366,7 +1366,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 
     // Calculate uncertainty
     // Loop over all amino-acids
-    for (int i = 0; i < this->pdbIndex.Count(); i++) {
+    for (int i = 0; i < static_cast<int>(this->pdbIndex.Count()); i++) {
         unsigned int consideredMethods = methodCnt;
         
         // Loop over all secondary strucutre types

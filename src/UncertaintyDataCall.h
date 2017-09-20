@@ -257,7 +257,7 @@ namespace megamol {
             }
             if (!this->secStructUncertainty)
                 return default;
-            else if (this->secStructUncertainty->Count() <= index)
+            else if (static_cast<int>(this->secStructUncertainty->Count()) <= index)
                 return default;
             else if (this->secStructUncertainty->operator[](index).Count() <= i)
                 return default;
@@ -280,7 +280,7 @@ namespace megamol {
             }
             if (!this->sortedSecStructAssignment)
                 return default;
-            else if (this->sortedSecStructAssignment->Count() <= index)
+            else if (static_cast<int>(this->sortedSecStructAssignment->Count()) <= index)
                 return default;
             else if (this->sortedSecStructAssignment->operator[](index).Count() <= i)
                 return default;
