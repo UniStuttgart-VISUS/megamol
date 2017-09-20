@@ -9,6 +9,9 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer2 plugin" OFF)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(imageviewer2)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  
+
   if(UNIX)
     find_package(JPEG REQUIRED)
     add_definitions(-DXMD_H) # prevents typedef conflict

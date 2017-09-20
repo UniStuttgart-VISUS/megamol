@@ -8,6 +8,9 @@ option(BUILD_PROTEIN_PLUGIN "Option to build protein" ON)
 if(BUILD_PROTEIN_PLUGIN)
   project(protein)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
+  
+
   set(LIBS vislib core mmstd_trisoup protein_calls glload)
   include_directories("include" "src")
 

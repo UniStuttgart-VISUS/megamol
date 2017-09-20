@@ -8,6 +8,8 @@ option(BUILD_MMSTD_MOLDYN_PLUGIN "Option to build mmstd_moldyn" ON)
 if(BUILD_MMSTD_MOLDYN_PLUGIN)
   project(mmstd_moldyn)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_MOLDYN_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  
   set(LIBS vislib core glload)
   include_directories("include" "src")
 

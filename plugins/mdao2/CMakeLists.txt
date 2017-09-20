@@ -8,6 +8,8 @@ option(BUILD_MDAO2_PLUGIN "Option to build mdao2" ON)
 if(BUILD_MDAO2_PLUGIN)
   project(mdao2)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_MDAO2_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  
   set(LIBS vislib core glload)
   include_directories("include" "src")
 

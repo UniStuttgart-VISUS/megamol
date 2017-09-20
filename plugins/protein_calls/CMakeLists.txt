@@ -8,6 +8,8 @@ option(BUILD_PROTEIN_CALLS_PLUGIN "Option to build protein_calls" ON)
 if(BUILD_PROTEIN_CALLS_PLUGIN)
   project(protein_calls)
   
+  set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_CALLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   set(LIBS vislib core glload)
   include_directories("include" "src")
 

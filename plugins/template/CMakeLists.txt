@@ -9,6 +9,8 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build MegaMolPlugin" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(MegaMolPlugin)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   set(LIBS vislib core glload)
   include_directories("include" "src")
 

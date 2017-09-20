@@ -8,6 +8,8 @@ option(BUILD_MMSTD_TRISOUP_PLUGIN "Option to build mmstd_trisoup" ON)
 if(BUILD_MMSTD_TRISOUP_PLUGIN)
   project(mmstd_trisoup)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_TRISOUP_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   set(LIBS vislib core glload)
   include_directories("include" "src")
 

@@ -9,6 +9,8 @@ option(BUILD_CORE "Build core" ON)
 if(BUILD_CORE)
   project(core)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
+  
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
 

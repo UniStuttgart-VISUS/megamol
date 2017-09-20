@@ -5,12 +5,14 @@
 #
 string(TOUPPER infovis EXPORT_NAME)
 #option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON)
-include(check_mmdep)
-CHECK_MMDEP(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON BUILD_MMSTD_DATATOOLS_PLUGIN)
+
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(infovis)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
+  
   set(LIBS vislib core glload mmstd_datatools)
   include_directories("include" "src")
 

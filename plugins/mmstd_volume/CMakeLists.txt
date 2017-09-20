@@ -8,6 +8,8 @@ option(BUILD_MMSTD_VOLUME_PLUGIN "Option to build mmstd_VOLUME" ON)
 if(BUILD_MMSTD_VOLUME_PLUGIN)
   project(mmstd_volume)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_VOLUME_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   add_subdirectory(datraw)
   
   set(LIBS vislib core glload datraw)

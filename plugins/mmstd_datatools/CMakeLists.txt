@@ -8,6 +8,8 @@ option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   project(mmstd_datatools)
 
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  
   if(UNIX)
     find_package(OpenMP)
   endif()
