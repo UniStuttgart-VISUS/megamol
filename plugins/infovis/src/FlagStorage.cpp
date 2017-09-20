@@ -10,8 +10,8 @@ FlagStorage::FlagStorage(void) :
     getFlagsSlot("getFlags", "Provides flag data to clients."),
     flags(), crit() {
 
-	this->getFlagsSlot.SetCallback(FlagCall::ClassName(), FlagCall::FunctionName(FlagCall::CallForGetFlags), &FlagStorage::getFlagsCallback);
-	this->getFlagsSlot.SetCallback(FlagCall::ClassName(), FlagCall::FunctionName(FlagCall::CallForSetFlags), &FlagStorage::setFlagsCallback);
+    this->getFlagsSlot.SetCallback(FlagCall::ClassName(), FlagCall::FunctionName(FlagCall::CallForGetFlags), &FlagStorage::getFlagsCallback);
+    this->getFlagsSlot.SetCallback(FlagCall::ClassName(), FlagCall::FunctionName(FlagCall::CallForSetFlags), &FlagStorage::setFlagsCallback);
     this->MakeSlotAvailable(&this->getFlagsSlot);
 }
 
@@ -32,28 +32,28 @@ void FlagStorage::release(void) {
 
 
 bool FlagStorage::getFlagsCallback(core::Call& caller) {
-	FlagCall *fc = dynamic_cast<FlagCall*>(&caller);
+    FlagCall *fc = dynamic_cast<FlagCall*>(&caller);
     if (fc == NULL) return false;
 
-	crit.Lock();
+    crit.Lock();
     //fc->SetFlags(this->flags);
-	// TODO less yucky
-	fc->flags = this->flags;
-	crit.Unlock();
+    // TODO less yucky
+    fc->flags = this->flags;
+    crit.Unlock();
 
     return true;
 }
 
 
 bool FlagStorage::setFlagsCallback(core::Call& caller) {
-	FlagCall *fc = dynamic_cast<FlagCall*>(&caller);
-	if (fc == NULL) return false;
+    FlagCall *fc = dynamic_cast<FlagCall*>(&caller);
+    if (fc == NULL) return false;
     
-	crit.Lock();
-	//this->flags = fc->GetFlags();
-	// TODO less yucky
-	this->flags = fc->flags;
-	crit.Unlock();
+    crit.Lock();
+    //this->flags = fc->GetFlags();
+    // TODO less yucky
+    this->flags = fc->flags;
+    crit.Unlock();
 
     return true;
 }
