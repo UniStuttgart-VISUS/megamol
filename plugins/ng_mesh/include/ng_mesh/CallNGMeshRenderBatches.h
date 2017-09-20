@@ -194,7 +194,7 @@ namespace ngmesh {
 					size_t offset = 0;
 					for (int i = 0; i < batch_cnt; ++i)
 					{
-						shader_prgms = reinterpret_cast<ShaderPrgmData*>(new_raw_buffer);
+						shader_prgms = reinterpret_cast<ShaderPrgmData*>(new_raw_buffer + base_offset + offset);
 						offset += sizeof(ShaderPrgmData) + shader_prgms[i].char_cnt;
 
 						meshes = reinterpret_cast<MeshData*>(new_raw_buffer + base_offset + offset);
