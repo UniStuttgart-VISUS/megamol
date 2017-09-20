@@ -13,8 +13,8 @@
 
 // Version
 1 VERSIONINFO
- FILEVERSION $PROJ_MAJVER$,$PROJ_MINVER$,$PROJ_BUILDVER$,$PROJ_REVVER$
- PRODUCTVERSION $PROJ_MAJVER$,$PROJ_MINVER$,$PROJ_BUILDVER$,$PROJ_REVVER$
+ FILEVERSION ${MEGAMOL_MAJOR},${MEGAMOL_MINOR},${MEGAMOL_PATCH},${GIT_HASH}
+ PRODUCTVERSION ${MEGAMOL_MAJOR},${MEGAMOL_MINOR},${MEGAMOL_PATCH},${GIT_HASH}
  FILEFLAGSMASK 0x3fL
 #if defined(_DEBUG) || defined(DEBUG)
  FILEFLAGS 0x1L
@@ -29,14 +29,14 @@ BEGIN
     BEGIN
         BLOCK "040704b0"
         BEGIN
-            VALUE "CompanyName", "$PROJ_TEAM$"
-            VALUE "FileDescription", "$PROJ_DESC$"
-            VALUE "FileVersion", "$PROJ_MAJVER$.$PROJ_MINVER$.$PROJ_BUILDVER$.$PROJ_REVVER$"
+            VALUE "CompanyName", "${PROJ_TEAM}"
+            VALUE "FileDescription", "${PROJ_DESC}"
+            VALUE "FileVersion", "${MEGAMOL_MAJOR}.${MEGAMOL_MINOR}.${MEGAMOL_PATCH}.${GIT_HASH}"
             VALUE "InternalName", "MegaMol Configurator"
-            VALUE "LegalCopyright", "Copyright (C) 2013-$PROJ_YEAR$"
+            VALUE "LegalCopyright", "Copyright (C) 2013-${YEAR}"
             VALUE "OriginalFilename", "MegaMolConf.exe"
-            VALUE "ProductName", "$PROJ_NAME$"
-            VALUE "ProductVersion", "$PROJ_MAJVER$.$PROJ_MINVER$.$PROJ_BUILDVER$.$PROJ_REVVER$"
+            VALUE "ProductName", "${PROJ_NAME}"
+            VALUE "ProductVersion", "${MEGAMOL_MAJOR}.${MEGAMOL_MINOR}.${MEGAMOL_PATCH}.${GIT_HASH}"
         END
     END
     BLOCK "VarFileInfo"

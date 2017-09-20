@@ -215,7 +215,6 @@
     </None>
     <None Include="Resources\megamol.cfg" />
     <None Include="Resources\mmconfig.manifest" />
-    <None Include="Resources\mmconfig.rc.input" />
     <None Include="Resources\mmconfig.res" />
     <None Include="Properties\AssemblyInfo.cs.input" />
     <None Include="Properties\Settings.settings">
@@ -227,7 +226,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="VersionInfo.pl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\MegaMol_Ctrl.ico" />
@@ -305,14 +303,15 @@
     <None Include="Resources\StatusAnnotations_Required_32xLG_color.png" />
     <None Include="Resources\StatusAnnotations_Complete_and_ok_32xLG_color.png" />
     <None Include="Resources\mmconfig.rc">
-      <SubType>Designer</SubType>
+      <Generator>rc.exe</Generator>
     </None>
     <Content Include="Resources\MegaMol_Plg.ico" />
     <Content Include="Resources\MegaMol_Proj.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>perl "$(ProjectDir)VersionInfo.pl" "$(SolutionDir)\."</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets" Condition="Exists('..\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

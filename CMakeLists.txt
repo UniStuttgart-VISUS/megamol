@@ -50,6 +50,11 @@ if(WIN32)
 endif()
 
 ###############################
+# console
+###############################
+add_subdirectory(configurator)
+
+###############################
 # Plugins
 ###############################
 add_subdirectory(plugins)

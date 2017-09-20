@@ -36,7 +36,7 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2013-"
             VALUE "OriginalFilename", "MegaMolConf.exe"
             VALUE "ProductName", "MegaMol"
-            VALUE "ProductVersion", "1.2.3.0"
+            VALUE "ProductVersion", "77.2.3.0"
         END
     END
     BLOCK "VarFileInfo"
