@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -60,7 +61,7 @@ namespace ngmesh {
 #endif // _WIN32
 			return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
 				&& isExtAvailable("GL_ARB_shader_draw_parameters")
-				&& ogl_IsVersionGEQ(4, 5);
+				&& ogl_IsVersionGEQ(4, 3);
 		}
 
 		/** Ctor. */
@@ -112,11 +113,11 @@ namespace ngmesh {
 		/**
 		 *
 		 */
-		void addRenderBatch(CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data,
-							CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data,
-							CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data,
-							CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
-							CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params);
+		void addRenderBatch(CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData&			shader_prgm_data,
+							CallNGMeshRenderBatches::RenderBatchesData::MeshData&				mesh_data,
+							CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData&		draw_command_data,
+							CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams&		mesh_shader_params,
+							CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams&	mtl_shader_params);
 
 		/**
 		 *
@@ -128,7 +129,6 @@ namespace ngmesh {
 								CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
 								CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params,
 								uint32_t															update_flags);
-
 
 		/**
 		* The render callback.
@@ -159,6 +159,7 @@ namespace ngmesh {
 			{
 				glGenBuffers(1, &m_handle);
 				glBindBuffer(m_target, m_handle);
+				auto gl_err = glGetError();
 				glBufferData(m_target, m_byte_size, data, m_usage);
 				glBindBuffer(m_target, 0);
 			}
@@ -186,6 +187,21 @@ namespace ngmesh {
 
 				glBindBuffer(m_target, m_handle);
 				glBufferSubData(m_target, byte_offset, datastorage.size() * sizeof(Container::value_type), datastorage.data());
+				glBindBuffer(m_target, 0);
+			}
+
+			void loadSubData(GLvoid const* data, GLsizeiptr byte_size, GLsizeiptr byte_offset = 0) const
+			{
+				// check if feasible
+				if ((byte_offset + byte_size) > m_byte_size)
+				{
+					// error message
+					vislib::sys::Log::DefaultLog.WriteError("Invalid byte_offset or size for loadSubData");
+					return;
+				}
+
+				glBindBuffer(m_target, m_handle);
+				glBufferSubData(m_target, byte_offset, byte_size, data);
 				glBindBuffer(m_target, 0);
 			}
 
@@ -227,13 +243,14 @@ namespace ngmesh {
 				GLenum					usage = GL_STATIC_DRAW,
 				GLenum					primitive_type = GL_TRIANGLES)
 				: m_vbo<VertexContainer>(GL_ARRAY_BUFFER, vertices, usage),
-				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage),
+				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor will fail! needs a bound vao!
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
 
 				// set attribute pointer and vao state
 				glBindVertexArray(m_va_handle);
+				m_ibo.bind();
 				m_vbo.bind();
 				GLuint attrib_idx = 0;
 				for (auto& attribute : vertex_descriptor.attributes)
@@ -271,6 +288,7 @@ namespace ngmesh {
 				GLenum				usage = GL_STATIC_DRAW,
 				GLenum				primitive_type = GL_TRIANGLES)
 				: m_vbo(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage),
+				//m_ibo(nullptr), //TODO ibo generation in constructor will fail! needs a bound vao!
 				m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
@@ -279,6 +297,11 @@ namespace ngmesh {
 				// set attribute pointer and vao state
 				glBindVertexArray(m_va_handle);
 				m_vbo.bind();
+
+				// dirty hack to make ibo work as BufferObject
+				//m_ibo = std::make_unique<BufferObject>(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage);
+				m_ibo.bind();
+
 				GLuint attrib_idx = 0;
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
@@ -289,6 +312,7 @@ namespace ngmesh {
 				}
 				glBindVertexArray(0);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 				switch (m_indices_type)
 				{

@@ -72,7 +72,7 @@ namespace ngmesh {
 				{
 					struct DrawElementsCommand
 					{
-						GLuint vertex_cnt;
+						GLuint cnt;
 						GLuint instance_cnt;
 						GLuint first_idx;
 						GLuint base_vertex;
