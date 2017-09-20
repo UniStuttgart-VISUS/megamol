@@ -4,7 +4,9 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER infovis EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON)
+#option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON)
+include(check_mmdep)
+CHECK_MMDEP(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON BUILD_MMSTD_DATATOOLS_PLUGIN)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(infovis)
@@ -22,7 +24,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_dependencies(${PROJECT_NAME} vislib glload core mmstd_datatools)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
