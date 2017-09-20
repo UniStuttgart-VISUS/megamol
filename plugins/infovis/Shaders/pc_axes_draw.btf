@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc_axes_draw" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="pc" />
+
+  <namespace name="axes">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 actualColor;
+
+void main()
+{
+  uint dimension = pc_dimension(gl_InstanceID);
+	vec4 vertex = axis_line(gl_InstanceID, gl_VertexID);
+	
+  if (dimension == pickedAxis) {
+  	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+  	actualColor = color;
+  }
+  
+  gl_Position = projection * modelView * vertex;
+}
+		    ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 fragColor;
+in vec4 actualColor;
+
+void main()
+{
+  fragColor = actualColor;
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+  <namespace name="scales">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 actualColor;
+        
+void main()
+{
+  
+  uint dimension = pc_dimension(gl_InstanceID / numTicks);
+	vec4 bottom = axis_line(gl_InstanceID / numTicks, 0);
+	vec4 top = axis_line(gl_InstanceID / numTicks, 1);
+  
+  vec4 vertex = vec4(
+  bottom.x - axisHalfTick + 2 * gl_VertexID * axisHalfTick,
+  mix(bottom.y, top.y, (gl_InstanceID % numTicks) / float(numTicks - 1)),
+  bottom.z,
+  bottom.w);
+  
+  if (dimension == pickedAxis) {
+  	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+  	actualColor = color;
+  }
+  gl_Position = projection * modelView * vertex;
+}
+		    ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 fragColor;
+in vec4 actualColor;
+
+void main()
+{
+  fragColor = actualColor;
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+  
+  <namespace name="filterindicators">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 actualColor;
+uniform ivec2 pickedIndicator;
+        
+void main()
+{
+  
+  uint dimension = pc_dimension(gl_InstanceID / 2);
+	vec4 bottom = axis_line(gl_InstanceID / 2, 0);
+	vec4 top = axis_line(gl_InstanceID / 2, 1);
+  
+  float iAmTop = (gl_InstanceID % 2);
+  float topOffset = iAmTop * 2.0 - 1.0; // top -> 1, bottom -> -1
+  float val = (topOffset > 0) ? filters[dimension].upper : filters[dimension].lower;
+  //val = val - dataMinimum[dimension];
+  //val /= dataMaximum[dimension] - dataMinimum[dimension];
+  vec4 vertex = vec4(
+  bottom.x - axisHalfTick + gl_VertexID * axisHalfTick,
+  mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + gl_VertexID % 2)),
+  bottom.z,
+  bottom.w);
+  
+  if ((dimension == pickedIndicator.x) && (abs(iAmTop - pickedIndicator.y) < 0.1)) {
+  	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+  	actualColor = color;
+  }
+  gl_Position = projection * modelView * vertex;
+}
+		    ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 fragColor;
+in vec4 actualColor;
+
+void main()
+{
+  fragColor = actualColor;
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+</btf>
