@@ -78,7 +78,7 @@ bool NGMeshRenderer::create()
 	std::uniform_real_distribution<float> distr(0.05, 0.1);
 	std::uniform_real_distribution<float> loc_distr(-0.9, 0.9);
 
-	draw_command_data.draw_cnt = 100000;
+	draw_command_data.draw_cnt = 1000000;
 	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
@@ -232,7 +232,7 @@ void NGMeshRenderer::updateRenderBatch(
 		return;
 	}
 
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::shaderUpdateBit()) > 0)
+	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::SHADER_BIT) > 0)
 	{
 		m_render_batches[idx].shader_prgm.reset();
 
@@ -246,22 +246,22 @@ void NGMeshRenderer::updateRenderBatch(
 		m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
 	}
 
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::meshUpdateBit()) > 0)
+	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESH_BIT) > 0)
 	{
 		// TODO check if mesh buffer need reallocation
 	}
 
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::drawCommandsUpdateBit()) > 0)
+	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::DRAWCOMMANDS_BIT) > 0)
 	{
 		// TODO check if buffer needs reallocation
 	}
 
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::meshParamsUpdateBit()) > 0)
+	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESHPARAMS_BIT) > 0)
 	{
 		// TODO check if buffer needs reallocation
 	}
 
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::materialsParamsUpdateBit()) > 0)
+	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MATERIAL_BIT) > 0)
 	{
 		// TODO check if buffer needs reallocation
 	}
@@ -300,29 +300,28 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 
 	auto cam_right = cr->GetCameraParameters()->Right();
 	auto cam_up = cr->GetCameraParameters()->Up();
-	auto cam_front = cr->GetCameraParameters()->Front();
+	auto cam_front = -cr->GetCameraParameters()->Front();
 	auto cam_position = cr->GetCameraParameters()->Position();
 	std::array<GLfloat, 16> view_matrix;
 	view_matrix[0] = cam_right.X();
 	view_matrix[1] = cam_up.X();
 	view_matrix[2] = cam_front.X();
 	view_matrix[3] = 0.0f;
-
+	
 	view_matrix[4] = cam_right.Y();
 	view_matrix[5] = cam_up.Y();
 	view_matrix[6] = cam_front.Y();
 	view_matrix[7] = 0.0f;
-
+	
 	view_matrix[8] = cam_right.Z();
 	view_matrix[9] = cam_up.Z();
 	view_matrix[10] = cam_front.Z();
 	view_matrix[11] = 0.0f;
 
-	view_matrix[12] = (cam_position.X()*cam_right.X() + cam_position.Y()*cam_right.Y() + cam_position.Z()*cam_right.Z());
-	view_matrix[13] = (cam_position.X()*cam_up.X() + cam_position.Y()*cam_up.Y() + cam_position.Z()*cam_up.Z());
-	view_matrix[14] = (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
+	view_matrix[12] = - (cam_position.X()*cam_right.X() + cam_position.Y()*cam_right.Y() + cam_position.Z()*cam_right.Z());
+	view_matrix[13] = - (cam_position.X()*cam_up.X() + cam_position.Y()*cam_up.Y() + cam_position.Z()*cam_up.Z());
+	view_matrix[14] = - (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
 	view_matrix[15] = 1.0f;
-
 
 	CallNGMeshRenderBatches* render_batch_call = this->getData();
 
@@ -344,8 +343,6 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 
 		render_batch.draw_commands->bind();
 		render_batch.mesh->bindVertexArray();
-		
-		std::cout << "Draw Count: " << render_batch.draw_cnt << std::endl;
 
 		glMultiDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
 			render_batch.mesh->getIndicesType(),

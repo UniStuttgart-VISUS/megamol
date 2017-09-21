@@ -36,11 +36,13 @@ namespace ngmesh {
 			{
 			public:
 
-				static uint32_t shaderUpdateBit()			{ return 0x1; }
-				static uint32_t meshUpdateBit()				{ return 0x2; }
-				static uint32_t drawCommandsUpdateBit()		{ return 0x4; }
-				static uint32_t meshParamsUpdateBit()		{ return 0x8; }
-				static uint32_t materialsParamsUpdateBit()	{ return 0x10; }
+				enum UpdateBits {
+					SHADER_BIT			= 0x1,
+					MESH_BIT			= 0x2,
+					DRAWCOMMANDS_BIT	= 0x4,
+					MESHPARAMS_BIT		= 0x8,
+					MATERIAL_BIT		= 0x10
+				};
 
 				struct ShaderPrgmData
 				{
