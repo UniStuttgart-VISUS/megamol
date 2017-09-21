@@ -4,6 +4,8 @@ The Infovis plugin provides all kinds of Information Visualization modules, like
 ## Build
 This plugin is switched on by default. It depends on mmstd_datatools.
 
+---
+
 ## Modules
 
 ### DiagramSeries
@@ -33,6 +35,10 @@ Additional parameters of interest:
 | drawSelectedItemsSlot      | `true`           | draw/hide selected items |
 | drawOtherItemsSlot   | `true`    | draw/hide items that are not selected |
 
+Example screenshot cutout using `DRAW_CONTINUOUS` with filter indicators (small 'hats' on axes):
+![NGParCoDemo.PNG](NGParCoDemo.PNG)
+
+---
 
 ## Calls
 
