@@ -751,6 +751,7 @@ bool PDBLoader::Frame::SetAtomOccupancy( unsigned int idx, float val) {
 PDBLoader::PDBLoader(void) : AnimDataModule(),
         pdbFilenameSlot( "pdbFilename", "The path to the PDB data file to be loaded"),
         xtcFilenameSlot( "xtcFilename", "The path to the XTC data file to be loaded"),
+		capFilenameSlot("capFilename", "The path to the CAP data file to be loaded"),
         forceDataCallerSlot( "getforcedata", "Connects the loader with force data storage"),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
@@ -758,6 +759,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
         calcBBoxPerFrameSlot("calcBBoxPerFrame", "Calculate the bounding box for each frame separately"),
         calcBondsSlot("calculateBonds", "Calculate covalent bonds when loading the file"),
+		recomputeStridePerFrameSlot( "recomputeSTRIDEeachFrame", "If STRIDE is used, should it be recomputed each frame?"),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
@@ -768,6 +770,9 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 
     this->xtcFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->xtcFilenameSlot);
+
+	this->capFilenameSlot << new param::FilePathParam("");
+	this->MakeSlotAvailable(&this->capFilenameSlot);
 
     this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
     this->MakeSlotAvailable( &this->forceDataCallerSlot);
@@ -790,6 +795,9 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 
     this->calcBondsSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->calcBondsSlot);
+
+	this->recomputeStridePerFrameSlot << new param::BoolParam(false);
+	this->MakeSlotAvailable(&this->recomputeStridePerFrameSlot);
 
     mdd = NULL; // no mdd object
 }
@@ -826,6 +834,11 @@ bool PDBLoader::getData( core::Call& call) {
 
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
+
+	if (this->capFilenameSlot.IsDirty()) {
+		this->capFilenameSlot.ResetDirty();
+		this->loadFileCap(this->capFilenameSlot.Param<core::param::FilePathParam>()->Value());
+	}
 
     if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
@@ -952,8 +965,7 @@ bool PDBLoader::getData( core::Call& call) {
     dc->SetChains( static_cast<unsigned int>(this->chain.Count()),
         (MolecularDataCall::Chain*)this->chain.PeekElements());
 
-    if( !this->secStructAvailable &&
-            this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
+    if( (!this->secStructAvailable || this->recomputeStridePerFrameSlot.Param<param::BoolParam>()->Value() )  && this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
         time_t t = clock(); // DEBUG
         if( this->stride ) delete this->stride;
         this->stride = new Stride( dc );
@@ -976,6 +988,11 @@ bool PDBLoader::getData( core::Call& call) {
 bool PDBLoader::getExtent( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
+
+	if (this->capFilenameSlot.IsDirty()) {
+		this->capFilenameSlot.ResetDirty();
+		this->loadFileCap(this->capFilenameSlot.Param<core::param::FilePathParam>()->Value());
+	}
 
     if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
@@ -1141,13 +1158,27 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 // ignore alternate locations
                 if (line.Substring(16, 1).Equals(" ", false) ||
                     line.Substring(16, 1).Equals("A", false)) {
-                    // resize atom entry array, if necessary
-                    if (atomEntries.Count() == atomEntriesCapacity) {
-                        atomEntriesCapacity += 10000;
-                        atomEntries.AssertCapacity(atomEntriesCapacity);
-                    }
-                    // add atom entry
-                    atomEntries.Add(line);
+					// check if the atom belongs to a cap and needs to be removed
+					auto res_string = line.Substring(23, 4);
+					res_string.TrimSpaces();
+					int res_id = std::atoi(res_string.PeekBuffer());
+					bool found = false;
+					for (size_t i = 0; i < this->cap_chain.Count(); i++) {
+						if (res_id >= this->cap_chain[i].first && res_id <= this->cap_chain[i].second) {
+							found = true;
+							break;
+						}
+					}
+
+					if (!found) {
+						// resize atom entry array, if necessary
+						if (atomEntries.Count() == atomEntriesCapacity) {
+							atomEntriesCapacity += 10000;
+							atomEntries.AssertCapacity(atomEntriesCapacity);
+						}
+						// add atom entry
+						atomEntries.Add(line);
+					}
                 }
             }
             // next line
@@ -1442,6 +1473,49 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 }
             }
         }
+}
+
+/*
+ * parse one atom entry
+ */
+void PDBLoader::loadFileCap(const vislib::TString & filename) {
+	using vislib::sys::Log;
+
+	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Loading CAP file: %s", T2A(filename.PeekBuffer())); // DEBUG
+
+	vislib::sys::ASCIIFileBuffer file;
+	vislib::StringA line;
+	unsigned int lineCnt;
+
+	this->cap_chain.Clear();
+																								   
+	// try to load the file
+	bool file_loaded = false;
+	if (file.LoadFile(T2A(filename))) {
+		// file successfully loaded, read first frame
+		file_loaded = true;
+		lineCnt = 0;
+		while (lineCnt < file.Count()) {
+			// get the current line from the file
+			line = file.Line(lineCnt);
+			
+			// store the first and the last rsidue from the cap
+			vislib::StringA begin, end;
+			auto pos = line.Find("-", 0);
+			if (pos != -1) {
+				begin = line.Substring(0, pos);
+				end = line.Substring(pos + 1);
+
+			} else {
+				begin = line.Substring(0);
+				end = line.Substring(0);
+			}
+			this->cap_chain.Add(std::make_pair(std::atoi(begin.PeekBuffer()), std::atoi(end.PeekBuffer())));
+
+			// next line
+			lineCnt++;
+		}
+	}
 }
 
 /*
