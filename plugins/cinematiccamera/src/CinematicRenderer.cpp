@@ -55,8 +55,6 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     // init variables
     this->interpolSteps     = 20;
     this->toggleManipulator = false;
-    this->totalSimTime       = 1.0f;
-    this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->showHelpText      = false;
 
     // init parameters
@@ -153,12 +151,9 @@ bool CinematicRenderer::GetExtents(Call& call) {
     bboxCR3D.Union(*bboxCCC);
     cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
-    // Check for bounding box center before extending it by keyframes
-    this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
-    if (this->bboxCenter != ccc->getBboxCenter()) {
-        ccc->setBboxCenter(this->bboxCenter);
-        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-    }
+    // Set new bounding box center (before applying keyframe bounding box)
+    ccc->setBboxCenter(oc->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
 
     // Apply new boundingbox 
 	cr3d->AccessBoundingBoxes().SetWorldSpaceBBox(bboxCR3D);
@@ -200,29 +195,53 @@ bool CinematicRenderer::Render(Call& call) {
         this->toggleHelpTextParam.ResetDirty();
     }
 
-    // Check for new max anim time
-    this->totalSimTime = static_cast<float>(oc->TimeFramesCount());
-    if (this->totalSimTime != ccc->getTotalSimTime()) {
-        ccc->setTotalSimTime(this->totalSimTime);
-        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-    }
-
-    // Set animation time based on selected keyframe ('disables' animation via view3d)
-    Keyframe skf = ccc->getSelectedKeyframe();
-    // Wrap animation time to simulation time
-    float simTime  = skf.getAnimTime();
-    float frameCnt = static_cast<float>(oc->TimeFramesCount());
-    simTime = simTime - (floorf(simTime / frameCnt) * frameCnt);
-
+    // Set total simulation time of call
+    float totalSimTime = static_cast<float>(oc->TimeFramesCount());
+    ccc->setTotalSimTime(totalSimTime);
+    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
+    // Set simulation time based on selected keyframe ('disables' animation via view3d)
     *oc = *cr3d;
-    oc->SetTime(simTime);
+    Keyframe skf = ccc->getSelectedKeyframe();
+    float simTime = skf.getSimTime();
+    oc->SetTime(simTime * totalSimTime);
 
-    // Call slave renderer.
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    (*oc)(0);
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    // Opengl setup
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+    //glDisable(GL_DEPTH_TEST);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLfloat tmpLw;
+    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
+    GLfloat tmpPs;
+    glGetFloatv(GL_POINT_SIZE, &tmpPs);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
+    // COLORS
+    float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
+                                                  // Adapt colors depending on  Lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L < 0.5f) {
+        // not used so far
+    }
 
     // Get current Model-View-Projection matrix  for world space to screen space projection of keyframe camera position for mouse selection
     GLfloat modelViewMatrix_column[16];
@@ -272,39 +291,6 @@ bool CinematicRenderer::Render(Call& call) {
     // Draw manipulators
     this->manipulator.draw();
 
-    // Get the foreground color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-    // COLORS
-    float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
-    // Adapt colors depending on  Lightness
-    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
-    if (L < 0.5f) {
-        // not used so far
-    }
-
-    // Opengl setup
-    GLfloat tmpLw;
-    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
-    GLfloat tmpPs;
-    glGetFloatv(GL_POINT_SIZE, &tmpPs);
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
     // Draw spline
     math::Point<float, 3> tmpP;
     glColor4fv(sColor);
@@ -327,7 +313,7 @@ bool CinematicRenderer::Render(Call& call) {
         }
     glEnd();
 
-    // Draw help text 
+    // Draw help text  --------------------------------------------------------
     if (!this->theFont.Initialise()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
@@ -347,35 +333,36 @@ bool CinematicRenderer::Render(Call& call) {
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_POLYGON_SMOOTH);
-///NB:   Has to be disabled for filled font rendering (e.g. forgotten in SimpleMoleculeRenderer)
-    glDisableClientState(GL_COLOR_ARRAY); 
     glColor4fv(fgColor);
     float fontSize = viewportSize.GetWidth()*0.03f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
     float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------");
     if (this->showHelpText) {
-        tmpStr += "[t] Timeline - Move or Select/Drag&Drop mode.\n";
-        tmpStr += "[tab] Move or Select mode.\n";
+        tmpStr += "[h] Hide help text.\n";
+        tmpStr += "[tab] Move or Selection mode.\n";
         tmpStr += "[m] Toggle different Keyframe manipulators.\n";
         tmpStr += "[a] Add new keyframe.\n";
         tmpStr += "[c] Change view of selected Keyframe.\n";
         tmpStr += "[d] Delete selected Keyframe.\n";
         tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
         tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[r] Start/Stop rendering complete animation.\n";
+        tmpStr += "[r] Toggle rendering complete animation.\n";
+        tmpStr += "[space] Toggle playing animation.\n";
         tmpStr += "[v] Set same velocity between all Keyframes.\n";
-        tmpStr += "[h] Hide help text.\n";
+        tmpStr += "----- Timeline: -----\n";
+        tmpStr += "[left mouse] Selection.\n";
+        tmpStr += "[right mouse] Drag & Drop.\n";
+        tmpStr += "[middle mouse] Axis scaling.\n";
     }
     else {
         tmpStr += "[h] Show help text.\n";
     }
     this->theFont.DrawString(10.0f, viewportSize.GetHeight() - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 
     // Reset opengl
     glLineWidth(tmpLw);
@@ -384,6 +371,15 @@ bool CinematicRenderer::Render(Call& call) {
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
     glEnable(GL_DEPTH_TEST);
+
+
+    // Call slave renderer ----------------------------------------------------
+    // (Call slave renderer in the end, because of ... GrimRenderer)
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    (*oc)(0);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 
     return true;
 }

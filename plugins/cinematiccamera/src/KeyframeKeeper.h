@@ -85,12 +85,13 @@ namespace megamol {
             float                                totalSimTime;
             unsigned int                         interpolSteps;
             vislib::math::Point<float, 3>        bboxCenter;
+            unsigned int                         fps;
 
             vislib::math::Vector<float, 3>       camViewUp;
             vislib::math::Point<float, 3>        camViewPosition;
             vislib::math::Point<float, 3>        camViewLookat;
             float                                camViewApertureangle;
-
+            
             // Variables only used in keyframe keeper
             vislib::StringA                      filename;
 
@@ -150,6 +151,7 @@ namespace megamol {
             /** Callback for dropping selected keyframe */
             bool CallForSetDropKeyframe(core::Call& c);
 
+
             /**********************************************************************
             * parameters
             **********************************************************************/
@@ -162,8 +164,10 @@ namespace megamol {
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
             core::param::ParamSlot setKeyframesToSameSpeed;
-			/**param for current keyframe Time */
-			core::param::ParamSlot editCurrentTimeParam;
+			/**param for current keyframe aniamtion time */
+			core::param::ParamSlot editCurrentAnimTimeParam;
+            /**param for current keyframe simulation time */
+            core::param::ParamSlot editCurrentSimTimeParam;
 			/**param for current keyframe Position */
 			core::param::ParamSlot editCurrentPosParam;
 			/**param for current keyframe LookAt */

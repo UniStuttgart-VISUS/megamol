@@ -3,6 +3,7 @@
 #
 
 # Failed to get handle for parameter ::inst::CinematicView1::enableMouseSelection
+# Failed to get handle for parameter ::inst::CinematicView1::anim::togglePlay
 
 ::inst::CinematicRenderer1::01 Spline subdivision=30
 # ::inst::CinematicRenderer1::02 Toggle manipulator=
@@ -10,14 +11,15 @@
 # ::inst::KeyframeKeeper1::01 Add new keyframe=
 # ::inst::KeyframeKeeper1::02 Change selected keyframe=
 # ::inst::KeyframeKeeper1::03 Delete selected keyframe=
-::inst::KeyframeKeeper1::Edit Selection::01 Time=148.607620
-::inst::KeyframeKeeper1::05 Set same speed=false
-::inst::KeyframeKeeper1::Edit Selection::02 Position=-2.067735;-3.700173;-0.957056
-::inst::KeyframeKeeper1::Edit Selection::03 LookAt=1.167032;1.212250;2.280886
+::inst::KeyframeKeeper1::Edit Selection::01 Animation Time=0.999174
+::inst::KeyframeKeeper1::Edit Selection::01 Simulation Time=1.000000
+# ::inst::KeyframeKeeper1::05 Set same speed=
+::inst::KeyframeKeeper1::Edit Selection::02 Position=1.167032;1.212250;9.442453
+::inst::KeyframeKeeper1::Edit Selection::03 LookAt=1.047032;1.272250;2.280886
 # ::inst::KeyframeKeeper1::Edit Selection::04 Reset LookAt=
-::inst::KeyframeKeeper1::Edit Selection::05 UP=-0.349171;0.699518;-0.623502
+::inst::KeyframeKeeper1::Edit Selection::05 UP=0.000000;1.000000;0.000000
 ::inst::KeyframeKeeper1::Edit Selection::06 Aperture=30.000000
-::inst::KeyframeKeeper1::04 Total time=350.000000
+::inst::KeyframeKeeper1::04 Total animation  time=30.000000
 ::inst::KeyframeKeeper1::Storage::01 Filename=D:\04_megamol_github\megamol-git\bin\keyframes.kf
 # ::inst::KeyframeKeeper1::Storage::02 Save keyframes=
 ::inst::KeyframeKeeper1::Storage::03 (Auto) Load keyframes=true
@@ -26,8 +28,8 @@
 ::inst::SimpleMoleculeRenderer1::color::coloringMode1=Element
 ::inst::SimpleMoleculeRenderer1::color::colorWeighting=0.500000
 ::inst::SimpleMoleculeRenderer1::color::neighborhood=false
-::inst::SimpleMoleculeRenderer1::renderMode=Lines
-::inst::SimpleMoleculeRenderer1::stickRadius=0.400000
+::inst::SimpleMoleculeRenderer1::renderMode=Spacefilling
+::inst::SimpleMoleculeRenderer1::stickRadius=0.300000
 ::inst::SimpleMoleculeRenderer1::probeRadius=1.400000
 ::inst::SimpleMoleculeRenderer1::color::minGradColor=#146496
 ::inst::SimpleMoleculeRenderer1::color::midGradColor=#f0f0f0
@@ -47,12 +49,9 @@
 ::inst::PDBLoader1::solventResidues=
 ::inst::PDBLoader1::calcBBoxPerFrame=false
 ::inst::PDBLoader1::calculateBonds=true
-# ::inst::TimeLineRenderer1::01 Moving time line=
-::inst::TimeLineRenderer1::Ruler::01 Mode=Fixed Font
-::inst::TimeLineRenderer1::Ruler::02 Fixed interval segmentation=10.000000
-::inst::TimeLineRenderer1::Ruler::03 Fixed font size=25.000000
+::inst::TimeLineRenderer1::Ruler::01 Font size=20.000000
 ::inst::SplitView1::split.orientation=vertical
-::inst::SplitView1::split.pos=0.850000
+::inst::SplitView1::split.pos=0.500000
 ::inst::SplitView1::split.width=4.000000
 ::inst::SplitView1::split.colour=gray
 ::inst::SplitView2::split.orientation=horizontal
@@ -146,9 +145,8 @@
 ::inst::CinematicView1::bboxCol=black
 ::inst::CinematicView1::viewcube::show=false
 ::inst::CinematicView1::anim::play=false
-::inst::CinematicView1::anim::speed=10.000000
-::inst::CinematicView1::anim::time=148.607620
-# ::inst::CinematicView1::anim::togglePlay=
+::inst::CinematicView1::anim::speed=0.500000
+::inst::CinematicView1::anim::time=254.999969
 # ::inst::CinematicView1::anim::SpeedUp=
 # ::inst::CinematicView1::anim::SpeedDown=
 ::inst::CinematicView1::Cinematic::02 Skybox side=None
@@ -156,3 +154,4 @@
 ::inst::CinematicView1::Cinematic::03 Width=640
 ::inst::CinematicView1::Cinematic::05 FPS=10
 # ::inst::CinematicView1::Cinematic::01 Render animation=
+# ::inst::CinematicView1::Cinematic::05 Play animation=

@@ -379,7 +379,6 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     // Check if world camera position is zero ...
     if (normal.IsNull()) {
         normal.SetZ(1.0f);
-        vislib::sys::Log::DefaultLog.WriteError("[OJHHH].");
     }
     normal.Normalise();
     // Get arbitary vector vertical to normal
@@ -414,18 +413,6 @@ bool KeyframeManipulator::draw(void) {
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.0f);
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);    
     glEnable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
 
@@ -437,13 +424,13 @@ bool KeyframeManipulator::draw(void) {
         fgColor[i] -= bgColor[i];
     }
     // COLORS
-    float kColor[4] = { 0.7f, 0.7f, 1.0f, 1.0f };  // Color for KEYFRAME
-    float skColor[4] = {0.1f, 0.1f, 1.0f, 1.0f };  // Color for SELECTED KEYFRAME
-    float mlaColor[4] = {0.3f, 0.8f, 0.8f, 1.0f }; // Color for MANIPULATOR LOOKAT
-    float muColor[4] = {0.8f, 0.0f, 0.8f, 1.0f };  // Color for MANIPULATOR UP
-    float mxColor[4] = {0.8f, 0.1f, 0.0f, 1.0f };  // Color for MANIPULATOR X-AXIS
-    float myColor[4] = {0.8f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Y-AXIS
-    float mzColor[4] = {0.1f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Z-AXIS
+    float kColor[4]   = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME
+    float skColor[4]  = {0.2f, 0.2f, 1.0f, 1.0f };  // Color for SELECTED KEYFRAME
+    float mlaColor[4] = {0.3f, 0.8f, 0.8f, 1.0f };  // Color for MANIPULATOR LOOKAT
+    float muColor[4]  = {0.8f, 0.0f, 0.8f, 1.0f };  // Color for MANIPULATOR UP
+    float mxColor[4]  = {0.8f, 0.1f, 0.0f, 1.0f };  // Color for MANIPULATOR X-AXIS
+    float myColor[4]  = {0.8f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Y-AXIS
+    float mzColor[4]  = {0.1f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Z-AXIS
     // Adapt colors depending on  Lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
@@ -507,7 +494,6 @@ bool KeyframeManipulator::draw(void) {
 
     // Reset opengl
     glLineWidth(tmpLw);
-    glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
 
     return true;

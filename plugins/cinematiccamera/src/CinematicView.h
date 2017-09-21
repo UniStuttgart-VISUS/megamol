@@ -101,18 +101,22 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            float                                   currentViewTime;
+            clock_t                                 deltaAnimTime;
             Keyframe                                shownKeyframe;
+            bool                                    playAnim;
+
             int                                     cineWidth;
             int                                     cineHeight;
-            int                                     fps;
-            float                                   totalSimTime;
-            int                                     vpW, vpH;
-            vislib::math::Point<float, 3>           bboxCenter;
+            int                                     vpH;
+            int                                     vpW;
+
+            CinematicView::SkyboxSides              sbSide;
+
             vislib::graphics::gl::FramebufferObject fbo;
             bool                                    resetFbo;
             bool                                    rendering;
-            CinematicView::SkyboxSides              sbSide;
+            unsigned int                            fps;
+            unsigned int                            expFrameCnt;
 
             struct pngData {
                 BYTE                  *buffer;
@@ -125,13 +129,16 @@ namespace megamol {
                 unsigned int           cnt;
                 png_structp            ptr;
                 png_infop              infoptr;
-                float                  time;
+                float                  animTime;
                 bool                   lock;
             } pngdata;
 
             /**********************************************************************
             * functions
             **********************************************************************/
+
+            /** */
+            bool setSimTime(float st);
 
             /** Render to file functions */
             bool rtf_setup();
@@ -210,6 +217,8 @@ namespace megamol {
             core::param::ParamSlot fpsParam;
             /** */
             core::param::ParamSlot renderParam;
+            /** */
+            core::param::ParamSlot toggleAnimPlayParam;
 		};
 
 	} /* end namespace cinematiccamera */

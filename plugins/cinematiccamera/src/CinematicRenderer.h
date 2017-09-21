@@ -150,8 +150,6 @@ namespace megamol {
             vislib::graphics::gl::OutlineFont theFont;
 #endif
             unsigned int                     interpolSteps;
-            float                            totalSimTime;
-            vislib::math::Point<float, 3>    bboxCenter;
             bool                             toggleManipulator;
             bool                             showHelpText;
             KeyframeManipulator              manipulator;
