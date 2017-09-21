@@ -137,6 +137,8 @@ namespace megamol {
             bool                           animRedoSegmAdapt;
             float                          animScaleOffset;
             float                          animLenTimeFrac;
+            float                          animScalePos;
+            float                          animScaleDelta;
 
             vislib::math::Vector<float, 2> simAxisEndPos;
             float                          simAxisLen;
@@ -147,9 +149,10 @@ namespace megamol {
             bool                           simRedoSegmAdapt;
             float                          simScaleOffset;
             float                          simLenTimeFrac;
+            float                          simScalePos;
+            float                          simScaleDelta;
 
             vislib::math::Vector<float, 2> lastMousePos;
-            vislib::math::Vector<float, 2> scalePos;
             unsigned int                   scaleAxis;
 
             Keyframe                       dragDropKeyframe;

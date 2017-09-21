@@ -64,6 +64,8 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->animScaleFac      = 0.0f;
     this->animScaleOffset   = 0.0f;
     this->animLenTimeFrac   = 0.0f;
+    this->animScalePos      = 0.0f;
+    this->animScaleDelta    = 0.0f;
 
     this->simAxisEndPos     = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->simAxisLen        = 0.0f;
@@ -73,9 +75,10 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->simScaleFac       = 0.0f;
     this->simScaleOffset    = 0.0f;
     this->simLenTimeFrac    = 0.0f;
+    this->simScalePos       = 0.0f;
+    this->simScaleDelta     = 0.0f;
 
     this->lastMousePos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->scalePos          = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->scaleAxis         = 0;
     this->dragDropActive    = false;
     this->dragDropAxis      = 0;
@@ -260,7 +263,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 doAdapt = false;
             }
         }
-        this->animScaleOffset = this->scalePos.X() - (this->scalePos.X()  * this->animScaleFac); // Is always negative
+        this->animScaleOffset = this->animScalePos - (this->animScaleDelta  * this->animScaleFac);
+        this->animScaleOffset = (this->animScaleOffset > 0.0f) ? (0.0f) : (this->animScaleOffset);
         this->animLenTimeFrac = this->animAxisLen / this->animTotalTime * this->animScaleFac;
         this->animRedoSegmAdapt = false;
     }
@@ -294,7 +298,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 doAdapt = false;
             }
         }
-        this->simScaleOffset = this->scalePos.Y() - (this->scalePos.Y() * this->simScaleFac); // Is always negative
+        this->simScaleOffset = this->simScalePos - (this->simScaleDelta * this->simScaleFac); 
+        this->simScaleOffset = (this->simScaleOffset > 0.0f) ? (0.0f) : (this->simScaleOffset);
         this->simLenTimeFrac = this->simAxisLen * this->simScaleFac;
         this->simRedoSegmAdapt = false;
     }
@@ -711,9 +716,11 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
         this->scaleAxis = 0;
         this->lastMousePos.Set(x, y);
 
-        float posX = vislib::math::Clamp(x - this->axisStartPos.X(), 0.0f, this->animAxisLen);
-        float posY = vislib::math::Clamp(y - this->axisStartPos.Y(), 0.0f, this->simAxisLen);
-        this->scalePos.Set(posX, posY);
+        this->animScalePos = vislib::math::Clamp(x - this->axisStartPos.X(), 0.0f, this->animAxisLen);
+        this->animScaleDelta = (this->animScalePos - this->animScaleOffset) / this->animScaleFac;
+
+        this->simScalePos = vislib::math::Clamp(y - this->axisStartPos.Y(), 0.0f, this->simAxisLen);
+        this->simScaleDelta = (this->simScalePos - this->simScaleOffset) / this->simScaleFac;
     }
     else if ((flags & view::MOUSEFLAG_BUTTON_MIDDLE_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_MIDDLE_CHANGED)) {
 
