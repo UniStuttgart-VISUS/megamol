@@ -8,7 +8,7 @@ option(BUILD_MMSTD_MOLDYN_PLUGIN "Option to build mmstd_moldyn" ON)
 if(BUILD_MMSTD_MOLDYN_PLUGIN)
   project(mmstd_moldyn)
 
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
 

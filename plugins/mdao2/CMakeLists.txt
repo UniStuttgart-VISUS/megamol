@@ -8,7 +8,7 @@ option(BUILD_MDAO2_PLUGIN "Option to build mdao2" ON)
 if(BUILD_MDAO2_PLUGIN)
   project(mdao2)
 
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
   # Build MegaMol Plugin

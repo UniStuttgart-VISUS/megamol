@@ -12,7 +12,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     find_package(OpenMP)
   endif()
 
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src" "3rd/nanoflann")
 
   if (OPENMP_FOUND OR WIN32)

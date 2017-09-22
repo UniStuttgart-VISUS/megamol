@@ -8,7 +8,7 @@ option(BUILD_PROTEIN_CALLS_PLUGIN "Option to build protein_calls" ON)
 if(BUILD_PROTEIN_CALLS_PLUGIN)
   project(protein_calls)
   
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
   # Build MegaMol Plugin

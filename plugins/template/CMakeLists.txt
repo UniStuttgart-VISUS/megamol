@@ -9,7 +9,7 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build MegaMolPlugin" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(MegaMolPlugin)
 
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
   # Build MegaMol Plugin

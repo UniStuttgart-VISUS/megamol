@@ -10,7 +10,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
 
   add_subdirectory(datraw)
   
-  set(LIBS vislib core datraw)
+  set(LIBS vislib core datraw glad)
   include_directories("include" "src")
 
 

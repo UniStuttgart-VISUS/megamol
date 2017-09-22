@@ -8,7 +8,7 @@ option(BUILD_MMSTD_TRISOUP_PLUGIN "Option to build mmstd_trisoup" ON)
 if(BUILD_MMSTD_TRISOUP_PLUGIN)
   project(mmstd_trisoup)
 
-  set(LIBS vislib core)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
 

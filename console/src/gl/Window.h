@@ -121,7 +121,6 @@ namespace gl {
         
 #ifndef USE_EGL
         std::shared_ptr<glfwInst> glfw;
-        CoreHandle hView; // Handle to the core view instance
         GLFWwindow *hWnd; // glfw window handle
 #else
         EGLContext *hWnd; // EGL context

@@ -8,7 +8,7 @@ option(BUILD_PROTEIN_PLUGIN "Option to build protein" ON)
 if(BUILD_PROTEIN_PLUGIN)
   project(protein)
 
-  set(LIBS vislib core mmstd_trisoup protein_calls)
+  set(LIBS vislib core glad mmstd_trisoup protein_calls)
   include_directories("include" "src")
 
   # Build MegaMol Plugin
