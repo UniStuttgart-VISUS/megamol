@@ -30,10 +30,14 @@ if(BUILD_CONFIGURATOR)
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "MegaMolConf/*.resx")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "MegaMolConf/*.cs")
 
-  configure_file(${CONFIGURATOR_SOURCE}/MegaMolConf.csproj.input MegaMolConf.csproj)
+  #configure_file(${CONFIGURATOR_SOURCE}/MegaMolConf.csproj.input MegaMolConf.csproj)
 
-  include_external_msproject(conf_csproj "${CMAKE_CURRENT_BINARY_DIR}/MegaMolConf.csproj")
+  include_external_msproject(MegaMolConf "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj")
 
+  # Copy packages.config to build folder
+  file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/packages.config" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+  # Run the resource compiler
   if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/mmconfig.res")
     find_package(RC MODULE)
     if(NOT ${RC_FOUND})
@@ -50,4 +54,12 @@ if(BUILD_CONFIGURATOR)
       message(FATAL_ERROR "ERROR in ${RC_EXE} mmconfig.rc\nCould not create mmconfig.res\n${out_var}\n${err_var}")
     endif()
   endif()
+
+  add_custom_target(install_configurator_deps 
+  COMMAND "copy" "${CONF_BIN}\\mmconfig.res" "${CONF_SOURCE}\\MegaMolConf\\Resources\\mmconfig.res"
+  COMMAND "copy" "${CONF_BIN}\\AssemblyInfo.cs" "${CONF_SOURCE}\\MegaMolConf\\Properties\\AssemblyInfo.cs")
+
+
+  set_target_properties(core PROPERTIES FOLDER configurator)
+
 endif()
