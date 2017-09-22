@@ -126,19 +126,19 @@ namespace megamol {
             // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
-            vislib::math::Vector<float, 2> axisStartPos;
+            vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
 
-            vislib::math::Vector<float, 2> animAxisEndPos;
-            float                          animAxisLen;
-            float                          animTotalTime;
-            float                          animSegmSize;
-            float                          animSegmValue;
-            float                          animScaleFac;
-            bool                           animRedoSegmAdapt;
-            float                          animScaleOffset;
-            float                          animLenTimeFrac;
-            float                          animScalePos;
-            float                          animScaleDelta;
+            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of naimation axis
+            float                          animAxisLen;        // length of the animation axis
+            float                          animTotalTime;      // the total animation time
+            float                          animSegmSize;       // the world space size of one segment of the animation time ruler
+            float                          animSegmValue;      // the animation time value of on segment on the ruler 
+            float                          animScaleFac;       // the scaling factor of the animation axis
+            bool                           animRedoSegmAdapt;  // indicates if the segment size/value should be recalculated
+            float                          animScaleOffset;    // (negative) offset to keep position on the ruler during scaling in focus 
+            float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
+            float                          animScalePos;       // the ruler position to be kept in focus during scaling
+            float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
 
             vislib::math::Vector<float, 2> simAxisEndPos;
             float                          simAxisLen;

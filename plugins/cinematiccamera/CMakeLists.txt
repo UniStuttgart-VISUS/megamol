@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER cinematiccamera EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build MegaMolPlugin" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build Cinematic Camera Plugin" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(cinematiccamera)

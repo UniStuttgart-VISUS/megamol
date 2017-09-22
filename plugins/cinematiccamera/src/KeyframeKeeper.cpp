@@ -38,23 +38,24 @@ using namespace megamol::core;
 */
 KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     cinematicCallSlot("scene3D", "holds keyframe data"),
-    addKeyframeParam(              "01 Add new keyframe", "Adds new keyframe at the currently selected time."),
-    changeKeyframeParam(           "02 Change selected keyframe", "Changes selected keyframe at the currently selected time."),
-    deleteSelectedKeyframeParam(   "03 Delete selected keyframe", "Deletes the currently selected keyframe."),
-    setTotalAnimTimeParam(         "04 Total animation  time", "The total timespan of the animation."),
-    setKeyframesToSameSpeed(       "05 Set same speed", "Move keyframes to get same speed between all keyframes."),
+    addKeyframeParam(              "01_addKeyframe", "Adds new keyframe at the currently selected time."),
+    setTotalAnimTimeParam(         "04_maxAnimTime", "The total timespan of the animation."),
+    setKeyframesToSameSpeed(       "05_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
+    snapToFramesParam(             "06_snapAnimationFrames", "Snap animation time of all keyframes to fixed animation frames."),
 
-    editCurrentAnimTimeParam(      "Edit Selection::01 Animation Time", "Edit animation time of the selected keyframe."),
-    editCurrentSimTimeParam(       "Edit Selection::01 Simulation Time", "Edit simulation time of the selected keyframe."),
-    editCurrentPosParam(           "Edit Selection::02 Position", "Edit  position vector of the selected keyframe."),
-    editCurrentLookAtParam(        "Edit Selection::03 LookAt", "Edit LookAt vector of the selected keyframe."),
-    resetLookAtParam(              "Edit Selection::04 Reset LookAt", "Reset the LookAt vector of the selected keyframe."),
-    editCurrentUpParam(            "Edit Selection::05 UP", "Edit Up vector of the selected keyframe."),
-    editCurrentApertureParam(      "Edit Selection::06 Aperture", "Edit apperture angle of the selected keyframe."),
+    deleteSelectedKeyframeParam(   "editSelected::01_deleteKeyframe", "Deletes the currently selected keyframe."),
+    changeKeyframeParam(           "editSelected::02_applyView", "Apply current view to selected keyframe."),
+    editCurrentAnimTimeParam(      "editSelected::03_animTime", "Edit animation time of the selected keyframe."),
+    editCurrentSimTimeParam(       "editSelected::04_simTime", "Edit simulation time of the selected keyframe."),
+    editCurrentPosParam(           "editSelected::05_position", "Edit  position vector of the selected keyframe."),
+    editCurrentLookAtParam(        "editSelected::06_lookat", "Edit LookAt vector of the selected keyframe."),
+    resetLookAtParam(              "editSelected::07_resetLookat", "Reset the LookAt vector of the selected keyframe."),
+    editCurrentUpParam(            "editSelected::08_up", "Edit Up vector of the selected keyframe."),
+    editCurrentApertureParam(      "editSelected::09_apertureAngle", "Edit apperture angle of the selected keyframe."),
 
-    fileNameParam(                 "Storage::01 Filename", "The name of the file to load or save keyframes."),
-    saveKeyframesParam(            "Storage::02 Save keyframes", "Save keyframes to file."),
-    loadKeyframesParam(            "Storage::03 (Auto) Load keyframes", "Load keyframes from file when filename changes."),
+    fileNameParam(                 "storage::01_filename", "The name of the file to load or save keyframes."),
+    saveKeyframesParam(            "storage::02_save", "Save keyframes to file."),
+    loadKeyframesParam(            "storage::03_autoLoad", "Load keyframes from file when filename changes."),
     selectedKeyframe(), dragDropKeyframe()
     {
 
@@ -92,14 +93,14 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->totalAnimTime        = 1.0f;
     this->interpolSteps        = 10;
     this->fps                  = 24;
-    this->totalSimTime         = 0.0f;
+    this->totalSimTime         = 1.0f;
     this->bboxCenter           = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f); 
     this->filename             = "keyframes.kf";
     this->camViewUp            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
     this->camViewPosition      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
     this->camViewLookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->camViewApertureangle = 30.0f;
-
+    this->snapToFrames         = false;
 
     // init parameters
     this->addKeyframeParam.SetParameter(new param::ButtonParam('a'));
@@ -146,6 +147,11 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
 	this->loadKeyframesParam.SetParameter(new param::BoolParam(true));
 	this->MakeSlotAvailable(&this->loadKeyframesParam);
+
+    this->snapToFramesParam.SetParameter(new param::ButtonParam('f'));
+    this->MakeSlotAvailable(&this->snapToFramesParam);
+
+    this->loadKeyframesParam.ForceSetDirty();
 }
 
 
@@ -567,6 +573,20 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         }
     }
 
+    // loadKeyframesParam -----------------------------------------------------
+    if (this->snapToFramesParam.IsDirty()) {
+        this->snapToFramesParam.ResetDirty();
+
+        this->snapToFrames = !this->snapToFrames;
+
+        //if (this->snapToFrames) {
+            for (unsigned int i = 0; i < this->keyframes.Count(); i++) {
+                this->snapKeyframe2AnimFrame(&this->keyframes[i]);
+            }
+            this->snapKeyframe2AnimFrame(&this->selectedKeyframe);
+        //}        
+    }
+
     // PROPAGATE CURRENT DATA TO CALL -----------------------------------------
     ccc->setKeyframes(&this->keyframes);
     ccc->setBoundingBox(&this->boundingBox);
@@ -578,6 +598,27 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
     return true;
 }
+
+
+/*
+* KeyframeKeeper::snapKeyframe2AnimFrame
+*/
+void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe *kf) {
+
+    float snapAnimTime = kf->getAnimTime();
+
+    if (this->fps == 0) {
+        vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
+        return;
+    }
+
+    float fpsFrac = 1.0f / (float)(this->fps);
+    // Round to 5th position after the comma
+    snapAnimTime = floorf(snapAnimTime / fpsFrac + 0.5f) * fpsFrac;
+
+    kf->setAnimTime(snapAnimTime);
+}
+
 
 /*
 * KeyframeKeeper::setSameSpeed

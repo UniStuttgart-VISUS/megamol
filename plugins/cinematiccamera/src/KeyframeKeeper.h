@@ -86,6 +86,7 @@ namespace megamol {
             unsigned int                         interpolSteps;
             vislib::math::Point<float, 3>        bboxCenter;
             unsigned int                         fps;
+            bool                                 snapToFrames;
 
             vislib::math::Vector<float, 3>       camViewUp;
             vislib::math::Point<float, 3>        camViewPosition;
@@ -127,6 +128,9 @@ namespace megamol {
              *  Uses interpolSteps for approximation of path between keyframe positions 
              */
             void setSameSpeed(void);
+
+            /** */
+            void snapKeyframe2AnimFrame(Keyframe *kf);
 
             /**********************************************************************
             * callback stuff
@@ -186,7 +190,8 @@ namespace megamol {
             core::param::ParamSlot  editCurrentApertureParam;
             /** */
             core::param::ParamSlot  resetLookAtParam;
-
+            /** */
+            core::param::ParamSlot  snapToFramesParam;
 
 		};
 

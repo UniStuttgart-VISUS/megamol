@@ -30,12 +30,12 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    renderParam(              "Cinematic::01 Render animation", "Render complete animation to png-Files."),
-	selectedSkyboxSideParam(  "Cinematic::02 Skybox side", "Select the skybox side rendering."),
-    resWidthParam(            "Cinematic::03 Width", "Set resolution of cineamtic view in vertical direction."), 
-    resHeightParam(           "Cinematic::04 Height","Set resolution of cineamtic view in horizontal direction."),
-    fpsParam(                 "Cinematic::05 FPS", "Set frames per second the animation should be rendered."),
-    toggleAnimPlayParam(      "Cinematic::05 Play animation", "Start/stop playing animation"),
+    renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
+    toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
+	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
+    resWidthParam(            "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    resHeightParam(           "05_cinematicWidth","The width resolution of the cineamtic view to render."),
+    fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     shownKeyframe()
     {
 
@@ -165,6 +165,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
     // Set total simulation time of call
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
+    //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [totalSimTime] %f", static_cast<float>(cr3d->TimeFramesCount()));
+
     // Set FPS to call
     ccc->setFps(this->fps);
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
@@ -525,7 +527,7 @@ bool CinematicView::rtf_setup() {
     this->pngdata.infoptr   = NULL;
     //this->pngdata.file;
 
-    // Calculate pre-decimal point positions
+    // Calculate pre-decimal point positions for frame counter in filename
     this->expFrameCnt = 1;
     float frameCnt = (float)(this->fps) * ccc->getTotalAnimTime();
     while (frameCnt > 1.0f) {
@@ -559,8 +561,8 @@ bool CinematicView::rtf_setup() {
     // Set current simulation time
     this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
     
-    // Lock rendering and wait for one frame to get the new animation time applied 
-///NB:   Otherwise first frame is not set right -> just for high resolutions ?
+    // Lock rendering and wait for one frame to get the new animation time applied. 
+    // Otherwise first frame is not set right -> just for high resolutions ?
     this->pngdata.lock = true;
 
     this->rendering = true;
@@ -593,7 +595,8 @@ bool CinematicView::rtf_set_time_and_camera() {
         this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
 
         // Increase to next time step
-        this->pngdata.animTime += (1.0f / static_cast<float>(this->fps));
+        float fpsFrac = (1.0f / static_cast<float>(this->fps));
+        this->pngdata.animTime += fpsFrac;
 
         // Finish rendering if max anim time is reached
         if (this->pngdata.animTime > ccc->getTotalAnimTime()) {
@@ -613,8 +616,9 @@ bool CinematicView::rtf_create_frame() {
         vislib::StringA tmpFilename, tmpStr;
         tmpStr.Format("%i", this->expFrameCnt);
         tmpStr.Prepend("\%0");
-        tmpStr.Append("i.png");
-        tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
+        // tmpStr.Append("i.png");
+        tmpStr.Append("i_-_animTime_%f.png");
+        tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt, this->pngdata.animTime);
         tmpFilename.Prepend(this->pngdata.filename);
 
         // open final image file

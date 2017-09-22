@@ -46,9 +46,9 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
 #ifndef USE_SIMPLE_FONT
     theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
-    stepsParam(           "01 Spline subdivision", "Amount of interpolation steps between keyframes"),
-    toggleManipulateParam("02 Toggle manipulator", "Toggle between position manipulation or lookup manipulation."),
-    toggleHelpTextParam(  "03 Toggle help text", "Show/hide help text with key assignments."),
+    stepsParam(           "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
+    toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
+    toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
     manipulator()
     {
 
@@ -206,16 +206,13 @@ bool CinematicRenderer::Render(Call& call) {
     oc->SetTime(simTime * totalSimTime);
 
     // Opengl setup
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    //glDisableClientState(GL_COLOR_ARRAY);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_1D);
     //glDisable(GL_DEPTH_TEST);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
@@ -293,8 +290,8 @@ bool CinematicRenderer::Render(Call& call) {
 
     // Draw spline
     math::Point<float, 3> tmpP;
-    glColor4fv(sColor);
-///NB:   Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
+    glColor4fv(sColor); 
+    // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);
     glPointSize(1.5f);
     glBegin(GL_POINTS);
@@ -336,23 +333,29 @@ bool CinematicRenderer::Render(Call& call) {
     glColor4fv(fgColor);
     float fontSize = viewportSize.GetWidth()*0.03f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
-    float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------");
+    float strWidth = this->theFont.LineWidth(fontSize, "----------------------------------------------------------------");
     if (this->showHelpText) {
         tmpStr += "[h] Hide help text.\n";
-        tmpStr += "[tab] Move or Selection mode.\n";
-        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
-        tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[c] Change view of selected Keyframe.\n";
-        tmpStr += "[d] Delete selected Keyframe.\n";
-        tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
-        tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[r] Toggle rendering complete animation.\n";
-        tmpStr += "[space] Toggle playing animation.\n";
-        tmpStr += "[v] Set same velocity between all Keyframes.\n";
-        tmpStr += "----- Timeline: -----\n";
-        tmpStr += "[left mouse] Selection.\n";
-        tmpStr += "[right mouse] Drag & Drop.\n";
-        tmpStr += "[middle mouse] Axis scaling.\n";
+        tmpStr += "__________ GLOBAL:\n";
+        tmpStr += "[a] - Add new keyframe.\n";
+        tmpStr += "[d] - Delete selected Keyframe.\n";
+        tmpStr += "[l] - Reset Look-At of selected Keyframe.\n";
+        tmpStr += "[s] - Save Keyframes to file.\n";
+        tmpStr += "[r] - Toggle rendering complete animation.\n";
+        tmpStr += "[space] - Toggle playing animation.\n";
+        tmpStr += "__________ CINEMATIC VIEW:\n";
+        tmpStr += "[c] - Apply view to selected Keyframe.\n \n";
+        tmpStr += "__________ TRACKING SHOT VIEW:\n";
+        tmpStr += "[tab] - Move or Selection mode.\n";
+        tmpStr += "[m] - Toggle different Keyframe manipulators.\n";
+        tmpStr += "__________ TIME LINES:\n";
+        tmpStr += "[f] - Snap keyframes to animation frames.\n";
+        tmpStr += "[left mouse] - Selection.\n";
+        tmpStr += "[right mouse] - Drag & Drop.\n";
+        tmpStr += "[middle mouse] - Axis scaling.\n";
+        
+        //tmpStr += "[v] Set same velocity between all Keyframes.\n";
+
     }
     else {
         tmpStr += "[h] Show help text.\n";
