@@ -158,11 +158,11 @@ CallNGMeshRenderBatches* NGMeshRenderer::getData()
 }
 
 void NGMeshRenderer::addRenderBatch(
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData&			shader_prgm_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData&				mesh_data,
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData&		draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams&		mesh_shader_params,
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams&	mtl_shader_params)
+	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
+	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
+	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
+	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params)
 {
 	// Push back new RenderBatch object
 	m_render_batches.push_back(RenderBatch());
@@ -218,13 +218,13 @@ void NGMeshRenderer::addRenderBatch(
 }
 
 void NGMeshRenderer::updateRenderBatch(
-	size_t																idx,
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data,
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params,
-	uint32_t															update_flags)
+	size_t																	idx,
+	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
+	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
+	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
+	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
+	uint32_t																update_flags)
 {
 	if (idx >= m_render_batches.size())
 	{
@@ -325,7 +325,36 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 
 	CallNGMeshRenderBatches* render_batch_call = this->getData();
 
-	//TODO loop render batches data, create/update if necessary
+	// loop render batches data, create/update if necessary
+	auto render_batches = render_batch_call->getRenderBatches();
+	for (size_t i = 0; i < render_batches->getBatchCount(); ++i)
+	{
+		if (i >= m_render_batches.size()) // new batch
+		{
+			addRenderBatch(
+				render_batches->getShaderProgramData(i),
+				render_batches->getMeshData(i),
+				render_batches->getDrawCommandData(i),
+				render_batches->getMeshShaderParams(i),
+				render_batches->getMaterialShaderParams(i)
+			);
+		}
+		else
+		{
+			if (render_batches->getUpdateFlags(i) > 0) // check if at least a single flag is set to 1
+			{
+				updateRenderBatch(
+					i,
+					render_batches->getShaderProgramData(i),
+					render_batches->getMeshData(i),
+					render_batches->getDrawCommandData(i),
+					render_batches->getMeshShaderParams(i),
+					render_batches->getMaterialShaderParams(i),
+					render_batches->getUpdateFlags(i)
+				);
+			}
+		}
+	}
 
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 

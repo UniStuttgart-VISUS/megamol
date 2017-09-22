@@ -103,69 +103,116 @@ namespace ngmesh {
 				};
 
 			private:
+				
+				/*
+				* Meta data of the render batches. Stores information on byte sizes and memory locations of actual data.
+				*/
+				struct Head
+				{
+					uint8_t*	raw_buffer;
+					size_t		used_batch_cnt;
+					size_t		available_batch_cnt;
 
-				uint8_t*	raw_buffer;
-				size_t		used_byte_size;
-				size_t		allocated_byte_size;
-				size_t		batch_cnt;
+					ShaderPrgmData*			shader_prgms;
+					MeshData*				meshes;
+					DrawCommandData*		draw_commands;
+					MeshShaderParams*		mesh_shader_params;
+					MaterialShaderParams*	mtl_shader_params;
+					uint32_t*				update_flags;
+				};				
 
-				ShaderPrgmData*			shader_prgms;
-				MeshData*				meshes;
-				DrawCommandData*		draw_commands;
-				MeshShaderParams*		mesh_shader_params;
-				MaterialShaderParams*	mtl_shader_params;
-				uint32_t*				update_flags;
+				/*
+				* Raw data storage of actual render batch data.
+				*/
+				struct Data
+				{
+					uint8_t*	raw_buffer;
+					size_t		used_byte_size;
+					size_t		allocated_byte_size;
+				};
+
+				Head m_head;
+				Data m_data;
 
 			public:
 				RenderBatchesData()
-					: raw_buffer(nullptr),
-					used_byte_size(0),
-					allocated_byte_size(0),
-					batch_cnt(0),
-					shader_prgms(nullptr),
-					meshes(nullptr),
-					draw_commands(nullptr),
-					mesh_shader_params(nullptr),
-					mtl_shader_params(nullptr),
-					update_flags(nullptr) {}
+				{
+					m_head.raw_buffer = nullptr;
+					m_head.used_batch_cnt = 0;
+					m_head.available_batch_cnt = 0;
+
+					m_data.raw_buffer = nullptr;
+					m_data.used_byte_size = 0;
+					m_data.allocated_byte_size = 0;
+				}
 				~RenderBatchesData()
 				{
-					if (raw_buffer != nullptr)
-						delete raw_buffer;
+					if (m_head.raw_buffer != nullptr)
+						delete m_head.raw_buffer;
+
+					if (m_data.raw_buffer != nullptr)
+						delete m_data.raw_buffer;
 				}
 
 				RenderBatchesData& operator=(const RenderBatchesData& rhs)
 				{
-					used_byte_size = rhs.used_byte_size;
-					allocated_byte_size = rhs.allocated_byte_size;
-					batch_cnt = rhs.batch_cnt;
+					delete m_head.raw_buffer;
+					delete m_data.raw_buffer;
 
-					delete raw_buffer;
-					raw_buffer = new uint8_t[allocated_byte_size];
-					std::memcpy(raw_buffer, rhs.raw_buffer, used_byte_size);
+					// compute new size of head buffer
+					size_t byte_size = rhs.m_head.used_batch_cnt * (
+						sizeof(ShaderPrgmData)
+						+ sizeof(MeshData)
+						+ sizeof(DrawCommandData)
+						+ sizeof(MeshShaderParams)
+						+ sizeof(MaterialShaderParams)
+						+ sizeof(uint32_t));
 
-					// set individual pointers to new values
+					m_head.raw_buffer = new uint8_t[byte_size];
+					m_head.used_batch_cnt = rhs.m_head.used_batch_cnt;
+					m_head.available_batch_cnt = rhs.m_head.used_batch_cnt;
+
+					m_head.shader_prgms = (ShaderPrgmData*)m_head.raw_buffer;
+					m_head.meshes = (MeshData*)(m_head.shader_prgms + m_head.used_batch_cnt);
+					m_head.draw_commands = (DrawCommandData*)(m_head.meshes + m_head.used_batch_cnt);
+					m_head.mesh_shader_params = (MeshShaderParams*)(m_head.draw_commands + m_head.used_batch_cnt);
+					m_head.mtl_shader_params = (MaterialShaderParams*)(m_head.mesh_shader_params + m_head.used_batch_cnt);
+					m_head.update_flags = (uint32_t*)(m_head.mtl_shader_params + m_head.used_batch_cnt);
+
+					std::memcpy(m_head.shader_prgms, rhs.m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmData));
+					std::memcpy(m_head.meshes, rhs.m_head.meshes, m_head.used_batch_cnt * sizeof(MeshData));
+					std::memcpy(m_head.draw_commands, rhs.m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandData));
+					std::memcpy(m_head.mesh_shader_params, rhs.m_head.mesh_shader_params, m_head.used_batch_cnt * sizeof(MeshShaderParams));
+					std::memcpy(m_head.mtl_shader_params, rhs.m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParams));
+					std::memcpy(m_head.update_flags, rhs.m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
+
+					
+					m_data.raw_buffer = new uint8_t[rhs.m_data.used_byte_size];
+					m_data.used_byte_size = rhs.m_data.used_byte_size;
+					m_data.allocated_byte_size = rhs.m_data.allocated_byte_size;
+					std::memcpy(m_data.raw_buffer, rhs.m_data.raw_buffer, rhs.m_data.used_byte_size);
+
+					// set head pointers to new buffer
 					size_t base_offset = 0;
 					size_t offset = 0;
-					for (int i = 0; i < batch_cnt; ++i)
+					for (int i = 0; i < m_head.used_batch_cnt; ++i)
 					{
-						shader_prgms = reinterpret_cast<ShaderPrgmData*>(raw_buffer);
-						offset += sizeof(ShaderPrgmData) + shader_prgms[i].char_cnt;
+						m_head.shader_prgms[i].raw_string = reinterpret_cast<char*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(char) + m_head.shader_prgms[i].char_cnt;
 
-						meshes = reinterpret_cast<MeshData*>(raw_buffer + base_offset + offset);
-						offset += sizeof(MeshData) + meshes[i].vertex_data.byte_size + meshes[i].index_data.byte_size;
+						m_head.meshes[i].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].vertex_data.byte_size;
+						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].index_data.byte_size;
 
-						draw_commands = reinterpret_cast<DrawCommandData*>(raw_buffer + base_offset + offset);
-						offset += sizeof(DrawCommandData) + sizeof(DrawCommandData::DrawElementsCommand) * draw_commands[i].draw_cnt;
+						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
-						mesh_shader_params = reinterpret_cast<MeshShaderParams*>(raw_buffer + base_offset + offset);
-						offset += sizeof(MeshShaderParams) + mesh_shader_params[i].byte_size;
+						m_head.mesh_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
+						offset += m_head.mesh_shader_params[i].byte_size;
 
-						mtl_shader_params = reinterpret_cast<MaterialShaderParams*>(raw_buffer + base_offset + offset);
-						offset += sizeof(MaterialShaderParams);
-
-						update_flags = reinterpret_cast<uint32_t*>(raw_buffer + base_offset + offset);
-						offset += sizeof(uint32_t);
+						m_head.mtl_shader_params[i].data = reinterpret_cast<MaterialParameters*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[i].elements_cnt;
 
 						base_offset += offset;
 						offset = 0;
@@ -178,63 +225,158 @@ namespace ngmesh {
 				RenderBatchesData(RenderBatchesData&& other) = delete;
 				RenderBatchesData& operator=(RenderBatchesData&& rhs) = delete;
 				
-
-				void reallocate(size_t byte_size)
+				void reallocateHeadBuffer(size_t new_batch_cnt)
 				{
-					if (byte_size <= allocated_byte_size)
+					if (new_batch_cnt <= m_head.used_batch_cnt)
+					{
+						vislib::sys::Log::DefaultLog.WriteError("Reallocation size for RenderBatches not feasible");
+						return;
+					}
+	
+					Head new_head;
+
+					// compute new size of head buffer
+					size_t byte_size = new_batch_cnt * (
+						sizeof(ShaderPrgmData)
+						+ sizeof(MeshData)
+						+ sizeof(DrawCommandData)
+						+ sizeof(MeshShaderParams)
+						+ sizeof(MaterialShaderParams)
+						+ sizeof(uint32_t));
+
+					new_head.raw_buffer = new uint8_t[byte_size];
+					new_head.used_batch_cnt = m_head.used_batch_cnt;
+					new_head.available_batch_cnt = new_batch_cnt;
+
+					new_head.shader_prgms = (ShaderPrgmData*) new_head.raw_buffer;
+					new_head.meshes = (MeshData*)(new_head.shader_prgms + new_batch_cnt);
+					new_head.draw_commands = (DrawCommandData*)(new_head.meshes + new_batch_cnt);
+					new_head.mesh_shader_params = (MeshShaderParams*)(new_head.draw_commands + new_batch_cnt);
+					new_head.mtl_shader_params = (MaterialShaderParams*)(new_head.mesh_shader_params + new_batch_cnt);
+					new_head.update_flags = (uint32_t*)(new_head.mtl_shader_params + new_batch_cnt);
+
+					std::memcpy(new_head.shader_prgms, m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmData));
+					std::memcpy(new_head.meshes, m_head.meshes, m_head.used_batch_cnt * sizeof(MeshData));
+					std::memcpy(new_head.draw_commands, m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandData));
+					std::memcpy(new_head.mesh_shader_params, m_head.mesh_shader_params, m_head.used_batch_cnt * sizeof(MeshShaderParams));
+					std::memcpy(new_head.mtl_shader_params, m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParams));
+					std::memcpy(new_head.update_flags, m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
+
+					delete m_head.raw_buffer;
+					m_head = new_head;
+				}
+
+				void reallocateDataBuffer(size_t new_byte_size)
+				{
+					if (new_byte_size <= m_data.allocated_byte_size)
 					{
 						vislib::sys::Log::DefaultLog.WriteError("Reallocation size for RenderBatches not feasible");
 						return;
 					}
 
-					uint8_t* new_raw_buffer = new uint8_t[byte_size];
-					std::memcpy(new_raw_buffer, raw_buffer, used_byte_size);
-					allocated_byte_size = byte_size;
+					Data new_data;
+					new_data.raw_buffer = new uint8_t[new_byte_size];
+					new_data.used_byte_size = m_data.used_byte_size;
+					new_data.allocated_byte_size = new_byte_size;
+					std::memcpy(new_data.raw_buffer, m_data.raw_buffer, m_data.used_byte_size);
 
-					// set individual pointers to new values
+					// set head pointers to new buffer
 					size_t base_offset = 0;
 					size_t offset = 0;
-					for (int i = 0; i < batch_cnt; ++i)
+					for (int i = 0; i < m_head.used_batch_cnt; ++i)
 					{
-						shader_prgms = reinterpret_cast<ShaderPrgmData*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(ShaderPrgmData) + shader_prgms[i].char_cnt;
+						m_head.shader_prgms[i].raw_string = reinterpret_cast<char*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(char) + m_head.shader_prgms[i].char_cnt;
 
-						meshes = reinterpret_cast<MeshData*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(MeshData) + meshes[i].vertex_data.byte_size + meshes[i].index_data.byte_size;
+						m_head.meshes[i].vertex_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].vertex_data.byte_size;
+						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].index_data.byte_size;
 
-						draw_commands = reinterpret_cast<DrawCommandData*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(DrawCommandData) + sizeof(DrawCommandData::DrawElementsCommand) * draw_commands[i].draw_cnt;
+						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
-						mesh_shader_params = reinterpret_cast<MeshShaderParams*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(MeshShaderParams) + mesh_shader_params[i].byte_size;
+						m_head.mesh_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
+						offset += m_head.mesh_shader_params[i].byte_size;
 
-						mtl_shader_params = reinterpret_cast<MaterialShaderParams*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(MaterialShaderParams);
-
-						update_flags = reinterpret_cast<uint32_t*>(new_raw_buffer + base_offset + offset);
-						offset += sizeof(uint32_t);
+						m_head.mtl_shader_params[i].data = reinterpret_cast<MaterialParameters*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[i].elements_cnt;
 
 						base_offset += offset;
 						offset = 0;
 					}
 
-					delete raw_buffer;
-					raw_buffer = new_raw_buffer;
+					delete m_data.raw_buffer;
+					m_data = new_data;
 				}
 
 				void addBatch(ShaderPrgmData shader_prgm,
 					MeshData mesh_data,
 					DrawCommandData draw_commands,
 					MeshShaderParams mesh_shader_params,
-					MaterialShaderParams)
+					MaterialShaderParams mtl_shader_params)
 				{
-					//TODO calculate byte size of batch
+					if (m_head.used_batch_cnt == m_head.available_batch_cnt)
+						reallocateHeadBuffer(m_head.available_batch_cnt + 5);
 
-					//TODO check if allocated size fits old data + new data
+					// calculate byte size of batch data
+					size_t byte_size = shader_prgm.char_cnt
+						+ mesh_data.index_data.byte_size + mesh_data.vertex_data.byte_size
+						+ draw_commands.draw_cnt * sizeof(DrawCommandData::DrawElementsCommand)
+						+ mesh_shader_params.byte_size
+						+ mtl_shader_params.elements_cnt * sizeof(MaterialParameters);
 
-					//TODO add new render batch
+					// check if allocated size fits old data + new data
+					if ((m_data.used_byte_size + byte_size) > m_data.allocated_byte_size)
+						reallocateDataBuffer(m_data.used_byte_size + 2 * byte_size);
+
+
+					// add new render batch
+					++m_head.used_batch_cnt;
+					assert(m_head.used_batch_cnt <= m_head.available_batch_cnt);
+
+					size_t idx = m_head.used_batch_cnt;
+					size_t offset;
+					m_head.shader_prgms[idx].raw_string = reinterpret_cast<char*>(m_data.raw_buffer + offset);
+					m_head.shader_prgms[idx].char_cnt = shader_prgm.char_cnt;
+					offset += m_head.shader_prgms[idx].char_cnt;
+					std::memcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string, shader_prgm.char_cnt);
+
+					m_head.meshes[idx].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
+					m_head.meshes[idx].vertex_data.byte_size = mesh_data.vertex_data.byte_size;
+					offset += m_head.meshes[idx].vertex_data.byte_size;
+					std::memcpy(m_head.meshes[idx].vertex_data.raw_data, mesh_data.vertex_data.raw_data, mesh_data.vertex_data.byte_size);
+					m_head.meshes[idx].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
+					m_head.meshes[idx].index_data.byte_size = mesh_data.index_data.byte_size;
+					offset += m_head.meshes[idx].index_data.byte_size;
+					std::memcpy(m_head.meshes[idx].index_data.raw_data, mesh_data.index_data.raw_data, mesh_data.index_data.byte_size);
+
+					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(m_data.raw_buffer + offset);
+					m_head.draw_commands[idx].draw_cnt = draw_commands.draw_cnt;
+					offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
+					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandData::DrawElementsCommand));
+
+					m_head.mesh_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
+					m_head.mesh_shader_params[idx].byte_size = mesh_shader_params.byte_size;
+					offset += m_head.mesh_shader_params[idx].byte_size;
+					std::memcpy(m_head.mesh_shader_params[idx].raw_data, mesh_shader_params.raw_data, mesh_shader_params.byte_size);
+
+					m_head.mtl_shader_params[idx].data = reinterpret_cast<MaterialParameters*>(m_data.raw_buffer + offset);
+					m_head.mtl_shader_params[idx].elements_cnt = mtl_shader_params.elements_cnt;
+					offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[idx].elements_cnt;
+					std::memcpy(m_head.mtl_shader_params[idx].data, mtl_shader_params.data, mtl_shader_params.elements_cnt * sizeof(MaterialParameters));
 				}
 
+				void resetUpdateFlags(size_t batch_idx) { m_head.update_flags[batch_idx] = 0; }
+
+				size_t getBatchCount() const { return m_head.used_batch_cnt; }
+
+				ShaderPrgmData const&		getShaderProgramData(size_t batch_idx) const { return m_head.shader_prgms[batch_idx]; }
+				MeshData const&				getMeshData(size_t batch_idx) const { return m_head.meshes[batch_idx]; }
+				DrawCommandData	const&		getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
+				MeshShaderParams const&		getMeshShaderParams(size_t batch_idx) const { return m_head.mesh_shader_params[batch_idx]; }
+				MaterialShaderParams const&	getMaterialShaderParams(size_t batch_idx) const { return m_head.mtl_shader_params[batch_idx]; }
+				uint32_t					getUpdateFlags(size_t batch_idx) const { return m_head.update_flags[batch_idx]; }
 			};
 		
 		public:
@@ -280,11 +422,17 @@ namespace ngmesh {
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
+			/**
+			 *
+			 */
 			void setRenderBatches(RenderBatchesData const* render_batches)
 			{
 				m_render_batches = render_batches;
 			}
 
+			/**
+			 *
+			 */
 			RenderBatchesData const* getRenderBatches()
 			{
 				return m_render_batches;

@@ -113,22 +113,24 @@ namespace ngmesh {
 		/**
 		 *
 		 */
-		void addRenderBatch(CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData&			shader_prgm_data,
-							CallNGMeshRenderBatches::RenderBatchesData::MeshData&				mesh_data,
-							CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData&		draw_command_data,
-							CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams&		mesh_shader_params,
-							CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams&	mtl_shader_params);
+		void addRenderBatch(
+			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
+			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
+			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
+			CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params);
 
 		/**
 		 *
 		 */
-		void updateRenderBatch(size_t																idx,
-								CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data,
-								CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data,
-								CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data,
-								CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params,
-								CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params,
-								uint32_t															update_flags);
+		void updateRenderBatch(
+			size_t																	idx,
+			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
+			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
+			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
+			CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
+			uint32_t																update_flags);
 
 		/**
 		* The render callback.
@@ -288,7 +290,6 @@ namespace ngmesh {
 				GLenum				usage = GL_STATIC_DRAW,
 				GLenum				primitive_type = GL_TRIANGLES)
 				: m_vbo(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage),
-				//m_ibo(nullptr), //TODO ibo generation in constructor will fail! needs a bound vao!
 				m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
