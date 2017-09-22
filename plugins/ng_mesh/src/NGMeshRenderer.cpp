@@ -29,8 +29,8 @@ NGMeshRenderer::~NGMeshRenderer()
 
 bool NGMeshRenderer::create()
 {
-	//TODO generate debug render batch that doesn't rely on data call
-
+	// generate debug render batch that doesn't rely on data call
+	/*
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
@@ -111,6 +111,8 @@ bool NGMeshRenderer::create()
 	addRenderBatch(shader_prgm_data, mesh_data, draw_command_data, mesh_shader_params, mtl_shader_params);
 	
 	//TODO delete stuff again
+	*/
+
 
 	return true;
 }
@@ -178,12 +180,23 @@ void NGMeshRenderer::addRenderBatch(
 	m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(),vert_shader_src.Count(),frag_shader_src.Code(),frag_shader_src.Count());
 
 	// Create mesh
+	Mesh::VertexLayout layout;
+	layout.byte_size = mesh_data.vertex_descriptor.byte_size;
+	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
+	{
+		layout.attributes.push_back(Mesh::VertexLayout::Attribute(
+			mesh_data.vertex_descriptor.attributes[i].type,
+			mesh_data.vertex_descriptor.attributes[i].size,
+			mesh_data.vertex_descriptor.attributes[i].normalized,
+			mesh_data.vertex_descriptor.attributes[i].offset)
+		);
+	}
 	m_render_batches.back().mesh = std::make_unique<Mesh>(
 		mesh_data.vertex_data.raw_data,
 		mesh_data.vertex_data.byte_size,
 		mesh_data.index_data.raw_data,
 		mesh_data.index_data.byte_size,
-		mesh_data.vertex_descriptor,
+		layout,
 		mesh_data.index_data.index_type 
 		);
 
@@ -323,7 +336,14 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	view_matrix[14] = - (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
 	view_matrix[15] = 1.0f;
 
+
 	CallNGMeshRenderBatches* render_batch_call = this->getData();
+
+	if (render_batch_call == nullptr)
+		return false;
+
+	if (!(*render_batch_call)(0))
+		return false;
 
 	// loop render batches data, create/update if necessary
 	auto render_batches = render_batch_call->getRenderBatches();

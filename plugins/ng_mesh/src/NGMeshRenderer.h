@@ -19,7 +19,6 @@
 #include "mmcore/view/CallRender3D.h"
 
 #include "ng_mesh/CallNGMeshRenderBatches.h"
-#include "VertexLayout.h"
 
 namespace megamol {
 namespace ngmesh {
@@ -237,6 +236,33 @@ namespace ngmesh {
 		class Mesh
 		{
 		public:
+
+			/**
+			* Basic Vertex Layout descriptor taken over from glOwl.
+			*/
+			struct VertexLayout
+			{
+				struct Attribute
+				{
+					Attribute(GLenum type, GLint size, GLboolean normalized, GLsizei offset)
+						: size(size), type(type), normalized(normalized), offset(offset) {}
+
+					GLint size;
+					GLenum type;
+					GLboolean normalized;
+					GLsizei offset;
+				};
+
+				VertexLayout() : byte_size(0), attributes() {}
+				VertexLayout(GLsizei byte_size, const std::vector<Attribute>& attributes)
+					: byte_size(byte_size), attributes(attributes) {}
+				VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
+					: byte_size(byte_size), attributes(attributes) {}
+
+				GLsizei byte_size;
+				std::vector<Attribute> attributes;
+			};
+
 			template<typename VertexContainer, typename IndexContainer>
 			Mesh(VertexContainer const& vertices,
 				IndexContainer const&	indices,
@@ -245,7 +271,7 @@ namespace ngmesh {
 				GLenum					usage = GL_STATIC_DRAW,
 				GLenum					primitive_type = GL_TRIANGLES)
 				: m_vbo<VertexContainer>(GL_ARRAY_BUFFER, vertices, usage),
-				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor will fail! needs a bound vao!
+				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor might fail? needs a bound vao?
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
@@ -335,25 +361,15 @@ namespace ngmesh {
 			}
 
 			template<typename VertexContainer>
-			void loadVertexSubData(VertexContainer const& vertices, GLsizeiptr byte_offset)
-			{
+			void loadVertexSubData(VertexContainer const& vertices, GLsizeiptr byte_offset){
 				m_vbo.loadSubData<VertexContainer>(vertices, byte_offset);
 			}
 
-			void bindVertexArray() const
-			{
-				glBindVertexArray(m_va_handle);
-			}
+			void bindVertexArray() const { glBindVertexArray(m_va_handle); }
 
-			GLenum getIndicesType() const
-			{
-				return m_indices_type;
-			}
+			GLenum getIndicesType() const { return m_indices_type; }
 
-			GLenum getPrimitiveType() const
-			{
-				return m_primitive_type;
-			}
+			GLenum getPrimitiveType() const { return m_primitive_type; }
 
 			GLsizeiptr getVertexBufferByteSize() const { return m_vbo.getByteSize(); }
 			GLsizeiptr getIndexBufferByteSize() const { return m_ibo.getByteSize(); }

@@ -18,12 +18,12 @@
 #include "ng_mesh.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 
-#include "VertexLayout.h"
 
 namespace megamol {
 namespace ngmesh {
@@ -65,9 +65,24 @@ namespace ngmesh {
 						GLenum		index_type;
 					};
 
-					VertexData		vertex_data;
-					IndexData		index_data;
-					VertexLayout	vertex_descriptor;
+					struct VertexLayoutData
+					{
+						struct Attribute
+						{
+							GLint		size;
+							GLenum		type;
+							GLboolean	normalized;
+							GLsizei		offset;
+						};
+
+						size_t		byte_size;
+						size_t		attribute_cnt;
+						Attribute*	attributes;
+					};
+
+					VertexData			vertex_data;
+					IndexData			index_data;
+					VertexLayoutData	vertex_descriptor;
 				};
 
 				struct DrawCommandData
@@ -204,6 +219,8 @@ namespace ngmesh {
 						offset += m_head.meshes[i].vertex_data.byte_size;
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
+						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshData::VertexLayoutData::Attribute*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(MeshData::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
@@ -292,6 +309,8 @@ namespace ngmesh {
 						offset += m_head.meshes[i].vertex_data.byte_size;
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
+						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshData::VertexLayoutData::Attribute*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(MeshData::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
@@ -335,8 +354,8 @@ namespace ngmesh {
 					++m_head.used_batch_cnt;
 					assert(m_head.used_batch_cnt <= m_head.available_batch_cnt);
 
-					size_t idx = m_head.used_batch_cnt;
-					size_t offset;
+					size_t idx = m_head.used_batch_cnt -1;
+					size_t offset = m_data.used_byte_size;
 					m_head.shader_prgms[idx].raw_string = reinterpret_cast<char*>(m_data.raw_buffer + offset);
 					m_head.shader_prgms[idx].char_cnt = shader_prgm.char_cnt;
 					offset += m_head.shader_prgms[idx].char_cnt;
@@ -348,15 +367,21 @@ namespace ngmesh {
 					std::memcpy(m_head.meshes[idx].vertex_data.raw_data, mesh_data.vertex_data.raw_data, mesh_data.vertex_data.byte_size);
 					m_head.meshes[idx].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
 					m_head.meshes[idx].index_data.byte_size = mesh_data.index_data.byte_size;
+					m_head.meshes[idx].index_data.index_type = mesh_data.index_data.index_type;
 					offset += m_head.meshes[idx].index_data.byte_size;
 					std::memcpy(m_head.meshes[idx].index_data.raw_data, mesh_data.index_data.raw_data, mesh_data.index_data.byte_size);
+					m_head.meshes[idx].vertex_descriptor.byte_size = mesh_data.vertex_descriptor.byte_size;
+					m_head.meshes[idx].vertex_descriptor.attribute_cnt = mesh_data.vertex_descriptor.attribute_cnt;
+					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<MeshData::VertexLayoutData::Attribute*>(m_data.raw_buffer + offset);
+					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(MeshData::VertexLayoutData::Attribute);
+					std::memcpy(m_head.meshes[idx].vertex_descriptor.attributes, mesh_data.vertex_descriptor.attributes, mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshData::VertexLayoutData::Attribute));
 
 					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(m_data.raw_buffer + offset);
 					m_head.draw_commands[idx].draw_cnt = draw_commands.draw_cnt;
 					offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
 					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandData::DrawElementsCommand));
 
-					m_head.mesh_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
+					m_head.mesh_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset); 
 					m_head.mesh_shader_params[idx].byte_size = mesh_shader_params.byte_size;
 					offset += m_head.mesh_shader_params[idx].byte_size;
 					std::memcpy(m_head.mesh_shader_params[idx].raw_data, mesh_shader_params.raw_data, mesh_shader_params.byte_size);

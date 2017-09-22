@@ -14,6 +14,7 @@
 
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 #include "NGMeshRenderer.h"
+#include "NGMeshDebugDataSource.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -42,6 +43,7 @@ namespace {
 
             // register modules here:
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshDebugDataSource>();
 
             //
             // TODO: Register your plugin's modules here
