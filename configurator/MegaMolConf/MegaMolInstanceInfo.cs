@@ -8,7 +8,7 @@ using System.Windows.Forms;
 namespace MegaMolConf {
     class MegaMolInstanceInfo {
         public System.Diagnostics.Process Process { get; set; }
-        public MegaMolConf.Communication.Connection Connection { get; set; }
+        public Communication.Connection Connection { get; set; }
         public System.Windows.Forms.TabPage TabPage { get; set; }
         public int Port { get; set; }
         public System.Threading.Thread Thread { get; set; }
@@ -182,7 +182,7 @@ namespace MegaMolConf {
         private void TryConnecting(string conn) {
             while (!stopQueued && this.Connection == null) {
                 try {
-                    this.Connection = MegaMolConf.Communication.Connection.Connect(conn);
+                    this.Connection = Communication.Connection.Connect(conn);
                 } catch {
                     // nothing
                     System.Threading.Thread.Sleep(500);
@@ -205,8 +205,8 @@ namespace MegaMolConf {
             lock (myLock) {
                 if (this.Connection != null && this.Connection.Valid && !this.stopQueued) {
                     try {
-                        MegaMolConf.Communication.GenericRequest request = new Communication.GenericRequest { Command = req };
-                        MegaMolConf.Communication.Response res = Connection.Send(request);
+                        Communication.GenericRequest request = new Communication.GenericRequest { Command = req };
+                        Communication.Response res = Connection.Send(request);
                         if (!string.IsNullOrWhiteSpace(res.Error)) {
                             ret = res.Error;
                             ParentForm.listBoxLog.Log(Util.Level.Error, string.Format("MegaMol did not accept {0}: {1}", req.ToString(), res.Error));

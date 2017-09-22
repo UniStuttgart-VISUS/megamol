@@ -8,14 +8,15 @@ option(BUILD_MMSTD_TRISOUP_PLUGIN "Option to build mmstd_trisoup" ON)
 if(BUILD_MMSTD_TRISOUP_PLUGIN)
   project(mmstd_trisoup)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_TRISOUP_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   set(LIBS vislib core glload)
   include_directories("include" "src")
 
 
-  # Build MegaMol Plugin
-  # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
@@ -26,8 +27,6 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
       "src/volumetrics/Voxelizer.cpp"
       )
   endif()
-  # shader files for installation
-  file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
 
   # Target definition
@@ -42,6 +41,7 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
   
+  # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
@@ -51,6 +51,7 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
+  # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})

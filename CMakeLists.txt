@@ -26,6 +26,9 @@ include(global_versioninfo)
 # MEGAMOL OPTIONS
 include(megamol_options)
 
+# MEGAMOL MAKROS
+include(check_mmdep)
+
 
 ###############################
 # vislib
@@ -50,13 +53,23 @@ if(WIN32)
 endif()
 
 ###############################
-# console
+# configurator
 ###############################
-add_subdirectory(configurator)
+if(WIN32)
+  add_subdirectory(configurator)
+endif()
 
 ###############################
 # Plugins
 ###############################
 add_subdirectory(plugins)
 
+# Check dependencies and throw error
+foreach(d ${DEP_LIST})
+  string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
+  list(GET SINGLE_LIST 0 plugin)
+  list(REMOVE_AT SINGLE_LIST 0)
+  CHECK_MMDEP(${plugin} "${SINGLE_LIST}")
+endforeach()
 
+set(DEP_LIST "" CACHE INTERNAL "")
