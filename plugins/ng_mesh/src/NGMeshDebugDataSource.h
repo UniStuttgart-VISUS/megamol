@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/param/ParamSlot.h"
+
 #include "ng_mesh/AbstractNGMeshDataSource.h"
 
 namespace megamol {
@@ -51,10 +53,25 @@ namespace ngmesh {
 
 	protected:
 
-		virtual bool load(std::string const& filename);
+		virtual bool getDataCallback(core::Call& caller);
+
+		/**
+		* Loads the specified geometry and shader file
+		*
+		* @param shader_filename The shader file to load
+		* @param geometry_filename The geometry file to load
+		*
+		* @return True on success
+		*/
+		virtual bool load(std::string const& shader_filename, std::string const& geometry_filename);
 
 	private:
 
+		/** The mesh file name */
+		core::param::ParamSlot m_geometryFilename_slot;
+
+		/** The shader file name */
+		core::param::ParamSlot m_shaderFilename_slot;
 	};
 }
 }

@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
 
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 
@@ -42,7 +41,7 @@ namespace ngmesh {
 		*
 		* @return 'true' on success, 'false' on failure.
 		*/
-		virtual bool getDataCallback(core::Call& caller);
+		virtual bool getDataCallback(core::Call& caller) = 0;
 
 		/**
 		* Gets the data from the source.
@@ -58,15 +57,6 @@ namespace ngmesh {
 		*/
 		virtual void release();
 
-		/**
-		* Loads the specified file
-		*
-		* @param filename The file to load
-		*
-		* @return True on success
-		*/
-		virtual bool load(std::string const& filename) = 0;
-
 		/** The data storage for the render batches */
 		CallNGMeshRenderBatches::RenderBatchesData m_render_batches;
 
@@ -75,11 +65,8 @@ namespace ngmesh {
 
 	private:
 
-		/** The file name */
-		core::param::ParamSlot filenameSlot;
-
 		/** The slot for requesting data */
-		megamol::core::CalleeSlot getDataSlot;
+		megamol::core::CalleeSlot m_getData_slot;
 	};
 
 }

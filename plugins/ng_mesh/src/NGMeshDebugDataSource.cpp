@@ -11,24 +11,62 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
+#include "mmcore/param/FilePathParam.h"
+
 #include "stdafx.h"
 #include "NGMeshDebugDataSource.h"
 
 using namespace megamol;
 using namespace megamol::ngmesh;
 
-NGMeshDebugDataSource::NGMeshDebugDataSource()
+NGMeshDebugDataSource::NGMeshDebugDataSource() :
+	m_shaderFilename_slot("shader filename", "The name of to the shader file to load"),
+	m_geometryFilename_slot("mesh filename", "The path to the mesh file to load")
 {
+	this->m_shaderFilename_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
+
+	this->m_geometryFilename_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_geometryFilename_slot);
 }
 
 NGMeshDebugDataSource::~NGMeshDebugDataSource()
 {
 }
 
-bool NGMeshDebugDataSource::load(std::string const& filename)
+bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
+{
+	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
+	if (render_batches_call == NULL)
+		return false;
+	if (this->m_geometryFilename_slot.IsDirty() || this->m_shaderFilename_slot.IsDirty())
+	{
+		this->m_geometryFilename_slot.ResetDirty();
+		this->m_shaderFilename_slot.ResetDirty();
+
+		// Clear render batches TODO: add explicit clear function?
+		CallNGMeshRenderBatches::RenderBatchesData empty_render_batches;
+		m_render_batches = empty_render_batches;
+
+		m_bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+
+		auto vislib_shader_filename = m_shaderFilename_slot.Param<core::param::FilePathParam>()->Value();
+		std::string shdr_filename(vislib_shader_filename.PeekBuffer());
+
+		auto vislib_geometry_filename = m_geometryFilename_slot.Param<core::param::FilePathParam>()->Value();
+		std::string geom_filename(vislib_geometry_filename.PeekBuffer());
+
+		load(shdr_filename, geom_filename);
+	}
+
+	render_batches_call->setRenderBatches(&m_render_batches);
+
+	return true;
+}
+
+bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
 {
 	std::cout << "loading data" << std::endl;
-
 
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
@@ -36,8 +74,9 @@ bool NGMeshDebugDataSource::load(std::string const& filename)
 	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params;
 	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
 
-	shader_prgm_data.raw_string = "NGMeshDebug";
-	shader_prgm_data.char_cnt = 12;
+	shader_prgm_data.char_cnt = shader_filename.length();
+	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
+	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
@@ -84,8 +123,8 @@ bool NGMeshDebugDataSource::load(std::string const& filename)
 	mesh_data.vertex_descriptor.attributes[1].offset = 12;
 
 	std::mt19937 generator(4215);
-	std::uniform_real_distribution<float> distr(0.05, 0.1);
-	std::uniform_real_distribution<float> loc_distr(-0.9, 0.9);
+	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
+	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
 	draw_command_data.draw_cnt = 1000000;
 	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];

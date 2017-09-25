@@ -145,20 +145,6 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	return true;
 }
 
-CallNGMeshRenderBatches* NGMeshRenderer::getData()
-{
-	CallNGMeshRenderBatches* rb_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
-
-	if (rb_call != NULL)
-	{
-		return rb_call;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 void NGMeshRenderer::addRenderBatch(
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
@@ -292,7 +278,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	GLfloat far_clip = cr->GetCameraParameters()->FarClip();
 	GLfloat f = 1.0f / std::tan(fovy / 2.0f);
 	GLfloat nf = 1.0f / (near_clip - far_clip);
-	GLfloat aspect_ratio = cr->GetViewport().AspectRatio();
+	GLfloat aspect_ratio = static_cast<GLfloat>(cr->GetViewport().AspectRatio());
 	std::array<GLfloat, 16> projection_matrix;
 	projection_matrix[0] = f / aspect_ratio;
 	projection_matrix[1] = 0.0f;
@@ -337,9 +323,9 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	view_matrix[15] = 1.0f;
 
 
-	CallNGMeshRenderBatches* render_batch_call = this->getData();
+	CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 
-	if (render_batch_call == nullptr)
+	if (render_batch_call == NULL)
 		return false;
 
 	if (!(*render_batch_call)(0))

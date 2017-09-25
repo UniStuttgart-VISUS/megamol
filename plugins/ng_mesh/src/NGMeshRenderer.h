@@ -23,6 +23,15 @@
 namespace megamol {
 namespace ngmesh {
 
+
+	/**
+	 * Renderer module for rendering geometry with modern (OpenGL 4.3+) features.
+	 * Objects for rendering are supplied in batches. Each  render batch can contain
+	 * many objects that use the same shader program and also share the same geometry
+	 * or at least the same vertex format.
+	 * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
+	 * for the indirect draw call is stored and accessed via SSBOs.
+	 */
 	class NGMeshRenderer : public megamol::core::view::Renderer3DModule
 	{
 	public:
@@ -41,7 +50,7 @@ namespace ngmesh {
 		* @return A human readable description of this module.
 		*/
 		static const char *Description(void) {
-			return "Modern renderer for meshes. Works with render batches and indirect draw calls.";
+			return "Modern renderer for meshes. Objects are rendered in batches using indirect draw calls.";
 		}
 
 		/**
@@ -105,12 +114,14 @@ namespace ngmesh {
 		bool GetExtents(core::Call& call);
 
 		/**
-		 * Access to render batches data via data call
-		 */
-		CallNGMeshRenderBatches* getData();
-
-		/**
+		 * Adds a new render batch by translating the given render batch data
+		 * into a GPU RenderBatch ready for rendering.
 		 *
+		 * @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
+		 * @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
+		 * @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
+		 * @param mesh_shader_params Additional data used by the shader during rendering that is specific to the rendered object
+		 * @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
 		 */
 		void addRenderBatch(
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
@@ -120,8 +131,16 @@ namespace ngmesh {
 			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params);
 
 		/**
-		 *
-		 */
+		* Selectively updates an existing render batch with new data.
+		*
+		* @param idx The index of the render batch that is updated
+		* @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
+		* @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
+		* @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
+		* @param mesh_shader_params Additional data used by the shader during rendering that is specific to the rendered object
+		* @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
+		* @param update_flags The bit flags that signal which parts of the render batch data needs to be updated
+		*/
 		void updateRenderBatch(
 			size_t																	idx,
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
@@ -142,6 +161,9 @@ namespace ngmesh {
 
 	private:
 
+		/**
+		 * Generic OpenGL buffer object.
+		 */
 		class BufferObject
 		{
 		public:
@@ -160,7 +182,6 @@ namespace ngmesh {
 			{
 				glGenBuffers(1, &m_handle);
 				glBindBuffer(m_target, m_handle);
-				auto gl_err = glGetError();
 				glBufferData(m_target, m_byte_size, data, m_usage);
 				glBindBuffer(m_target, 0);
 			}
@@ -216,6 +237,11 @@ namespace ngmesh {
 				glBindBufferBase(m_target, index, m_handle);
 			}
 
+			void bindAs(GLenum target, GLuint index) const
+			{
+				glBindBufferBase(target, index, m_handle);
+			}
+
 			GLenum getTarget() const
 			{
 				return m_target;
@@ -233,6 +259,9 @@ namespace ngmesh {
 			GLenum		m_usage;
 		};
 
+		/**
+		 * OpenGL mesh class. Wraps all data and functionality required to store and use geometry with OpenGL.
+		 */
 		class Mesh
 		{
 		public:
@@ -393,6 +422,9 @@ namespace ngmesh {
 		};
 
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
+		/**
+		 * A collection of GPU Resources required for rendering geometry using glMultiDrawElementsIndirect.
+		 */
 		struct RenderBatch
 		{
 			GLsizei							draw_cnt;

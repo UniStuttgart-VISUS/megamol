@@ -75,8 +75,8 @@ namespace ngmesh {
 							GLsizei		offset;
 						};
 
-						size_t		byte_size;
-						size_t		attribute_cnt;
+						GLsizei		byte_size;
+						GLuint		attribute_cnt;
 						Attribute*	attributes;
 					};
 
