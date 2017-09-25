@@ -127,13 +127,6 @@ namespace utility {
         }
 
         /**
-         * Answer the activated config sets.
-         *
-         * @return A multi sz string of the activated configuration sets.
-         */
-        vislib::TMultiSz ConfigSets(void) const;
-
-        /**
         * Answers all names and values of config values that are to be overridden.
         *
         * @return All names and values of config values
@@ -458,9 +451,6 @@ namespace utility {
 
         /** specifies the configuration file to load */
         ParserOption configFile;
-
-        /** adds a configuration set */
-        ParserOption configSet;
 
         /** overrides a variable from the configuration */
         ParserOption configValue;

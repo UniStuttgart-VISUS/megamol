@@ -70,7 +70,6 @@ ConfigurationParser::ConfigurationParser(
         megamol::core::utility::Configuration& config) 
         : ConditionalParser(), config(config), activeInstanceRequest(),
         xmlVersion(), legacyBaseDir(), legacyShaderDir() {
-    this->SetConfigSetProvider(&this->config);
 }
 
 

@@ -26,6 +26,9 @@ include(global_versioninfo)
 # MEGAMOL OPTIONS
 include(megamol_options)
 
+# MEGAMOL MAKROS
+include(check_mmdep)
+
 
 ###############################
 # vislib
@@ -46,6 +49,7 @@ add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 # add directory structure for visual studio
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
 ###############################
@@ -53,4 +57,12 @@ endif()
 ###############################
 add_subdirectory(plugins)
 
+# Check dependencies and throw error
+foreach(d ${DEP_LIST})
+  string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
+  list(GET SINGLE_LIST 0 plugin)
+  list(REMOVE_AT SINGLE_LIST 0)
+  CHECK_MMDEP(${plugin} "${SINGLE_LIST}")
+endforeach()
 
+set(DEP_LIST "" CACHE INTERNAL "")

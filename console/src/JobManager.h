@@ -55,6 +55,9 @@ namespace console {
         /** The viewing windows. */
         std::vector<std::shared_ptr<Job> > jobs;
 
+        /** whether shutdown has been requested. do not start jobs again. */
+        bool terminating;
+
     };
 
 } /* end namespace console */
