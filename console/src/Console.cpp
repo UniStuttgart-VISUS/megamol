@@ -312,13 +312,6 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
     if (parser->IsConfigFileSpecified()) {
         MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CFGFILE, MMC_TYPE_TSTR, parser->ConfigFile()));
     }
-    vislib::TMultiSz configSets = parser->ConfigSets();
-    if (configSets.Count() > 0) {
-        unsigned int cnt = static_cast<unsigned int>(configSets.Count());
-        for (unsigned int i = 0; i < cnt; i++) {
-            MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CFGSET, MMC_TYPE_TSTR, configSets[i].PeekBuffer()));
-        }
-    }
 
     vislib::TMultiSz cfgVals;
     cfgVals = parser->ConfigValues();

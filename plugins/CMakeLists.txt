@@ -13,4 +13,3 @@ foreach(plugin ${plugins})
     endif()
   endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt)
 endforeach(plugin ${plugins})
-

@@ -30,54 +30,11 @@ namespace xml {
     class ConditionalParser : public XmlParser {
     public:
 
-        /**
-         * Nested interface class providing the activated config sets.
-         */
-        class ConfigSetProvider {
-        public:
-
-#ifndef _WIN32
-            // just to make stupid gcc happy.
-            virtual ~ConfigSetProvider(void) { }
-#endif /* _WIN32 */
-
-            /**
-             * Answer wether or not the given config set is active.
-             *
-             * @param set The name of the config set to test.
-             *
-             * @return 'true' if the given config set is active, 'false' otherwise.
-             */
-            virtual bool IsConfigSetActive(const vislib::StringW& set) const = 0;
-
-        };
-
         /** Ctor. */
         ConditionalParser(void);
 
         /** Dtor. */
         virtual ~ConditionalParser(void);
-
-        /**
-         * Answers the current 'ConfigSetProvider'.
-         *
-         * @return A pointer to the current 'ConfigSetProvider'.
-         */
-        inline ConfigSetProvider* GetConfigSetProvider(void) const {
-            return this->cfgSetProvider;
-        }
-
-        /**
-         * Sets the config set provider to be used. The ownership of the 
-         * 'ConfigSetProvider' object is not changed. The caller must ensure
-         * that the object and the pointer remains valid as long as it is used
-         * by this object.
-         *
-         * @param A pointer to the config set provider to be used.
-         */
-        inline void SetConfigSetProvider(ConfigSetProvider* provider) {
-            this->cfgSetProvider = provider;
-        }
 
     protected:
 
@@ -153,7 +110,7 @@ namespace xml {
 
         /**
          * Evaluates the attributes of an '<if>'-tag. Valid tests are 
-         * 'bitwidth', 'computer', 'configset', 'debug', and 'os'. Multiple
+         * 'bitwidth', 'computer', 'debug', and 'os'. Multiple
          * tests in one tag will be or-combined.
          *
          * @param attrib The attribute array of the '<if>'-tag.
@@ -182,9 +139,6 @@ namespace xml {
          */
         bool evaluateCondition(const vislib::StringA& expression,
             vislib::StringA *tokenz, unsigned int tokenCount) const;
-
-        /** Pointer to the config set provider */
-        ConfigSetProvider *cfgSetProvider;
 
         /** The if checker version */
         IfCheckerVersion ifCheckerVer;

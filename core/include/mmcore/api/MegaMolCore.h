@@ -126,7 +126,7 @@ typedef enum _mmcValueTypeEnum : int {
 /** Possible initialisation values */
 typedef enum _mmcInitValueEnum : int {
     MMC_INITVAL_CFGFILE, // The configuration file to load.
-    MMC_INITVAL_CFGSET, // A configuration set to be added.
+    MMC_INITVAL_CFGSET, // A configuration set to be added. // TODO: deprecated but retained in case someone is using numbers instead of enum values
     MMC_INITVAL_LOGFILE, // The log file to use.
     MMC_INITVAL_LOGLEVEL, // The log level to use.
     MMC_INITVAL_LOGECHOLEVEL, // The log echo level to use.
