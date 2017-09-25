@@ -45,10 +45,6 @@
     <Win32Resource>Resources\mmconfig.res</Win32Resource>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MegaMol.SimpleParamRemote.Client, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\build\packages\MegaMol.SimpleParamRemote.ClientNet.1.0.2-beta5\lib\net452\MegaMol.SimpleParamRemote.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
@@ -66,6 +62,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connection\Connection.cs" />
+    <Compile Include="Connection\GenericRequest.cs" />
+    <Compile Include="Connection\ParameterType.cs" />
+    <Compile Include="Connection\ParameterTypeCode.cs" />
+    <Compile Include="Connection\ParameterTypeDescription.cs" />
+    <Compile Include="Connection\ParameterTypeUtility.cs" />
+    <Compile Include="Connection\Request.cs" />
+    <Compile Include="Connection\Response.cs" />
+    <Compile Include="Connection\ZeroMQContext.cs" />
     <Compile Include="Data\ParamType\FlexEnum.cs" />
     <Compile Include="FlexEnumParamEditor.cs" />
     <Compile Include="ImportParamfileForm.cs">

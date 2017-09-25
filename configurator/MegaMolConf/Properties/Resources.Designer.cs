@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MegaMolConf.MegaMolConf.Properties {
+namespace MegaMolConf.Properties {
     using System;
     
     
