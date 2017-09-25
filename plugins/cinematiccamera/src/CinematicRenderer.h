@@ -152,7 +152,18 @@ namespace megamol {
             unsigned int                     interpolSteps;
             bool                             toggleManipulator;
             bool                             showHelpText;
+            bool                             toggleModelBBox;
             KeyframeManipulator              manipulator;
+            vislib::graphics::gl::FramebufferObject fbo;
+            vislib::math::Cuboid<float>      ocBbox;
+
+
+            /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            /** */
+            void drawBoundingBox(void);
 
             /**********************************************************************
             * callback stuff
@@ -174,6 +185,8 @@ namespace megamol {
             core::param::ParamSlot toggleManipulateParam;
             /**  */
             core::param::ParamSlot toggleHelpTextParam;
+            /**  */
+            core::param::ParamSlot toggleModelBBoxParam;
 		};
 
 	} /* end namespace cinematiccamera */

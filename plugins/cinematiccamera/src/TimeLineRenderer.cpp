@@ -357,6 +357,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -531,10 +532,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Reset opengl 
     glLineWidth(tmpLw);
+
     glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();

@@ -147,11 +147,10 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
 	this->loadKeyframesParam.SetParameter(new param::BoolParam(true));
 	this->MakeSlotAvailable(&this->loadKeyframesParam);
+    this->loadKeyframesParam.ForceSetDirty(); 
 
     this->snapToFramesParam.SetParameter(new param::ButtonParam('f'));
     this->MakeSlotAvailable(&this->snapToFramesParam);
-
-    this->loadKeyframesParam.ForceSetDirty();
 }
 
 

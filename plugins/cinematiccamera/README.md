@@ -50,6 +50,7 @@ The module `CinematicRenderer` exposes the following parameters:
 * `01_splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
 * `02_toggleManipulators` (Assigned key: `m`): Toggle between position manipulators and lookat/up manipulators of selected keyframe.            
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
+* `04_toggleModelBBox` (Assigned key: `t`): Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
@@ -72,6 +73,6 @@ The modules should be connected as shown in the following module/call graph. The
 
 ![megamol example module/call graph](https://github.com/tobiasrau/megamol-dev/blob/cinematiccamera/plugins/cinematiccamera/graph.png)
 
-Example project files are supported in the `\example` fodler of this plugin.
+Example project files are supported in the `\example` folder of this plugin.
 
 

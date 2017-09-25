@@ -260,8 +260,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
     }
 
-    // Set camera parameters of selected keyframe for this view
-    // but only if selected keyframe differs to last locally stored and shown keyframe.
+    // Set camera parameters of selected keyframe for this view.
+    // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering 
     // or animation loaded new slected keyframe.
     Keyframe skf = ccc->getSelectedKeyframe();
@@ -306,7 +306,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
         }
     }
-
 
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
     ccc->setCameraParameters(this->cam.Parameters());
@@ -407,6 +406,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Draw final image -------------------------------------------------------
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -417,11 +421,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
 
     // Adjust fbo viewport size if it is greater than viewport
     int fboVpWidth  = fboWidth;
@@ -457,11 +456,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
-
     // Draw letter box  -------------------------------------------------------
-    // Get the background color of this view
-    float bgColor[4];
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+
+    // Color stuff ------------------------------------------------------------
+    
+    const float *bgColor = this->bkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     // Adapt colors depending on  Lightness
@@ -471,6 +470,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             lbColor[i] = 0.0f;
         }
     }
+
     // Calculate position of texture
     int x = 0;
     int y = 0;
@@ -504,7 +504,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->rendering && this->pngdata.lock) {
         this->pngdata.lock = false;
     }
-
 }
 
 

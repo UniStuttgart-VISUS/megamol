@@ -416,6 +416,9 @@ bool KeyframeManipulator::draw(void) {
     glEnable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
 
+    // Rest of necessary OpenGl settings are done in CinematicRenderer ...
+
+
     // Get the foreground color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
