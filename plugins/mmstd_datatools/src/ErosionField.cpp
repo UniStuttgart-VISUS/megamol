@@ -66,17 +66,31 @@ bool ErosionField::manipulateData(
         while (std::abs(maxCol - nextCol) < 0.01f) {
             nextCol += 1.0f;
 
-            for (const auto& edge : inNData) {
-                float& c1 = colors[edge.i1];
-                float& c2 = colors[edge.i2];
-                if ((c1 < -0.9f) && (c2 > -0.1f) && (c2 < nextCol - 0.1f)) {
+	    auto edges = inNData.GetEdgeData();
+	    for (unsigned int i=0; i < inNData.GetEdgeCount(); ++i) {
+	        float& c1 = colors[edges[i].i1];
+                float& c2 = colors[edges[i].i2] ;
+		if ((c1 < -0.9f) && (c2 > -0.1f) && (c2 < nextCol - 0.1f)) {
                     c1 = nextCol;
                     maxCol = nextCol;
                 } else if ((c2 < -0.9f) && (c1 > -0.1f) && (c1 < nextCol - 0.1f)) {
                     c2 = nextCol;
                     maxCol = nextCol;
                 }
-            }
+
+	    }
+	    
+//             for (const auto& edge : inNData) {
+//                 float& c1 = colors[edge.i1];
+//                 float& c2 = colors[edge.i2];
+//                 if ((c1 < -0.9f) && (c2 > -0.1f) && (c2 < nextCol - 0.1f)) {
+//                     c1 = nextCol;
+//                     maxCol = nextCol;
+//                 } else if ((c2 < -0.9f) && (c1 > -0.1f) && (c1 < nextCol - 0.1f)) {
+//                     c2 = nextCol;
+//                     maxCol = nextCol;
+//                 }
+//             }
         }
 
     }

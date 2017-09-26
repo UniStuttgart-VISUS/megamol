@@ -75,6 +75,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
+#include "mmcore/utility/LuaHostService.h"
 
 /*****************************************************************************/
 
@@ -119,28 +120,28 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         factories::AbstractAssemblyInstance(),
         preInit(new PreInit), config(),
-        shaderSourceFactory(config), log(),
+        shaderSourceFactory(config), log(), lua(nullptr),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
-	// setup log as early as possible.
-	this->log.SetLogFileName(static_cast<const char*>(NULL), false);
-	this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
+    // setup log as early as possible.
+    this->log.SetLogFileName(static_cast<const char*>(NULL), false);
+    this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
 #ifdef _DEBUG
-	this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
 #else
-	this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
+    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
 #endif
-	this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
-	this->log.SetOfflineMessageBufferSize(25);
-	// redirect default log to instance log of last instance
-	//  not perfect, but better than nothing.
-	vislib::sys::Log::DefaultLog.SetLogFileName(
-		static_cast<const char*>(NULL), false);
-	vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-	vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-	vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
+    this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    this->log.SetOfflineMessageBufferSize(25);
+    // redirect default log to instance log of last instance
+    //  not perfect, but better than nothing.
+    vislib::sys::Log::DefaultLog.SetLogFileName(
+        static_cast<const char*>(NULL), false);
+    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
+    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
@@ -167,6 +168,9 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     factories::register_call_classes(this->call_descriptions);
     for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
 
+    //megamol::core::utility::LuaHostService::ID = 
+    //    this->InstallService<megamol::core::utility::LuaHostService>();
+
     // Normalize timer with time offset to something less crappy shitty hateworthy
     this->timeOffset = -this->GetCoreInstanceTime();
 
@@ -179,8 +183,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     }
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
 //#endif
-
-
 
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 }
@@ -225,6 +227,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // finally plugins
     delete this->plugins;
     this->plugins = nullptr;
+
+    delete this->lua;
+    this->lua = nullptr;
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
@@ -293,6 +298,22 @@ void megamol::core::CoreInstance::Initialise(void) {
     }
     vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
 
+    this->lua = new LuaState(this);
+    if (this->lua == nullptr || !this->lua->StateOk()) {
+        throw vislib::IllegalStateException(
+            "Cannot initalise Lua", __FILE__, __LINE__);
+    }
+    std::string result;
+    int ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
+        "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
+        "' mode on ', mmGetMachineName(), '.')", result);
+    if (ok) {
+        //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+    }
+    //lua->RunString("mmLogInfo('Lua loaded Ok.')");
+
     // configuration file
     if (this->preInit->IsConfigFileSet()) {
         this->config.LoadConfig(this->preInit->GetConfigFile());
@@ -318,6 +339,10 @@ void megamol::core::CoreInstance::Initialise(void) {
             }
         } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS);
     }
+
+    // register services? TODO: right place?
+    megamol::core::utility::LuaHostService::ID =
+        this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins
     // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
@@ -548,17 +573,6 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
                 }
                 this->preInit->SetConfigFile(
                     utility::APIValueUtil::AsStringW(type, value));
-                break;
-            case MMC_INITVAL_CFGSET:
-                if (!utility::APIValueUtil::IsStringType(type)) {
-                    return MMC_ERR_TYPE;
-                }
-                this->config.ActivateConfigSet(
-                    utility::APIValueUtil::AsStringW(type, value));
-                this->log.WriteMsg(250,
-                    "Configuration Set \"%s\" added to be activated\n",
-                    utility::APIValueUtil::AsStringA(type, value)
-                    .PeekBuffer());
                 break;
             case MMC_INITVAL_LOGFILE:
                 if (!utility::APIValueUtil::IsStringType(type)) {
@@ -2103,7 +2117,6 @@ void megamol::core::CoreInstance::addProject(
         megamol::core::utility::xml::XmlReader& reader) {
     using vislib::sys::Log;
     utility::ProjectParser parser(this);
-    parser.SetConfigSetProvider(&this->config);
     if (parser.Parse(reader)) {
         // success, add project elements
         std::shared_ptr<ViewDescription> vd;

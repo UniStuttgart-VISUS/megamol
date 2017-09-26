@@ -258,9 +258,10 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
         case 1: // I
             if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString())) {
                 retValue = false;
+            } else {
+                iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
+                iMax = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MaximumValue();
             }
-            iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
-            iMax = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MaximumValue();
             break;
         case 2: // global RGB
             break;
@@ -317,31 +318,32 @@ bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
                 static_cast<unsigned int>(g * 255.0f), static_cast<unsigned int>(b * 255.0f));
         }
 
-        size_t colOffset = 0;
-        switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
-            case 0: // per particle
-                c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
-                colOffset = 4;
-                break;
-            case 1: // global
-                c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
-                colOffset = 3;
-                break;
-        }
+        if (ft->GetRowsCount() > 0) {
+            size_t colOffset = 0;
+            switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
+                case 0: // per particle
+                    c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset = 4;
+                    break;
+                case 1: // global
+                    c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset = 3;
+                    break;
+            }
 
-        switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
-            case 0: // RGB
-                c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
-                break;
-            case 1: // I
-                c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
-                c.AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
-                break;
-            case 2: // global RGB
-                c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
-                break;
+            switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
+                case 0: // RGB
+                    c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    break;
+                case 1: // I
+                    c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    c.AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
+                    break;
+                case 2: // global RGB
+                    c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+                    break;
+            }
         }
-
         c.SetUnlocker(NULL);
 
         return true;

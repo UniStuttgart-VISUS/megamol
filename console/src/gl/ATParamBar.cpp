@@ -396,8 +396,18 @@ std::vector<std::shared_ptr<vislib::StringA> > gl::ATParamBar::EnumParam::enumSt
 
 gl::ATParamBar::FlexEnumParam::FlexEnumParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc)
     : ValueParam(src, bar, makeMyFlexEnumType(src->Handle(), desc), def) {
+
     std::vector<TwEnumVal> values;
     parseFlexEnumDesc(values, desc);
+    ::TwRemoveVar(bar, GetKey().c_str());
+    auto type = ::TwDefineEnum(GetKey().c_str(), values.data(), static_cast<unsigned int>(values.size()));
+    ::TwAddVarCB(bar, GetKey().c_str(), type,
+        reinterpret_cast<TwSetVarCallback>(&ValueParam::twSetCallback),
+        reinterpret_cast<TwGetVarCallback>(&ValueParam::twGetCallback),
+        this, def.str().c_str());
+    if (this->enumStrings.size() > 0) {
+        ::mmcSetParameterValueA(this->Handle(), *this->enumStrings[0]);
+    }
 }
 
 void gl::ATParamBar::FlexEnumParam::Set(const void *value) {
@@ -435,7 +445,7 @@ TwType gl::ATParamBar::FlexEnumParam::makeMyFlexEnumType(void* hParam, const std
     ::memcpy(idc, &id, 8);
     n.Format("%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", idc[0], idc[1], idc[2], idc[3], idc[4], idc[5], idc[6], idc[7]);
     std::vector<TwEnumVal> values;
-    parseFlexEnumDesc(values, desc);
+//    parseFlexEnumDesc(values, desc);
     return ::TwDefineEnum(n, values.data(), static_cast<unsigned int>(values.size()));
 }
 
@@ -461,7 +471,7 @@ void gl::ATParamBar::FlexEnumParam::parseFlexEnumDesc(std::vector<TwEnumVal>& ou
     }
 }
 
-std::vector<std::shared_ptr<vislib::StringA> > gl::ATParamBar::FlexEnumParam::enumStrings;
+//std::vector<std::shared_ptr<vislib::StringA> > gl::ATParamBar::FlexEnumParam::enumStrings;
 
 /****************************************************************************/
 

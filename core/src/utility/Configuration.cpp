@@ -283,7 +283,7 @@ bool megamol::core::utility::Configuration::logFilenameLocked = false;
  */
 megamol::core::utility::Configuration::Configuration(void) 
         : cfgFileName(), criticalParserError(false), appDir(),
-        shaderDirs(), resourceDirs(), configSets(), configValues(), instanceRequests(),
+        shaderDirs(), resourceDirs(), configValues(), instanceRequests(),
         pluginLoadInfos() {
     this->setDefaultValues();
 }
@@ -443,7 +443,7 @@ void megamol::core::utility::Configuration::LoadConfig(
                 // log error
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR,
-                    "Configuration %s seams to be no File or Directory.",
+                    "Configuration %s seems to be no File or Directory.",
                     W2A(sName));
             }
         } else {
@@ -468,8 +468,8 @@ bool megamol::core::utility::Configuration::searchConfigFile(
         return false; // omitt not existing directories
     }
 
-    static const wchar_t *filenames[] = {L"megamolconfig.xml", L"megamol.cfg",
-        L".megamolconfig.xml", L".megamol.cfg"};
+    static const wchar_t *filenames[] = {L"megamolconfig.lua", L"megamolconfig.xml", 
+        L"megamol.cfg", L".megamolconfig.xml", L".megamol.cfg"};
     static const unsigned int filenameCount 
         = sizeof(filenames) / sizeof(char*);
     vislib::StringW filename;
@@ -516,38 +516,17 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
 
     this->cfgFileLocations.Append(file);
 
-    try {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO + 10, 
-            "Parsing configuration file \"%s\"", W2A(filename));
+    if (file.EndsWith(L".lua")) {
 
-        megamol::core::utility::xml::XmlReader reader;
-        reader.OpenFile(filename);
-        megamol::core::utility::xml::ConfigurationParser parser(*this);
-
-        if (!parser.Parse(reader)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, 
-                "Unable to parse config file \"%s\"\n", W2A(filename));
-            this->criticalParserError = true;
+        LuaState lua(this);
+        int ok;
+        std::string res;
+        ok = lua.RunFile(file.PeekBuffer(), res);
+        if (ok) {
+            //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", res.c_str());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", res.c_str());
         }
-
-        if (parser.MessagesPresent()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "Parser Messages:");
-            vislib::SingleLinkedList<vislib::StringA>::Iterator msgs 
-                = parser.Messages();
-            while (msgs.HasNext()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_WARN, "    %s",
-                    msgs.Next().PeekBuffer());
-            }
-        }
-
-        if (this->criticalParserError) {
-            return;
-        }
-
         // realize configuration values
         this->cfgFileName = filename;
 
@@ -555,7 +534,7 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
             this->appDir = vislib::sys::Path::Resolve(this->appDir);
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_INFO + 50,
-                "Directory \"application\" resolved to \"%s\"", 
+                "Directory \"application\" resolved to \"%s\"",
                 W2A(this->appDir));
         } else {
             this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
@@ -564,66 +543,122 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
                 "Directory \"application\" is \"%s\"", W2A(this->appDir));
         }
 
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, 
-            "Configuration sucessfully loaded from \"%s\"", 
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Configuration sucessfully loaded from \"%s\"",
             W2A(this->cfgFileName));
 
-    } catch(megamol::core::utility::xml::ConfigurationParser
+    } else {
+        // XML-based config file
+        // TODO: deprecate
+        try {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_INFO + 10,
+                "Parsing configuration file \"%s\"", W2A(filename));
+
+            megamol::core::utility::xml::XmlReader reader;
+            reader.OpenFile(filename);
+            megamol::core::utility::xml::ConfigurationParser parser(*this);
+
+            if (!parser.Parse(reader)) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to parse config file \"%s\"\n", W2A(filename));
+                this->criticalParserError = true;
+            }
+
+            if (parser.MessagesPresent()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    "Parser Messages:");
+                vislib::SingleLinkedList<vislib::StringA>::Iterator msgs
+                    = parser.Messages();
+                while (msgs.HasNext()) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(
+                        vislib::sys::Log::LEVEL_WARN, "    %s",
+                        msgs.Next().PeekBuffer());
+                }
+            }
+
+            if (this->criticalParserError) {
+                return;
+            }
+
+            // realize configuration values
+            this->cfgFileName = filename;
+
+            if (vislib::sys::Path::IsRelative(this->appDir)) {
+                this->appDir = vislib::sys::Path::Resolve(this->appDir);
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_INFO + 50,
+                    "Directory \"application\" resolved to \"%s\"",
+                    W2A(this->appDir));
+            } else {
+                this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_INFO + 150,
+                    "Directory \"application\" is \"%s\"", W2A(this->appDir));
+            }
+
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Configuration sucessfully loaded from \"%s\"",
+                W2A(this->cfgFileName));
+
+        } catch (megamol::core::utility::xml::ConfigurationParser
             ::RedirectedConfigurationException rde) {
         // log info
-        redirect = vislib::sys::Path::Resolve(
-            rde.GetRedirectedConfiguration(),
-            vislib::sys::Path::GetDirectoryName(file));
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO + 10, 
-            "Configuration redirected to \"%s\"", W2A(redirect));
+            redirect = vislib::sys::Path::Resolve(
+                rde.GetRedirectedConfiguration(),
+                vislib::sys::Path::GetDirectoryName(file));
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_INFO + 10,
+                "Configuration redirected to \"%s\"", W2A(redirect));
 
-    } catch(std::bad_alloc ba) {
-        // log error
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "Memory allocation error while parsing xml configuration file");
-        this->criticalParserError = true;
-    } catch(vislib::Exception e) {
-        // log error
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "Exception while parsing xml configuration file: %s", e.GetMsgA());
-        this->criticalParserError = true;
-    } catch(...) {
-        // log error
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "Generic Error while parsing xml configuration file");
-        this->criticalParserError = true;
-    }
+        } catch (std::bad_alloc ba) {
+            // log error
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Memory allocation error while parsing xml configuration file");
+            this->criticalParserError = true;
+        } catch (vislib::Exception e) {
+            // log error
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Exception while parsing xml configuration file: %s", e.GetMsgA());
+            this->criticalParserError = true;
+        } catch (...) {
+            // log error
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Generic Error while parsing xml configuration file");
+            this->criticalParserError = true;
+        }
 
-    if (!redirect.IsEmpty()) {
-        // make sure we start in a clean state
-        this->setDefaultValues();
+        if (!redirect.IsEmpty()) {
+            // make sure we start in a clean state
+            this->setDefaultValues();
 
-        if (vislib::sys::File::Exists(redirect)) {
-            if (vislib::sys::File::IsFile(redirect)) {
-                this->loadConfigFromFile(redirect);
-            } else if (vislib::sys::File::IsDirectory(redirect)) {
-                if (!this->searchConfigFile(redirect)) {
+            if (vislib::sys::File::Exists(redirect)) {
+                if (vislib::sys::File::IsFile(redirect)) {
+                    this->loadConfigFromFile(redirect);
+                } else if (vislib::sys::File::IsDirectory(redirect)) {
+                    if (!this->searchConfigFile(redirect)) {
+                        // log error
+                        vislib::sys::Log::DefaultLog.WriteMsg(
+                            vislib::sys::Log::LEVEL_ERROR,
+                            "No Configuration file found at redirected location.");
+                        this->criticalParserError = true;
+                    }
+                } else {
                     // log error
                     vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR, 
-                        "No Configuration file found at redirected location.");
+                        vislib::sys::Log::LEVEL_ERROR,
+                        "Redirected Configuration seams to be no File or "
+                        "Directory.");
                     this->criticalParserError = true;
                 }
             } else {
                 // log error
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, 
-                    "Redirected Configuration seams to be no File or "
-                    "Directory.");
+                    vislib::sys::Log::LEVEL_ERROR,
+                    "Redirected Configuration not found.");
                 this->criticalParserError = true;
             }
-        } else {
-            // log error
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, 
-                "Redirected Configuration not found.");
-            this->criticalParserError = true;
         }
     }
 }
@@ -702,41 +737,6 @@ const void * megamol::core::utility::Configuration::GetValue(
 
     if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
     return NULL;
-}
-
-
-/*
- * megamol::core::utility::Configuration::ActivateConfigSet
- */
-void megamol::core::utility::Configuration::ActivateConfigSet(
-        const vislib::StringW& set) {
-    vislib::SingleLinkedList<vislib::StringW>::Iterator iter 
-        = this->configSets.GetIterator();
-    while (iter.HasNext()) {
-        vislib::StringW& s = iter.Next();
-        if (s.Equals(set, false)) {
-            return;
-        }
-    }
-    this->configSets.Append(set);
-}
-
-
-/*
- * megamol::core::utility::Configuration::IsConfigSetActive
- */
-bool megamol::core::utility::Configuration::IsConfigSetActive(
-        const vislib::StringW& set) const {
-    vislib::SingleLinkedList<vislib::StringW>::Iterator iter 
-        = const_cast<vislib::SingleLinkedList<vislib::StringW>& >(
-        this->configSets).GetIterator();
-    while (iter.HasNext()) {
-        vislib::StringW& s = iter.Next();
-        if (s.Equals(set, false)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 
