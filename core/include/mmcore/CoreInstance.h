@@ -117,6 +117,11 @@ namespace plugins {
          */
         virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
+        /** return the contained LuaState */
+        inline LuaState* GetLuaState(void) {
+            return this->lua;
+        }
+
         /**
          * Answers the log object of the instance.
          *

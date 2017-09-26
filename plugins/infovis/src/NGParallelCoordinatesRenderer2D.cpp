@@ -418,10 +418,10 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     if (!makeComputeProgram("::pc_item_pick", this->pickProgram)) return false;
     if (!makeComputeProgram("::pc_item_stroke", this->strokeProgram)) return false;
 
-    glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, filterWorkgroupSize);
-    glGetProgramiv(this->minMaxProgram, GL_COMPUTE_LOCAL_WORK_SIZE, counterWorkgroupSize);
-    glGetProgramiv(this->pickProgram, GL_COMPUTE_LOCAL_WORK_SIZE, pickWorkgroupSize);
-    glGetProgramiv(this->strokeProgram, GL_COMPUTE_LOCAL_WORK_SIZE, strokeWorkgroupSize);
+    glGetProgramiv(this->filterProgram, GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
+    glGetProgramiv(this->minMaxProgram, GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
+    glGetProgramiv(this->pickProgram, GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
+    glGetProgramiv(this->strokeProgram, GL_COMPUTE_WORK_GROUP_SIZE, strokeWorkgroupSize);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
