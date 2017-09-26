@@ -1,8 +1,12 @@
 ## Infovis
 The Infovis plugin provides all kinds of Information Visualization modules, like charts, plots and diagrams. Currently there are still few modules available, so feel free to contribute!
 
+Jump to [Modules](#modules), jump to [Calls](#calls)
+
 ## Build
 This plugin is switched on by default. It depends on mmstd_datatools.
+
+---
 
 ## Modules
 
@@ -29,16 +33,20 @@ Additional parameters of interest:
 
 | Parameter    | Default Value | Description                                                            |
 |--------------|---------------|------------------------------------------------------------------------|
-| sqrtDensity | `true`          | map the square root of the density for `DRAW_CONTINUOUS` to color, set to `false` for linear mapping |
+| sqrtDensity | `true`          | for `DRAW_CONTINUOUS`: map the square root of the density to color, set to `false` for linear mapping |
 | drawSelectedItemsSlot      | `true`           | draw/hide selected items |
 | drawOtherItemsSlot   | `true`    | draw/hide items that are not selected |
 
+Example screenshot cutout using `DRAW_CONTINUOUS` with filter indicators (small 'hats' on axes):
+![NGParCoDemo.PNG](NGParCoDemo.PNG)
+
+---
 
 ## Calls
 
 ### DiagramSeriesCall
 
-This call transports a function pointer that allows pushing a [DiagramSeries](#DiagramSeries) into a renderer (for example).
+This call transports a function pointer that allows pushing a [DiagramSeries](#diagramseries) into a renderer (for example).
 
 ### FlagCall
 

@@ -14,7 +14,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
 
   add_subdirectory(datraw)
   
-  set(LIBS vislib core glload datraw)
+  set(LIBS vislib core datraw glad)
   include_directories("include" "src")
 
 
@@ -26,7 +26,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core datraw)
+  add_dependencies(${PROJECT_NAME} vislib core datraw)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.

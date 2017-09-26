@@ -67,7 +67,7 @@ if(BUILD_CORE)
   )
 
   add_subdirectory(remoteconsole)
-  
+
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -102,8 +102,8 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
-  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
-  include_directories("include" "src" ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include)
+  set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
+  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include)
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
   if (OPENMP_FOUND OR WIN32)
@@ -138,7 +138,7 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(core vislib glload)
+  add_dependencies(core vislib glad)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})

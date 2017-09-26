@@ -13,4 +13,4 @@ file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp")
 
 # target definition
 add_executable(clusterTest ${header_files} ${source_files})
-target_link_libraries(clusterTest vislib ${GLUT_LIBRARIES} ${GLLOAD_LIBRARIES})
+target_link_libraries(clusterTest vislib ${GLUT_LIBRARIES})

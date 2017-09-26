@@ -15,9 +15,17 @@ set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
 set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+if(UNIX)
+	option(USE_EGL "Use EGL instead of GLFW" OFF)
+	if(USE_EGL)
+		add_definitions("-DUSE_EGL")
+	endif()
+endif()
+
+	
 # GLOBAL DLL DEFINITIONS
 if(WIN32)
-  add_definitions(-DGL_LOAD_DLL)
+  #add_definitions(-DGL_LOAD_DLL)
 endif()
 
 # VERSIONS
