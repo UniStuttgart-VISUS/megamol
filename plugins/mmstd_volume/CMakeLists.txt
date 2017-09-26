@@ -8,27 +8,21 @@ option(BUILD_MMSTD_VOLUME_PLUGIN "Option to build mmstd_VOLUME" ON)
 if(BUILD_MMSTD_VOLUME_PLUGIN)
   project(mmstd_volume)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_VOLUME_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   add_subdirectory(datraw)
   
   set(LIBS vislib core datraw glad)
   include_directories("include" "src")
 
 
-  # Build MegaMol Plugin
-  # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-  if(UNIX)
-    list(REMOVE_ITEM source_files
-      "src/dllmain.cpp"
-      )
-  endif()
-  # shader files for installation
-  file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
@@ -42,6 +36,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   
+  # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
@@ -51,6 +46,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
+  # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})

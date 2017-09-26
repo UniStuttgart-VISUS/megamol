@@ -3,7 +3,7 @@ option(BUILD_VISLIB "Build vislib" ON)
 
 if(BUILD_VISLIB)
   project(vislib)
-  set(BUILDING_VISLIB_PROJECT 1)
+
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
   
   if(UNIX)
@@ -46,6 +46,7 @@ if(BUILD_VISLIB)
   target_link_libraries(vislib PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
   
+  # Grouping in Visual Studio
   set_target_properties(vislib PROPERTIES FOLDER base)
   source_group("Public Header Files" FILES ${header_files})
   source_group("Header Files" FILES "src/*.h")

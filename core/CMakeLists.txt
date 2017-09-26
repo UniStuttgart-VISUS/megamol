@@ -9,6 +9,10 @@ option(BUILD_CORE "Build core" ON)
 if(BUILD_CORE)
   project(core)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
+  
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
 
@@ -36,6 +40,7 @@ if(BUILD_CORE)
   if(UNIX)
   find_package(OpenMP)
   endif()
+
   find_package(MPI)
 
   if(WIN32)
@@ -65,10 +70,7 @@ if(BUILD_CORE)
   endif()
 
 
-  # Build MegaMol Core
-  # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
@@ -86,8 +88,6 @@ if(BUILD_CORE)
     "src/vismol2/Mol2Data.cpp"
     )    
 
-  include_directories(BEFORE "include" "src")
-
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_dependencies(core vislib)
@@ -96,17 +96,17 @@ if(BUILD_CORE)
   target_link_libraries(core PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-  set_target_properties(core PROPERTIES FOLDER base)
-  source_group("Public Header Files" FILES ${public_header_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files})
-
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   if(WIN32)
     set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
 
+  # Target structure in Visual Studio
+  set_target_properties(core PROPERTIES FOLDER base)
+  source_group("Public Header Files" FILES ${public_header_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+  source_group("Shaders" FILES ${shader_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
