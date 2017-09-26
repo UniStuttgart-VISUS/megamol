@@ -47,4 +47,4 @@ build_script:
 after_build:
   - cd c:\projects\megamol\stage\
   - 7z a -y -bd megamol.zip
-- ps: Push-AppveyorArtifact "megamol.zip" -Filename "megamol-${env:VSVER}-${env:Platform}-${env:Configuration}.zip"
+  - ps: Push-AppveyorArtifact "megamol.zip" -Filename "megamol-${env:VSVER}-${env:Platform}-${env:Configuration}.zip"
