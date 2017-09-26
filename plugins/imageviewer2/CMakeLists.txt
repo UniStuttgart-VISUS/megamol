@@ -18,7 +18,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     add_definitions(-DXMD_H) # prevents typedef conflict
   endif()
 
-  set(LIBS vislib core glload ${JPEG_LIBRARIES})
+  set(LIBS vislib core glad ${JPEG_LIBRARIES})
   include_directories("include" "src" ${JPEG_INCLUDE_DIR})
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")

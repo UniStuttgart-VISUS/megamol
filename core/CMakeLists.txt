@@ -17,7 +17,7 @@ if(BUILD_CORE)
   set(CMAKE_THREAD_PREFER_PTHREAD)
 
   find_package(Threads REQUIRED)
-
+  
   # include lua sources
   add_subdirectory(lua)
   
@@ -38,7 +38,7 @@ if(BUILD_CORE)
   endif()
 
   if(UNIX)
-    find_package(OpenMP)
+  find_package(OpenMP)
   endif()
 
   find_package(MPI)
@@ -55,8 +55,8 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
-  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} "include" "src")
+  set(LIBS vislib lua glad ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
 
   if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -90,7 +90,7 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(core vislib glload)
+  add_dependencies(core vislib)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
