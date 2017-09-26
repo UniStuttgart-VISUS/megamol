@@ -52,7 +52,7 @@ if(BUILD_CONSOLE)
   endif()
 
   set(LIBS vislib core glad ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
-  include_directories(${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR})
+  include_directories(${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR} "src" "include")
 
   if(NOT USE_EGL)
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)

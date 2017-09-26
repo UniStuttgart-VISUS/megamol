@@ -34,7 +34,7 @@ if(BUILD_REMOTECONSOLE)
     INSTALL_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
   )
 
-  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
+  set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include)
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
@@ -48,6 +48,7 @@ if(BUILD_REMOTECONSOLE)
   add_executable(${PROJECT_NAME} ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  add_dependencies(${PROJECT_NAME} core glad)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})

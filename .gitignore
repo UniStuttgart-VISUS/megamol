@@ -9,3 +9,7 @@ configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/
 configurator/packages/
+
+configurator/MegaMolConf/Properties/AssemblyInfo\.cs
+
+configurator/MegaMolConf/Resources/mmconfig\.res
