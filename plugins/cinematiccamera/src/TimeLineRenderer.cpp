@@ -38,7 +38,7 @@ using namespace megamol::cinematiccamera;
 */
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam( "01_fonSize", "The font size."),
+    rulerFontParam( "01_fontSize", "The font size."),
 
 #ifndef USE_SIMPLE_FONT
 	theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
@@ -340,15 +340,18 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     }
 
-    // Opengl setup
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+    // Opengl setup -----------------------------------------------------------
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
@@ -358,9 +361,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
 
     // Draw frame markers
     float frameFrac = this->animAxisLen / ((float)(this->fps) * (this->animTotalTime)) * this->animScaleFac;
@@ -607,11 +609,23 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                 posX = this->axisStartPos.X() + animAxisX;
                 if ((x < (posX + offset)) && (x > (posX - offset))) {
+                    // If another keyframe is already hit, check which keyframe is closer to mouse position
+                    if (hit) { 
+                        float deltaX = vislib::math::Abs(posX - x);
+                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().getAnimTime() * this->animLenTimeFrac;
+                        if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                            posX = this->axisStartPos.X() + animAxisX;
+                            if (deltaX < vislib::math::Abs(posX - x)) {
+                                ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                            }
+                        }
+                    }
+                    else {
+                        ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                    }
                     // Set hit keyframe as selected
-                    ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
                     if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
                     hit = true;
-                    break; // Exit loop on hit
                 }
             }
 		}

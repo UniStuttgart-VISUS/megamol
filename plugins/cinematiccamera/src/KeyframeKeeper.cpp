@@ -348,15 +348,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         // Add keyframe to array
         if(!this->addKeyframe(this->selectedKeyframe)) {
-            // Choose new time
+            // Choose new time if there alredy exists an keyframe at this time
             if (this->keyframes.Count() > 0) {
-//////  EDIT ANIM TIME  ////////
-                float t = this->keyframes.Last().getAnimTime() + 0.1f*this->totalAnimTime; 
-                t = (t < 0.0f) ? (0.0f) : (t);
+                float t = this->selectedKeyframe.getAnimTime() + (1.0f / (float)(this->fps));
                 t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
-
                 this->selectedKeyframe.setAnimTime(t);
-                this->addKeyframe(this->selectedKeyframe);
+                if (!this->addKeyframe(this->selectedKeyframe)) {
+                    vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Add Keyframe] Unable to add new keyframe.");
+                }
             }
         }
         this->updateEditParameters(this->selectedKeyframe, false);
@@ -399,7 +398,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             if (tt < this->keyframes.Last().getAnimTime()) {
                 tt = this->keyframes.Last().getAnimTime();
                 this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-                vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Set Total Time ] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Set Total Time] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
             }
         }
         this->totalAnimTime = tt;
@@ -417,7 +416,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->editCurrentAnimTimeParam.ResetDirty();
 
         // Clamp time value to allowed min max
-//////  EDIT ANIM TIME  ////////
         float t = this->editCurrentAnimTimeParam.Param<param::FloatParam>()->Value(); 
         t = (t < 0.0f) ? (0.0f) : (t);
         t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
@@ -651,7 +649,6 @@ void KeyframeKeeper::setSameSpeed() {
                 kfTime = kfDist / totalVelocity;
 
                 unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
-//////  EDIT ANIM TIME  ////////
                 this->keyframes[index].setAnimTime(this->keyframes[index - 1].getAnimTime() + kfTime);
 
                 kfDist = 0.0f;
@@ -869,19 +866,12 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         i0 = (i1 > 0) ? (i1 - 1) : (0);
         i3 = (i2 < kfIdxCnt) ? (i2 + 1) : (kfIdxCnt);
 
-
-
-///// SIMULATION TIME /////
         // Interpolate simulation time linear between i1 and i2
         float simT1 = this->keyframes[i1].getSimTime();
         float simT2 = this->keyframes[i2].getSimTime();
-
         float simT = simT1 + (simT2 - simT1)*iT;
 
         kf.setSimTime(simT);
-///// SIMULATION TIME /////
-
-
 
         //interpolate position
         vislib::math::Vector<float, 3> p0(keyframes[i0].getCamPosition());
@@ -893,6 +883,12 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             (p2 - p0) * iT +
             (p0 * 2 - p1 * 5 + p2 * 4 - p3) * iT * iT +
             (-p0 + p1 * 3 - p2 * 3 + p3) * iT * iT * iT) * 0.5);
+
+        // Prevent loops if time of keyframes is different, but postion is the same
+        if (p1 == p2) {
+            pk = p1;
+        }
+
         kf.setCameraPosition(Point<float, 3>(pk.X(), pk.Y(), pk.Z()));
 
         //interpolate lookAt
@@ -905,6 +901,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             (l2 - l0) * iT +
             (l0 * 2 - l1 * 5 + l2 * 4 - l3) * iT * iT +
             (-l0 + l1 * 3 - l2 * 3 + l3) * iT * iT * iT) * 0.5);
+
         kf.setCameraLookAt(Point<float, 3>(lk.X(), lk.Y(), lk.Z()));
 
         //interpolate up
@@ -917,6 +914,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             (u2 - u0) * iT +
             (u0 * 2 - u1 * 5 + u2 * 4 - u3) * iT * iT +
             (-u0 + u1 * 3 - u2 * 3 + u3) * iT * iT * iT) * 0.5);
+
         kf.setCameraUp(uk - pk);
 
         //interpolate aperture angle
@@ -972,7 +970,7 @@ void KeyframeKeeper::saveKeyframes() {
 void KeyframeKeeper::loadKeyframes() {
 
     if (this->filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Load Keyframes] No filename given.");
+        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Load Keyframes] No filename given.");
     }
     else {
         

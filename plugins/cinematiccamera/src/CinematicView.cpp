@@ -165,14 +165,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
     // Set total simulation time of call
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
-    //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [totalSimTime] %f", static_cast<float>(cr3d->TimeFramesCount()));
-
     // Set FPS to call
     ccc->setFps(this->fps);
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
 
-
     bool loadNewCamParams = false;
+
     // Update parameters ------------------------------------------------------
     if (this->toggleAnimPlayParam.IsDirty()) {
         this->toggleAnimPlayParam.ResetDirty();
@@ -314,8 +312,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Viewport stuff ---------------------------------------------------------
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0];  // or cr3d->GetViewport().GetSize().GetHeight();
-    int   vpHeight = vp[3] - vp[1]; // or cr3d->GetViewport().GetSize().GetWidth();
+    int   vpWidth = vp[2] - vp[0];  
+    int   vpHeight = vp[3] - vp[1]; 
 
     float vpRatio = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
@@ -343,7 +341,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             this->resetFbo = true;
         }
     }
-
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
     int fboVp[4] = { 0, 0, fboWidth, fboHeight };
     this->overrideViewport = fboVp;
@@ -538,7 +535,7 @@ bool CinematicView::rtf_setup() {
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
     struct tm *now = std::localtime(&t);
-    frameFolder.Format("frames_%ifps_%i%02i%02i-%02i%02i%02i",  this->fps, (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
@@ -615,9 +612,9 @@ bool CinematicView::rtf_create_frame() {
         vislib::StringA tmpFilename, tmpStr;
         tmpStr.Format("%i", this->expFrameCnt);
         tmpStr.Prepend("\%0");
-        // tmpStr.Append("i.png");
-        tmpStr.Append("i_-_animTime_%f.png");
-        tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt, this->pngdata.animTime);
+         tmpStr.Append("i.png");
+        //tmpStr.Append("i_-_animTime_%f.png");
+        //tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt, this->pngdata.animTime);
         tmpFilename.Prepend(this->pngdata.filename);
 
         // open final image file
