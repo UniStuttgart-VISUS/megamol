@@ -51,10 +51,10 @@ if(BUILD_CORE)
   # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
   if(UNIX)
     set(ZMQCPP_INSTALL_CMD "cp")
-    set(ZMQCPP_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(ZMQCPP_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   else()
     set(ZMQCPP_INSTALL_CMD "powershell")
-    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   endif()
   
   ExternalProject_Add(extlibcppzmq
