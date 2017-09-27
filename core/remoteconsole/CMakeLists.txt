@@ -37,7 +37,7 @@ if(BUILD_REMOTECONSOLE)
   include_directories(BEFORE "include" "src")
 
   # Target definition
-  add_executable(${PROJECT_NAME} ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
   add_dependencies(${PROJECT_NAME} extlibcxxopts extlibzmq core)

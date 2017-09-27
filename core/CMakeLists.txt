@@ -31,6 +31,7 @@ if(BUILD_CORE)
   include(ExternalProject)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
+  
   set(ZMQ_VER "4_2_2")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
@@ -66,8 +67,7 @@ if(BUILD_CORE)
     INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
   )
 
-  add_subdirectory(remoteconsole)
-
+  
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -166,6 +166,8 @@ if(BUILD_CORE)
   else()
     install(TARGETS core DESTINATION "lib" EXPORT core-target)
   endif()
+
+add_subdirectory(remoteconsole)
 
 endif(BUILD_CORE)
 
