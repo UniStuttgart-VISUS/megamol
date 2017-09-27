@@ -13,7 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  set(LIBS vislib core glload protein_calls ${PNG_LIBRARIES})
+  set(LIBS vislib core glad protein_calls ${PNG_LIBRARIES})
   include_directories("include" "src" ${PNG_INCLUDE_DIRS})
 
   # Build MegaMol Plugin
@@ -27,7 +27,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files}) # UNCOMMENT TO ADD SHADER (and comment next line)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_dependencies(${PROJECT_NAME} vislib glad core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
