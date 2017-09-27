@@ -19,12 +19,11 @@ if(BUILD_REMOTECONSOLE)
     set(CXXOPTS_INSTALL_CMD "powershell")
     set(CXXOPTS_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   endif()
-  set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external)
-  file(MAKE_DIRECTORY ${EXTERNAL_INSTALL_LOCATION}/include)
   ExternalProject_Add(extlibcxxopts
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    CONFIGURE_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
-    BUILD_COMMAND ""
+    DEPENDS extlibzmq core
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
     INSTALL_COMMAND ""
   )
 
@@ -41,7 +40,7 @@ if(BUILD_REMOTECONSOLE)
   add_executable(${PROJECT_NAME} ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-  add_dependencies(${PROJECT_NAME} extlibcxxopts extlibzmq)
+  add_dependencies(${PROJECT_NAME} extlibcxxopts extlibzmq core)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
