@@ -101,9 +101,9 @@ The light yellow tagged data source module has to be replaced by a suitable one 
 
 ### Example
 
-The sample project supported in the `example` folder of this plugin.
-As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
+The sample project which is supported in the `example` folder of this plugin (`cinematiccam_simplemol.mmprj`) has to be copied into the `bin` folder of megamol.
 In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
-` .\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`
-
+*Under Windows:* `".\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
+*Under Linux:* `"./megamol.sh -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
+As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
 
