@@ -14,12 +14,13 @@ if(BUILD_REMOTECONSOLE)
 
   if(UNIX)
     set(CXXOPTS_INSTALL_CMD "cp")
-    set(CXXOPTS_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(CXXOPTS_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   else()
     set(CXXOPTS_INSTALL_CMD "powershell")
-    set(CXXOPTS_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(CXXOPTS_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   endif()
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external)
+  file(MAKE_DIRECTORY ${EXTERNAL_INSTALL_LOCATION}/include)
   ExternalProject_Add(extlibcxxopts
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     CONFIGURE_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
