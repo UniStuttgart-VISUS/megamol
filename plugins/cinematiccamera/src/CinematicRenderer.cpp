@@ -52,8 +52,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
     toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
     toggleModelBBoxParam( "04_toggleModelBBox", "Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model."),
+    //textureShader(),
     manipulator()
-    //, textureShader()
     {
 
     // init variables
@@ -106,10 +106,10 @@ bool CinematicRenderer::create(void) {
     const char *shaderName = "textureShader";
 
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) {  // anpassen!
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) { 
             return false; 
         }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { // anpassen!
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::fragment", frag)) {
             return false; 
         }
         if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -457,6 +457,8 @@ bool CinematicRenderer::Render(Call& call) {
     // Draw texture -------------------------------------------------------
     // (Depth of texture depends on lookat position of world camera ...)
 
+    //this->textureShader.Enable();
+
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     this->fbo.BindColourTexture();
@@ -478,6 +480,8 @@ bool CinematicRenderer::Render(Call& call) {
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
+
+    //this->textureShader.Disable();
 
     // Draw help text  --------------------------------------------------------
 

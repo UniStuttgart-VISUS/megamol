@@ -108,7 +108,7 @@ TimeLineRenderer::~TimeLineRenderer(void) {
 */
 bool TimeLineRenderer::create(void) {
 	
-    this->LoadTexture("arrow.png");  // this->markerTextures[0]
+    this->LoadTexture("../plugins/cinematiccamera/resources/arrow.png");  // this->markerTextures[0]
 	
 	return true;
 }
