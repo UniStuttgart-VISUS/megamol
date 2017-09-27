@@ -14,6 +14,8 @@ if(BUILD_OSPRAY_PLUGIN)
 
   find_package(ospray CONFIG REQUIRED)
 
+  message(INFO " ${CMAKE_INSTALL_LIBDIR}")
+
   set(LIBS vislib core glad mmstd_trisoup protein_calls ${OSPRAY_LIBRARIES})
   include_directories("include" "src" ${OSPRAY_INCLUDE_DIRS})
 
