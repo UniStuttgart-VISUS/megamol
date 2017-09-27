@@ -158,7 +158,7 @@ namespace megamol {
             vislib::graphics::gl::FramebufferObject fbo;
             vislib::math::Cuboid<float>      ocBbox;
             /** The render to texture */
-            vislib::graphics::gl::GLSLShader textureShader;
+            //vislib::graphics::gl::GLSLShader textureShader;
 
             /**********************************************************************
             * functions

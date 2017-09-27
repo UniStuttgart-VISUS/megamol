@@ -5,30 +5,36 @@ Through defining fixed keyframes of desired camera positions for specific animat
 
 ![cinematic camera demo picture](https://github.com/tobiasrau/megamol-dev/blob/cinematiccamera/plugins/cinematiccamera/demo.png)
 
+---
+
+## Use cases
+
+This plugin can be used to render a video of a simulation.
+
 --- 
 
 ## Module Descriptions
 This plugin provides the modules `KeyframeKeeper`,  `CinematicRenderer`, `CinematicView` and `TimeLineRenderer`.
 
-#### `KeyframeKeeper`:
+#### KeyframeKeeper:
 
 This module maintains the keyframes and their properties centralised. 
 The module `CinematicRenderer`, `CinematicView` and `TimeLineRenderer` have to be connected with the same `KeyframeKeeper` (see module-call graph below).
 
-#### `CinematicRenderer`:
+#### CinematicRenderer:
 
 This module shows the spatial position of the defined keyframes and the resulting tracking shot. 
 It allows the selection of keyframes by mouse. 
 The position and direction of the camera parameters of a keyframe can be altered by selectable manipulators.
 
-#### `CinematicView`:
+#### CinematicView:
 
 This module provides the preview of the final view to be rendered.
 Any desired view can be applied to an existing or a new keyframe.
 By running the animation as preview one can audit the final view of the video in real time.
 The complete final video can be rendered to png files by defining the resolution and the number of frames per second.
 
-#### `TimeLineRenderer`:
+#### TimeLineRenderer:
 
 This module shows the temporal position of the keyframes on the animation time axis and the simulation time axis in an two-dimensional diagram.
 The manipulation of the simulation and the animation time of a keyframe can be done per drag and drop.
@@ -98,6 +104,6 @@ The light yellow tagged data source module has to be replaced by a suitable one 
 The sample project supported in the `example` folder of this plugin.
 As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
 In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
-`.\\mmconsole.exe -p .\\cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`
+` .\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`
 
 

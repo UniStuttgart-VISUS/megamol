@@ -52,7 +52,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
     toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
     toggleModelBBoxParam( "04_toggleModelBBox", "Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model."),
-    manipulator(), textureShader()
+    manipulator()
+    //, textureShader()
     {
 
     // init variables
@@ -99,15 +100,16 @@ CinematicRenderer::~CinematicRenderer(void) {
 
 bool CinematicRenderer::create(void) {
 
+    /*
     vislib::graphics::gl::ShaderSource vert, frag;
 
     const char *shaderName = "textureShader";
 
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) { 
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) {  // anpassen!
             return false; 
         }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { 
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { // anpassen!
             return false; 
         }
         if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -131,7 +133,7 @@ bool CinematicRenderer::create(void) {
             "Unable to compile %s shader: Unknown exception\n", shaderName);
         return false;
     }
-
+    */
 	return true;
 }
 
@@ -141,7 +143,7 @@ bool CinematicRenderer::create(void) {
 */
 void CinematicRenderer::release(void) {
 
-    this->textureShader.Release();
+    //this->textureShader.Release();
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
