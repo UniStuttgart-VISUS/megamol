@@ -1,5 +1,5 @@
 # OSPRay plugin
-[OSPRay](http://ospray.org) is a CPU ray tracing engine and is one project of the Software Defined Disualization (SDVis) open source initiative from Intel (http://sdvis.org/).
+[OSPRay](http://ospray.org) is a CPU ray tracing engine and is one project of the Software Defined Disualization (SDVis) open source initiative of Intel (http://sdvis.org/).
 It builds on top of the high-performance ray tracing kernels of [Embree](https://embree.github.io/) and the [ISPC](https://ispc.github.io/) SPMD compiler.
 
 In this plugin, most of the functionality of OSPRay is covered and can be used via MegaMol modules and MegaMol calls.
@@ -19,5 +19,5 @@ If OSPRay is not automatically found set the appropriate `ospray_DIR`. Hint: The
 
 ## Modules
 
-As already showed in the module graph, the OSPRay plugin has three different kinds of modules: the `OSPRayStructure`, `OSPRayLight`, and  `OSPRayMaterial`.
-As a additional module the main module of this plugin is the `OSPRayRenderer`.
+As seen in the figure above, the OSPRay plugin has three different kinds of modules: `OSPRayStructure`, `OSPRayLight`, and  `OSPRayMaterial`.
+While these three modules are processing the actual data and several parameters, main module of this plugin is the `OSPRayRenderer` that communicats to OSPRay via its API.
