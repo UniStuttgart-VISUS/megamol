@@ -11,6 +11,7 @@
     - [Jobs: Converting Data](#jobs)
     - [Advanced Usage](#advanced-usage)
     - [Configuration Files](#configuration-files)
+    - [Appendix](#appendix)
 
 <!-- /TOC -->
 
@@ -96,51 +97,52 @@ On the console prompt, start `make`:
 
 ### Configuration
 
-After successfully installing or compiling MegaMol TM you should have all executable files inside
-your bin folder.
+After successfully installing or compiling MegaMol&trade; you should have all executable files inside
+your bin folder. Some setup still needs to be done:
+
+#### General Settings
 
 Create a file megamol.cfg in this bin directory, with the content shown in appendix A.1.
-Locate line 7 containing the tag `<appdir path="." />`. Both relative and absolute path should work
+Locate line 3 containing the tag `mmSetAppDir`. Both relative and absolute path should work
 here fine, it is recommended to change the path in this line to the global path to the MegaMol&trade;
 application bin directory, e.g.:
 
-```xml
-    <appdir path="/home/user/megamol/bin" />
+```lua
+    mmSetAppDir("U:/home/user/src/megamol-dev/bin")
 ```
+#### Logging
 
-Line 5 configures the log mechanism of MegaMol TM . Adjusting the value of echolevel changes
+Line 6+7 configures the log mechanism of MegaMol&trade; . Adjusting the value of echolevel changes
 the amount of log information printed on the console. Specifying a log file and the level informs
-MegaMol TM to write a log file and print the messages of the requested level into that file. The log
+MegaMol&trade; to write a log file and print the messages of the requested level into that file. The log
 level is a numeric value. All messages with lower numeric values will be printed (or saved). The
 asterisk stands for the highest numeric value, thus printing all messages.
-All MegaMol TM XML files support condition tags (see lines 20 to 27, for example). All tags
-inside these condition tags are only evaluated if the value of cond in the opening condition tag
-evaluates to true. One of the most basic conditions is shown in the example configuration file,
-i.e. the value of debug. This variable is true only if the debug version of MegaMol TM is being run.
-Note the negation operator ! to test if MegaMol TM is not the debug version. The configuration
-file uses conditional tags to load the matching release versions or debug versions of all configured
-plugins. Extend the configuration accordingly if you introduce new plugins into your installation.
 
-```xml
-    <log file="" level="0" echolevel="*" />
+```lua
+    mmSetLogFile("")
+    mmSetLogLevel(0)
+    mmSetEchoLevel('*')
 ```
 
+#### Plugins
+
+Extend the configuration if you introduce new plugins into your installation.
 Although, there are different ways to specify the plugins to be loaded, the tags in the example
-configuration file are the most secure way. Each <plugin> tag requires three attributes:
+configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
 
 - `path` should be the path to find the plugin in. The example configuration file assumes
-to find the plugins in the same directory as the MegaMol TM executable (which is the
+to find the plugins in the same directory as the MegaMol&trade; executable (which is the
 case for Windows installations. On Linux systems you need to change this path (e.g. to
 ../../lib/megamol).
 - `name` is the file name of the plugin.
-- `action` refers to an internal parameter of MegaMol TM and should always be include.
+- `action` refers to an internal parameter of MegaMol&trade; and should always be include.
 
-Rendering modules from plugins require shader codes to function. MegaMol TM searches these
+Rendering modules from plugins require shader codes to function. MegaMol&trade; searches these
 codes in all registered shader directories. To register a shader directory, add a corresponding tag
 to the configuration file.
 
-```xml
-    <plugin path="/nethome/fernanor/software/megamol/lib" name="*.mmplg" action="include" />
+```lua
+    mmPluginLoaderInfo("U:/home/user/src/megamol-dev/bin", "*.mmplg", "include")
 ```
 
 ## Viewing Data Sets
@@ -152,7 +154,7 @@ website.
 ### Views, Modules and Calls
 
 The run time functionality of MegaMol&trade; is constructed by modules and calls. These two type of
-objects are instantiated at run time, interconnected and build the module graph. Figure 3.1 shows
+objects are instantiated at run time, interconnected and build the module graph. The [Example Graph] shows
 an example module graph containing a rendering content of a window view, a renderer, a data
 source, and two modules providing additional information for the renderer. The modules, shown
 as blue boxes, are interconnected by call objects, shown as gray boxes. The connection end point
@@ -537,3 +539,32 @@ how special characters and strings are escaped.
 ## Configuration Files
 
 These files are also part of the MegaMol&trade; Release 1.1 download packages.
+
+## Appendix
+
+Main config file:
+
+```lua
+    print('Hi, I am the megamolconfig.lua!')
+
+    -- mmSetAppDir("U:/home/user/src/megamol-dev/bin")
+    mmSetAppDir(".")
+
+    mmSetLogFile("")
+    mmSetLogLevel(0)
+    mmSetEchoLevel('*')
+
+    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
+    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
+
+    mmPluginLoaderInfo("U:/home/reina/src/megamol-dev/bin", "*.mmplg", "include")
+
+    -- mmSetConfigValue("*-window", "w1280h720")
+    mmSetConfigValue("*-window", "w720h720")
+    mmSetConfigValue("consolegui", "on")
+
+    mmSetConfigValue("LRHostEnable", "true")
+
+    return "done with megamolconfig.lua."
+    -- error("megamolconfig.lua is not happy!")
+```
