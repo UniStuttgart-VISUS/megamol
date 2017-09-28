@@ -331,7 +331,12 @@ to be at least as large as imgWidth and imgHeight. The values for tileWidth and 
 are limited by the maximum texture size, maximum frame buffer object size and graphics memory
 size of your graphics card. Thus, these values are often limited, e.g. to 8192.
 
-![Screenshot](pics/screenshooter.png "The parameter filename specifies the path to the image file to be created. MegaMol&trade; only creates PNG files. Hit the button trigger to have MegaMol&trade; create the requested screenshot.")
+<center>
+<img src="pics/screenshooter.png" alt="Screenshooter" style="width: 512px;"/>
+<p style="text-align: left; width: 512px;">
+The parameter filename specifies the path to the image file to be created. MegaMol&trade; only creates PNG files. Hit the button trigger to have MegaMol&trade; create the requested screenshot.
+</p>
+</center>
 
 ## Making simple Videos
 
@@ -380,7 +385,7 @@ file and edit it manually with a text editor. Replace the <view> tags with the s
 ### Converting to MMPLD
 
 The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading binary memory
-dump of MegaMol&trade; meant for small and mid-sized data sets ( 1-10 mio. particles). MegaMol&trade;
+dump of MegaMol&trade; meant for small and mid-sized data sets (1-10 mio. particles). MegaMol&trade;
 can convert most of it’s supported file formats to MMPLD file format. More precisely, all file
 formats which are loaded by a MegaMol&trade; module supporting the MultiParticleDataCall can
 be converted to MMPLD. For this, specify a converter job using a DataWriterJob module and
