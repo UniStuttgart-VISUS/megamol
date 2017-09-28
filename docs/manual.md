@@ -145,22 +145,109 @@ to the configuration file.
     mmPluginLoaderInfo("U:/home/user/src/megamol-dev/bin", "*.mmplg", "include")
 ```
 
+#### Global Settings
+
+The configuration file also specifies global settings variables which can modify the behavior of
+different modules. Two such variables are set in the example configuration file.
+On line 16 the variable `*-window` is set. This variable specifies the default position and size
+for all rendering windows MegaMol&trade; will create. The asterisk represents any window name. If
+you set a variable with a specific name, windows with exactly this name will respect the settings
+variable. For example, test-window will specify the value for the window created by the view
+instance test.
+
+```lua
+    mmSetConfigValue("*-window", "w720h720")
+```
+
+The value itself contains five variables:
+- The first two variables are prefixed with `x` and `y` and specify the location of the window in
+screen pixel coordinates.
+- The second two variables are prefixed with `w` and `h` and specify the size of the client area of
+the window in pixels.
+- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons
+and border from the created window. This variable allows to create borderless windows
+filling the complete screen for full screen rendering.
+
+The second settings variable, specified on line 45, activates (or deactivates) the GUI of the console
+front end, that is the AntTweakBar.
+
+```lua
+    mmSetConfigValue("consolegui", "on")
+```
+
+This concludes the building and configuring of MegaMol&trade; . Test your installation following
+the description in the following section.
+
+### Tests
+
+The test MegaMol&trade; simple start the front end executable.
+Open a console and change your working directory to the MegaMol&trade; install directory. Start
+the MegaMol&trade; start script:
+./megamol.sh
+Alternatively, you can decent into the bin directory and start the front end directly. Doing so,
+you must ensure that the additional shared objects can be found and loaded. Enter the command:
+cd bin
+LD_LIBRARY_PATH=. ./MegaMolCon
+This direct invocation is not recommended. Thus, the remaining examples in this manual will
+assume that you use the start shell script.
+MegaMol&trade; should start and should print several messages to the console. The leading number
+of each line, is the log level. There should be no output of warnings (log level of 100 or less) or
+errors (log level 1). The output should look like this:
+MegaMol (&trade; ) Console
+Copyright ( c ) 2006 - 2015 by MegaMol Team : VISUS ( Universitaet
+Stuttgart , Germany ) , TU Dresden ( Dresden , Germany )
+Alle Rechte vorbehalten .
+All rights reserved .
+Called : D :\ Uni \ Vis - Tutorial - Stick \ MegaMol \ portable \ bin \ MegaMolCon .
+exe
+250| Path "../ share / megamol / core / Shaders " added as shader search
+path .
+...
+250| Configuration value "* - window " set to " w1280h720 ".
+250| Configuration value " consolegui " set to " on ".
+100| AppDir resolved to " D :\ Uni \ Vis - Tutorial - Stick \ MegaMol \ portable
+\ bin "
+350| Directory " application " is " D :\ Uni \ Vis - Tutorial - Stick \ MegaMol \
+portable \ bin "
+200| Configuration sucessfully loaded from " D :\ Uni \ Vis - Tutorial -
+Stick \ MegaMol \ portable \ bin \ megamol . cfg "
+200| Plugin mmstd_datatools loaded : 15 Modules , 0 Calls
+...
+200| Core Instance destroyed
+
+For a better test you should invoke MegaMol&trade; requesting a simple rendering. Then you can
+be sure that the graphics drivers, graphics libraries and shader codes are correctly found and are working.
+Try: 
+
+    $ ./megamol.sh -i testspheres inst
+
+<center>
+<a name="testrunpic"></a>
+<img src="pics/testspheres.png" alt="First test results" style="width: 768px;"/>
+<p style="text-align: left; width: 768px;">
+MegaMol running the testspheres instance. The highlighted option in the AntTweak-
+Bar on the right side of the window adjusts the animation speed.
+</p>
+</center>
+
+MegaMol&trade; should now open a rendering window showing a generated data set with several
+colored spheres. Hitting the `space` key starts and stops the animation playback. In the AntTweak-
+Bar, on the left side of the window, you can adjust all parameters of the running MegaMol&trade;
+instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter you can adjust the playback speed of the animation.
+
 ## Viewing Data Sets
 
 In this chapter discusses the principle usage of the prepared project files for data set viewing. This
-project script files are available in the script and example package from the MegaMol&trade; project
+project script files are available in the *script and example* package from the MegaMol&trade; project
 website.
 
 ### Views, Modules and Calls
 
-The run time functionality of MegaMol&trade; is constructed by modules and calls. These two type of
-objects are instantiated at run time, interconnected and build the module graph. The [Example Graph] shows
-an example module graph containing a rendering content of a window view, a renderer, a data
-source, and two modules providing additional information for the renderer. The modules, shown
-as blue boxes, are interconnected by call objects, shown as gray boxes. The connection end point
-at the modules are CallerSlots, shown as red triangles, and CalleeSlots shown as green triangles.
+The run time functionality of MegaMol&trade; is constructed by *modules* and *calls*. These two type of
+objects are instantiated at run time, interconnected and build the *module graph*. The figure [Example Graph](#examplegraph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. The connection end point at the modules are *CallerSlots*, shown as red triangles, and *CalleeSlots* shown as green triangles.
 
 <center>
+<a name="examplegraph"></a>
 <img src="pics/example_graph.png" alt="Example graph" style="width: 1024px;"/>
 <p style="text-align: left; width: 1024px;">
 An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.""An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.
@@ -168,22 +255,23 @@ An example module graph. Left-most module view of class View3D represents the re
 </center>
 
 The module graph follows the pull pattern. This means, that modules request function invo-
-cation by other modules. For example, the view modules needs to update the window content.
-The view modules thus invokes the renderer module to provide a new rendering. The renderer
+cation by other modules. For example, the *view* modules needs to update the window content.
+The *view* modules thus invokes the *renderer* module to provide a new rendering. The *renderer*
 calls the data source if new data is available or to provide the old cached data.
 
 #### Modules and calls
 
-Modules are the functional entities of MegaMol&trade; . They provide several programmatic access
-points, the slots. Two types of these slots are shown in figure 3.1 as colored arrow heads.
-CalleeSlots are access points of modules, through which these can be called to perform a
-function. For example, modules of class SimpleSphereRenderer provide a CalleeSlot rendering
+*Modules* are the functional entities of MegaMol&trade; . They provide several programmatic access
+points, the *slots*. Two types of these slots are shown in figure [Example Graph](#examplegraph) as colored arrow heads.
+
+*CalleeSlots* are access points of modules, through which these can be called to perform a
+function. For example, modules of class `SimpleSphereRenderer` provide a CalleeSlot rendering
 through which the rendering function can be invoked.
 The counterparts are CallerSlots which are outgoing access points. These allow modules to
-call other modules. Modules of class View3D provide a corresponding slot rendering to call a
+call other modules. Modules of class `View3D` provide a corresponding slot `rendering` to call a
 connected renderer.
 These two types of slots are connected using objects of call classes. These are shown as gray
-boxes in figure 3.1. Both CalleeSlots and CallerSlots specify types of calls they are compatible
+boxes in figure 3.1. Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible
 with. In the case of the above examples of renderings-relates slots, this is the type CallRender3D.
 Calls do not contains signification functionality. Instead they are thin interfaces meant for
 data transport. For example, data to be visualized is loaded by data source modules. In figure 3.1
