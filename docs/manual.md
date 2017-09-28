@@ -65,9 +65,17 @@ these environments.
 #### Windows
 
 #### Linux
+Tested with
+
+    $ cat /proc/version
+    Linux version 4.4.0-93-generic (buildd@lgw01-03) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4) ) #116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017
+
 As prerequisites, following packages from the repository are neccessary:
 
-    $ sudo apt install 
+    $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev \
+                       uuid-dev libexpat-dev libunwind-dev libxrandr-dev \
+                       libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+
 
 First, download the software package from github:
 
@@ -201,7 +209,7 @@ modules instantiated as part of the view will be create inside this namespace. F
 project file seen in appendix A.2 defines the module data as part of the view dataview. If this
 view is instantiated by the command line:
 
-    console.exe -i dataview inst
+    $ console.exe -i dataview inst
 
 then the module will be created with the full name ::inst::data. Correspondingly, it’s param-
 eter slot filename can be globally addressed by ::inst::data::filename. This allows for the
@@ -422,7 +430,12 @@ The Configurator is a utility application for editing MegaMol&trade; project fil
 it allows to edit the modules, calls and parameters to be instantiated and set for view instances
 (see sections 3.1 and 3.2). Figure 5.1 shows the main GUI window of the application.
 
-![Configurator](pics/configurator.png "The Configurator main GUI.")
+<center>
+<img src="pics/configurator.png" alt="Configurator" style="width: 1024px;"/>
+<p style="text-align: center; width: 1024px;">
+The Configurator main GUI.
+</p>
+</center>
 
 The Configurator is written in C#. The Configurator can be run on Linux using Mono 1 .
 However, we never tested compiling the Configurator with Mono and do not support this process.
