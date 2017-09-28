@@ -13,3 +13,5 @@ configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 
 configurator/MegaMolConf/Resources/mmconfig\.res
+
+build-linux/
