@@ -270,9 +270,7 @@ end loads project files (using `-p`) and requests instantiation of views and job
 #### Views 
 <a name=views></a>
 
-TODO Which file is used here?
-
-*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in appendix TODO defines the module data as part of the view dataview. If this view is instantiated by the command line:
+*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line:
 
     $ console.exe -i dataview inst
 
@@ -330,7 +328,7 @@ At the lines 24 to 27 the modules are interconnected using call objects. The cor
 
 One important function of project files can be seen, for example, at line 13: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
-<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 8 from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
+<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 8, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
 
 ### View Interaction
 
