@@ -10,7 +10,7 @@ if(BUILD_PROTEIN_UNCERTAINTY_PLUGIN)
   
   set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_UNCERTAINTY_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN BUILD_PROTEIN_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core mmstd_trisoup protein_calls protein glload)
+  set(LIBS vislib core mmstd_trisoup protein_calls protein glad)
   include_directories("include" "src")
 
   # Build MegaMol Plugin
@@ -31,7 +31,7 @@ if(BUILD_PROTEIN_UNCERTAINTY_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core mmstd_trisoup protein_calls protein)
+  add_dependencies(${PROJECT_NAME} vislib glad core mmstd_trisoup protein_calls protein)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
