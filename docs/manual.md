@@ -44,29 +44,24 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 
 ## Installation and Setup
 
-This chapter discusses installation and setup of MegaMol&trade; , either from the pre-built binary
-packages or from the source code repository. The latter is, however, meant for experience users.
-MegaMol&trade; targets Microsoft Windows (Windows 7 or newer, x86 and x64) and Linux (x64)
-as supported environments. Currently, Ubuntu is used as Linux distribution for development.
-Further platforms are not considered during the development. While MegaMol&trade; might work on
-further platforms, the development team will currently not grant any support for problems on
-these environments.
+This chapter discusses installation and setup of MegaMol&trade; , either from the pre-built binary packages or from the source code repository. The latter is, however, meant for experience users. MegaMol&trade; targets Microsoft Windows (Windows 7 or newer, x86 and x64) and Linux (x64) as supported environments. Currently, Ubuntu is used as Linux distribution for development.
+Further platforms are not considered during the development. While MegaMol&trade; might work on further platforms, the development team will currently not grant any support for problems on these environments.
 
 ### Building from source
 
 #### Windows
 
-For Window you will need to install `CMake`, and just load the `CMakeLists.txt` in the root directory of the repository. Click `Ok` to generate the build files.
+For Window you will need to install `CMake`, and just load the `CMakeLists.txt` in the root directory of the repository. Click `Configure` a few times (until all red entries disappear).Then click `Generate` to generate the build files.
 
 <center>
 <a name="cmake_windows"></a>
 <img src="pics/cmake_windows.png" alt="CMake Windows" style="width: 768px;"/>
-<p style="text-align: left; width: 768px;">
+<p style="width: 768px;">
 `CMake` screenshot showing generation of build files.
 </p>
 </center>
 
-<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see ![ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on github.
+<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see [ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on github.
 
 
 
