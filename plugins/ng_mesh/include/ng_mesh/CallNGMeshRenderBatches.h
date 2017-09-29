@@ -100,7 +100,7 @@ namespace ngmesh {
 					GLsizei					draw_cnt;
 				};
 
-				struct MeshShaderParams
+				struct ObjectShaderParams
 				{
 					uint8_t*	raw_data;
 					size_t		byte_size;
@@ -131,7 +131,7 @@ namespace ngmesh {
 					ShaderPrgmData*			shader_prgms;
 					MeshData*				meshes;
 					DrawCommandData*		draw_commands;
-					MeshShaderParams*		mesh_shader_params;
+					ObjectShaderParams*		obj_shader_params;
 					MaterialShaderParams*	mtl_shader_params;
 					uint32_t*				update_flags;
 				};				
@@ -179,7 +179,7 @@ namespace ngmesh {
 						sizeof(ShaderPrgmData)
 						+ sizeof(MeshData)
 						+ sizeof(DrawCommandData)
-						+ sizeof(MeshShaderParams)
+						+ sizeof(ObjectShaderParams)
 						+ sizeof(MaterialShaderParams)
 						+ sizeof(uint32_t));
 
@@ -190,14 +190,14 @@ namespace ngmesh {
 					m_head.shader_prgms = (ShaderPrgmData*)m_head.raw_buffer;
 					m_head.meshes = (MeshData*)(m_head.shader_prgms + m_head.used_batch_cnt);
 					m_head.draw_commands = (DrawCommandData*)(m_head.meshes + m_head.used_batch_cnt);
-					m_head.mesh_shader_params = (MeshShaderParams*)(m_head.draw_commands + m_head.used_batch_cnt);
-					m_head.mtl_shader_params = (MaterialShaderParams*)(m_head.mesh_shader_params + m_head.used_batch_cnt);
+					m_head.obj_shader_params = (ObjectShaderParams*)(m_head.draw_commands + m_head.used_batch_cnt);
+					m_head.mtl_shader_params = (MaterialShaderParams*)(m_head.obj_shader_params + m_head.used_batch_cnt);
 					m_head.update_flags = (uint32_t*)(m_head.mtl_shader_params + m_head.used_batch_cnt);
 
 					std::memcpy(m_head.shader_prgms, rhs.m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmData));
 					std::memcpy(m_head.meshes, rhs.m_head.meshes, m_head.used_batch_cnt * sizeof(MeshData));
 					std::memcpy(m_head.draw_commands, rhs.m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandData));
-					std::memcpy(m_head.mesh_shader_params, rhs.m_head.mesh_shader_params, m_head.used_batch_cnt * sizeof(MeshShaderParams));
+					std::memcpy(m_head.obj_shader_params, rhs.m_head.obj_shader_params, m_head.used_batch_cnt * sizeof(ObjectShaderParams));
 					std::memcpy(m_head.mtl_shader_params, rhs.m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParams));
 					std::memcpy(m_head.update_flags, rhs.m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
 
@@ -225,8 +225,8 @@ namespace ngmesh {
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
-						m_head.mesh_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
-						offset += m_head.mesh_shader_params[i].byte_size;
+						m_head.obj_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
+						offset += m_head.obj_shader_params[i].byte_size;
 
 						m_head.mtl_shader_params[i].data = reinterpret_cast<MaterialParameters*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[i].elements_cnt;
@@ -257,7 +257,7 @@ namespace ngmesh {
 						sizeof(ShaderPrgmData)
 						+ sizeof(MeshData)
 						+ sizeof(DrawCommandData)
-						+ sizeof(MeshShaderParams)
+						+ sizeof(ObjectShaderParams)
 						+ sizeof(MaterialShaderParams)
 						+ sizeof(uint32_t));
 
@@ -268,14 +268,14 @@ namespace ngmesh {
 					new_head.shader_prgms = (ShaderPrgmData*) new_head.raw_buffer;
 					new_head.meshes = (MeshData*)(new_head.shader_prgms + new_batch_cnt);
 					new_head.draw_commands = (DrawCommandData*)(new_head.meshes + new_batch_cnt);
-					new_head.mesh_shader_params = (MeshShaderParams*)(new_head.draw_commands + new_batch_cnt);
-					new_head.mtl_shader_params = (MaterialShaderParams*)(new_head.mesh_shader_params + new_batch_cnt);
+					new_head.obj_shader_params = (ObjectShaderParams*)(new_head.draw_commands + new_batch_cnt);
+					new_head.mtl_shader_params = (MaterialShaderParams*)(new_head.obj_shader_params + new_batch_cnt);
 					new_head.update_flags = (uint32_t*)(new_head.mtl_shader_params + new_batch_cnt);
 
 					std::memcpy(new_head.shader_prgms, m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmData));
 					std::memcpy(new_head.meshes, m_head.meshes, m_head.used_batch_cnt * sizeof(MeshData));
 					std::memcpy(new_head.draw_commands, m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandData));
-					std::memcpy(new_head.mesh_shader_params, m_head.mesh_shader_params, m_head.used_batch_cnt * sizeof(MeshShaderParams));
+					std::memcpy(new_head.obj_shader_params, m_head.obj_shader_params, m_head.used_batch_cnt * sizeof(ObjectShaderParams));
 					std::memcpy(new_head.mtl_shader_params, m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParams));
 					std::memcpy(new_head.update_flags, m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
 
@@ -315,8 +315,8 @@ namespace ngmesh {
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandData::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
-						m_head.mesh_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
-						offset += m_head.mesh_shader_params[i].byte_size;
+						m_head.obj_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
+						offset += m_head.obj_shader_params[i].byte_size;
 
 						m_head.mtl_shader_params[i].data = reinterpret_cast<MaterialParameters*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[i].elements_cnt;
@@ -329,11 +329,12 @@ namespace ngmesh {
 					m_data = new_data;
 				}
 
-				void addBatch(ShaderPrgmData shader_prgm,
-					MeshData mesh_data,
-					DrawCommandData draw_commands,
-					MeshShaderParams mesh_shader_params,
-					MaterialShaderParams mtl_shader_params)
+				void addBatch(
+					ShaderPrgmData			shader_prgm,
+					MeshData				mesh_data,
+					DrawCommandData			draw_commands,
+					ObjectShaderParams		obj_shader_params,
+					MaterialShaderParams	mtl_shader_params)
 				{
 					if (m_head.used_batch_cnt == m_head.available_batch_cnt)
 						reallocateHeadBuffer(m_head.available_batch_cnt + 5);
@@ -342,7 +343,7 @@ namespace ngmesh {
 					size_t byte_size = shader_prgm.char_cnt
 						+ mesh_data.index_data.byte_size + mesh_data.vertex_data.byte_size
 						+ draw_commands.draw_cnt * sizeof(DrawCommandData::DrawElementsCommand)
-						+ mesh_shader_params.byte_size
+						+ obj_shader_params.byte_size
 						+ mtl_shader_params.elements_cnt * sizeof(MaterialParameters);
 
 					// check if allocated size fits old data + new data
@@ -381,10 +382,10 @@ namespace ngmesh {
 					offset += sizeof(DrawCommandData::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
 					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandData::DrawElementsCommand));
 
-					m_head.mesh_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset); 
-					m_head.mesh_shader_params[idx].byte_size = mesh_shader_params.byte_size;
-					offset += m_head.mesh_shader_params[idx].byte_size;
-					std::memcpy(m_head.mesh_shader_params[idx].raw_data, mesh_shader_params.raw_data, mesh_shader_params.byte_size);
+					m_head.obj_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset); 
+					m_head.obj_shader_params[idx].byte_size = obj_shader_params.byte_size;
+					offset += m_head.obj_shader_params[idx].byte_size;
+					std::memcpy(m_head.obj_shader_params[idx].raw_data, obj_shader_params.raw_data, obj_shader_params.byte_size);
 
 					m_head.mtl_shader_params[idx].data = reinterpret_cast<MaterialParameters*>(m_data.raw_buffer + offset);
 					m_head.mtl_shader_params[idx].elements_cnt = mtl_shader_params.elements_cnt;
@@ -399,7 +400,7 @@ namespace ngmesh {
 				ShaderPrgmData const&		getShaderProgramData(size_t batch_idx) const { return m_head.shader_prgms[batch_idx]; }
 				MeshData const&				getMeshData(size_t batch_idx) const { return m_head.meshes[batch_idx]; }
 				DrawCommandData	const&		getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
-				MeshShaderParams const&		getMeshShaderParams(size_t batch_idx) const { return m_head.mesh_shader_params[batch_idx]; }
+				ObjectShaderParams const&	getObjectShaderParams(size_t batch_idx) const { return m_head.obj_shader_params[batch_idx]; }
 				MaterialShaderParams const&	getMaterialShaderParams(size_t batch_idx) const { return m_head.mtl_shader_params[batch_idx]; }
 				uint32_t					getUpdateFlags(size_t batch_idx) const { return m_head.update_flags[batch_idx]; }
 			};

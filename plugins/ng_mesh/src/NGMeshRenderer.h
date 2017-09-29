@@ -120,14 +120,14 @@ namespace ngmesh {
 		 * @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
 		 * @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
 		 * @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
-		 * @param mesh_shader_params Additional data used by the shader during rendering that is specific to the rendered object
+		 * @param obj_shader_params Additional data used by the shader during rendering that is specific to the rendered object
 		 * @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
 		 */
 		void addRenderBatch(
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
 			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params);
 
 		/**
@@ -137,7 +137,7 @@ namespace ngmesh {
 		* @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
 		* @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
 		* @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
-		* @param mesh_shader_params Additional data used by the shader during rendering that is specific to the rendered object
+		* @param obj_shader_params Additional data used by the shader during rendering that is specific to the rendered object
 		* @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
 		* @param update_flags The bit flags that signal which parts of the render batch data needs to be updated
 		*/
@@ -146,7 +146,7 @@ namespace ngmesh {
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
 			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
 			uint32_t																update_flags);
 
@@ -432,7 +432,7 @@ namespace ngmesh {
 			std::unique_ptr<GLSLShader>		shader_prgm;
 			std::unique_ptr<Mesh>			mesh;
 			std::unique_ptr<BufferObject>	draw_commands;
-			std::unique_ptr<BufferObject>	mesh_shader_params;
+			std::unique_ptr<BufferObject>	obj_shader_params;
 			std::unique_ptr<BufferObject>	mtl_shader_params;
 		};
 

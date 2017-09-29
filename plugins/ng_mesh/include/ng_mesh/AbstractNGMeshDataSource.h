@@ -18,7 +18,7 @@
 namespace megamol {
 namespace ngmesh {
 
-	class AbstractNGMeshDataSource : public core::Module
+	class NG_MESH_API AbstractNGMeshDataSource : public core::Module
 	{
 	public:
 		AbstractNGMeshDataSource();

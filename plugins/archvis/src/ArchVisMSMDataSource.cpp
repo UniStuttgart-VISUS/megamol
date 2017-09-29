@@ -14,14 +14,15 @@
 #include "mmcore/param/FilePathParam.h"
 
 #include "stdafx.h"
-#include "NGMeshDebugDataSource.h"
+#include "ArchVisMSMDataSource.h"
 
 using namespace megamol;
 using namespace megamol::ngmesh;
 
-NGMeshDebugDataSource::NGMeshDebugDataSource() :
+ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_shaderFilename_slot("shader filename", "The name of to the shader file to load"),
-	m_geometryFilename_slot("mesh filename", "The path to the mesh file to load")
+	m_geometryFilename_slot("mesh filename", "The path to the mesh file to load"),
+	m_IPAdress_slot("ip adress", "The ip adress of the sensor data transfer")
 {
 	this->m_shaderFilename_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
@@ -30,11 +31,11 @@ NGMeshDebugDataSource::NGMeshDebugDataSource() :
 	this->MakeSlotAvailable(&this->m_geometryFilename_slot);
 }
 
-NGMeshDebugDataSource::~NGMeshDebugDataSource()
+ArchVisMSMDataSource::~ArchVisMSMDataSource()
 {
 }
 
-bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
+bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 {
 	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
 	if (render_batches_call == NULL)
@@ -64,14 +65,14 @@ bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
 	return true;
 }
 
-bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
+bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
 {
 	std::cout << "loading data" << std::endl;
 
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams		obj_shader_params;
+	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams		mesh_shader_params;
 	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
 
 	shader_prgm_data.char_cnt = shader_filename.length();
@@ -129,8 +130,8 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	draw_command_data.draw_cnt = 1000000;
 	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
 
-	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
-	obj_shader_params.raw_data = new uint8_t[obj_shader_params.byte_size];
+	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
+	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
 
 	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
 	{
@@ -151,7 +152,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 		object_transform.SetAt(1, 3, loc_distr(generator));
 		object_transform.SetAt(2, 3, loc_distr(generator));
 
-		std::memcpy(obj_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
+		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 	}
 
 	mtl_shader_params.elements_cnt = 0;
@@ -161,7 +162,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 		shader_prgm_data,
 		mesh_data,
 		draw_command_data,
-		obj_shader_params,
+		mesh_shader_params,
 		mtl_shader_params);
 	
 	return true;

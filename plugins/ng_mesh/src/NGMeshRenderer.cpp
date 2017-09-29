@@ -34,7 +34,7 @@ bool NGMeshRenderer::create()
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		mesh_shader_params;
+	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		obj_shader_params;
 	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
 
 	shader_prgm_data.raw_string = "NGMeshDebug";
@@ -81,8 +81,8 @@ bool NGMeshRenderer::create()
 	draw_command_data.draw_cnt = 1000000;
 	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
 
-	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
-	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
+	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
+	obj_shader_params.raw_data = new uint8_t[obj_shader_params.byte_size];
 
 	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
 	{
@@ -103,16 +103,15 @@ bool NGMeshRenderer::create()
 		object_transform.SetAt(1, 3, loc_distr(generator));
 		object_transform.SetAt(2, 3, loc_distr(generator));
 
-		std::memcpy(mesh_shader_params.raw_data + i*(16*4), object_transform.PeekComponents(), 16*4);
+		std::memcpy(obj_shader_params.raw_data + i*(16*4), object_transform.PeekComponents(), 16*4);
 	}
 
 	mtl_shader_params.elements_cnt = 0;
 	
-	addRenderBatch(shader_prgm_data, mesh_data, draw_command_data, mesh_shader_params, mtl_shader_params);
+	addRenderBatch(shader_prgm_data, mesh_data, draw_command_data, obj_shader_params, mtl_shader_params);
 	
 	//TODO delete stuff again
 	*/
-
 
 	return true;
 }
@@ -149,7 +148,7 @@ void NGMeshRenderer::addRenderBatch(
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
 	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params)
 {
 	// Push back new RenderBatch object
@@ -197,10 +196,10 @@ void NGMeshRenderer::addRenderBatch(
 	m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
 
 	// Create GPU buffer for mesh related shader parameters
-	m_render_batches.back().mesh_shader_params = std::make_unique<BufferObject>(
+	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
 		GL_SHADER_STORAGE_BUFFER,
-		mesh_shader_params.raw_data,
-		mesh_shader_params.byte_size,
+		obj_shader_params.raw_data,
+		obj_shader_params.byte_size,
 		GL_DYNAMIC_DRAW
 		);
 
@@ -221,7 +220,7 @@ void NGMeshRenderer::updateRenderBatch(
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams const&		mesh_shader_params,
+	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
 	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
 	uint32_t																update_flags)
 {
@@ -341,7 +340,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 				render_batches->getShaderProgramData(i),
 				render_batches->getMeshData(i),
 				render_batches->getDrawCommandData(i),
-				render_batches->getMeshShaderParams(i),
+				render_batches->getObjectShaderParams(i),
 				render_batches->getMaterialShaderParams(i)
 			);
 		}
@@ -354,7 +353,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 					render_batches->getShaderProgramData(i),
 					render_batches->getMeshData(i),
 					render_batches->getDrawCommandData(i),
-					render_batches->getMeshShaderParams(i),
+					render_batches->getObjectShaderParams(i),
 					render_batches->getMaterialShaderParams(i),
 					render_batches->getUpdateFlags(i)
 				);
@@ -373,7 +372,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
 		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
 
-		render_batch.mesh_shader_params->bind(0);
+		render_batch.obj_shader_params->bind(0);
 		render_batch.mtl_shader_params->bind(1);
 
 		render_batch.draw_commands->bind();
