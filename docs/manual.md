@@ -319,13 +319,48 @@ MegaMol&trade; provides some internal description of views which can be instanti
 
 ### Project Files
 
-Project files are the primary method to start up MegaMol&trade; . The snippet below shows the content of the project file `pdbcartoonview.mmprj` which can be used to simply view a particle data set.
+Project files are the primary method to start up MegaMol&trade; . The snippets below show the content of the project file `simple_siff.mmprj` and `pdbcartoonview.mmprj` which can be used to simply view the sample particle data sets.
 
-Line 5 opens the view instance description. Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. The view description is named `dataview` and the name for the primary view module is given as `view`.
+Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. Both file define a *view*, which is the only node in the top level node `MegaMol`. The other keywords give a description for the behavior of this view.
 
+#### Example 1: `simple_siff.mmprj`
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
-    <MegaMol type="project" version="1.0">
+    <MegaMol type="project" version="1.3">
+    <!--Use this command line arguments to start MegaMol
+        -p mmpld-view.mmprj -i mmpldview inst -v inst::data::filename 1OGZ.mmpld
+    -->
+    <view name="dataview" viewmod="view">
+        <!-- data loader -->
+        <module class="SIFFDataSource" name="data" />
+        <!-- renderer -->
+        <module class="SimpleSphereRenderer" name="renderer" />
+        <!-- view & setup -->
+        <module class="View3D" name="view" />
+        <module class="LinearTransferFunction" name="colors">
+                <param name="mincolour" value="forestgreen" />
+                <param name="maxcolour" value="lightskyblue" />
+        </module>
+        <module class="ClipPlane" name="clipplane">
+                <param name="colour" value="#80808000" />
+        </module>
+        <!-- screenshooter -->
+        <module class="ScreenShooter" name="screenshooter">
+                <param name="view" value="inst" />
+        </module>
+        <!-- connecting calls -->
+        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata" />
+        <call class="CallRender3D" from="view::rendering" to="renderer::rendering" />
+        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction" />
+        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane" />
+    </view>
+    </MegaMol>
+```
+
+Example 2: `pdbcartoonview.mmprj`
+```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <MegaMol type="project" version="1.3">
     <!-- view definition starts here -->
     <view name="pdbcartoonview" viewmod="view3d">
         <!-- data loader -->
@@ -344,26 +379,53 @@ Line 5 opens the view instance description. Although, it is possible to host mul
 
 ### Code Walkthrough
 
-At the line 7, the *renderer* module class is selected and instantiated.
+After the data sources, the renderer is defined:
+
 ```xml
-        <!-- renderer -->
+        <!-- renderer pdbcartoonview.mmprj-->
         <module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <!-- renderer simple_siff.mmprj-->
+        <module class="SimpleSphereRenderer" name="renderer" />
 ```
 
-The *view* module is specified at line 9.
+After this, the *view* module is specified.
 All used data source modules use mainly slots with the same names, i.e. a *ParameterSlot* named `filename` and a *CalleeSlot* named `getdata`, compatible with MultiParticleDataCall, providing access to the loaded data. Specifying the right config set variable thus allows the caller to use data sets from different file formats with this project file. See the online documentation for more information on these file formats. The recommended file format for MegaMol&trade; currently is <b>MMPLD</b>, and the corresponding data source module is thus the default module.
 
 ```xml
-        <!-- view setup -->
+        <!-- view setup pdbcartoonview.mmprj -->
         <module class="View3d" name="view3d" />
+        <!-- view setup simple_siff.mmprj -->
+        <module class="View3D" name="view" />
+        <module class="LinearTransferFunction" name="colors">
+                <param name="mincolour" value="forestgreen" />
+                <param name="maxcolour" value="lightskyblue" />
+        </module>
+        <module class="ClipPlane" name="clipplane">
+                <param name="colour" value="#80808000" />
+        </module>
 ```
+One important function of project files can be seen in the code for `simple_siff.mmprj`: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
-At the lines 11 to 13 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does therefore work using relative names.
+The following block deals with the modules being interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does therefore work using relative names.
 
 ```xml
-        <!-- connecting calls -->
+        <!-- connecting calls pdbcartoonview.mmprj -->
         <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
         <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
+        <!-- connecting calls simple_siff.mmprj -->
+        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata" />
+        <call class="CallRender3D" from="view::rendering" to="renderer::rendering" />
+        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction" />
+        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane" />
+```
+
+Additionally, the `simple_siff.mmprj` project includes the module *ScreenShooter*. As parameters, the connected view must be specified, which is done by setting the `view` parameter to `inst` which is the name of the view instance given on the command line.
+
+```xml
+        <!-- screenshooter -->
+        <module class="ScreenShooter" name="screenshooter">
+                <param name="view" value="inst" />
+        </module>
 ```
 
 <b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
