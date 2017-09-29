@@ -283,7 +283,7 @@ The run time functionality of MegaMol&trade; is constructed by *modules* and *ca
 <a name="examplegraph"></a>
 <img src="pics/example_graph.png" alt="Example graph" style="width: 1024px;"/>
 <p style="text-align: left; width: 1024px;">
-An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.
+An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph.
 </p>
 </center>
 
