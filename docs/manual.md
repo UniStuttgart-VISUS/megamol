@@ -475,7 +475,6 @@ A (red) *CallerSlot* can only have a single outgoing call, while (green) *Callee
 ### Starting MegaMol
 
 The Configurator allows you to directly start MegaMol&trade; with the currently selected project file. Remember: the Configurator is only an editor for project files and has no online connection to a running MegaMol&trade; instance. You thus need to remember to save your edited project files before starting MegaMol&trade; .
-oeauaoeu
 
 <center>
 <a name="configurator-start"></a>
