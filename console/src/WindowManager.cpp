@@ -13,7 +13,6 @@
 #include "vislib/sys/Log.h"
 #include "utility/ConfigHelper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "GLFW/glfw3.h"
 #include "ViewMouseUILayer.h"
 #include "ButtonParamUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
@@ -24,6 +23,7 @@
 #include "utility/HotFixes.h"
 #include "utility/HotFixFileName.h"
 #include "utility/KHR.h"
+#include "JobManager.h"
 
 const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol\xE2\x84\xA2 - ";
 const int megamol::console::WindowManager::TitlePrefixLength = 13;
@@ -87,6 +87,7 @@ void megamol::console::WindowManager::Shutdown(void) {
     for (std::shared_ptr<gl::Window> win : windows) {
         if (win->IsAlive()) win->RequestClose();
     }
+    megamol::console::JobManager::Instance().Shutdown();
     while (!windows.empty()) Update();
 }
 
@@ -156,7 +157,11 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     }
 
     // get an existing window to share context resources
+#ifndef USE_EGL
     GLFWwindow *share = nullptr;
+#else
+    EGLContext *share = nullptr;
+#endif
     if (!windows.empty()) share = windows[0]->WindowHandle();
 
     // prepare window object

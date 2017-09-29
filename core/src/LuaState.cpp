@@ -19,11 +19,14 @@
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/UTF8Encoder.h"
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <algorithm>
 #include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/Process.h"
 
 extern "C" {
 #include "lua.h"
@@ -50,6 +53,7 @@ bool iequals(const std::string& one, const std::string& other) {
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = mmLogInfo,"
+"  error = error,"
 "  mmLog = mmLog,"
 "  mmLogInfo = mmLogInfo,"
 "  mmGetBitWidth = mmGetBitWidth,"
@@ -60,10 +64,17 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  mmAddShaderDir = mmAddShaderDir,"
 "  mmAddResourceDir = mmAddResourceDir,"
 "  mmPluginLoaderInfo = mmPluginLoaderInfo,"
+"  mmGetModuleParams = mmGetModuleParams,"
 "  mmSetLogFile = mmSetLogFile,"
 "  mmSetLogLevel = mmSetLogLevel,"
 "  mmSetEchoLevel = mmSetEchoLevel,"
 "  mmSetConfigValue = mmSetConfigValue,"
+"  mmGetProcessID = mmGetProcessID,"
+"  mmGetModuleParams = mmGetModuleParams,"
+"  mmGetParamType = mmGetParamType,"
+"  mmGetParamDescription = mmGetParamDescription,"
+"  mmGetParamValue = mmGetParamValue,"
+"  mmSetParamValue = mmSetParamValue,"
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -225,6 +236,13 @@ void megamol::core::LuaState::commonInit() {
 
         lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
 
+        lua_register(L, "mmGetProcessID", &dispatch<&LuaState::GetProcessID>);
+        lua_register(L, "mmGetModuleParams", &dispatch<&LuaState::GetModuleParams>);
+        lua_register(L, "mmGetParamType", &dispatch<&LuaState::GetParamType>);
+        lua_register(L, "mmGetParamDescription", &dispatch<&LuaState::GetParamDescription>);
+        lua_register(L, "mmGetParamValue", &dispatch<&LuaState::GetParamValue>);
+        lua_register(L, "mmSetParamValue", &dispatch<&LuaState::SetParamValue>);
+
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
         //luaL_openlibs(L);
@@ -260,6 +278,16 @@ void megamol::core::LuaState::commonInit() {
     }
 }
 
+
+bool megamol::core::LuaState::getString(int i, std::string& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TSTRING) {
+        auto *res = lua_tostring(L, i);
+        out = std::string(res);
+        return true;
+    }
+    return false;
+}
 
 /*
 * megamol::core::LuaState::LuaState
@@ -313,58 +341,88 @@ bool megamol::core::LuaState::LoadEnviromentString(const std::string& envString)
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName) {
+bool megamol::core::LuaState::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
     if (!input.fail()) {
         std::stringstream buffer;
         buffer << input.rdbuf();
-        return RunString(envName, buffer.str());
+        return RunString(envName, buffer.str(), result);
     } else {
         return false;
     }
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName) {
+bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wstring& fileName, std::string& result) {
     vislib::sys::File input;
     if (input.Open(fileName.c_str(), vislib::sys::File::AccessMode::READ_ONLY,
         vislib::sys::File::ShareMode::SHARE_READ, vislib::sys::File::CreationMode::OPEN_ONLY)) {
         vislib::StringA contents;
         vislib::sys::ReadTextFile(contents, input);
         input.Close();
-        return RunString(envName, std::string(contents));
+        return RunString(envName, std::string(contents), result);
     } else {
         return false;
     }
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script) {
+bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
     if (L != nullptr) {
-        USES_CHECK_LUA;
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
-        CHECK_LUA(lua_pcall(L, 0, LUA_MULTRET, 0));
-        return true;
+        int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
+        if (ret != LUA_OK) {
+            const char *err = lua_tostring(L, -1); // get error from top of stack...
+            //vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
+            result = std::string(err);
+            lua_pop(L, 1); // and remove it.
+            return false;
+        } else {
+            bool good = true;
+            // as a result, we still expect a string, if anything
+            int n = lua_gettop(L);
+            if (n > 0) {
+                if (n > 2) {
+                    vislib::sys::Log::DefaultLog.WriteError("Lua execution returned more than one value");
+                    good = false;
+                } else {
+                    std::string res;
+                    // we are not in a Lua callback, so making lua throw (luaL_checkstring) is not a good idea!
+                    if (getString(1, res)) {
+                        result = res;
+                    } else {
+                        result = "Result is a non-string";
+                        vislib::sys::Log::DefaultLog.WriteError("Lua execution returned non-string");
+                        good = false;
+                    } 
+                }
+                // clean up stack!
+                for (int i = 1; i <= n; i++)
+                    lua_pop(L, 1);
+                return good;
+            }
+            return true;
+        }
     } else {
         return false;
     }
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::string& fileName) {
-    return RunFile("megamol_env", fileName);
+bool megamol::core::LuaState::RunFile(const std::string& fileName, std::string& result) {
+    return RunFile("megamol_env", fileName, result);
 }
 
 
-bool megamol::core::LuaState::RunFile(const std::wstring& fileName) {
-    return RunFile("megamol_env", fileName);
+bool megamol::core::LuaState::RunFile(const std::wstring& fileName, std::string& result) {
+    return RunFile("megamol_env", fileName, result);
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& script) {
-    return RunString("megamol_env", script);
+bool megamol::core::LuaState::RunString(const std::string& script, std::string& result) {
+    return RunString("megamol_env", script, result);
 }
 
 
@@ -578,4 +636,234 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
         }
     }
     return retval;
+}
+
+
+int megamol::core::LuaState::GetProcessID(lua_State *L) {
+    if (this->checkRunning("mmGetProcessID")) {
+        vislib::StringA str;
+        unsigned int id = vislib::sys::Process::CurrentID();
+        str.Format("%u", id);
+        lua_pushstring(L, str.PeekBuffer());
+        return 1;
+    }
+}
+
+
+int megamol::core::LuaState::GetModuleParams(lua_State *L) {
+    if (this->checkRunning("mmGetModuleParams")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (!anoc) {
+            lua_pushstring(L, "GetModuleParams: no root");
+            lua_error(L);
+            return 0;
+        }
+        Module::const_ptr_type mod = Module::dynamic_pointer_cast(const_cast<AbstractNamedObjectContainer*>(anoc.get())->FindNamedObject(paramName));
+        if (!mod) {
+            lua_pushstring(L, "GetModuleParams: module not found");
+            lua_error(L);
+            return 0;
+        }
+
+        std::stringstream answer;
+        vislib::StringA name(mod->FullName());
+        answer << name << "\1";
+        AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+        se = mod->ChildList_End();
+        for (si = mod->ChildList_Begin(); si != se; ++si) {
+            const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
+            if (slot != NULL) {
+                //name.Append("::");
+                //name.Append(slot->Name());
+
+                answer << slot->Name() << "\1";
+
+                vislib::StringA descUTF8;
+                vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
+                answer << descUTF8 << "\1";
+
+                auto psp = slot->Parameter();
+                if (psp.IsNull()) {
+                    std::ostringstream err;
+                    err << "GetModuleParams: ParamSlot " << slot->FullName() << " does seem to hold no parameter";
+                    lua_pushstring(L, err.str().c_str());
+                    lua_error(L);
+                }
+
+                vislib::RawStorage pspdef;
+                psp->Definition(pspdef);
+                // not nice, but we make HEX (base64 would be better, but I don't care)
+                std::string answer2(pspdef.GetSize() * 2, ' ');
+                for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
+                    uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                    uint8_t bh[2] = { static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16) };
+                    for (unsigned int j = 0; j < 2; ++j) answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
+                }
+                answer << answer2 << "\1";
+
+                vislib::StringA valUTF8;
+                vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+
+                answer << valUTF8 << "\1";
+            }
+        }
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
+
+
+bool megamol::core::LuaState::getParamSlot(const std::string routine, const char *paramName, core::param::ParamSlot **out) {
+
+    AbstractNamedObjectContainer::const_ptr_type root = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(this->coreInst->ModuleGraphRoot());
+    if (!root) {
+        std::string err = routine + ": no root";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(paramName);
+    if (!obj) {
+        std::string err = routine + ": parameter name " + paramName + " not found";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    *out = dynamic_cast<core::param::ParamSlot*>(obj.get());
+    if (*out == nullptr) {
+        std::string err = routine + ": parameter name " + paramName + " did not refer to a ParamSlot";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    return true;
+}
+
+
+int megamol::core::LuaState::GetParamType(lua_State *L) {
+    if (this->checkRunning("mmGetParamType")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamType", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "GetParamType: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::RawStorage pspdef;
+            psp->Definition(pspdef);
+            // not nice, but we make HEX (base64 would be better, but I don't care)
+            std::string answer(pspdef.GetSize() * 2, ' ');
+            for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
+                uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                uint8_t bh[2] = { static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16) };
+                for (unsigned int j = 0; j < 2; ++j) answer[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
+            }
+
+            lua_pushstring(L, answer.c_str());
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::GetParamDescription(lua_State *L) {
+    if (this->checkRunning("mmGetParamDescription")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamDescription", paramName, &ps)) {
+
+            vislib::StringA valUTF8;
+            vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
+
+            lua_pushstring(L, valUTF8);
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::GetParamValue(lua_State *L) {
+    if (this->checkRunning("mmGetParamValue")) {
+        auto paramName = luaL_checkstring(L, 1);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("GetParamValue", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "GetParamValue: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::StringA valUTF8;
+            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+
+            lua_pushstring(L, valUTF8);
+            return 1;
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetParamValue(lua_State *L) {
+    if (this->checkRunning("mmSetParamValue")) {
+        auto paramName = luaL_checkstring(L, 1);
+        auto paramValue = luaL_checkstring(L, 2);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        core::param::ParamSlot *ps = nullptr;
+        if (getParamSlot("SetParamValue", paramName, &ps)) {
+
+            auto psp = ps->Parameter();
+            if (psp.IsNull()) {
+                lua_pushstring(L, "SetParamValue: ParamSlot does seem to hold no parameter");
+                lua_error(L);
+                return 0;
+            }
+
+            vislib::TString val;
+            vislib::UTF8Encoder::Decode(val, paramValue);
+
+            if (psp->ParseValue(val)) {
+                lua_pushstring(L, psp->ValueString());
+                return 1;
+            } else {
+                lua_pushstring(L, "SetParamValue: ParseValue failed");
+                lua_error(L);
+                return 0;
+            }
+        } else {
+            // the error is already thrown
+            return 0;
+        }
+    }
+    return 0;
 }
