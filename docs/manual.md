@@ -11,7 +11,6 @@
     - [Jobs: Converting Data](#jobs)
     - [Advanced Usage](#advanced-usage)
     - [Configuration Files](#configuration-files)
-    - [Appendix](#appendix)
 
 <!-- /TOC -->
 
@@ -57,7 +56,22 @@ these environments.
 
 #### Windows
 
+For Window you will need to install `CMake`, and just load the `CMakeLists.txt` in the root directory of the repository. Click `Ok` to generate the build files.
+
+<center>
+<a name="cmake_windows"></a>
+<img src="pics/cmake_windows.png" alt="CMake Windows" style="width: 768px;"/>
+<p style="text-align: left; width: 768px;">
+`CMake` screenshot showing generation of build files.
+</p>
+</center>
+
+<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see ![ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on github.
+
+
+
 #### Linux
+
 Tested with
 
     $ cat /proc/version
@@ -89,32 +103,51 @@ On the console prompt, start `make`:
 
 ### Configuration
 
-After successfully installing or compiling MegaMol&trade; you should have all executable files inside
-your bin folder. Some setup still needs to be done:
+After successfully installing or compiling MegaMol&trade; you should have all executable files inside your bin folder. Some setup still needs to be done.
+Create a file `megamolconfig.lua` in this bin directory, with the following content (it may already exist). You will need to adjust the paths accordingly:
+
+```lua
+    print('Hi, I am the megamolconfig.lua!')
+
+    mmSetAppDir(".")
+
+    mmSetLogFile("")
+    mmSetLogLevel(0)
+    mmSetEchoLevel('*')
+
+    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
+    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
+
+    mmPluginLoaderInfo("U:/home/user/src/megamol-dev/bin", "*.mmplg", "include")
+
+    mmSetConfigValue("*-window", "w720h720")
+    mmSetConfigValue("consolegui", "on")
+
+    mmSetConfigValue("LRHostEnable", "true")
+
+    return "Done with megamolconfig.lua. Bye!"
+```
+
+The following paragraphs explain the most important steps of preparing script in more detail.
 
 #### General Settings
 
-Create a file megamol.cfg in this bin directory, with the content shown in appendix A.1.
-Locate line 3 containing the tag `mmSetAppDir`. Both relative and absolute path should work
-here fine, it is recommended to change the path in this line to the global path to the MegaMol&trade;
-application bin directory, e.g.:
+Locate line 3 containing the tag `mmSetAppDir`. Both relative and absolute path should work here fine, it is recommended to change the path in this line to the global path to the MegaMol&trade; application bin directory, e.g.:
 
 ```lua
     mmSetAppDir("U:/home/user/src/megamol-dev/bin")
 ```
 #### Logging
 
-Line 6+7 configures the log mechanism of MegaMol&trade; . Adjusting the value of echolevel changes
-the amount of log information printed on the console. Specifying a log file and the level informs
-MegaMol&trade; to write a log file and print the messages of the requested level into that file. The log
-level is a numeric value. All messages with lower numeric values will be printed (or saved). The
-asterisk stands for the highest numeric value, thus printing all messages.
+Line 6-8 configures the log mechanism of MegaMol&trade; . Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. Specifying a log file and the level informs MegaMol&trade; to write a log file and print the messages of the requested level into that file. The *LogLevel* is a numeric value. All messages with lower numeric values will be printed (or saved). The asterisk `*` stands for the highest numeric value, thus printing all messages.
 
 ```lua
     mmSetLogFile("")
     mmSetLogLevel(0)
     mmSetEchoLevel('*')
 ```
+
+TODO: Explain shader dir and resource dir lines in snippet (or remove from snippet?)
 
 #### Plugins
 
@@ -138,29 +171,19 @@ to the configuration file.
 
 #### Global Settings
 
-The configuration file also specifies global settings variables which can modify the behavior of
-different modules. Two such variables are set in the example configuration file.
-On line 16 the variable `*-window` is set. This variable specifies the default position and size
-for all rendering windows MegaMol&trade; will create. The asterisk represents any window name. If
-you set a variable with a specific name, windows with exactly this name will respect the settings
-variable. For example, test-window will specify the value for the window created by the view
-instance test.
+The configuration file also specifies global settings variables which can modify the behavior of different modules. Two such variables are set in the example configuration file.
+On line 14 the variable `*-window` is set. This variable specifies the default position and size for all rendering windows MegaMol&trade; will create. The asterisk represents any window name. If you set a variable with a specific name, windows with exactly this name will respect the settings variable. For example, `test-window` will specify the value for the window created by the view instance test.
 
 ```lua
     mmSetConfigValue("*-window", "w720h720")
 ```
 
 The value itself contains five variables:
-- The first two variables are prefixed with `x` and `y` and specify the location of the window in
-screen pixel coordinates.
-- The second two variables are prefixed with `w` and `h` and specify the size of the client area of
-the window in pixels.
-- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons
-and border from the created window. This variable allows to create borderless windows
-filling the complete screen for full screen rendering.
+- The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
+- The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
+- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons and border from the created window. This variable allows to create borderless windows filling the complete screen for full screen rendering.
 
-The second settings variable, specified on line 45, activates (or deactivates) the GUI of the console
-front end, that is the AntTweakBar.
+The second settings variable, specified on line 15, activates (or deactivates) the GUI of the console front end, that is the AntTweakBar.
 
 ```lua
     mmSetConfigValue("consolegui", "on")
@@ -306,7 +329,7 @@ At the lines 24 to 27 the modules are interconnected using call objects. The cor
 
 One important function of project files can be seen, for example, at line 13: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
-<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying one or both of these config set variables using the switch `-c <name>` in the command line.
+<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 8 from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
 
 ### View Interaction
 
@@ -475,35 +498,4 @@ The whole process start command line can be copied to the clipboard using the re
 
 ## Configuration Files
 
-These files are also part of the MegaMol&trade; Release 1.1 download packages.
-
-<a name="appendix"></a>
-
-## Appendix
-
-Main config file `megamolconfig.lua`:
-
-```lua
-    print('Hi, I am the megamolconfig.lua!')
-
-    -- mmSetAppDir("U:/home/user/src/megamol-dev/bin")
-    mmSetAppDir(".")
-
-    mmSetLogFile("")
-    mmSetLogLevel(0)
-    mmSetEchoLevel('*')
-
-    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
-    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
-
-    mmPluginLoaderInfo("U:/home/reina/src/megamol-dev/bin", "*.mmplg", "include")
-
-    -- mmSetConfigValue("*-window", "w1280h720")
-    mmSetConfigValue("*-window", "w720h720")
-    mmSetConfigValue("consolegui", "on")
-
-    mmSetConfigValue("LRHostEnable", "true")
-
-    return "done with megamolconfig.lua."
-    -- error("megamolconfig.lua is not happy!")
-```
+These files are also part of the MegaMol&trade; Release 1.3 download packages.
