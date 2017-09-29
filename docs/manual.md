@@ -265,7 +265,6 @@ Bar on the right side of the window adjusts the animation speed.
 </p>
 </center>
 
-TODO: Comment on error message
 Dont mind the `Ignoring Xlib error: error code n request code m` messages.
 MegaMol&trade; should now open a rendering window showing a generated data set with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol&trade; instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter you can adjust the playback speed of the animation.
 
@@ -310,9 +309,9 @@ end loads project files (using `-p`) and requests instantiation of views and job
 #### Views 
 <a name=views></a>
 
-*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line:
+TODO: Test this. While it worked for me (as in no errors), I could not see anything happening except an AntTweakBar with tons of stuff.
 
-TODO: Test this. While it worked for me (as in no errors), I could not see anything happening except an AntTweakBar with tons of stuff
+*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line:
 
     $ mmconsole -p simple_imd.mmprj -i dataview inst
 
@@ -383,9 +382,7 @@ Specifying the right config set variable thus allows the caller to use data sets
         </module>
 ```
 
-TODO: "The slot names use only the module names and slot names to form their names." wtf?
-
-At the lines 24 to 27 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect from, and the targetted *CalleeSlot* to connect to. The slot names use only the module names and slot names to form their names. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
+At the lines 24 to 27 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect from, and the targetted *CalleeSlot* to connect to. The slot identifiers consist of module instance name (as defined in the project file), and the slot name as defined by the implementation. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
 
 ```xml
         <!-- connecting calls -->
@@ -469,7 +466,7 @@ The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading
 
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
-    <MegaMol type="project" version="1.1">
+    <MegaMol type="project" version="1.3">
     <!--Use this command line arguments to start MegaMol™
         -p mmpld-view.mmprj -i mmpldview inst -v inst::data::filename 1OGZ.mmpld
     -->
@@ -486,11 +483,74 @@ The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading
             </job>
     </MegaMol>
 ```
-The entry module for data conversion is of class `DataWriterJob`, see line 11. This job module controls writing several files into a new data set. The output is implemented in corresponding write modules, like the `MMPLDWriter`, see line 12. This writer module is then connected to a module providing the data. In the simplest scenario this is directly a data loader module. The above example selects one module from several options, in the same way the data viewing project does (see section [Project Files](#project-files)). The job is instantiated similarly using the command line:
+The entry module for data conversion is of class `DataWriterJob`, see line 11. This job module controls writing several files into a new data set. The output is implemented in corresponding write modules, like the `MMPLDWriter`, see line 12. This writer module is then connected to a module providing the data. In the simplest scenario this is directly a data loader module. The above example selects one module from several options, in the same way the data viewing project does (see section [Project Files](#project-files)). The job is instantiated similarly using the command line. The paths for `makemmpld.mmprj` and `inputfile.siff` might need to be adjusted:
 
     $ mmconsole -p makemmpld.mmprj -i convjob j -v j::data::filename inputfile.siff -v j::writer::filename outputfile.mmpld
 
 The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After all data is written, MegaMol&trade; terminates itself. The console output should be similar to this listing:
+
+    0200|MegaMol� Console
+    0200|Console: (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
+    0300|MegaMol Core API "cef9ff221ce4-dirty"; 
+    0200|Core "MegaMol Core (Evolution Chamber)" (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
+    0300|
+    0200|Started Fri Sep 29 16:16:56 2017
+
+    MegaMol� Console
+    Copyright (c) 2006 - 2017 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)
+    Alle Rechte vorbehalten.
+    All rights reserved.
+
+    0200|Called: /nethome/user/software/megamol/bin/mmconsole -p ../docs/lua/makemmpld.mmprj -i convjob j -v j::data::filename ../samples/MegaMol/sampledata/exp2mill.00010.siff -v j::writer::filename outputfile.mmpld
+    250|Path "/nethome/user/software/megamol/share/shaders" added as shader search path.
+    250|Configuration value "*-window" set to "w1280h720".
+    250|Configuration value "consolegui" set to "on".
+    350|Directory "application" is "/nethome/user/software/megamol/bin"
+    200|Configuration sucessfully loaded from "/nethome/user/software/megamol/bin/megamol.cfg"
+    200|Default LRHostAddress = "tcp://*:33333"
+    200|Default LRHostEnable = "true"
+    200|Installed service "LuaRemote" [1]
+    200|LRH Server socket opened on "tcp://*:33333"
+    200|Auto-enabled service "LuaRemote" [1]
+    200|Plugin CinematicCamera loaded: 4 Modules, 1 Calls
+    200|Plugin "CinematicCamera" (/nethome/user/software/megamol/lib/libcinematiccamera.mmplg) loaded: 4 Modules, 1 Calls registered
+    200|Plugin infovis loaded: 3 Modules, 2 Calls
+    200|Plugin "infovis" (/nethome/user/software/megamol/lib/libinfovis.mmplg) loaded: 3 Modules, 2 Calls registered
+    200|Plugin mdao2 loaded: 1 Modules, 0 Calls
+    200|Plugin "mdao2" (/nethome/user/software/megamol/lib/libmdao2.mmplg) loaded: 1 Modules, 0 Calls registered
+    200|Plugin mmstd_datatools loaded: 43 Modules, 4 Calls
+    200|Plugin "mmstd_datatools" (/nethome/user/software/megamol/lib/libmmstd_datatools.mmplg) loaded: 43 Modules, 4 Calls registered
+    200|Plugin mmstd_moldyn loaded: 16 Modules, 1 Calls
+    200|Plugin "mmstd_moldyn" (/nethome/user/software/megamol/lib/libmmstd_moldyn.mmplg) loaded: 16 Modules, 1 Calls registered
+    200|Plugin mmstd_trisoup loaded: 12 Modules, 4 Calls
+    200|Plugin "mmstd_trisoup" (/nethome/user/software/megamol/lib/libmmstd_trisoup.mmplg) loaded: 12 Modules, 4 Calls registered
+    200|Plugin "mmstd.volume" (/nethome/user/software/megamol/lib/libmmstd_volume.mmplg) loaded: 7 Modules, 0 Calls registered
+    200|Plugin Protein loaded: 55 Modules, 9 Calls
+    200|Plugin "Protein" (/nethome/user/software/megamol/lib/libprotein.mmplg) loaded: 55 Modules, 9 Calls registered
+    200|Plugin Protein_Calls loaded: 0 Modules, 10 Calls
+    200|Plugin "Protein_Calls" (/nethome/user/software/megamol/lib/libprotein_calls.mmplg) loaded: 0 Modules, 10 Calls registered
+    200|Loading project file "../docs/lua/makemmpld.mmprj"
+    550|Created module "N7megamol9stdplugin6moldyn2io14SIFFDataSourceE"
+    550|Created module "SIFFDataSource" (::j::data)
+    550|Created module "N7megamol4core3job13DataWriterJobE"
+    550|Created module "DataWriterJob" (::j::job)
+    550|Created module "N7megamol4core6moldyn11MMPLDWriterE"
+    550|Created module "MMPLDWriter" (::j::writer)
+    550|Call "DataWriterCtrlCall" instantiated from "::j::job::writer" to "::j::writer::control"
+    550|Call "MultiParticleDataCall" instantiated from "::j::writer::data" to "::j::data::getdata"
+    200|Setting parameter "::j::data::filename" to "../samples/MegaMol/sampledata/exp2mill.00010.siff"
+    200|Setting parameter "::j::writer::filename" to "outputfile.mmpld"
+    200|Job "job" started ...
+    200|Starting DataWriterJob "::j::job"
+    200|Started writing data frame 0
+    200|Completed writing data
+    200|DataWriterJob "::j::job" complete
+    250|Job instance j terminating ...
+    550|Released module "N7megamol9stdplugin6moldyn2io14SIFFDataSourceE"
+    550|Released module "N7megamol4core3job13DataWriterJobE"
+    550|Released module "N7megamol4core6moldyn11MMPLDWriterE"
+    200|Core Instance destroyed
+    200|LRH Server socket closed
 
 TODO: Console output after running makemmpld.mmprj
 
