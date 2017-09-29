@@ -10,7 +10,6 @@
     - [Viewing Data Sets](#viewing-data-sets)
     - [Jobs: Converting Data](#jobs)
     - [Advanced Usage](#advanced-usage)
-    - [Configuration Files](#configuration-files)
 
 <!-- /TOC -->
 
@@ -323,7 +322,7 @@ Project files are the primary method to start up MegaMol&trade; . The snippets b
 
 Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. Both file define a *view*, which is the only node in the top level node `MegaMol`. The other keywords give a description for the behavior of this view.
 
-#### Example 1: `simple_siff.mmprj`
+Example 1: `simple_siff.mmprj`
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
     <MegaMol type="project" version="1.3">
@@ -652,9 +651,3 @@ This configuration is useful in case of errors which cause MegaMol&trade; to ins
 you access to the default command lines for your project.
 
 The whole process start command line can be copied to the clipboard using the remaining menu items in the Start menu. The differences for Cmd shell and Powershell are only the way how special characters and strings are escaped.
-
-<a name="configuration-files"></a>
-
-## Configuration Files
-
-These files are also part of the MegaMol&trade; Release 1.3 download packages.
