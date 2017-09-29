@@ -358,7 +358,7 @@ All used data source modules use mainly slots with the same names, i.e. a *Param
         <module class="View3d" name="view3d" />
 ```
 
-At the lines 11 to 13 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file), while the slot name is as defined by the implementation. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
+At the lines 11 to 13 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does therefore work using relative names.
 
 ```xml
         <!-- connecting calls -->
@@ -366,7 +366,7 @@ At the lines 11 to 13 the modules are interconnected using call objects. The cor
         <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
 ```
 
-<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 8, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
+<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
 
 ### View Interaction
 
