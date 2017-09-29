@@ -15,29 +15,6 @@
 //// HAHA!
 //#endif /* _WIN32 */
 
-#ifdef _WIN32
-/**
- * Answers whether or not a given wgl extension is supported.
- * HINT: This is basically useless since you can ask glload as well...
- *
- * @param extensionName The name of the extension to search for.
- *
- * @return 0 if the extension is not supported,
- *         1 if the extension is supported, or
- *         -1 if there was an error while asking for the extension strings.
- */
-int WGLExtensionSupported(const char *extensionName) {
-    if (isExtAvailable(extensionName)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-#else /* _WIN32 */
-// HAHA!
-#endif /* _WIN32 */
-
-
 /*
  * vislib::graphics::gl::DrawCuboidLines
  */

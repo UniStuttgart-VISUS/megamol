@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <string>
+#include "mmcore/param/ParamSlot.h"
 
 struct lua_State; // lua includes should stay in the core
 
@@ -64,28 +65,28 @@ namespace utility {
         /**
          * Run a script file, sandboxed in the environment provided.
          */
-        bool RunFile(const std::string& envName, const std::string& fileName);
+        bool RunFile(const std::string& envName, const std::string& fileName, std::string& result);
         /**
          * Run a script file, sandboxed in the environment provided.
          */
-        bool RunFile(const std::string& envName, const std::wstring& fileName);
+        bool RunFile(const std::string& envName, const std::wstring& fileName, std::string& result);
         /**
          * Run a script string, sandboxed in the environment provided.
          */
-        bool RunString(const std::string& envName, const std::string& script);
+        bool RunString(const std::string& envName, const std::string& script, std::string& result);
         
         /**
          * Run a script file, sandboxed in the standard megamol_env.
          */
-        bool RunFile(const std::string& fileName);
+        bool RunFile(const std::string& fileName, std::string& result);
         /**
          * Run a script file, sandboxed in the standard megamol_env.
          */
-        bool RunFile(const std::wstring& fileName);
+        bool RunFile(const std::wstring& fileName, std::string& result);
         /**
          * Run a script string, sandboxed in the standard megamol_env.
          */
-        bool RunString(const std::string& script);
+        bool RunString(const std::string& script, std::string& result);
 
         /**
          * Answer whether the wrapped lua state is valid
@@ -156,10 +157,42 @@ namespace utility {
         int SetEchoLevel(lua_State *L);
 
         /**
-         *mmSetConfigValue(string name, string value): set configuration value 'name'
+         * mmSetConfigValue(string name, string value): set configuration value 'name'
          * to 'value'.
          */
         int SetConfigValue(lua_State *L);
+
+        // ** MegaMol API provided for runtime manipulation / Configurator live connection
+
+        /** answer the ProcessID of the running MegaMol */
+        int GetProcessID(lua_State *L);
+
+        /**
+         * mmGetModuleParams(string name): list all parameters of a module
+         * along with their description, type and value.
+         */
+        int GetModuleParams(lua_State *L);
+
+        /**
+         * mmGetParamType(string name): get the type of a specific parameter.
+         */
+        int GetParamType(lua_State *L);
+
+        /**
+        * mmGetParamDescription(string name): get the description of a specific parameter.
+        */
+        int GetParamDescription(lua_State *L);
+
+        /**
+         * mmGetParamValue(string name): get the value of a specific parameter.
+         */
+        int GetParamValue(lua_State *L);
+
+        /**
+         * mmSetParamValue(string name, string value):
+         * set the value of a specific parameter.
+         */
+        int SetParamValue(lua_State *L);
 
     private:
 
@@ -177,6 +210,16 @@ namespace utility {
 
         /** all of the Lua startup code */
         void commonInit();
+
+        /**
+         * shorthand to ask graph for the param slot, returned in 'out'.
+         * WARNING: assumes the graph is ALREADY LOCKED!
+         */
+        bool getParamSlot(const std::string routine, const char *paramName,
+            core::param::ParamSlot **out);
+
+        /** gets a string from the stack position i. returns false if it's not a string */
+        bool getString(int i, std::string& out);
 
         /** print the stack somewhat */
         void printStack();
