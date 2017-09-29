@@ -250,11 +250,9 @@ The resulting output should look something like this:
 Alternatively, you can decend into the bin directory and start the front end directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
 
     cd bin
-    LD_LIBRARY_PATH=../lib ./console
+    LD_LIBRARY_PATH=../lib ./mmconsole
 
-This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script.
-MegaMol&trade; should start and print several messages to the console. The leading number of each line, is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above.
-For a better test you should invoke MegaMol&trade; requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries and shader codes are correctly found and are working. To do this, try: 
+This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script. MegaMol&trade; should start and print several messages to the console. The leading number of each line, is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above. For a better test you should invoke MegaMol&trade; requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries and shader codes are correctly found and are working. To do this, try: 
 
     $ ./megamol.sh -i testspheres inst
 
@@ -314,21 +312,20 @@ end loads project files (using `-p`) and requests instantiation of views and job
 
 *Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line:
 
-    $ console.exe -i dataview inst
+TODO: Test this. While it worked for me (as in no errors), I could not see anything happening except an AntTweakBar with tons of stuff
+
+    $ mmconsole -p simple_imd.mmprj -i dataview inst
 
 , then the module will be created with the full name `::inst::data`. Correspondingly, it’s parameter slot `filename` can be globally addressed by `::inst::data::filename`. This allows for the instantiation of several independent view instances. For each view instance a rendering window will be created. To provide the content for the rendering window, each view instance description needs to provide a *default view*, usually via the `viewmod` attribute of the view tag in the MegaMol&trade; project file. The value of this attribute is the name for the view module to be called by the window management code. This module class must be implemented by deriving from `::megamol::core::view::AbstractView`. Typically, you use `View3D` or `View2D`.
-MegaMol&trade; provides some internal description of views which can be instantiated without loading a project file first. The view description `TestSpheres` used in section [Test](#tests) is one example of such a built-in description.
+MegaMol&trade; provides some internal description of views which can be instantiated without loading a project file first. The view description *TestSpheres* used in section [Test](#tests) is one example of such a built-in description.
 
 <a name="project-files"></a>
 
 ### Project Files
 
-Project files are the primary method to start up MegaMol&trade; . The snippet below shows the content
-of the project file `simple_imd.mmprj` which can be used to simply view a particle data set.
+Project files are the primary method to start up MegaMol&trade; . The snippet below shows the content of the project file `simple_imd.mmprj` which can be used to simply view a particle data set.
 
-Line 5 opens the view instance description. Although, it is possible to host multiple instance
-descriptions in a single project file its is recommended to only have one description per file. The
-view description is named `dataview` and the name for the primary view module is given as `view`.
+Line 5 opens the view instance description. Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. The view description is named `dataview` and the name for the primary view module is given as `view`.
 
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
@@ -362,11 +359,41 @@ view description is named `dataview` and the name for the primary view module is
     </MegaMol>
 ```
 
-The *view* module is specified at line 11, followed by modules for the color transfer function and the clip plane. At the line 7, the *renderer* module class is selected and instantiated. 
+### Code Walkthrough
+
+At the line 7, the *renderer* module class is selected and instantiated.
+```xml
+        <!-- renderer -->
+        <module class="SimpleSphereRenderer" name="renderer"/>
+```
+
+The *view* module is specified at line 11, followed by modules for the color transfer function and the clip plane. 
 All used data source modules use mainly slots with the same names, i.e. a *ParameterSlot* named `filename` and a *CalleeSlot* named `getdata`, compatible with MultiParticleDataCall, providing access to the loaded data.
 Specifying the right config set variable thus allows the caller to use data sets from different file formats with this project file. See the online documentation for more information on these file formats. The recommended file format for MegaMol&trade; currently is <b>MMPLD</b>, and the corresponding data source module is thus the default module.
 
-At the lines 24 to 27 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect from, and the targetted *CalleeSlot* to connect to. The slot names use only the module names and slot names to form their names. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work with relative names.
+```xml
+        <!-- view & setup -->
+        <module class="View3D" name="view"/>
+        <module class="LinearTransferFunction" name="colors">
+                <param name="mincolour" value="forestgreen"/>
+                <param name="maxcolour" value="lightskyblue"/>
+        </module>
+        <module class="ClipPlane" name="clipplane">
+                <param name="colour" value="#80808000"/>
+        </module>
+```
+
+TODO: "The slot names use only the module names and slot names to form their names." wtf?
+
+At the lines 24 to 27 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect from, and the targetted *CalleeSlot* to connect to. The slot names use only the module names and slot names to form their names. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
+
+```xml
+        <!-- connecting calls -->
+        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata"/>
+        <call class="CallRender3D" from="view::rendering" to="renderer::rendering"/>
+        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction"/>
+        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane"/>
+```
 
 One important function of project files can be seen, for example, at line 13: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
@@ -461,9 +488,9 @@ The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading
 ```
 The entry module for data conversion is of class `DataWriterJob`, see line 11. This job module controls writing several files into a new data set. The output is implemented in corresponding write modules, like the `MMPLDWriter`, see line 12. This writer module is then connected to a module providing the data. In the simplest scenario this is directly a data loader module. The above example selects one module from several options, in the same way the data viewing project does (see section [Project Files](#project-files)). The job is instantiated similarly using the command line:
 
-    $ console.exe -p makemmpld.mmprj -c load_SIFF -i convjob j -v j::data::filename inputfile.siff -v j::writer::filename outputfile.mmpld
+    $ mmconsole -p makemmpld.mmprj -i convjob j -v j::data::filename inputfile.siff -v j::writer::filename outputfile.mmpld
 
-This command line select the class SIFFDataSource for the module data. The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After all data is written, MegaMol&trade; terminates itself. The console output should be similar to this listing:
+The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After all data is written, MegaMol&trade; terminates itself. The console output should be similar to this listing:
 
 TODO: Console output after running makemmpld.mmprj
 
@@ -477,14 +504,14 @@ This chapter discusses advanced usage of MegaMol&trade; .
 
 <a name="configurator"></a>
 
-### Configurator
+### Configurator (Windows)
 
 The Configurator is a utility application for editing MegaMol&trade; project files. More specifically, it allows to edit the modules, calls and parameters to be instantiated and set for view instances (see sections [Modules, View and Calls](#modules-views-calls) and [Project Files](#project-files)). The [image](#configurator-pic) below shows the main GUI window of the application.
 
 <center>
 <a name="configurator-pic"></a>
 <img src="pics/configurator.png" alt="Configurator" style="width: 1024px;"/>
-<p style="text-align: center; width: 1024px;">
+<p style="width: 1024px;">
 The Configurator main GUI.
 </p>
 </center>
