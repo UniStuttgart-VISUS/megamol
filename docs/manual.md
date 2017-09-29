@@ -202,18 +202,58 @@ the MegaMol&trade; start script:
 
     ./megamol.sh
 
-Alternatively, you can decend into the bin directory and start the front end directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands:
+The resulting output should look something like this:
 
-TODO: Test this
+    0200|MegaMol� Console
+    0200|Console: (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
+    0300|MegaMol Core API "cef9ff221ce4-dirty"; 
+    0200|Core "MegaMol Core (Evolution Chamber)" (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
+    0300|
+    0200|Started Fri Sep 29 14:31:38 2017
+
+        MegaMol� Console
+        Copyright (c) 2006 - 2017 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)
+        Alle Rechte vorbehalten.
+        All rights reserved.
+        
+    0200|Called: /nethome/user/software/megamol/bin/mmconsole
+    250|Path "/nethome/user/software/megamol/share/shaders" added as shader search path.
+    250|Configuration value "*-window" set to "w1280h720".
+    250|Configuration value "consolegui" set to "on".
+    350|Directory "application" is "/nethome/user/software/megamol/bin"
+    200|Configuration sucessfully loaded from "/nethome/user/software/megamol/bin/megamol.cfg"
+    200|Default LRHostAddress = "tcp://*:33333"
+    200|Default LRHostEnable = "true"
+    200|Installed service "LuaRemote" [1]
+    200|LRH Server socket opened on "tcp://*:33333"
+    200|Auto-enabled service "LuaRemote" [1]
+    200|Plugin CinematicCamera loaded: 4 Modules, 1 Calls
+    200|Plugin "CinematicCamera" (/nethome/user/software/megamol/lib/libcinematiccamera.mmplg) loaded: 4 Modules, 1 Calls registered
+    200|Plugin infovis loaded: 3 Modules, 2 Calls
+    200|Plugin "infovis" (/nethome/user/software/megamol/lib/libinfovis.mmplg) loaded: 3 Modules, 2 Calls registered
+    200|Plugin mdao2 loaded: 1 Modules, 0 Calls
+    200|Plugin "mdao2" (/nethome/user/software/megamol/lib/libmdao2.mmplg) loaded: 1 Modules, 0 Calls registered
+    200|Plugin mmstd_datatools loaded: 43 Modules, 4 Calls
+    200|Plugin "mmstd_datatools" (/nethome/user/software/megamol/lib/libmmstd_datatools.mmplg) loaded: 43 Modules, 4 Calls registered
+    200|Plugin mmstd_moldyn loaded: 16 Modules, 1 Calls
+    200|Plugin "mmstd_moldyn" (/nethome/user/software/megamol/lib/libmmstd_moldyn.mmplg) loaded: 16 Modules, 1 Calls registered
+    200|Plugin mmstd_trisoup loaded: 12 Modules, 4 Calls
+    200|Plugin "mmstd_trisoup" (/nethome/user/software/megamol/lib/libmmstd_trisoup.mmplg) loaded: 12 Modules, 4 Calls registered
+    200|Plugin "mmstd.volume" (/nethome/user/software/megamol/lib/libmmstd_volume.mmplg) loaded: 7 Modules, 0 Calls registered
+    200|Plugin Protein loaded: 55 Modules, 9 Calls
+    200|Plugin "Protein" (/nethome/user/software/megamol/lib/libprotein.mmplg) loaded: 55 Modules, 9 Calls registered
+    200|Plugin Protein_Calls loaded: 0 Modules, 10 Calls
+    200|Plugin "Protein_Calls" (/nethome/user/software/megamol/lib/libprotein_calls.mmplg) loaded: 0 Modules, 10 Calls registered
+    200|Core Instance destroyed
+    200|LRH Server socket closed
+
+Alternatively, you can decend into the bin directory and start the front end directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
 
     cd bin
-    LD_LIBRARY_PATH=. ./console
+    LD_LIBRARY_PATH=../lib ./console
 
 This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script.
-MegaMol&trade; should start and print several messages to the console. The leading number of each line, is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should look like this:
-
-TODO: fill in tests output
-
+MegaMol&trade; should start and print several messages to the console. The leading number of each line, is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above.
 For a better test you should invoke MegaMol&trade; requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries and shader codes are correctly found and are working. To do this, try: 
 
     $ ./megamol.sh -i testspheres inst
@@ -227,6 +267,8 @@ Bar on the right side of the window adjusts the animation speed.
 </p>
 </center>
 
+TODO: Comment on error message
+Dont mind the `Ignoring Xlib error: error code n request code m` messages.
 MegaMol&trade; should now open a rendering window showing a generated data set with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol&trade; instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter you can adjust the playback speed of the animation.
 
 <a name="viewing-data-sets"></a>
