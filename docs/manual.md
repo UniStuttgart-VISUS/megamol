@@ -143,7 +143,6 @@ Line 6-8 configures the log mechanism of MegaMol&trade; . Adjusting the value of
 ```
 
 #### Shaders and Resources
-TODO: Possibly improve explanation
 
 Line 9+10 show how to set your shader and resource directories.
 
@@ -309,11 +308,9 @@ end loads project files (using `-p`) and requests instantiation of views and job
 #### Views 
 <a name=views></a>
 
-TODO: Test this. While it worked for me (as in no errors), I could not see anything happening except an AntTweakBar with tons of stuff.
+*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line note (note that most files will probably need some path adjustments):
 
-*Views* are one of the two instance types MegaMol&trade; can run. They are specified by the corresponding tag in a MegaMol&trade; project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line:
-
-    $ mmconsole -p simple_imd.mmprj -i dataview inst
+    $ ./megamol.sh -p pdbcartoonview.mmprj -i pdbcartoonview pv --paramfile pdbmolview02.param -v ::pdbdata::pdbFilename 11m40_sim.pdb -v ::pdbdata::xtcFilename 1m40_100frames.xtc
 
 , then the module will be created with the full name `::inst::data`. Correspondingly, it’s parameter slot `filename` can be globally addressed by `::inst::data::filename`. This allows for the instantiation of several independent view instances. For each view instance a rendering window will be created. To provide the content for the rendering window, each view instance description needs to provide a *default view*, usually via the `viewmod` attribute of the view tag in the MegaMol&trade; project file. The value of this attribute is the name for the view module to be called by the window management code. This module class must be implemented by deriving from `::megamol::core::view::AbstractView`. Typically, you use `View3D` or `View2D`.
 MegaMol&trade; provides some internal description of views which can be instantiated without loading a project file first. The view description *TestSpheres* used in section [Test](#tests) is one example of such a built-in description.
@@ -322,40 +319,27 @@ MegaMol&trade; provides some internal description of views which can be instanti
 
 ### Project Files
 
-Project files are the primary method to start up MegaMol&trade; . The snippet below shows the content of the project file `simple_imd.mmprj` which can be used to simply view a particle data set.
+Project files are the primary method to start up MegaMol&trade; . The snippet below shows the content of the project file `pdbcartoonview.mmprj` which can be used to simply view a particle data set.
 
 Line 5 opens the view instance description. Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. The view description is named `dataview` and the name for the primary view module is given as `view`.
 
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
     <MegaMol type="project" version="1.0">
-    <!--Use this command line arguments to start MegaMol:
-        $ -p mmpld-view.mmprj -i mmpldview inst -v inst::data::filename 1OGZ.mmpld
-    -->
-    <view name="dataview" viewmod="view">
-        <module class="IMDAtomData" name="data"/>
+    <!-- view definition starts here -->
+    <view name="pdbcartoonview" viewmod="view3d">
+        <!-- data loader -->
+        <module class="PDBLoader" name="::pdbdata" />
         <!-- renderer -->
-        <module class="SimpleSphereRenderer" name="renderer"/>
-        <!-- view & setup -->
-        <module class="View3D" name="view"/>
-        <module class="LinearTransferFunction" name="colors">
-                <param name="mincolour" value="forestgreen"/>
-                <param name="maxcolour" value="lightskyblue"/>
-        </module>
-        <module class="ClipPlane" name="clipplane">
-                <param name="colour" value="#80808000"/>
-        </module>
-        <!-- screenshooter -->
-        <module class="ScreenShooter" name="screenshooter">
-                <param name="view" value="inst"/>
-        </module>
+        <module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <!-- view setup -->
+        <module class="View3d" name="view3d" />
         <!-- connecting calls -->
-        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata"/>
-        <call class="CallRender3D" from="view::rendering" to="renderer::rendering"/>
-        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction"/>
-        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane"/>
+        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
     </view>
     </MegaMol>
+
 ```
 
 ### Code Walkthrough
@@ -363,36 +347,24 @@ Line 5 opens the view instance description. Although, it is possible to host mul
 At the line 7, the *renderer* module class is selected and instantiated.
 ```xml
         <!-- renderer -->
-        <module class="SimpleSphereRenderer" name="renderer"/>
+        <module class="MoleculeCartoonRenderer" name="cartoonren" />
 ```
 
-The *view* module is specified at line 11, followed by modules for the color transfer function and the clip plane. 
-All used data source modules use mainly slots with the same names, i.e. a *ParameterSlot* named `filename` and a *CalleeSlot* named `getdata`, compatible with MultiParticleDataCall, providing access to the loaded data.
-Specifying the right config set variable thus allows the caller to use data sets from different file formats with this project file. See the online documentation for more information on these file formats. The recommended file format for MegaMol&trade; currently is <b>MMPLD</b>, and the corresponding data source module is thus the default module.
+The *view* module is specified at line 9.
+All used data source modules use mainly slots with the same names, i.e. a *ParameterSlot* named `filename` and a *CalleeSlot* named `getdata`, compatible with MultiParticleDataCall, providing access to the loaded data. Specifying the right config set variable thus allows the caller to use data sets from different file formats with this project file. See the online documentation for more information on these file formats. The recommended file format for MegaMol&trade; currently is <b>MMPLD</b>, and the corresponding data source module is thus the default module.
 
 ```xml
-        <!-- view & setup -->
-        <module class="View3D" name="view"/>
-        <module class="LinearTransferFunction" name="colors">
-                <param name="mincolour" value="forestgreen"/>
-                <param name="maxcolour" value="lightskyblue"/>
-        </module>
-        <module class="ClipPlane" name="clipplane">
-                <param name="colour" value="#80808000"/>
-        </module>
+        <!-- view setup -->
+        <module class="View3d" name="view3d" />
 ```
 
-At the lines 24 to 27 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect from, and the targetted *CalleeSlot* to connect to. The slot identifiers consist of module instance name (as defined in the project file), and the slot name as defined by the implementation. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
+At the lines 11 to 13 the modules are interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file), while the slot name is as defined by the implementation. Specifying the full name would require the instance name this view will be instanced as. Searching for the slots does therefore work using relative names.
 
 ```xml
         <!-- connecting calls -->
-        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata"/>
-        <call class="CallRender3D" from="view::rendering" to="renderer::rendering"/>
-        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction"/>
-        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane"/>
+        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
 ```
-
-One important function of project files can be seen, for example, at line 13: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
 <b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 8, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
 
