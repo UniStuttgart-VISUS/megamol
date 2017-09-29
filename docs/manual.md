@@ -142,12 +142,20 @@ Line 6-8 configures the log mechanism of MegaMol&trade; . Adjusting the value of
     mmSetEchoLevel('*')
 ```
 
-TODO: Explain shader dir and resource dir lines in snippet (or remove from snippet?)
+#### Shaders and Resources
+TODO: Possibly improve explanation
+
+Line 9+10 show how to set your shader and resource directories.
+
+```lua
+    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
+    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
+```
+The *AddDir* commands set the paths for the respective resource.
 
 #### Plugins
 
-Extend the configuration if you introduce new plugins into your installation.
-Although, there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
+Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
 
 - `path` should be the path to find the plugin in. The example configuration file assumes
 to find the plugins in the same directory as the MegaMol&trade; executable (which is the
@@ -156,9 +164,7 @@ case for Windows installations. On Linux systems you need to change this path (e
 - `name` is the file name of the plugin.
 - `action` refers to an internal parameter of MegaMol&trade; and should always be include.
 
-Rendering modules from plugins require shader codes to function. MegaMol&trade; searches these
-codes in all registered shader directories. To register a shader directory, add a corresponding tag
-to the configuration file.
+Rendering modules from plugins require shader codes to function. MegaMol&trade; searches these codes in all registered shader directories. To register a shader directory, add a corresponding tag to the configuration file.
 
 ```lua
     mmPluginLoaderInfo("U:/home/user/src/megamol-dev/bin", "*.mmplg", "include")
