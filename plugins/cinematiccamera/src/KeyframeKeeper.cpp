@@ -737,11 +737,7 @@ bool KeyframeKeeper::changeKeyframe(Keyframe kf) {
             // change keyframe
             this->keyframes[i] = kf;
             // Updating Bounding Box
-            // Extend camera position for bounding box to cover manipulator axis
-            vislib::math::Vector<float, 3> manipulator = vislib::math::Vector<float, 3>(kf.getCamLookAt().X(), kf.getCamLookAt().Y(), kf.getCamLookAt().Z());
-            manipulator = kf.getCamPosition() - manipulator;
-            manipulator.ScaleToLength(1.5f);
-            this->boundingBox.GrowToPoint(static_cast<vislib::math::Point<float, 3> >(kf.getCamPosition() + manipulator));
+            this->boundingBox.GrowToPoint(kf.getCamPosition());
             // Refresh interoplated camera positions
             this->refreshInterpolCamPos(this->interpolSteps);
             //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [change Keyframe] Replacing existing keyframe.");

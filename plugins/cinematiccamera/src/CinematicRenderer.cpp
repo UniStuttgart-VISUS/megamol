@@ -159,6 +159,9 @@ bool CinematicRenderer::GetExtents(Call& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
         return false;
     }
+    // Grow bounding box to manipulators
+    this->manipulator.growBbox(bboxCCC);
+
     bboxCR3D.Union(*bboxCCC);
     cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
@@ -336,13 +339,13 @@ bool CinematicRenderer::Render(Call& call) {
         availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
     }
     // Update manipulator data
-    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix, 
         cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
             cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
     // Draw manipulators
     this->manipulator.draw();
 
-    math::Point<float, 3> tmpP;
+    vislib::math::Point<float, 3> tmpP;
     glColor4fv(sColor);
     // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);

@@ -51,7 +51,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
     // init variables
     this->fontSize          = 15.0f;
-    this->simRedoSegmAdapt = true;
+    this->simRedoSegmAdapt  = true;
     this->animRedoSegmAdapt = true;
 
     this->axisStartPos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
@@ -66,6 +66,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->animLenTimeFrac   = 0.0f;
     this->animScalePos      = 0.0f;
     this->animScaleDelta    = 0.0f;
+    this->animFormatStr     = "%.2f ";
 
     this->simAxisEndPos     = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->simAxisLen        = 0.0f;
@@ -77,6 +78,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->simLenTimeFrac    = 0.0f;
     this->simScalePos       = 0.0f;
     this->simScaleDelta     = 0.0f;
+    this->simFormatStr      = "%.1f ";
 
     this->lastMousePos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->scaleAxis         = 0;
@@ -85,6 +87,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->rulerMarkSize     = 1.0f;
     this->keyfMarkSize      = 1.0f;
     this->fps               = 24;
+    
     this->markerTextures.Clear();
 
     // init parameters
@@ -136,10 +139,10 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     // Set time line position depending on font size
     vislib::StringA tmpStr;
     if (this->simTotalTime > this->animTotalTime) {
-        tmpStr.Format(" %.2f ", this->simTotalTime);
+        tmpStr.Format(this->simFormatStr.PeekBuffer(), this->simTotalTime);
     }
     else {
-        tmpStr.Format(" %.2f ", this->animTotalTime);
+        tmpStr.Format(this->animFormatStr.PeekBuffer(), this->animTotalTime);
     }
     float strHeight        = this->theFont.LineHeight(this->fontSize );        
     float strWidth         = this->theFont.LineWidth(this->fontSize, tmpStr); 
@@ -205,21 +208,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (this->rulerFontParam.IsDirty()) {
         this->rulerFontParam.ResetDirty();
         this->fontSize = this->rulerFontParam.Param<param::FloatParam>()->Value();
-
-        vislib::StringA tmpStr;
-        if (this->simTotalTime > this->animTotalTime) {
-            tmpStr.Format(" %.2f ", this->simTotalTime);
-        }
-        else {
-            tmpStr.Format(" %.2f ", this->animTotalTime);
-        }
-        float strHeight = this->theFont.LineHeight(this->fontSize);
-        float strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-        this->rulerMarkSize = strHeight / 2.0f;
-        this->keyfMarkSize  = strHeight*1.5f;
-
-        this->animRedoSegmAdapt = true;
-        this->simRedoSegmAdapt = true;
+        // Recalc extends of time line which depends on font size
+        this->GetExtents(call);
     }
 
     // Initialise font
@@ -231,21 +221,25 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     vislib::StringA tmpStr;
     float strWidth;
     float strHeight;
+
     // Adapt segement sizes if necessary
     if (this->animRedoSegmAdapt) {
-        tmpStr.Format("%.2f ", this->animTotalTime);
-        strWidth = this->theFont.LineWidth(this->fontSize, tmpStr) * 1.25f;
-        float powerOfTen = 1.0f;
+
+        float powersOfTen = 1.0f;
         float tmpTime = this->animTotalTime;
         while (tmpTime > 1.0f) {
             tmpTime /= 10.0f;
-            powerOfTen *= 10.0f;
+            powersOfTen *= 10.0f;
         }
+
+        tmpStr.Format(this->animFormatStr.PeekBuffer(), this->animTotalTime);
+        strWidth = this->theFont.LineWidth(this->fontSize, tmpStr) * 1.0f;
+
         // Minimum segment size
-        this->animSegmValue = powerOfTen;
-        this->animSegmSize  = this->animAxisLen / this->animTotalTime * this->animSegmValue * this->animScaleFac;
-        float minSegSize    = strWidth;
-        bool doAdapt = true;
+        this->animSegmValue  = powersOfTen;
+        this->animSegmSize   = this->animAxisLen / this->animTotalTime * this->animSegmValue * this->animScaleFac;
+        float minSegSize     = strWidth;
+        bool doAdapt         = true;
         while (doAdapt) {
             doAdapt = true;
             this->animSegmValue /= 5.0f;
@@ -263,26 +257,44 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 doAdapt = false;
             }
         }
-        this->animLenTimeFrac = this->animAxisLen / this->animTotalTime * this->animScaleFac;
-        this->animRedoSegmAdapt = false;
 
+        /*
+        unsigned int animPot = 0;
+        float tmpAnimSegValue = this->animSegmValue;
+        while (tmpAnimSegValue < 1.0f) {
+            tmpAnimSegValue *= 10.0f;
+            animPot++;
+        }
+        vislib::sys::Log::DefaultLog.WriteWarn("[animPot] = %i", animPot);
+        this->animFormatStr.Format("%i", animPot);
+        this->animFormatStr.Prepend("%.");
+        this->animFormatStr.Append("f ");
+        vislib::sys::Log::DefaultLog.WriteWarn("[this->animFormatStr] = %s", this->animFormatStr.PeekBuffer());
+        */
+
+        this->animLenTimeFrac = this->animAxisLen / this->animTotalTime * this->animScaleFac;
         this->animScaleOffset = this->animScalePos - (this->animScaleDelta  * this->animScaleFac);
         this->animScaleOffset = (this->animScaleOffset > 0.0f) ? (0.0f) : (this->animScaleOffset);
         // hard reset if scaling factor is one
         if (this->animScaleFac <= 1.0f) {
             this->animScaleOffset = 0.0f;
         }
+
+        this->animRedoSegmAdapt = false;
     }
     if (this->simRedoSegmAdapt) {
-        strHeight = this->theFont.LineHeight(this->fontSize) * 1.25f;
-        float powerOfTen = 1.0f;
+
+        float powersOfTen = 1.0f;
         float tmpTime = this->simTotalTime;
         while (tmpTime > 1.0f) {
             tmpTime /= 10.0f;
-            powerOfTen *= 10.0f;
+            powersOfTen *= 10.0f;
         }
+
+        strHeight = this->theFont.LineHeight(this->fontSize) * 1.0f;
+
         // Minimum segment size
-        this->simSegmValue = powerOfTen;
+        this->simSegmValue = powersOfTen;
         this->simSegmSize = this->simAxisLen / this->simTotalTime * this->simSegmValue * this->simScaleFac;
         float minSegSize = strHeight;
         bool doAdapt = true;
@@ -303,15 +315,16 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
                 doAdapt = false;
             }
         }
-        this->simLenTimeFrac = this->simAxisLen * this->simScaleFac;
-        this->simRedoSegmAdapt = false;
 
+        this->simLenTimeFrac = this->simAxisLen * this->simScaleFac;
         this->simScaleOffset = this->simScalePos - (this->simScaleDelta * this->simScaleFac);
         this->simScaleOffset = (this->simScaleOffset > 0.0f) ? (0.0f) : (this->simScaleOffset);
         // hard reset if scaling factor is one
         if (this->simScaleFac <= 1.0f) {
             this->simScaleOffset = 0.0f;
         }
+
+        this->simRedoSegmAdapt = false;
     }
 
     // Get the foreground color (inverse background color)
@@ -354,12 +367,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_1D);
     glDisable(GL_DEPTH_TEST);
 
-    glEnable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -420,9 +434,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             for (unsigned int i = 0; i < keyframes->Count(); i++) {
                 x = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
                 y = this->simScaleOffset  + (*keyframes)[i].getSimTime()  * this->simLenTimeFrac;
-                //if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
-                    glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
-                //}
+                glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
             }
             // Last vertex
             x = this->animScaleOffset + this->animTotalTime * this->animLenTimeFrac;
@@ -481,11 +493,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strHeight = this->theFont.LineHeight(this->fontSize);
     // animation time steps
     float timeStep = 0.0f;
-    tmpStr.Format("%.2f ", this->animTotalTime);
+    tmpStr.Format(this->animFormatStr.PeekBuffer(), this->animTotalTime);
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     for (float f = this->animScaleOffset; f < this->animAxisLen + this->animSegmSize/10.0f; f = f + this->animSegmSize) {
         if (f >= 0.0f) {
-            tmpStr.Format("%.2f ", timeStep);
+            tmpStr.Format(this->animFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
             this->theFont.DrawString(this->axisStartPos.X() + f - strWidth / 2.0f, this->axisStartPos.Y() - this->rulerMarkSize - strHeight,
                                      strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
@@ -494,12 +506,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
     // simulation time steps
     timeStep = 0.0f;
-    tmpStr.Format("%.2f ", this->simTotalTime);
+    tmpStr.Format(this->simFormatStr.PeekBuffer(), this->simTotalTime);
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     float tmpStrWidth = strWidth;
     for (float f = this->simScaleOffset; f < this->simAxisLen + this->simSegmSize/10.0f; f = f + this->simSegmSize) {
         if (f >= 0.0f) {
-            tmpStr.Format("%.2f ", timeStep);
+            tmpStr.Format(this->simFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
             this->theFont.DrawString(this->axisStartPos.X() - this->rulerMarkSize - strWidth, this->axisStartPos.Y() - strHeight / 2.0f + f,
                                      strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
@@ -516,7 +528,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         aF = this->dragDropKeyframe.getAnimTime() * (float)(this->fps);
         sT = this->dragDropKeyframe.getSimTime()*this->simTotalTime;
     }
-    tmpStr.Format("animation time: %.2f | animation frame: %.2f | simulation time: %.2f ", aT, aF, sT);
+    tmpStr.Format("animation time: %.3f | animation frame: %.3f | simulation time: %.3f ", aT, aF, sT);
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->simAxisEndPos.Y() + this->keyfMarkSize,
                              strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);

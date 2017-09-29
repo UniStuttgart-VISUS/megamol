@@ -156,17 +156,23 @@ bool KeyframeManipulator::updateManipulators() {
         }
     }
 
+    // Adaptive axis length of manipulators
+    float length = vislib::math::Max((this->worldCamDir.Length() * this->axisLengthFac), 1.0f);
+
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         switch (static_cast<manipType>(i)) {
-            case (manipType::SELECTED_KF_POS_X):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_POS_Y):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_POS_Z):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f); break;
-            case (manipType::SELECTED_KF_LOOKAT_X):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_LOOKAT_Y):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_LOOKAT_Z):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f); break;
-            case (manipType::SELECTED_KF_UP):         tmpkfS.wsPos = skfPosV + this->selectedKf.getCamUp(); break;
+            case (manipType::SELECTED_KF_POS_X):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); break;
+            case (manipType::SELECTED_KF_POS_Y):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); break;
+            case (manipType::SELECTED_KF_POS_Z):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); break;
+            case (manipType::SELECTED_KF_LOOKAT_X):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); break;
+            case (manipType::SELECTED_KF_LOOKAT_Y):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); break;
+            case (manipType::SELECTED_KF_LOOKAT_Z):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); break;
+            case (manipType::SELECTED_KF_UP):         tmpkfS.wsPos = this->selectedKf.getCamUp(); 
+                                                      tmpkfS.wsPos.ScaleToLength(length);
+                                                      tmpkfS.wsPos += skfPosV;
+                                                      break;
             case (manipType::SELECTED_KF_POS_LOOKAT): tmpkfS.wsPos = skfPosV - skfLaV;
-                                                      tmpkfS.wsPos.Normalise();
+                                                      tmpkfS.wsPos.ScaleToLength(length);
                                                       tmpkfS.wsPos += skfPosV;
                                                       break;
             default: vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Bug: %i", i); return false;
@@ -177,6 +183,21 @@ bool KeyframeManipulator::updateManipulators() {
     }
 
     return true;
+}
+
+
+/*
+* KeyframeManipulator::growBbox
+*/
+void KeyframeManipulator::growBbox(vislib::math::Cuboid<float> *bb) {
+
+    if (bb != NULL) {
+        if (this->isDataSet) {
+            for (unsigned int i = 0; i < this->manipArray.Count(); i++) {
+                bb->GrowToPoint(this->V2P(this->manipArray[i].wsPos));
+            }
+        }
+    }
 }
 
 
@@ -286,6 +307,9 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
             lineDiff *= -1.0f;
         }
     }
+    lineDiff *= ((this->worldCamDir.Length() * this->axisLengthFac));
+
+
     vislib::math::Vector<float, 3> tmpVec;
     switch (this->activeType) {
         case (manipType::SELECTED_KF_POS_X):      skfPosV.SetX(skfPosV.X() + lineDiff); break;
@@ -316,6 +340,8 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
         if (tmpSsRight.Dot(tmpSsMani + tmpDeltaMouse) < 0.0f) {
             lineDiff *= -1.0f;
         }
+        lineDiff /= ((this->worldCamDir.Length() * this->axisLengthFac));
+
         // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula"
         vislib::math::Vector<float, 3> k = (skfPosV - skfLaV); // => rotation axis = camera lookat
         skfUpV = skfUpV * cos(lineDiff) + k.Cross(skfUpV) * sin(lineDiff) + k * (k.Dot(skfUpV)) * (1.0f - cos(lineDiff));
@@ -385,7 +411,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     }
     normal.Normalise();
     // Size of radius depends on the length of the lookat direction vector
-    float radius = vislib::math::Max((this->worldCamDir.Length() * this->circleRadiusPc), 0.15f);
+    float radius = vislib::math::Max((this->worldCamDir.Length() * this->circleRadiusFac), 0.15f);
     // Get arbitary vector vertical to normal
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
     rot.ScaleToLength(radius);

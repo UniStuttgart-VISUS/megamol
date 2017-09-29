@@ -101,7 +101,7 @@ The light yellow tagged data source module has to be replaced by a suitable one 
 
 ### Example
 
-The sample project which is supported in the `example` folder of this plugin (`cinematiccam_simplemol.mmprj`) has to be copied into the `bin` folder of megamol.
+The sample project (`cinematiccam_simplemol.mmprj`) which is supported in the `example` folder of this plugin has to be copied into the `bin` folder of megamol.
 In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
 *Under Windows:* `".\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
 *Under Linux:* `"./megamol.sh -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
