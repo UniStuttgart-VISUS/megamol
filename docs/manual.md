@@ -552,8 +552,6 @@ The input file name and output file name are explicitly specified using the -v a
     200|Core Instance destroyed
     200|LRH Server socket closed
 
-TODO: Console output after running makemmpld.mmprj
-
 To convert from other file formats, for which a corresponding loader does exist, you should be able to adjust this project file.
 
 <a name="advanced-usage"></a>
