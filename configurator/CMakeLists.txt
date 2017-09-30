@@ -4,11 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 
-if(WIN32)
-  option(BUILD_CONFIGURATOR "Build configurator" ON)
-else()
-  option(BUILD_CONFIGURATOR "Build configurator" OFF)
-endif()
+option(BUILD_CONFIGURATOR "Build configurator" OFF)
 
 if(BUILD_CONFIGURATOR)
   

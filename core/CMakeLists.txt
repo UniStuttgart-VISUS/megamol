@@ -31,6 +31,7 @@ if(BUILD_CORE)
   include(ExternalProject)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
+  
   set(ZMQ_VER "4_2_2")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
@@ -38,7 +39,8 @@ if(BUILD_CORE)
     set(ZMQ_LIB debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib" CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
   else()
-    set(ZMQ_SO "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq.so")
+    include(GNUInstallDirs)
+    set(ZMQ_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzmq.so")
   endif()
   ExternalProject_Add(extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
@@ -49,11 +51,11 @@ if(BUILD_CORE)
 
   # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
   if(UNIX)
-    set(ZMQCPP_INSTALL_CMD "cp")
-    set(ZMQCPP_INSTALL_ARGS "${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(ZMQCPP_INSTALL_CMD "eval")
+    set(ZMQCPP_INSTALL_ARGS "cp ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   else()
     set(ZMQCPP_INSTALL_CMD "powershell")
-    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include")
+    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   endif()
   
   ExternalProject_Add(extlibcppzmq
@@ -66,8 +68,7 @@ if(BUILD_CORE)
     INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
   )
 
-  add_subdirectory(remoteconsole)
-
+  
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -79,8 +80,8 @@ if(BUILD_CORE)
       find_package(libpng16 CONFIG REQUIRED CONFIGS "libpng16.cmake")
       get_target_property(PNG_LIB_FILE png_static LOCATION)
       get_filename_component(PNG_LIB_PATH ${PNG_LIB_FILE} DIRECTORY)
-      set(PNG_LIBRARIES png_static)
-      set(PNG_INCLUDE_DIRS "${PNG_LIB_PATH}/../include")
+      set(PNG_LIBRARIES png_static CACHE INTERNAL "")
+      set(PNG_INCLUDE_DIRS "${PNG_LIB_PATH}/../include" CACHE INTERNAL "")
     endif()
   endif()
 
@@ -138,7 +139,7 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(core vislib glad)
+  add_dependencies(core vislib glad extlibzmq extlibcppzmq)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
@@ -164,8 +165,11 @@ if(BUILD_CORE)
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")
     install(TARGETS core ARCHIVE DESTINATION "lib")
   else()
+    install(DIRECTORY ${EXTERNAL_INSTALL_LOCATION}/lib DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq.so*")
     install(TARGETS core DESTINATION "lib" EXPORT core-target)
   endif()
+
+add_subdirectory(remoteconsole)
 
 endif(BUILD_CORE)
 
