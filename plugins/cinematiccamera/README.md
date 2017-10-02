@@ -48,14 +48,15 @@ The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_addKeyframe` (Assigned key: `a`): Adds new keyframe at the currently selected time.
-* `04_maxAnimTime` (`1.0`): The total timespan of the animation.
-* `05_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
-* `06_snapAnimationFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
-* `editSelected - 03_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
+* `02_maxAnimTime` (`1.0`): The total timespan of the animation.
+* `03_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
+* `04_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
+* `05_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
+* `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
-* `editSelected - 01_animTime` (`1.0`): Edit animation time of the selected keyframe.
-* `editSelected - 02_simTime` (`1.0`): Edit simulation time of the selected keyframe.
-* `editSelected - 02_position`: Edit the position vector of the selected keyframe.
+* `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
+* `editSelected - 04_simTime` (`1.0`): Edit simulation time of the selected keyframe.
+* `editSelected - 05_position`: Edit the position vector of the selected keyframe.
 * `editSelected - 06_lookat`: Edit the look-at vector of the selected keyframe.
 * `editSelected - 07_resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
 * `editSelected - 08_up`:  Edit the up vector of the selected keyframe.
