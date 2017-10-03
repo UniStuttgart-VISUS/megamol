@@ -26,7 +26,6 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 #include "CinematicRenderer.h"
 #include "CallCinematicCamera.h"
@@ -52,7 +51,6 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
     toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
     toggleModelBBoxParam( "04_toggleModelBBox", "Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model."),
-    //textureShader(),
     manipulator()
     {
 
@@ -100,40 +98,6 @@ CinematicRenderer::~CinematicRenderer(void) {
 
 bool CinematicRenderer::create(void) {
 
-    /*
-    vislib::graphics::gl::ShaderSource vert, frag;
-
-    const char *shaderName = "textureShader";
-
-    try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) { 
-            return false; 
-        }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::fragment", frag)) {
-            return false; 
-        }
-        if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-    }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader (@%s): %s\n", shaderName,
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
-        return false;
-    }
-    catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: Unknown exception\n", shaderName);
-        return false;
-    }
-    */
 	return true;
 }
 
@@ -142,8 +106,6 @@ bool CinematicRenderer::create(void) {
 * CinematicRenderer::release
 */
 void CinematicRenderer::release(void) {
-
-    //this->textureShader.Release();
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
@@ -197,6 +159,9 @@ bool CinematicRenderer::GetExtents(Call& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
         return false;
     }
+    // Grow bounding box to manipulators
+    this->manipulator.growBbox(bboxCCC);
+
     bboxCR3D.Union(*bboxCCC);
     cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
@@ -374,13 +339,13 @@ bool CinematicRenderer::Render(Call& call) {
         availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
     }
     // Update manipulator data
-    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix, 
         cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
             cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
     // Draw manipulators
     this->manipulator.draw();
 
-    math::Point<float, 3> tmpP;
+    vislib::math::Point<float, 3> tmpP;
     glColor4fv(sColor);
     // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);
@@ -434,6 +399,7 @@ bool CinematicRenderer::Render(Call& call) {
     // Disable fbo
     this->fbo.Disable();
 
+    // Draw final image -------------------------------------------------------
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -451,13 +417,8 @@ bool CinematicRenderer::Render(Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-
     // Draw texture -------------------------------------------------------
-    // (Depth of texture depends on lookat position of world camera ...)
-
-    //this->textureShader.Enable();
+    glDisable(GL_DEPTH_TEST);
 
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
@@ -466,9 +427,6 @@ bool CinematicRenderer::Render(Call& call) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Draw in the background
-    glTranslatef(0.0f, 0.0f, -1.0f);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
@@ -481,9 +439,9 @@ bool CinematicRenderer::Render(Call& call) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
-    //this->textureShader.Disable();
-
     // Draw help text  --------------------------------------------------------
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
 
     // Draw help text in front of bounding box rendered by the view3d
     glTranslatef(0.0f, 0.0f, 1.0f);
