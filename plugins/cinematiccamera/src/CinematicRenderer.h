@@ -19,7 +19,6 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/Cuboid.h"
@@ -157,8 +156,6 @@ namespace megamol {
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;
             vislib::math::Cuboid<float>      ocBbox;
-            /** The render to texture */
-            //vislib::graphics::gl::GLSLShader textureShader;
 
             /**********************************************************************
             * functions
