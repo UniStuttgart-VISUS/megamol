@@ -981,7 +981,7 @@ void NGParallelCoordinatesRenderer2D::drawParcos(void) {
                 this->densityFBO.GetWidth() != windowWidth || this->densityFBO.GetHeight() != windowHeight) {
                 densityFBO.Release();
                 ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
-                MAKE_OBJECT_LABEL(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
+                MAKE_OBJECT_LABEL_EXPLICIT(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
             }
             if (ok) {
                 densityFBO.Enable();
