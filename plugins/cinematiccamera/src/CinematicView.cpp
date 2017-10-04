@@ -381,18 +381,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    GLenum callOutBuffer = cr3d->OutputBuffer();
+    //GLenum callOutBuffer = cr3d->OutputBuffer();
     cr3d->SetOutputBuffer(this->fbo.GetID());
+
     this->overrideCall = cr3d;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
 
-    glFlush();
     this->fbo.Disable();
 
+    //cr3d->SetOutputBuffer(callOutBuffer);
+
     // Reset override render call
-    cr3d->SetOutputBuffer(callOutBuffer);
     this->overrideCall = NULL;
     // Reset override viewport
     this->overrideViewport = NULL; 
@@ -456,7 +457,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw letter box  -------------------------------------------------------
 
     // Color stuff ------------------------------------------------------------
-    
     const float *bgColor = this->bkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -497,6 +497,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     
+    // Reset opengl
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
     // Unlock renderer after first frame
     if (this->rendering && this->pngdata.lock) {
         this->pngdata.lock = false;

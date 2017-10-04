@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="CinematicRenderer">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">400</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="main" type="string">
+            <![CDATA[
+            
+layout (location = 0) in vec4 VertexPosition; 
+layout (location = 1) in vec2 VertexUV;
+
+//uniform mat4 MVP; // ModelViewProjection-Matrix
+    
+   
+
+void main(void) {
+
+    gl_Position = VertexPosition;
+    //gl_Position = MVP * VertexPosition; // MVP is identity matrix ...
+}
+
+]]>
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">400</snippet>
+        <snippet name="common::defines"/>        
+        <snippet name="main" type="string">
+            <![CDATA[
+         
+layout( location = 0 ) out vec4 FragColor;
+
+uniform float vpH;
+uniform float vpW;
+ 
+uniform sampler2D depthtex;
+
+void main()
+{
+   
+    vec2  UV     = vec2(gl_FragCoord.x / vpW, gl_FragCoord.y / vpH);
+    gl_FragDepth = texture2D(depthtex, UV).r; //rgb have the same value ...
+    //gl_FragDepth = 1.0; 
+    FragColor    = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    
+    // DEBUG STUFF:
+    
+    //FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    //FragColor = vec4(texture2D(colortex, UV).rgba);
+    //FragColor = vec4(texture2D(depthtex, UV).rgb, 0.0);
+    //gl_FragDepth = 1.0;
+    //FragColor = vec4(texture2D(depthtex, UV).rgba);
+    //FragColor = vec4(texture2D(colortex, UV).rgba);
+    //float depth = texture2D(depthtex, UV).r;
+    //float red = (depth < 0.0)?(depth):(0.0);
+    //float green = (depth > 0.0)?(depth):(0.0);
+    //FragColor = vec4(red, green, 0.0, 1.0);
+    //FragColor = vec4(UV.x, UV.y, 0.0, 1.0 - depth);
+}
+]]>
+        </snippet>
+    </shader>
+
+</btf>
