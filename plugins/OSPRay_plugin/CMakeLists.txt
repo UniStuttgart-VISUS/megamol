@@ -48,7 +48,7 @@ if(BUILD_OSPRAY_PLUGIN)
     foreach(lib ${OSPRAY_LIBRARIES})
       get_filename_component(dir ${lib} DIRECTORY)
       get_filename_component(libname ${lib} NAME)
-      install(DIRECTORY ${dir} DESTINATION "lib" FILES_MATCHING PATTERN "${libname}*")
+      install(DIRECTORY ${dir} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "${libname}*")
     endforeach()
   endif()
 
