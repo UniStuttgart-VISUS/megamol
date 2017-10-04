@@ -139,6 +139,7 @@ namespace megamol {
             float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
             float                          animScalePos;       // the ruler position to be kept in focus during scaling
             float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
+            vislib::StringA                animFormatStr;      // string with adapted floating point formatting
 
             vislib::math::Vector<float, 2> simAxisEndPos;
             float                          simAxisLen;
@@ -151,6 +152,7 @@ namespace megamol {
             float                          simLenTimeFrac;
             float                          simScalePos;
             float                          simScaleDelta;
+            vislib::StringA                simFormatStr;
 
             vislib::math::Vector<float, 2> lastMousePos;
             unsigned int                   scaleAxis;
@@ -163,7 +165,7 @@ namespace megamol {
             float                          keyfMarkSize;
             float                          rulerMarkSize;
             unsigned int                   fps;
-            
+
 
             /**********************************************************************
             * functions
