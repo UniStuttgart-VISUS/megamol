@@ -14,8 +14,6 @@ if(BUILD_OSPRAY_PLUGIN)
 
   find_package(ospray CONFIG REQUIRED)
 
-  message(INFO " ${CMAKE_INSTALL_LIBDIR}")
-
   set(LIBS vislib core glad mmstd_trisoup protein_calls ${OSPRAY_LIBRARIES})
   include_directories("include" "src" ${OSPRAY_INCLUDE_DIRS})
 
@@ -48,7 +46,7 @@ if(BUILD_OSPRAY_PLUGIN)
     foreach(lib ${OSPRAY_LIBRARIES})
       get_filename_component(dir ${lib} DIRECTORY)
       get_filename_component(libname ${lib} NAME)
-      install(DIRECTORY ${dir} DESTINATION "lib" FILES_MATCHING PATTERN "${libname}*")
+      install(DIRECTORY ${dir} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "${libname}*")
     endforeach()
   endif()
 

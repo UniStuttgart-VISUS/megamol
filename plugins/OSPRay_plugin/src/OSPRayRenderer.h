@@ -117,6 +117,7 @@ private:
 
     // Interface dirty flag
     bool InterfaceIsDirty();
+    void InterfaceResetDirty();
 
     // rendering conditions
     bool data_has_changed;

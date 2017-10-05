@@ -202,44 +202,40 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     // if user wants to switch renderer
     if (this->rd_type.IsDirty()) {
+        ospRelease(camera);
+        ospRelease(world);
+        ospRelease(renderer);
         switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
         case SCIVIS:
-            ospRelease(camera);
-            ospRelease(world);
-            ospRelease(renderer);
             this->setupOSPRay(renderer, camera, world, "scivis");
             break;
         case PATHTRACER:
-            ospRelease(camera);
-            ospRelease(world);
-            ospRelease(renderer);
             this->setupOSPRay(renderer, camera, world, "pathtracer");
             break;
         }
         renderer_has_changed = true;
-        this->rd_type.ResetDirty();
     }
-	setupOSPRayCamera(camera, cr);
-	ospCommit(camera);
+    setupOSPRayCamera(camera, cr);
+    ospCommit(camera);
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
     if (data_has_changed ||
-		cam_has_changed ||
-		renderer_has_changed ||
-		!(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
-		time != cr->Time() ||
-		this->InterfaceIsDirty()) {
+        cam_has_changed ||
+        renderer_has_changed ||
+        !(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
+        time != cr->Time() ||
+        this->InterfaceIsDirty()) {
 
-		if (data_has_changed ||
-			time != cr->Time() ||
-			this->InterfaceIsDirty()) {
-				this->fillWorld();
-				ospCommit(world);
-		}
-
-		time = cr->Time();
-		renderer_has_changed = false;
+        if (data_has_changed ||
+            time != cr->Time() ||
+            this->InterfaceIsDirty()) {
+            this->fillWorld();
+            ospCommit(world);
+        }
+        this->InterfaceResetDirty();
+        time = cr->Time();
+        renderer_has_changed = false;
 
         RendererSettings(renderer);
 
@@ -305,13 +301,18 @@ bool OSPRayRenderer::InterfaceIsDirty() {
     if (
         this->AbstractIsDirty()
         ) {
-        this->AbstractResetDirty();
         return true;
     } else {
         return false;
     }
 }
 
+/*
+ospray::OSPRayRenderer::InterfaceResetDirty()
+*/
+void OSPRayRenderer::InterfaceResetDirty() {
+    this->AbstractResetDirty();
+}
 
 
 /*

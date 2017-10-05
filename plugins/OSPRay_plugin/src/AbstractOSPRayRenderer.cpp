@@ -116,7 +116,7 @@ void AbstractOSPRayRenderer::setupTextureScreen() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindVertexArray(0);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // setup texture
     glEnable(GL_TEXTURE_2D);
@@ -311,6 +311,7 @@ bool AbstractOSPRayRenderer::AbstractIsDirty() {
         this->AOdistance.IsDirty() ||
         this->extraSamles.IsDirty() ||
         this->shadows.IsDirty() ||
+        this->rd_type.IsDirty() ||
         this->rd_epsilon.IsDirty() ||
         this->rd_spp.IsDirty() ||
         this->rd_maxRecursion.IsDirty() ||
@@ -328,6 +329,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->AOdistance.ResetDirty();
     this->extraSamles.ResetDirty();
     this->shadows.ResetDirty();
+    this->rd_type.ResetDirty();
     this->rd_epsilon.ResetDirty();
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
