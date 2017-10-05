@@ -33,8 +33,8 @@ CinematicView::CinematicView(void) : View3D(),
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
 	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resWidthParam(            "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    resHeightParam(           "05_cinematicWidth","The width resolution of the cineamtic view to render."),
+    resHeightParam(           "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    resWidthParam(            "05_cinematicWidth","The width resolution of the cineamtic view to render."),
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     shownKeyframe()
     {
