@@ -27,8 +27,7 @@ AbstractOSPRayStructure::AbstractOSPRayStructure(void) :
     this->MakeSlotAvailable(&this->getMaterialSlot);
 
     this->structureContainer.isValid = true;
-    this->time = 0.0f;
-
+    this->time = -1.0f;
 }
 
 AbstractOSPRayStructure::~AbstractOSPRayStructure(void) {
