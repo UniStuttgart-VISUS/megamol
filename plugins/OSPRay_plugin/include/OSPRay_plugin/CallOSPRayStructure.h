@@ -18,6 +18,7 @@ namespace megamol {
 namespace ospray {
 
 enum structureTypeEnum {
+    UNINITIALIZED,
     GEOMETRY,
     VOLUME
 };

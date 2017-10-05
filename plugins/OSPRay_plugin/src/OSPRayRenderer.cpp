@@ -135,8 +135,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospSetCurrentDevice(device);
     }
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL)
-        return false;
+    if (cr == NULL) return false;
 
 
 
@@ -195,7 +194,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         //imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
         imgSize.x = cr->GetCameraParameters()->TileRect().Width();
         imgSize.y = cr->GetCameraParameters()->TileRect().Height();
-        framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+        framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         ospCommit(framebuffer);
     }
 
@@ -230,7 +229,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         if (data_has_changed ||
             time != cr->Time() ||
             this->InterfaceIsDirty()) {
-            this->fillWorld();
+            if (!this->fillWorld()) return false;
             ospCommit(world);
         }
         this->InterfaceResetDirty();
@@ -254,8 +253,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
         // setup framebuffer
-        ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+        ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
 
 
         // get the texture from the framebuffer
@@ -283,7 +282,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
     } else {
-        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
         ospUnmapFrameBuffer(fb, framebuffer);
