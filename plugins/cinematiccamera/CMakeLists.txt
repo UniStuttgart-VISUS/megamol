@@ -22,11 +22,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*") # UNCOMMENT TO ADD SHADER
-
+  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
+  
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files}) # UNCOMMENT TO ADD SHADER (and comment next line)
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${resource_files} ${source_files} ${shader_files})
   add_dependencies(${PROJECT_NAME} vislib glad core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
@@ -37,7 +37,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders") # UNCOMMENT TO ADD SHADER
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
+
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
@@ -49,7 +51,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files}) # UNCOMMENT TO ADD SHADER
+  source_group("Shaders" FILES ${shader_files})
 
 
 endif(BUILD_${EXPORT_NAME}_PLUGIN)
