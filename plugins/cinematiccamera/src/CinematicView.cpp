@@ -381,8 +381,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    //GLenum callOutBuffer = cr3d->OutputBuffer();
-    cr3d->SetOutputBuffer(this->fbo.GetID());
+    cr3d->SetOutputBuffer(&this->fbo);
 
     this->overrideCall = cr3d;
 
@@ -390,8 +389,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     Base::Render(context);
 
     this->fbo.Disable();
-
-    //cr3d->SetOutputBuffer(callOutBuffer);
 
     // Reset override render call
     this->overrideCall = NULL;

@@ -288,7 +288,7 @@ bool CinematicRenderer::Render(Call& call) {
     // Get current viewport
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0];
+    int   vpWidth  = vp[2] - vp[0];
     int   vpHeight = vp[3] - vp[1];
 
     // Get pointer to keyframes array
@@ -340,8 +340,7 @@ bool CinematicRenderer::Render(Call& call) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-        GLenum callOutBuffer = oc->OutputBuffer();
-        oc->SetOutputBuffer(this->fbo.GetID());
+        oc->SetOutputBuffer(&this->fbo);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -352,13 +351,10 @@ bool CinematicRenderer::Render(Call& call) {
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
 
-        // Reset output buffer
-        oc->SetOutputBuffer(callOutBuffer);
-
         // Disable fbo
         this->fbo.Disable();
 
-
+       
         // Draw textures ------------------------------------------------------
 
         glDisable(GL_LINE_SMOOTH);
