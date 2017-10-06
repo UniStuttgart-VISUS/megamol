@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 #include "ospray/ospray.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/param/ParamSlot.h"
@@ -38,12 +39,13 @@ protected:
     * helper function for rendering the OSPRay texture
     * @param GLSL shader
     * @param GL texture object
-    * @param OSPRay texture
+    * @param OSPRay color texture
+    * @param OSPRay depth texture
     * @param GL vertex array object
     * @param image/window width
     * @param image/window heigth
     */
-    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, int &width, int &height);
+    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, const uint32_t* db, int &width, int &height);
 
     /**
     * helper function for setting up the OSPRay screen
@@ -93,7 +95,8 @@ protected:
     OSPFrameBuffer newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format = OSP_FB_RGBA8, const uint32_t frameBufferChannels = OSP_FB_COLOR);
 
     // vertex array, vertex buffer object, texture
-    GLuint vaScreen, vbo, tex;
+    GLuint vaScreen, vbo, tex, depth;
+    vislib::graphics::gl::FramebufferObject fbo;
 
 
     /**

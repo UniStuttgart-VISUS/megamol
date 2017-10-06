@@ -88,46 +88,79 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
 
 }
 
-void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height) {
+void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, const uint32_t * db, int &width, int &height) {
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->tex);
+    if (this->fbo.IsValid()) {
+        if ((this->fbo.GetWidth() != width) || (this->fbo.GetHeight() != height)) {
+            this->fbo.Release();
+        }
+    }
+    if (!this->fbo.IsValid()) {
+        this->fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+    }
+    if (this->fbo.IsValid()) {
+        this->fbo.Enable();
+    }
+
+
+
+    this->fbo.BindColourTexture();
+    glClear(GL_COLOR_BUFFER_BIT);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-
-    glUniform1i(shader.ParameterLocation("tex"), 0);
-    glBindVertexArray(this->vaScreen);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    this->fbo.BindDepthTexture();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, db);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (this->fbo.IsValid()) {
+        this->fbo.Disable();
+        this->fbo.DrawColourTexture();
+        //this->fbo.DrawDepthTexture();
+    }
 }
 
+
 void AbstractOSPRayRenderer::setupTextureScreen() {
-
     // setup vertexarray
-    float screenVertices[] = { 0.0f,0.0f, 1.0f,0.0f, 0.0f,1.0f, 1.0f,1.0f };
+    //float screenVertices[] = { 0.0f,0.0f, 1.0f,0.0f, 0.0f,1.0f, 1.0f,1.0f };
 
-    glGenVertexArrays(1, &this->vaScreen);
-    glGenBuffers(1, &this->vbo);
+    //glGenVertexArrays(1, &this->vaScreen);
+    //glGenBuffers(1, &this->vbo);
 
-    glBindVertexArray(this->vaScreen);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    glEnableVertexAttribArray(0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(this->vaScreen);
+    //glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+    //glEnableVertexAttribArray(0);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
+    //glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    //glBindVertexArray(0);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // setup texture
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &this->tex);
-    glBindTexture(GL_TEXTURE_2D, this->tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    //// setup color texture
+    //glEnable(GL_TEXTURE_2D);
+    //glGenTextures(1, &this->tex);
+    //glBindTexture(GL_TEXTURE_2D, this->tex);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    //glDisable(GL_TEXTURE_2D);
+
+    //// setup depth texture
+    //glEnable(GL_TEXTURE_2D);
+    //glGenTextures(1, &this->depth);
+    //glBindTexture(GL_TEXTURE_2D, this->depth);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    //glDisable(GL_TEXTURE_2D);
 }
 
 void AbstractOSPRayRenderer::releaseTextureScreen() {

@@ -25,10 +25,6 @@
 
 using namespace megamol::ospray;
 
-
-
-
-
 /*
 ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
@@ -50,12 +46,6 @@ OSPRayRenderer::OSPRayRenderer(void) :
     renderer = NULL;
     camera = NULL;
     world = NULL;
-
-
-    //tmp variable
-    number = 0;
-
-
 }
 
 
@@ -259,6 +249,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+        db = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_DEPTH);
 
         // write a sequence of single pictures while the screenshooter is running
         // only for debugging
@@ -273,7 +264,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         //    writePPM(fname, isize, fb);
         //    this->number++;
         //}
-        this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
+        this->renderTexture2D(osprayShader, fb, db, imgSize.x, imgSize.y);
 
         // clear stuff
         ospUnmapFrameBuffer(fb, framebuffer);
@@ -284,7 +275,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     } else {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-        this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
+        db = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_DEPTH);
+        this->renderTexture2D(osprayShader, fb, db, imgSize.x, imgSize.y);
         ospUnmapFrameBuffer(fb, framebuffer);
     }
 
