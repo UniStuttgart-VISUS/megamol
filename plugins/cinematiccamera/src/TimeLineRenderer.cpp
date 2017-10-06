@@ -51,8 +51,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
     // init variables
     this->fontSize          = 15.0f;
-    this->simRedoSegmAdapt  = true;
-    this->animRedoSegmAdapt = true;
+    this->redoAdaptation    = true;
 
     this->axisStartPos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
 
@@ -160,9 +159,8 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     // Do adaptation only if there are changes in the time line length
     if (tmpLength != this->animAxisLen) {
         this->animScaleFac = 1.0f; // Reset scaling factor
-        this->simScaleFac = 1.0f;  // Reset scaling factor
-        this->animRedoSegmAdapt = true;
-        this->simRedoSegmAdapt = true;
+        this->simScaleFac  = 1.0f; // Reset scaling factor
+        this->redoAdaptation = true;
     }
 
     return true;
@@ -192,8 +190,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Get maximum animation time 
     if (this->animTotalTime != ccc->getTotalAnimTime()) {
         this->animTotalTime = ccc->getTotalAnimTime();
-        this->animRedoSegmAdapt = true;
-        this->simRedoSegmAdapt = true;
+        this->redoAdaptation = true;
     }
     // Get max simulation time
     if (this->simTotalTime != ccc->getTotalSimTime()) {
@@ -223,8 +220,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float strHeight;
 
     // Adapt segement sizes if necessary
-    if (this->animRedoSegmAdapt) {
+    if (this->redoAdaptation) {
 
+        // ANIMATION
         float powersOfTen = 1.0f;
         float tmpTime = this->animTotalTime;
         while (tmpTime > 1.0f) {
@@ -277,21 +275,19 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (this->animScaleFac <= 1.0f) {
             this->animScaleOffset = 0.0f;
         }
-        this->animRedoSegmAdapt = false;
-    }
-    if (this->simRedoSegmAdapt) {
 
-        float powersOfTen = 1.0f;
-        float tmpTime = this->simTotalTime;
+        // SIMULATION
+        powersOfTen = 1.0f;
+        tmpTime = this->simTotalTime;
         while (tmpTime > 1.0f) {
             tmpTime /= 10.0f;
             powersOfTen *= 10.0f;
         }
         this->simSegmValue = powersOfTen;
 
-        unsigned int simPot     = 0;
-        unsigned int refine     = 1;
-        float        minSegSize = this->theFont.LineHeight(this->fontSize) * 1.25f;
+        refine = 1;
+        unsigned int simPot = 0;
+        float minSegSize = this->theFont.LineHeight(this->fontSize) * 1.25f;
         while (refine != 0) {
 
             float div = 5.0f;
@@ -330,7 +326,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             this->simScaleOffset = 0.0f;
         }
 
-        this->simRedoSegmAdapt = false;
+        this->redoAdaptation = false;
     }
 
     // Get the foreground color (inverse background color)
@@ -549,6 +545,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.Y() + this->simAxisLen/2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + strHeight/2.0f,
                              strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+
+    //this->theFont.Deinitialise();
 
     // Reset opengl 
     glLineWidth(tmpLw);
@@ -780,7 +778,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             //vislib::sys::Log::DefaultLog.WriteWarn("[animScaleFac] %f", this->animScaleFac);
 
             this->animScaleFac = (this->animScaleFac < 1.0f) ? (1.0f) : (this->animScaleFac);
-            this->animRedoSegmAdapt = true;
+            this->redoAdaptation = true;
         }
         else if (this->scaleAxis == 2) { // simulation axis - Y
 
@@ -788,7 +786,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             //vislib::sys::Log::DefaultLog.WriteWarn("[simScaleFac] %f", this->simScaleFac);
 
             this->simScaleFac = (this->simScaleFac < 1.0f) ? (1.0f) : (this->simScaleFac);
-            this->simRedoSegmAdapt = true;
+            this->redoAdaptation = true;
         }
         this->lastMousePos.Set(x, y);
     }

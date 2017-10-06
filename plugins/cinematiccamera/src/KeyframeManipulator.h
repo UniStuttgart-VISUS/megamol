@@ -49,7 +49,7 @@ namespace megamol {
                // Add new manipulator type before NONE ...
 
 
-            /** Update data of manipulators.
+            /** Update rednering data of manipulators.
             *
             * @param am    Array of manipulator types
             * @param kfa   Pointer to the array of keyframes
@@ -61,9 +61,17 @@ namespace megamol {
             * @return True if data was updated successfully.
             *
             */
-            bool update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
+            bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
                         vislib::math::Vector<float, 3> wcd);
+
+            /** Update extents.
+            *   Grows bounding box to manipulators.
+            *   If manipulator lies inside of bounding box:
+            *   Get bounding box of model to determine minimum length of manipulator axes.
+            *
+            */
+            void updateExtents(vislib::math::Cuboid<float> *bb);
 
             /** */
             bool draw(void);
@@ -79,9 +87,6 @@ namespace megamol {
 
             /** */
             Keyframe getManipulatedKeyframe(void);
-
-            /** */
-            void growBbox(vislib::math::Cuboid<float> *bb);
 
         private:
 
@@ -130,6 +135,7 @@ namespace megamol {
             vislib::math::Vector<float, 3>   worldCamDir;
             bool                             isDataSet;
             bool                             isDataDirty;
+            vislib::math::Cuboid<float>      modelBbox;
 
             vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
 
