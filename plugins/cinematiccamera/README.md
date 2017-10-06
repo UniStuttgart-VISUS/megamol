@@ -1,15 +1,9 @@
 # MegaMol plugin "Cinematic Camera"
 
 This module allows the video rendering of simulations.
-Through defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
+By defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
 
 ![cinematic camera demo picture](https://github.com/tobiasrau/megamol-dev/blob/cinematiccamera/plugins/cinematiccamera/demo.png)
-
----
-
-## Use cases
-
-This plugin can be used to render a video of a simulation.
 
 --- 
 
@@ -37,8 +31,8 @@ The complete final video can be rendered to png files by defining the resolution
 #### TimeLineRenderer:
 
 This module shows the temporal position of the keyframes on the animation time axis and the simulation time axis in an two-dimensional diagram.
-The manipulation of the simulation and the animation time of a keyframe can be done per drag and drop.
-The time axes can be zoomed independently at the current mouse position.
+The keyframes can be selected (left mouse button) or they can be shifted along the simulation or animation time axis per drag and drop (right mouse button).
+The time axes can be zoomed independently at the current mouse position (middle mouse button).
 
 --- 
 
