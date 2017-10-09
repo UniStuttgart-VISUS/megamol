@@ -516,9 +516,10 @@ bool CinematicRenderer::Render(Call& call) {
         tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
         tmpStr += "[tab] Move or Selection mode.\n";
         tmpStr += "[m] Toggle different Keyframe manipulators.\n";
-        tmpStr += "[t] Show model or bounding box.\n";
+        tmpStr += "[b] Show model or bounding box.\n";
         tmpStr += "-----[ TIME LINES ]-----\n";
         tmpStr += "[f] Snap keyframes to animation frames.\n";
+        tmpStr += "[t] Straighten tangent between two keyframes.\n";
         tmpStr += "[left mouse] Selection.\n";
         tmpStr += "[right mouse] Drag & Drop.\n";
         tmpStr += "[middle mouse] Axis scaling.\n";
