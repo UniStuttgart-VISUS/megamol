@@ -46,7 +46,7 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `03_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
 * `04_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
 * `05_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
-* `06_straightenSimTangent` (Assigned key: `t`): Straighten tangent of simulation time between two consecutively selected keyframes.
+* `06_straightenSimTangent` (Assigned key: `t`): Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe.
 * `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
 * `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
@@ -75,8 +75,8 @@ The module `CinematicView` exposes the following parameters:
    Whenever rendering is begun a new folder holding the new frame files is generated.
 * `02_playPreview` (Assigned key: `space`): Toggle playing animation as preview.
 * `03_skyboxSide` (`NONE`): Select the skybox side.
-* `04_cinematicHeight`(`1920`): The height resolution of the cinematic view to render.
-* `05_cinematicWidth` (`1080`): The width resolution of the cinematic view to render.
+* `04_cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
+* `05_cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
 * `05_fps` (`24`): The frames per second the animation should be rendered.
     
 The module `TimeLineRenderer` exposes the following parameters:

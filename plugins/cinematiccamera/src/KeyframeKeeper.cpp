@@ -43,7 +43,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     setKeyframesToSameSpeed(       "03_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
     snapAnimFramesParam(           "04_snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames."),
     snapSimFramesParam(            "05_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
-    simTangentParam(               "06_straightenSimTangent", "Straighten tangent of simulation time between currently selectd keyframe and the next selected keyframe."),
+    simTangentParam(               "06_straightenSimTangent", "Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe."),
 
     deleteSelectedKeyframeParam(   "editSelected::01_deleteKeyframe", "Deletes the currently selected keyframe."),
     changeKeyframeParam(           "editSelected::02_applyView", "Apply current view to selected keyframe."),
