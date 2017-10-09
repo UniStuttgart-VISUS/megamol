@@ -341,7 +341,7 @@ bool CinematicRenderer::Render(Call& call) {
 
         // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
         GLenum callOutBuffer = oc->OutputBuffer();
-        oc->SetOutputBuffer(this->fbo.GetID());
+        oc->SetOutputBuffer(&this->fbo);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -372,6 +372,7 @@ bool CinematicRenderer::Render(Call& call) {
 
         // DRAW DEPTH ---------------------------------------------------------
         glDepthFunc(GL_LEQUAL);
+        //glDisable(GL_DEPTH_TEST);
         glEnable(GL_DEPTH_TEST);
 
         this->textureShader.Enable();

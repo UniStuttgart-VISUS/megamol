@@ -16,9 +16,14 @@ out vec2 texCoords;
         <snippet name="MainParams" type="string">
             <![CDATA[
 void main(void) {
-    gl_Position = vec4(2.0f, 2.0f, 2.0f, 1) * (vec4(in_position,0,1) - vec4(0.5f, 0.5f, 0.5f, 0)); 
+    const vec4 vertices[4] = vec4[4]( vec4(-1.0, -1.0, 0.0, 0.0),
+                                      vec4(1.0, -1.0, 1.0, 0.0),
+                                      vec4(-1.0, 1.0, 0.0, 1.0),
+                                      vec4(1.0, 1.0, 1.0, 1.0) );
+    //gl_Position = vec4(2.0f, 2.0f, 2.0f, 1) * (vec4(in_position,0,1) - vec4(0.5f, 0.5f, 0.5f, 0)); 
     //gl_Position = vec4(in_position, 0, 1);
-    texCoords = in_position;
+    gl_Position = vec4(vertices[gl_VertexID].xy, 0.99, 1);
+    texCoords = vertices[gl_VertexID].zw;
 }
 ]]>
         </snippet>

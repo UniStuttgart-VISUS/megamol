@@ -45,7 +45,7 @@ protected:
     * @param image/window width
     * @param image/window heigth
     */
-    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, const uint32_t* db, int &width, int &height);
+    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, const float* db, int &width, int &height, core::view::CallRender3D& cr, const float farClip);
 
     /**
     * helper function for setting up the OSPRay screen
@@ -96,7 +96,6 @@ protected:
 
     // vertex array, vertex buffer object, texture
     GLuint vaScreen, vbo, tex, depth;
-    vislib::graphics::gl::FramebufferObject fbo;
 
 
     /**

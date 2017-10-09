@@ -119,8 +119,8 @@ private:
     osp::vec2i imgSize;
 
     // OSPRay textures
-    const uint32_t * fb;
-    const uint32_t * db;
+    const uint32_t* fb;
+    const float* db;
 
     bool renderer_has_changed;
 };
