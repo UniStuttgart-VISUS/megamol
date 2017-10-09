@@ -541,7 +541,7 @@ bool CinematicView::rtf_setup() {
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 
     // Set current time stamp to file name
-    this->pngdata.filename = "frames_";
+    this->pngdata.filename = "frames";
     // this->pngdata.filename.Format("frame_%i%i%i-%i%i%i_-_", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Create new byte buffer
@@ -610,11 +610,10 @@ bool CinematicView::rtf_create_frame() {
 
     if (!this->pngdata.lock) {
         vislib::StringA tmpFilename, tmpStr;
-        tmpStr.Format("%i", this->expFrameCnt);
-        tmpStr.Prepend("\%0");
-         tmpStr.Append("i.png");
-        //tmpStr.Append("i_-_animTime_%f.png");
-        //tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt, this->pngdata.animTime);
+        tmpStr.Format(".%i", this->expFrameCnt);
+        tmpStr.Prepend("%0");
+        tmpStr.Append("i.png");
+        tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
         tmpFilename.Prepend(this->pngdata.filename);
 
         // open final image file

@@ -43,7 +43,7 @@ protected:
     * @param image/window width
     * @param image/window heigth
     */
-    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height);
+    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, int &width, int &height);
 
     /**
     * helper function for setting up the OSPRay screen
@@ -101,7 +101,7 @@ protected:
     * create geometries and volumes.
     *
     */
-    void fillWorld();
+    bool fillWorld();
 
     /**
     * Releases the created geometries and volumes.
