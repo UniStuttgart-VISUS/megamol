@@ -78,7 +78,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleModelBBoxParam.SetParameter(new param::ButtonParam('t'));
+    this->toggleModelBBoxParam.SetParameter(new param::ButtonParam('b'));
     this->MakeSlotAvailable(&this->toggleModelBBoxParam);
 
     // Load spline interpolation keyframes at startup
