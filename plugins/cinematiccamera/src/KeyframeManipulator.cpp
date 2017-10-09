@@ -158,66 +158,83 @@ bool KeyframeManipulator::updateManipulators() {
     }
 
     // Adaptive axis length of manipulators
+    float radius = this->circleVertices[1].Length();
     float length = vislib::math::Max((this->worldCamDir.Length() * this->axisLengthFac), 1.0f);
+    vislib::math::Vector<float, 3> tmpV;
+    float len;
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         switch (static_cast<manipType>(i)) {
             case (manipType::SELECTED_KF_POS_X):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); 
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(this->modelBbox.GetSize().Width(), 0.0f, 0.0f);
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
                 }
                break;
             case (manipType::SELECTED_KF_POS_Y):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); 
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(0.0f, this->modelBbox.GetSize().Height(), 0.0f);
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
                 }
                 break;
             case (manipType::SELECTED_KF_POS_Z):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); 
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(0.0f, 0.0f, this->modelBbox.GetSize().Depth());
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_X):  
-                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); 
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f);
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(this->modelBbox.GetSize().Width(), 0.0f, 0.0f);
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_Y):   
-                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); 
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f);
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(0.0f, this->modelBbox.GetSize().Height(), 0.0f);
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_Z):   
-                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); 
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length);
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos += vislib::math::Vector<float, 3>(0.0f, 0.0f, this->modelBbox.GetSize().Depth());
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
                 }
                 break;
             case (manipType::SELECTED_KF_UP):         
-                tmpkfS.wsPos = this->selectedKf.getCamUp(); 
-                tmpkfS.wsPos.ScaleToLength(length);
-                tmpkfS.wsPos += skfPosV;
+                tmpV = this->selectedKf.getCamUp();
+                tmpV.ScaleToLength(length);
+                tmpkfS.wsPos = skfPosV + tmpV;
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    vislib::math::Vector<float, 3> tmpVec = vislib::math::Vector<float, 3>(this->modelBbox.Width(), this->modelBbox.Height(), this->modelBbox.Depth());
-                    tmpkfS.wsPos = this->selectedKf.getCamUp();
-                    tmpkfS.wsPos.ScaleToLength(length + tmpVec.Length());
-                    tmpkfS.wsPos += skfPosV;
+                    len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
+                    tmpV.ScaleToLength(len);
+                    tmpkfS.wsPos = skfPosV + tmpV;
+                    if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                        tmpV.ScaleToLength(2.0f * len);
+                        tmpkfS.wsPos = skfPosV + tmpV;
+                        if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                            tmpV.ScaleToLength(3.0f * len);
+                            tmpkfS.wsPos = skfPosV + tmpV;
+                        }
+                    }
                 }
                 break;
             case (manipType::SELECTED_KF_POS_LOOKAT): 
-                tmpkfS.wsPos = skfPosV - skfLaV;
-                tmpkfS.wsPos.ScaleToLength(length);
-                tmpkfS.wsPos += skfPosV;
+                tmpV = skfPosV - skfLaV;
+                tmpV.ScaleToLength(length);
+                tmpkfS.wsPos = skfPosV + tmpV;
                 if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    vislib::math::Vector<float, 3> tmpVec = vislib::math::Vector<float, 3>(this->modelBbox.Width(), this->modelBbox.Height(), this->modelBbox.Depth());
-                    tmpkfS.wsPos = skfPosV - skfLaV;
-                    tmpkfS.wsPos.ScaleToLength(length + tmpVec.Length());
-                    tmpkfS.wsPos += skfPosV;
+                    len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
+                    tmpV.ScaleToLength(len);
+                    tmpkfS.wsPos = skfPosV + tmpV;
+                    if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                        tmpV.ScaleToLength(2.0f * len);
+                        tmpkfS.wsPos = skfPosV + tmpV;
+                        if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                            tmpV.ScaleToLength(3.0f * len);
+                            tmpkfS.wsPos = skfPosV + tmpV;
+                        }
+                    }
                 }
                 break;
             default: 
