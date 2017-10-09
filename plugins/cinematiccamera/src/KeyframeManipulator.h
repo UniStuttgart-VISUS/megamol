@@ -80,6 +80,9 @@ namespace megamol {
             /** */
             Keyframe getManipulatedKeyframe(void);
 
+            /** */
+            void growBbox(vislib::math::Cuboid<float> *bb);
+
         private:
 
             /**********************************************************************
@@ -103,10 +106,11 @@ namespace megamol {
             };
 
             // Some fixed values
-            const float                      circleRadiusPc = 0.0075f;   // Percentage of lookat direction which is used as adaptive circle radius
-            const unsigned int               circleSubDiv   = 20;        // Amount of subdivisions of an circle primitive
-            const float                      lineWidth      = 2.5;
-            const float                      sensitivity    = 0.01f;     // Relationship between mouse movement and length changes of coordinates
+            const float                      circleRadiusFac = 0.0075f;    // Factor for lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac   = 0.05f;      // Factor for lookat direction which is used as adaptive axis length
+            const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
+            const float                      lineWidth       = 2.5;
+            const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
 
             // Positions of keyframes
             vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions

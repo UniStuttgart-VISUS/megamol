@@ -95,7 +95,6 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &s
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
 
     glUniform1i(shader.ParameterLocation("tex"), 0);
-
     glBindVertexArray(this->vaScreen);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
@@ -116,7 +115,7 @@ void AbstractOSPRayRenderer::setupTextureScreen() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindVertexArray(0);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // setup texture
     glEnable(GL_TEXTURE_2D);
@@ -311,6 +310,7 @@ bool AbstractOSPRayRenderer::AbstractIsDirty() {
         this->AOdistance.IsDirty() ||
         this->extraSamles.IsDirty() ||
         this->shadows.IsDirty() ||
+        this->rd_type.IsDirty() ||
         this->rd_epsilon.IsDirty() ||
         this->rd_spp.IsDirty() ||
         this->rd_maxRecursion.IsDirty() ||
@@ -328,6 +328,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->AOdistance.ResetDirty();
     this->extraSamles.ResetDirty();
     this->shadows.ResetDirty();
+    this->rd_type.ResetDirty();
     this->rd_epsilon.ResetDirty();
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
@@ -496,21 +497,23 @@ void AbstractOSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &si
 
 
 
-void AbstractOSPRayRenderer::fillWorld() {
+bool AbstractOSPRayRenderer::fillWorld() {
 
-	if (this->geo.size() != 0) {
-		for (auto element : this->geo) {
-			ospRemoveGeometry(this->world, element);
-		}
-		this->geo.clear();
-	}
-	if (this->vol.size() != 0) {
-		for (auto element : this->vol) {
-			ospRemoveVolume(this->world, element);
-		}
-		this->vol.clear();
-	}
-	//ospRelease(this->world);
+    bool returnValue = true;
+
+    if (this->geo.size() != 0) {
+        for (auto element : this->geo) {
+            ospRemoveGeometry(this->world, element);
+        }
+        this->geo.clear();
+    }
+    if (this->vol.size() != 0) {
+        for (auto element : this->vol) {
+            ospRemoveVolume(this->world, element);
+        }
+        this->vol.clear();
+    }
+    //ospRelease(this->world);
 
 
     for (auto entry : this->structureMap) {
@@ -594,15 +597,21 @@ void AbstractOSPRayRenderer::fillWorld() {
         OSPData voxels     = NULL;
         OSPData isovalues  = NULL;
         OSPData planes     = NULL;
-        //OSPPlane pln      = NULL; //TEMPORARILY DISABLED
+        //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
+        case structureTypeEnum::UNINITIALIZED:
+            break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
             case geometryTypeEnum::SPHERES:
-
+                if (element.vertexData == NULL) {
+                    returnValue = false;
+                    break;
+                }
                 geo.push_back(ospNewGeometry("spheres"));
 
-                vertexData = ospNewData(element.partCount * element.vertexLength, OSP_FLOAT, element.vertexData->data());
+                vertexData = ospNewData(element.partCount * element.vertexLength, OSP_FLOAT, element.vertexData->data(), OSP_DATA_SHARED_BUFFER);
+
                 ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
 
                 if (element.vertexLength > 3) {
@@ -617,10 +626,10 @@ void AbstractOSPRayRenderer::fillWorld() {
                 ospSetData(geo.back(), "spheres", vertexData);
 
                 if (element.colorLength == 4) {
-                    colorData = ospNewData(element.partCount * element.colorLength, OSP_FLOAT, element.colorData->data());
+                    colorData = ospNewData(element.partCount * element.colorLength, OSP_FLOAT, element.colorData->data(), OSP_DATA_SHARED_BUFFER);
                     ospCommit(colorData);
                     ospSetData(geo.back(), "color", colorData);
-                } 
+                }
 
                 // clipPlane setup
                 /* TEMPORARILY DISABLED
@@ -638,20 +647,25 @@ void AbstractOSPRayRenderer::fillWorld() {
                 break;
 
             case geometryTypeEnum::NHSPHERES:
+                if (element.vertexData == NULL) {
+                    returnValue = false;
+                    break;
+                }
+
                 geo.push_back(ospNewGeometry("spheres"));
 
-                if (element.vertexLength > 3*sizeof(float)) {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw);
+                if (element.vertexLength > 3 * sizeof(float)) {
+                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
                     ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
                     ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
                 } else {
-                    vertexData = ospNewData(element.partCount*4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    vertexData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
                     ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
                     ospSet1f(geo.back(), "radius", element.globalRadius);
                     //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
                     //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
                     //ospSet1i(geo, "color_stride", element.vertexLength + element.colorLength);
-                    
+
                 }
                 ospCommit(vertexData);
                 //ospCommit(colorData);
@@ -660,7 +674,10 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             case geometryTypeEnum::TRIANGLES:
-
+                if (element.vertexData == NULL) {
+                    returnValue = false;
+                    break;
+                }
 
                 geo.push_back(ospNewGeometry("triangles"));
 
@@ -701,14 +718,18 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             case geometryTypeEnum::STREAMLINES:
+                if (element.vertexData == NULL) {
+                    returnValue = false;
+                    break;
+                }
 
                 geo.push_back(ospNewGeometry("streamlines"));
 
                 osp::vec3fa* data;
-                data = new osp::vec3fa[element.vertexData->size()/3];
+                data = new osp::vec3fa[element.vertexData->size() / 3];
 
                 // fill aligned array with vertex data
-                for (unsigned int i = 0; i < element.vertexData->size()/3; i++) {
+                for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
                     data[i].x = element.vertexData->data()[3 * i + 0];
                     data[i].y = element.vertexData->data()[3 * i + 1];
                     data[i].z = element.vertexData->data()[3 * i + 2];
@@ -717,7 +738,7 @@ void AbstractOSPRayRenderer::fillWorld() {
                     data[i].u = 16;
                 }
 
-                vertexData = ospNewData(element.vertexData->size()/3, OSP_FLOAT3A, data);
+                vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data);
                 ospCommit(vertexData);
                 ospSetData(geo.back(), "vertex", vertexData);
 
@@ -741,6 +762,7 @@ void AbstractOSPRayRenderer::fillWorld() {
             if (material != NULL) {
                 ospSetMaterial(geo.back(), material);
             }
+
             ospCommit(geo.back());
 
             ospAddGeometry(world, geo.back());
@@ -755,8 +777,12 @@ void AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::VOLUME:
-            vol.push_back(ospNewVolume("shared_structured_volume"));
+            if (element.voxels == NULL) {
+                returnValue = false;
+                break;
+            }
 
+            vol.push_back(ospNewVolume("shared_structured_volume"));
 
             ospSetString(vol.back(), "voxelType", "float");
             // scaling properties of the volume
@@ -800,36 +826,36 @@ void AbstractOSPRayRenderer::fillWorld() {
 
             case volumeRepresentationType::ISOSURFACE:
                 // isosurface
-                    geo.push_back(ospNewGeometry("isosurfaces"));
-                    isovalues = ospNewData(1, OSP_FLOAT, element.isoValue->data());
-                    ospCommit(isovalues);
-                    ospSetData(geo.back(), "isovalues", isovalues);
-                    ospSetObject(geo.back(), "volume", vol.back());
+                geo.push_back(ospNewGeometry("isosurfaces"));
+                isovalues = ospNewData(1, OSP_FLOAT, element.isoValue->data());
+                ospCommit(isovalues);
+                ospSetData(geo.back(), "isovalues", isovalues);
+                ospSetObject(geo.back(), "volume", vol.back());
 
-                    if (material != NULL) {
-                        ospSetMaterial(geo.back(), material);
-                    }
+                if (material != NULL) {
+                    ospSetMaterial(geo.back(), material);
+                }
 
-                    ospCommit(geo.back());
+                ospCommit(geo.back());
 
-                    ospAddGeometry(world, geo.back()); // Show isosurface
+                ospAddGeometry(world, geo.back()); // Show isosurface
 
                 break;
 
             case volumeRepresentationType::SLICE:
-                    geo.push_back(ospNewGeometry("slices"));
-                    planes = ospNewData(1, OSP_FLOAT4, element.sliceData->data());
-                    ospCommit(planes);
-                    ospSetData(geo.back(), "planes", planes);
-                    ospSetObject(geo.back(), "volume", vol.back());
+                geo.push_back(ospNewGeometry("slices"));
+                planes = ospNewData(1, OSP_FLOAT4, element.sliceData->data());
+                ospCommit(planes);
+                ospSetData(geo.back(), "planes", planes);
+                ospSetObject(geo.back(), "volume", vol.back());
 
-                    if (material != NULL) {
-                        ospSetMaterial(geo.back(), material);
-                    }
+                if (material != NULL) {
+                    ospSetMaterial(geo.back(), material);
+                }
 
-                    ospCommit(geo.back());
+                ospCommit(geo.back());
 
-                    ospAddGeometry(world, geo.back());  // Show slice
+                ospAddGeometry(world, geo.back());  // Show slice
 
                 break;
             }
@@ -838,6 +864,8 @@ void AbstractOSPRayRenderer::fillWorld() {
 
 
     } // for element loop
+
+    return returnValue;
 }
 
 void AbstractOSPRayRenderer::releaseOSPRayStuff() {
