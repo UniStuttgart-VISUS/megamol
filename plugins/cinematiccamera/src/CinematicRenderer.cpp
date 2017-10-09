@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/View3D.h"
+#include "mmcore/CoreInstance.h"
 
 #include "vislib/Array.h"
 #include "vislib/math/Point.h"
@@ -25,6 +26,7 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 
 #include "CinematicRenderer.h"
 #include "CallCinematicCamera.h"
@@ -46,18 +48,20 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
 #ifndef USE_SIMPLE_FONT
     theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
-    stepsParam(           "01 Spline subdivision", "Amount of interpolation steps between keyframes"),
-    toggleManipulateParam("02 Toggle manipulator", "Toggle between position manipulation or lookup manipulation."),
-    toggleHelpTextParam(  "03 Toggle help text", "Show/hide help text with key assignments."),
+    stepsParam(           "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
+    toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
+    toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
+    toggleModelBBoxParam( "04_toggleModelBBox", "Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model."),
+    //textureShader(),
     manipulator()
     {
 
     // init variables
     this->interpolSteps     = 20;
     this->toggleManipulator = false;
-    this->totalSimTime       = 1.0f;
-    this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->showHelpText      = false;
+    this->toggleModelBBox   = false;
+    this->ocBbox.SetNull();
 
     // init parameters
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -74,6 +78,9 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
 
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
+
+    this->toggleModelBBoxParam.SetParameter(new param::ButtonParam('t'));
+    this->MakeSlotAvailable(&this->toggleModelBBoxParam);
 
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
@@ -93,6 +100,40 @@ CinematicRenderer::~CinematicRenderer(void) {
 
 bool CinematicRenderer::create(void) {
 
+    /*
+    vislib::graphics::gl::ShaderSource vert, frag;
+
+    const char *shaderName = "textureShader";
+
+    try {
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) { 
+            return false; 
+        }
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::fragment", frag)) {
+            return false; 
+        }
+        if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
+            return false;
+        }
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile %s shader (@%s): %s\n", shaderName,
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+        return false;
+    }
+    catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
+        return false;
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile %s shader: Unknown exception\n", shaderName);
+        return false;
+    }
+    */
 	return true;
 }
 
@@ -102,7 +143,12 @@ bool CinematicRenderer::create(void) {
 */
 void CinematicRenderer::release(void) {
 
-	// intentionally empty
+    //this->textureShader.Release();
+
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
+    this->fbo.Release();
 }
 
 
@@ -141,24 +187,22 @@ bool CinematicRenderer::GetExtents(Call& call) {
 	*cr3d = *oc;
 
     // Compute bounding box including spline (in world space) and object (in world space).
-    math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
-    math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
+    vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
+    this->ocBbox = bboxCR3D;
+    vislib::math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
 
     // Get bounding box of spline.
-    math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
+    vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
     if (bboxCCC == NULL)  {
-        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
         return false;
     }
     bboxCR3D.Union(*bboxCCC);
     cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
-    // Check for bounding box center before extending it by keyframes
-    this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
-    if (this->bboxCenter != ccc->getBboxCenter()) {
-        ccc->setBboxCenter(this->bboxCenter);
-        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-    }
+    // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
+    ccc->setBboxCenter(oc->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
 
     // Apply new boundingbox 
 	cr3d->AccessBoundingBoxes().SetWorldSpaceBBox(bboxCR3D);
@@ -199,58 +243,120 @@ bool CinematicRenderer::Render(Call& call) {
         this->showHelpText = !this->showHelpText;
         this->toggleHelpTextParam.ResetDirty();
     }
-
-    // Check for new max anim time
-    this->totalSimTime = static_cast<float>(oc->TimeFramesCount());
-    if (this->totalSimTime != ccc->getTotalSimTime()) {
-        ccc->setTotalSimTime(this->totalSimTime);
-        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
+    if (this->toggleModelBBoxParam.IsDirty()) {
+        this->toggleModelBBox = !this->toggleModelBBox;
+        this->toggleModelBBoxParam.ResetDirty();
     }
 
-    // Set animation time based on selected keyframe ('disables' animation via view3d)
-    Keyframe skf = ccc->getSelectedKeyframe();
-    // Wrap animation time to simulation time
-    float simTime  = skf.getAnimTime();
-    float frameCnt = static_cast<float>(oc->TimeFramesCount());
-    simTime = simTime - (floorf(simTime / frameCnt) * frameCnt);
-
+    // Set total simulation time of call
+    float totalSimTime = static_cast<float>(oc->TimeFramesCount());
+    ccc->setTotalSimTime(totalSimTime);
+    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
+    // Set simulation time based on selected keyframe ('disables' animation via view3d)
     *oc = *cr3d;
-    oc->SetTime(simTime);
+    Keyframe skf = ccc->getSelectedKeyframe();
+    float simTime = skf.getSimTime();
+    oc->SetTime(simTime * totalSimTime);
 
-    // Call slave renderer.
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    (*oc)(0);
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
+    // COLORS
+    float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
+                                                  // Adapt colors depending on  Lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L < 0.5f) {
+        // not used so far
+    }
 
     // Get current Model-View-Projection matrix  for world space to screen space projection of keyframe camera position for mouse selection
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    math::ShallowMatrix<GLfloat, 4, math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    math::ShallowMatrix<GLfloat, 4, math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
     // Compute modelViewProjMatrix matrix
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
     // Get current viewport
-    vislib::math::Dimension<int, 2> viewportSize = cr3d->GetViewport().GetSize();
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    int   vpWidth = vp[2] - vp[0];
+    int   vpHeight = vp[3] - vp[1];
 
     // Get pointer to keyframes array
     Array<Keyframe> *keyframes = ccc->getKeyframes();
     if (keyframes == NULL) {
-        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to keyframe array is NULL.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to keyframe array is NULL.");
         return false;
     }
 
     // Get pointer to interpolated keyframes array
-    Array<math::Point<float, 3> > *interpolKeyframes = ccc->getInterpolCamPositions();
+    Array<vislib::math::Point<float, 3> > *interpolKeyframes = ccc->getInterpolCamPositions();
     if (interpolKeyframes == NULL) {
-        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to interpolated camera positions array is NULL.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to interpolated camera positions array is NULL.");
         return false;
     }
 
+    // Opengl setup
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
+    GLfloat tmpLw;
+    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
+    GLfloat tmpPs;
+    glGetFloatv(GL_POINT_SIZE, &tmpPs);
+
+    // Suppress TRACE output of fbo.Enable() and fbo.Create()
+#if defined(DEBUG) || defined(_DEBUG)
+    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
+    vislib::Trace::GetInstance().SetLevel(0);
+#endif // DEBUG || _DEBUG 
+
+    if (this->fbo.IsValid()) {
+        if ((this->fbo.GetWidth() != vpWidth) || (this->fbo.GetHeight() != vpHeight)) {
+            this->fbo.Release();
+        }
+    }
+    if (!this->fbo.IsValid()) {
+        if (!this->fbo.Create(vpWidth, vpHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+            throw vislib::Exception("[CINEMATIC RENDERER] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return false;
+        }
+    }
+
+    if (this->fbo.Enable() != GL_NO_ERROR) {
+        throw vislib::Exception("[CINEMATIC RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+        return false;
+    }
+    // Reset TRACE output level
+#if defined(DEBUG) || defined(_DEBUG)
+    vislib::Trace::GetInstance().SetLevel(otl);
+#endif // DEBUG || _DEBUG 
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Draw cinematic renderer stuff -------------------------------------------
     // Manipulators
     vislib::Array<KeyframeManipulator::manipType> availManip;
     availManip.Clear();
@@ -268,47 +374,15 @@ bool CinematicRenderer::Render(Call& call) {
         availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
     }
     // Update manipulator data
-    this->manipulator.update(availManip, keyframes, skf, viewportSize, cr3d->GetCameraParameters()->Position(), modelViewProjMatrix);
+    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+        cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
+            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
     // Draw manipulators
     this->manipulator.draw();
 
-    // Get the foreground color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-    // COLORS
-    float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
-    // Adapt colors depending on  Lightness
-    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
-    if (L < 0.5f) {
-        // not used so far
-    }
-
-    // Opengl setup
-    GLfloat tmpLw;
-    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
-    GLfloat tmpPs;
-    glGetFloatv(GL_POINT_SIZE, &tmpPs);
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-    // Draw spline
     math::Point<float, 3> tmpP;
     glColor4fv(sColor);
-///NB:   Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
+    // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);
     glPointSize(1.5f);
     glBegin(GL_POINTS);
@@ -318,74 +392,212 @@ bool CinematicRenderer::Render(Call& call) {
     }
     glEnd();
     glEnable(GL_BLEND);
+    // Draw spline
     glEnable(GL_LINE_SMOOTH);
     glLineWidth(2.0f);
     glBegin(GL_LINE_STRIP);
-        for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
-            tmpP = (*interpolKeyframes)[i];
-            glVertex3f(tmpP.GetX(), tmpP.GetY(), tmpP.GetZ());
-        }
+    for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
+        tmpP = (*interpolKeyframes)[i];
+        glVertex3f(tmpP.GetX(), tmpP.GetY(), tmpP.GetZ());
+    }
     glEnd();
 
-    // Draw help text 
+    // Draw slave renderer stuff ----------------------------------------------
+    if (this->toggleModelBBox) { // Draw either semi-transparent bounding box of model ...
+        glEnable(GL_CULL_FACE);
+        // (Blending has to be enabled ...)
+
+        glCullFace(GL_FRONT);
+        this->drawBoundingBox();
+        glCullFace(GL_BACK);
+        this->drawBoundingBox();
+    }
+    else { // ... or render full model to texture.
+
+        // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+        GLenum callOutBuffer = oc->OutputBuffer();
+        oc->SetOutputBuffer(this->fbo.GetID());
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        // Call render function of slave renderer
+        (*oc)(0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+
+        // Reset output buffer
+        oc->SetOutputBuffer(callOutBuffer);
+    }        
+
+    // Disable fbo
+    this->fbo.Disable();
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0f, (float)(vpWidth), 0.0f, (float)(vpHeight), -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
+    // Draw texture -------------------------------------------------------
+    // (Depth of texture depends on lookat position of world camera ...)
+
+    //this->textureShader.Enable();
+
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    this->fbo.BindColourTexture();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Draw in the background
+    glTranslatef(0.0f, 0.0f, -1.0f);
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(0.0f, 0.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f((float)(vpWidth), 0.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f((float)(vpWidth), (float)(vpHeight));
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, (float)(vpHeight));
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+
+    //this->textureShader.Disable();
+
+    // Draw help text  --------------------------------------------------------
+
+    // Draw help text in front of bounding box rendered by the view3d
+    glTranslatef(0.0f, 0.0f, 1.0f);
+    glEnable(GL_POLYGON_SMOOTH);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glColor4fv(fgColor);
     if (!this->theFont.Initialise()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0.0f, (float)viewportSize.GetWidth(), 0.0f, (float)viewportSize.GetHeight(), -1.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    // Draw help text in front of bounding box rendered by view
-    glTranslatef(0.0f, 0.0f, 1.0f);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable(GL_POLYGON_SMOOTH);
-///NB:   Has to be disabled for filled font rendering (e.g. forgotten in SimpleMoleculeRenderer)
-    glDisableClientState(GL_COLOR_ARRAY); 
-    glColor4fv(fgColor);
-    float fontSize = viewportSize.GetWidth()*0.03f; // 2.5% of viewport width
+    float fontSize = (float)(vpWidth)*0.03f; // 3% of viewport width
     vislib::StringA tmpStr = "";
-    float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------");
+    float strWidth = this->theFont.LineWidth(fontSize, "---------- ---------- ---------- ---------- ----- ");
+
     if (this->showHelpText) {
-        tmpStr += "[t] Timeline - Move or Select/Drag&Drop mode.\n";
-        tmpStr += "[tab] Move or Select mode.\n";
-        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
+        // Adapt font size if height of help text is greater than viewport height
+        float strHeight = 20.0f * this->theFont.LineHeight(fontSize);
+        while (strHeight > (float)(vpHeight)) {
+            fontSize -= 0.001f;
+            strHeight = 20.0f * this->theFont.LineHeight(fontSize);
+        }
+        tmpStr += "-----[ GLOBAL ]-----\n";
+        tmpStr += "[h] Hide help text.\n";
         tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[c] Change view of selected Keyframe.\n";
         tmpStr += "[d] Delete selected Keyframe.\n";
         tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
         tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[r] Start/Stop rendering complete animation.\n";
-        tmpStr += "[v] Set same velocity between all Keyframes.\n";
-        tmpStr += "[h] Hide help text.\n";
+        tmpStr += "[r] Toggle rendering complete animation.\n";
+        //tmpStr += "[v] Set same velocity between all Keyframes.\n";
+        tmpStr += "[space] Toggle playing animation.\n";
+        tmpStr += "-----[ CINEMATIC VIEW ]-----\n";
+        tmpStr += "[c] Apply view to selected Keyframe.\n \n";
+        tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
+        tmpStr += "[tab] Move or Selection mode.\n";
+        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
+        tmpStr += "[t] Show model or bounding box.\n";
+        tmpStr += "-----[ TIME LINES ]-----\n";
+        tmpStr += "[f] Snap keyframes to animation frames.\n";
+        tmpStr += "[left mouse] Selection.\n";
+        tmpStr += "[right mouse] Drag & Drop.\n";
+        tmpStr += "[middle mouse] Axis scaling.\n";
     }
     else {
         tmpStr += "[h] Show help text.\n";
     }
-    this->theFont.DrawString(10.0f, viewportSize.GetHeight() - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(10.0f, (float)(vpHeight) - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
-    glMatrixMode(GL_MODELVIEW);
+    // Reset opengl -----------------------------------------------------------
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 
-    // Reset opengl
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
+
     glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
 
     return true;
+}
+
+
+/*
+* CinematicRenderer::drawBoundingBox
+*/
+void CinematicRenderer::drawBoundingBox() {
+
+    float alpha = 0.75f;
+
+    glBegin(GL_QUADS);
+
+    glEdgeFlag(true);
+
+    glColor4f(0.5f, 0.5f, 0.5f, alpha);
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Back());
+
+    glColor4f(0.5f, 0.5f, 0.5f, alpha);
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Front());
+
+    glColor4f(0.75f, 0.75f, 0.75f, alpha);
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Back());
+
+    glColor4f(0.75f, 0.75f, 0.75f, alpha);
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Front());
+
+    glColor4f(0.25f, 0.25f, 0.25f, alpha);
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Bottom(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Left(), this->ocBbox.Top(), this->ocBbox.Back());
+
+    glColor4f(0.25f, 0.25f, 0.25f, alpha);
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Back());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Top(), this->ocBbox.Front());
+    glVertex3f(this->ocBbox.Right(), this->ocBbox.Bottom(), this->ocBbox.Front());
+
+    glEnd();
+
 }
 
 
@@ -403,7 +615,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     if (ccc == NULL) return false;
     Array<Keyframe> *keyframes = ccc->getKeyframes();
     if (keyframes == NULL) {
-        sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] Pointer to keyframe array is NULL.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] Pointer to keyframe array is NULL.");
         return false;
     }
 
@@ -416,6 +628,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             ccc->setSelectedKeyframeTime((*keyframes)[index].getAnimTime());
             if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
             consume = true;
+            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] KEYFRAME SELECT.");
         }
         
         // Check if manipulator is selected
@@ -423,6 +636,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
+            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
         }
         
     }
@@ -433,6 +647,7 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
+            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
         }
     }
     

@@ -25,67 +25,74 @@ namespace megamol {
 
 			/** CTOR */
             Keyframe();
-            Keyframe(float t);
-            Keyframe(float t, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up,
+            Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up,
                      vislib::math::Point<float, 3> lookat, float aperture);
 
 			/** DTOR */
 			~Keyframe();
 
             /** */
-			bool operator==(Keyframe const& rhs){
+            inline bool operator==(Keyframe const& rhs){
 				return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime));
 			}
 
             /** */
-            bool operator!=(Keyframe const& rhs) {
+            inline bool operator!=(Keyframe const& rhs) {
                 return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime));
             }
 
             ///// GET /////
 
             /** */
-            float getAnimTime() {
-                return animTime;
+            inline float getAnimTime() {
+                return this->animTime;
             }
             /** */
-			vislib::math::Point<float, 3> getCamPosition(){
+            inline float getSimTime() {
+                return (this->simTime == 1.0f)?(1.0f-0.0000001f):(this->simTime);
+            }
+            /** */
+            inline vislib::math::Point<float, 3> getCamPosition(){
                 return this->camera.position;
 			}
             /** */
-			vislib::math::Point<float, 3> getCamLookAt(){
+            inline vislib::math::Point<float, 3> getCamLookAt(){
                 return this->camera.lookat;
 			}
             /** */
-			vislib::math::Vector<float, 3> getCamUp(){
+            inline vislib::math::Vector<float, 3> getCamUp(){
                 return this->camera.up;
 			}
             /** */
-			float getCamApertureAngle(){
+            inline float getCamApertureAngle(){
                 return this->camera.apertureangle;
 			}
 
             ///// SET /////
 
             /** */
-            void setAnimTime(float t) {
-                this->animTime = t;
+            inline void setAnimTime(float t) {
+                this->animTime = (t < 0.0f)?(0.0f):(t);
             }
             /** */
-			void setCameraPosition(vislib::math::Point <float, 3> pos){
+            inline void setSimTime(float t) {
+                this->simTime = vislib::math::Clamp(t, 0.0f, 1.0f);
+            }
+            /** */
+            inline void setCameraPosition(vislib::math::Point <float, 3> pos){
                 this->camera.position = pos;
 			}
             /** */
-			void setCameraLookAt(vislib::math::Point <float, 3> look){
+            inline void setCameraLookAt(vislib::math::Point <float, 3> look){
                 this->camera.lookat = look;
 			}
             /** */
-			void setCameraUp(vislib::math::Vector<float, 3> up){
+            inline void setCameraUp(vislib::math::Vector<float, 3> up){
                 this->camera.up = up;
 			}
             /** */
-			void setCameraApertureAngele(float apertureangle){
-                this->camera.apertureangle = apertureangle;
+            inline void setCameraApertureAngele(float apertureangle){
+                this->camera.apertureangle = vislib::math::Clamp(apertureangle, 0.0f, 180.0f);
 			}
 
             ///// SERIALISATION /////
@@ -119,6 +126,9 @@ namespace megamol {
             * variables
             **********************************************************************/
 
+            // Simulation time is always in [0,1] and is relative to absolute total simulation time 
+            float                    simTime;
+            // Unit of animation time are seconds
 			float                    animTime;
             Keyframe::Camera         camera;
 

@@ -167,11 +167,15 @@ namespace megamol {
             }
 
             // DROP OF DRAGGED KEYFRAME
-            inline void setDropTime(float t) {
-                this->dropTime = t;
+            inline void setDropTimes(float at, float st) {
+                this->dropAnimTime = at;
+                this->dropSimTime  = st;
             }
-            inline float getDropTime() {
-                return this->dropTime;
+            inline float getDropAnimTime() {
+                return this->dropAnimTime;
+            }
+            inline float getDropSimTime() {
+                return this->dropSimTime;
             }
 
             // BOUNDING-BOX CENTER
@@ -180,6 +184,14 @@ namespace megamol {
             }
             inline vislib::math::Point<float, 3> getBboxCenter() {
                 return this->bboxCenter;
+            }
+
+            // FRAMES PER SECOND
+            inline void setFps(unsigned int f) {
+                this->fps = f;
+            }
+            inline unsigned int getFps() {
+                return this->fps;
             }
 
 		private:
@@ -195,10 +207,12 @@ namespace megamol {
             vislib::math::Cuboid<float>		              *boundingbox;
             unsigned int                                   interpolSteps;
             Keyframe						               selectedKeyframe;
-            float                                          dropTime;
+            float                                          dropAnimTime;
+            float                                          dropSimTime;
 			float								           totalAnimTime;
             float                                          totalSimTime;
             vislib::math::Point<float, 3>                  bboxCenter;
+            unsigned int                                   fps;
 
 		};
 

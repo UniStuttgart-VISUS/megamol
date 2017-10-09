@@ -117,19 +117,6 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            // The coloring mode for the keyframe marker
-            enum ColorMode {
-                DEFAULT_COLOR  = 0,
-                SELECTED_COLOR = 1,
-                DRAGDROP_COLOR = 2
-            };
-
-            // The rulerScaling
-            enum rulerMode {
-                RULER_FIXED_FONT    = 0,
-                RULER_FIXED_SEGMENT = 1
-            };
-
             // font rendering
 #ifdef USE_SIMPLE_FONT
             vislib::graphics::gl::SimpleFont  theFont;
@@ -139,25 +126,44 @@ namespace megamol {
             // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
-            vislib::math::Vector<float, 2> tlStartPos;
-            vislib::math::Vector<float, 2> tlEndPos;
-            float                          tlLength;
-            float                          devX, devY;
-            float                          totalAnimTime;
-            float                          lastMouseX;
-            float                          lastMouseY;
+            vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
+
+            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of naimation axis
+            float                          animAxisLen;        // length of the animation axis
+            float                          animTotalTime;      // the total animation time
+            float                          animSegmSize;       // the world space size of one segment of the animation time ruler
+            float                          animSegmValue;      // the animation time value of on segment on the ruler 
+            float                          animScaleFac;       // the scaling factor of the animation axis
+            bool                           animRedoSegmAdapt;  // indicates if the segment size/value should be recalculated
+            float                          animScaleOffset;    // (negative) offset to keep position on the ruler during scaling in focus 
+            float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
+            float                          animScalePos;       // the ruler position to be kept in focus during scaling
+            float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
+
+            vislib::math::Vector<float, 2> simAxisEndPos;
+            float                          simAxisLen;
+            float                          simTotalTime;
+            float                          simSegmSize;
+            float                          simSegmValue;
+            float                          simScaleFac;
+            bool                           simRedoSegmAdapt;
+            float                          simScaleOffset;
+            float                          simLenTimeFrac;
+            float                          simScalePos;
+            float                          simScaleDelta;
+
+            vislib::math::Vector<float, 2> lastMousePos;
+            unsigned int                   scaleAxis;
+
             Keyframe                       dragDropKeyframe;
-            bool                           aktiveDragDrop;
-            float                          adaptFontSize;
-            float                          adaptSegSize;
-            bool                           moveTimeLine;
-            float                          segmentSize;
+            bool                           dragDropActive;
+            unsigned int                   dragDropAxis;
+
             float                          fontSize;
-            float                          markerSize;
-            rulerMode                      currentRulerMode;
-            float                          initScaleFac;
-            float                          scaleFac;
-            bool                           redoAdaptation;
+            float                          keyfMarkSize;
+            float                          rulerMarkSize;
+            unsigned int                   fps;
+            
 
             /**********************************************************************
             * functions
@@ -181,20 +187,8 @@ namespace megamol {
             * parameter
             **********************************************************************/
 
-            /** marker size parameter */
-            megamol::core::param::ParamSlot markerSizeParam;
-
-            /** move time line parameter */
-            megamol::core::param::ParamSlot moveTimeLineParam;
-
             /**  */
-            megamol::core::param::ParamSlot rulerModeParam;
-
-            /**  */
-            megamol::core::param::ParamSlot rulerFixedSegParam;
-
-            /**  */
-            megamol::core::param::ParamSlot rulerFixedFontParam;
+            megamol::core::param::ParamSlot rulerFontParam;
 		};
 
 	} /* end namespace cinematiccamera */

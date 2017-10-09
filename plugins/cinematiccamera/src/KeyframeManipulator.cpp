@@ -31,7 +31,7 @@ KeyframeManipulator::KeyframeManipulator(void) :
     this->sKfInArray          = false;;
     this->modelViewProjMatrix = vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>();
     this->viewportSize        = vislib::math::Dimension<int, 2>();
-    this->worldCamPos         = vislib::math::Vector<float, 3>();
+    this->worldCamDir         = vislib::math::Vector<float, 3>();
     this->isDataDirty         = true;
     this->kfArray.Clear();
     this->manipArray.Clear();
@@ -52,8 +52,8 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 /*
 * KeyframeManipulator::KeyframeManipulator
 */
-bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, vislib::math::Dimension<int, 2> vps,
-                           vislib::math::Point<float, 3> wcp, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm) {
+bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wcd) {
 
     if (kfa == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
@@ -63,15 +63,16 @@ bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> a
     // Update ModelViewPorjectionMatrix ---------------------------------------
     // and position of world camera 
     bool recalcKf = false;
-    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamPos != wcp)) {
+    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamDir != wcd)) {
         this->calculateCircleVertices();
         recalcKf = true;
     }
     this->modelViewProjMatrix = mvpm;
-    this->worldCamPos         = vislib::math::Vector<float, 3>(wcp.X(), wcp.Y(), wcp.Z());
+    this->worldCamDir         = wcd;
 
     // Update viewport --------------------------------------------------------
-    this->viewportSize = vps;
+    this->viewportSize.SetHeight(vph);
+    this->viewportSize.SetWidth(vpw);
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
@@ -96,7 +97,7 @@ bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> a
         this->kfArray.AssertCapacity(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
             manipPosData tmpkfA;
-            tmpkfA.wsPos = static_cast<vislib::math::Vector<float, 3>>((*kfa)[i].getCamPosition());
+            tmpkfA.wsPos = (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
             tmpkfA.ssPos = this->getScreenSpace(tmpkfA.wsPos);
             tmpkfA.offset = (this->getScreenSpace(tmpkfA.wsPos + this->circleVertices[1]) - tmpkfA.ssPos).Norm(); // ...
             this->kfArray.Add(tmpkfA);
@@ -104,8 +105,8 @@ bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> a
     }
     else { // Update only different positions
         for (unsigned int i = 0; i < kfACnt; i++) {
-            if (this->kfArray[i].wsPos != (*kfa)[i].getCamPosition()) { 
-                this->kfArray[i].wsPos  = static_cast<vislib::math::Vector<float, 3> >((*kfa)[i].getCamPosition());
+            if (this->kfArray[i].wsPos != (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) { 
+                this->kfArray[i].wsPos  = (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
                 this->kfArray[i].ssPos  = this->getScreenSpace(this->kfArray[i].wsPos);
                 this->kfArray[i].offset = (this->getScreenSpace(this->kfArray[i].wsPos + this->circleVertices[1]) - this->kfArray[i].ssPos).Norm(); 
             }
@@ -140,8 +141,8 @@ bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> a
 */
 bool KeyframeManipulator::updateManipulators() {
 
-    vislib::math::Vector<float, 3> skfPosV = this->P2V(this->selectedKf.getCamPosition());
-    vislib::math::Vector<float, 3> skfLaV  = this->P2V(this->selectedKf.getCamLookAt());
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
     // Update screen space positions
     this->sKfSsPos    = this->getScreenSpace(skfPosV);
     this->sKfSsLookAt = this->getScreenSpace(skfLaV);
@@ -261,8 +262,8 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     float lineDiff = 0.0f;
 
     // Local copies as vectors
-    vislib::math::Vector<float, 3> skfPosV = this->P2V(this->selectedKf.getCamPosition());
-    vislib::math::Vector<float, 3> skfLaV  = this->P2V(this->selectedKf.getCamLookAt());
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
     vislib::math::Vector<float, 3> skfUpV  = this->selectedKf.getCamUp();
 
     vislib::math::Vector<float, 2> ssVec = this->manipArray[index].ssPos - this->sKfSsPos;
@@ -300,7 +301,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     }
 
     if (this->activeType == manipType::SELECTED_KF_UP) {
-        bool cwRot = ((this->worldCamPos - skfLaV).Norm() > (this->worldCamPos - skfPosV).Norm());
+        bool cwRot = ((this->worldCamDir - skfLaV).Norm() > (this->worldCamDir - skfPosV).Norm());
         vislib::math::Vector<float, 3> tmpSsUp = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f); // up vector for screen space
         if (!cwRot) {
             tmpSsUp.SetZ(-1.0f);
@@ -323,6 +324,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     // Apply changes to selected keyframe
     this->selectedKf.setCameraPosition(this->V2P(skfPosV));
     this->selectedKf.setCameraLookAt(this->V2P(skfLaV));
+    skfUpV.Normalise();
     this->selectedKf.setCameraUp(skfUpV);
 
     // Update manipulators
@@ -375,23 +377,25 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     this->circleVertices.AssertCapacity(this->circleSubDiv);
 
     // Get normal for plane the cirlce lies on
-    vislib::math::Vector<float, 3> normal = this->worldCamPos;
-    // Check if world camera position is zero ...
+    vislib::math::Vector<float, 3> normal = this->worldCamDir;
+    // Check if world camera direction is zero ...
     if (normal.IsNull()) {
         normal.SetZ(1.0f);
-        vislib::sys::Log::DefaultLog.WriteError("[OJHHH].");
+        //vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [calculateCircleVertices] LookAt direction of world camera shouldn't be zero.");
     }
     normal.Normalise();
+    // Size of radius depends on the length of the lookat direction vector
+    float radius = vislib::math::Max((this->worldCamDir.Length() * this->circleRadiusPc), 0.15f);
     // Get arbitary vector vertical to normal
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
-    rot.ScaleToLength(this->circleRadius);
+    rot.ScaleToLength(radius);
     // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula" 
     float t = 2.0f*(float)(CC_PI) / (float)(this->circleSubDiv); // theta angle for rotation   
     // First vertex is center of triangle fan
     this->circleVertices.Add(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
     for (unsigned int i = 0; i <= this->circleSubDiv; i++) {
         rot = rot * cos(t) + normal.Cross(rot) * sin(t) + normal * (normal.Dot(rot)) * (1.0f - cos(t));
-        rot.ScaleToLength(this->circleRadius);
+        rot.ScaleToLength(radius);
         this->circleVertices.Add(rot);
     }
 }
@@ -407,27 +411,17 @@ bool KeyframeManipulator::draw(void) {
         return false;
     }
 
-    vislib::math::Vector<float, 3> skfPosV = this->P2V(this->selectedKf.getCamPosition());
-    vislib::math::Vector<float, 3> skfLaV  = this->P2V(this->selectedKf.getCamLookAt());
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.0f);
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);    
     glEnable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
+
+    // Rest of necessary OpenGl settings are already done in CinematicRenderer ...
 
     // Get the foreground color (inverse background color)
     float bgColor[4];
@@ -437,13 +431,13 @@ bool KeyframeManipulator::draw(void) {
         fgColor[i] -= bgColor[i];
     }
     // COLORS
-    float kColor[4] = { 0.7f, 0.7f, 1.0f, 1.0f };  // Color for KEYFRAME
-    float skColor[4] = {0.1f, 0.1f, 1.0f, 1.0f };  // Color for SELECTED KEYFRAME
-    float mlaColor[4] = {0.3f, 0.8f, 0.8f, 1.0f }; // Color for MANIPULATOR LOOKAT
-    float muColor[4] = {0.8f, 0.0f, 0.8f, 1.0f };  // Color for MANIPULATOR UP
-    float mxColor[4] = {0.8f, 0.1f, 0.0f, 1.0f };  // Color for MANIPULATOR X-AXIS
-    float myColor[4] = {0.8f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Y-AXIS
-    float mzColor[4] = {0.1f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Z-AXIS
+    float kColor[4]   = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME
+    float skColor[4]  = {0.2f, 0.2f, 1.0f, 1.0f };  // Color for SELECTED KEYFRAME
+    float mlaColor[4] = {0.3f, 0.8f, 0.8f, 1.0f };  // Color for MANIPULATOR LOOKAT
+    float muColor[4]  = {0.8f, 0.0f, 0.8f, 1.0f };  // Color for MANIPULATOR UP
+    float mxColor[4]  = {0.8f, 0.1f, 0.0f, 1.0f };  // Color for MANIPULATOR X-AXIS
+    float myColor[4]  = {0.8f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Y-AXIS
+    float mzColor[4]  = {0.1f, 0.8f, 0.0f, 1.0f };  // Color for MANIPULATOR Z-AXIS
     // Adapt colors depending on  Lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
@@ -507,7 +501,6 @@ bool KeyframeManipulator::draw(void) {
 
     // Reset opengl
     glLineWidth(tmpLw);
-    glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
 
     return true;

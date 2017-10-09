@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc_item_pick" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="pc" />
+
+  <snippet name="intersectLineCircle" type="string">
+    <![CDATA[
+#define FLOAT_EPS (1.0e-10)
+
+bool intersectLineCircle(vec2 p, vec2 q, vec2 m, float r)
+{
+  // Project m onto (p, q)
+  
+  vec2 x = m - p;
+  vec2 l = q - p;
+  
+  float lineLength = dot(l, l);
+  
+  if (abs(lineLength) < FLOAT_EPS)
+  {
+    return false;
+  }
+  
+  float u = dot(x, l) / lineLength;
+  
+  if (u < 0.0)
+  {
+    // x is already correct
+  }
+  else if (u > 1.0)
+  {
+    x = m - q;
+  }
+  else // 0.0 < u < 1.0
+  {
+    x -= u * l;
+  }
+  
+  return dot(x, x) <= (r * r);
+}
+    ]]>
+  </snippet>
+  
+  <shader name="comp">
+    <snippet type="version">430</snippet>
+    <snippet name="::pc::extensions" />
+    <snippet name="::pc::useLineStrip" />
+    <snippet name="::pc::buffers" />
+    <snippet name="::pc::uniforms" />
+    <snippet name="::pc::common" />
+    <snippet name="::pc_item_pick::uniforms" />
+    <snippet name="::pc_item_pick::intersectLineCircle" />
+    <snippet name="::bitflags::main" />
+    <snippet type="string">
+      <![CDATA[
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main()
+{
+  vec4 center = vec4(mouse, pc_item_defaultDepth, 1.0);
+  
+  uint itemID = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+  
+  if (itemID < itemCount
+    && bitflag_isVisible(flags[itemID])
+    )
+  {
+    bool selected = false;
+    
+    for (uint dimension = 1; dimension < dimensionCount; ++dimension)
+    {
+    	// TODO
+      //vec4 p = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension - 1), dimension - 1);
+      //vec4 q = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension), dimension);
+      
+      //if (intersectLineCircle(p.xy, q.xy, mouse, pickRadius))
+      //{
+      //  selected = true;
+      //  break;
+      //}
+    }
+    
+    bitflag_set(flags[itemID], FLAG_SELECTED, selected);
+  }
+}
+      ]]>
+    </snippet>
+  </shader>
+  
+  <namespace name="indicator">
+
+    <snippet name="interface" type="string">
+      <![CDATA[
+	    ]]>
+    </snippet>
+
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_pick::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+smooth out vec2 circleCoord;
+
+void main()
+{
+  vec2 vertices[6] =
+  {
+    // b_l, b_r, t_r
+    vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(1.0, 1.0)
+    // t_r, t_l, b_l
+    , vec2(1.0, 1.0), vec2(-1.0, 1.0), vec2(-1.0, -1.0)
+  };
+  
+  circleCoord = vertices[gl_VertexID];
+  
+  vec4 vertex = vec4(mouse + pickRadius * circleCoord, pc_item_defaultDepth, 1.0);
+  
+  gl_Position = projection * modelView * vertex;
+}
+      ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_pick::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+uniform vec4 indicatorColor = vec4(0.0, 0.0, 1.0, 1.0);
+
+in vec2 circleCoord;
+
+out vec4 fragColor;
+
+void main()
+{
+  float dist = length(circleCoord);
+  
+  if (dist < 1.0)
+  {
+    fragColor = indicatorColor;
+  }
+  else
+  {
+    discard;
+  }
+}
+      ]]>
+      </snippet>
+    </shader>
+
+  </namespace>
+
+</btf>
