@@ -640,13 +640,13 @@ UINT megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
 
 
 int megamol::core::LuaState::GetProcessID(lua_State *L) {
-    if (this->checkRunning("mmGetProcessID")) {
+//    if (this->checkRunning("mmGetProcessID")) {
         vislib::StringA str;
         unsigned int id = vislib::sys::Process::CurrentID();
         str.Format("%u", id);
         lua_pushstring(L, str.PeekBuffer());
         return 1;
-    }
+//    }
 }
 
 

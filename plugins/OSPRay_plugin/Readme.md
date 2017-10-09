@@ -11,7 +11,7 @@ The figure below shows a common OSPRay module graph in MegaMol.
 ## Building
 [OSPRay](http://ospray.org) is not included in this package, however it is required for this plugin to build.
 
-Step 1: Get and build OSPRay. Follow the instructions on the OSPRay website (http://ospray.org) or the OSPRay GitHub page (https://github.com/ospray/ospray).
+Step 1: Get and build OSPRay. Follow the instructions on the OSPRay website (http://ospray.org) or the OSPRay GitHub page (https://github.com/ospray/ospray). Make sure `OSPRAY_INSTALL_DEPENDENCIES` is enabled, otherwise Embree and TBB DLLs will not be installed and unavailable for the plugin. The plugin always uses the release version of OSPRay.
 
 Step 2: Make sure you enable the plugin in CMake. Either use `-DBUILD_OSPRAY_PLUGIN` as configuration argument or use the graphical user interface `ccmake`.
 
