@@ -14,6 +14,8 @@
 
 #include "CaverTunnelResidueLoader.h"
 
+#include "TunnelResidueDataCall.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -59,7 +61,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::sombreros::MyCall2>();
             //   ...
             //
-
+			this->call_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelResidueDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
