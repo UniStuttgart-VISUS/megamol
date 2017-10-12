@@ -103,6 +103,22 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
+  # include zfp
+  set(ZFP_VER "0_5_2")
+  string(REPLACE "_" "." ZFP_TAG ${ZFP_VER})
+   if (MSVC)
+    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/zfp.lib" CACHE INTERNAL '')
+  else()
+    include(GNUInstallDirs)
+    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzfp.a")
+  endif()
+  ExternalProject_Add(extzfp
+    GIT_REPOSITORY https://github.com/LLNL/zfp.git
+    GIT_TAG ${ZFP_TAG}
+    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
+  )
+  message(STATUS "ZFP Git Tag: " ${ZFP_TAG})
+
   set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
