@@ -20,25 +20,17 @@ if(BUILD_CONFIGURATOR)
       set(CONFIGURATOR_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf)
       string(REGEX REPLACE "/" "\\\\" CONF_SOURCE  ${CMAKE_CURRENT_SOURCE_DIR})
       string(REGEX REPLACE "/" "\\\\" CONF_BIN  ${CMAKE_CURRENT_BINARY_DIR})
+      string(REGEX REPLACE "/" "\\\\" CONF_INST  ${CMAKE_INSTALL_PREFIX})
       configure_file(${CONFIGURATOR_SOURCE}/Resources/mmconfig.rc.input mmconfig.rc)
       configure_file(${CONFIGURATOR_SOURCE}/Properties/AssemblyInfo.cs.input AssemblyInfo.cs)
 
-      # Libs and include dirs
-  set(LIBS  ${ZMQ_LIB})
-  include_directories("MegaMolConf" ${EXTERNAL_INSTALL_LOCATION}/include)
-
-  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "MegaMolConf/*.resx")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "MegaMolConf/*.cs")
-
-  #configure_file(${CONFIGURATOR_SOURCE}/MegaMolConf.csproj.input MegaMolConf.csproj)
-
-  add_custom_target(install_configurator_deps 
+  add_custom_target(prebuild_configurator_deps 
   COMMAND "copy" "${CONF_BIN}\\mmconfig.res" "${CONF_SOURCE}\\MegaMolConf\\Resources\\mmconfig.res"
   COMMAND "copy" "${CONF_BIN}\\AssemblyInfo.cs" "${CONF_SOURCE}\\MegaMolConf\\Properties\\AssemblyInfo.cs")
 
-  set_target_properties(install_configurator_deps PROPERTIES FOLDER configurator)
+  set_target_properties(prebuild_configurator_deps PROPERTIES FOLDER configurator)
 
-  include_external_msproject(MegaMolConf "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj" install_configurator_deps)
+  include_external_msproject(MegaMolConf "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj" prebuild_configurator_deps)
 
   set_target_properties(MegaMolConf PROPERTIES FOLDER configurator)
 
@@ -63,4 +55,18 @@ if(BUILD_CONFIGURATOR)
     endif()
   endif()
 
+
+  # Install binaries and libraries
+  install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
+
+  if(BITS EQUAL 64)
+    set(sub_dir "amd64")
+  else()
+    set(sub_dir "i386")
+  endif()
+  install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
+
+  
 endif()
