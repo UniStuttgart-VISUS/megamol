@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ArchVisMSM">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="string">
+<!--
+
+#extension GL_ARB_shader_draw_parameters : require
+
+struct MeshShaderParams
+{
+    mat4 transform;
+};
+
+struct MaterialShaderParams
+{
+    uvec2 texture_handle_dummy;
+};
+
+layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
+layout(std430, binding = 1) readonly buffer MaterialShaderParamsBuffer { MaterialShaderParams[] mtl_shader_params; };
+
+uniform mat4 view_mx;
+uniform mat4 proj_mx;
+
+in vec3 v_position;
+in vec3 v_normal;
+
+void main()
+{
+
+    //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
+    mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
+    gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
+
+}
+-->
+</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="string">
+<!--
+out layout(location = 0) vec4 frag_colour;
+
+void main(void) {
+    frag_colour = vec4( 1.0, 0.75, 0.2, 1.0);
+}
+-->
+</snippet>
+    </shader>
+
+</btf>

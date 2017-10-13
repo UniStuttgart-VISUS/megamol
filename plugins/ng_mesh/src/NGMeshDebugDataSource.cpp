@@ -110,7 +110,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	uint_view[1] = 1;
 	uint_view[2] = 2;
 
-	mesh_data.vertex_descriptor.byte_size = 24;
+	mesh_data.vertex_descriptor.stride = 24;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
 	mesh_data.vertex_descriptor.attributes = new CallNGMeshRenderBatches::RenderBatchesData::MeshData::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;

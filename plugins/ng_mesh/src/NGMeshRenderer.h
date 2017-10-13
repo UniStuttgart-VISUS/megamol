@@ -282,13 +282,13 @@ namespace ngmesh {
 					GLsizei offset;
 				};
 
-				VertexLayout() : byte_size(0), attributes() {}
+				VertexLayout() : stride(0), attributes() {}
 				VertexLayout(GLsizei byte_size, const std::vector<Attribute>& attributes)
-					: byte_size(byte_size), attributes(attributes) {}
+					: stride(byte_size), attributes(attributes) {}
 				VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
-					: byte_size(byte_size), attributes(attributes) {}
+					: stride(byte_size), attributes(attributes) {}
 
-				GLsizei byte_size;
+				GLsizei stride;
 				std::vector<Attribute> attributes;
 			};
 
@@ -299,8 +299,9 @@ namespace ngmesh {
 				GLenum					indices_type = GL_UNSIGNED_INT,
 				GLenum					usage = GL_STATIC_DRAW,
 				GLenum					primitive_type = GL_TRIANGLES)
-				: m_vbo<VertexContainer>(GL_ARRAY_BUFFER, vertices, usage),
-				m_ibo<IndexContainer>(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor might fail? needs a bound vao?
+				: m_vbo(GL_ARRAY_BUFFER, vertices, usage),
+				m_ibo(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor might fail? needs a bound vao?
+				m_vertex_descriptor(vertex_descriptor),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
@@ -313,7 +314,7 @@ namespace ngmesh {
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
 					glEnableVertexAttribArray(attrib_idx);
-					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.byte_size, (GLvoid*)attribute.offset);
+					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.stride, (GLvoid*)attribute.offset);
 
 					attrib_idx++;
 				}
@@ -346,6 +347,7 @@ namespace ngmesh {
 				GLenum				primitive_type = GL_TRIANGLES)
 				: m_vbo(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage),
 				m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
+				m_vertex_descriptor(vertex_descriptor),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
 				glGenVertexArrays(1, &m_va_handle);
@@ -362,7 +364,7 @@ namespace ngmesh {
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
 					glEnableVertexAttribArray(attrib_idx);
-					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.byte_size, reinterpret_cast<GLvoid*>(attribute.offset));
+					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.stride, reinterpret_cast<GLvoid*>(attribute.offset));
 
 					attrib_idx++;
 				}

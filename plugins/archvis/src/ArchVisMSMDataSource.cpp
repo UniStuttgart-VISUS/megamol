@@ -16,7 +16,12 @@
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
 
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/tiny_gltf.h"
+
 using namespace megamol;
+using namespace megamol::archvis;
 using namespace megamol::ngmesh;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
@@ -69,6 +74,26 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 {
 	std::cout << "loading data" << std::endl;
 
+
+	// Begin test gltf
+
+	tinygltf::Model model;
+	tinygltf::TinyGLTF loader;
+	std::string err;
+
+	bool ret = loader.LoadASCIIFromFile(&model, &err, geometry_filename);
+	if (!err.empty()) {
+		printf("Err: %s\n", err.c_str());
+	}
+
+	if (!ret) {
+		printf("Failed to parse glTF\n");
+	}
+
+	
+
+	// End test gltf
+
 	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
 	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
 	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
@@ -111,7 +136,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	uint_view[1] = 1;
 	uint_view[2] = 2;
 
-	mesh_data.vertex_descriptor.byte_size = 24;
+	mesh_data.vertex_descriptor.stride = 24;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
 	mesh_data.vertex_descriptor.attributes = new CallNGMeshRenderBatches::RenderBatchesData::MeshData::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;

@@ -17,8 +17,10 @@
 
 #include "ng_mesh/AbstractNGMeshDataSource.h"
 
+using namespace megamol::ngmesh;
+
 namespace megamol {
-namespace ngmesh {
+namespace archvis {
 
 	class ArchVisMSMDataSource : public AbstractNGMeshDataSource
 	{
@@ -29,7 +31,7 @@ namespace ngmesh {
 		* @return The name of this module.
 		*/
 		static const char *ClassName(void) {
-			return "NGMeshDebugDataSource";
+			return "ArchVisMSMDataSource";
 		}
 
 		/**
@@ -38,7 +40,7 @@ namespace ngmesh {
 		* @return A human readable description of this module.
 		*/
 		static const char *Description(void) {
-			return "Data source for debuging NGMeshRenderer";
+			return "Data source for visualizing SFB1244's 'Maﬂstabsmodell'";
 		}
 
 		/**

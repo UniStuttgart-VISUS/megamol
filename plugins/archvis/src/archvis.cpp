@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "ArchVisMSMDataSource.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -46,6 +48,7 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::archvis::MyModule2>();
             //   ...
             //
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
 
             // register calls here:
 

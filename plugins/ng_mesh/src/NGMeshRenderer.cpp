@@ -166,7 +166,7 @@ void NGMeshRenderer::addRenderBatch(
 
 	// Create mesh
 	Mesh::VertexLayout layout;
-	layout.byte_size = mesh_data.vertex_descriptor.byte_size;
+	layout.stride = mesh_data.vertex_descriptor.stride;
 	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
 	{
 		layout.attributes.push_back(Mesh::VertexLayout::Attribute(

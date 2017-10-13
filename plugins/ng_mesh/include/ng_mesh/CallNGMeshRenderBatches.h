@@ -75,7 +75,7 @@ namespace ngmesh {
 							GLsizei		offset;
 						};
 
-						GLsizei		byte_size;
+						GLsizei		stride;
 						GLuint		attribute_cnt;
 						Attribute*	attributes;
 					};
@@ -371,7 +371,7 @@ namespace ngmesh {
 					m_head.meshes[idx].index_data.index_type = mesh_data.index_data.index_type;
 					offset += m_head.meshes[idx].index_data.byte_size;
 					std::memcpy(m_head.meshes[idx].index_data.raw_data, mesh_data.index_data.raw_data, mesh_data.index_data.byte_size);
-					m_head.meshes[idx].vertex_descriptor.byte_size = mesh_data.vertex_descriptor.byte_size;
+					m_head.meshes[idx].vertex_descriptor.stride = mesh_data.vertex_descriptor.stride;
 					m_head.meshes[idx].vertex_descriptor.attribute_cnt = mesh_data.vertex_descriptor.attribute_cnt;
 					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<MeshData::VertexLayoutData::Attribute*>(m_data.raw_buffer + offset);
 					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(MeshData::VertexLayoutData::Attribute);
