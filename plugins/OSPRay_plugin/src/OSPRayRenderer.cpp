@@ -268,6 +268,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
         // clear stuff
         ospUnmapFrameBuffer(fb, framebuffer);
+        ospUnmapFrameBuffer(db, framebuffer);
 
         this->releaseOSPRayStuff();
 
@@ -278,6 +279,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         db = (float*)ospMapFrameBuffer(framebuffer, OSP_FB_DEPTH);
         this->renderTexture2D(osprayShader, fb, db, imgSize.x, imgSize.y, *cr, camParams->FarClip());
         ospUnmapFrameBuffer(fb, framebuffer);
+        ospUnmapFrameBuffer(db, framebuffer);
     }
 
     osprayShader.Disable();
