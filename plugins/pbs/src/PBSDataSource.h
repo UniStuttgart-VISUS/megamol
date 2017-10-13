@@ -1,7 +1,17 @@
+/*
+ * PBSDataSource.h
+ *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
 #ifndef PBS_PBSREADER_H_INCLUDED
 #define PBS_PBSREADER_H_INCLUDED
 
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 
 namespace megamol {
 namespace pbs {
@@ -54,6 +64,41 @@ protected:
      */
     virtual void release(void);
 private:
+    /**
+     * Callback receiving the update of the file name parameter.
+     *
+     * @param slot The updated ParamSlot.
+     *
+     * @return Always 'true' to reset the dirty flag.
+     */
+    bool filenameChanged(core::param::ParamSlot& slot);
+
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
+
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
+
+    /** The file name */
+    core::param::ParamSlot filename;
+
+    /** The slot for requesting data */
+    core::CalleeSlot getData;
+
+    /** The data set data hash */
+    size_t dataHash;
 };
 
 } /* end namespace pbs */
