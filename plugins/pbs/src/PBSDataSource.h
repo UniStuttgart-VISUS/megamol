@@ -9,6 +9,8 @@
 #define PBS_PBSREADER_H_INCLUDED
 
 #include <vector>
+#include <string>
+#include <stdexcept>
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
@@ -69,6 +71,36 @@ protected:
     virtual void release(void);
 private:
     /**
+     * Helper function to insert read buffer into an output buffer.
+     *
+     * @lhs Buffer to insert into
+     * @rhs Buffer to insert from
+     * @num_elements Number of elements to insert
+     */
+    template<class T>
+    void insertElements(std::vector<T>& lhs, std::vector<char>& rhs, size_t num_elements) {
+        if (num_elements > rhs.size() / sizeof(T)) {
+            throw std::out_of_range("PBSDataSource::insertElements: rhs.size() to small for num_elements\n");
+        }
+        lhs.insert(lhs.end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
+    }
+
+    /**
+     * Clears all buffers.
+     */
+    void clearBuffers(void);
+
+    /**
+     * Reads and decompressed PBS file
+     *
+     * @param filename Path to the PBS file without extension
+     * @param data Buffer to store the uncompressed file content
+     *
+     * @return True, if file was successfully read
+     */
+    bool readPBSFile(const std::string& filename, std::vector<char> &data, const zfp_type type, const unsigned int num_elements, const double tol);
+
+    /**
      * Callback receiving the update of the file name parameter.
      *
      * @param slot The updated ParamSlot.
@@ -98,14 +130,17 @@ private:
     /** The file name */
     core::param::ParamSlot filenameSlot;
 
-    /** The datatype */
-    core::param::ParamSlot datatypeSlot;
+    /** The start chunk idx */
+    core::param::ParamSlot start_idx_slot;
 
-    /** The ZFP compression tolerance */
-    core::param::ParamSlot toleranceSlot;
+    /** The end chunk idx */
+    core::param::ParamSlot end_idx_slot;
 
-    /** The number of elements in the PBS file */
-    core::param::ParamSlot numElementsSlot;
+    /** The start render region idx */
+    core::param::ParamSlot start_region_idx_slot;
+
+    /** The end render region idx */
+    core::param::ParamSlot end_region_idx_slot;
 
     /** The slot for requesting data */
     core::CalleeSlot getData;
@@ -119,6 +154,38 @@ private:
     /** Lookup table for ZFP datatype sizes */
     size_t datatype_size[5] = {
         0, sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double)
+    };
+
+    /** Buffers for point coordinates */
+    std::vector<double> x_data, y_data, z_data;
+
+    /** Buffers for point normals in spherical coordinates */
+    std::vector<float> nx_data, ny_data;
+
+    /** Buffers for point colors */
+    std::vector<unsigned char> cr_data, cg_data, cb_data;
+
+    /** Flag-storage for "renderable" property */
+    std::vector<bool> render_flag;
+
+    /** Number of possible attributes */
+    static const unsigned int max_num_attributes = 8;
+
+    /** Idx enum for point attributes */
+    enum attribute_type {
+        x = 0,
+        y,
+        z,
+        nx,
+        ny,
+        cr,
+        cg,
+        cb
+    };
+
+    /** Prefixes of filenames */
+    std::string filename_prefixes[max_num_attributes] = {
+        "x", "y", "z", "nx", "ny", "cr", "cg", "cb"
     };
 };
 
