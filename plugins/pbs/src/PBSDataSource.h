@@ -8,10 +8,14 @@
 #ifndef PBS_PBSREADER_H_INCLUDED
 #define PBS_PBSREADER_H_INCLUDED
 
+#include <vector>
+
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+
+#include "zfp.h"
 
 namespace megamol {
 namespace pbs {
@@ -92,13 +96,30 @@ private:
     bool getExtentCallback(core::Call& caller);
 
     /** The file name */
-    core::param::ParamSlot filename;
+    core::param::ParamSlot filenameSlot;
+
+    /** The datatype */
+    core::param::ParamSlot datatypeSlot;
+
+    /** The ZFP compression tolerance */
+    core::param::ParamSlot toleranceSlot;
+
+    /** The number of elements in the PBS file */
+    core::param::ParamSlot numElementsSlot;
 
     /** The slot for requesting data */
     core::CalleeSlot getData;
 
+    /** Buffer holding the data of the PBS file */
+    std::vector<char> data;
+
     /** The data set data hash */
     size_t dataHash;
+
+    /** Lookup table for ZFP datatype sizes */
+    size_t datatype_size[5] = {
+        0, sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double)
+    };
 };
 
 } /* end namespace pbs */
