@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 /**
- * Returns the version of the MegaMol™ plugin api used by this plugin.
+ * Returns the version of the MegaMolï¿½ plugin api used by this plugin.
  *
  * @return 200 -- (ver.: 2.00)
  */

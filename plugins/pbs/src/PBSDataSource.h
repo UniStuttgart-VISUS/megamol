@@ -116,7 +116,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getDataCallback(core::Call& caller);
+    bool getDataCallback(core::Call& c);
 
     /**
      * Gets the data from the source.
@@ -125,7 +125,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getExtentCallback(core::Call& caller);
+    bool getExtentCallback(core::Call& c);
 
     /** The file name */
     core::param::ParamSlot filenameSlot;

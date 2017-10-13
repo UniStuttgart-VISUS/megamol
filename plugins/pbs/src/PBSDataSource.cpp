@@ -11,6 +11,8 @@
 #include <fstream>
 #include <vector>
 
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -123,6 +125,8 @@ bool PBSDataSource::readPBSFile(const std::string& filename, std::vector<char>& 
 
 
 bool PBSDataSource::filenameChanged(core::param::ParamSlot& slot) {
+    this->clearBuffers();
+
     const std::string path_to_pbs = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
 
     const auto start_idx = this->start_idx_slot.Param<core::param::IntParam>()->Value();
@@ -211,11 +215,12 @@ bool PBSDataSource::filenameChanged(core::param::ParamSlot& slot) {
 }
 
 
-bool PBSDataSource::getDataCallback(core::Call& caller) {
-    return false;
+bool PBSDataSource::getDataCallback(core::Call& c) {
+
+    return true;
 }
 
 
-bool PBSDataSource::getExtentCallback(core::Call& caller) {
-    return false;
+bool PBSDataSource::getExtentCallback(core::Call& c) {
+    return true;
 }
