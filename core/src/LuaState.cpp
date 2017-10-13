@@ -51,30 +51,92 @@ bool iequals(const std::string& one, const std::string& other) {
     return true;
 }
 
+#define MMC_LUA_MMLOG "mmLog"
+#define MMC_LUA_MMLOGINFO "mmLogInfo"
+#define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
+#define MMC_LUA_MMGETCONFIGURATION "mmGetConfiguration"
+#define MMC_LUA_MMGETOS "mmGetOS"
+#define MMC_LUA_MMGETMACHINENAME "mmGetMachineName"
+#define MMC_LUA_MMSETAPPDIR "mmSetAppDir"
+#define MMC_LUA_MMADDSHADERDIR "mmAddShaderDir"
+#define MMC_LUA_MMADDRESOURCEDIR "mmAddResourceDir"
+#define MMC_LUA_MMPLUGINLOADERINFO "mmPluginLoaderInfo"
+#define MMC_LUA_MMGETMODULEPARAMS "mmGetModuleParams"
+#define MMC_LUA_MMSETLOGFILE "mmSetLogFile"
+#define MMC_LUA_MMSETLOGLEVEL "mmSetLogLevel"
+#define MMC_LUA_MMSETECHOLEVEL "mmSetEchoLevel"
+#define MMC_LUA_MMSETCONFIGVALUE "mmSetConfigValue"
+#define MMC_LUA_MMGETPROCESSID "mmGetProcessID"
+#define MMC_LUA_MMGETPARAMTYPE "mmGetParamType"
+#define MMC_LUA_MMGETPARAMDESCRIPTION "mmGetParamDescription"
+#define MMC_LUA_MMGETPARAMVALUE "mmGetParamValue"
+#define MMC_LUA_MMSETPARAMVALUE "mmSetParamValue"
+#define MMC_LUA_MMCREATEMODULE "mmCreateModule"
+#define MMC_LUA_MMDELETEMODULE "mmDeleteModule"
+#define MMC_LUA_MMCREATECALL "mmCreateCall"
+#define MMC_LUA_MMDELETECALL "mmDeleteCall"
+#define MMC_LUA_MMQUERYMODULES "mmQueryModules"
+#define MMC_LUA_MMHELP "mmHelp"
+
+
+const std::unordered_map<std::string, std::string> MM_LUA_HELP = {
+    { MMC_LUA_MMLOG, MMC_LUA_MMLOG"(int level, ...)\n\tLog to MegaMol console. Level constants are LOGINFO, LOGWARNING, LOGERROR." },
+    { MMC_LUA_MMLOGINFO, MMC_LUA_MMLOGINFO"(...)\n\tLog to MegaMol console with LOGINFO level." },
+    { MMC_LUA_MMGETBITHWIDTH, MMC_LUA_MMGETBITHWIDTH"()\n\tReturns the bit width of the compiled executable." },
+    { MMC_LUA_MMGETCONFIGURATION, MMC_LUA_MMGETCONFIGURATION"()\n\tReturns the configuration ('debug' or 'release')." },
+    { MMC_LUA_MMGETOS, MMC_LUA_MMGETOS"()\n\tReturns the operating system ('windows', 'linux', or 'unknown')."},
+    { MMC_LUA_MMGETMACHINENAME, MMC_LUA_MMGETMACHINENAME"" },
+    { MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR"" },
+    { MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR"" },
+    { MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR"" },
+    { MMC_LUA_MMPLUGINLOADERINFO, MMC_LUA_MMPLUGINLOADERINFO"" },
+    { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"" },
+    { MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE"" },
+    { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"" },
+    { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"" },
+    { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"" },
+    { MMC_LUA_MMGETPROCESSID, MMC_LUA_MMGETPROCESSID"" },
+    { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"" },
+    { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"" },
+    { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE"" },
+    { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"" },
+    { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"" },
+    { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"" },
+    { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"" },
+    { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"" },
+    { MMC_LUA_MMQUERYMODULES, MMC_LUA_MMQUERYMODULES"" },
+    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"" }
+};
+
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
-"  print = mmLogInfo,"
+"  print = " MMC_LUA_MMLOGINFO ","
 "  error = error,"
-"  mmLog = mmLog,"
-"  mmLogInfo = mmLogInfo,"
-"  mmGetBitWidth = mmGetBitWidth,"
-"  mmGetConfiguration = mmGetConfiguration,"
-"  mmGetOS = mmGetOS,"
-"  mmGetMachineName = mmGetMachineName,"
-"  mmSetAppDir = mmSetAppDir,"
-"  mmAddShaderDir = mmAddShaderDir,"
-"  mmAddResourceDir = mmAddResourceDir,"
-"  mmPluginLoaderInfo = mmPluginLoaderInfo,"
-"  mmGetModuleParams = mmGetModuleParams,"
-"  mmSetLogFile = mmSetLogFile,"
-"  mmSetLogLevel = mmSetLogLevel,"
-"  mmSetEchoLevel = mmSetEchoLevel,"
-"  mmSetConfigValue = mmSetConfigValue,"
-"  mmGetProcessID = mmGetProcessID,"
-"  mmGetModuleParams = mmGetModuleParams,"
-"  mmGetParamType = mmGetParamType,"
-"  mmGetParamDescription = mmGetParamDescription,"
-"  mmGetParamValue = mmGetParamValue,"
-"  mmSetParamValue = mmSetParamValue,"
+MMC_LUA_MMLOG "=" MMC_LUA_MMLOG ","
+MMC_LUA_MMLOGINFO "=" MMC_LUA_MMLOGINFO ","
+MMC_LUA_MMGETBITHWIDTH "=" MMC_LUA_MMGETBITHWIDTH ","
+MMC_LUA_MMGETCONFIGURATION "=" MMC_LUA_MMGETCONFIGURATION ","
+MMC_LUA_MMGETOS "=" MMC_LUA_MMGETOS ","
+MMC_LUA_MMGETMACHINENAME "=" MMC_LUA_MMGETMACHINENAME ","
+MMC_LUA_MMSETAPPDIR "=" MMC_LUA_MMSETAPPDIR ","
+MMC_LUA_MMADDSHADERDIR "=" MMC_LUA_MMADDSHADERDIR ","
+MMC_LUA_MMADDRESOURCEDIR "=" MMC_LUA_MMADDRESOURCEDIR ","
+MMC_LUA_MMPLUGINLOADERINFO "=" MMC_LUA_MMPLUGINLOADERINFO ","
+MMC_LUA_MMGETMODULEPARAMS "=" MMC_LUA_MMGETMODULEPARAMS ","
+MMC_LUA_MMSETLOGFILE "=" MMC_LUA_MMSETLOGFILE ","
+MMC_LUA_MMSETLOGLEVEL "=" MMC_LUA_MMSETLOGLEVEL ","
+MMC_LUA_MMSETECHOLEVEL "=" MMC_LUA_MMSETECHOLEVEL ","
+MMC_LUA_MMSETCONFIGVALUE "=" MMC_LUA_MMSETCONFIGVALUE ","
+MMC_LUA_MMGETPROCESSID "=" MMC_LUA_MMGETPROCESSID ","
+MMC_LUA_MMGETPARAMTYPE "=" MMC_LUA_MMGETPARAMTYPE ","
+MMC_LUA_MMGETPARAMDESCRIPTION "=" MMC_LUA_MMGETPARAMDESCRIPTION ","
+MMC_LUA_MMGETPARAMVALUE "=" MMC_LUA_MMGETPARAMVALUE ","
+MMC_LUA_MMSETPARAMVALUE "=" MMC_LUA_MMSETPARAMVALUE ","
+MMC_LUA_MMCREATEMODULE "=" MMC_LUA_MMCREATEMODULE ","
+MMC_LUA_MMDELETEMODULE "=" MMC_LUA_MMDELETEMODULE ","
+MMC_LUA_MMCREATECALL "=" MMC_LUA_MMCREATECALL ","
+MMC_LUA_MMDELETECALL "=" MMC_LUA_MMDELETECALL ","
+MMC_LUA_MMQUERYMODULES "=" MMC_LUA_MMQUERYMODULES ","
+MMC_LUA_MMHELP "=" MMC_LUA_MMHELP ","
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -217,31 +279,40 @@ void megamol::core::LuaState::commonInit() {
         //TODO
         *static_cast<LuaState**>(lua_getextraspace(L)) = this;
 
-        lua_register(L, "mmLog", &dispatch<&LuaState::Log>);
-        lua_register(L, "mmLogInfo", &dispatch<&LuaState::LogInfo>);
+        lua_register(L, MMC_LUA_MMLOG, &dispatch<&LuaState::Log>);
+        lua_register(L, MMC_LUA_MMLOGINFO, &dispatch<&LuaState::LogInfo>);
 
-        lua_register(L, "mmGetOS", &dispatch<&LuaState::GetOS>);
-        lua_register(L, "mmGetBitWidth", &dispatch<&LuaState::GetBitWidth>);
-        lua_register(L, "mmGetConfiguration", &dispatch<&LuaState::GetConfiguration>);
-        lua_register(L, "mmGetMachineName", &dispatch<&LuaState::GetMachineName>);
+        lua_register(L, MMC_LUA_MMGETOS, &dispatch<&LuaState::GetOS>);
+        lua_register(L, MMC_LUA_MMGETBITHWIDTH, &dispatch<&LuaState::GetBitWidth>);
+        lua_register(L, MMC_LUA_MMGETCONFIGURATION, &dispatch<&LuaState::GetConfiguration>);
+        lua_register(L, MMC_LUA_MMGETMACHINENAME, &dispatch<&LuaState::GetMachineName>);
 
-        lua_register(L, "mmSetAppDir", &dispatch<&LuaState::SetAppDir>);
-        lua_register(L, "mmAddShaderDir", &dispatch<&LuaState::AddShaderDir>);
-        lua_register(L, "mmAddResourceDir", &dispatch<&LuaState::AddResourceDir>);
-        lua_register(L, "mmPluginLoaderInfo", &dispatch<&LuaState::PluginLoaderInfo>);
+        lua_register(L, MMC_LUA_MMSETAPPDIR, &dispatch<&LuaState::SetAppDir>);
+        lua_register(L, MMC_LUA_MMADDSHADERDIR, &dispatch<&LuaState::AddShaderDir>);
+        lua_register(L, MMC_LUA_MMADDRESOURCEDIR, &dispatch<&LuaState::AddResourceDir>);
+        lua_register(L, MMC_LUA_MMPLUGINLOADERINFO, &dispatch<&LuaState::PluginLoaderInfo>);
 
-        lua_register(L, "mmSetLogFile", &dispatch<&LuaState::SetLogFile>);
-        lua_register(L, "mmSetLogLevel", &dispatch<&LuaState::SetLogLevel>);
-        lua_register(L, "mmSetEchoLevel", &dispatch<&LuaState::SetEchoLevel>);
+        lua_register(L, MMC_LUA_MMSETLOGFILE, &dispatch<&LuaState::SetLogFile>);
+        lua_register(L, MMC_LUA_MMSETLOGLEVEL, &dispatch<&LuaState::SetLogLevel>);
+        lua_register(L, MMC_LUA_MMSETECHOLEVEL, &dispatch<&LuaState::SetEchoLevel>);
 
-        lua_register(L, "mmSetConfigValue", &dispatch<&LuaState::SetConfigValue>);
+        lua_register(L, MMC_LUA_MMSETCONFIGVALUE, &dispatch<&LuaState::SetConfigValue>);
 
-        lua_register(L, "mmGetProcessID", &dispatch<&LuaState::GetProcessID>);
-        lua_register(L, "mmGetModuleParams", &dispatch<&LuaState::GetModuleParams>);
-        lua_register(L, "mmGetParamType", &dispatch<&LuaState::GetParamType>);
-        lua_register(L, "mmGetParamDescription", &dispatch<&LuaState::GetParamDescription>);
-        lua_register(L, "mmGetParamValue", &dispatch<&LuaState::GetParamValue>);
-        lua_register(L, "mmSetParamValue", &dispatch<&LuaState::SetParamValue>);
+        lua_register(L, MMC_LUA_MMGETPROCESSID, &dispatch<&LuaState::GetProcessID>);
+        lua_register(L, MMC_LUA_MMGETMODULEPARAMS, &dispatch<&LuaState::GetModuleParams>);
+        lua_register(L, MMC_LUA_MMGETPARAMTYPE, &dispatch<&LuaState::GetParamType>);
+        lua_register(L, MMC_LUA_MMGETPARAMDESCRIPTION, &dispatch<&LuaState::GetParamDescription>);
+        lua_register(L, MMC_LUA_MMGETPARAMVALUE, &dispatch<&LuaState::GetParamValue>);
+        lua_register(L, MMC_LUA_MMSETPARAMVALUE, &dispatch<&LuaState::SetParamValue>);
+
+        lua_register(L, MMC_LUA_MMCREATEMODULE, &dispatch<&LuaState::CreateModule>);
+        lua_register(L, MMC_LUA_MMDELETEMODULE, &dispatch<&LuaState::DeleteModule>);
+        lua_register(L, MMC_LUA_MMCREATECALL, &dispatch<&LuaState::CreateCall>);
+        lua_register(L, MMC_LUA_MMDELETECALL, &dispatch<&LuaState::DeleteCall>);
+
+        lua_register(L, MMC_LUA_MMQUERYMODULES, &dispatch<&LuaState::QueryModules>);
+
+        lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -372,6 +443,7 @@ bool megamol::core::LuaState::RunString(const std::string& envName, const std::s
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
+        int old_n = lua_gettop(L);
         int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
             const char *err = lua_tostring(L, -1); // get error from top of stack...
@@ -506,7 +578,7 @@ int megamol::core::LuaState::LogInfo(lua_State *L) {
 
 
 int megamol::core::LuaState::SetAppDir(lua_State *L) {
-    if (this->checkConfiguring("mmSetAppDir")) {
+    if (this->checkConfiguring(MMC_LUA_MMSETAPPDIR)) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         this->conf->appDir = vislib::StringW(p);
@@ -516,7 +588,7 @@ int megamol::core::LuaState::SetAppDir(lua_State *L) {
 
 
 int megamol::core::LuaState::AddShaderDir(lua_State *L) {
-    if (this->checkConfiguring("mmAddShaderDir")) {
+    if (this->checkConfiguring(MMC_LUA_MMADDSHADERDIR)) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         this->conf->AddShaderDirectory(p);
@@ -526,7 +598,7 @@ int megamol::core::LuaState::AddShaderDir(lua_State *L) {
 
 
 int megamol::core::LuaState::AddResourceDir(lua_State *L) {
-    if (this->checkConfiguring("mmAddResourceDir")) {
+    if (this->checkConfiguring(MMC_LUA_MMADDRESOURCEDIR)) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         this->conf->AddResourceDirectory(p);
@@ -536,7 +608,7 @@ int megamol::core::LuaState::AddResourceDir(lua_State *L) {
 
 
 int megamol::core::LuaState::PluginLoaderInfo(lua_State *L) {
-    if (this->checkConfiguring("mmPluginLoaderInfo")) {
+    if (this->checkConfiguring(MMC_LUA_MMPLUGINLOADERINFO)) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         auto f = luaL_checkstring(L, 2);
@@ -558,7 +630,7 @@ int megamol::core::LuaState::PluginLoaderInfo(lua_State *L) {
 
 
 int megamol::core::LuaState::SetLogFile(lua_State *L) {
-    if (this->checkConfiguring("mmSetLogFile")) {
+    if (this->checkConfiguring(MMC_LUA_MMSETLOGFILE)) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logFilenameLocked) {
@@ -573,7 +645,7 @@ int megamol::core::LuaState::SetLogFile(lua_State *L) {
 
 
 int megamol::core::LuaState::SetLogLevel(lua_State *L) {
-    if (this->checkConfiguring("mmSetLogLevel")) {
+    if (this->checkConfiguring(MMC_LUA_MMSETLOGLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logLevelLocked) {
             if (this->conf->instanceLog != nullptr) {
@@ -586,7 +658,7 @@ int megamol::core::LuaState::SetLogLevel(lua_State *L) {
 
 
 int megamol::core::LuaState::SetEchoLevel(lua_State *L) {
-    if (this->checkConfiguring("mmSetEchoLevel")) {
+    if (this->checkConfiguring(MMC_LUA_MMSETECHOLEVEL)) {
         auto l = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logEchoLevelLocked) {
             if (this->conf->instanceLog != nullptr) {
@@ -599,7 +671,7 @@ int megamol::core::LuaState::SetEchoLevel(lua_State *L) {
 
 
 int megamol::core::LuaState::SetConfigValue(lua_State *L) {
-    if (this->checkConfiguring("mmSetConfigValue")) {
+    if (this->checkConfiguring(MMC_LUA_MMSETCONFIGVALUE)) {
         auto name = luaL_checkstring(L, 1);
         auto value = luaL_checkstring(L, 2);
         this->conf->setConfigValue(name, value);
@@ -651,7 +723,7 @@ int megamol::core::LuaState::GetProcessID(lua_State *L) {
 
 
 int megamol::core::LuaState::GetModuleParams(lua_State *L) {
-    if (this->checkRunning("mmGetModuleParams")) {
+    if (this->checkRunning(MMC_LUA_MMGETMODULEPARAMS)) {
         auto paramName = luaL_checkstring(L, 1);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
@@ -659,13 +731,14 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
         if (!anoc) {
-            lua_pushstring(L, "GetModuleParams: no root");
+            lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": no root");
             lua_error(L);
             return 0;
         }
+        // TODO honestly!
         Module::const_ptr_type mod = Module::dynamic_pointer_cast(const_cast<AbstractNamedObjectContainer*>(anoc.get())->FindNamedObject(paramName));
         if (!mod) {
-            lua_pushstring(L, "GetModuleParams: module not found");
+            lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": module not found");
             lua_error(L);
             return 0;
         }
@@ -690,7 +763,7 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
                 auto psp = slot->Parameter();
                 if (psp.IsNull()) {
                     std::ostringstream err;
-                    err << "GetModuleParams: ParamSlot " << slot->FullName() << " does seem to hold no parameter";
+                    err << MMC_LUA_MMGETMODULEPARAMS": ParamSlot " << slot->FullName() << " does seem to hold no parameter";
                     lua_pushstring(L, err.str().c_str());
                     lua_error(L);
                 }
@@ -728,16 +801,17 @@ bool megamol::core::LuaState::getParamSlot(const std::string routine, const char
         lua_error(L);
         return false;
     }
+    // TODO honestly!
     AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(paramName);
     if (!obj) {
-        std::string err = routine + ": parameter name " + paramName + " not found";
+        std::string err = routine + ": parameter \"" + paramName + "\" not found";
         lua_pushstring(L, err.c_str());
         lua_error(L);
         return false;
     }
     *out = dynamic_cast<core::param::ParamSlot*>(obj.get());
     if (*out == nullptr) {
-        std::string err = routine + ": parameter name " + paramName + " did not refer to a ParamSlot";
+        std::string err = routine + ": parameter name \"" + paramName + "\" did not refer to a ParamSlot";
         lua_pushstring(L, err.c_str());
         lua_error(L);
         return false;
@@ -746,17 +820,64 @@ bool megamol::core::LuaState::getParamSlot(const std::string routine, const char
 }
 
 
+bool megamol::core::LuaState::getView(const std::string routine, const char *viewName,
+    core::ViewInstance **out) {
+
+    //AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    //AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
+    //ViewInstance *vi = dynamic_cast<ViewInstance *>(ano.get());
+
+    AbstractNamedObjectContainer::const_ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->ModuleGraphRoot());
+    if (!root) {
+        std::string err = routine + ": no root";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(viewName);
+    if (!obj) {
+        std::string err = routine + ": view \"" + std::string(viewName) + "\" not found";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    *out = dynamic_cast<ViewInstance *>(obj.get());
+    return true;
+}
+
+
+bool megamol::core::LuaState::getJob(const std::string routine, const char *jobName,
+    core::JobInstance **out) {
+    AbstractNamedObjectContainer::const_ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->ModuleGraphRoot());
+    if (!root) {
+        std::string err = routine + ": no root";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(jobName);
+    if (!obj) {
+        std::string err = routine + ": job \"" + std::string(jobName) + "\" not found";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return false;
+    }
+    *out = dynamic_cast<JobInstance *>(obj.get());
+    return true;
+}
+
+
 int megamol::core::LuaState::GetParamType(lua_State *L) {
-    if (this->checkRunning("mmGetParamType")) {
+    if (this->checkRunning(MMC_LUA_MMGETPARAMTYPE)) {
         auto paramName = luaL_checkstring(L, 1);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
-        if (getParamSlot("GetParamType", paramName, &ps)) {
+        if (getParamSlot(MMC_LUA_MMGETPARAMTYPE, paramName, &ps)) {
 
             auto psp = ps->Parameter();
             if (psp.IsNull()) {
-                lua_pushstring(L, "GetParamType: ParamSlot does seem to hold no parameter");
+                lua_pushstring(L, MMC_LUA_MMGETPARAMTYPE": ParamSlot does seem to hold no parameter");
                 lua_error(L);
                 return 0;
             }
@@ -783,12 +904,12 @@ int megamol::core::LuaState::GetParamType(lua_State *L) {
 
 
 int megamol::core::LuaState::GetParamDescription(lua_State *L) {
-    if (this->checkRunning("mmGetParamDescription")) {
+    if (this->checkRunning(MMC_LUA_MMGETPARAMDESCRIPTION)) {
         auto paramName = luaL_checkstring(L, 1);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
-        if (getParamSlot("GetParamDescription", paramName, &ps)) {
+        if (getParamSlot(MMC_LUA_MMGETPARAMDESCRIPTION, paramName, &ps)) {
 
             vislib::StringA valUTF8;
             vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
@@ -805,16 +926,16 @@ int megamol::core::LuaState::GetParamDescription(lua_State *L) {
 
 
 int megamol::core::LuaState::GetParamValue(lua_State *L) {
-    if (this->checkRunning("mmGetParamValue")) {
+    if (this->checkRunning(MMC_LUA_MMGETPARAMVALUE)) {
         auto paramName = luaL_checkstring(L, 1);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
-        if (getParamSlot("GetParamValue", paramName, &ps)) {
+        if (getParamSlot(MMC_LUA_MMGETPARAMVALUE, paramName, &ps)) {
 
             auto psp = ps->Parameter();
             if (psp.IsNull()) {
-                lua_pushstring(L, "GetParamValue: ParamSlot does seem to hold no parameter");
+                lua_pushstring(L, MMC_LUA_MMGETPARAMVALUE": ParamSlot does seem to hold no parameter");
                 lua_error(L);
                 return 0;
             }
@@ -834,17 +955,17 @@ int megamol::core::LuaState::GetParamValue(lua_State *L) {
 
 
 int megamol::core::LuaState::SetParamValue(lua_State *L) {
-    if (this->checkRunning("mmSetParamValue")) {
+    if (this->checkRunning(MMC_LUA_MMSETPARAMVALUE)) {
         auto paramName = luaL_checkstring(L, 1);
         auto paramValue = luaL_checkstring(L, 2);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
-        if (getParamSlot("SetParamValue", paramName, &ps)) {
+        if (getParamSlot(MMC_LUA_MMSETPARAMVALUE, paramName, &ps)) {
 
             auto psp = ps->Parameter();
             if (psp.IsNull()) {
-                lua_pushstring(L, "SetParamValue: ParamSlot does seem to hold no parameter");
+                lua_pushstring(L, MMC_LUA_MMSETPARAMVALUE": ParamSlot does seem to hold no parameter");
                 lua_error(L);
                 return 0;
             }
@@ -856,7 +977,7 @@ int megamol::core::LuaState::SetParamValue(lua_State *L) {
                 lua_pushstring(L, psp->ValueString());
                 return 1;
             } else {
-                lua_pushstring(L, "SetParamValue: ParseValue failed");
+                lua_pushstring(L, MMC_LUA_MMSETPARAMVALUE": ParseValue failed");
                 lua_error(L);
                 return 0;
             }
@@ -866,4 +987,175 @@ int megamol::core::LuaState::SetParamValue(lua_State *L) {
         }
     }
     return 0;
+}
+
+
+int megamol::core::LuaState::CreateModule(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMCREATEMODULE)) {
+        //auto viewjobName = luaL_checkstring(L, 1);
+        auto className = luaL_checkstring(L, 1);
+        std::string instanceName(luaL_checkstring(L, 2));
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        factories::ModuleDescription::ptr md = this->coreInst->GetModuleDescriptionManager().Find(vislib::StringA(className));
+        if (md == NULL) {
+            std::string out = "module class \"" + std::string(className) + "\" not found.";
+            lua_pushstring(L, out.c_str());
+            lua_error(L);
+            return 0;
+        }
+
+        //core::ViewInstance *vi = nullptr;
+        //core::JobInstance *ji = nullptr;
+        //if (this->getView("mmCreateModule", viewjobName, &vi)) {
+
+        //} else if (this->getJob("mmCreateModule", viewjobName, &ji)) {
+
+        //} else {
+
+        //}
+
+        if (instanceName.compare(0, 2, "::") != 0) {
+            std::string out = "instance name must be global (starting with \"::\")";
+            lua_pushstring(L, out.c_str());
+            lua_error(L);
+            return 0;
+        }
+
+        auto mod = this->coreInst->instantiateModule(instanceName.c_str(), md);
+        if (mod == nullptr) {
+            std::string out = "could not create module (check MegaMol log)";
+            lua_pushstring(L, out.c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::DeleteModule(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMDELETEMODULE)) {
+
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::CreateCall(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMCREATECALL)) {
+        auto from = luaL_checkstring(L, 1);
+        auto to = luaL_checkstring(L, 2);
+        auto className = luaL_checkstring(L, 3);
+
+        factories::CallDescription::ptr cd = this->coreInst->GetCallDescriptionManager().Find(vislib::StringA(className));
+        if (cd == NULL) {
+            std::string out = "call class \"" + std::string(className) + "\" not found.";
+            lua_pushstring(L, out.c_str());
+            lua_error(L);
+            return 0;
+        }
+
+        auto ca = this->coreInst->InstantiateCall(from, to, cd);
+        if (ca == nullptr) {
+            std::string out = "could not create call (check MegaMol log)";
+            lua_pushstring(L, out.c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::DeleteCall(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMDELETECALL)) {
+
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::CreateJob(lua_State *L) {
+    lua_pushstring(L, "not implemented yet!");
+    lua_error(L);
+    return 0;
+}
+
+
+int megamol::core::LuaState::DeleteJob(lua_State *L) {
+    lua_pushstring(L, "not implemented yet!");
+    lua_error(L);
+    return 0;
+}
+
+
+int megamol::core::LuaState::CreateView(lua_State *L) {
+    lua_pushstring(L, "not implemented yet!");
+    lua_error(L);
+    return 0;
+}
+
+
+int megamol::core::LuaState::DeleteView(lua_State *L) {
+    lua_pushstring(L, "not implemented yet!");
+    lua_error(L);
+    return 0;
+}
+
+
+void megamol::core::LuaState::queryModules(std::stringstream& reply, core::AbstractNamedObjectContainer::const_ptr_type anoc) {
+    if (!anoc) return;
+
+    reply << "Module: " << anoc.get()->FullName() << std::endl;
+    reply << "Children:" << std::endl;
+    auto it_end = anoc->ChildList_End();
+    for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+        AbstractNamedObject::const_ptr_type ano = *it;
+        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (anoc) {
+            reply << anoc.get()->FullName() << std::endl;
+        }
+    }
+    for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+        AbstractNamedObject::const_ptr_type ano = *it;
+        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (anoc) {
+            queryModules(reply, anoc);
+        }
+    }
+}
+
+
+int megamol::core::LuaState::QueryModules(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMQUERYMODULES)) {
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (!anoc) {
+            lua_pushstring(L, MMC_LUA_MMQUERYMODULES": no root");
+            lua_error(L);
+            return 0;
+        }
+
+        std::stringstream answer;
+
+        queryModules(answer, anoc);
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::Help(lua_State *L) {
+    std::stringstream out;
+    out << "MegaMol Lua Help:" << std::endl;
+    for (auto &p : MM_LUA_HELP) {
+        out << p.second << std::endl;
+    }
+    lua_pushstring(L, out.str().c_str());
+    return 1;
 }

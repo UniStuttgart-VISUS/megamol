@@ -13,6 +13,8 @@
 
 #include <string>
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/ViewInstance.h"
+#include "mmcore/JobInstance.h"
 
 struct lua_State; // lua includes should stay in the core
 
@@ -194,6 +196,19 @@ namespace utility {
          */
         int SetParamValue(lua_State *L);
 
+        int CreateModule(lua_State *L);
+        int DeleteModule(lua_State *L);
+        int CreateCall(lua_State *L);
+        int DeleteCall(lua_State *L);
+        int CreateJob(lua_State *L);
+        int DeleteJob(lua_State *L);
+        int CreateView(lua_State *L);
+        int DeleteView(lua_State *L);
+
+        int QueryModules(lua_State *L);
+
+        int Help(lua_State *L);
+
     private:
 
         /** error handler */
@@ -217,6 +232,16 @@ namespace utility {
          */
         bool getParamSlot(const std::string routine, const char *paramName,
             core::param::ParamSlot **out);
+
+        // TODO: possibly not needed
+        bool getView(const std::string routine, const char *viewName,
+            core::ViewInstance **out);
+
+        // TODO: possibly not needed
+        bool getJob(const std::string routine, const char *jobName,
+            core::JobInstance **out);
+
+        void queryModules(std::stringstream& reply, core::AbstractNamedObjectContainer::const_ptr_type anoc);
 
         /** gets a string from the stack position i. returns false if it's not a string */
         bool getString(int i, std::string& out);

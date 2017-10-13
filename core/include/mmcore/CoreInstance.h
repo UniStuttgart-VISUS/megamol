@@ -445,6 +445,17 @@ namespace plugins {
             const vislib::StringA toPath, factories::CallDescription::ptr desc);
 
         /**
+        * Instantiates a module
+        *
+        * @param path The full namespace path
+        * @param desc The module description
+        *
+        * @return The new module or 'NULL' in case of an error
+        */
+        Module::ptr_type instantiateModule(const vislib::StringA path,
+            factories::ModuleDescription::ptr desc);
+
+        /**
          * Fired whenever a parameter updates it's value
          *
          * @param slot The parameter slot
@@ -816,17 +827,6 @@ namespace plugins {
          */
         void getGlobalParameterHash(ModuleNamespace::const_ptr_type path,
             ParamHashMap_t &map) const;
-
-        /**
-         * Instantiates a module
-         *
-         * @param path The full namespace path
-         * @param desc The module description
-         *
-         * @return The new module or 'NULL' in case of an error
-         */
-        Module::ptr_type instantiateModule(const vislib::StringA path,
-            factories::ModuleDescription::ptr desc);
 
         /**
          * Enumerates all parameters. The callback function is called for each
