@@ -106,7 +106,7 @@ if(BUILD_CORE)
   # include zfp
   set(ZFP_VER "0_5_2")
   string(REPLACE "_" "." ZFP_TAG ${ZFP_VER})
-   if (MSVC)
+  if (MSVC)
     set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/zfp.lib" CACHE INTERNAL '')
   else()
     include(GNUInstallDirs)
@@ -115,7 +115,7 @@ if(BUILD_CORE)
   ExternalProject_Add(extzfp
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
     GIT_TAG ${ZFP_TAG}
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
+    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_UTILITIES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
   )
   message(STATUS "ZFP Git Tag: " ${ZFP_TAG})
 
