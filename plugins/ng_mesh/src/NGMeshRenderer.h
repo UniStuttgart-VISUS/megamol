@@ -127,7 +127,7 @@ namespace ngmesh {
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
 			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params);
 
 		/**
@@ -146,7 +146,7 @@ namespace ngmesh {
 			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
 			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
 			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
+			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
 			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
 			uint32_t																update_flags);
 

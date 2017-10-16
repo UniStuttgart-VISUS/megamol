@@ -12,6 +12,7 @@
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
@@ -25,15 +26,22 @@ using namespace megamol::archvis;
 using namespace megamol::ngmesh;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
-	m_shaderFilename_slot("shader filename", "The name of to the shader file to load"),
-	m_geometryFilename_slot("mesh filename", "The path to the mesh file to load"),
-	m_IPAdress_slot("ip adress", "The ip adress of the sensor data transfer")
+	m_shaderFilename_slot("Shader", "The name of to the shader file to load"),
+	m_partsList_slot("Parts list", "The path to the parts list file to load"),
+	m_nodeElement_table_slot("Node/Element table", "The path to the node/element table to load"),
+	m_IPAdress_slot("Ip adress", "The ip adress of the sensor data transfer")
 {
 	this->m_shaderFilename_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
 
-	this->m_geometryFilename_slot << new core::param::FilePathParam("");
-	this->MakeSlotAvailable(&this->m_geometryFilename_slot);
+	this->m_partsList_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_partsList_slot);
+
+	m_nodeElement_table_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_nodeElement_table_slot);
+	
+	m_IPAdress_slot << new core::param::IntParam(0);
+	this->MakeSlotAvailable(&this->m_IPAdress_slot);
 }
 
 ArchVisMSMDataSource::~ArchVisMSMDataSource()
@@ -45,10 +53,14 @@ bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
 	if (render_batches_call == NULL)
 		return false;
-	if (this->m_geometryFilename_slot.IsDirty() || this->m_shaderFilename_slot.IsDirty())
+	if (this->m_partsList_slot.IsDirty() ||
+		this->m_shaderFilename_slot.IsDirty() ||
+		this->m_nodeElement_table_slot.IsDirty() )
 	{
-		this->m_geometryFilename_slot.ResetDirty();
+		// TODO handle different slots seperatly ?
 		this->m_shaderFilename_slot.ResetDirty();
+		this->m_partsList_slot.ResetDirty();
+		this->m_nodeElement_table_slot.ResetDirty();
 
 		// Clear render batches TODO: add explicit clear function?
 		CallNGMeshRenderBatches::RenderBatchesData empty_render_batches;
@@ -59,11 +71,13 @@ bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 		auto vislib_shader_filename = m_shaderFilename_slot.Param<core::param::FilePathParam>()->Value();
 		std::string shdr_filename(vislib_shader_filename.PeekBuffer());
 
-		auto vislib_geometry_filename = m_geometryFilename_slot.Param<core::param::FilePathParam>()->Value();
+		auto vislib_geometry_filename = m_partsList_slot.Param<core::param::FilePathParam>()->Value();
 		std::string geom_filename(vislib_geometry_filename.PeekBuffer());
 
 		load(shdr_filename, geom_filename);
 	}
+
+	// TODO handle IP slot is dirty
 
 	render_batches_call->setRenderBatches(&m_render_batches);
 

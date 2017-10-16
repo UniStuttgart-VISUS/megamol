@@ -74,8 +74,11 @@ namespace archvis {
 		/** The shader file name */
 		core::param::ParamSlot m_shaderFilename_slot;
 
-		/** The mesh file name */
-		core::param::ParamSlot m_geometryFilename_slot;
+		/** The mesh list file name */
+		core::param::ParamSlot m_partsList_slot;
+
+		/** The node/element list file name */
+		core::param::ParamSlot m_nodeElement_table_slot;
 
 		/** The IP Adress for sensor data transfer */
 		core::param::ParamSlot m_IPAdress_slot;
