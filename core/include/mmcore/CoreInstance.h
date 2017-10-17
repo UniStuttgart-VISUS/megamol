@@ -79,6 +79,8 @@ namespace plugins {
         public factories::AbstractAssemblyInstance {
     public:
 
+        friend class megamol::core::LuaState;
+
         typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
 
         /**
