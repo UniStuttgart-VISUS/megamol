@@ -1189,7 +1189,61 @@ int megamol::core::LuaState::CreateCall(lua_State *L) {
 
 int megamol::core::LuaState::DeleteCall(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMDELETECALL)) {
+        auto from = luaL_checkstring(L, 1);
+        auto to = luaL_checkstring(L, 2);
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
+        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
+        AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+        if (!root) {
+            lua_pushstring(L, MMC_LUA_MMDELETEMODULE": no root");
+            lua_error(L);
+            return 0;
+        }
+        bool found = false;
+                // find the call
+        std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+        anoStack.push_back(root);
+        while (anoStack.size() > 0) {
+            AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+            anoStack.pop_back();
+
+            if (anoc) {
+                auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::ptr_type ano = *it;
+                    AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        anoStack.push_back(anoc);
+                    } else {
+                        core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                        if (callerSlot != nullptr) {
+                            core::Call *call = callerSlot->CallAs<Call>();
+                            if (call != nullptr) {
+                                auto target = call->PeekCalleeSlot();
+                                auto source = call->PeekCallerSlot();
+                                if (source->FullName().Equals(from) && target->FullName().Equals(to)) {
+                                    // this should be the right call
+                                    //vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                    //    call->PeekCalleeSlot()->FullName());
+                                    callerSlot->SetCleanupMark(true);
+                                    callerSlot->DisconnectCalls();
+                                    callerSlot->PerformCleanup();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!found) {
+            lua_pushstring(L, ("cannot find call from \"" + std::string(from) + "\" to \"" + std::string(to) + "\"").c_str());
+            lua_error(L);
+            return 0;
+        }
     }
     return 0;
 }
