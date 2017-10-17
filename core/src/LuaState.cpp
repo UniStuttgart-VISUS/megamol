@@ -87,27 +87,28 @@ const std::unordered_map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMGETBITHWIDTH, MMC_LUA_MMGETBITHWIDTH"()\n\tReturns the bit width of the compiled executable." },
     { MMC_LUA_MMGETCONFIGURATION, MMC_LUA_MMGETCONFIGURATION"()\n\tReturns the configuration ('debug' or 'release')." },
     { MMC_LUA_MMGETOS, MMC_LUA_MMGETOS"()\n\tReturns the operating system ('windows', 'linux', or 'unknown')."},
-    { MMC_LUA_MMGETMACHINENAME, MMC_LUA_MMGETMACHINENAME"" },
-    { MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR"" },
-    { MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR"" },
-    { MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR"" },
-    { MMC_LUA_MMPLUGINLOADERINFO, MMC_LUA_MMPLUGINLOADERINFO"" },
-    { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"" },
-    { MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE"" },
-    { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"" },
-    { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"" },
-    { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"" },
-    { MMC_LUA_MMGETPROCESSID, MMC_LUA_MMGETPROCESSID"" },
-    { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"" },
-    { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"" },
-    { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE"" },
-    { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"" },
-    { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"" },
-    { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"" },
-    { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"" },
-    { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"" },
-    { MMC_LUA_MMQUERYMODULES, MMC_LUA_MMQUERYMODULES"" },
-    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"" }
+    { MMC_LUA_MMGETPROCESSID, MMC_LUA_MMGETPROCESSID"()\n\tReturns the process id of the running MegaMol." },
+    { MMC_LUA_MMGETMACHINENAME, MMC_LUA_MMGETMACHINENAME"()\n\tReturns the machine name." },
+    { MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR"(string dir)\n\tSets the path where the mmconsole.exe is located." },
+    { MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR"(string dir)\n\tAdds a shader/btf search path." },
+    { MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR"(string dir)\n\tAdds a resource search path." },
+    { MMC_LUA_MMPLUGINLOADERINFO, MMC_LUA_MMPLUGINLOADERINFO"(string glob, string action)\n\tTell the core how to load plugins. Glob a path and ('include' | 'exclude') it." },
+    { MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE"(string path)\n\tSets the full path of the log file." },
+    { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR." },
+    { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"(int level)\n\tSets the level of log events to output to the console (see above)." },
+    { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"(string name, string value)\n\tSets the config value <name> to <value>." },
+    { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
+    "\n\tFor each parameter the name, description, definition, and value are returned." },
+    { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"(string name)\n\tReturn the HEX type descriptor of a parameter slot." },
+    { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"(string name)\n\tReturn the description of a parameter slot." },
+    { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE"(string name)\n\tReturn the value of a parameter slot." },
+    { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"(string name, string value)\n\tSet the value of a parameter slot." },
+    { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"(string className, string instanceName)\n\tCreate a module instance of class <className> called <instanceName>." },
+    { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"(string name)\n\tDelete the module called <name>." },
+    { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string from, string to, string className)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
+    { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>." },
+    { MMC_LUA_MMQUERYMODULES, MMC_LUA_MMQUERYMODULES"()\n\tShow the instantiated modules and their children." },
+    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"()\n\tShow this help." }
 };
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
@@ -1201,7 +1202,7 @@ int megamol::core::LuaState::DeleteCall(lua_State *L) {
             return 0;
         }
         bool found = false;
-                // find the call
+        // find the call
         std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
         anoStack.push_back(root);
         while (anoStack.size() > 0) {
