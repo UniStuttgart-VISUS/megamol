@@ -241,8 +241,6 @@ namespace utility {
         bool getJob(const std::string routine, const char *jobName,
             core::JobInstance **out);
 
-        void queryModules(std::stringstream& reply, core::AbstractNamedObjectContainer::const_ptr_type anoc);
-
         /** gets a string from the stack position i. returns false if it's not a string */
         bool getString(int i, std::string& out);
 

@@ -15,6 +15,8 @@
 
 #include "mmcore/LuaState.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/utility/Configuration.h"
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/Log.h"
@@ -724,19 +726,18 @@ int megamol::core::LuaState::GetProcessID(lua_State *L) {
 
 int megamol::core::LuaState::GetModuleParams(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMGETMODULEPARAMS)) {
-        auto paramName = luaL_checkstring(L, 1);
+        auto moduleName = luaL_checkstring(L, 1);
 
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
-        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
-        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
+        AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
         if (!anoc) {
             lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": no root");
             lua_error(L);
             return 0;
         }
-        // TODO honestly!
-        Module::const_ptr_type mod = Module::dynamic_pointer_cast(const_cast<AbstractNamedObjectContainer*>(anoc.get())->FindNamedObject(paramName));
+        Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName));
         if (!mod) {
             lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": module not found");
             lua_error(L);
@@ -746,10 +747,10 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
         std::stringstream answer;
         vislib::StringA name(mod->FullName());
         answer << name << "\1";
-        AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+        AbstractNamedObjectContainer::child_list_type::iterator si, se;
         se = mod->ChildList_End();
         for (si = mod->ChildList_Begin(); si != se; ++si) {
-            const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
+            param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>((*si).get());
             if (slot != NULL) {
                 //name.Append("::");
                 //name.Append(slot->Name());
@@ -794,15 +795,14 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
 
 bool megamol::core::LuaState::getParamSlot(const std::string routine, const char *paramName, core::param::ParamSlot **out) {
 
-    AbstractNamedObjectContainer::const_ptr_type root = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(this->coreInst->ModuleGraphRoot());
+    AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->coreInst->namespaceRoot);
     if (!root) {
         std::string err = routine + ": no root";
         lua_pushstring(L, err.c_str());
         lua_error(L);
         return false;
     }
-    // TODO honestly!
-    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(paramName);
+    AbstractNamedObject::ptr_type obj = root.get()->FindNamedObject(paramName);
     if (!obj) {
         std::string err = routine + ": parameter \"" + paramName + "\" not found";
         lua_pushstring(L, err.c_str());
@@ -827,14 +827,14 @@ bool megamol::core::LuaState::getView(const std::string routine, const char *vie
     //AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
     //ViewInstance *vi = dynamic_cast<ViewInstance *>(ano.get());
 
-    AbstractNamedObjectContainer::const_ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->ModuleGraphRoot());
+    AbstractNamedObjectContainer::ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->namespaceRoot);
     if (!root) {
         std::string err = routine + ": no root";
         lua_pushstring(L, err.c_str());
         lua_error(L);
         return false;
     }
-    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(viewName);
+    AbstractNamedObject::ptr_type obj = root.get()->FindNamedObject(viewName);
     if (!obj) {
         std::string err = routine + ": view \"" + std::string(viewName) + "\" not found";
         lua_pushstring(L, err.c_str());
@@ -848,14 +848,14 @@ bool megamol::core::LuaState::getView(const std::string routine, const char *vie
 
 bool megamol::core::LuaState::getJob(const std::string routine, const char *jobName,
     core::JobInstance **out) {
-    AbstractNamedObjectContainer::const_ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->ModuleGraphRoot());
+    AbstractNamedObjectContainer::ptr_type root = AbstractNamedObjectContainer::dynamic_pointer_cast(this->coreInst->namespaceRoot);
     if (!root) {
         std::string err = routine + ": no root";
         lua_pushstring(L, err.c_str());
         lua_error(L);
         return false;
     }
-    AbstractNamedObject::ptr_type obj = const_cast<AbstractNamedObjectContainer*>(root.get())->FindNamedObject(jobName);
+    AbstractNamedObject::ptr_type obj = root.get()->FindNamedObject(jobName);
     if (!obj) {
         std::string err = routine + ": job \"" + std::string(jobName) + "\" not found";
         lua_pushstring(L, err.c_str());
@@ -1037,6 +1037,122 @@ int megamol::core::LuaState::CreateModule(lua_State *L) {
 
 int megamol::core::LuaState::DeleteModule(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMDELETEMODULE)) {
+        auto moduleName = luaL_checkstring(L, 1);
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
+        AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+        if (!root) {
+            lua_pushstring(L, MMC_LUA_MMDELETEMODULE": no root");
+            lua_error(L);
+            return 0;
+        }
+        Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(moduleName));
+        if (!mod) {
+            lua_pushstring(L, MMC_LUA_MMDELETEMODULE": module not found");
+            lua_error(L);
+            return 0;
+        }
+
+        if (mod.get()->Parent() != nullptr) {
+            auto p = mod.get()->Parent();
+            auto n = dynamic_cast<core::ModuleNamespace *>(p.get());
+            if (n) {
+
+                // find all incoming calls. these need to be disconnected properly and deleted.
+                std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+                anoStack.push_back(root);
+                while (anoStack.size() > 0) {
+                    AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+                    anoStack.pop_back();
+
+                    if (anoc) {
+                        auto it_end = anoc->ChildList_End();
+                        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                            AbstractNamedObject::ptr_type ano = *it;
+                            AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                            if (anoc) {
+                                anoStack.push_back(anoc);
+                            } else {
+                                core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                                if (callerSlot != nullptr) {
+                                    core::Call *call = callerSlot->CallAs<Call>();
+                                    if (call != nullptr) {
+                                        auto target = call->PeekCalleeSlot()->Parent();
+                                        if (target->FullName().Equals(mod->FullName())) {
+                                            // this call points to mod
+                                            vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                                call->PeekCalleeSlot()->FullName());
+                                            callerSlot->SetCleanupMark(true);
+                                            callerSlot->DisconnectCalls();
+                                            callerSlot->PerformCleanup();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // delete all outgoing calls of mod
+                AbstractNamedObjectContainer::child_list_type::iterator children, childrenend;
+                childrenend = mod->ChildList_End();
+                std::vector<AbstractNamedObject::ptr_type> deletionQueue;
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+                    if (anoc) {
+                        std::stringstream out;
+                        out << MMC_LUA_MMDELETEMODULE": found container \"";
+                        out << anoc->FullName() << "\"inside module \"";
+                        out << (mod->FullName()) << "\"";
+                        lua_pushstring(L, out.str().c_str());
+                        lua_error(L);
+                        return 0;
+                    }
+                    core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
+                    if (callerSlot != nullptr) {
+                        core::Call *call = callerSlot->CallAs<Call>();
+                        if (call != nullptr) {
+                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                call->PeekCalleeSlot()->FullName());
+                            delete call;
+                        }
+                        deletionQueue.push_back(child);
+                    }
+                    core::param::ParamSlot *paramSlot = dynamic_cast<core::param::ParamSlot*>(child.get());
+                    if (paramSlot != nullptr) {
+                        //paramSlot->SetCleanupMark(true);
+                        //paramSlot->PerformCleanup();
+                        deletionQueue.push_back(child);
+                    }
+                    core::CalleeSlot *calleeSlot = dynamic_cast<core::CalleeSlot*>(child.get());
+                    if (calleeSlot != nullptr) {
+                        deletionQueue.push_back(child);
+                    }
+                }
+
+                for (auto &c : deletionQueue) {
+                    mod->RemoveChild(c);
+                }
+
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    vislib::sys::Log::DefaultLog.WriteError("child remaining in %s: %s", mod->FullName(), child->FullName());
+                }
+
+                // remove mod
+                n->RemoveChild(mod);
+            } else {
+                lua_pushstring(L, ("module \"" + std::string(moduleName) + "\" has no parent of type ModuleNamespace. Deletion makes no sense.").c_str());
+                lua_error(L);
+                return 0;
+            }
+        } else {
+            lua_pushstring(L, ("module \"" + std::string(moduleName) + "\" has no parent. Deletion makes no sense.").c_str());
+            lua_error(L);
+            return 0;
+        }
 
     }
     return 0;
@@ -1048,6 +1164,8 @@ int megamol::core::LuaState::CreateCall(lua_State *L) {
         auto from = luaL_checkstring(L, 1);
         auto to = luaL_checkstring(L, 2);
         auto className = luaL_checkstring(L, 3);
+
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         factories::CallDescription::ptr cd = this->coreInst->GetCallDescriptionManager().Find(vislib::StringA(className));
         if (cd == NULL) {
@@ -1105,29 +1223,6 @@ int megamol::core::LuaState::DeleteView(lua_State *L) {
 }
 
 
-void megamol::core::LuaState::queryModules(std::stringstream& reply, core::AbstractNamedObjectContainer::const_ptr_type anoc) {
-    if (!anoc) return;
-
-    reply << "Module: " << anoc.get()->FullName() << std::endl;
-    reply << "Children:" << std::endl;
-    auto it_end = anoc->ChildList_End();
-    for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
-        AbstractNamedObject::const_ptr_type ano = *it;
-        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-        if (anoc) {
-            reply << anoc.get()->FullName() << std::endl;
-        }
-    }
-    for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
-        AbstractNamedObject::const_ptr_type ano = *it;
-        AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-        if (anoc) {
-            queryModules(reply, anoc);
-        }
-    }
-}
-
-
 int megamol::core::LuaState::QueryModules(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMQUERYMODULES)) {
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
@@ -1142,7 +1237,47 @@ int megamol::core::LuaState::QueryModules(lua_State *L) {
 
         std::stringstream answer;
 
-        queryModules(answer, anoc);
+        //queryModules(answer, anoc);
+        std::vector<AbstractNamedObjectContainer::const_ptr_type> anoStack;
+        anoStack.push_back(anoc);
+        while (anoStack.size() > 0) {
+            anoc = anoStack.back();
+            anoStack.pop_back();
+            
+            if (anoc) {
+                answer << "Module:   " << anoc.get()->FullName() << std::endl;
+                if (anoc.get()->Parent() != nullptr) {
+                    answer << "Parent:   " << anoc.get()->Parent()->FullName() << std::endl;
+                } else {
+                    answer << "Parent:   none" << std::endl;
+                }
+                answer << "Children: ";
+                auto it_end = anoc->ChildList_End();
+                int numChildren = 0;
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::const_ptr_type ano = *it;
+                    AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        if (numChildren == 0) {
+                            answer << std::endl;
+                        }
+                        answer << anoc.get()->FullName() << std::endl;
+                        numChildren++;
+                    }
+                }
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::const_ptr_type ano = *it;
+                    AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        anoStack.push_back(anoc);
+                    }
+                }
+                if (numChildren == 0) {
+                    answer << "none" << std::endl;
+                }
+            }
+        }
+
         lua_pushstring(L, answer.str().c_str());
         return 1;
     }
