@@ -41,6 +41,7 @@
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
 //#include "mmcore/special/ColStereoDisplay.h"
+#include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/LinearTransferFunction.h"
 #include "mmcore/view/TransferFunctionRenderer.h"
@@ -112,6 +113,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
+    instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::LinearTransferFunction>();
     instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
