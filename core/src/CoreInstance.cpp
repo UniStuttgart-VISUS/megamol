@@ -123,6 +123,9 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         shaderSourceFactory(config), log(), lua(nullptr),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
+        pendingCallInstRequests(), pendingCallDelRequests(),
+        pendingModuleInstRequests(), pendingModuleDelRequests(),
+        graphUpdateLock(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
     // setup log as early as possible.
@@ -746,6 +749,248 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
         static_cast<ParamValueSetRequest&>(req) = *param;
     }
     this->pendingJobInstRequests.Add(req);
+}
+
+
+bool megamol::core::CoreInstance::RequestModuleDeletion(const vislib::StringA& id) {
+    this->pendingModuleDelRequests.Add(id);
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestCallDeletion(const vislib::StringA& from,
+    const vislib::StringA& to) {
+    this->pendingCallDelRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(
+        from, to));
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestModuleInstantiation(const vislib::StringA& className,
+    const vislib::StringA& id) {
+
+    factories::ModuleDescription::ptr md =
+        this->GetModuleDescriptionManager().Find(vislib::StringA(className));
+    if (md == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of module"
+            " \"%s\": class \"%s\" not found.", id, className);
+        return false;
+    }
+
+    core::InstanceDescription::ModuleInstanceRequest mir;
+    mir.SetFirst(id);
+    mir.SetSecond(md);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingModuleInstRequests.Add(mir);
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestCallInstantiation(const vislib::StringA& className,
+    const vislib::StringA& from, const vislib::StringA& to) {
+
+    factories::CallDescription::ptr cd =
+        this->GetCallDescriptionManager().Find(vislib::StringA(className));
+    if (cd == NULL) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of "
+            " unknown call class \"%s\".", className);
+        return false;
+    }
+
+    core::InstanceDescription::CallInstanceRequest cir(from, to, cd, false);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingCallInstRequests.Add(cir);
+    return true;
+}
+
+
+void megamol::core::CoreInstance::PerformGraphUpdates() {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+
+    AbstractNamedObject::ptr_type ano = this->namespaceRoot;
+    AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+    if (!root) {
+        vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates: no root");
+        return;
+    }
+
+    // delete modules
+    while (this->pendingModuleDelRequests.Count() > 0) {
+        auto mdr = this->pendingModuleDelRequests.First();
+        this->pendingModuleDelRequests.RemoveFirst();
+
+        Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
+        if (!mod) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr);
+            continue;
+        }
+
+        if (mod.get()->Parent() != nullptr) {
+            auto p = mod.get()->Parent();
+            auto n = dynamic_cast<core::ModuleNamespace *>(p.get());
+            if (n) {
+
+                // find all incoming calls. these need to be disconnected properly and deleted.
+                std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+                anoStack.push_back(root);
+                while (anoStack.size() > 0) {
+                    AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+                    anoStack.pop_back();
+
+                    if (anoc) {
+                        auto it_end = anoc->ChildList_End();
+                        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                            AbstractNamedObject::ptr_type ano = *it;
+                            AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                            if (anoc) {
+                                anoStack.push_back(anoc);
+                            } else {
+                                core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                                if (callerSlot != nullptr) {
+                                    core::Call *call = callerSlot->CallAs<Call>();
+                                    if (call != nullptr) {
+                                        auto target = call->PeekCalleeSlot()->Parent();
+                                        if (target->FullName().Equals(mod->FullName())) {
+                                            // this call points to mod
+                                            //vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                            //   call->PeekCalleeSlot()->FullName());
+                                            callerSlot->ConnectCall(nullptr);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // delete all outgoing calls of mod
+                AbstractNamedObjectContainer::child_list_type::iterator children, childrenend;
+                childrenend = mod->ChildList_End();
+                std::vector<AbstractNamedObject::ptr_type> deletionQueue;
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+                    if (anoc) {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "PerformGraphUpdates: found container \"%s\" inside module \"%s\"",
+                            anoc->FullName(), mod->FullName());
+                        continue;
+                    }
+                    core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
+                    if (callerSlot != nullptr) {
+                        core::Call *call = callerSlot->CallAs<Call>();
+                        if (call != nullptr) {
+                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                call->PeekCalleeSlot()->FullName());
+                            callerSlot->ConnectCall(nullptr);
+                        }
+                        deletionQueue.push_back(child);
+                    }
+                    core::param::ParamSlot *paramSlot = dynamic_cast<core::param::ParamSlot*>(child.get());
+                    if (paramSlot != nullptr) {
+                        //paramSlot->SetCleanupMark(true);
+                        //paramSlot->PerformCleanup();
+                        deletionQueue.push_back(child);
+                    }
+                    core::CalleeSlot *calleeSlot = dynamic_cast<core::CalleeSlot*>(child.get());
+                    if (calleeSlot != nullptr) {
+                        deletionQueue.push_back(child);
+                    }
+                }
+
+                for (auto &c : deletionQueue) {
+                    mod->RemoveChild(c);
+                }
+
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    vislib::sys::Log::DefaultLog.WriteError("child remaining in %s: %s", mod->FullName(), child->FullName());
+                }
+
+                // remove mod
+                n->RemoveChild(mod);
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.", mdr);
+                continue;
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr);
+            continue;
+        }
+
+    }
+
+    // delete calls
+    while (this->pendingCallDelRequests.Count() > 0) {
+        auto cdr = this->pendingCallDelRequests.First();
+        this->pendingCallDelRequests.RemoveFirst();
+        bool found = false;
+        // find the call
+        std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+        anoStack.push_back(root);
+        while (anoStack.size() > 0) {
+            AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+            anoStack.pop_back();
+
+            if (anoc) {
+                auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::ptr_type ano = *it;
+                    AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        anoStack.push_back(anoc);
+                    } else {
+                        core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                        if (callerSlot != nullptr) {
+                            core::Call *call = callerSlot->CallAs<Call>();
+                            if (call != nullptr) {
+                                auto target = call->PeekCalleeSlot();
+                                auto source = call->PeekCallerSlot();
+                                if (source->FullName().Equals(cdr.First()) && target->FullName().Equals(cdr.Second())) {
+                                    // this should be the right call
+                                    //vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                    //    call->PeekCalleeSlot()->FullName());
+                                    callerSlot->SetCleanupMark(true);
+                                    callerSlot->DisconnectCalls();
+                                    callerSlot->PerformCleanup();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot delete call from \"%s\" to \"%s\"",
+                cdr.First(), cdr.Second());
+        }
+    }
+
+    // make modules
+    while (this->pendingModuleInstRequests.Count() > 0) {
+        auto mir = this->pendingModuleInstRequests.First();
+        this->pendingModuleInstRequests.RemoveFirst();
+        if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
+                " of class \"%s\".", mir.First(), mir.Second()->ClassName());
+        }
+    }
+
+    // make calls
+    while (this->pendingCallInstRequests.Count() > 0) {
+        auto cir = this->pendingCallInstRequests.First();
+        this->pendingCallInstRequests.RemoveFirst();
+        if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+                " from \"%s\" to \"%s\".", cir.Description()->ClassName(), cir.From(), cir.To());
+        }
+    }
+
 }
 
 

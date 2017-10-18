@@ -29,6 +29,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include "vislib/sys/Lockable.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
@@ -247,6 +248,17 @@ namespace plugins {
         void RequestJobInstantiation(const JobDescription *desc,
             const vislib::StringA& id,
             const ParamValueSetRequest *param = NULL);
+
+        bool RequestModuleDeletion(const vislib::StringA& id);
+        bool RequestCallDeletion(const vislib::StringA& from,
+            const vislib::StringA& to);
+        bool RequestModuleInstantiation(const vislib::StringA& className,
+            const vislib::StringA& id);
+        bool RequestCallInstantiation(const vislib::StringA& className,
+            const vislib::StringA& from, const vislib::StringA& to);
+
+        //** do everything that is queued w.r.t. modules and calls */
+        void PerformGraphUpdates();
 
         /**
          * Answer whether the core has pending requests of instantiations of
@@ -970,6 +982,18 @@ namespace plugins {
 
         /** The list of pending jobs to be instantiated */
         vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
+
+        /** the list of calls to be instantiated: (class,(from,to))* */
+        vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingCallInstRequests;
+        /** the list of modules to be instantiated: (class, id)* */
+        vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> pendingModuleInstRequests;
+        /** the list of calls to be deleted: (from,to)* */
+        vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>>
+            pendingCallDelRequests;
+        /** the list of modules to be deleted: (id)* */
+        vislib::SingleLinkedList<vislib::StringA> pendingModuleDelRequests;
+        vislib::sys::CriticalSection graphUpdateLock;
+
 
         /** The module namespace root */
         RootModuleNamespace::ptr_type namespaceRoot;

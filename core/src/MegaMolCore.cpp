@@ -1210,3 +1210,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const cha
     if (core == NULL) return;
     core->WriteStateToXML(outFilename);
 }
+
+
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void *hCore) {
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core != NULL) {
+        core->PerformGraphUpdates();
+    }
+}

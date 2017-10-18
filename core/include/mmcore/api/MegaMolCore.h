@@ -959,6 +959,11 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
 
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename);
 
+/**
+ * Perform all queued graph modification requests: delete modules/calls,
+ * then create new modules/calls.
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void *hCore);
 
 #ifdef __cplusplus
 } /* extern "C" */

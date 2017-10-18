@@ -487,6 +487,8 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // main loop
     bool winsAlive, jobsAlive;
     do {
+        ::mmcPerformGraphUpdates(hCore);
+
         winsAlive = megamol::console::WindowManager::Instance().IsAlive();
         jobsAlive = megamol::console::JobManager::Instance().IsAlive();
 
