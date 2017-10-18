@@ -11,14 +11,14 @@
 #include <fstream>
 #include <vector>
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
 #include "vislib/sys/Log.h"
+
+#include "pbs/PBSDataCall.h"
 
 
 using namespace megamol;
@@ -32,7 +32,25 @@ end_idx_slot("end_idx", "The end idx of chunks to read."),
 start_region_idx_slot("start_region_idx", "The start idx of chunks to read."),
 end_region_idx_slot("end_idx", "The end idx of chunks to read."),
 getData("getdata", "Slot to request data from this data source.") {
+    this->getData.SetCallback(PBSDataCall::ClassName(), PBSDataCall::FunctionName(0), &PBSDataSource::getDataCallback);
+    this->getData.SetCallback(PBSDataCall::ClassName(), PBSDataCall::FunctionName(1), &PBSDataSource::getExtentCallback);
+    this->MakeSlotAvailable(&this->getData);
 
+    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot.SetUpdateCallback(&PBSDataSource::filenameChanged);
+    this->MakeSlotAvailable(&this->filenameSlot);
+
+    this->start_idx_slot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->start_idx_slot);
+
+    this->end_idx_slot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->end_idx_slot);
+
+    this->start_region_idx_slot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->start_region_idx_slot);
+
+    this->end_region_idx_slot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->end_region_idx_slot);
 }
 
 
@@ -52,14 +70,14 @@ void PBSDataSource::release(void) {
 
 
 void PBSDataSource::clearBuffers(void) {
-    this->x_data.clear();
-    this->y_data.clear();
-    this->z_data.clear();
-    this->nx_data.clear();
-    this->ny_data.clear();
-    this->cr_data.clear();
-    this->cg_data.clear();
-    this->cb_data.clear();
+    this->x_data->clear();
+    this->y_data->clear();
+    this->z_data->clear();
+    this->nx_data->clear();
+    this->ny_data->clear();
+    this->cr_data->clear();
+    this->cg_data->clear();
+    this->cb_data->clear();
 }
 
 
@@ -216,6 +234,81 @@ bool PBSDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
 
 bool PBSDataSource::getDataCallback(core::Call& c) {
+    try {
+        PBSDataCall* pdc = dynamic_cast<PBSDataCall*>(&c);
+
+        std::shared_ptr<PBSStorage> ret;
+
+        if (this->with_normals && this->with_colors) {
+            *ret = PBSDataCall::PNCStorage();
+        } else if (this->with_colors) {
+            *ret = PBSDataCall::CStorage();
+        } else if (this->with_normals) {
+            *ret = PBSDataCall::NStorage();
+        }
+
+        ret->SetX(this->x_data);
+        ret->SetY(this->y_data);
+        ret->SetZ(this->z_data);
+        ret->SetNX(this->nx_data);
+        ret->SetNY(this->ny_data);
+        ret->SetCR(this->cr_data);
+        ret->SetCG(this->cg_data);
+        ret->SetCB(this->cb_data);
+
+        pdc->SetData(std::move(ret));
+
+        /*switch (this->generatePBSType) {
+        case pbs_type::P:
+        {
+            PBSStorage ret;
+            ret.SetX(this->x_data);
+            ret.SetY(this->y_data);
+            ret.SetZ(this->z_data);
+            pdc->SetData(std::make_shared<PBSStorage>(ret));
+        }
+            break;
+        case pbs_type::PN:
+        {
+            PBSDataCall::PNStorage ret;
+            ret.SetX(this->x_data);
+            ret.SetY(this->y_data);
+            ret.SetZ(this->z_data);
+            ret.SetNX(this->nx_data);
+            ret.SetNY(this->ny_data);
+            pdc->SetData(std::make_shared<PBSDataCall::PNStorage>(ret));
+        }
+            break;
+        case pbs_type::PC:
+        {
+            PBSDataCall::PCStorage ret;
+            ret.SetX(this->x_data);
+            ret.SetY(this->y_data);
+            ret.SetZ(this->z_data);
+            ret.SetCR(this->cr_data);
+            ret.SetCG(this->cg_data);
+            ret.SetCB(this->cb_data);
+            pdc->SetData(std::make_shared<PBSDataCall::PCStorage>(ret));
+        }
+        case pbs_type::PNC:
+        {
+            PBSDataCall::PNCStorage ret;
+            ret.SetX(this->x_data);
+            ret.SetY(this->y_data);
+            ret.SetZ(this->z_data);
+            ret.SetNX(this->nx_data);
+            ret.SetNY(this->ny_data);
+            ret.SetCR(this->cr_data);
+            ret.SetCG(this->cg_data);
+            ret.SetCB(this->cb_data);
+            pdc->SetData(std::make_shared<PBSDataCall::PNCStorage>(ret));
+        }
+        default:
+            break;
+        }*/
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }

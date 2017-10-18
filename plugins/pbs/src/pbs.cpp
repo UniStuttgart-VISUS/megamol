@@ -12,6 +12,12 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+// Modules
+#include "PBSDataSource.h"
+
+// Calls
+#include "pbs/PBSDataCall.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -38,7 +44,7 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-
+            this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
             //
             // TODO: Register your plugin's modules here
             // like:
@@ -48,7 +54,7 @@ namespace {
             //
 
             // register calls here:
-
+            this->call_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataCall>();
             //
             // TODO: Register your plugin's calls here
             // like:

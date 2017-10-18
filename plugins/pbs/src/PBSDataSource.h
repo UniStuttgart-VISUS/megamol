@@ -8,9 +8,11 @@
 #ifndef PBS_PBSREADER_H_INCLUDED
 #define PBS_PBSREADER_H_INCLUDED
 
+#include <array>
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
@@ -70,6 +72,26 @@ protected:
      */
     virtual void release(void);
 private:
+    /** Idx enum for point attributes */
+    enum attribute_type {
+        x = 0,
+        y,
+        z,
+        nx,
+        ny,
+        cr,
+        cg,
+        cb
+    };
+
+    enum pbs_type {
+        None,
+        P,
+        PN,
+        PC,
+        PNC
+    };
+
     /**
      * Helper function to insert read buffer into an output buffer.
      *
@@ -78,12 +100,37 @@ private:
      * @num_elements Number of elements to insert
      */
     template<class T>
-    void insertElements(std::vector<T>& lhs, std::vector<char>& rhs, size_t num_elements) {
+    inline void insertElements(std::shared_ptr<std::vector<T>>& lhs, std::vector<char>& rhs, size_t num_elements) {
         if (num_elements > rhs.size() / sizeof(T)) {
             throw std::out_of_range("PBSDataSource::insertElements: rhs.size() to small for num_elements\n");
         }
-        lhs.insert(lhs.end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
+        lhs->insert(lhs->end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
     }
+
+    /*inline void updatePBSType(const attribute_type& type) {
+        this->type_flags[type] = true;
+    }
+
+    inline pbs_type generatePBSType(void) {
+        std::array<bool, 3> comp;
+
+        if (this->type_flags[0] && this->type_flags[1] && this->type_flags[2]) comp[0] = true;
+        else return pbs_type::None;
+
+        if (this->type_flags[3] && this->type_flags[4]) comp[1] = true;
+
+        if (this->type_flags[5] && this->type_flags[6] && this->type_flags[7]) comp[2] = true;
+
+        if (!comp[1] && !comp[2]) return pbs_type::P;
+
+        if (comp[1] && !comp[2]) return pbs_type::PN;
+
+        if (!comp[1] && comp[2]) return pbs_type::PC;
+
+        if (comp[1] && comp[2]) return pbs_type::PNC;
+
+        return pbs_type::None;
+    }*/
 
     /**
      * Clears all buffers.
@@ -157,13 +204,13 @@ private:
     };
 
     /** Buffers for point coordinates */
-    std::vector<double> x_data, y_data, z_data;
+    std::shared_ptr<std::vector<double>> x_data, y_data, z_data;
 
     /** Buffers for point normals in spherical coordinates */
-    std::vector<float> nx_data, ny_data;
+    std::shared_ptr<std::vector<float>> nx_data, ny_data;
 
     /** Buffers for point colors */
-    std::vector<unsigned char> cr_data, cg_data, cb_data;
+    std::shared_ptr<std::vector<unsigned char>> cr_data, cg_data, cb_data;
 
     /** Flag-storage for "renderable" property */
     std::vector<bool> render_flag;
@@ -171,22 +218,16 @@ private:
     /** Number of possible attributes */
     static const unsigned int max_num_attributes = 8;
 
-    /** Idx enum for point attributes */
-    enum attribute_type {
-        x = 0,
-        y,
-        z,
-        nx,
-        ny,
-        cr,
-        cg,
-        cb
-    };
+    std::array<bool, max_num_attributes> type_flags;
 
     /** Prefixes of filenames */
     std::string filename_prefixes[max_num_attributes] = {
         "x", "y", "z", "nx", "ny", "cr", "cg", "cb"
     };
+
+    bool with_normals;
+
+    bool with_colors;
 };
 
 } /* end namespace pbs */
