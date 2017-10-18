@@ -51,7 +51,7 @@ bool megamol::core::special::StubModule::stub(Call& c) {
         if (cd->IsDescribing(&c)) {
             for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
                 try {
-                    c(idx);
+                    this->inSlot.Call(idx);
                 } catch (...) {
                     return false;
                 }
