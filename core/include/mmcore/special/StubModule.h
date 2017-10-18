@@ -16,6 +16,11 @@ namespace megamol {
 namespace core {
 namespace special {
 
+/**
+ * Simple module accepting all inbound and outbound call classes.
+ * This module can be used as a stub for debugging and test purposes for development modules
+ * for which suitable sinks do not exist.
+ */
 class StubModule : public Module {
 public:
     /**
@@ -23,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "StubModule";
     }
 
@@ -32,8 +37,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
-        return "Stub module which accepts all ingoing and outgoing calls for debugging and test purposes.";
+    static const char* Description(void) {
+        return "Stub module which accepts all ingoing (inSlot) and outgoing (outSlot) calls "
+            "for debugging and test purposes.";
     }
 
     /**
@@ -63,10 +69,19 @@ protected:
      */
     virtual void release(void);
 private:
+    /** Outbound connection */
     CalleeSlot outSlot;
 
+    /** Inbound connection */
     CallerSlot inSlot;
 
+    /**
+     * Stub that calls all callback functions of the inbound connection.
+     *
+     * @param c Calling outbound connection
+     *
+     * @return True, if successful.
+     */
     bool stub(Call& c);
 
 }; /* end class StubModule */

@@ -47,8 +47,9 @@ void special::StubModule::release(void) {
 
 
 bool megamol::core::special::StubModule::stub(Call& c) {
+    auto call = this->inSlot.CallAs<Call>();
     for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
-        if (cd->IsDescribing(&c)) {
+        if (cd->IsDescribing(call)) {
             for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
                 try {
                     this->inSlot.Call(idx);
