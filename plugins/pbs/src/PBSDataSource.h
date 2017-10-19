@@ -104,7 +104,10 @@ private:
         if (num_elements > rhs.size() / sizeof(T)) {
             throw std::out_of_range("PBSDataSource::insertElements: rhs.size() to small for num_elements\n");
         }
-        lhs->insert(lhs->end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
+        //lhs->insert(lhs->end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
+        for (size_t i = 0; i < num_elements * sizeof(T); i+=sizeof(T)) {
+            lhs->push_back(*reinterpret_cast<T*>(&rhs[i]));
+        }
     }
 
     /*inline void updatePBSType(const attribute_type& type) {
@@ -146,6 +149,12 @@ private:
      * @return True, if file was successfully read
      */
     bool readPBSFile(const std::string& filename, std::vector<char> &data, const zfp_type type, const unsigned int num_elements, const double tol);
+
+    bool read(void);
+
+    bool isDirty(void);
+
+    void resetDirty(void);
 
     /**
      * Callback receiving the update of the file name parameter.
@@ -210,7 +219,7 @@ private:
     std::shared_ptr<std::vector<float>> nx_data, ny_data;
 
     /** Buffers for point colors */
-    std::shared_ptr<std::vector<unsigned char>> cr_data, cg_data, cb_data;
+    std::shared_ptr<std::vector<unsigned int>> cr_data, cg_data, cb_data;
 
     /** Flag-storage for "renderable" property */
     std::vector<bool> render_flag;

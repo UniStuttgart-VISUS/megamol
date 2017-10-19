@@ -69,27 +69,27 @@ public:
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned char>> GetCR(void) const {
-        return std::weak_ptr<std::vector<unsigned char>>();
+    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCR(void) const {
+        return std::weak_ptr<std::vector<unsigned int>>();
     }
 
-    inline virtual void SetCR(std::weak_ptr<std::vector<unsigned char>> cr) {
+    inline virtual void SetCR(std::weak_ptr<std::vector<unsigned int>> cr) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned char>> GetCG(void) const {
-        return std::weak_ptr<std::vector<unsigned char>>();
+    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCG(void) const {
+        return std::weak_ptr<std::vector<unsigned int>>();
     }
 
-    inline virtual void SetCG(std::weak_ptr<std::vector<unsigned char>> cg) {
+    inline virtual void SetCG(std::weak_ptr<std::vector<unsigned int>> cg) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned char>> GetCB(void) const {
-        return std::weak_ptr<std::vector<unsigned char>>();
+    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCB(void) const {
+        return std::weak_ptr<std::vector<unsigned int>>();
     }
 
-    inline virtual void SetCB(std::weak_ptr<std::vector<unsigned char>> cb) {
+    inline virtual void SetCB(std::weak_ptr<std::vector<unsigned int>> cb) {
         // intentionally empty
     }
 private:

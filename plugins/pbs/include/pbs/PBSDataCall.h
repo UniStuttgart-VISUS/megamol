@@ -63,31 +63,31 @@ public:
             this->SetCB(rhs.GetCB());
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned char>> GetCR(void) const override {
+        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCR(void) const override {
             return this->cr;
         }
 
-        inline virtual void SetCR(const std::weak_ptr<std::vector<unsigned char>> cr) override {
+        inline virtual void SetCR(const std::weak_ptr<std::vector<unsigned int>> cr) override {
             this->cr = cr;
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned char>> GetCG(void) const override {
+        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCG(void) const override {
             return this->cg;
         }
 
-        inline virtual void SetCG(const std::weak_ptr<std::vector<unsigned char>> cg) override {
+        inline virtual void SetCG(const std::weak_ptr<std::vector<unsigned int>> cg) override {
             this->cg = cg;
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned char>> GetCB(void) const override {
+        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCB(void) const override {
             return this->cb;
         }
 
-        inline virtual void SetCB(const std::weak_ptr<std::vector<unsigned char>> cb) override {
+        inline virtual void SetCB(const std::weak_ptr<std::vector<unsigned int>> cb) override {
             this->cb = cb;
         }
     private:
-        std::weak_ptr<std::vector<unsigned char>> cr, cg, cb;
+        std::weak_ptr<std::vector<unsigned int>> cr, cg, cb;
     };
 
     class PNCStorage : public NStorage, public CStorage {
