@@ -3,10 +3,18 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
+#ifndef MMSOMBREROSPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
+#define MMSOMBREROSPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "TunnelResidueDataCall.h"
 
 #include "vislib/sys/File.h"
 
@@ -94,10 +102,10 @@ namespace sombreros {
              *
              * @param owner The owning AnimDataModule
              */
-            //TODOFrame(core::view::AnimDataModule& owner);
+            Frame(core::view::AnimDataModule& owner);
 
             /** Dtor. */
-            //TODOvirtual ~Frame(void);
+            virtual ~Frame(void);
 
             /**
              * Clears the loaded data
@@ -117,14 +125,14 @@ namespace sombreros {
              *
              * @return True on success
              */
-            //TODObool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version);
+            bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version);
 
             /**
              * Sets the data into the call
              *
              * @param call The call to receive the data
              */
-            //TODOvoid SetData(MultiParticleDataCall& call);
+            void SetData(TunnelResidueDataCall& call);
 
         private:
 
@@ -135,12 +143,12 @@ namespace sombreros {
             unsigned int fileVersion;
 
         };
-#if 0
+
         /**
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-        class Unlocker : public MultiParticleDataCall::Unlocker {
+        class Unlocker : public TunnelResidueDataCall::Unlocker {
         public:
 
             /**
@@ -148,7 +156,7 @@ namespace sombreros {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : MultiParticleDataCall::Unlocker(),
+            Unlocker(Frame& frame) : TunnelResidueDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }
@@ -173,7 +181,6 @@ namespace sombreros {
             Frame *frame;
 
         };
-#endif
 
 	private:
 
@@ -213,5 +220,7 @@ namespace sombreros {
 		size_t data_hash;
 	};
 
-}
-}
+} /* end namespace sombreros */
+} /* end namespace megamol */
+
+#endif

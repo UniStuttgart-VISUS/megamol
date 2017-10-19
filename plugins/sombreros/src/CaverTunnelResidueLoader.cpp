@@ -6,8 +6,6 @@
 #include "stdafx.h"
 #include "CaverTunnelResidueLoader.h"
 
-#include "TunnelResidueDataCall.h"
-
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -16,6 +14,42 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::sombreros;
+
+/********************************************************************************************************************************************/
+
+/*
+ * CaverTunnelResidueLoader::Frame::Frame
+ */
+CaverTunnelResidueLoader::Frame::Frame(view::AnimDataModule& owner) : 
+	view::AnimDataModule::Frame(owner), dat() {
+	// intentionally empty
+}
+
+/*
+ * CaverTunnelResidueLoader::Frame::~Frame
+ */
+CaverTunnelResidueLoader::Frame::~Frame(void) {
+	this->Clear();
+}
+
+/*
+ * CaverTunnelResidueLoader::Frame::LoadFrame
+ */
+bool CaverTunnelResidueLoader::Frame::LoadFrame(vislib::sys::File * file, unsigned int idx, UINT64 size, unsigned int version) {
+	this->frame = idx;
+	this->fileVersion = version;
+	this->dat.EnforceSize(static_cast<SIZE_T>(size));
+	return (file->Read(this->dat, size) == size);
+}
+
+/*
+ * CaverTunnelResidueLoader::Frame::SetData
+ */
+void CaverTunnelResidueLoader::Frame::SetData(TunnelResidueDataCall& call) {
+	// TODO
+}
+
+/********************************************************************************************************************************************/
 
 /*
  * CaverTunnelResidueLoader::CaverTunnelResidueLoader
@@ -44,8 +78,8 @@ CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) {
  * CaverTunnelResidueLoader::constructFrame
  */
 core::view::AnimDataModule::Frame* CaverTunnelResidueLoader::constructFrame(void) const {
-	// TODO
-	return nullptr;
+	Frame * f = new Frame(*const_cast<CaverTunnelResidueLoader*>(this));
+	return f;
 }
 
 /*
@@ -60,7 +94,20 @@ bool CaverTunnelResidueLoader::create(void) {
  * CaverTunnelResidueLoader::loadFrame
  */
 void CaverTunnelResidueLoader::loadFrame(core::view::AnimDataModule::Frame * frame, unsigned int idx) {
+	using vislib::sys::Log;
+	Frame * f = dynamic_cast<Frame*>(frame);
+	if (f == nullptr) return;
+	if (this->file == nullptr) {
+		f->Clear();
+		return;
+	}
+	ASSERT(idx < this->FrameCount());
 	// TODO
+	//this->file->Seek(this->frameIdx[idx]);
+	//if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
+	//	// failed
+	//	Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
+	//}
 }
 
 /*

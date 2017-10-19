@@ -3,6 +3,12 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
+#ifndef MMSOMBREROSPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
+#define MMSOMBREROSPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
@@ -95,3 +101,5 @@ namespace sombreros {
 
 } /* end namespace sombreros */
 } /* end namespace megamol */
+
+#endif
