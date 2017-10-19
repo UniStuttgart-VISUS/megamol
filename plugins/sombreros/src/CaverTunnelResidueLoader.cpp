@@ -15,6 +15,8 @@
 #include "vislib/sys/TextFileReader.h"
 #include "vislib/sys/Log.h"
 
+#include <string>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::sombreros;
@@ -169,12 +171,30 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 			continue;
 		}
 
+		if (this->tunnelVector.empty()) {
+			// should not happen
+			break;
+		}
+
 		// parse the line
 		line.TrimSpaces();
 		if (line.IsEmpty()) continue;
 
 		// split the line into the different parts
 		std::vector<vislib::StringA> parts = splitLine(line);
+		TunnelResidueDataCall::Tunnel * tp = &this->tunnelVector[this->tunnelVector.size() - 1];
+
+		if (parts.size() > 5) { // only in this case we have atom indices
+			tp->atomNumbers.push_back(static_cast<int>(parts.size() - 5));
+			tp->firstAtomIndices.push_back(static_cast<int>(tp->atomIdentifiers.size()));
+			// parse the small entries of the form <snapshots>:<element_symbol>_<serial_number>
+			for (int i = 5; i < static_cast<int>(parts.size()); i++) {
+				// TODO this may be dangerous...
+				auto numberString = splitLine(parts[i], ':')[0];
+				auto idxString = splitLine(parts[i], '_')[1];
+				tp->atomIdentifiers.push_back(std::pair<int, int>(std::stoi(idxString.PeekBuffer()), std::stoi(numberString.PeekBuffer())));
+			}
+		}
 	}
 
 	return true;
