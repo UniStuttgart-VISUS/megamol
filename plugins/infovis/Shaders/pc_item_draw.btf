@@ -313,7 +313,7 @@ uniform vec4 clearColor = vec4(0.0);
       <snippet type="version">430</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::uniforms" />
-      <snippet name="::pc_item_draw::histogramm::uniforms" />
+      <snippet name="::pc_item_draw::histogram::uniforms" />
       <snippet type="string">
         <![CDATA[
 uniform vec2 bottomLeft = vec2(-1.0);
@@ -355,7 +355,7 @@ void main()
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
       <snippet name="::pc_item_draw::uniforms" />
-      <snippet name="::pc_item_draw::histogramm::uniforms" />
+      <snippet name="::pc_item_draw::histogram::uniforms" />
       <snippet type="string">
         <![CDATA[
 smooth in vec2 texCoord;
