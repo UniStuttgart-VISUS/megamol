@@ -13,7 +13,24 @@ using namespace megamol::ospray;
 
 
 OSPRayStructureContainer::OSPRayStructureContainer() :
-    isValid(false) { }
+    isValid(false),
+ vertexData(NULL),
+ colorData(NULL),
+ normalData(NULL),
+ texData(NULL),
+ indexData(NULL),
+ voxels(NULL),
+ gridOrigin(NULL),
+ gridSpacing(NULL),
+ dimensions(NULL),
+ clippingBoxLower(NULL),
+ clippingBoxUpper(NULL),
+ isoValue(NULL),
+ sliceData(NULL),
+ clipPlaneData(NULL),
+ clipPlaneColor(NULL),
+raw(NULL),
+type(structureTypeEnum::UNINITIALIZED) { }
 
 OSPRayStructureContainer::~OSPRayStructureContainer() {
     //

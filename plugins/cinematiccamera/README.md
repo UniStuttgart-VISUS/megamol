@@ -1,15 +1,9 @@
 # MegaMol plugin "Cinematic Camera"
 
 This module allows the video rendering of simulations.
-Through defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
+By defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
 
 ![cinematic camera demo picture](https://github.com/tobiasrau/megamol-dev/blob/cinematiccamera/plugins/cinematiccamera/demo.png)
-
----
-
-## Use cases
-
-This plugin can be used to render a video of a simulation.
 
 --- 
 
@@ -37,8 +31,8 @@ The complete final video can be rendered to png files by defining the resolution
 #### TimeLineRenderer:
 
 This module shows the temporal position of the keyframes on the animation time axis and the simulation time axis in an two-dimensional diagram.
-The manipulation of the simulation and the animation time of a keyframe can be done per drag and drop.
-The time axes can be zoomed independently at the current mouse position.
+The keyframes can be selected (left mouse button) or they can be shifted along the simulation or animation time axis per drag and drop (right mouse button).
+The time axes can be zoomed independently at the current mouse position (middle mouse button).
 
 --- 
 
@@ -48,14 +42,15 @@ The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_addKeyframe` (Assigned key: `a`): Adds new keyframe at the currently selected time.
-* `04_maxAnimTime` (`1.0`): The total timespan of the animation.
-* `05_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
-* `06_snapAnimationFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
-* `editSelected - 03_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
+* `02_maxAnimTime` (`1.0`): The total timespan of the animation.
+* `03_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
+* `04_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
+* `05_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
+* `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
-* `editSelected - 01_animTime` (`1.0`): Edit animation time of the selected keyframe.
-* `editSelected - 02_simTime` (`1.0`): Edit simulation time of the selected keyframe.
-* `editSelected - 02_position`: Edit the position vector of the selected keyframe.
+* `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
+* `editSelected - 04_simTime` (`1.0`): Edit simulation time of the selected keyframe.
+* `editSelected - 05_position`: Edit the position vector of the selected keyframe.
 * `editSelected - 06_lookat`: Edit the look-at vector of the selected keyframe.
 * `editSelected - 07_resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
 * `editSelected - 08_up`:  Edit the up vector of the selected keyframe.
@@ -101,9 +96,9 @@ The light yellow tagged data source module has to be replaced by a suitable one 
 
 ### Example
 
-The sample project supported in the `example` folder of this plugin.
-As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
+The sample project (`cinematiccam_simplemol.mmprj`) which is supported in the `example` folder of this plugin has to be copied into the `bin` folder of megamol.
 In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
-` .\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`
-
+*Under Windows:* `".\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
+*Under Linux:* `"./megamol.sh -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
+As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
 
