@@ -33,8 +33,8 @@ CinematicView::CinematicView(void) : View3D(),
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
 	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resWidthParam(            "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    resHeightParam(           "05_cinematicWidth","The width resolution of the cineamtic view to render."),
+    resHeightParam(           "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    resWidthParam(            "05_cinematicWidth","The width resolution of the cineamtic view to render."),
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     shownKeyframe()
     {
@@ -381,18 +381,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    GLenum callOutBuffer = cr3d->OutputBuffer();
+    //GLenum callOutBuffer = cr3d->OutputBuffer();
     cr3d->SetOutputBuffer(this->fbo.GetID());
+
     this->overrideCall = cr3d;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
 
-    glFlush();
     this->fbo.Disable();
 
+    //cr3d->SetOutputBuffer(callOutBuffer);
+
     // Reset override render call
-    cr3d->SetOutputBuffer(callOutBuffer);
     this->overrideCall = NULL;
     // Reset override viewport
     this->overrideViewport = NULL; 
@@ -456,7 +457,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw letter box  -------------------------------------------------------
 
     // Color stuff ------------------------------------------------------------
-    
     const float *bgColor = this->bkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -497,6 +497,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     
+    // Reset opengl
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
     // Unlock renderer after first frame
     if (this->rendering && this->pngdata.lock) {
         this->pngdata.lock = false;
@@ -541,7 +545,7 @@ bool CinematicView::rtf_setup() {
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 
     // Set current time stamp to file name
-    this->pngdata.filename = "frames_";
+    this->pngdata.filename = "frames";
     // this->pngdata.filename.Format("frame_%i%i%i-%i%i%i_-_", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Create new byte buffer
@@ -610,11 +614,10 @@ bool CinematicView::rtf_create_frame() {
 
     if (!this->pngdata.lock) {
         vislib::StringA tmpFilename, tmpStr;
-        tmpStr.Format("%i", this->expFrameCnt);
-        tmpStr.Prepend("\%0");
-         tmpStr.Append("i.png");
-        //tmpStr.Append("i_-_animTime_%f.png");
-        //tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt, this->pngdata.animTime);
+        tmpStr.Format(".%i", this->expFrameCnt);
+        tmpStr.Prepend("%0");
+        tmpStr.Append("i.png");
+        tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
         tmpFilename.Prepend(this->pngdata.filename);
 
         // open final image file

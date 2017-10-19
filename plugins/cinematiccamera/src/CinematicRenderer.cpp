@@ -26,7 +26,6 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 #include "CinematicRenderer.h"
 #include "CallCinematicCamera.h"
@@ -52,7 +51,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     toggleManipulateParam("02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
     toggleHelpTextParam(  "03_toggleHelpText", "Show/hide help text for key assignments."),
     toggleModelBBoxParam( "04_toggleModelBBox", "Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model."),
-    //textureShader(),
+    textureShader(),
     manipulator()
     {
 
@@ -100,17 +99,16 @@ CinematicRenderer::~CinematicRenderer(void) {
 
 bool CinematicRenderer::create(void) {
 
-    /*
     vislib::graphics::gl::ShaderSource vert, frag;
 
     const char *shaderName = "textureShader";
 
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) { 
-            return false; 
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) {
+            return false;
         }
         if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::fragment", frag)) {
-            return false; 
+            return false;
         }
         if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
@@ -133,7 +131,7 @@ bool CinematicRenderer::create(void) {
             "Unable to compile %s shader: Unknown exception\n", shaderName);
         return false;
     }
-    */
+
 	return true;
 }
 
@@ -143,7 +141,7 @@ bool CinematicRenderer::create(void) {
 */
 void CinematicRenderer::release(void) {
 
-    //this->textureShader.Release();
+    this->textureShader.Release();
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
@@ -189,6 +187,9 @@ bool CinematicRenderer::GetExtents(Call& call) {
     // Compute bounding box including spline (in world space) and object (in world space).
     vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
     this->ocBbox = bboxCR3D;
+    // Grow bounding box to manipulators and get information of bbox of model
+    this->manipulator.updateExtents(&bboxCR3D);
+
     vislib::math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
 
     // Get bounding box of spline.
@@ -197,6 +198,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
         return false;
     }
+
     bboxCR3D.Union(*bboxCCC);
     cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
 
@@ -303,6 +305,94 @@ bool CinematicRenderer::Render(Call& call) {
         return false;
     }
 
+    // Draw slave renderer stuff ----------------------------------------------
+    if (!this->toggleModelBBox) {
+
+           // Suppress TRACE output of fbo.Enable() and fbo.Create()
+#if defined(DEBUG) || defined(_DEBUG)
+        unsigned int otl = vislib::Trace::GetInstance().GetLevel();
+        vislib::Trace::GetInstance().SetLevel(0);
+#endif // DEBUG || _DEBUG 
+
+        if (this->fbo.IsValid()) {
+            if ((this->fbo.GetWidth() != vpWidth) || (this->fbo.GetHeight() != vpHeight)) {
+                this->fbo.Release();
+            }
+        }
+        if (!this->fbo.IsValid()) {
+            if (!this->fbo.Create(vpWidth, vpHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+                throw vislib::Exception("[CINEMATIC RENDERER] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                return false;
+            }
+        }
+
+        if (this->fbo.Enable() != GL_NO_ERROR) {
+            throw vislib::Exception("[CINEMATIC RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+            return false;
+        }
+        // Reset TRACE output level
+#if defined(DEBUG) || defined(_DEBUG)
+        vislib::Trace::GetInstance().SetLevel(otl);
+#endif // DEBUG || _DEBUG 
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+        GLenum callOutBuffer = oc->OutputBuffer();
+        oc->SetOutputBuffer(this->fbo.GetID());
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        // Call render function of slave renderer
+        (*oc)(0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+
+        // Reset output buffer
+        oc->SetOutputBuffer(callOutBuffer);
+
+        // Disable fbo
+        this->fbo.Disable();
+
+
+        // Draw textures ------------------------------------------------------
+
+        glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_POLYGON_SMOOTH);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // DRAW DEPTH ---------------------------------------------------------
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_DEPTH_TEST);
+
+        this->textureShader.Enable();
+
+        glUniform1f(this->textureShader.ParameterLocation("vpW"), (float)(vpWidth));
+        glUniform1f(this->textureShader.ParameterLocation("vpH"), (float)(vpHeight));
+        glUniform1i(this->textureShader.ParameterLocation("depthtex"), 0);
+
+        this->fbo.DrawDepthTexture();
+
+        this->textureShader.Disable();
+
+        // DRAW COLORS --------------------------------------------------------
+        glDisable(GL_DEPTH_TEST);
+
+        this->fbo.DrawColourTexture();
+    }        
+
+
+    // Draw cinematic renderer stuff -------------------------------------------
+
     // Opengl setup
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -325,38 +415,6 @@ bool CinematicRenderer::Render(Call& call) {
     GLfloat tmpPs;
     glGetFloatv(GL_POINT_SIZE, &tmpPs);
 
-    // Suppress TRACE output of fbo.Enable() and fbo.Create()
-#if defined(DEBUG) || defined(_DEBUG)
-    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
-    vislib::Trace::GetInstance().SetLevel(0);
-#endif // DEBUG || _DEBUG 
-
-    if (this->fbo.IsValid()) {
-        if ((this->fbo.GetWidth() != vpWidth) || (this->fbo.GetHeight() != vpHeight)) {
-            this->fbo.Release();
-        }
-    }
-    if (!this->fbo.IsValid()) {
-        if (!this->fbo.Create(vpWidth, vpHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
-            throw vislib::Exception("[CINEMATIC RENDERER] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return false;
-        }
-    }
-
-    if (this->fbo.Enable() != GL_NO_ERROR) {
-        throw vislib::Exception("[CINEMATIC RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
-        return false;
-    }
-    // Reset TRACE output level
-#if defined(DEBUG) || defined(_DEBUG)
-    vislib::Trace::GetInstance().SetLevel(otl);
-#endif // DEBUG || _DEBUG 
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Draw cinematic renderer stuff -------------------------------------------
     // Manipulators
     vislib::Array<KeyframeManipulator::manipType> availManip;
     availManip.Clear();
@@ -374,13 +432,13 @@ bool CinematicRenderer::Render(Call& call) {
         availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
     }
     // Update manipulator data
-    this->manipulator.update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+    this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
         cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
-            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
+        cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
     // Draw manipulators
     this->manipulator.draw();
 
-    math::Point<float, 3> tmpP;
+    vislib::math::Point<float, 3> tmpP;
     glColor4fv(sColor);
     // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
     glDisable(GL_BLEND);
@@ -402,8 +460,8 @@ bool CinematicRenderer::Render(Call& call) {
     }
     glEnd();
 
-    // Draw slave renderer stuff ----------------------------------------------
-    if (this->toggleModelBBox) { // Draw either semi-transparent bounding box of model ...
+    // Draw semi-transparent bounding box of model
+    if (this->toggleModelBBox) { 
         glEnable(GL_CULL_FACE);
         // (Blending has to be enabled ...)
 
@@ -411,29 +469,12 @@ bool CinematicRenderer::Render(Call& call) {
         this->drawBoundingBox();
         glCullFace(GL_BACK);
         this->drawBoundingBox();
+
+        glDisable(GL_CULL_FACE);
     }
-    else { // ... or render full model to texture.
 
-        // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-        GLenum callOutBuffer = oc->OutputBuffer();
-        oc->SetOutputBuffer(this->fbo.GetID());
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-
-        // Call render function of slave renderer
-        (*oc)(0);
-
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-
-        // Reset output buffer
-        oc->SetOutputBuffer(callOutBuffer);
-    }        
-
-    // Disable fbo
-    this->fbo.Disable();
-
+    // Draw help text  --------------------------------------------------------
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -443,53 +484,13 @@ bool CinematicRenderer::Render(Call& call) {
     glPushMatrix();
     glLoadIdentity();
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_1D);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-
-    // Draw texture -------------------------------------------------------
-    // (Depth of texture depends on lookat position of world camera ...)
-
-    //this->textureShader.Enable();
-
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    this->fbo.BindColourTexture();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Draw in the background
-    glTranslatef(0.0f, 0.0f, -1.0f);
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(0.0f, 0.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f((float)(vpWidth), 0.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f((float)(vpWidth), (float)(vpHeight));
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, (float)(vpHeight));
-    glEnd();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-
-    //this->textureShader.Disable();
-
-    // Draw help text  --------------------------------------------------------
-
     // Draw help text in front of bounding box rendered by the view3d
     glTranslatef(0.0f, 0.0f, 1.0f);
     glEnable(GL_POLYGON_SMOOTH);
+
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+
     glColor4fv(fgColor);
     if (!this->theFont.Initialise()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
@@ -497,7 +498,6 @@ bool CinematicRenderer::Render(Call& call) {
     }
     float fontSize = (float)(vpWidth)*0.03f; // 3% of viewport width
     vislib::StringA tmpStr = "";
-    float strWidth = this->theFont.LineWidth(fontSize, "---------- ---------- ---------- ---------- ----- ");
 
     if (this->showHelpText) {
         // Adapt font size if height of help text is greater than viewport height
@@ -530,7 +530,11 @@ bool CinematicRenderer::Render(Call& call) {
     else {
         tmpStr += "[h] Show help text.\n";
     }
+
+    float strWidth = this->theFont.LineWidth(fontSize, tmpStr);
     this->theFont.DrawString(10.0f, (float)(vpHeight) - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    //this->theFont.Deinitialise();
 
     // Reset opengl -----------------------------------------------------------
     glPopMatrix();

@@ -49,7 +49,7 @@ namespace megamol {
                // Add new manipulator type before NONE ...
 
 
-            /** Update data of manipulators.
+            /** Update rednering data of manipulators.
             *
             * @param am    Array of manipulator types
             * @param kfa   Pointer to the array of keyframes
@@ -61,9 +61,17 @@ namespace megamol {
             * @return True if data was updated successfully.
             *
             */
-            bool update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
+            bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
                         vislib::math::Vector<float, 3> wcd);
+
+            /** Update extents.
+            *   Grows bounding box to manipulators.
+            *   If manipulator lies inside of bounding box:
+            *   Get bounding box of model to determine minimum length of manipulator axes.
+            *
+            */
+            void updateExtents(vislib::math::Cuboid<float> *bb);
 
             /** */
             bool draw(void);
@@ -103,10 +111,11 @@ namespace megamol {
             };
 
             // Some fixed values
-            const float                      circleRadiusPc = 0.0075f;   // Percentage of lookat direction which is used as adaptive circle radius
-            const unsigned int               circleSubDiv   = 20;        // Amount of subdivisions of an circle primitive
-            const float                      lineWidth      = 2.5;
-            const float                      sensitivity    = 0.01f;     // Relationship between mouse movement and length changes of coordinates
+            const float                      circleRadiusFac = 0.0075f;    // Factor for lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac   = 0.05f;      // Factor for lookat direction which is used as adaptive axis length
+            const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
+            const float                      lineWidth       = 2.5;
+            const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
 
             // Positions of keyframes
             vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions
@@ -126,6 +135,7 @@ namespace megamol {
             vislib::math::Vector<float, 3>   worldCamDir;
             bool                             isDataSet;
             bool                             isDataDirty;
+            vislib::math::Cuboid<float>      modelBbox;
 
             vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
 
