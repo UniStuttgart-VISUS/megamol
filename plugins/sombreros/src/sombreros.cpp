@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "CaverTunnelResidueLoader.h"
+#include "TunnelToBFactor.h"
 
 #include "TunnelResidueDataCall.h"
 
@@ -51,6 +52,7 @@ namespace {
             //   ...
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::CaverTunnelResidueLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToBFactor>();
 
             // register calls here:
 
