@@ -211,13 +211,29 @@ namespace sombreros {
          */
         bool getExtentCallback(core::Call& caller);
 
+		/**
+		 * Splits a line into different parts, seperated by a given char
+		 *
+		 * @param line The line to split
+		 * @param splitChar The char to split after. Default: whitespace
+		 * @return Vector containing all parts of the line. May be empty, when the line only contains the splitChar or was empty before.
+		 */
+		std::vector<vislib::StringA> splitLine(vislib::StringA line, char splitChar = ' ');
+
+		/** Slot for the filename */
 		core::param::ParamSlot filenameSlot;
 
+		/** The data output callee slot */
 		core::CalleeSlot getData;
 
+		/** The file handle */
 		vislib::sys::File * file;
 
+		/** The data hash */
 		size_t data_hash;
+
+		/** data storage for all read tunnels */
+		std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
 	};
 
 } /* end namespace sombreros */

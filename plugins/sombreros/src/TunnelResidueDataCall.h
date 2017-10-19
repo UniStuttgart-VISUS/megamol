@@ -10,6 +10,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
+#include <vector>
 
 namespace megamol {
 namespace sombreros {
@@ -23,26 +24,19 @@ namespace sombreros {
 		public:
 			/** Ctor. */
 			Tunnel(void) {
-				numCoordinates = 0;
-				coordinates = nullptr;
-				atomNumbers = nullptr;
-				firstAtomIndices = nullptr;
-				atomIdentifiers = nullptr;
+				//intentionally empty
 			}
 			/** array storing the voronoi vertex locations of the tunnel represented */
-			float * coordinates;
+			std::vector<float> coordinates;
 
-			/** the number of voronoi vertex coordinates of the tunnel */
-			int numCoordinates;
+			/** the numbers of stored atoms per voronoi vertex */
+			std::vector<int> atomNumbers;
 
-			/** the numbers of stored atoms per voronoi vertex. length: numCoordinates */
-			int * atomNumbers;
-
-			/** the indices of the first atoms belonging to each voronoi vertex. length: numCoordinates */
-			int * firstAtomIndices;
+			/** the indices of the first atoms belonging to each voronoi vertex */
+			std::vector<int> firstAtomIndices;
 
 			/** the identifiers for all atoms stored in the call. first: identifier, second: number of occurences */
-			std::pair<int, int> * atomIdentifiers;
+			std::vector<std::pair<int, int>> atomIdentifiers;
 		};
 
 		/**
