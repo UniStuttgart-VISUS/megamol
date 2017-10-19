@@ -60,6 +60,8 @@
 #include "io/MMGDDDataSource.h"
 #include "floattable/FloatTableColumnScaler.h"
 #include "floattable/FloatTableObserverPlane.h"
+#include "floattable/FloatTableJoin.h"
+#include "floattable/FloatTableColumnFilter.h"
 
 
 /*
@@ -183,6 +185,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnScaler>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableObserverPlane>();
+			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableJoin>();
+			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnFilter>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
