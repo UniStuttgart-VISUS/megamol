@@ -145,11 +145,11 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 }
 
 void NGMeshRenderer::addRenderBatch(
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params)
+	ShaderPrgmDataAccessor const&		shader_prgm_data,
+	MeshDataAccessor const&				mesh_data,
+	DrawCommandDataAccessor const&		draw_command_data,
+	ObjectShaderParamsDataAccessor const&	obj_shader_params,
+	MaterialShaderParamsDataAccessor const&	mtl_shader_params)
 {
 	// Push back new RenderBatch object
 	m_render_batches.push_back(RenderBatch());
@@ -189,7 +189,7 @@ void NGMeshRenderer::addRenderBatch(
 	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
 		GL_DRAW_INDIRECT_BUFFER,
 		draw_command_data.data,
-		draw_command_data.draw_cnt * sizeof(CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand),
+		draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
 		GL_DYNAMIC_DRAW
 		);
 
@@ -208,7 +208,7 @@ void NGMeshRenderer::addRenderBatch(
 	m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
 		GL_SHADER_STORAGE_BUFFER,
 		mtl_shader_params.data,
-		mtl_shader_params.elements_cnt * sizeof(CallNGMeshRenderBatches::RenderBatchesData::MaterialParameters),
+		mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
 		GL_DYNAMIC_DRAW
 		);
 
@@ -217,11 +217,11 @@ void NGMeshRenderer::addRenderBatch(
 
 void NGMeshRenderer::updateRenderBatch(
 	size_t																	idx,
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&		obj_shader_params,
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
+	ShaderPrgmDataAccessor const&		shader_prgm_data,
+	MeshDataAccessor const&				mesh_data,
+	DrawCommandDataAccessor const&		draw_command_data,
+	ObjectShaderParamsDataAccessor const&		obj_shader_params,
+	MaterialShaderParamsDataAccessor const&	mtl_shader_params,
 	uint32_t																update_flags)
 {
 	if (idx >= m_render_batches.size())

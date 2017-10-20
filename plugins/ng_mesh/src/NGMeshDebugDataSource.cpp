@@ -68,11 +68,11 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 {
 	std::cout << "loading data" << std::endl;
 
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams		obj_shader_params;
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
+	ShaderPrgmDataAccessor			shader_prgm_data;
+	MeshDataAccessor				mesh_data;
+	DrawCommandDataAccessor			draw_command_data;
+	ObjectShaderParamsDataAccessor		obj_shader_params;
+	MaterialShaderParamsDataAccessor	mtl_shader_params;
 
 	shader_prgm_data.char_cnt = shader_filename.length();
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
@@ -110,16 +110,17 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	uint_view[1] = 1;
 	uint_view[2] = 2;
 
-	mesh_data.vertex_descriptor.stride = 24;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
-	mesh_data.vertex_descriptor.attributes = new CallNGMeshRenderBatches::RenderBatchesData::MeshData::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
+	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[0].size = 3;
 	mesh_data.vertex_descriptor.attributes[0].normalized = GL_FALSE;
+	mesh_data.vertex_descriptor.attributes[0].stride = 24;
 	mesh_data.vertex_descriptor.attributes[0].offset = 0;
 	mesh_data.vertex_descriptor.attributes[1].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[1].size = 3;
 	mesh_data.vertex_descriptor.attributes[1].normalized = GL_FALSE;
+	mesh_data.vertex_descriptor.attributes[1].stride = 24;
 	mesh_data.vertex_descriptor.attributes[1].offset = 12;
 
 	std::mt19937 generator(4215);
@@ -127,7 +128,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
 	draw_command_data.draw_cnt = 1000000;
-	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
+	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	obj_shader_params.raw_data = new uint8_t[obj_shader_params.byte_size];

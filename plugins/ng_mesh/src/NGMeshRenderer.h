@@ -124,11 +124,11 @@ namespace ngmesh {
 		 * @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
 		 */
 		void addRenderBatch(
-			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
-			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
-			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
-			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params);
+			ShaderPrgmDataAccessor const&		shader_prgm_data,
+			MeshDataAccessor const&				mesh_data,
+			DrawCommandDataAccessor const&		draw_command_data,
+			ObjectShaderParamsDataAccessor const&	obj_shader_params,
+			MaterialShaderParamsDataAccessor const&	mtl_shader_params);
 
 		/**
 		* Selectively updates an existing render batch with new data.
@@ -142,13 +142,13 @@ namespace ngmesh {
 		* @param update_flags The bit flags that signal which parts of the render batch data needs to be updated
 		*/
 		void updateRenderBatch(
-			size_t																	idx,
-			CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData const&		shader_prgm_data,
-			CallNGMeshRenderBatches::RenderBatchesData::MeshData const&				mesh_data,
-			CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData const&		draw_command_data,
-			CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams const&	obj_shader_params,
-			CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams const&	mtl_shader_params,
-			uint32_t																update_flags);
+			size_t						idx,
+			ShaderPrgmDataAccessor const&		shader_prgm_data,
+			MeshDataAccessor const&				mesh_data,
+			DrawCommandDataAccessor const&		draw_command_data,
+			ObjectShaderParamsDataAccessor const&	obj_shader_params,
+			MaterialShaderParamsDataAccessor const&	mtl_shader_params,
+			uint32_t					update_flags);
 
 		/**
 		* The render callback.
@@ -279,16 +279,16 @@ namespace ngmesh {
 					GLint size;
 					GLenum type;
 					GLboolean normalized;
+					GLsizei stride;
 					GLsizei offset;
 				};
 
-				VertexLayout() : stride(0), attributes() {}
+				VertexLayout() : attributes() {}
 				VertexLayout(GLsizei byte_size, const std::vector<Attribute>& attributes)
-					: stride(byte_size), attributes(attributes) {}
+					: attributes(attributes) {}
 				VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
-					: stride(byte_size), attributes(attributes) {}
+					: attributes(attributes) {}
 
-				GLsizei stride;
 				std::vector<Attribute> attributes;
 			};
 

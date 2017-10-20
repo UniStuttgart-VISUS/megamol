@@ -86,7 +86,17 @@ bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 
 bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
 {
-	std::cout << "loading data" << std::endl;
+	std::cout << "loading data" << std::endl;	
+
+	ShaderPrgmDataAccessor				shader_prgm_data;
+	MeshDataAccessor					mesh_data;
+	DrawCommandDataAccessor				draw_command_data;
+	ObjectShaderParamsDataAccessor		mesh_shader_params;
+	MaterialShaderParamsDataAccessor	mtl_shader_params;
+
+	shader_prgm_data.char_cnt = shader_filename.length();
+	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
+	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
 
 	// Begin test gltf
@@ -104,20 +114,24 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		printf("Failed to parse glTF\n");
 	}
 
-	
+	mesh_data.vertex_descriptor.attribute_cnt = model.meshes.front().primitives.front().attributes.size();
+	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
+	size_t i = 0;
+	for (auto& attribute : model.meshes.front().primitives.front().attributes)
+	{
+		std::cout << attribute.first << std::endl;
+
+		mesh_data.vertex_descriptor.attributes[i].type = GL_FLOAT;
+		mesh_data.vertex_descriptor.attributes[i].size = 3;
+		mesh_data.vertex_descriptor.attributes[i].normalized = GL_FALSE;
+		mesh_data.vertex_descriptor.attributes[i].offset = 0;
+
+		++i;
+	}
 
 	// End test gltf
 
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-	CallNGMeshRenderBatches::RenderBatchesData::ObjectShaderParams		mesh_shader_params;
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
-
-	shader_prgm_data.char_cnt = shader_filename.length();
-	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
-	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
-
+	/*
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
 	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
@@ -152,7 +166,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 
 	mesh_data.vertex_descriptor.stride = 24;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
-	mesh_data.vertex_descriptor.attributes = new CallNGMeshRenderBatches::RenderBatchesData::MeshData::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
+	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[0].size = 3;
 	mesh_data.vertex_descriptor.attributes[0].normalized = GL_FALSE;
@@ -167,7 +181,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
 	draw_command_data.draw_cnt = 1000000;
-	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
+	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
@@ -204,5 +218,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		mesh_shader_params,
 		mtl_shader_params);
 	
+	*/
+
 	return true;
 }
