@@ -116,11 +116,17 @@ namespace sombreros {
 		/** Slot for the filename */
 		core::param::ParamSlot filenameSlot;
 
+		/** Slot for the filename containing the tunnel vertices */
+		core::param::ParamSlot tunnelFilenameSlot;
+
 		/** The data output callee slot */
 		core::CalleeSlot getData;
 
 		/** The file handle */
 		vislib::sys::File * file;
+
+		/** The tunnel file handle */
+		vislib::sys::File * tunnelFile;
 
 		/** The data hash */
 		size_t data_hash;
