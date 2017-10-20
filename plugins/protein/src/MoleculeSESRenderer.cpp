@@ -68,6 +68,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
         molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
         colorTableFileParam( "color::colorTableFilename", "The filename of the color table."),
         offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering."),
+		probeRadiusSlot("probeRadius", "The probe radius for the surface computation"),
 	    puxelSizeBuffer(512 << 20),
         computeSesPerMolecule(false)
 {
@@ -82,6 +83,9 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     this->probeRadius = 1.4f;
     // set transparency
     this->transparency = 0.5f;
+
+	this->probeRadiusSlot.SetParameter(new param::FloatParam(1.4f, 0.1f));
+	this->MakeSlotAvailable(&this->probeRadiusSlot);
 
     // ----- en-/disable postprocessing -----
     this->postprocessing = NONE;
@@ -957,6 +961,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
         */
 
         // ----------------------------------------------------------------------------
+		this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
         
         // init the reduced surfaces
         if( this->reducedSurface.empty() ) {
@@ -1239,6 +1244,12 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol, const 
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;
     }
+	if (this->probeRadiusSlot.IsDirty()) {
+		this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
+		this->reducedSurface.clear();
+		this->preComputationDone = false;
+		this->probeRadiusSlot.ResetDirty();
+	}
 
     if( recomputeColors ) {
         this->preComputationDone = false;
@@ -2334,6 +2345,8 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
         this->sphericTriaTexCoord3[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
         this->sphericTriaColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
 
+		this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
+
         // loop over all RS-faces
         for( i = 0; i < this->reducedSurface[cntRS]->GetRSFaceCount(); ++i )
         {
@@ -2536,6 +2549,8 @@ void MoleculeSESRenderer::ComputeRaycastingArrays( unsigned int idxRS) {
     // do nothing if the given index is out of bounds
     if( idxRS > this->reducedSurface.size() )
         return;
+
+	this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
 
     // check if all arrays have the correct size
     if( this->sphericTriaVertexArray.size() != this->reducedSurface.size() ||
@@ -3116,6 +3131,8 @@ void MoleculeSESRenderer::RenderProbe( const vislib::math::Vector<float, 3> m) {
     GLUquadricObj *sphere = gluNewQuadric();
     gluQuadricNormals( sphere, GL_SMOOTH);
 
+	this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
+
     glEnable( GL_BLEND);
     glBlendFunc( GL_SRC_ALPHA, GL_ONE);
 
@@ -3154,6 +3171,8 @@ void MoleculeSESRenderer::RenderProbeGPU( const vislib::math::Vector<float, 3> m
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+
+	this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
 
     glBegin( GL_POINTS);
             glColor3f( 1.0f, 1.0f, 1.0f );
