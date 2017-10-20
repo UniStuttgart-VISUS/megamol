@@ -1140,6 +1140,8 @@ namespace protein_calls {
          */
         const int* AtomHydrogenBondIndices(void) const { return atomHydrogenBondIdx; }
 
+		const int* AtomFormerIndices(void) const { return atomFormerIdx; }
+
 		/**
          * Set the indices of atom hydrogen bonds. 
 		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
@@ -1354,6 +1356,10 @@ namespace protein_calls {
 				delete[] this->atomBFactors;
 			this->atomBFactors = bfac;
 			this->ownsBFactorMemory = ownsBFacMem;
+		}
+
+		void SetFormerAtomIndices(const int *formerAtomIndices) {
+			this->atomFormerIdx = formerAtomIndices;
 		}
 
         /**
@@ -1649,6 +1655,8 @@ namespace protein_calls {
         const unsigned int *atomHydrogenBondStatistics;
 		/** marks whether we use fake hydrogen bonds (calpha -> calpha) */
 		bool atomHydrogenBondsFake;
+		/** The former atom indices from the pdb file */
+		const int *atomFormerIdx;
 
         const unsigned int *solventResidueIdx;
         unsigned int atomSolventResCount;

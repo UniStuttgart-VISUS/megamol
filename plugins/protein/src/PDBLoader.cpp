@@ -25,6 +25,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 #define SFB716DEMO
 #define DARKER_COLORS
@@ -887,6 +888,7 @@ bool PDBLoader::getData( core::Call& call) {
             this->data[dc->FrameID()]->MaxCharge());
         dc->SetOccupancyRange( this->data[dc->FrameID()]->MinOccupancy(),
             this->data[dc->FrameID()]->MaxOccupancy());
+		dc->SetFormerAtomIndices(this->atomFormerIdx.PeekElements());
     } else {
 
         if (dc->FrameID() >= vislib::math::Max(1U, static_cast<unsigned int>(
@@ -949,6 +951,7 @@ bool PDBLoader::getData( core::Call& call) {
                             this->data[0]->MaxCharge());
         dc->SetOccupancyRange( this->data[0]->MinOccupancy(),
                                this->data[0]->MaxOccupancy());
+		dc->SetFormerAtomIndices(this->atomFormerIdx.PeekElements());
     }
 
     dc->SetConnections( static_cast<unsigned int>(this->connectivity.Count() / 2),
@@ -1247,6 +1250,9 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         this->atomType.AssertCapacity(atomEntries.Count());
         // set the capacity of the residue array
         this->residue.AssertCapacity(atomEntries.Count());
+		// set the capacity of the index array
+		this->atomFormerIdx.AssertCapacity(atomEntries.Count());
+		this->atomFormerIdx.SetCount(atomEntries.Count());
 
         this->atomResidueIdx.SetCount(atomEntries.Count());
 
@@ -1531,6 +1537,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         float( atof( atomEntry.Substring( 38, 8))),
         float( atof( atomEntry.Substring( 46, 8))));
     this->data[frame]->SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
+	
+	// get the atom index of the current ATOM entry
+	tmpStr = atomEntry.Substring(6, 5);
+	tmpStr.TrimSpaces();
+	this->atomFormerIdx[atom] = std::stoi(tmpStr.PeekBuffer());
 
     // get the name (atom type) of the current ATOM entry
     tmpStr = atomEntry.Substring( 12, 4);

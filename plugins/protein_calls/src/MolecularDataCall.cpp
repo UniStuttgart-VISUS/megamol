@@ -528,6 +528,7 @@ MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
 	this->neighborhoods = nullptr;
 	this->neighborhoodSizes = nullptr;
 	this->hydrogenBonds = nullptr;
+	this->atomFormerIdx = nullptr;
 }
 
 
