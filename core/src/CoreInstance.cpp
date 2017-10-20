@@ -125,7 +125,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         pendingCallInstRequests(), pendingCallDelRequests(),
         pendingModuleInstRequests(), pendingModuleDelRequests(),
-        graphUpdateLock(),
+        graphUpdateLock(), loadedLuaProjects(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
     // setup log as early as possible.
@@ -681,6 +681,7 @@ megamol::core::CoreInstance::FindJobDescription(const char *name) {
  * megamol::core::CoreInstance::RequestAllInstantiations
  */
 void megamol::core::CoreInstance::RequestAllInstantiations() {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     for (auto vd : this->projViewDescs) {
         int cnt = static_cast<int>(this->pendingViewInstRequests.Count());
         std::string s = std::to_string(cnt);
@@ -997,7 +998,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 /*
  * megamol::core::CoreInstance::GetPendingViewName
  */
-vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) const {
+vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     if (this->pendingViewInstRequests.IsEmpty()) return nullptr;
     ViewInstanceRequest request = this->pendingViewInstRequests.First();
     return request.Name();
@@ -1013,6 +1015,7 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1246,6 +1249,7 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
@@ -1530,16 +1534,34 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
-    megamol::core::utility::xml::XmlReader reader;
-    if (!reader.OpenFile(filename)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to open project file \"%s\"",
-            filename.PeekBuffer());
-        return;
+    // TODO if endswith lua, execute, save for later
+    if (filename.EndsWith(".lua")) {
+        vislib::StringA content;
+        std::string result;
+        if (!vislib::sys::ReadTextFile(content, filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                filename.PeekBuffer());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Loading project file \"%s\"", filename.PeekBuffer());
+            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                    "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+            }
+        }
+    } else {
+        megamol::core::utility::xml::XmlReader reader;
+        if (!reader.OpenFile(filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                filename.PeekBuffer());
+            return;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Loading project file \"%s\"", filename.PeekBuffer());
+        this->addProject(reader);
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Loading project file \"%s\"", filename.PeekBuffer());
-    this->addProject(reader);
 }
 
 
@@ -1547,17 +1569,36 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
-    megamol::core::utility::xml::XmlReader reader;
-    if (!reader.OpenFile(filename)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to open project file \"%s\"",
+    // TODO if endswith lua, execute, save for later
+    if (filename.EndsWith(L".lua")) {
+        vislib::StringA content;
+        std::string result;
+        if (!vislib::sys::ReadTextFile(content, filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                vislib::StringA(filename).PeekBuffer());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                    "Failed loading project file \"%s\": %s",
+                    vislib::StringA(filename).PeekBuffer(), result.c_str());
+            }
+        }
+    } else {
+        megamol::core::utility::xml::XmlReader reader;
+        if (!reader.OpenFile(filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                vislib::StringA(filename).PeekBuffer());
+            return;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Loading project file \"%s\"",
             vislib::StringA(filename).PeekBuffer());
-        return;
+        this->addProject(reader);
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Loading project file \"%s\"",
-        vislib::StringA(filename).PeekBuffer());
-    this->addProject(reader);
 }
 
 

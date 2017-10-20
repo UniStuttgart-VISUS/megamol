@@ -1,9 +1,9 @@
 /*
-* LuaState.h
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VIS).
-* Alle Rechte vorbehalten.
-*/
+ * LuaState.h
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 
 #ifndef MEGAMOLCORE_LUASTATE_H_INCLUDED
 #define MEGAMOLCORE_LUASTATE_H_INCLUDED

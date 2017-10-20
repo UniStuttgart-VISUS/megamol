@@ -1,9 +1,9 @@
 /*
-* LuaState.cpp
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VIS).
-* Alle Rechte vorbehalten.
-*/
+ * LuaState.cpp
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
 #if (_MSC_VER > 1000)
@@ -27,6 +27,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <map>
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/Process.h"
 
@@ -77,11 +78,15 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMDELETEMODULE "mmDeleteModule"
 #define MMC_LUA_MMCREATECALL "mmCreateCall"
 #define MMC_LUA_MMDELETECALL "mmDeleteCall"
+#define MMC_LUA_MMCREATEVIEW "mmCreateView"
+#define MMC_LUA_MMDELETEVIEW "mmDeleteView"
+#define MMC_LUA_MMCREATEJOB "mmCreateJob"
+#define MMC_LUA_MMDELETEJOB "mmDeleteJob"
 #define MMC_LUA_MMQUERYMODULES "mmQueryModules"
 #define MMC_LUA_MMHELP "mmHelp"
 
 
-const std::unordered_map<std::string, std::string> MM_LUA_HELP = {
+const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMLOG, MMC_LUA_MMLOG"(int level, ...)\n\tLog to MegaMol console. Level constants are LOGINFO, LOGWARNING, LOGERROR." },
     { MMC_LUA_MMLOGINFO, MMC_LUA_MMLOGINFO"(...)\n\tLog to MegaMol console with LOGINFO level." },
     { MMC_LUA_MMGETBITHWIDTH, MMC_LUA_MMGETBITHWIDTH"()\n\tReturns the bit width of the compiled executable." },
@@ -103,14 +108,23 @@ const std::unordered_map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"(string name)\n\tReturn the description of a parameter slot." },
     { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE"(string name)\n\tReturn the value of a parameter slot." },
     { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"(string name, string value)\n\tSet the value of a parameter slot." },
-    { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"(string className, string instanceName)\n\tCreate a module instance of class <className> called <instanceName>." },
+    { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>." },
     { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"(string name)\n\tDelete the module called <name>." },
-    { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string from, string to, string className)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
+    { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
     { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>." },
     { MMC_LUA_MMQUERYMODULES, MMC_LUA_MMQUERYMODULES"()\n\tShow the instantiated modules and their children." },
-    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"()\n\tShow this help." }
+    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"()\n\tShow this help." },
+    { MMC_LUA_MMCREATEVIEW, MMC_LUA_MMCREATEVIEW"(string viewName, string viewModuleClass, string viewModuleName)"
+    "\n\tCreate a new window/view and the according namespace <viewName> alongside it."
+    "\n\tAlso, instantiate a view module called <viewModuleName> of <viewModuleClass> inside that window." },
+    { MMC_LUA_MMDELETEVIEW, MMC_LUA_MMDELETEVIEW"TODO" },
+    { MMC_LUA_MMCREATEJOB, MMC_LUA_MMCREATEJOB"(string jobName, string jobModuleClass, string jobModuleName)"
+    "\n\tCreate a new background job and the according namespace <jobName> alongside it."
+    "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window." },
+    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB"TODO" }
 };
 
+// clang-format off
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = " MMC_LUA_MMLOGINFO ","
 "  error = error,"
@@ -140,6 +154,10 @@ MMC_LUA_MMCREATECALL "=" MMC_LUA_MMCREATECALL ","
 MMC_LUA_MMDELETECALL "=" MMC_LUA_MMDELETECALL ","
 MMC_LUA_MMQUERYMODULES "=" MMC_LUA_MMQUERYMODULES ","
 MMC_LUA_MMHELP "=" MMC_LUA_MMHELP ","
+MMC_LUA_MMCREATEVIEW "=" MMC_LUA_MMCREATEVIEW ","
+MMC_LUA_MMDELETEVIEW "=" MMC_LUA_MMDELETEVIEW ","
+MMC_LUA_MMCREATEJOB "=" MMC_LUA_MMCREATEJOB ","
+MMC_LUA_MMDELETEJOB "=" MMC_LUA_MMDELETEJOB ","
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -168,6 +186,7 @@ MMC_LUA_MMHELP "=" MMC_LUA_MMHELP ","
 "      sqrt = math.sqrt, tan = math.tan, tanh = math.tanh },"
 "  os = { clock = os.clock, difftime = os.difftime, time = os.time },"
 "}";
+// clang-format on
 
 typedef int (megamol::core::LuaState::*memberFunc)(lua_State * L);
 // This template wraps a member function into a C-style "free" function compatible with lua.
@@ -312,6 +331,11 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMDELETEMODULE, &dispatch<&LuaState::DeleteModule>);
         lua_register(L, MMC_LUA_MMCREATECALL, &dispatch<&LuaState::CreateCall>);
         lua_register(L, MMC_LUA_MMDELETECALL, &dispatch<&LuaState::DeleteCall>);
+
+        lua_register(L, MMC_LUA_MMCREATEVIEW, &dispatch<&LuaState::CreateView>);
+        lua_register(L, MMC_LUA_MMDELETEVIEW, &dispatch<&LuaState::DeleteView>);
+        lua_register(L, MMC_LUA_MMCREATEJOB, &dispatch<&LuaState::CreateJob>);
+        lua_register(L, MMC_LUA_MMDELETEJOB, &dispatch<&LuaState::DeleteJob>);
 
         lua_register(L, MMC_LUA_MMQUERYMODULES, &dispatch<&LuaState::QueryModules>);
 
@@ -956,6 +980,10 @@ int megamol::core::LuaState::GetParamValue(lua_State *L) {
 
 
 int megamol::core::LuaState::SetParamValue(lua_State *L) {
+    // todo this needs to be queueued as well
+
+    fdgdfsgd
+
     if (this->checkRunning(MMC_LUA_MMSETPARAMVALUE)) {
         auto paramName = luaL_checkstring(L, 1);
         auto paramValue = luaL_checkstring(L, 2);
@@ -1036,9 +1064,9 @@ int megamol::core::LuaState::DeleteModule(lua_State *L) {
 
 int megamol::core::LuaState::CreateCall(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMCREATECALL)) {
-        auto from = luaL_checkstring(L, 1);
-        auto to = luaL_checkstring(L, 2);
-        auto className = luaL_checkstring(L, 3);
+        auto className = luaL_checkstring(L, 1);
+        auto from = luaL_checkstring(L, 2);
+        auto to = luaL_checkstring(L, 3);
 
         if(!this->coreInst->RequestCallInstantiation(className, from, to)) {
             std::stringstream out;
@@ -1071,8 +1099,23 @@ int megamol::core::LuaState::DeleteCall(lua_State *L) {
 
 
 int megamol::core::LuaState::CreateJob(lua_State *L) {
-    lua_pushstring(L, "not implemented yet!");
-    lua_error(L);
+    if (this->checkRunning(MMC_LUA_MMCREATEJOB)) {
+        auto jobName = luaL_checkstring(L, 1);
+        auto className = luaL_checkstring(L, 2);
+        auto moduleName = luaL_checkstring(L, 3);
+
+        auto jd = std::make_shared<JobDescription>(jobName);
+        jd->AddModule(this->coreInst->GetModuleDescriptionManager().Find(className), moduleName);
+        jd->SetJobModuleID(moduleName);
+        try {
+            this->coreInst->projJobDescs.Register(jd);
+            this->coreInst->RequestJobInstantiation(jd.get(), jobName);
+        } catch (vislib::AlreadyExistsException) {
+            lua_pushstring(L, ("job \"" + std::string(jobName) + "\" already exists.").c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
     return 0;
 }
 
@@ -1085,8 +1128,23 @@ int megamol::core::LuaState::DeleteJob(lua_State *L) {
 
 
 int megamol::core::LuaState::CreateView(lua_State *L) {
-    lua_pushstring(L, "not implemented yet!");
-    lua_error(L);
+    if (this->checkRunning(MMC_LUA_MMCREATEVIEW)) {
+        auto viewName = luaL_checkstring(L, 1);
+        auto className = luaL_checkstring(L, 2);
+        auto moduleName = luaL_checkstring(L, 3);
+
+        auto vd = std::make_shared<ViewDescription>(viewName);
+        vd->AddModule(this->coreInst->GetModuleDescriptionManager().Find(className), moduleName);
+        vd->SetViewModuleID(moduleName);
+        try {
+            this->coreInst->projViewDescs.Register(vd);
+            this->coreInst->RequestViewInstantiation(vd.get(), viewName);
+        } catch (vislib::AlreadyExistsException) {
+            lua_pushstring(L, ("view \"" + std::string(viewName) + "\" already exists.").c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
     return 0;
 }
 

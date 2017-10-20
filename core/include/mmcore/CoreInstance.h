@@ -30,6 +30,7 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/sys/Lockable.h"
+#include "vislib/sys/AutoLock.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
@@ -267,7 +268,8 @@ namespace plugins {
          * @return 'true' if there are pending view instantiation requests,
          *         'false' otherwise.
          */
-        inline bool HasPendingViewInstantiationRequests(void) const {
+        inline bool HasPendingViewInstantiationRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
             return !this->pendingViewInstRequests.IsEmpty();
         }
 
@@ -278,11 +280,12 @@ namespace plugins {
          * @return 'true' if there are pending job instantiation requests,
          *         'false' otherwise.
          */
-        inline bool HasPendingJobInstantiationRequests(void) const {
+        inline bool HasPendingJobInstantiationRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
             return !this->pendingJobInstRequests.IsEmpty();
         }
 
-        vislib::StringA GetPendingViewName(void) const;
+        vislib::StringA GetPendingViewName(void);
 
         /**
          * Instantiates the next pending view, if there is one.
@@ -964,6 +967,9 @@ namespace plugins {
 
         /** The Lua state */
         megamol::core::LuaState *lua;
+
+        /** all othe lua projects loaded from the command line */
+        vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
 
         /** The manager of the builtin view descriptions */
         megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;
