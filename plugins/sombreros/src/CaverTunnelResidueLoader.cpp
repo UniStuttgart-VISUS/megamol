@@ -21,46 +21,10 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::sombreros;
 
-/********************************************************************************************************************************************/
-
-/*
- * CaverTunnelResidueLoader::Frame::Frame
- */
-CaverTunnelResidueLoader::Frame::Frame(view::AnimDataModule& owner) : 
-	view::AnimDataModule::Frame(owner), dat() {
-	// intentionally empty
-}
-
-/*
- * CaverTunnelResidueLoader::Frame::~Frame
- */
-CaverTunnelResidueLoader::Frame::~Frame(void) {
-	this->Clear();
-}
-
-/*
- * CaverTunnelResidueLoader::Frame::LoadFrame
- */
-bool CaverTunnelResidueLoader::Frame::LoadFrame(vislib::sys::File * file, unsigned int idx, UINT64 size, unsigned int version) {
-	this->frame = idx;
-	this->fileVersion = version;
-	this->dat.EnforceSize(static_cast<SIZE_T>(size));
-	return (file->Read(this->dat, size) == size);
-}
-
-/*
- * CaverTunnelResidueLoader::Frame::SetData
- */
-void CaverTunnelResidueLoader::Frame::SetData(TunnelResidueDataCall& call) {
-	// TODO
-}
-
-/********************************************************************************************************************************************/
-
 /*
  * CaverTunnelResidueLoader::CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::CaverTunnelResidueLoader(void) : view::AnimDataModule(),
+CaverTunnelResidueLoader::CaverTunnelResidueLoader(void) : Module(),
 		getData("getData", "The slot providing the data loaded by this module."),
 		filenameSlot("filename", "The path to the input file."),
 		data_hash(0) {
@@ -84,14 +48,6 @@ CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) {
 }
 
 /*
- * CaverTunnelResidueLoader::constructFrame
- */
-core::view::AnimDataModule::Frame* CaverTunnelResidueLoader::constructFrame(void) const {
-	Frame * f = new Frame(*const_cast<CaverTunnelResidueLoader*>(this));
-	return f;
-}
-
-/*
  * CaverTunnelResidueLoader::create
  */
 bool CaverTunnelResidueLoader::create(void) {
@@ -99,31 +55,11 @@ bool CaverTunnelResidueLoader::create(void) {
 	return true;
 }
 
-/*
- * CaverTunnelResidueLoader::loadFrame
- */
-void CaverTunnelResidueLoader::loadFrame(core::view::AnimDataModule::Frame * frame, unsigned int idx) {
-	using vislib::sys::Log;
-	Frame * f = dynamic_cast<Frame*>(frame);
-	if (f == nullptr) return;
-	if (this->file == nullptr) {
-		f->Clear();
-		return;
-	}
-	ASSERT(idx < this->FrameCount());
-	// TODO
-	//this->file->Seek(this->frameIdx[idx]);
-	//if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
-	//	// failed
-	//	Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
-	//}
-}
 
 /*
  * CaverTunnelResidueLoader::release
  */
 void CaverTunnelResidueLoader::release(void) {
-	this->resetFrameCache();
 	if (this->file != nullptr) {
 		vislib::sys::File * f = this->file;
 		this->file = nullptr;
@@ -139,7 +75,6 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 	using vislib::sys::Log;
 	using vislib::sys::File;
 
-	this->resetFrameCache();
 	this->data_hash++;
 
 	if (this->file == nullptr) {
@@ -153,8 +88,6 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 		Log::DefaultLog.WriteError("Unable to open tunnel-File \"%s\".", vislib::StringA(
 			this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
 		SAFE_DELETE(this->file);
-		this->setFrameCount(1);
-		this->initFrameCache(1);
 		return true;
 	}
 
@@ -240,7 +173,12 @@ std::vector<vislib::StringA> CaverTunnelResidueLoader::splitLine(vislib::StringA
  * CaverTunnelResidueLoader::getDataCallback
  */
 bool CaverTunnelResidueLoader::getDataCallback(core::Call& caller) {
-	// TODO
+	TunnelResidueDataCall * trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
+	if (trdc == nullptr) return false;
+
+	trdc->setTunnelNumber(static_cast<int>(this->tunnelVector.size()));
+	trdc->setTunnelDescriptions(this->tunnelVector.data());
+
 	return true;
 }
 
@@ -248,6 +186,15 @@ bool CaverTunnelResidueLoader::getDataCallback(core::Call& caller) {
  * CaverTunnelResidueLoader::getExtentCallback
  */
 bool CaverTunnelResidueLoader::getExtentCallback(core::Call& caller) {
-	// TODO
-	return true;
+	TunnelResidueDataCall * trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
+
+	if (trdc != nullptr) {
+		trdc->SetFrameCount(1); // TODO
+		trdc->setTunnelNumber(static_cast<int>(this->tunnelVector.size()));
+		trdc->AccessBoundingBoxes().Clear();
+		trdc->SetDataHash(this->data_hash);
+		return true;
+	}
+
+	return false;
 }

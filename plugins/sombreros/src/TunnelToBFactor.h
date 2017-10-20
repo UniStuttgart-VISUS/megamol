@@ -15,6 +15,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "TunnelResidueDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
@@ -84,7 +85,7 @@ namespace sombreros {
 		/**
 		 * Applies the B-Factor changes to the outgoing call
 		 */
-		void applyBFactor(protein_calls::MolecularDataCall * outCall, protein_calls::MolecularDataCall * inCall);
+		void applyBFactor(protein_calls::MolecularDataCall * outCall, protein_calls::MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall);
 
 		/** Slot for the MolecularDataCall output */
 		core::CalleeSlot dataOutSlot;

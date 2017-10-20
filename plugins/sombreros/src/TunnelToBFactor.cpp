@@ -68,13 +68,17 @@ bool TunnelToBFactor::getData(Call& call) {
 
 	MolecularDataCall * mdc = this->molInSlot.CallAs<MolecularDataCall>();
 	if (mdc == nullptr) return false;
+	TunnelResidueDataCall * trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+	if (trdc == nullptr) return false;
 
 	mdc->SetCalltime(outCall->Calltime());
 	if (!(*mdc)(0)) return false;
 
+	if (!(*trdc)(0)) return false;
+
 	outCall->operator=(*mdc);
 
-	applyBFactor(outCall, mdc);
+	applyBFactor(outCall, mdc, trdc);
 
 	return true;
 }
@@ -89,8 +93,13 @@ bool TunnelToBFactor::getExtent(Call& call) {
 	MolecularDataCall * mdc = this->molInSlot.CallAs<MolecularDataCall>();
 	if (mdc == nullptr) return false;
 
+	TunnelResidueDataCall * trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+	if (trdc == nullptr) return false;
+
 	mdc->SetCalltime(outCall->Calltime());
 	if (!(*mdc)(1)) return false;
+
+	if (!(*trdc)(1)) return false;
 
 	outCall->operator=(*mdc); // deep copy
 
@@ -100,11 +109,31 @@ bool TunnelToBFactor::getExtent(Call& call) {
 /*
  * TunnelToBFactor::applyBFactor
  */
-void TunnelToBFactor::applyBFactor(MolecularDataCall * outCall, MolecularDataCall * inCall) {
+void TunnelToBFactor::applyBFactor(MolecularDataCall * outCall, MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall) {
 	auto numFactors = inCall->AtomCount();
 	this->bFactors.resize(numFactors, 0.0f);
 
-	for (unsigned int i = 0; i < numFactors / 2; i++) {
-		this->bFactors[i] = 1.0f;
+	// setup search array
+	std::vector<int> revMap;
+	int mymin = INT_MAX, mymax = INT_MIN;
+	for (int i = 0; i < static_cast<int>(numFactors); i++) {
+		if (inCall->AtomFormerIndices()[i] > mymax) mymax = inCall->AtomFormerIndices()[i];
+		if (inCall->AtomFormerIndices()[i] < mymin) mymin = inCall->AtomFormerIndices()[i];
 	}
+
+	revMap.resize(mymax + 1);
+	for (int i = 0; i < static_cast<int>(numFactors); i++) {
+		revMap[inCall->AtomFormerIndices()[i]] = i;
+	}
+
+	for (int i = 0; i < tunnelCall->getTunnelNumber(); i++) {
+		auto numAtoms = tunnelCall->getTunnelDescriptions()[i].atomIdentifiers.size();
+		for (int j = 0; j < static_cast<int>(numAtoms); j++) {
+			int atomIdx = tunnelCall->getTunnelDescriptions()[i].atomIdentifiers[j].first;
+			this->bFactors[revMap[atomIdx]] = 1.0f;
+		}
+	}
+
+	outCall->SetAtomBFactors(this->bFactors.data());
+	outCall->SetBFactorRange(0.0f, 1.0f);
 }
