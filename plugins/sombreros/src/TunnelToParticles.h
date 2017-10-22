@@ -1,0 +1,95 @@
+/*
+ * TunnelToParticles.h
+ * Copyright (C) 2006-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
+#ifndef MMSOMBREROSPLUGIN_TUNNELTOPARTICLES_H_INCLUDED
+#define MMSOMBREROSPLUGIN_TUNNELTOPARTICLES_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "mmcore/Call.h"
+#include "mmcore/Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+
+#include "TunnelResidueDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+
+namespace megamol {
+namespace sombreros {
+
+	class TunnelToParticles : public megamol::core::Module {
+	public:
+
+		/**
+         * Answer the name of this module.
+         *
+         * @return The name of this module.
+         */
+        static const char *ClassName(void) {
+            return "TunnelToParticles";
+        }
+
+        /**
+         * Answer a human readable description of this module.
+         *
+         * @return A human readable description of this module.
+         */
+        static const char *Description(void) {
+            return "Module for writing tunnel-vertex-information into a MultiParticleDataCall";
+        }
+
+        /**
+         * Answers whether this module is available on the current system.
+         *
+         * @return 'true' if the module is available, 'false' otherwise.
+         */
+        static bool IsAvailable(void) {
+            return true;
+        }
+
+		/** Ctor. */
+		TunnelToParticles(void);
+
+		/** Dtor. */
+		virtual ~TunnelToParticles(void);
+
+	protected:
+
+		/**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+		virtual bool create(void);
+
+		/**
+         * Implementation of 'release'.
+         */
+		virtual void release(void);
+
+		/**
+         * Call for get data.
+         */
+		bool getData(megamol::core::Call& call);
+
+		/**
+         * Call for get extent.
+         */
+		bool getExtent(megamol::core::Call& call);
+
+	private:
+
+		/** Slot for the particle data output */
+		core::CalleeSlot dataOutSlot;
+
+		/** Slot for the tunnel data input */
+		core::CallerSlot tunnelInSlot;
+	};
+
+} /* end namespace sombreros */
+} /* end namespace megamol */
+
+#endif

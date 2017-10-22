@@ -14,6 +14,7 @@
 
 #include "CaverTunnelResidueLoader.h"
 #include "TunnelToBFactor.h"
+#include "TunnelToParticles.h"
 
 #include "TunnelResidueDataCall.h"
 
@@ -53,6 +54,7 @@ namespace {
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::CaverTunnelResidueLoader>();
 			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToBFactor>();
+			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToParticles>();
 
             // register calls here:
 
