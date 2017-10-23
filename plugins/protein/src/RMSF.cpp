@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cfloat>
 #include <climits>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::protein;
