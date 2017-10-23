@@ -308,7 +308,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 							pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
 							pow(centroid[1] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1], 2) +
 							pow(centroid[2] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 2], 2));
-						bin = unsigned int(std::truncf(dist / steps));
+						bin = static_cast<unsigned int>(std::truncf(dist / steps));
 						lower_bound = float(bin) * steps;
 						upper_bound = float(bin + 1) * steps;
 						alpha = (dist - lower_bound) / (upper_bound - lower_bound);
