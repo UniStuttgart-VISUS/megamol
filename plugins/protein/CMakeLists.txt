@@ -38,10 +38,14 @@ if(BUILD_PROTEIN_PLUGIN)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
-  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-  install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+	# special case for the MSMS-related files
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+	# special case for the MSMS-related files
+	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.x86_64Linux2.2.6.1 DESTINATION "bin")
   endif()
 
   # Grouping in Visual Studio
