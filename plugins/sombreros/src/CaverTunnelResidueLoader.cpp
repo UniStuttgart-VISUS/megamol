@@ -14,6 +14,8 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/TextFileReader.h"
 #include "vislib/sys/Log.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Dimension.h"
 
 #include <string>
 
@@ -179,7 +181,6 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 			// TODO multiple snapshots
 
 			auto values = splitLine(line, ',');
-			 // 12 eintraege + werte
 			// read number of clusters
 			int clusterNum = std::stoi(values[1].PeekBuffer());
 
@@ -215,6 +216,29 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 				}
 			}
 		}
+
+		// bounding box calculation
+		this->boundingBox = vislib::math::Cuboid<float>();
+		float maxRadius = 0.0;
+
+		if (this->tunnelVector.size() > 0) {
+			if (this->tunnelVector[0].coordinates.size() > 3) {
+				vislib::math::Point<float, 3> point = vislib::math::Point<float, 3>(this->tunnelVector[0].coordinates.data());
+				vislib::math::Dimension<float, 3> dim = vislib::math::Dimension<float, 3>(0.0f, 0.0f, 0.0f);
+				this->boundingBox = vislib::math::Cuboid<float>(point, dim);
+			}
+		}
+
+		for (int i = 0; i < this->tunnelVector.size(); i++) {
+			for (int j = 0; j < this->tunnelVector[i].coordinates.size(); j = j + 4) {
+				vislib::math::Point<float, 3> point = vislib::math::Point<float, 3>(&this->tunnelVector[i].coordinates[j]);
+				this->boundingBox.GrowToPoint(point);
+				if (maxRadius < this->tunnelVector[i].coordinates[j + 3]) {
+					maxRadius = this->tunnelVector[i].coordinates[j + 3];
+				}
+			}
+		}
+		this->boundingBox.Grow(maxRadius);
 	}
 
 	return true;
@@ -278,8 +302,11 @@ bool CaverTunnelResidueLoader::getExtentCallback(core::Call& caller) {
 	if (trdc != nullptr) {
 		trdc->SetFrameCount(1); // TODO
 		trdc->setTunnelNumber(static_cast<int>(this->tunnelVector.size()));
-		trdc->AccessBoundingBoxes().Clear();
 		trdc->SetDataHash(this->data_hash);
+
+		trdc->AccessBoundingBoxes().Clear();
+		trdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+		trdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
 		return true;
 	}
 

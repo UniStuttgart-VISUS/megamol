@@ -18,6 +18,7 @@
 #include "TunnelResidueDataCall.h"
 
 #include "vislib/sys/File.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace sombreros {
@@ -133,6 +134,9 @@ namespace sombreros {
 
 		/** data storage for all read tunnels */
 		std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
+
+		/** The bounding box of the tunnel voronoi vertices */
+		vislib::math::Cuboid<float> boundingBox;
 	};
 
 } /* end namespace sombreros */

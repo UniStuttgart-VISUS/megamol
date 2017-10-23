@@ -64,7 +64,20 @@ bool TunnelToParticles::getData(Call& call) {
 
 	if (!(*trdc)(0)) return false;
 
-	// TODO copy data
+	mpdc->SetFrameCount(1); // TODO
+	mpdc->SetParticleListCount(trdc->getTunnelNumber());
+
+	MultiParticleDataCall::Particles::VertexDataType vrtDatType = MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
+	MultiParticleDataCall::Particles::ColourDataType colDatType = MultiParticleDataCall::Particles::COLDATA_NONE;
+	unsigned int stride = 16;
+
+	for (int i = 0; i < trdc->getTunnelNumber(); i++) {
+		MultiParticleDataCall::Particles &pts = mpdc->AccessParticles(i);
+		pts.SetGlobalColour(0, 0, 255);
+		pts.SetCount(trdc->getTunnelDescriptions()[i].coordinates.size());
+		pts.SetVertexData(vrtDatType, trdc->getTunnelDescriptions()[i].coordinates.data(), stride);
+		pts.SetColourData(colDatType, trdc->getTunnelDescriptions()[i].coordinates.data(), stride);
+	}
 
 	return true;
 }
@@ -81,8 +94,14 @@ bool TunnelToParticles::getExtent(Call& call) {
 
 	if (!(*trdc)(1)) return false;
 	if (!(*trdc)(0)) return false;
+	// the call to getData here is necessary because the loader cannot 
+	// know the number of tunnels before loading the whole file
 
-	// TODO compute bounding box
+	mpdc->SetFrameCount(1); // TODO
+	mpdc->SetParticleListCount(trdc->getTunnelNumber());
+	mpdc->AccessBoundingBoxes().Clear();
+	mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(trdc->GetBoundingBoxes().ObjectSpaceBBox());
+	mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(trdc->GetBoundingBoxes().ObjectSpaceClipBox());
 
 	return true;
 }
