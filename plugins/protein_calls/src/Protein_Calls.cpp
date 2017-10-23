@@ -22,6 +22,7 @@
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VariantMatchDataCall.h"
 #include "protein_calls/CallMouseInput.h"
+#include "protein_calls/PerAtomFloatCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -69,6 +70,7 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VariantMatchDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VTIDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::CallMouseInput>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::PerAtomFloatCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
