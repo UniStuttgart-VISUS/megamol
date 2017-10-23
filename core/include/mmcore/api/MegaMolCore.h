@@ -423,14 +423,14 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
  * @see mmcSetConfigurationValue
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
-	void *hCore, mmcConfigID id, const char *name, const char *val);
+    void *hCore, mmcConfigID id, const char *name, const char *val);
 
 /**
  * Unicode Implementation of mmcSetConfigurationValue
  * @see mmcSetConfigurationValue
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
-	void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val);
+    void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val);
 
 /**
  * Request all available instances.
@@ -475,7 +475,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
  *         'false' otherwise.
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
-	void *hCore);
+    void *hCore);
 
 /**
  * Answer the name of the next pending view instance

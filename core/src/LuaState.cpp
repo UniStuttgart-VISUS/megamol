@@ -980,38 +980,20 @@ int megamol::core::LuaState::GetParamValue(lua_State *L) {
 
 
 int megamol::core::LuaState::SetParamValue(lua_State *L) {
-    // todo this needs to be queueued as well
-
-    fdgdfsgd
 
     if (this->checkRunning(MMC_LUA_MMSETPARAMVALUE)) {
         auto paramName = luaL_checkstring(L, 1);
         auto paramValue = luaL_checkstring(L, 2);
 
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
-        core::param::ParamSlot *ps = nullptr;
-        if (getParamSlot(MMC_LUA_MMSETPARAMVALUE, paramName, &ps)) {
-
-            auto psp = ps->Parameter();
-            if (psp.IsNull()) {
-                lua_pushstring(L, MMC_LUA_MMSETPARAMVALUE": ParamSlot does seem to hold no parameter");
-                lua_error(L);
-                return 0;
-            }
-
-            vislib::TString val;
-            vislib::UTF8Encoder::Decode(val, paramValue);
-
-            if (psp->ParseValue(val)) {
-                lua_pushstring(L, psp->ValueString());
-                return 1;
-            } else {
-                lua_pushstring(L, MMC_LUA_MMSETPARAMVALUE": ParseValue failed");
-                lua_error(L);
-                return 0;
-            }
-        } else {
-            // the error is already thrown
+        if (!this->coreInst->RequestParamValue(paramName, paramValue)) {
+            std::stringstream out;
+            out << "could not set \"";
+            out << paramName;
+            out << "\" to \"";
+            out << paramValue;
+            out << "\" (check MegaMol log)";
+            lua_pushstring(L, out.str().c_str());
+            lua_error(L);
             return 0;
         }
     }

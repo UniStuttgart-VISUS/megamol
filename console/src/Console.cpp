@@ -457,7 +457,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             break;
         }
     }
-
     while (::mmcHasPendingViewInstantiationRequests(hCore)) {
         if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
             vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
@@ -465,6 +464,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             break;
         }
     }
+    ::mmcPerformGraphUpdates(hCore);
 
     // parameter value options
     std::map<vislib::TString, vislib::TString> paramValues;
@@ -492,8 +492,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // main loop
     bool winsAlive, jobsAlive;
     do {
-        ::mmcPerformGraphUpdates(hCore);
-
         while (::mmcHasPendingJobInstantiationRequests(hCore)) {
             if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
                 vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
@@ -501,7 +499,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
                 break;
             }
         }
-
         while (::mmcHasPendingViewInstantiationRequests(hCore)) {
             if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
                 vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
@@ -509,6 +506,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
                 break;
             }
         }
+        ::mmcPerformGraphUpdates(hCore);
 
         winsAlive = megamol::console::WindowManager::Instance().IsAlive();
         jobsAlive = megamol::console::JobManager::Instance().IsAlive();

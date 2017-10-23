@@ -250,13 +250,36 @@ namespace plugins {
             const vislib::StringA& id,
             const ParamValueSetRequest *param = NULL);
 
+        /**
+         * Request deletion of the module with the given id.
+         */
         bool RequestModuleDeletion(const vislib::StringA& id);
+
+        /**
+         * Request deletion of call connecting callerslot from
+         * to calleeslot to.
+         */
         bool RequestCallDeletion(const vislib::StringA& from,
             const vislib::StringA& to);
+
+        /**
+         * Request instantiation of a module of class className
+         * with the name id.
+         */
         bool RequestModuleInstantiation(const vislib::StringA& className,
             const vislib::StringA& id);
+
+        /**
+         * Request instantiation of a call of class className, connecting
+         * Callerslot from to Calleeslot to.
+         */
         bool RequestCallInstantiation(const vislib::StringA& className,
             const vislib::StringA& from, const vislib::StringA& to);
+
+        /**
+         * Request setting the parameter id to the value.
+         */
+        bool RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
 
         //** do everything that is queued w.r.t. modules and calls */
         void PerformGraphUpdates();
@@ -998,6 +1021,9 @@ namespace plugins {
             pendingCallDelRequests;
         /** the list of modules to be deleted: (id)* */
         vislib::SingleLinkedList<vislib::StringA> pendingModuleDelRequests;
+        /** the list of (parameter = value) pairs that need to be set */
+        vislib::SingleLinkedList<vislib::Pair< vislib::StringA, vislib::StringA>>
+            pendingParamSetRequests;
         vislib::sys::CriticalSection graphUpdateLock;
 
 

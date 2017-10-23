@@ -125,6 +125,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         pendingCallInstRequests(), pendingCallDelRequests(),
         pendingModuleInstRequests(), pendingModuleDelRequests(),
+        pendingParamSetRequests(),
         graphUpdateLock(), loadedLuaProjects(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
@@ -725,6 +726,7 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
     if (param != NULL) {
         static_cast<ParamValueSetRequest&>(req) = *param;
     }
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingViewInstRequests.Add(req);
 }
 
@@ -749,11 +751,13 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
     if (param != NULL) {
         static_cast<ParamValueSetRequest&>(req) = *param;
     }
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingJobInstRequests.Add(req);
 }
 
 
 bool megamol::core::CoreInstance::RequestModuleDeletion(const vislib::StringA& id) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingModuleDelRequests.Add(id);
     return true;
 }
@@ -761,6 +765,7 @@ bool megamol::core::CoreInstance::RequestModuleDeletion(const vislib::StringA& i
 
 bool megamol::core::CoreInstance::RequestCallDeletion(const vislib::StringA& from,
     const vislib::StringA& to) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingCallDelRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(
         from, to));
     return true;
@@ -805,8 +810,16 @@ bool megamol::core::CoreInstance::RequestCallInstantiation(const vislib::StringA
 }
 
 
-void megamol::core::CoreInstance::PerformGraphUpdates() {
+bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, const vislib::StringA& value) {
     vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingParamSetRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(id, value));
+    return true;
+}
+
+
+void megamol::core::CoreInstance::PerformGraphUpdates() {
+    vislib::sys::AutoLock u(this->graphUpdateLock);
+    vislib::sys::AutoLock m(this->ModuleGraphRoot()->ModuleGraphLock());
 
     AbstractNamedObject::ptr_type ano = this->namespaceRoot;
     AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
@@ -992,6 +1005,27 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    // set parameter values;
+    while (this->pendingParamSetRequests.Count() > 0) {
+        auto psr = this->pendingParamSetRequests.First();
+        this->pendingParamSetRequests.RemoveFirst();
+
+        auto p = this->FindParameter(psr.First());
+        if (p != nullptr) {
+            vislib::TString val;
+            vislib::UTF8Encoder::Decode(val, psr.Second());
+
+            if (!p->ParseValue(val)) {
+                vislib::sys::Log::DefaultLog.WriteError("setting \"%s\" to \"%s\": ParseValue failed.", psr.First(), psr.Second());
+                continue;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo("setting \"%s\" to \"%s\".", psr.First(), psr.Second());
+            }
+        } else {
+            // the error is already shown
+            continue;
+        }
+    }
 }
 
 
