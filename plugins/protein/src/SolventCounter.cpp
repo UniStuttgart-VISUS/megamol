@@ -12,6 +12,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include <omp.h>
+#include <cfloat>
+#include <climits>
 
 
 using namespace megamol;
