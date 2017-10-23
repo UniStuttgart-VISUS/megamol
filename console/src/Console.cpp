@@ -390,6 +390,24 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
 #endif /* _WIN32 */
 }
 
+void processPendingActions(void) {
+    while (::mmcHasPendingJobInstantiationRequests(hCore)) {
+        if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
+            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
+            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+            break;
+        }
+    }
+    while (::mmcHasPendingViewInstantiationRequests(hCore)) {
+        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
+            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
+            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+            break;
+        }
+    }
+    ::mmcPerformGraphUpdates(hCore);
+}
+
 /**
  * Implements normal program operations
  *
@@ -417,36 +435,27 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     }
 
     // prepare project files and instantiations
-    bool haveLuaProject = false;
     vislib::SingleLinkedList<vislib::TString> projects;
     parser->GetProjectFiles(projects);
     vislib::SingleLinkedList<vislib::TString>::Iterator projectIter = projects.GetIterator();
+    int loadedProjects = 0;
+    int loadedLuaProjects = 0;
     while (projectIter.HasNext()) {
         const vislib::TString& project = projectIter.Next();
         // HAZARD: Legacy Projects vs. new Projects
         ::mmcLoadProject(hCore, project);
+        loadedProjects++;
         if (project.EndsWith(".lua")) {
-            haveLuaProject = true;
-
-            while (::mmcHasPendingJobInstantiationRequests(hCore)) {
-                if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
-                    vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
-                    vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-                    break;
-                }
-            }
-            while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-                if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
-                    vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
-                    vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-                    break;
-                }
-            }
-            ::mmcPerformGraphUpdates(hCore);
+            loadedLuaProjects++;
+            processPendingActions();
         }
     }
+    if (loadedLuaProjects > 0 && loadedLuaProjects != loadedProjects) {
+        vislib::sys::Log::DefaultLog.WriteError("You cannot mix loading legacy projects and lua projects!");
+        return -66;
+    }
 
-    if (!haveLuaProject) {
+    if (loadedLuaProjects == 0) {
     // try to create all requested instances
     // Remember the ids so we can predict view names before creating them
     // later.
@@ -466,6 +475,8 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             ::mmcRequestAllInstances(hCore);
         }
     }
+
+    processPendingActions();
 
     // parameter value options
     std::map<vislib::TString, vislib::TString> paramValues;
@@ -493,21 +504,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // main loop
     bool winsAlive, jobsAlive;
     do {
-        while (::mmcHasPendingJobInstantiationRequests(hCore)) {
-            if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
-                vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
-                vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-                break;
-            }
-        }
-        while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-            if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
-                vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
-                vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-                break;
-            }
-        }
-        ::mmcPerformGraphUpdates(hCore);
+        processPendingActions();
 
         winsAlive = megamol::console::WindowManager::Instance().IsAlive();
         jobsAlive = megamol::console::JobManager::Instance().IsAlive();
