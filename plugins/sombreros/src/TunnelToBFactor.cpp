@@ -8,6 +8,7 @@
 
 #include "TunnelResidueDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include <climits>
 
 
 using namespace megamol;
