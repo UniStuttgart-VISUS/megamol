@@ -1014,17 +1014,35 @@ namespace plugins {
 
         /** the list of calls to be instantiated: (class,(from,to))* */
         vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingCallInstRequests;
+
         /** the list of modules to be instantiated: (class, id)* */
         vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> pendingModuleInstRequests;
+
         /** the list of calls to be deleted: (from,to)* */
         vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>>
             pendingCallDelRequests;
+
         /** the list of modules to be deleted: (id)* */
         vislib::SingleLinkedList<vislib::StringA> pendingModuleDelRequests;
+
         /** the list of (parameter = value) pairs that need to be set */
         vislib::SingleLinkedList<vislib::Pair< vislib::StringA, vislib::StringA>>
             pendingParamSetRequests;
+
+        /**
+         * You need to lock this if you manipulate any pending* lists. The lists
+         * are designed to be manipulated from the Lua interface which CAN be
+         * invoked from another thread (the LuaRemoteHost, for example).
+         */
         vislib::sys::CriticalSection graphUpdateLock;
+
+        /**
+         * The verbatim loaded project files. We need to keep them to send them
+         * to interested parties, like the simpleclusterclient, so they can interpret
+         * them THEMSELVES. All control flow must be retained to allow for asymmetric
+         * MegaMol execution.
+         */
+        vislib::SingleLinkedList<vislib::StringA> loadedProjectFiles;
 
 
         /** The module namespace root */

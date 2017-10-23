@@ -125,7 +125,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         pendingCallInstRequests(), pendingCallDelRequests(),
         pendingModuleInstRequests(), pendingModuleDelRequests(),
-        pendingParamSetRequests(),
+        pendingParamSetRequests(), loadedProjectFiles(),
         graphUpdateLock(), loadedLuaProjects(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
@@ -1582,6 +1582,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
             if (!this->lua->RunString(content.PeekBuffer(), result)) {
                 vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+            } else {
+                this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
             }
         }
     } else {
@@ -1618,6 +1620,9 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
                 vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s",
                     vislib::StringA(filename).PeekBuffer(), result.c_str());
+            } else {
+                this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(
+                    vislib::StringA(filename), content));
             }
         }
     } else {
