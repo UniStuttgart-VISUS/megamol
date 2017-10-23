@@ -6,6 +6,7 @@
 #include "vislib/math/ShallowVector.h"
 #include <fstream>
 #include <cfloat>
+#include <climits>
 
 using namespace megamol;
 using namespace megamol::protein;
