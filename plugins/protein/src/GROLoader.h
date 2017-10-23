@@ -372,7 +372,7 @@ namespace protein {
              *
              * @return The atom b-factor array.
              */
-            const float* AtomBFactor() { return this->bfactor.PeekElements(); }
+            float* AtomBFactor() { return &this->bfactor[0]; }
 
             /**
              * Get a reference to the array of atom charges.

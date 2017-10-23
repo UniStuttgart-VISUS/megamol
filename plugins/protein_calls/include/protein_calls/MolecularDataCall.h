@@ -1101,7 +1101,7 @@ namespace protein_calls {
          *
          * @return The atom b-factor array.
          */
-        const float* AtomBFactors(void) const { return atomBFactors; }
+        float* AtomBFactors(void) const { return atomBFactors; }
 
         /**
          * Get the atom charges.
@@ -1345,9 +1345,16 @@ namespace protein_calls {
          */
         void SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
             const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
-            const float* bfactor, const float* charge, const float* occupancy);
+            float* bfactor, const float* charge, const float* occupancy);
 
-        void SetAtomPositions(const float *atomPositions) { atomPos = atomPositions; }
+		void SetAtomPositions(const float *atomPositions) { atomPos = atomPositions; }
+
+		void SetAtomBFactors(float *bfac, bool ownsBFacMem = false) {
+			if (this->ownsBFactorMemory)
+				delete[] this->atomBFactors;
+			this->atomBFactors = bfac;
+			this->ownsBFactorMemory = ownsBFacMem;
+		}
 
         /**
          * Set the residues.
@@ -1581,7 +1588,13 @@ namespace protein_calls {
             this->solventResidueIdx = s.solventResidueIdx;
             this->atomSolventResCount = s.atomSolventResCount;
             this->atomType = s.atomType;
-            this->atomBFactors = s.atomBFactors;
+			this->ownsBFactorMemory = s.ownsBFactorMemory;
+			if (!this->ownsBFactorMemory) {
+				this->atomBFactors = s.atomBFactors;
+			} else {
+				this->atomBFactors = new float[this->atomCount];
+				memcpy(this->atomBFactors, s.atomBFactors, sizeof(float)*this->atomCount);
+			}
             this->atomCharges = s.atomCharges;
             this->atomOccupancies = s.atomOccupancies;
             this->minBFactor = s.minBFactor;
@@ -1675,7 +1688,9 @@ namespace protein_calls {
         const unsigned int* connections;
 
         /** The array of b-factors */
-        const float* atomBFactors;
+        float* atomBFactors;
+		/** Flag whether the call owns the B-factor memory */
+		bool ownsBFactorMemory;
         /** The minimum bfactor */
         float minBFactor;
         /** The maximum bfactor */
