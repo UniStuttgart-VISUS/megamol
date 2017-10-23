@@ -166,13 +166,13 @@ void NGMeshRenderer::addRenderBatch(
 
 	// Create mesh
 	Mesh::VertexLayout layout;
-	layout.stride = mesh_data.vertex_descriptor.stride;
 	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
 	{
 		layout.attributes.push_back(Mesh::VertexLayout::Attribute(
 			mesh_data.vertex_descriptor.attributes[i].type,
 			mesh_data.vertex_descriptor.attributes[i].size,
 			mesh_data.vertex_descriptor.attributes[i].normalized,
+			mesh_data.vertex_descriptor.attributes[i].stride,
 			mesh_data.vertex_descriptor.attributes[i].offset)
 		);
 	}

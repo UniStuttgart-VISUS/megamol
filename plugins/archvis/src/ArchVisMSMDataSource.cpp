@@ -119,7 +119,11 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	size_t i = 0;
 	for (auto& attribute : model.meshes.front().primitives.front().attributes)
 	{
-		std::cout << attribute.first << std::endl;
+		std::cout << "Attribute "<< attribute.first << std::endl;
+
+		std::cout << model.accessors[attribute.second].componentType << std::endl;
+		std::cout << model.accessors[attribute.second].count << std::endl;
+		std::cout << model.accessors[attribute.second].byteOffset << std::endl;
 
 		mesh_data.vertex_descriptor.attributes[i].type = GL_FLOAT;
 		mesh_data.vertex_descriptor.attributes[i].size = 3;
