@@ -1016,10 +1016,10 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
             if (!p->ParseValue(val)) {
-                vislib::sys::Log::DefaultLog.WriteError("setting \"%s\" to \"%s\": ParseValue failed.", psr.First(), psr.Second());
+                vislib::sys::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.", psr.First(), psr.Second());
                 continue;
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo("setting \"%s\" to \"%s\".", psr.First(), psr.Second());
+                vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\".", psr.First(), psr.Second());
             }
         } else {
             // the error is already shown

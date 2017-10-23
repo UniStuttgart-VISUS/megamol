@@ -427,6 +427,22 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         ::mmcLoadProject(hCore, project);
         if (project.EndsWith(".lua")) {
             haveLuaProject = true;
+
+            while (::mmcHasPendingJobInstantiationRequests(hCore)) {
+                if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
+                    vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+                    break;
+                }
+            }
+            while (::mmcHasPendingViewInstantiationRequests(hCore)) {
+                if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
+                    vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
+                    break;
+                }
+            }
+            ::mmcPerformGraphUpdates(hCore);
         }
     }
 
@@ -450,21 +466,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             ::mmcRequestAllInstances(hCore);
         }
     }
-    while (::mmcHasPendingJobInstantiationRequests(hCore)) {
-        if (!megamol::console::JobManager::Instance().InstantiatePendingJob(hCore)) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested job.");
-            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-            break;
-        }
-    }
-    while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
-            vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
-            break;
-        }
-    }
-    ::mmcPerformGraphUpdates(hCore);
 
     // parameter value options
     std::map<vislib::TString, vislib::TString> paramValues;
