@@ -20,6 +20,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 
+//#define MONERA
 
 /*
  * FillAminoAcidColorTable
@@ -71,29 +72,54 @@ Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::Molecula
         case 4 : return CHARGE;
         case 5 : return OCCUPANCY;
         case 6 : return CHAIN;
-        case 7 : return MOLECULE;
-        case 8 : return RAINBOW;
+		case 7: return MOLECULE;
+		case 8: return RAINBOW;
+		case 9: return HYDROPHOBICITY;
         default : return ELEMENT;
     }
 }
 
 /*
- * Color::GetModeByIndex
- */
+* Color::GetModeByIndex
+*/
 Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
-	const protein_calls::BindingSiteCall *bs, unsigned int idx) {
-    switch(idx) {
-        case 0 : return ELEMENT;
-        case 1 : return RESIDUE;
-        case 2 : return STRUCTURE;
-        case 3 : return BFACTOR;
-        case 4 : return CHARGE;
-        case 5 : return OCCUPANCY;
-        case 6 : return CHAIN;
-        case 7 : return MOLECULE;
-        case 8 : return RAINBOW;
-        case 9 : return BINDINGSITE;
-        default : return ELEMENT;
+    const protein_calls::BindingSiteCall *bs, unsigned int idx) {
+    switch (idx) {
+    case 0: return ELEMENT;
+    case 1: return RESIDUE;
+    case 2: return STRUCTURE;
+    case 3: return BFACTOR;
+    case 4: return CHARGE;
+    case 5: return OCCUPANCY;
+    case 6: return CHAIN;
+    case 7: return MOLECULE;
+    case 8: return RAINBOW;
+    case 9: return HYDROPHOBICITY;
+    case 10: return BINDINGSITE;
+    default: return ELEMENT;
+    }
+}
+
+/*
+* Color::GetModeByIndex
+*/
+Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
+    const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa, unsigned int idx) {
+    switch (idx) {
+    case 0: return ELEMENT;
+    case 1: return RESIDUE;
+    case 2: return STRUCTURE;
+    case 3: return BFACTOR;
+    case 4: return CHARGE;
+    case 5: return OCCUPANCY;
+    case 6: return CHAIN;
+    case 7: return MOLECULE;
+    case 8: return RAINBOW;
+    case 9: return HYDROPHOBICITY;
+    case 10: return BINDINGSITE;
+    case 11: return PER_ATOM_FLOAT;
+	case 12: return AMINOACID;
+    default: return ELEMENT;
     }
 }
 
@@ -103,25 +129,102 @@ Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::Molecula
 std::string Color::GetName(Color::ColoringMode col) {
 
     switch(col) {
-        case ELEMENT     : return "Element";
-        case STRUCTURE   : return "Structure";
-        case RAINBOW     : return "Rainbow";
-        case BFACTOR     : return "BFactor";
-        case CHARGE      : return "Charge";
-        case OCCUPANCY   : return "Occupancy";
-        case CHAIN       : return "Chain";
-        case MOLECULE    : return "Molecule";
-        case RESIDUE     : return "Residue";
-        case CHAINBOW    : return "Chainbow";
-        case AMINOACID   : return "Aminoacid";
-        case VALUE       : return "Value";
-        case CHAIN_ID    : return "ChainID";
-        case MOVEMENT    : return "Movement";
-        case BINDINGSITE : return "BindingSite";
+        case ELEMENT		: return "Element";
+        case STRUCTURE		: return "Structure";
+        case RAINBOW		: return "Rainbow";
+        case BFACTOR		: return "BFactor";
+        case CHARGE			: return "Charge";
+        case OCCUPANCY		: return "Occupancy";
+        case CHAIN			: return "Chain";
+        case MOLECULE		: return "Molecule";
+        case RESIDUE		: return "Residue";
+        case CHAINBOW		: return "Chainbow";
+        case AMINOACID		: return "Aminoacid";
+        case VALUE			: return "Value";
+		case CHAIN_ID		: return "ChainID";
+		case MOVEMENT		: return "Movement";
+        case HYDROPHOBICITY : return "Hydrophobicity";
+        case BINDINGSITE    : return "BindingSite";
+        case PER_ATOM_FLOAT : return "SolventCount";
         default : return "";
     }
 }
 
+/*
+ * Get the hydrophobicity value for an amino acid
+ */
+float Color::GetHydrophibicityByResName(vislib::StringA resName) {
+#ifdef MONERA
+	// O.D.Monera, T.J.Sereda, N.E.Zhou, C.M.Kay, R.S.Hodges
+	// "Relationship of sidechain hydrophobicity and alpha-helical propensity on the stability of the single-stranded amphipathic alpha-helix."
+	// J.Pept.Sci. 1995 Sep - Oct; 1(5) : 319 - 29.
+	if (resName.Equals("ALA", false))
+		return 41.0f;
+	else if (resName.Equals("ARG", false))
+		return -14.0f;
+	else if (resName.Equals("LEU", false))
+		return 97.0f;
+	else if (resName.Equals("LYS", false))
+		return -23.0f;
+	else if (resName.Equals("MET", false))
+		return 74.0f;
+	else if (resName.Equals("GLN", false))
+		return -10.0f;
+	else if (resName.Equals("ILE", false))
+		return 99.0f;
+	else if (resName.Equals("TRP", false))
+		return 97.0f;
+	else if (resName.Equals("PHE", false))
+		return 100.0f;
+	else if (resName.Equals("TYR", false))
+		return 63.0f;
+	else if (resName.Equals("CYS", false))
+		return 49.0f;
+	else if (resName.Equals("VAL", false))
+		return 76.0f;
+	else if (resName.Equals("ASN", false))
+		return -28.0f;
+	else if (resName.Equals("SER", false))
+		return -5.0f;
+	else if (resName.Equals("HIS", false))
+		return 8.0f;
+	else if (resName.Equals("GLU", false))
+		return -31.0f;
+	else if (resName.Equals("THR", false))
+		return 13.0f;
+	else if (resName.Equals("ASP", false))
+		return -55.0f;
+	else if (resName.Equals("GLY", false))
+		return 0.0f;
+	else if (resName.Equals("PRO", false))
+		return -46.0f;
+#else
+	// J. Kyte, R. F. Doolittle
+	// "A simple method for displaying the hydropathic character of a protein."
+	// J. Mol. Biol. 1982 May 5; 157(1) : 105 - 32.
+	if (resName.Equals("Ala", false)) return 1.8f;
+	else if (resName.Equals("Arg", false)) return -4.5f;
+	else if (resName.Equals("Asn", false)) return -3.5f;
+	else if (resName.Equals("Asp", false)) return -3.5f;
+	else if (resName.Equals("Cys", false)) return 2.5f;
+	else if (resName.Equals("Glu", false)) return -3.5f;
+	else if (resName.Equals("Gln", false)) return -3.5f;
+	else if (resName.Equals("Gly", false)) return -0.4f;
+	else if (resName.Equals("His", false)) return -3.2f;
+	else if (resName.Equals("Ile", false)) return 4.5f;
+	else if (resName.Equals("Leu", false)) return 3.8f;
+	else if (resName.Equals("Lys", false)) return -3.9f;
+	else if (resName.Equals("Met", false)) return 1.9f;
+	else if (resName.Equals("Phe", false)) return 2.8f;
+	else if (resName.Equals("Pro", false)) return -1.6f;
+	else if (resName.Equals("Ser", false)) return -0.8f;
+	else if (resName.Equals("Thr", false)) return -0.7f;
+	else if (resName.Equals("Trp", false)) return -0.9f;
+	else if (resName.Equals("Tyr", false)) return -1.3f;
+	else if (resName.Equals("Val", false)) return 4.2f;
+#endif
+	return 0.0f;
+}
 
 /*
  * MakeColorTable routine for molecular data call
@@ -135,8 +238,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const protein_calls::BindingSiteCall *bs,
-		bool useNeighbors) {
+        const protein_calls::BindingSiteCall *bs,
+		bool useNeighbors,
+        const protein_calls::PerAtomFloatCall *pa) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -204,6 +308,151 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
                 }
             }
         } // ... END coloring mode RESIDUE
+		else if (currentColoringMode == AMINOACID) {
+			unsigned int resTypeIdx, colour_idx;
+			// loop over all residues
+			for (cntRes = 0; cntRes < mol->ResidueCount(); ++cntRes) {
+				// loop over all atoms of the current residue
+				idx = mol->Residues()[cntRes]->FirstAtomIndex();
+				cnt = mol->Residues()[cntRes]->AtomCount();
+				// get residue type index
+				resTypeIdx = mol->Residues()[cntRes]->Type();
+				if (mol->ResidueTypeNames()[resTypeIdx].Equals("ALA") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("VAL") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("MET") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("LEU") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("ILE") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("PRO") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("TRP") || 
+					mol->ResidueTypeNames()[resTypeIdx].Equals("PHE")) {
+					colour_idx = 0;
+				}
+				else if (mol->ResidueTypeNames()[resTypeIdx].Equals("TYR") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("TYM") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("THR") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("GLN") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("GLY") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("SER") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("CYS") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("CYX") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("CYM") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("ASN") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("ASH"))
+				{
+					colour_idx = 1;
+				}
+				else if (mol->ResidueTypeNames()[resTypeIdx].Equals("LYS") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("LYN") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("ARG") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("HIS") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("HID") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("HIE") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("HIP"))
+				{
+					colour_idx = 2;
+				}
+				else if (mol->ResidueTypeNames()[resTypeIdx].Equals("GLU") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("GLH") ||
+					mol->ResidueTypeNames()[resTypeIdx].Equals("ASP"))
+				{
+					colour_idx = 3;
+				}
+				else
+				{
+					colour_idx = 4;
+				}
+				for (cntAtom = idx; cntAtom < idx + cnt; ++cntAtom) 
+				{
+					if (colour_idx == 0)
+					{
+						atomColorTable.Add(255.0f / 255.0f);
+						atomColorTable.Add(230.0f / 255.0f);
+						atomColorTable.Add(128.0f / 255.0f);
+					}
+					else if (colour_idx == 1)
+					{
+						atomColorTable.Add(170 / 255.0f);
+						atomColorTable.Add(222.0f / 255.0f);
+						atomColorTable.Add(135.0f / 255.0f);
+					}
+					else if (colour_idx == 2)
+					{
+						atomColorTable.Add(128.0f / 255.0f);
+						atomColorTable.Add(179.0f / 255.0f);
+						atomColorTable.Add(255.0f / 255.0f);
+					}
+					else if (colour_idx == 3)
+					{
+						atomColorTable.Add(255.0f / 255.0f);
+						atomColorTable.Add(170.0f / 255.0f);
+						atomColorTable.Add(170.0f / 255.0f);
+					}
+					else
+					{
+						atomColorTable.Add(180.0f / 255.0f);
+						atomColorTable.Add(180.0f / 255.0f);
+						atomColorTable.Add(180.0f / 255.0f);
+					}
+				}
+			}
+		} // ... END coloring mode AMINOACID
+		else if (currentColoringMode == HYDROPHOBICITY) {
+			float r, g, b;
+			// get min color
+			utility::ColourParser::FromString(minGradColor, r, g, b);
+			vislib::math::Vector<float, 3> colMin(r, g, b);
+			// get mid color
+			utility::ColourParser::FromString(midGradColor, r, g, b);
+			vislib::math::Vector<float, 3> colMid(r, g, b);
+			// get max color
+			utility::ColourParser::FromString(maxGradColor, r, g, b);
+			vislib::math::Vector<float, 3> colMax(r, g, b);
+			// temp color variable
+			vislib::math::Vector<float, 3> col;
+#ifdef MONERA
+			float min_val(-100.0f);
+			float max_val(100.0f);
+			float mid(0.0f);
+#else
+			float min_val(-4.5f);
+			float max_val(4.5f);
+			float mid(0.0f);
+#endif
+			float val;
+
+			unsigned int resTypeIdx;
+			// loop over all residues
+			for (cntRes = 0; cntRes < mol->ResidueCount(); ++cntRes) {
+				// loop over all atoms of the current residue
+				idx = mol->Residues()[cntRes]->FirstAtomIndex();
+				cnt = mol->Residues()[cntRes]->AtomCount();
+				// get residue type index
+				resTypeIdx = mol->Residues()[cntRes]->Type();
+				val = GetHydrophibicityByResName(mol->ResidueTypeNames()[resTypeIdx]);
+				for (cntAtom = idx; cntAtom < idx + cnt; ++cntAtom) {
+					// below middle value --> blend between min and mid color
+					if (val < mid) {
+						col = colMin + ((colMid - colMin) / (mid - min_val)) * (val - min_val);
+						atomColorTable.Add(col.GetX());
+						atomColorTable.Add(col.GetY());
+						atomColorTable.Add(col.GetZ());
+					}
+					// above middle value --> blend between max and mid color
+					else if (val > mid) {
+						col = colMid + ((colMax - colMid) / (max_val - mid)) * (val - mid);
+						atomColorTable.Add(col.GetX());
+						atomColorTable.Add(col.GetY());
+						atomColorTable.Add(col.GetZ());
+					}
+					// middle value --> assign mid color
+					else {
+						atomColorTable.Add(colMid.GetX());
+						atomColorTable.Add(colMid.GetY());
+						atomColorTable.Add(colMid.GetZ());
+					}
+				}
+			}
+		} // ... END coloring mode HYDROPHOBICITY
         else if( currentColoringMode == STRUCTURE ) {
             utility::ColourParser::FromString( "#00ff00", r, g, b);
             vislib::math::Vector<float, 3> colNone( r, g, b);
@@ -312,6 +561,67 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
                 }
             }
         } // ... END coloring mode BFACTOR
+        else if (currentColoringMode == PER_ATOM_FLOAT) {
+            float r, g, b;
+            // get min color
+            utility::ColourParser::FromString(
+                minGradColor,
+                r, g, b);
+            vislib::math::Vector<float, 3> colMin(r, g, b);
+            // get mid color
+            utility::ColourParser::FromString(
+                midGradColor,
+                r, g, b);
+            vislib::math::Vector<float, 3> colMid(r, g, b);
+            // get max color
+            utility::ColourParser::FromString(
+                maxGradColor,
+                r, g, b);
+            vislib::math::Vector<float, 3> colMax(r, g, b);
+            // temp color variable
+            vislib::math::Vector<float, 3> col;
+
+            float min_val(pa->MinValue());
+            float max_val(pa->MaxValue());
+            float mid(pa->MidValue());
+            float val;
+            printf("%.1f ", min_val);
+            printf("%.1f ", mid);
+            printf("%.1f ", max_val);
+
+            for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
+                if (min_val == max_val) {
+                    atomColorTable.Add(colMid.GetX());
+                    atomColorTable.Add(colMid.GetY());
+                    atomColorTable.Add(colMid.GetZ());
+                    continue;
+                }
+
+                val = pa->GetFloat()[cnt];
+                // below middle value --> blend between min and mid color
+                if (val < mid) {
+                    col = colMin + ((colMid - colMin) / (mid - min_val)) *
+                        (val - min_val);
+                    atomColorTable.Add(col.GetX());
+                    atomColorTable.Add(col.GetY());
+                    atomColorTable.Add(col.GetZ());
+                }
+                // above middle value --> blend between max and mid color
+                else if (val > mid) {
+                    col = colMid + ((colMax - colMid) / (max_val - mid)) *
+                        (val - mid);
+                    atomColorTable.Add(col.GetX());
+                    atomColorTable.Add(col.GetY());
+                    atomColorTable.Add(col.GetZ());
+                }
+                // middle value --> assign mid color
+                else {
+                    atomColorTable.Add(colMid.GetX());
+                    atomColorTable.Add(colMid.GetY());
+                    atomColorTable.Add(colMid.GetZ());
+                }
+            }
+        } // ... END coloring mode PER_ATOM_FLOAT
         else if( currentColoringMode == CHARGE ) {
             float r, g, b;
             // get min color
@@ -591,8 +901,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const protein_calls::BindingSiteCall *bs, 
-		bool useNeighbors) {
+        const protein_calls::BindingSiteCall *bs,
+		bool useNeighbors,
+        const protein_calls::PerAtomFloatCall *pa) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -618,11 +929,11 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
 
         // Compute first color table
         Color::MakeColorTable(mol, cm0, color0, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true, bs);
+            minGradColor, midGradColor, maxGradColor, true, bs, pa);
 
         // Compute second color table
         Color::MakeColorTable(mol, cm1, color1, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true, bs);
+            minGradColor, midGradColor, maxGradColor, true, bs, pa);
 
         // Interpolate
         for(unsigned int cnt = 0; cnt < mol->AtomCount()*3; cnt++) {
@@ -667,8 +978,9 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 	vislib::TString minGradColor,
 	vislib::TString midGradColor,
 	vislib::TString maxGradColor,
-	bool forceRecompute,
-	const protein_calls::BindingSiteCall *bs) {
+    bool forceRecompute,
+    const protein_calls::BindingSiteCall *bs,
+    const protein_calls::PerAtomFloatCall *pa) {
 
 	// temporary variables
     unsigned int cnt, cnt2, idx, idx2, cntAtom, cntRes, cntSecS, atomIdx,
