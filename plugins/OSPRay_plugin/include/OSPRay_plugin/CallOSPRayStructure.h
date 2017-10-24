@@ -81,6 +81,7 @@ public:
 
     bool clippingBoxActive;
     bool dataChanged;
+    bool materialChanged;
     bool isValid;
 
     OSPRayStructureContainer();

@@ -496,6 +496,88 @@ void AbstractOSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &si
 }
 
 
+void AbstractOSPRayRenderer::changeMaterial() {
+
+    for (auto entry : this->structureMap) {
+        auto const &element = entry.second;
+
+        // custom material settings
+        OSPMaterial material;
+        material = NULL;
+        if (element.materialContainer != NULL) {
+            switch (element.materialContainer->materialType) {
+            case OBJMATERIAL:
+                material = ospNewMaterial(renderer, "OBJMaterial");
+                ospSet3fv(material, "Kd", element.materialContainer->Kd.data());
+                ospSet3fv(material, "Ks", element.materialContainer->Ks.data());
+                ospSet1f(material, "Ns", element.materialContainer->Ns);
+                ospSet1f(material, "d", element.materialContainer->d);
+                ospSet3fv(material, "Tf", element.materialContainer->Tf.data());
+                break;
+            case LUMINOUS:
+                material = ospNewMaterial(renderer, "Luminous");
+                ospSet3fv(material, "color", element.materialContainer->lumColor.data());
+                ospSet1f(material, "intensity", element.materialContainer->lumIntensity);
+                ospSet1f(material, "transparency", element.materialContainer->lumTransparency);
+                break;
+            case GLASS:
+                material = ospNewMaterial(renderer, "Glass");
+                ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
+                ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
+                ospSet3fv(material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
+                ospSet3fv(material, "attenuationColorOutside", element.materialContainer->glassAttenuationColorOutside.data());
+                ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
+                break;
+            case MATTE:
+                material = ospNewMaterial(renderer, "Matte");
+                ospSet3fv(material, "reflectance", element.materialContainer->matteReflectance.data());
+                break;
+            case METAL:
+                material = ospNewMaterial(renderer, "Metal");
+                ospSet3fv(material, "reflectance", element.materialContainer->metalReflectance.data());
+                ospSet3fv(material, "eta", element.materialContainer->metalEta.data());
+                ospSet3fv(material, "k", element.materialContainer->metalK.data());
+                ospSet1f(material, "roughness", element.materialContainer->metalRoughness);
+                break;
+            case METALLICPAINT:
+                material = ospNewMaterial(renderer, "MetallicPaint");
+                ospSet3fv(material, "shadeColor", element.materialContainer->metallicShadeColor.data());
+                ospSet3fv(material, "glitterColor", element.materialContainer->metallicGlitterColor.data());
+                ospSet1f(material, "glitterSpread", element.materialContainer->metallicGlitterSpread);
+                ospSet1f(material, "eta", element.materialContainer->metallicEta);
+                break;
+            case PLASTIC:
+                material = ospNewMaterial(renderer, "Plastic");
+                ospSet3fv(material, "pigmentColor", element.materialContainer->plasticPigmentColor.data());
+                ospSet1f(material, "eta", element.materialContainer->plasticEta);
+                ospSet1f(material, "roughness", element.materialContainer->plasticRoughness);
+                ospSet1f(material, "thickness", element.materialContainer->plasticThickness);
+                break;
+            case THINGLASS:
+                material = ospNewMaterial(renderer, "ThinGlass");
+                ospSet3fv(material, "transmission", element.materialContainer->thinglassTransmission.data());
+                ospSet1f(material, "eta", element.materialContainer->thinglassEta);
+                ospSet1f(material, "thickness", element.materialContainer->thinglassThickness);
+                break;
+            case VELVET:
+                material = ospNewMaterial(renderer, "Velvet");
+                ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
+                ospSet3fv(material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
+                ospSet1f(material, "backScattering", element.materialContainer->velvetBackScattering);
+                ospSet1f(material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
+                break;
+            }
+            ospCommit(material);
+        }
+
+        if (material != NULL) {
+            ospSetMaterial(geo.back(), material);
+        }
+        ospCommit(geo.back());
+
+    }
+}
+
 
 bool AbstractOSPRayRenderer::fillWorld() {
 

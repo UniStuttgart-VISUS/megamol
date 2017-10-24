@@ -52,8 +52,10 @@ OSPRayNHSphereGeometry::OSPRayNHSphereGeometry(void) :
 
 bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
+    // fill material container
+    this->processMaterial();
+
     // read Data, calculate  shape parameters, fill data vectors
-    
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
@@ -114,20 +116,6 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
 
-
-    // material container
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    if (cm != NULL) {
-        auto gmp = cm->getMaterialParameter();
-        if (gmp->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    } else {
-        this->structureContainer.materialContainer = NULL;
-    }
-
-
-
     return true;
 }
 
@@ -148,10 +136,7 @@ void OSPRayNHSphereGeometry::release() {
 ospray::OSPRayNHSphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayNHSphereGeometry::InterfaceIsDirty() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    cm->getMaterialParameter();
     if (
-        cm->InterfaceIsDirty() ||
         this->particleList.IsDirty()
         ) {
         this->particleList.ResetDirty();

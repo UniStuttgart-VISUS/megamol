@@ -36,8 +36,10 @@ OSPRayTriangleMesh::OSPRayTriangleMesh(void) :
 
 bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
 
+    // fill material container
+    this->processMaterial();
+
     // read Data, calculate  shape parameters, fill data vectors
-    
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::trisoup::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::trisoup::CallTriMeshData>();
 
@@ -172,21 +174,6 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     this->structureContainer.vertexCount = vertexCount;
     this->structureContainer.triangleCount = triangleCount;
 
-
-
-    // material container
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    if (cm != NULL) {
-        auto gmp = cm->getMaterialParameter();
-        if (gmp->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    } else {
-        this->structureContainer.materialContainer = NULL;
-    }
-
-
-
     return true;
 }
 
@@ -207,10 +194,7 @@ void OSPRayTriangleMesh::release() {
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayTriangleMesh::InterfaceIsDirty() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    cm->getMaterialParameter();
     if (
-        cm->InterfaceIsDirty() ||
         this->objectID.IsDirty()
         ) {
         this->objectID.ResetDirty();
