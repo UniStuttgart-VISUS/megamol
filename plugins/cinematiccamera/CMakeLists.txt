@@ -13,7 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  set(LIBS vislib core glload protein_calls ${PNG_LIBRARIES})
+  set(LIBS vislib core glad protein_calls ${PNG_LIBRARIES})
   include_directories("include" "src" ${PNG_INCLUDE_DIRS})
 
   # Build MegaMol Plugin
@@ -22,12 +22,12 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
-
+  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
+  
   # Target definition
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${resource_files} ${source_files} ${shader_files})
+  add_dependencies(${PROJECT_NAME} vislib glad core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
@@ -37,7 +37,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
+
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
@@ -49,7 +51,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
-  #source_group("Shaders" FILES ${shader_files})
+  source_group("Shaders" FILES ${shader_files})
 
 
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

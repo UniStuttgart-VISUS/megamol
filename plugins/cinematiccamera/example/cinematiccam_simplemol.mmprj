@@ -6,13 +6,13 @@
 
 Use this command line arguments to start MegaMol™
 in Cmd:
-  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera inst
+  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
 in PowerShell:
-  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera inst
+  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
 
 -->
 
-	<view name="cinematiccamera" viewmod="SplitView1">
+	<view name="cinematiccamera_simplemol" viewmod="SplitView1">
 		<module class="SplitView" name="SplitView1" confpos="{X=20,Y=352}">
 			<param name="split.orientation" value="1" />
 			<param name="split.pos" value="0.6" />
@@ -33,7 +33,6 @@ in PowerShell:
 			<param name="04_cinematicHeight" value="640" />
 			<param name="06_fps" value="10" />
 		</module>
-		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=503,Y=471}" />
 		<module class="KeyframeKeeper" name="KeyframeKeeper1" confpos="{X=900,Y=361}" />
 		<module class="View2D" name="View2D1" confpos="{X=226,Y=465}">
 			<param name="backCol" value="black" />
@@ -52,17 +51,18 @@ in PowerShell:
 			<param name="pdbFilename" value="data\2veo03.pdb" />
 			<param name="xtcFilename" value="data\2veo03.xtc" />
 		</module>
+		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=499,Y=484}" />
 		<call class="CallRenderView" from="SplitView1::render1" to="SplitView2::render" />
 		<call class="CallRenderView" from="SplitView1::render2" to="View2D1::render" />
-		<call class="CallRender2D" from="View2D1::rendering" to="TimeLineRenderer1::rendering" />
 		<call class="CallRender3D" from="View3D1::rendering" to="CinematicRenderer1::rendering" />
 		<call class="CallCinematicCamera" from="CinematicView1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
 		<call class="CallCinematicCamera" from="CinematicRenderer1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
-		<call class="CallCinematicCamera" from="TimeLineRenderer1::getkeyframes" to="KeyframeKeeper1::scene3D" />
 		<call class="CallRenderView" from="SplitView2::render1" to="View3D1::render" />
 		<call class="CallRenderView" from="SplitView2::render2" to="CinematicView1::render" />
 		<call class="CallRender3D" from="CinematicRenderer1::renderer" to="SimpleMoleculeRenderer1::rendering" />
 		<call class="MolecularDataCall" from="SimpleMoleculeRenderer1::getData" to="PDBLoader1::dataout" />
 		<call class="CallRender3D" from="CinematicView1::rendering" to="SimpleMoleculeRenderer1::rendering" />
+		<call class="CallCinematicCamera" from="TimeLineRenderer1::getkeyframes" to="KeyframeKeeper1::scene3D" />
+		<call class="CallRender2D" from="View2D1::rendering" to="TimeLineRenderer1::rendering" />
 	</view>
 </MegaMol>

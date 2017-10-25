@@ -48,10 +48,30 @@ namespace megamol {
             }; // DON'T CHANGE ORDER OR NUMBERING
                // Add new manipulator type before NONE ...
 
-            /** */
-            bool update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
-                        vislib::math::Dimension<int, 2> vps, vislib::math::Point<float, 3> wcp, 
-                        vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm);
+
+            /** Update rednering data of manipulators.
+            *
+            * @param am    Array of manipulator types
+            * @param kfa   Pointer to the array of keyframes
+            * @param skf   The currently selected keyframe
+            * @param vps   The current viewport size
+            * @param mvpm  The current Model-View-Projection-Matrix
+            * @param wcd   The lookat direction of the world camera
+            *
+            * @return True if data was updated successfully.
+            *
+            */
+            bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
+                        float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
+                        vislib::math::Vector<float, 3> wcd);
+
+            /** Update extents.
+            *   Grows bounding box to manipulators.
+            *   If manipulator lies inside of bounding box:
+            *   Get bounding box of model to determine minimum length of manipulator axes.
+            *
+            */
+            void updateExtents(vislib::math::Cuboid<float> *bb);
 
             /** */
             bool draw(void);
@@ -90,12 +110,12 @@ namespace megamol {
                 bool                           available;
             };
 
-
             // Some fixed values
-            const float                      circleRadius = 0.15f;
-            const unsigned int               circleSubDiv = 20;
-            const float                      lineWidth    = 2.5;
-            const float                      sensitivity  = 0.01f; // Relationship between mouse movement and length changes of coordinates
+            const float                      circleRadiusFac = 0.0075f;    // Factor for lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac   = 0.05f;      // Factor for lookat direction which is used as adaptive axis length
+            const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
+            const float                      lineWidth       = 2.5;
+            const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
 
             // Positions of keyframes
             vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions
@@ -112,9 +132,10 @@ namespace megamol {
 
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::math::Dimension<int, 2>  viewportSize;
-            vislib::math::Vector<float, 3>   worldCamPos;
+            vislib::math::Vector<float, 3>   worldCamDir;
             bool                             isDataSet;
             bool                             isDataDirty;
+            vislib::math::Cuboid<float>      modelBbox;
 
             vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
 
@@ -137,10 +158,6 @@ namespace megamol {
             /** */
             bool updateManipulators(void);
 
-            /** Convert Point to Vector*/
-            inline vislib::math::Vector<float, 3> P2V(vislib::math::Point<float, 3> p) {
-                return vislib::math::Vector<float, 3>(p.X(), p.Y(), p.Z());
-            }
             /** Convert Vector to Point*/
             inline vislib::math::Point<float, 3> V2P(vislib::math::Vector<float, 3> v) {
                 return vislib::math::Point<float, 3>(v.X(), v.Y(), v.Z());

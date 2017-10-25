@@ -41,6 +41,7 @@
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
 //#include "mmcore/special/ColStereoDisplay.h"
+#include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/LinearTransferFunction.h"
 #include "mmcore/view/TransferFunctionRenderer.h"
@@ -69,7 +70,7 @@
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
-
+#include "mmcore/utility/LuaHostSettingsModule.h"
 
 using namespace megamol::core;
 
@@ -112,6 +113,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
+    instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::LinearTransferFunction>();
     instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
@@ -143,5 +145,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
-
+    instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
 }

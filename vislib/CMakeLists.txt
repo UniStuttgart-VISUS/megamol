@@ -13,16 +13,11 @@ if(BUILD_VISLIB)
     find_package(X11 REQUIRED)
   endif()
 
-  # Libs and include dirs
-  set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} -lrt -lcrypt ${UUID_LIBRARIES} ${OPENGL_LIBRARIES} ${CURSES_LIBRARIES})
-  include_directories(${OPENGL_INCLUDE_DIR})
+  add_subdirectory(glad)
 
-
-  # Build glload libraries
-  add_subdirectory(glload)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/glload/include" "include" "src")
-
-
+  set(LIBS glad ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${UUID_LIBRARIES} ${OPENGL_LIBRARIES} ${CURSES_LIBRARIES})
+  include_directories("include" "src" "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
+  
   # Build vislib
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -46,10 +41,8 @@ if(BUILD_VISLIB)
     "src/graphics/gl/GlutMouseInteractionAdapter.cpp"
     )
   
-
   # Target definition
   add_library(vislib STATIC ${header_files} ${source_files})
-  add_dependencies(vislib glload)
   target_link_libraries(vislib PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
   

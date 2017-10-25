@@ -86,7 +86,6 @@ namespace megamol {
             unsigned int                         interpolSteps;
             vislib::math::Point<float, 3>        bboxCenter;
             unsigned int                         fps;
-            bool                                 snapToFrames;
 
             vislib::math::Vector<float, 3>       camViewUp;
             vislib::math::Point<float, 3>        camViewPosition;
@@ -131,6 +130,9 @@ namespace megamol {
 
             /** */
             void snapKeyframe2AnimFrame(Keyframe *kf);
+
+            /** */
+            void snapKeyframe2SimFrame(Keyframe *kf);
 
             /**********************************************************************
             * callback stuff
@@ -191,8 +193,9 @@ namespace megamol {
             /** */
             core::param::ParamSlot  resetLookAtParam;
             /** */
-            core::param::ParamSlot  snapToFramesParam;
-
+            core::param::ParamSlot  snapAnimFramesParam;
+            /** */
+            core::param::ParamSlot  snapSimFramesParam;
 		};
 
 		/** Description class typedef */

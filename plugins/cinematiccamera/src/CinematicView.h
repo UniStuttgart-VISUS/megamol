@@ -161,7 +161,7 @@ namespace megamol {
             * @param pngPtr The png structure pointer
             * @param msg The error message
             */
-            static void PNGAPI CinematicView::pngError(png_structp pngPtr, png_const_charp msg) {
+            static void PNGAPI pngError(png_structp pngPtr, png_const_charp msg) {
                 throw vislib::Exception(msg, __FILE__, __LINE__);
             }
 
@@ -171,7 +171,7 @@ namespace megamol {
             * @param pngPtr The png structure pointer
             * @param msg The error message
             */
-            static void PNGAPI CinematicView::pngWarn(png_structp pngPtr, png_const_charp msg) {
+            static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                     "Png-Warning: %s\n", msg);
             }
@@ -183,7 +183,7 @@ namespace megamol {
             * @param buf The pointer to the buffer to be written
             * @param size The number of bytes to be written
             */
-            static void PNGAPI CinematicView::pngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
+            static void PNGAPI pngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
                 vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
                 f->Write(buf, size);
             }
@@ -193,7 +193,7 @@ namespace megamol {
             *
             * @param pngPtr The png structure pointer
             */
-            static void PNGAPI CinematicView::pngFlush(png_structp pngPtr) {
+            static void PNGAPI pngFlush(png_structp pngPtr) {
                 vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
                 f->Flush();
             }

@@ -12,17 +12,18 @@ if(BUILD_PROTEIN_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
   
-  set(LIBS vislib core mmstd_trisoup protein_calls glload)
+  set(LIBS vislib core glad mmstd_trisoup protein_calls)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core mmstd_trisoup protein_calls)
+  add_dependencies(${PROJECT_NAME} vislib core mmstd_trisoup protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
@@ -35,6 +36,7 @@ if(BUILD_PROTEIN_PLUGIN)
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
   install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")

@@ -418,10 +418,10 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     if (!makeComputeProgram("::pc_item_pick", this->pickProgram)) return false;
     if (!makeComputeProgram("::pc_item_stroke", this->strokeProgram)) return false;
 
-    glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, filterWorkgroupSize);
-    glGetProgramiv(this->minMaxProgram, GL_COMPUTE_LOCAL_WORK_SIZE, counterWorkgroupSize);
-    glGetProgramiv(this->pickProgram, GL_COMPUTE_LOCAL_WORK_SIZE, pickWorkgroupSize);
-    glGetProgramiv(this->strokeProgram, GL_COMPUTE_LOCAL_WORK_SIZE, strokeWorkgroupSize);
+    glGetProgramiv(this->filterProgram, GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
+    glGetProgramiv(this->minMaxProgram, GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
+    glGetProgramiv(this->pickProgram, GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
+    glGetProgramiv(this->strokeProgram, GL_COMPUTE_WORK_GROUP_SIZE, strokeWorkgroupSize);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
@@ -447,7 +447,7 @@ int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     float f = (x - this->marginX) / this->axisDistance;
     float frac = f - static_cast<long>(f);
     int integral = static_cast<int>(std::round(f));
-    if (integral >= this->columnCount || integral < 0) return -1;
+    if (integral >= static_cast<int>(this->columnCount) || integral < 0) return -1;
     if (frac > 0.8 || frac < 0.2) {
         //vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
         return axisIndirection[integral];
@@ -581,7 +581,7 @@ bool NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::pa
 }
 
 bool NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::param::ParamSlot & caller) {
-    for (auto i = 0; i < this->columnCount; i++) {
+    for (GLuint i = 0; i < this->columnCount; i++) {
         this->filters[i].lower = 0.0f;
         this->filters[i].upper = 1.0f;
     }
@@ -705,7 +705,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 
             int currAxis = mouseXtoAxis(mouseX);
             //printf("trying to drag to axis %i\n", currAxis);
-            if (currAxis != pickedAxis && currAxis >= 0 && currAxis < this->columnCount) {
+            if (currAxis != pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
                 for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
                     if (*ax == pickedAxis) {
                         this->axisIndirection.erase(ax);
@@ -956,11 +956,11 @@ void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
 void NGParallelCoordinatesRenderer2D::drawParcos(void) {
 
     // TODO only when filters changed!
-    size_t groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
+    GLuint groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
     GLuint groupCounts[3] = {
-        (groups % maxWorkgroupCount[0]) + 1u
-        , (groups / maxWorkgroupCount[0]) + 1u
-        , 1u
+        (groups % maxWorkgroupCount[0]) + 1
+        , (groups / maxWorkgroupCount[0]) + 1
+        , 1
     };
     this->enableProgramAndBind(this->filterProgram);
     filterProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
@@ -981,7 +981,7 @@ void NGParallelCoordinatesRenderer2D::drawParcos(void) {
                 this->densityFBO.GetWidth() != windowWidth || this->densityFBO.GetHeight() != windowHeight) {
                 densityFBO.Release();
                 ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
-                MAKE_OBJECT_LABEL(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
+                MAKE_OBJECT_LABEL_EXPLICIT(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
             }
             if (ok) {
                 densityFBO.Enable();
