@@ -9,6 +9,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmstd_trisoup/CallTriMeshData.h"
 #include "TunnelResidueDataCall.h"
 #include <set>
@@ -18,6 +20,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::trisoup;
 using namespace megamol::sombreros;
+using namespace megamol::protein_calls;
 
 /*
  * TunnelCutter::TunnelCutter
@@ -26,6 +29,8 @@ TunnelCutter::TunnelCutter(void) : Module(),
 		meshInSlot("dataIn", "Receives the input mesh"),
 		cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
 		tunnelInSlot("tunnelIn", "Receives the input tunnel data"),
+		moleculeInSlot("molIn", "Receives the input molecular data"),
+		bindingSiteInSlot("bsIn", "Receives the input binding site data"),
 		growSizeParam("growSize", "The number of steps for the region growing"),
 		isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE"){
 
@@ -41,12 +46,18 @@ TunnelCutter::TunnelCutter(void) : Module(),
 	this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
 	this->MakeSlotAvailable(&this->tunnelInSlot);
 
+	this->moleculeInSlot.SetCompatibleCall<MolecularDataCallDescription>();
+	this->MakeSlotAvailable(&this->moleculeInSlot);
+
+	this->bindingSiteInSlot.SetCompatibleCall<BindingSiteCallDescription>();
+	this->MakeSlotAvailable(&this->bindingSiteInSlot);
+
 	// parameters
 	this->growSizeParam.SetParameter(new param::IntParam(0, 0, 10));
 	this->MakeSlotAvailable(&this->growSizeParam);
 
-	//this->isActiveParam.SetParameter(new param::BoolParam(true));
-	//this->MakeSlotAvailable(&this->isActiveParam);
+	this->isActiveParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->isActiveParam);
 
 	// other variables
 	this->lastDataHash = 0;
@@ -94,7 +105,15 @@ bool TunnelCutter::getData(Call& call) {
 	if (!(*tc)(0)) return false;
 
 	if (this->dirt) {
-		cutMesh(inCall, tc);
+		if (this->isActiveParam.Param<param::BoolParam>()->Value()) {
+			cutMesh(inCall, tc);
+		} else {
+			this->meshVector.clear();
+			this->meshVector.resize(inCall->Count());
+			for (unsigned int i = 0; i < inCall->Count(); i++) {
+				this->meshVector[i] = inCall->Objects()[i];
+			}
+		}
 		this->dirt = false;
 	}
 
@@ -122,9 +141,10 @@ bool TunnelCutter::getExtent(Call& call) {
 	if (!(*inCall)(1)) return false;
 	if (!(*tc)(1)) return false;
 
-	if (this->growSizeParam.IsDirty()) {
+	if (this->growSizeParam.IsDirty() || this->isActiveParam.IsDirty()) {
 		this->hashOffset++;
 		this->growSizeParam.ResetDirty();
+		this->isActiveParam.ResetDirty();
 		this->dirt = true;
 	}
 
@@ -190,7 +210,6 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 			} else {
 				this->vertexKeepFlags[i][j] = false;
 			}
-
 		}
 
 		/*
@@ -328,7 +347,10 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				this->faces[i].push_back(vertIndexMap[vert2]);
 				this->faces[i].push_back(vertIndexMap[vert3]);
 			}
-		}				 
+		}	
+
+		// TODO find start vertex for the connection component
+		// needed: molecularDataCall, BindingSiteDataCall
 
 		/*
 		 * fourth step: fill the data into the structure
@@ -336,7 +358,5 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		this->meshVector[i].SetVertexData(static_cast<unsigned int>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), NULL, false);
 		this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces[i].size() / 3), this->faces[i].data(), false);
 		this->meshVector[i].SetMaterial(nullptr);
-		
-		//this->meshVector[i] = meshCall->Objects()[i];
 	}
 }

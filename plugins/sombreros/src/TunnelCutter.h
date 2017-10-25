@@ -110,6 +110,12 @@ namespace sombreros {
 		/** Slot for the tunnel input */
 		core::CallerSlot tunnelInSlot;
 
+		/** Slot for the input of the molecular data */
+		core::CallerSlot moleculeInSlot;
+
+		/** Slot for the input of the binding site */
+		core::CallerSlot bindingSiteInSlot;
+
 		/** Slot for the ouput of the cut mesh */
 		core::CalleeSlot cutMeshOutSlot;
 
