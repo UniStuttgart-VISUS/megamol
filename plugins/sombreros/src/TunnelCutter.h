@@ -9,6 +9,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "TunnelResidueDataCall.h"
+
 #include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -82,11 +84,25 @@ namespace sombreros {
 
 	private:
 
+		/** 
+		 * Cuts away unnecessary parts from the mesh and writes the result into the meshVector
+		 *
+		 * @param meshCall The call containing the input mesh. 
+		 * @param tunnelCall The call containing the tunnel data the cut region is based on.
+		 */
+		void cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
 		/** The offset to the lastly received hash */
 		SIZE_T hashOffset;
+
+		/** Size of the grown region */
+		core::param::ParamSlot growSizeParam;
+
+		/** Activation slot for the cutting */
+		core::param::ParamSlot isActiveParam;
 
 		/** Slot for the mesh input. */
 		core::CallerSlot meshInSlot;
@@ -99,6 +115,27 @@ namespace sombreros {
 
 		/** Vector containing the modified mesh data */
 		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
+
+		/** Vector containing the information for each vertex whether to keep it or not */
+		std::vector<std::vector<bool>> vertexKeepFlags;
+
+		/** Container for the kept vertices */
+		std::vector<std::vector<float>> vertices;
+
+		/** Container for the kept vertex normals */
+		std::vector<std::vector<float>> normals;
+
+		/** Container for the kept colors */
+		std::vector<std::vector<unsigned char>> colors;
+
+		/** Container for the kept vertex attributes */
+		std::vector<std::vector<unsigned int>> attributes;
+
+		/** Container for the kept faces */
+		std::vector<std::vector<unsigned int>> faces;
+
+		/** Dirty flag */
+		bool dirt;
 	};
 
 } /* end namespace sombreros */
