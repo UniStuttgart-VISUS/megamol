@@ -29,23 +29,23 @@ public:
             this->SetCB(rhs.GetCB());
         }
 
-        inline virtual std::weak_ptr<std::vector<float>> GetNX(void) const override {
+        inline virtual std::weak_ptr<std::vector<pbs_normal_t>> GetNX(void) const override {
             return this->nx;
         }
 
-        inline virtual void SetNX(const std::weak_ptr<std::vector<float>> nx) override {
+        inline virtual void SetNX(const std::weak_ptr<std::vector<pbs_normal_t>> nx) override {
             this->nx = nx;
         }
 
-        inline virtual std::weak_ptr<std::vector<float>> GetNY(void) const override {
+        inline virtual std::weak_ptr<std::vector<pbs_normal_t>> GetNY(void) const override {
             return this->ny;
         }
 
-        inline virtual void SetNY(const std::weak_ptr<std::vector<float>> ny) override {
+        inline virtual void SetNY(const std::weak_ptr<std::vector<pbs_normal_t>> ny) override {
             this->ny = ny;
         }
     private:
-        std::weak_ptr<std::vector<float>> nx, ny;
+        std::weak_ptr<std::vector<pbs_normal_t>> nx, ny;
     };
 
     class CStorage : virtual public PBSStorage {
@@ -63,31 +63,31 @@ public:
             this->SetCB(rhs.GetCB());
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCR(void) const override {
+        inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCR(void) const override {
             return this->cr;
         }
 
-        inline virtual void SetCR(const std::weak_ptr<std::vector<unsigned int>> cr) override {
+        inline virtual void SetCR(const std::weak_ptr<std::vector<pbs_color_t>> cr) override {
             this->cr = cr;
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCG(void) const override {
+        inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCG(void) const override {
             return this->cg;
         }
 
-        inline virtual void SetCG(const std::weak_ptr<std::vector<unsigned int>> cg) override {
+        inline virtual void SetCG(const std::weak_ptr<std::vector<pbs_color_t>> cg) override {
             this->cg = cg;
         }
 
-        inline virtual std::weak_ptr<std::vector<unsigned int>> GetCB(void) const override {
+        inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCB(void) const override {
             return this->cb;
         }
 
-        inline virtual void SetCB(const std::weak_ptr<std::vector<unsigned int>> cb) override {
+        inline virtual void SetCB(const std::weak_ptr<std::vector<pbs_color_t>> cb) override {
             this->cb = cb;
         }
     private:
-        std::weak_ptr<std::vector<unsigned int>> cr, cg, cb;
+        std::weak_ptr<std::vector<pbs_color_t>> cr, cg, cb;
     };
 
     class PNCStorage : public NStorage, public CStorage {

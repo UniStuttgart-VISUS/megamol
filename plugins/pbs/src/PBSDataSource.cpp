@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <vector>
+#include <chrono>
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -61,14 +62,14 @@ PBSDataSource::~PBSDataSource(void) {
 
 
 bool PBSDataSource::create(void) {
-    this->x_data = std::make_shared<std::vector<double>>();
-    this->y_data = std::make_shared<std::vector<double>>();
-    this->z_data = std::make_shared<std::vector<double>>();
-    this->nx_data = std::make_shared<std::vector<float>>();
-    this->ny_data = std::make_shared<std::vector<float>>();
-    this->cr_data = std::make_shared<std::vector<unsigned int>>();
-    this->cg_data = std::make_shared<std::vector<unsigned int>>();
-    this->cb_data = std::make_shared<std::vector<unsigned int>>();
+    this->x_data = std::make_shared<std::vector<PBSStorage::pbs_coord_t>>();
+    this->y_data = std::make_shared<std::vector<PBSStorage::pbs_coord_t>>();
+    this->z_data = std::make_shared<std::vector<PBSStorage::pbs_coord_t>>();
+    this->nx_data = std::make_shared<std::vector<PBSStorage::pbs_normal_t>>();
+    this->ny_data = std::make_shared<std::vector<PBSStorage::pbs_normal_t>>();
+    this->cr_data = std::make_shared<std::vector<PBSStorage::pbs_color_t>>();
+    this->cg_data = std::make_shared<std::vector<PBSStorage::pbs_color_t>>();
+    this->cb_data = std::make_shared<std::vector<PBSStorage::pbs_color_t>>();
 
     return true;
 }
@@ -94,7 +95,7 @@ void PBSDataSource::clearBuffers(void) {
 }
 
 
-bool PBSDataSource::readPBSFile(const std::string& filename, std::vector<char>& data, const zfp_type type, const unsigned int num_elements, const double tol) {
+bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char>& data, const zfp_type type, const unsigned int num_elements, const double tol) {
     //unsigned int num_elements = 0;
     //double tol = 0.0;
     //int _type = 0;
@@ -109,48 +110,67 @@ bool PBSDataSource::readPBSFile(const std::string& filename, std::vector<char>& 
     //zfp_type type = static_cast<zfp_type>(_type);
     //header.close();
 
-    std::ifstream file(filename + ".zfp", std::ios::binary | std::ios::ate);
+    /*std::ifstream file(filename + ".zfp", std::ios::binary | std::ios::ate);
     std::streamsize file_size = file.tellg();
-    file.seekg(0, std::ios::beg);
+    file.seekg(0, std::ios::beg);*/
 
-    std::vector<char> buffer(file_size);
-    if (!file.read(buffer.data(), file_size)) {
-        // error occurred during read
-        vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not read file %s\n", filename + ".zfp");
-        file.close();
-        return false;
-    }
-
-    file.close();
+    auto start = std::chrono::high_resolution_clock::now();
 
     data.clear();
-    data.resize(num_elements*this->datatype_size[type]);
 
-    zfp_field* field = zfp_field_1d(data.data(), type, num_elements);
+    if (type == zfp_type::zfp_type_none) {
+        data.resize(file_buffer_size);
+        if (!file.read(data.data(), file_buffer_size)) {
+            // error occurred during read
+            vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not read file\n");
+            //file.close();
+            return false;
+        }
+    } else {
 
-    zfp_stream* zfp = zfp_stream_open(nullptr);
+        std::vector<char> buffer(file_buffer_size);
+        if (!file.read(buffer.data(), file_buffer_size)) {
+            // error occurred during read
+            vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not read file\n");
+            //file.close();
+            return false;
+        }
 
-    zfp_stream_set_accuracy(zfp, tol);
+        //file.close();
 
-    bitstream* stream = stream_open(buffer.data(), buffer.size());
+        data.resize(num_elements*this->datatype_size[type]);
 
-    zfp_stream_set_bit_stream(zfp, stream);
+        zfp_field* field = zfp_field_1d(data.data(), type, num_elements);
 
-    if (!zfp_decompress(zfp, field)) {
-        // error occurred during decompression
-        vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not decompress ZFP stream\n");
+        zfp_stream* zfp = zfp_stream_open(nullptr);
+
+        zfp_stream_set_accuracy(zfp, tol);
+
+        bitstream* stream = stream_open(buffer.data(), buffer.size());
+
+        zfp_stream_set_bit_stream(zfp, stream);
+
+
+
+        if (!zfp_decompress(zfp, field)) {
+            // error occurred during decompression
+            vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not decompress ZFP stream\n");
+
+            zfp_field_free(field);
+            zfp_stream_close(zfp);
+            stream_close(stream);
+
+            return false;
+        }
+
 
         zfp_field_free(field);
         zfp_stream_close(zfp);
         stream_close(stream);
-
-        return false;
     }
 
-    zfp_field_free(field);
-    zfp_stream_close(zfp);
-    stream_close(stream);
-
+    auto duration = std::chrono::high_resolution_clock::now() - start;
+    vislib::sys::Log::DefaultLog.WriteInfo("ZFP duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(duration));
     return true;
 }
 
@@ -171,30 +191,42 @@ bool megamol::pbs::PBSDataSource::read(void) {
     const auto end_region_idx = this->end_region_idx_slot.Param<core::param::IntParam>()->Value();
 
     unsigned int num_elements = 0;
-    double tol = 0.0;
-    int _type = 0;
 
     for (int idx = start_idx; idx <= end_idx; idx++) {
         for (unsigned int attr = 0; attr < max_num_attributes; attr++) {
             // construct final filepath
             const std::string filename = path_to_pbs + "/" + this->filename_prefixes[attr] + "_" + std::to_string(idx);
 
-            std::ifstream header(filename + ".txt");
-            if (header.good()) {
-                if (!(header >> num_elements >> tol >> _type)) {
-                    // error occurred during header processing
-                    vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::filenameChanged: Could not read file %s\n", filename + ".txt");
-                    header.close();
-                    return false;
-                }
-                zfp_type type = static_cast<zfp_type>(_type);
-                header.close();
+            double tol = 0.0;
+            int _type = 0;
+            unsigned int num_buffers = 0;
+
+            double gBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+            double lBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+            std::ifstream file(filename + ".zfp", std::ios::binary | std::ios::ate);
+            if (file.good()) {
+                std::streamsize file_size = file.tellg();
+                file.seekg(0, std::ios::beg);
+
+                file.read(reinterpret_cast<char*>(gBBox), 6 * sizeof(double));
+                file.read(reinterpret_cast<char*>(lBBox), 6 * sizeof(double));
+                file.read(reinterpret_cast<char*>(&num_elements), sizeof(unsigned int));
+                file.read(reinterpret_cast<char*>(&tol), sizeof(double));
+                file.read(reinterpret_cast<char*>(&_type), sizeof(int));
+                file.read(reinterpret_cast<char*>(&num_buffers), sizeof(unsigned int));
+
+                auto type = static_cast<zfp_type>(_type);
+
+                auto file_buffer_size = file_size - file.tellg();
 
                 // read file
                 std::vector<char> buffer;
-                if (!this->readPBSFile(filename, buffer, type, num_elements, tol)) {
+                if (!this->readPBSFile(file, file_buffer_size, buffer, type, num_elements, tol)) {
+                    file.close();
                     return false;
                 }
+                file.close();
 
                 if (buffer.size() > 0) {
                     auto attr_type = static_cast<attribute_type>(attr);
@@ -236,9 +268,7 @@ bool megamol::pbs::PBSDataSource::read(void) {
                     }
                 }
             } else {
-                // print info that attr is missing
-                vislib::sys::Log::DefaultLog.WriteInfo("PBSDataSource::filenameChanged: Attribute %s for chunk %d is missing in path %s\n",
-                    this->filename_prefixes[attr], idx, path_to_pbs);
+                vislib::sys::Log::DefaultLog.WriteInfo("PBSDataSource::read: Attribute %s is missing\n", this->filename_prefixes[attr]);
             }
         }
 

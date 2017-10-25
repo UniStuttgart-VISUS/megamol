@@ -9,6 +9,10 @@ namespace pbs {
 
 class PBSStorage {
 public:
+    typedef double pbs_coord_t;
+    typedef float pbs_normal_t;
+    typedef unsigned char pbs_color_t;
+
     PBSStorage() { };
 
     virtual ~PBSStorage(void) { };
@@ -29,73 +33,73 @@ public:
         this->renderable_flags = renderable_flags;
     }
 
-    inline virtual std::weak_ptr<std::vector<double>> GetX(void) const {
+    inline virtual std::weak_ptr<std::vector<pbs_coord_t>> GetX(void) const {
         return this->x;
     }
 
-    inline virtual void SetX(const std::weak_ptr<std::vector<double>> x) {
+    inline virtual void SetX(const std::weak_ptr<std::vector<pbs_coord_t>> x) {
         this->x = x;
     }
 
-    inline virtual std::weak_ptr<std::vector<double>> GetY(void) const {
+    inline virtual std::weak_ptr<std::vector<pbs_coord_t>> GetY(void) const {
         return this->y;
     }
 
-    inline virtual void SetY(const std::weak_ptr<std::vector<double>> y) {
+    inline virtual void SetY(const std::weak_ptr<std::vector<pbs_coord_t>> y) {
         this->y = y;
     }
 
-    inline virtual std::weak_ptr<std::vector<double>> GetZ(void) const {
+    inline virtual std::weak_ptr<std::vector<pbs_coord_t>> GetZ(void) const {
         return this->z;
     }
 
-    inline virtual void SetZ(const std::weak_ptr<std::vector<double>> z) {
+    inline virtual void SetZ(const std::weak_ptr<std::vector<pbs_coord_t>> z) {
         this->z = z;
     }
 
-    inline virtual std::weak_ptr<std::vector<float>> GetNX(void) const {
-        return std::weak_ptr<std::vector<float>>();
+    inline virtual std::weak_ptr<std::vector<pbs_normal_t>> GetNX(void) const {
+        return std::weak_ptr<std::vector<pbs_normal_t>>();
     }
 
-    inline virtual void SetNX(const std::weak_ptr<std::vector<float>> nx) {
+    inline virtual void SetNX(const std::weak_ptr<std::vector<pbs_normal_t>> nx) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<float>> GetNY(void) const {
-        return std::weak_ptr<std::vector<float>>();
+    inline virtual std::weak_ptr<std::vector<pbs_normal_t>> GetNY(void) const {
+        return std::weak_ptr<std::vector<pbs_normal_t>>();
     }
 
-    inline virtual void SetNY(const std::weak_ptr<std::vector<float>> ny) {
+    inline virtual void SetNY(const std::weak_ptr<std::vector<pbs_normal_t>> ny) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCR(void) const {
-        return std::weak_ptr<std::vector<unsigned int>>();
+    inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCR(void) const {
+        return std::weak_ptr<std::vector<pbs_color_t>>();
     }
 
-    inline virtual void SetCR(std::weak_ptr<std::vector<unsigned int>> cr) {
+    inline virtual void SetCR(std::weak_ptr<std::vector<pbs_color_t>> cr) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCG(void) const {
-        return std::weak_ptr<std::vector<unsigned int>>();
+    inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCG(void) const {
+        return std::weak_ptr<std::vector<pbs_color_t>>();
     }
 
-    inline virtual void SetCG(std::weak_ptr<std::vector<unsigned int>> cg) {
+    inline virtual void SetCG(std::weak_ptr<std::vector<pbs_color_t>> cg) {
         // intentionally empty
     }
 
-    inline virtual std::weak_ptr<std::vector<unsigned int>> GetCB(void) const {
-        return std::weak_ptr<std::vector<unsigned int>>();
+    inline virtual std::weak_ptr<std::vector<pbs_color_t>> GetCB(void) const {
+        return std::weak_ptr<std::vector<pbs_color_t>>();
     }
 
-    inline virtual void SetCB(std::weak_ptr<std::vector<unsigned int>> cb) {
+    inline virtual void SetCB(std::weak_ptr<std::vector<pbs_color_t>> cb) {
         // intentionally empty
     }
 private:
     unsigned int num_elements;
 
-    std::weak_ptr<std::vector<double>> x, y, z;
+    std::weak_ptr<std::vector<pbs_coord_t>> x, y, z;
 
     std::weak_ptr<std::vector<bool>> renderable_flags;
 }; /* end class PBSStorage */

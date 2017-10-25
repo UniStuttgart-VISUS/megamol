@@ -21,6 +21,8 @@
 
 #include "zfp.h"
 
+#include "PBSStorage.h"
+
 namespace megamol {
 namespace pbs {
 
@@ -105,9 +107,12 @@ private:
             throw std::out_of_range("PBSDataSource::insertElements: rhs.size() to small for num_elements\n");
         }
         //lhs->insert(lhs->end(), reinterpret_cast<T*>(rhs.data()), reinterpret_cast<T*>(rhs.data()) + num_elements * sizeof(T));
-        for (size_t i = 0; i < num_elements * sizeof(T); i+=sizeof(T)) {
+        auto idx = lhs->size();
+        lhs->resize(lhs->size() + num_elements);
+        /*for (size_t i = 0; i < num_elements * sizeof(T); i+=sizeof(T)) {
             lhs->push_back(*reinterpret_cast<T*>(&rhs[i]));
-        }
+        }*/
+        memcpy(&((lhs->data())[idx]), rhs.data(), num_elements * sizeof(T)); // <-- don't do this at home
     }
 
     /*inline void updatePBSType(const attribute_type& type) {
@@ -148,7 +153,7 @@ private:
      *
      * @return True, if file was successfully read
      */
-    bool readPBSFile(const std::string& filename, std::vector<char> &data, const zfp_type type, const unsigned int num_elements, const double tol);
+    bool readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char> &data, const zfp_type type, const unsigned int num_elements, const double tol);
 
     bool read(void);
 
@@ -213,13 +218,13 @@ private:
     };
 
     /** Buffers for point coordinates */
-    std::shared_ptr<std::vector<double>> x_data, y_data, z_data;
+    std::shared_ptr<std::vector<PBSStorage::pbs_coord_t>> x_data, y_data, z_data;
 
     /** Buffers for point normals in spherical coordinates */
-    std::shared_ptr<std::vector<float>> nx_data, ny_data;
+    std::shared_ptr<std::vector<PBSStorage::pbs_normal_t>> nx_data, ny_data;
 
     /** Buffers for point colors */
-    std::shared_ptr<std::vector<unsigned int>> cr_data, cg_data, cb_data;
+    std::shared_ptr<std::vector<PBSStorage::pbs_color_t>> cr_data, cg_data, cb_data;
 
     /** Flag-storage for "renderable" property */
     std::vector<bool> render_flag;
