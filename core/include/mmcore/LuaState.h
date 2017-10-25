@@ -164,6 +164,11 @@ namespace utility {
          */
         int SetConfigValue(lua_State *L);
 
+        /**
+         * mmGetConfigValue(string name): get the value of configuration value 'name'
+         */
+        int GetConfigValue(lua_State *L);
+
         // ** MegaMol API provided for runtime manipulation / Configurator live connection
 
         /** answer the ProcessID of the running MegaMol */

@@ -126,6 +126,13 @@ namespace plugins {
             return this->lua;
         }
 
+        /** return whether loaded project files are Lua-based or legacy */
+        inline bool IsLuaProject() const {
+            return this->loadedLuaProjects.Count() > 0;
+        }
+
+        vislib::StringA GetMergedLuaProject() const;
+
         /**
          * Answers the log object of the instance.
          *
@@ -306,6 +313,17 @@ namespace plugins {
         inline bool HasPendingJobInstantiationRequests(void) {
             vislib::sys::AutoLock l(this->graphUpdateLock);
             return !this->pendingJobInstRequests.IsEmpty();
+        }
+
+        inline bool HasPendingRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
+            return !this->pendingViewInstRequests.IsEmpty()
+                || !this->pendingJobInstRequests.IsEmpty()
+                || !this->pendingCallDelRequests.IsEmpty()
+                || !this->pendingCallInstRequests.IsEmpty()
+                || !this->pendingModuleDelRequests.IsEmpty()
+                || !this->pendingModuleInstRequests.IsEmpty()
+                || !this->pendingParamSetRequests.IsEmpty();
         }
 
         vislib::StringA GetPendingViewName(void);
@@ -991,8 +1009,13 @@ namespace plugins {
         /** The Lua state */
         megamol::core::LuaState *lua;
 
-        /** all othe lua projects loaded from the command line */
-        vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
+        /**
+        * All of the verbatim loaded project files. We need to keep them to send them
+        * to interested parties, like the simpleclusterclient, so they can interpret
+        * them THEMSELVES. All control flow must be retained to allow for asymmetric
+        * MegaMol execution.
+        */
+        vislib::Array<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
 
         /** The manager of the builtin view descriptions */
         megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;
@@ -1035,15 +1058,6 @@ namespace plugins {
          * invoked from another thread (the LuaRemoteHost, for example).
          */
         vislib::sys::CriticalSection graphUpdateLock;
-
-        /**
-         * The verbatim loaded project files. We need to keep them to send them
-         * to interested parties, like the simpleclusterclient, so they can interpret
-         * them THEMSELVES. All control flow must be retained to allow for asymmetric
-         * MegaMol execution.
-         */
-        vislib::SingleLinkedList<vislib::StringA> loadedProjectFiles;
-
 
         /** The module namespace root */
         RootModuleNamespace::ptr_type namespaceRoot;

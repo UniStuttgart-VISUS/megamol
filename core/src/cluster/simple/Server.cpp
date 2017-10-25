@@ -142,14 +142,24 @@ bool cluster::simple::Server::Client::OnMessageReceived(
             }
             this->send(answer);
         } break;
-        case MSG_MODULGRAPH: {
+        case MSG_MODULGRAPH:
+        case MSG_MODULGRAPH_LUA: {
             vislib::RawStorage mem;
-            AbstractNamedObject::ptr_type rmnsp = this->parent.RootModule();
-            RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(rmnsp.get());
-            rmns->ModuleGraphLock().LockExclusive();
-            rmns->SerializeGraph(mem);
-            rmns->ModuleGraphLock().UnlockExclusive();
-            answer.GetHeader().SetMessageID(MSG_MODULGRAPH);
+            UINT32 msgType = MSG_MODULGRAPH;
+            // TODO Lua Case!
+            if (this->parent.GetCoreInstance()->IsLuaProject()) {
+                auto lua = this->parent.GetCoreInstance()->GetMergedLuaProject();
+                mem.AssertSize(lua.Length() + 1);
+                memcpy(mem.At(0), lua.PeekBuffer(), lua.Length() + 1);
+                msgType = MSG_MODULGRAPH_LUA;
+            } else {
+                AbstractNamedObject::ptr_type rmnsp = this->parent.RootModule();
+                RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(rmnsp.get());
+                rmns->ModuleGraphLock().LockExclusive();
+                rmns->SerializeGraph(mem);
+                rmns->ModuleGraphLock().UnlockExclusive();
+            }
+            answer.GetHeader().SetMessageID(msgType);
             answer.SetBody(mem, mem.GetSize());
             this->send(answer);
         } break;

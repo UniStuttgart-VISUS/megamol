@@ -69,6 +69,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMSETLOGLEVEL "mmSetLogLevel"
 #define MMC_LUA_MMSETECHOLEVEL "mmSetEchoLevel"
 #define MMC_LUA_MMSETCONFIGVALUE "mmSetConfigValue"
+#define MMC_LUA_MMGETCONFIGVALUE "mmGetConfigValue"
 #define MMC_LUA_MMGETPROCESSID "mmGetProcessID"
 #define MMC_LUA_MMGETPARAMTYPE "mmGetParamType"
 #define MMC_LUA_MMGETPARAMDESCRIPTION "mmGetParamDescription"
@@ -102,6 +103,7 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR." },
     { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"(int level)\n\tSets the level of log events to output to the console (see above)." },
     { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"(string name, string value)\n\tSets the config value <name> to <value>." },
+    { MMC_LUA_MMGETCONFIGVALUE, MMC_LUA_MMGETCONFIGVALUE"(string name)\n\tGets the value of config value <name>." },
     { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
     "\n\tFor each parameter the name, description, definition, and value are returned." },
     { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"(string name)\n\tReturn the HEX type descriptor of a parameter slot." },
@@ -143,6 +145,7 @@ MMC_LUA_MMSETLOGFILE "=" MMC_LUA_MMSETLOGFILE ","
 MMC_LUA_MMSETLOGLEVEL "=" MMC_LUA_MMSETLOGLEVEL ","
 MMC_LUA_MMSETECHOLEVEL "=" MMC_LUA_MMSETECHOLEVEL ","
 MMC_LUA_MMSETCONFIGVALUE "=" MMC_LUA_MMSETCONFIGVALUE ","
+MMC_LUA_MMGETCONFIGVALUE "=" MMC_LUA_MMGETCONFIGVALUE ","
 MMC_LUA_MMGETPROCESSID "=" MMC_LUA_MMGETPROCESSID ","
 MMC_LUA_MMGETPARAMTYPE "=" MMC_LUA_MMGETPARAMTYPE ","
 MMC_LUA_MMGETPARAMDESCRIPTION "=" MMC_LUA_MMGETPARAMDESCRIPTION ","
@@ -319,6 +322,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMSETECHOLEVEL, &dispatch<&LuaState::SetEchoLevel>);
 
         lua_register(L, MMC_LUA_MMSETCONFIGVALUE, &dispatch<&LuaState::SetConfigValue>);
+        lua_register(L, MMC_LUA_MMGETCONFIGVALUE, &dispatch<&LuaState::GetConfigValue>);
 
         lua_register(L, MMC_LUA_MMGETPROCESSID, &dispatch<&LuaState::GetProcessID>);
         lua_register(L, MMC_LUA_MMGETMODULEPARAMS, &dispatch<&LuaState::GetModuleParams>);
@@ -702,6 +706,52 @@ int megamol::core::LuaState::SetConfigValue(lua_State *L) {
         auto name = luaL_checkstring(L, 1);
         auto value = luaL_checkstring(L, 2);
         this->conf->setConfigValue(name, value);
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::GetConfigValue(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMGETCONFIGVALUE)) {
+        std::stringstream out;
+        auto name = luaL_checkstring(L, 1);
+        mmcValueType t;
+        const void *val = this->coreInst->Configuration().GetValue(MMC_CFGID_VARIABLE, name, &t);
+        switch (t) {
+            case MMC_TYPE_INT32:
+                out << *(static_cast<const int32_t*>(val));
+                break;
+            case MMC_TYPE_UINT32:
+                out << *(static_cast<const uint32_t*>(val));
+                break;
+            case MMC_TYPE_INT64:
+                out << *(static_cast<const int64_t*>(val));
+                break;
+            case MMC_TYPE_UINT64:
+                out << *(static_cast<const uint64_t*>(val));
+                break;
+            case MMC_TYPE_BYTE:
+                out << *(static_cast<const char*>(val));
+                break;
+            case MMC_TYPE_BOOL:
+                out << *(static_cast<const bool*>(val));
+                break;
+            case MMC_TYPE_FLOAT:
+                out << *(static_cast<const float*>(val));
+                break;
+            case MMC_TYPE_CSTR:
+                out << *(static_cast<const char*>(val));
+                break;
+            case MMC_TYPE_WSTR:
+                out << vislib::StringA(vislib::StringW(static_cast<const wchar_t*>(val)));
+                break;
+            default:
+                // also includes MMC_TYPE_VOIDP
+                out << "unknown";
+                break;
+        }
+        lua_pushstring(L, out.str().c_str());
+        return 1;
     }
     return 0;
 }

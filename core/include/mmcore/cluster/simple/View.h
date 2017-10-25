@@ -223,6 +223,7 @@ namespace simple {
         /** The heartbeat payload */
         vislib::RawStorage heartbeatPayload;
 
+        bool isFirstInitMsg;
     };
 
 

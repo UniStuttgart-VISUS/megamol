@@ -75,6 +75,8 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
+#include <sstream>
+
 #include "mmcore/utility/LuaHostService.h"
 
 /*****************************************************************************/
@@ -125,7 +127,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         pendingCallInstRequests(), pendingCallDelRequests(),
         pendingModuleInstRequests(), pendingModuleDelRequests(),
-        pendingParamSetRequests(), loadedProjectFiles(),
+        pendingParamSetRequests(),
         graphUpdateLock(), loadedLuaProjects(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
@@ -1655,6 +1657,20 @@ size_t megamol::core::CoreInstance::GetGlobalParameterHash(void) {
 
     return this->parameterHash;
 }
+
+
+vislib::StringA megamol::core::CoreInstance::GetMergedLuaProject() const {
+    if (this->loadedLuaProjects.Count() == 1) {
+        return this->loadedLuaProjects[0].Second();
+    }
+    std::stringstream out;
+    for (auto x = 0; x < this->loadedLuaProjects.Count(); x++) {
+        out << this->loadedLuaProjects[x].Second();
+        out << std::endl;
+    }
+    return out.str().c_str();
+}
+
 
 /*
  * megamol::core::CoreInstance::getGlobalParameterHash
