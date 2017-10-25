@@ -86,13 +86,13 @@ private:
         cb
     };
 
-    enum pbs_type {
+    /*enum pbs_type {
         None,
         P,
         PN,
         PC,
         PNC
-    };
+    };*/
 
     /**
      * Helper function to insert read buffer into an output buffer.
@@ -114,31 +114,6 @@ private:
         }*/
         memcpy(&((lhs->data())[idx]), rhs.data(), num_elements * sizeof(T)); // <-- don't do this at home
     }
-
-    /*inline void updatePBSType(const attribute_type& type) {
-        this->type_flags[type] = true;
-    }
-
-    inline pbs_type generatePBSType(void) {
-        std::array<bool, 3> comp;
-
-        if (this->type_flags[0] && this->type_flags[1] && this->type_flags[2]) comp[0] = true;
-        else return pbs_type::None;
-
-        if (this->type_flags[3] && this->type_flags[4]) comp[1] = true;
-
-        if (this->type_flags[5] && this->type_flags[6] && this->type_flags[7]) comp[2] = true;
-
-        if (!comp[1] && !comp[2]) return pbs_type::P;
-
-        if (comp[1] && !comp[2]) return pbs_type::PN;
-
-        if (!comp[1] && comp[2]) return pbs_type::PC;
-
-        if (comp[1] && comp[2]) return pbs_type::PNC;
-
-        return pbs_type::None;
-    }*/
 
     /**
      * Clears all buffers.
@@ -242,6 +217,10 @@ private:
     bool with_normals;
 
     bool with_colors;
+
+    std::shared_ptr<double> g_bbox;
+
+    std::shared_ptr<double> l_bbox;
 };
 
 } /* end namespace pbs */

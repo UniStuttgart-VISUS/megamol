@@ -71,6 +71,9 @@ bool PBSDataSource::create(void) {
     this->cg_data = std::make_shared<std::vector<PBSStorage::pbs_color_t>>();
     this->cb_data = std::make_shared<std::vector<PBSStorage::pbs_color_t>>();
 
+    this->g_bbox = std::shared_ptr<double>(new double[6], std::default_delete<double[]>());
+    this->l_bbox = std::shared_ptr<double>(new double[6], std::default_delete<double[]>());
+
     return true;
 }
 
@@ -114,7 +117,6 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
     std::streamsize file_size = file.tellg();
     file.seekg(0, std::ios::beg);*/
 
-    auto start = std::chrono::high_resolution_clock::now();
 
     data.clear();
 
@@ -128,6 +130,7 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
         }
     } else {
 
+        auto read_start = std::chrono::high_resolution_clock::now();
         std::vector<char> buffer(file_buffer_size);
         if (!file.read(buffer.data(), file_buffer_size)) {
             // error occurred during read
@@ -135,7 +138,10 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
             //file.close();
             return false;
         }
+        auto read_duration = std::chrono::high_resolution_clock::now() - read_start;
+        vislib::sys::Log::DefaultLog.WriteInfo("READ duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(read_duration));
 
+        auto zfp_start = std::chrono::high_resolution_clock::now();
         //file.close();
 
         data.resize(num_elements*this->datatype_size[type]);
@@ -167,22 +173,24 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
         zfp_field_free(field);
         zfp_stream_close(zfp);
         stream_close(stream);
-    }
 
-    auto duration = std::chrono::high_resolution_clock::now() - start;
-    vislib::sys::Log::DefaultLog.WriteInfo("ZFP duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(duration));
+        auto zfp_duration = std::chrono::high_resolution_clock::now() - zfp_start;
+        vislib::sys::Log::DefaultLog.WriteInfo("ZFP duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(zfp_duration));
+    }
     return true;
 }
 
 
-bool megamol::pbs::PBSDataSource::read(void) {
+bool PBSDataSource::read(void) {
+    if (!this->isDirty()) {
+        // required, to guard for a call to this function before params are initialized
+        return true;
+    }
+
     this->clearBuffers();
 
     const std::string path_to_pbs = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
 
-    if (!this->isDirty()) {
-        return true;
-    }
 
     const auto start_idx = this->start_idx_slot.Param<core::param::IntParam>()->Value();
     const auto end_idx = this->end_idx_slot.Param<core::param::IntParam>()->Value();
@@ -191,6 +199,7 @@ bool megamol::pbs::PBSDataSource::read(void) {
     const auto end_region_idx = this->end_region_idx_slot.Param<core::param::IntParam>()->Value();
 
     unsigned int num_elements = 0;
+    //double gBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     for (int idx = start_idx; idx <= end_idx; idx++) {
         for (unsigned int attr = 0; attr < max_num_attributes; attr++) {
@@ -201,16 +210,15 @@ bool megamol::pbs::PBSDataSource::read(void) {
             int _type = 0;
             unsigned int num_buffers = 0;
 
-            double gBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-            double lBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+            //double lBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
             std::ifstream file(filename + ".zfp", std::ios::binary | std::ios::ate);
             if (file.good()) {
                 std::streamsize file_size = file.tellg();
                 file.seekg(0, std::ios::beg);
 
-                file.read(reinterpret_cast<char*>(gBBox), 6 * sizeof(double));
-                file.read(reinterpret_cast<char*>(lBBox), 6 * sizeof(double));
+                file.read(reinterpret_cast<char*>(this->g_bbox.get()), 6 * sizeof(double));
+                file.read(reinterpret_cast<char*>(this->l_bbox.get()), 6 * sizeof(double));
                 file.read(reinterpret_cast<char*>(&num_elements), sizeof(unsigned int));
                 file.read(reinterpret_cast<char*>(&tol), sizeof(double));
                 file.read(reinterpret_cast<char*>(&_type), sizeof(int));
@@ -301,18 +309,18 @@ void PBSDataSource::resetDirty(void) {
 }
 
 
-bool PBSDataSource::filenameChanged(core::param::ParamSlot& slot) {
+bool PBSDataSource::filenameChanged(core::param::ParamSlot &slot) {
     return this->read();
 }
 
 
-bool PBSDataSource::getDataCallback(core::Call& c) {
+bool PBSDataSource::getDataCallback(core::Call &c) {
     try {
         if (this->isDirty()) {
             this->read();
         }
 
-        PBSDataCall* pdc = dynamic_cast<PBSDataCall*>(&c);
+        PBSDataCall *pdc = dynamic_cast<PBSDataCall*>(&c);
 
         std::shared_ptr<PBSStorage> ret = std::make_shared<PBSStorage>();
 
@@ -334,56 +342,10 @@ bool PBSDataSource::getDataCallback(core::Call& c) {
         ret->SetCG(this->cg_data);
         ret->SetCB(this->cb_data);
 
-        pdc->SetData(std::move(ret));
+        pdc->SetGlobalBBox(this->g_bbox);
+        pdc->SetLocalBBox(this->l_bbox);
 
-        /*switch (this->generatePBSType) {
-        case pbs_type::P:
-        {
-            PBSStorage ret;
-            ret.SetX(this->x_data);
-            ret.SetY(this->y_data);
-            ret.SetZ(this->z_data);
-            pdc->SetData(std::make_shared<PBSStorage>(ret));
-        }
-            break;
-        case pbs_type::PN:
-        {
-            PBSDataCall::PNStorage ret;
-            ret.SetX(this->x_data);
-            ret.SetY(this->y_data);
-            ret.SetZ(this->z_data);
-            ret.SetNX(this->nx_data);
-            ret.SetNY(this->ny_data);
-            pdc->SetData(std::make_shared<PBSDataCall::PNStorage>(ret));
-        }
-            break;
-        case pbs_type::PC:
-        {
-            PBSDataCall::PCStorage ret;
-            ret.SetX(this->x_data);
-            ret.SetY(this->y_data);
-            ret.SetZ(this->z_data);
-            ret.SetCR(this->cr_data);
-            ret.SetCG(this->cg_data);
-            ret.SetCB(this->cb_data);
-            pdc->SetData(std::make_shared<PBSDataCall::PCStorage>(ret));
-        }
-        case pbs_type::PNC:
-        {
-            PBSDataCall::PNCStorage ret;
-            ret.SetX(this->x_data);
-            ret.SetY(this->y_data);
-            ret.SetZ(this->z_data);
-            ret.SetNX(this->nx_data);
-            ret.SetNY(this->ny_data);
-            ret.SetCR(this->cr_data);
-            ret.SetCG(this->cg_data);
-            ret.SetCB(this->cb_data);
-            pdc->SetData(std::make_shared<PBSDataCall::PNCStorage>(ret));
-        }
-        default:
-            break;
-        }*/
+        pdc->SetData(std::move(ret));
     } catch (...) {
         return false;
     }
@@ -392,6 +354,6 @@ bool PBSDataSource::getDataCallback(core::Call& c) {
 }
 
 
-bool PBSDataSource::getExtentCallback(core::Call& c) {
+bool PBSDataSource::getExtentCallback(core::Call &c) {
     return true;
 }

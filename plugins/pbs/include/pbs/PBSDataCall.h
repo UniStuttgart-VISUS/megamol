@@ -182,9 +182,29 @@ public:
     inline void SetData(const std::shared_ptr<PBSStorage>&& data) {
         this->data = data;
     }
+
+    inline std::weak_ptr<double> GetGlobalBBox(void) const {
+        return this->g_bbox;
+    }
+
+    inline void SetGlobalBBox(const std::weak_ptr<double> &bbox) {
+        this->g_bbox = bbox;
+    }
+
+    inline std::weak_ptr<double> GetLocalBBox(void) const {
+        return this->l_bbox;
+    }
+
+    inline void SetLocalBBox(const std::weak_ptr<double> &bbox) {
+        this->l_bbox = bbox;
+    }
 protected:
 private:
     std::shared_ptr<PBSStorage> data;
+
+    std::weak_ptr<double> g_bbox;
+
+    std::weak_ptr<double> l_bbox;
 }; /* end class PBSDataCall */
 
 } /* end namespace pbs */
