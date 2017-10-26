@@ -15,6 +15,8 @@
 #include "TunnelResidueDataCall.h"
 #include <set>
 #include <climits>
+#include <cfloat>
+#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -98,15 +100,24 @@ bool TunnelCutter::getData(Call& call) {
 	TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
 	if (tc == nullptr) return false;
 
+	MolecularDataCall * mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
+	if (mdc == nullptr) return false;
+
+	BindingSiteCall * bsc = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
+	if (bsc == nullptr) return false;
+
 	inCall->SetFrameID(outCall->FrameID());
 	tc->SetFrameID(outCall->FrameID());
+	mdc->SetFrameID(outCall->FrameID());
 
 	if (!(*inCall)(0)) return false;
 	if (!(*tc)(0)) return false;
+	if (!(*mdc)(0)) return false;
+	if (!(*bsc)(0)) return false;
 
 	if (this->dirt) {
 		if (this->isActiveParam.Param<param::BoolParam>()->Value()) {
-			cutMesh(inCall, tc);
+			cutMesh(inCall, tc, mdc, bsc);
 		} else {
 			this->meshVector.clear();
 			this->meshVector.resize(inCall->Count());
@@ -135,11 +146,16 @@ bool TunnelCutter::getExtent(Call& call) {
 	TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
 	if (tc == nullptr) return false;
 
+	MolecularDataCall * mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
+	if (mdc == nullptr) return false;
+
 	inCall->SetFrameID(outCall->FrameID());
 	tc->SetFrameID(outCall->FrameID());
+	mdc->SetFrameID(outCall->FrameID());
 
 	if (!(*inCall)(1)) return false;
 	if (!(*tc)(1)) return false;
+	if (!(*mdc)(1)) return false;
 
 	if (this->growSizeParam.IsDirty() || this->isActiveParam.IsDirty()) {
 		this->hashOffset++;
@@ -163,7 +179,7 @@ bool TunnelCutter::getExtent(Call& call) {
 /*
  * TunnelCutter::cutMesh
  */
-void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall) {
+void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, MolecularDataCall * molCall, BindingSiteCall * bsCall) {
 
 	// generate set of allowed residue indices
 	std::set<int> allowedSet;
@@ -216,91 +232,143 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		 * second step: region growing
 		 */
 
-		if (this->growSizeParam.Param<param::IntParam>() > 0) {
-			// init distance vector
-			std::vector<unsigned int> vertexDistances(vertCount, UINT_MAX);
-			for (int j = 0; j < static_cast<int>(vertCount); j++) {
-				if (this->vertexKeepFlags[i][j]) {
-					vertexDistances[j] = 0;
+		// init distance vector
+		std::vector<unsigned int> vertexDistances(vertCount, UINT_MAX);
+		for (int j = 0; j < static_cast<int>(vertCount); j++) {
+			if (this->vertexKeepFlags[i][j]) {
+				vertexDistances[j] = 0;
+			}
+		}
+
+		// build search datastructures
+		std::vector<std::pair<unsigned int, unsigned int>> edgesForward;
+		std::vector<std::pair<unsigned int, unsigned int>> edgesReverse;
+		for (int j = 0; j < static_cast<int>(triCount); j++) {
+			unsigned int vert1 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 0];
+			unsigned int vert2 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 1];
+			unsigned int vert3 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 2];
+
+			edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert1, vert2));
+			edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert2, vert3));
+			edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert1, vert3));
+			edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert2, vert1));
+			edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert3, vert2));
+			edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert3, vert1));
+		}
+		// sort the search structures
+		std::sort(edgesForward.begin(), edgesForward.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+			return left.first < right.first;
+		});
+		std::sort(edgesReverse.begin(), edgesReverse.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+			return left.first < right.first;
+		});
+
+		// we reuse the allowedset and switch it with the newset each step
+		std::set<unsigned int> newset;
+		for (int s = 0; s < this->growSizeParam.Param<param::IntParam>()->Value(); s++) {
+			newset.clear();
+			// for each currently allowed vertex
+			for (auto element : allowedVerticesSet) {
+				// search for the start indices in both edge lists
+				auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+
+				// go through all forward edges starting with the vertex
+				while ((*forward).first == element && forward != edgesForward.end()) {
+					auto val = (*forward).second;
+					// check whether the endpoint val is not yet in our sets
+					if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
+						if (!this->vertexKeepFlags[i][val]) {
+							// if it is not, assign the distance
+							this->vertexKeepFlags[i][val] = true;
+							vertexDistances[val] = s + 1;
+							newset.insert(val);
+							keptVertices++;
+						}
+					}
+					forward++;
+				}
+
+				// do the same thing for all reverse edges
+				while ((*reverse).first == element && reverse != edgesReverse.end()) {
+					auto val = (*reverse).second;
+					// check whether the endpoint val is not yet in our sets
+					if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
+						if (!this->vertexKeepFlags[i][val]) {
+							// if it is not, assign the distance
+							this->vertexKeepFlags[i][val] = true;
+							vertexDistances[val] = s + 1;
+							newset.insert(val);
+							keptVertices++;
+						}
+					}
+					reverse++;
 				}
 			}
+			allowedVerticesSet = newset;
+		}
 
-			// build search datastructures
-			std::vector<std::pair<unsigned int, unsigned int>> edgesForward;
-			std::vector<std::pair<unsigned int, unsigned int>> edgesReverse;
-			for (int j = 0; j < static_cast<int>(triCount); j++) {
-				unsigned int vert1 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 0];
-				unsigned int vert2 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 1];
-				unsigned int vert3 = meshCall->Objects()[i].GetTriIndexPointerUInt32()[j * 3 + 2];
+		/*
+		 * third step: find start vertex for the connection component
+		 */
+		if (bsCall->GetBindingSiteCount() < 1) {
+			vislib::sys::Log::DefaultLog.WriteError("There are not binding sites provided. No further computation is possible!");
+			return;
+		}
 
-				edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert1, vert2));
-				edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert2, vert3));
-				edgesForward.push_back(std::pair<unsigned int, unsigned int>(vert1, vert3));
-				edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert2, vert1));
-				edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert3, vert2));
-				edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert3, vert1));
-			}
-			// sort the search structures
-			std::sort(edgesForward.begin(), edgesForward.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-				return left.first < right.first;
-			});
-			std::sort(edgesReverse.begin(), edgesReverse.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-				return left.first < right.first;
-			});
-
-			// we reuse the allowedset and switch it with the newset each step
-			std::set<unsigned int> newset;
-			for (int s = 0; s < this->growSizeParam.Param<param::IntParam>()->Value(); s++) {
-				newset.clear();
-				// for each currently allowed vertex
-				for (auto element : allowedVerticesSet) {
-					// search for the start indices in both edge lists
-					auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-						return x.first < val;
-					});
-					auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-						return x.first < val;
-					});
-
-					// go through all forward edges starting with the vertex
-					while ((*forward).first == element && forward != edgesForward.end()) {
-						auto val = (*forward).second;
-						// check whether the endpoint val is not yet in our sets
-						if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
-							if (!this->vertexKeepFlags[i][val]) {
-								// if it is not, assign the distance
-								this->vertexKeepFlags[i][val] = true;
-								vertexDistances[val] = s + 1;
-								newset.insert(val);
-								keptVertices++;
-							}
-						}
-						forward++;
+		// get the atom indices for the binding site
+		unsigned int firstMol;
+		unsigned int firstRes;
+		unsigned int firstAtom;
+		std::vector<vislib::math::Vector<float, 3>> atomPositions;
+		for (unsigned int cCnt = 0; cCnt < molCall->ChainCount(); cCnt++) {
+			firstMol = molCall->Chains()[cCnt].FirstMoleculeIndex();
+			for (unsigned int mCnt = firstMol; mCnt < firstMol + molCall->Chains()[cCnt].MoleculeCount(); mCnt++) {
+				firstRes = molCall->Molecules()[mCnt].FirstResidueIndex();
+				for (unsigned int rCnt = 0; rCnt < molCall->Molecules()[mCnt].ResidueCount(); rCnt++) {
+					// only check the first binding site
+					// we take the average location of the first described amino acid as starting point
+					if (bsCall->GetBindingSite(0)->Count() < 1) {
+						vislib::sys::Log::DefaultLog.WriteError("The provided binding site was empty. No further computation possible!");
+						return;
 					}
+					vislib::Pair<char, unsigned int> bsRes = bsCall->GetBindingSite(0)->operator[](0);
+					if (molCall->Chains()[cCnt].Name() == bsRes.First() &&
+						molCall->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.Second() &&
+						molCall->ResidueTypeNames()[molCall->Residues()[firstRes + rCnt]->Type()] == bsCall->GetBindingSiteResNames(0)->operator[](0)) {
 
-					// do the same thing for all reverse edges
-					while ((*reverse).first == element && reverse != edgesReverse.end()) {
-						auto val = (*reverse).second;
-						// check whether the endpoint val is not yet in our sets
-						if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
-							if (!this->vertexKeepFlags[i][val]) {
-								// if it is not, assign the distance
-								this->vertexKeepFlags[i][val] = true;
-								vertexDistances[val] = s + 1;
-								newset.insert(val);
-								keptVertices++;
-							}
+						firstAtom = molCall->Residues()[firstRes + rCnt]->FirstAtomIndex();
+						for (unsigned int aCnt = 0; aCnt < molCall->Residues()[firstRes + rCnt]->AtomCount(); aCnt++) {
+							unsigned int aIdx = firstAtom + aCnt;
+							float xcoord = molCall->AtomPositions()[3 * aIdx + 0];
+							float ycoord = molCall->AtomPositions()[3 * aIdx + 1];
+							float zcoord = molCall->AtomPositions()[3 * aIdx + 2];
+							atomPositions.push_back(vislib::math::Vector<float, 3>(xcoord, ycoord, zcoord));
 						}
-						reverse++;
 					}
 				}
-				allowedVerticesSet = newset;
 			}
-		} /* end if(growsizeparam > 0) */
+		}
+
+		// average the atom positions
+
+		// search for the vertex closest to the given position
+		float minDist = FLT_MAX;
+		unsigned int minIndex = UINT_MAX;
+		for (unsigned int j = 0; j < vertCount / 3; j=j+3) {
+			if (this->vertexKeepFlags[i][j]) {
+				vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(&meshCall->Objects()[i].GetVertexPointerFloat()[j]);
+				//auto distvec = pos - 
+			}
+		}
 
 
 		/*
-		 * third step: mesh cutting
+		 * fourth step: mesh cutting
 		 */
 		this->vertices[i].resize(keptVertices * 3);
 		this->normals[i].resize(keptVertices * 3);
@@ -349,11 +417,9 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 			}
 		}	
 
-		// TODO find start vertex for the connection component
-		// needed: molecularDataCall, BindingSiteDataCall
 
 		/*
-		 * fourth step: fill the data into the structure
+		 * nth step: fill the data into the structure
 		 */
 		this->meshVector[i].SetVertexData(static_cast<unsigned int>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), NULL, false);
 		this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces[i].size() / 3), this->faces[i].data(), false);

@@ -18,6 +18,8 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_trisoup/CallTriMeshData.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/BindingSiteCall.h"
 
 namespace megamol {
 namespace sombreros {
@@ -89,8 +91,10 @@ namespace sombreros {
 		 *
 		 * @param meshCall The call containing the input mesh. 
 		 * @param tunnelCall The call containing the tunnel data the cut region is based on.
+		 * @param molCall The call containing the molecular data.
+		 * @param bsCall The call containing the binding site data.
 		 */
-		void cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall);
+		void cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
