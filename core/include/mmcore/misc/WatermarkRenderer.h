@@ -16,7 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-
+#include "vislib/math/Vector.h"
 
 using namespace megamol::core;
 
@@ -125,9 +125,20 @@ namespace megamol {
             vislib::graphics::gl::OpenGLTexture2D textureBottomLeft;
             vislib::graphics::gl::OpenGLTexture2D textureBottomRight;
 
+            vislib::math::Vector<float, 2> sizeTopLeft;
+            vislib::math::Vector<float, 2> sizeTopRight;
+            vislib::math::Vector<float, 2> sizeBottomLeft;
+            vislib::math::Vector<float, 2> sizeBottomRight;
+
+            float lastScaleAll;
+            bool  firstParamChange;
+
             /**********************************************************************
             * functions
             **********************************************************************/
+
+            /*   */
+            SIZE_T  WatermarkRenderer::loadFile(const vislib::StringA & name, void **outData);
 
             /**  */
             bool loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename);
