@@ -199,10 +199,16 @@ bool WatermarkRenderer::Render(Call& call) {
 
     // OpenGl states
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    //glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     // Set matrices
     glMatrixMode(GL_PROJECTION);
@@ -230,6 +236,7 @@ bool WatermarkRenderer::Render(Call& call) {
 
     // Reset OpenGl states
     glDisable(GL_BLEND);
+    //glEnable(GL_DEPTH_TEST);
 
     return true;
 }
@@ -388,12 +395,13 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
             }
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
+            // Error is already catch by loadFile function ...
+            //vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
         }
         return false;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [loadTexture] Filename is empty.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [loadTexture] Unable to load file: No filename given\n");
     }
 
     return true;
@@ -413,32 +421,32 @@ SIZE_T  WatermarkRenderer::loadFile(const vislib::StringA & name, void **outData
 
     vislib::StringW filename = static_cast<vislib::StringW>(name);
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": no filename given\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file: No filename given\n");
         return 0;
     }
 
     if (!vislib::sys::File::Exists(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": not existing\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
         return 0;
     }
 
     SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": file is empty\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
         return 0;
     }
 
     *outData = new BYTE[size];
     vislib::sys::FastFile f;
     if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": cannot open file\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
 
     SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load file \"%s\": cannot read whole file\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
