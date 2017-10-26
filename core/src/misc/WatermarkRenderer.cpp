@@ -26,6 +26,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::misc;
 
+
 /*
 * WatermarkRenderer::WatermarkRenderer
 */
@@ -75,7 +76,7 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->paramAlpha);
 
-
+    /* Init variables */
     this->lastScaleAll     = 1.0f;
     this->firstParamChange = false;
 }
@@ -85,13 +86,18 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
 * WatermarkRenderer::WatermarkRenderer
 */
 WatermarkRenderer::~WatermarkRenderer(void) {
+    this->Release();
+}
 
+
+/*
+* WatermarkRenderer::release
+*/
+void WatermarkRenderer::release(void) {
     this->textureBottomLeft.Release();
     this->textureBottomRight.Release();
     this->textureTopLeft.Release();
     this->textureTopRight.Release();
-
-    this->Release();
 }
 
 
@@ -135,14 +141,6 @@ bool WatermarkRenderer::GetExtents(Call& call) {
     // Unused
 
     return true;
-}
-
-
-/*
-* WatermarkRenderer::release
-*/
-void WatermarkRenderer::release(void) {
-    // intentionally empty
 }
 
 
@@ -203,30 +201,31 @@ bool WatermarkRenderer::Render(Call& call) {
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    //glDisable(GL_DEPTH_TEST);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
 
     // Set matrices
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
     glOrtho(0.0f, vpWidth, 0.0f, vpHeight, -1.0, 1.0);
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-
     // Draw help text in front of all
     glTranslatef(0.0f, 0.0f, 1.0f);
 
     // Render watermarks ...
+    glEnable(GL_TEXTURE_2D);
     this->renderWatermark(WatermarkRenderer::TOP_LEFT, vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::TOP_RIGHT, vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_LEFT, vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_RIGHT, vpHeight, vpWidth);
+    glDisable(GL_TEXTURE_2D);
 
     // Reset matrices
     glPopMatrix();
@@ -236,7 +235,6 @@ bool WatermarkRenderer::Render(Call& call) {
 
     // Reset OpenGl states
     glDisable(GL_BLEND);
-    //glEnable(GL_DEPTH_TEST);
 
     return true;
 }
@@ -302,7 +300,6 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
 
     // Draw watermark texture
     if (tex->IsValid()) {
-        glEnable(GL_TEXTURE_2D);
         tex->Bind();
         glColor4f(1.0f, 1.0f, 1.0f, alpha);
         glBegin(GL_QUADS);
@@ -311,7 +308,6 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
             glTexCoord2f(1.0f, 1.0f); glVertex2f(right, bottom);
             glTexCoord2f(0.0f, 1.0f); glVertex2f(left, bottom);
         glEnd();
-        glDisable(GL_TEXTURE_2D);
     }
     else {
         return false;
@@ -328,7 +324,7 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
 
     if (!filename.IsEmpty()) {
 
-        vislib::graphics::gl::OpenGLTexture2D *tex  = NULL;
+        vislib::graphics::gl::OpenGLTexture2D *tex     = NULL;
         vislib::math::Vector<float, 2>        *texSize = NULL;
 
         switch (cor) {
@@ -411,11 +407,9 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
 /*
 * WatermarkRenderer::loadTexture
 *
-* Based on: megamol::core::utility::ResourceWrapper::LoadResource()
-* but without the lookup in the resource folder(s)
+* Based on: megamol::core::utility::ResourceWrapper::LoadResource() but without the lookup in the resource folder(s)
 */
-SIZE_T  WatermarkRenderer::loadFile(const vislib::StringA & name, void **outData) {
-    using vislib::sys::Log;
+SIZE_T WatermarkRenderer::loadFile(vislib::StringA name, void **outData) {
 
     *outData = NULL;
 
@@ -436,14 +430,13 @@ SIZE_T  WatermarkRenderer::loadFile(const vislib::StringA & name, void **outData
         return 0;
     }
 
-    *outData = new BYTE[size];
     vislib::sys::FastFile f;
     if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
         return 0;
     }
 
+    *outData = new BYTE[size];
     SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
     if (num != size) {
         vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());

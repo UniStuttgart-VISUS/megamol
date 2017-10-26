@@ -18,7 +18,7 @@
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/Vector.h"
 
-using namespace megamol::core;
+
 
 namespace megamol {
     namespace core {
@@ -45,7 +45,7 @@ namespace megamol {
             * @return A human readable description of this module.
             */
             static const char *Description(void) {
-                return "Render watermarks.";
+                return "Render watermarks using PNG-files in all four corners of the viewport.";
             }
 
             /**
@@ -138,7 +138,7 @@ namespace megamol {
             **********************************************************************/
 
             /*   */
-            SIZE_T  WatermarkRenderer::loadFile(const vislib::StringA & name, void **outData);
+            SIZE_T loadFile(vislib::StringA name, void **outData);
 
             /**  */
             bool loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename);
