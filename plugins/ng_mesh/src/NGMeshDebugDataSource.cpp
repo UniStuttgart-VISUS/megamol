@@ -68,9 +68,9 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 {
 	std::cout << "loading data" << std::endl;
 
-	ShaderPrgmDataAccessor			shader_prgm_data;
-	MeshDataAccessor				mesh_data;
-	DrawCommandDataAccessor			draw_command_data;
+	ShaderPrgmDataAccessor				shader_prgm_data;
+	MeshDataAccessor					mesh_data;
+	DrawCommandDataAccessor				draw_command_data;
 	ObjectShaderParamsDataAccessor		obj_shader_params;
 	MaterialShaderParamsDataAccessor	mtl_shader_params;
 

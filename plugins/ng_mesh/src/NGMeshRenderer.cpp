@@ -145,9 +145,9 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 }
 
 void NGMeshRenderer::addRenderBatch(
-	ShaderPrgmDataAccessor const&		shader_prgm_data,
-	MeshDataAccessor const&				mesh_data,
-	DrawCommandDataAccessor const&		draw_command_data,
+	ShaderPrgmDataAccessor const&			shader_prgm_data,
+	MeshDataAccessor const&					mesh_data,
+	DrawCommandDataAccessor const&			draw_command_data,
 	ObjectShaderParamsDataAccessor const&	obj_shader_params,
 	MaterialShaderParamsDataAccessor const&	mtl_shader_params)
 {

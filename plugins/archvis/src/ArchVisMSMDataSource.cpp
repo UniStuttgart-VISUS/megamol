@@ -97,8 +97,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	shader_prgm_data.char_cnt = shader_filename.length();
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
-
-	/*
+	
 	// Begin test gltf
 
 	tinygltf::Model model;
@@ -147,13 +146,13 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		model.buffers[index_bufferView.buffer].data.data() + index_bufferView.byteOffset,
 		mesh_data.index_data.byte_size);
 
-	std::cout << "==========================" << std::endl;
-	uint16_t* uint_view = reinterpret_cast<uint16_t*>(mesh_data.index_data.raw_data);
-	for (int i = 0; i < index_buffer_accessor.count; ++i)
-	{
-		std::cout << uint_view[i] << std::endl;
-	}
-	std::cout << "==========================" << std::endl;
+	//std::cout << "==========================" << std::endl;
+	//uint16_t* uint_view = reinterpret_cast<uint16_t*>(mesh_data.index_data.raw_data);
+	//for (int i = 0; i < index_buffer_accessor.count; ++i)
+	//{
+	//	std::cout << uint_view[i] << std::endl;
+	//}
+	//std::cout << "==========================" << std::endl;
 
 	auto vertex_buffer_accessor_0 = model.accessors[model.meshes.front().primitives.front().attributes.begin()->second];
 	auto vertex_bufferView = model.bufferViews[vertex_buffer_accessor_0.bufferView];
@@ -164,13 +163,13 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		model.buffers[vertex_bufferView.buffer].data.data() + vertex_bufferView.byteOffset,
 		mesh_data.vertex_data.byte_size);
 
-	std::cout << "==========================" << std::endl;
-	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
-	for (int i = 0; i < vertex_buffer_accessor_0.count; ++i)
-	{
-		std::cout << float_view[i] << std::endl;
-	}
-	std::cout << "==========================" << std::endl;
+	//std::cout << "==========================" << std::endl;
+	//float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
+	//for (int i = 0; i < vertex_buffer_accessor_0.count * 2; ++i)
+	//{
+	//	std::cout << float_view[i] << std::endl;
+	//}
+	//std::cout << "==========================" << std::endl;
 
 	std::cout << "Index type: " << mesh_data.index_data.index_type << std::endl;
 	std::cout << "Index byte size: " << mesh_data.index_data.byte_size << std::endl;
@@ -221,9 +220,8 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		mesh_shader_params,
 		mtl_shader_params);
 
-	*/
 
-	
+	/*
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
 	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
@@ -308,6 +306,8 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
+
+	*/
 	
 	return true;
 }

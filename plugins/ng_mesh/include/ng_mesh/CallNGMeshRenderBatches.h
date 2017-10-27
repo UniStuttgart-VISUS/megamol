@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -137,12 +138,12 @@ namespace ngmesh {
 					size_t		used_batch_cnt;
 					size_t		available_batch_cnt;
 
-					ShaderPrgmDataAccessor*			shader_prgms;
-					MeshDataAccessor*				meshes;
-					DrawCommandDataAccessor*		draw_commands;
+					ShaderPrgmDataAccessor*				shader_prgms;
+					MeshDataAccessor*					meshes;
+					DrawCommandDataAccessor*			draw_commands;
 					ObjectShaderParamsDataAccessor*		obj_shader_params;
 					MaterialShaderParamsDataAccessor*	mtl_shader_params;
-					uint32_t*				update_flags;
+					uint32_t*							update_flags;
 				};				
 
 				/*
@@ -339,9 +340,9 @@ namespace ngmesh {
 				}
 
 				void addBatch(
-					ShaderPrgmDataAccessor			shader_prgm,
-					MeshDataAccessor				mesh_data,
-					DrawCommandDataAccessor			draw_commands,
+					ShaderPrgmDataAccessor				shader_prgm,
+					MeshDataAccessor					mesh_data,
+					DrawCommandDataAccessor				draw_commands,
 					ObjectShaderParamsDataAccessor		obj_shader_params,
 					MaterialShaderParamsDataAccessor	mtl_shader_params)
 				{
@@ -349,8 +350,9 @@ namespace ngmesh {
 						reallocateHeadBuffer(m_head.available_batch_cnt + 5);
 
 					// calculate byte size of batch data
-					size_t byte_size = shader_prgm.char_cnt
+					size_t byte_size = shader_prgm.char_cnt + 1
 						+ mesh_data.index_data.byte_size + mesh_data.vertex_data.byte_size
+						+ mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute)
 						+ draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand)
 						+ obj_shader_params.byte_size
 						+ mtl_shader_params.elements_cnt * sizeof(MaterialParameters);
@@ -368,18 +370,22 @@ namespace ngmesh {
 					size_t offset = m_data.used_byte_size;
 					m_head.shader_prgms[idx].raw_string = reinterpret_cast<char*>(m_data.raw_buffer + offset);
 					m_head.shader_prgms[idx].char_cnt = shader_prgm.char_cnt;
-					offset += m_head.shader_prgms[idx].char_cnt;
-					std::memcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string, shader_prgm.char_cnt);
+					offset += m_head.shader_prgms[idx].char_cnt + 1;
+					//std::memcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string, shader_prgm.char_cnt);
+					std::strcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string);
 
 					m_head.meshes[idx].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
 					m_head.meshes[idx].vertex_data.byte_size = mesh_data.vertex_data.byte_size;
 					offset += m_head.meshes[idx].vertex_data.byte_size;
 					std::memcpy(m_head.meshes[idx].vertex_data.raw_data, mesh_data.vertex_data.raw_data, mesh_data.vertex_data.byte_size);
+
 					m_head.meshes[idx].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
 					m_head.meshes[idx].index_data.byte_size = mesh_data.index_data.byte_size;
 					m_head.meshes[idx].index_data.index_type = mesh_data.index_data.index_type;
 					offset += m_head.meshes[idx].index_data.byte_size;
 					std::memcpy(m_head.meshes[idx].index_data.raw_data, mesh_data.index_data.raw_data, mesh_data.index_data.byte_size);
+
+					m_head.meshes[idx].vertex_descriptor.stride = mesh_data.vertex_descriptor.stride;
 					m_head.meshes[idx].vertex_descriptor.attribute_cnt = mesh_data.vertex_descriptor.attribute_cnt;
 					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(m_data.raw_buffer + offset);
 					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute);
