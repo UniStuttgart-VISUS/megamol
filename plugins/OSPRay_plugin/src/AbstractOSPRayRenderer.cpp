@@ -729,20 +729,20 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
 
             case geometryTypeEnum::NHSPHERES:
-                if (element.vertexData == NULL) {
+                if (element.raw == NULL) {
                     returnValue = false;
                     break;
                 }
 
                 geo.push_back(ospNewGeometry("spheres"));
 
-                if (element.vertexLength > 3 * sizeof(float)) {
+                if (element.vertexLength > 3) {
                     vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
                     ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
                 } else {
-                    vertexData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float)+ element.colorLength * sizeof(float));
                     ospSet1f(geo.back(), "radius", element.globalRadius);
                     //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
                     //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
@@ -841,14 +841,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             }
 
-            if (material != NULL) {
+            if (material != NULL && geo.size() > 0) {
                 ospSetMaterial(geo.back(), material);
             }
 
-            ospCommit(geo.back());
-
-            ospAddGeometry(world, geo.back());
-
+            if (geo.size() > 0) {
+                ospCommit(geo.back());
+                ospAddGeometry(world, geo.back());
+            }
 
             if (vertexData != NULL) ospRelease(vertexData);
             if (colorData != NULL) ospRelease(colorData);

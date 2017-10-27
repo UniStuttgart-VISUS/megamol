@@ -88,9 +88,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     // Vertex data type check
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
-        vertexLength = 3 * sizeof(float);
+        vertexLength = 3;
     } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-        vertexLength = 4 * sizeof(float);
+        vertexLength = 4;
     }
 
     // Color data type check
