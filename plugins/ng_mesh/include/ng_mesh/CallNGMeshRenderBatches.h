@@ -60,10 +60,10 @@ namespace ngmesh {
 				GLint		size;
 				GLenum		type;
 				GLboolean	normalized;
-				GLsizei		stride;
 				GLsizei		offset;
 			};
-
+			
+			GLsizei		stride;
 			GLuint		attribute_cnt;
 			Attribute*	attributes;
 		};

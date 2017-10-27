@@ -98,7 +98,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
-
+	/*
 	// Begin test gltf
 
 	tinygltf::Model model;
@@ -114,6 +114,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		printf("Failed to parse glTF\n");
 	}
 
+	mesh_data.vertex_descriptor.stride = model.bufferViews[model.accessors[model.meshes.front().primitives.front().attributes.begin()->second].bufferView].byteStride;
 	mesh_data.vertex_descriptor.attribute_cnt = model.meshes.front().primitives.front().attributes.size();
 	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	size_t i = 0;
@@ -121,21 +122,108 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	{
 		std::cout << "Attribute "<< attribute.first << std::endl;
 
+		std::cout << model.accessors[attribute.second].type << std::endl;
 		std::cout << model.accessors[attribute.second].componentType << std::endl;
 		std::cout << model.accessors[attribute.second].count << std::endl;
 		std::cout << model.accessors[attribute.second].byteOffset << std::endl;
+		std::cout << model.accessors[attribute.second].normalized << std::endl;
 
-		mesh_data.vertex_descriptor.attributes[i].type = GL_FLOAT;
-		mesh_data.vertex_descriptor.attributes[i].size = 3;
-		mesh_data.vertex_descriptor.attributes[i].normalized = GL_FALSE;
-		mesh_data.vertex_descriptor.attributes[i].offset = 0;
+		mesh_data.vertex_descriptor.attributes[i].type = model.accessors[attribute.second].componentType;
+		mesh_data.vertex_descriptor.attributes[i].size = model.accessors[attribute.second].type;
+		mesh_data.vertex_descriptor.attributes[i].normalized = model.accessors[attribute.second].normalized;
+		mesh_data.vertex_descriptor.attributes[i].offset = model.accessors[attribute.second].byteOffset;
 
 		++i;
 	}
 
+	// Create local datastorage for actual index and vertex buffer
+	auto index_buffer_accessor = model.accessors[model.meshes.front().primitives.front().indices];
+	auto index_bufferView = model.bufferViews[index_buffer_accessor.bufferView];
+	mesh_data.index_data.index_type = index_buffer_accessor.componentType;
+	mesh_data.index_data.byte_size = index_bufferView.byteLength;
+	mesh_data.index_data.raw_data = new uint8_t[mesh_data.index_data.byte_size];
+	assert((index_bufferView.byteOffset + index_bufferView.byteLength) <= model.buffers[index_bufferView.buffer].data.size());
+	std::memcpy(mesh_data.index_data.raw_data,
+		model.buffers[index_bufferView.buffer].data.data() + index_bufferView.byteOffset,
+		mesh_data.index_data.byte_size);
+
+	std::cout << "==========================" << std::endl;
+	uint16_t* uint_view = reinterpret_cast<uint16_t*>(mesh_data.index_data.raw_data);
+	for (int i = 0; i < index_buffer_accessor.count; ++i)
+	{
+		std::cout << uint_view[i] << std::endl;
+	}
+	std::cout << "==========================" << std::endl;
+
+	auto vertex_buffer_accessor_0 = model.accessors[model.meshes.front().primitives.front().attributes.begin()->second];
+	auto vertex_bufferView = model.bufferViews[vertex_buffer_accessor_0.bufferView];
+	mesh_data.vertex_data.byte_size = vertex_bufferView.byteLength;
+	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size];
+	assert((vertex_bufferView.byteOffset+ mesh_data.vertex_data.byte_size) <= model.buffers[vertex_bufferView.buffer].data.size());
+	std::memcpy(mesh_data.vertex_data.raw_data,
+		model.buffers[vertex_bufferView.buffer].data.data() + vertex_bufferView.byteOffset,
+		mesh_data.vertex_data.byte_size);
+
+	std::cout << "==========================" << std::endl;
+	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
+	for (int i = 0; i < vertex_buffer_accessor_0.count; ++i)
+	{
+		std::cout << float_view[i] << std::endl;
+	}
+	std::cout << "==========================" << std::endl;
+
+	std::cout << "Index type: " << mesh_data.index_data.index_type << std::endl;
+	std::cout << "Index byte size: " << mesh_data.index_data.byte_size << std::endl;
+
+	std::cout << "Vertex buffer byte size: " << vertex_bufferView.byteLength << std::endl;
+
 	// End test gltf
 
-	/*
+	std::mt19937 generator(4215);
+	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
+	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
+
+	draw_command_data.draw_cnt = 1;
+	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
+
+	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
+	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
+
+	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
+	{
+		draw_command_data.data[i].cnt = index_buffer_accessor.count;
+		draw_command_data.data[i].instance_cnt = 1;
+		draw_command_data.data[i].first_idx = 0;
+		draw_command_data.data[i].base_vertex = 0;
+		draw_command_data.data[i].base_instance = 0;
+
+
+		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
+		GLfloat scale = distr(generator);
+		object_transform.SetAt(0, 0, scale);
+		object_transform.SetAt(1, 1, scale);
+		object_transform.SetAt(2, 2, scale);
+
+		object_transform.SetAt(0, 3, loc_distr(generator));
+		object_transform.SetAt(1, 3, loc_distr(generator));
+		object_transform.SetAt(2, 3, loc_distr(generator));
+
+		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
+	}
+
+	mtl_shader_params.elements_cnt = 0;
+
+	
+	m_render_batches.addBatch(
+		shader_prgm_data,
+		mesh_data,
+		draw_command_data,
+		mesh_shader_params,
+		mtl_shader_params);
+
+	*/
+
+	
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
 	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
@@ -214,7 +302,6 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 
 	mtl_shader_params.elements_cnt = 0;
 
-
 	m_render_batches.addBatch(
 		shader_prgm_data,
 		mesh_data,
@@ -222,7 +309,5 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		mesh_shader_params,
 		mtl_shader_params);
 	
-	*/
-
 	return true;
 }

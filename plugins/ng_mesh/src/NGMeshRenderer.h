@@ -273,22 +273,22 @@ namespace ngmesh {
 			{
 				struct Attribute
 				{
-					Attribute(GLenum type, GLint size, GLboolean normalized, GLsizei stride, GLsizei offset)
-						: size(size), type(type), normalized(normalized), stride(stride), offset(offset) {}
+					Attribute(GLenum type, GLint size, GLboolean normalized, GLsizei offset)
+						: size(size), type(type), normalized(normalized), offset(offset) {}
 
 					GLint size;
 					GLenum type;
 					GLboolean normalized;
-					GLsizei stride;
 					GLsizei offset;
 				};
 
-				VertexLayout() : attributes() {}
+				VertexLayout() : stride(0), attributes() {}
 				VertexLayout(GLsizei byte_size, const std::vector<Attribute>& attributes)
-					: attributes(attributes) {}
+					: stride(byte_size), attributes(attributes) {}
 				VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
-					: attributes(attributes) {}
+					: stride(byte_size), attributes(attributes) {}
 
+				GLsizei stride;
 				std::vector<Attribute> attributes;
 			};
 
@@ -364,7 +364,7 @@ namespace ngmesh {
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
 					glEnableVertexAttribArray(attrib_idx);
-					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, attribute.stride, reinterpret_cast<GLvoid*>(attribute.offset));
+					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.stride, reinterpret_cast<GLvoid*>(attribute.offset));
 
 					attrib_idx++;
 				}

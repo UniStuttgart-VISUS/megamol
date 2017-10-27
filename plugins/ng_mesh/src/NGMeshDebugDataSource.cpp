@@ -110,17 +110,16 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	uint_view[1] = 1;
 	uint_view[2] = 2;
 
+	mesh_data.vertex_descriptor.stride = 24;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
 	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[0].size = 3;
 	mesh_data.vertex_descriptor.attributes[0].normalized = GL_FALSE;
-	mesh_data.vertex_descriptor.attributes[0].stride = 24;
 	mesh_data.vertex_descriptor.attributes[0].offset = 0;
 	mesh_data.vertex_descriptor.attributes[1].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[1].size = 3;
 	mesh_data.vertex_descriptor.attributes[1].normalized = GL_FALSE;
-	mesh_data.vertex_descriptor.attributes[1].stride = 24;
 	mesh_data.vertex_descriptor.attributes[1].offset = 12;
 
 	std::mt19937 generator(4215);
