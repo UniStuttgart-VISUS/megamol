@@ -325,6 +325,7 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		unsigned int firstRes;
 		unsigned int firstAtom;
 		std::vector<vislib::math::Vector<float, 3>> atomPositions;
+		std::set<int> atx;
 		for (unsigned int cCnt = 0; cCnt < molCall->ChainCount(); cCnt++) {
 			firstMol = molCall->Chains()[cCnt].FirstMoleculeIndex();
 			for (unsigned int mCnt = firstMol; mCnt < firstMol + molCall->Chains()[cCnt].MoleculeCount(); mCnt++) {
@@ -348,24 +349,23 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 							float ycoord = molCall->AtomPositions()[3 * aIdx + 1];
 							float zcoord = molCall->AtomPositions()[3 * aIdx + 2];
 							atomPositions.push_back(vislib::math::Vector<float, 3>(xcoord, ycoord, zcoord));
+							atx.insert(static_cast<int>(aIdx));
 						}
 					}
 				}
 			}
 		}
 
-		// average the atom positions
+		// TODO compute the average position of close atoms
 
 		// search for the vertex closest to the given position
 		float minDist = FLT_MAX;
 		unsigned int minIndex = UINT_MAX;
-		for (unsigned int j = 0; j < vertCount / 3; j=j+3) {
-			if (this->vertexKeepFlags[i][j]) {
-				vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(&meshCall->Objects()[i].GetVertexPointerFloat()[j]);
-				//auto distvec = pos - 
+		for (unsigned int j = 0; j < vertCount / 3; j++) {
+			if (this->vertexKeepFlags[i][j * 3]) {
+					
 			}
 		}
-
 
 		/*
 		 * fourth step: mesh cutting
