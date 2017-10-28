@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: '-4'
+AlignAfterOpenBracket: DontAlign
+AllowShortFunctionsOnASingleLine: None
+ColumnLimit: '120'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+IndentWidth: '4'
+MaxEmptyLinesToKeep: '2'
+IncludeCategories:
+  - Regex:           '^"(stdafx|PrecompiledHeader)'
+    Priority:        -1
+  - Regex:           '^<'
+    Priority:        1
+  - Regex:           '^"'
+    Priority:        2
