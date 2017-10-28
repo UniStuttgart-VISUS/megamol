@@ -121,13 +121,35 @@ protected:
     virtual void BeforeRender(core::view::AbstractView *view);
 
 private:
+    bool connectSocketCallback(core::param::ParamSlot &p);
+
+    void connectSocket(std::string &address);
+
+    core::param::ParamSlot *findTimeParam(core::view::AbstractView *view);
+
+    bool resizeCallback(core::param::ParamSlot &p);
+
     zmq::context_t zmq_ctx;
 
     zmq::socket_t zmq_socket;
 
+    std::string ip_address;
+
     core::param::ParamSlot fboWidthSlot;
 
     core::param::ParamSlot fboHeightSlot;
+
+    core::param::ParamSlot ipAddressSlot;
+
+    core::param::ParamSlot animTimeParamNameSlot;
+
+    int width;
+
+    int height;
+
+    GLuint color_rbo, depth_rbo, fbo;
+
+    std::vector<unsigned char> color_buf, depth_buf;
 }; /* end class FBOTransmitter */
 
 GLuint createTexture(GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type);
