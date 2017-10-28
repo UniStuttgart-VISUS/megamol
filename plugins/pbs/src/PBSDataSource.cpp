@@ -84,21 +84,21 @@ void PBSDataSource::release(void) {
 
 
 void PBSDataSource::clearBuffers(void) {
-    this->x_data->clear();
+    /*this->x_data->clear();
     this->y_data->clear();
     this->z_data->clear();
     this->nx_data->clear();
     this->ny_data->clear();
     this->cr_data->clear();
     this->cg_data->clear();
-    this->cb_data->clear();
+    this->cb_data->clear();*/
 
     this->with_normals = false;
     this->with_colors = false;
 }
 
 
-bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char>& data, const zfp_type type, const unsigned int num_elements, const double tol) {
+bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char>& data, std::vector<char> &tmp, const zfp_type type, const unsigned int num_elements, const double tol) {
     //unsigned int num_elements = 0;
     //double tol = 0.0;
     //int _type = 0;
@@ -118,7 +118,7 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
     file.seekg(0, std::ios::beg);*/
 
 
-    data.clear();
+    //data.clear();
 
     if (type == zfp_type::zfp_type_none) {
         data.resize(file_buffer_size);
@@ -131,8 +131,9 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
     } else {
 
         auto read_start = std::chrono::high_resolution_clock::now();
-        std::vector<char> buffer(file_buffer_size);
-        if (!file.read(buffer.data(), file_buffer_size)) {
+        //std::vector<char> buffer(file_buffer_size);
+        tmp.resize(file_buffer_size);
+        if (!file.read(tmp.data(), file_buffer_size)) {
             // error occurred during read
             vislib::sys::Log::DefaultLog.WriteError("PBSDataSource::readPBSFile: Could not read file\n");
             //file.close();
@@ -152,7 +153,7 @@ bool PBSDataSource::readPBSFile(std::ifstream& file, const size_t file_buffer_si
 
         zfp_stream_set_accuracy(zfp, tol);
 
-        bitstream* stream = stream_open(buffer.data(), buffer.size());
+        bitstream* stream = stream_open(tmp.data(), tmp.size());
 
         zfp_stream_set_bit_stream(zfp, stream);
 
@@ -201,6 +202,12 @@ bool PBSDataSource::read(void) {
     unsigned int num_elements = 0;
     //double gBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+    /*std::vector<char> buffer(5000000000);
+    std::vector<char> tmp_buffer(5000000000);*/
+
+    std::vector<char> buffer(1);
+    std::vector<char> tmp_buffer(1);
+
     for (int idx = start_idx; idx <= end_idx; idx++) {
         for (unsigned int attr = 0; attr < max_num_attributes; attr++) {
             // construct final filepath
@@ -229,12 +236,14 @@ bool PBSDataSource::read(void) {
                 auto file_buffer_size = file_size - file.tellg();
 
                 // read file
-                std::vector<char> buffer;
-                if (!this->readPBSFile(file, file_buffer_size, buffer, type, num_elements, tol)) {
+                //std::vector<char> buffer;
+                if (!this->readPBSFile(file, file_buffer_size, buffer, tmp_buffer, type, num_elements, tol)) {
                     file.close();
                     return false;
                 }
                 file.close();
+
+                auto copy_start = std::chrono::high_resolution_clock::now();
 
                 if (buffer.size() > 0) {
                     auto attr_type = static_cast<attribute_type>(attr);
@@ -275,6 +284,9 @@ bool PBSDataSource::read(void) {
                         return false;
                     }
                 }
+
+                auto copy_duration = std::chrono::high_resolution_clock::now() - copy_start;
+                vislib::sys::Log::DefaultLog.WriteInfo("Copy duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(copy_duration));
             } else {
                 vislib::sys::Log::DefaultLog.WriteInfo("PBSDataSource::read: Attribute %s is missing\n", this->filename_prefixes[attr]);
             }

@@ -128,7 +128,7 @@ private:
      *
      * @return True, if file was successfully read
      */
-    bool readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char> &data, const zfp_type type, const unsigned int num_elements, const double tol);
+    bool readPBSFile(std::ifstream& file, const size_t file_buffer_size, std::vector<char> &data, std::vector<char> &tmp, const zfp_type type, const unsigned int num_elements, const double tol);
 
     bool read(void);
 
