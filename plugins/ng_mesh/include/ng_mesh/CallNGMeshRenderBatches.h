@@ -405,18 +405,21 @@ namespace ngmesh {
 					m_head.mtl_shader_params[idx].elements_cnt = mtl_shader_params.elements_cnt;
 					offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[idx].elements_cnt;
 					std::memcpy(m_head.mtl_shader_params[idx].data, mtl_shader_params.data, mtl_shader_params.elements_cnt * sizeof(MaterialParameters));
+
+					// New batch has been added, set update flags
+					m_head.update_flags[idx] = SHADER_BIT | MESH_BIT | DRAWCOMMANDS_BIT | MESHPARAMS_BIT | MATERIAL_BIT;
 				}
 
 				void resetUpdateFlags(size_t batch_idx) { m_head.update_flags[batch_idx] = 0; }
 
 				size_t getBatchCount() const { return m_head.used_batch_cnt; }
 
-				ShaderPrgmDataAccessor const&		getShaderProgramData(size_t batch_idx) const { return m_head.shader_prgms[batch_idx]; }
-				MeshDataAccessor const&				getMeshData(size_t batch_idx) const { return m_head.meshes[batch_idx]; }
-				DrawCommandDataAccessor	const&		getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
+				ShaderPrgmDataAccessor const&			getShaderProgramData(size_t batch_idx) const { return m_head.shader_prgms[batch_idx]; }
+				MeshDataAccessor const&					getMeshData(size_t batch_idx) const { return m_head.meshes[batch_idx]; }
+				DrawCommandDataAccessor	const&			getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
 				ObjectShaderParamsDataAccessor const&	getObjectShaderParams(size_t batch_idx) const { return m_head.obj_shader_params[batch_idx]; }
 				MaterialShaderParamsDataAccessor const&	getMaterialShaderParams(size_t batch_idx) const { return m_head.mtl_shader_params[batch_idx]; }
-				uint32_t					getUpdateFlags(size_t batch_idx) const { return m_head.update_flags[batch_idx]; }
+				uint32_t								getUpdateFlags(size_t batch_idx) const { return m_head.update_flags[batch_idx]; }
 			};
 		
 		public:
@@ -465,7 +468,7 @@ namespace ngmesh {
 			/**
 			 *
 			 */
-			void setRenderBatches(RenderBatchesData const* render_batches)
+			void setRenderBatches(RenderBatchesData* render_batches)
 			{
 				m_render_batches = render_batches;
 			}
@@ -473,14 +476,14 @@ namespace ngmesh {
 			/**
 			 *
 			 */
-			RenderBatchesData const* getRenderBatches()
+			RenderBatchesData* getRenderBatches()
 			{
 				return m_render_batches;
 			}
 		
 		private:
 		
-			RenderBatchesData const* m_render_batches;
+			RenderBatchesData* m_render_batches;
 		
 	};
 

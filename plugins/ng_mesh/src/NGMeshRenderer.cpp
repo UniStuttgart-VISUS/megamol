@@ -216,13 +216,13 @@ void NGMeshRenderer::addRenderBatch(
 }
 
 void NGMeshRenderer::updateRenderBatch(
-	size_t																	idx,
-	ShaderPrgmDataAccessor const&		shader_prgm_data,
-	MeshDataAccessor const&				mesh_data,
-	DrawCommandDataAccessor const&		draw_command_data,
-	ObjectShaderParamsDataAccessor const&		obj_shader_params,
+	size_t									idx,
+	ShaderPrgmDataAccessor const&			shader_prgm_data,
+	MeshDataAccessor const&					mesh_data,
+	DrawCommandDataAccessor const&			draw_command_data,
+	ObjectShaderParamsDataAccessor const&	obj_shader_params,
 	MaterialShaderParamsDataAccessor const&	mtl_shader_params,
-	uint32_t																update_flags)
+	uint32_t								update_flags)
 {
 	if (idx >= m_render_batches.size())
 	{
@@ -246,23 +246,73 @@ void NGMeshRenderer::updateRenderBatch(
 
 	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESH_BIT) > 0)
 	{
-		// TODO check if mesh buffer need reallocation
+		std::cout << "Update Mesh!" << std::endl;
+		m_render_batches[idx].mesh.reset();
+
+		Mesh::VertexLayout layout;
+		layout.stride = mesh_data.vertex_descriptor.stride;
+		for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
+		{
+			layout.attributes.push_back(Mesh::VertexLayout::Attribute(
+				mesh_data.vertex_descriptor.attributes[i].type,
+				mesh_data.vertex_descriptor.attributes[i].size,
+				mesh_data.vertex_descriptor.attributes[i].normalized,
+				mesh_data.vertex_descriptor.attributes[i].offset)
+			);
+		}
+		m_render_batches[idx].mesh = std::make_unique<Mesh>(
+			mesh_data.vertex_data.raw_data,
+			mesh_data.vertex_data.byte_size,
+			mesh_data.index_data.raw_data,
+			mesh_data.index_data.byte_size,
+			layout,
+			mesh_data.index_data.index_type
+			);
 	}
 
 	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::DRAWCOMMANDS_BIT) > 0)
 	{
-		// TODO check if buffer needs reallocation
+		m_render_batches[idx].draw_commands.reset();
+
+		// Create GPU buffer for draw commands
+		m_render_batches[idx].draw_commands = std::make_unique<BufferObject>(
+			GL_DRAW_INDIRECT_BUFFER,
+			draw_command_data.data,
+			draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
+			GL_DYNAMIC_DRAW
+			);
+
+		m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
 	}
 
 	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESHPARAMS_BIT) > 0)
 	{
-		// TODO check if buffer needs reallocation
+		m_render_batches[idx].obj_shader_params.reset();
+
+		// Create GPU buffer for mesh related shader parameters
+		m_render_batches[idx].obj_shader_params = std::make_unique<BufferObject>(
+			GL_SHADER_STORAGE_BUFFER,
+			obj_shader_params.raw_data,
+			obj_shader_params.byte_size,
+			GL_DYNAMIC_DRAW
+			);
 	}
 
 	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MATERIAL_BIT) > 0)
 	{
-		// TODO check if buffer needs reallocation
+		m_render_batches[idx].mtl_shader_params.reset();
+
+		// Create GPU buffer for material related shader parameters
+		//TODO build textures from input?
+		m_render_batches[idx].mtl_shader_params = std::make_unique<BufferObject>(
+			GL_SHADER_STORAGE_BUFFER,
+			mtl_shader_params.data,
+			mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
+			GL_DYNAMIC_DRAW
+			);
 	}
+
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 }
 
 
@@ -343,6 +393,8 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 				render_batches->getObjectShaderParams(i),
 				render_batches->getMaterialShaderParams(i)
 			);
+
+			render_batches->resetUpdateFlags(i);
 		}
 		else
 		{
@@ -357,6 +409,8 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 					render_batches->getMaterialShaderParams(i),
 					render_batches->getUpdateFlags(i)
 				);
+
+				render_batches->resetUpdateFlags(i);
 			}
 		}
 	}

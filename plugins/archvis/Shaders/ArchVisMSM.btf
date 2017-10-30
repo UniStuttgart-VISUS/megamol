@@ -27,9 +27,13 @@ uniform mat4 proj_mx;
 
 in vec3 v_normal;
 in vec3 v_position;
+in vec2 v_uv;
+
+out vec3 normal;
 
 void main()
 {
+    normal = v_normal;
 
     //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
@@ -44,6 +48,8 @@ void main()
         <snippet type="version">430</snippet>
         <snippet name="body" type="string">
 <!--
+in vec3 normal;
+
 out layout(location = 0) vec4 frag_colour;
 
 void main(void) {
