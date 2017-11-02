@@ -16,17 +16,16 @@
 <a name="overview"></a>
 
 ## Overview
-MegaMol&trade; is a visualization middleware used to visualize point-based molecular datasets. This
-software is developed by the MegaMol&trade; team, at the TU Dresden, Germany, and the Univer-
-sity of Stuttgart, Germany. The project was started in the Collaborative Research Center 716,
-subproject D.3, at the Visualization Research Center (VISUS), University of Stuttgart, Germany.
-Development involves the Computer Graphics and Visualization Group of the TU Dresden, Ger-
-many.
+
+MegaMol&trade; is a visualization middleware used to visualize point-based molecular datasets.
+The MegaMol&trade; project was started in the Collaborative Research Center 716, subproject D.3, at the Visualization Research Center (VISUS), University of Stuttgart, Germany.
+Today, it is governed by a number of teams at the TU Dresden and the University of Stuttgart.
 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
 Visit the project [website](https://github.com/UniStuttgart-VISUS/megamol.git "Megamol homepage") for downloads and more information.
 
 ### License
+
 MegaMol&trade; is freely and publicly available as open source following the therms of the BSD License.
 Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
 Alle Rechte vorbehalten.
@@ -43,42 +42,44 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 
 ## Installation and Setup
 
-This chapter discusses installation and setup of MegaMol&trade; , either from the pre-built binary packages or from the source code repository. The latter is, however, meant for experience users. MegaMol&trade; targets Microsoft Windows (Windows 7 or newer, x86 and x64) and Linux (x64) as supported environments. Currently, Ubuntu is used as Linux distribution for development.
-Further platforms are not considered during the development. While MegaMol&trade; might work on further platforms, the development team will currently not grant any support for problems on these environments.
+This chapter discusses installation and setup of MegaMol&trade; , either from the pre-built binary packages or the source code.
+The latter is, however, meant for experienced users. MegaMol&trade; targets Microsoft Windows (Windows 7 or newer, x86 and x64) and Linux (x64) as supported environments.
+Currently, Ubuntu is used as Linux distribution for development.
+Further platforms are not considered during the development. While MegaMol&trade; might work on further platforms, the development team will currently not grant any support for problems with these environments.
 
-### Building from source
+### Building from Source
 
 #### Windows
 
-For Window you will need to install `CMake`, and just load the `CMakeLists.txt` in the root directory of the repository. Click `Configure` a few times (until all red entries disappear).Then click `Generate` to generate the build files.
+For Windows, you have to install (CMake)[https://cmake.org/], and load the `CMakeLists.txt` present in the root directory of the repository. 
+Next, click `Configure` a few times (until all red entries disappear).
+Then click `Generate` to generate the build files.
 
 <center>
 <a name="cmake_windows"></a>
 <img src="pics/cmake_windows.png" alt="CMake Windows" style="width: 768px;"/>
 <p style="width: 768px;">
-`CMake` screenshot showing generation of build files.
+Screenshot of `cmake-gui` after generating build files.
 </p>
 </center>
 
-<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see [ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on github.
-
-
+<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB, and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see [ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on GitHub.
 
 #### Linux
 
-Tested with
+Tested with:
 
     $ cat /proc/version
     Linux version 4.4.0-93-generic (buildd@lgw01-03) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4) ) #116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017
 
-As prerequisites, following packages from the repository are neccessary:
+As prerequisites, following packages from the repository are required:
 
     $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev \
                        uuid-dev libexpat-dev libunwind-dev libxrandr-dev \
                        libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
 
 
-First, download the software package from github:
+First, download the software package from GitHub:
 
     $ git clone https://github.com/UniStuttgart-VISUS/megamol.git
 
@@ -122,7 +123,7 @@ Create a file `megamolconfig.lua` in this bin directory, with the following cont
     return "Done with megamolconfig.lua. Bye!"
 ```
 
-The following paragraphs explain the most important steps of preparing script in more detail.
+The following paragraphs explain the essential steps of preparing a script in more detail.
 
 #### General Settings
 
@@ -133,7 +134,7 @@ Locate line 3 containing the tag `mmSetAppDir`. Both relative and absolute path 
 ```
 #### Logging
 
-Line 6-8 configures the log mechanism of MegaMol&trade; . Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. Specifying a log file and the level informs MegaMol&trade; to write a log file and print the messages of the requested level into that file. The *LogLevel* is a numeric value. All messages with lower numeric values will be printed (or saved). The asterisk `*` stands for the highest numeric value, thus printing all messages.
+Line 6-8 configures the logging mechanism of MegaMol&trade; . Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. Specifying a log file and the level informs MegaMol&trade; to write a log file and print the messages of the requested level into that file. The *LogLevel* is a numeric value. All messages with lower numeric values will be printed (or saved). The asterisk `*` stands for the highest numeric value, thus printing all messages.
 
 ```lua
     mmSetLogFile("")
@@ -149,18 +150,18 @@ Line 9+10 show how to set your shader and resource directories.
     mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
     mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
 ```
-The *AddDir* commands set the paths for the respective resource.
+
+The *AddDir* commands set the paths for the respective resources.
 
 #### Plugins
 
 Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
 
-- `path` should be the path to find the plugin in. The example configuration file assumes
+- `path` should be the path to find the plugin. The example configuration file assumes
 to find the plugins in the same directory as the MegaMol&trade; executable (which is the
-case for Windows installations. On Linux systems you need to change this path (e.g. to
-../../lib/megamol).
+case for Windows installations. On Linux systems, you need to change this path, e.g., to `../../lib/megamol`.
 - `name` is the file name of the plugin.
-- `action` refers to an internal parameter of MegaMol&trade; and should always be include.
+- `action` refers to an internal parameter of MegaMol&trade; and should always be included.
 
 Rendering modules from plugins require shader codes to function. MegaMol&trade; searches these codes in all registered shader directories. To register a shader directory, add a corresponding tag to the configuration file.
 
@@ -171,7 +172,7 @@ Rendering modules from plugins require shader codes to function. MegaMol&trade; 
 #### Global Settings
 
 The configuration file also specifies global settings variables which can modify the behavior of different modules. Two such variables are set in the example configuration file.
-On line 14 the variable `*-window` is set. This variable specifies the default position and size for all rendering windows MegaMol&trade; will create. The asterisk represents any window name. If you set a variable with a specific name, windows with exactly this name will respect the settings variable. For example, `test-window` will specify the value for the window created by the view instance test.
+In line 14 the variable `*-window` is set. This variable specifies the default position and size for all rendering windows MegaMol&trade; will create. The asterisk represents any window name. If you set a variable with a specific name, windows with exactly this name will respect the settings variable. For example, `test-window` will specify the value for the window created by the view instance test.
 
 ```lua
     mmSetConfigValue("*-window", "w720h720")
@@ -180,7 +181,8 @@ On line 14 the variable `*-window` is set. This variable specifies the default p
 The value itself contains five variables:
 - The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
 - The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
-- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons and border from the created window. This variable allows to create borderless windows filling the complete screen for full screen rendering.
+- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons, and border from the created window. 
+This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
 
 The second settings variable, specified on line 15, activates (or deactivates) the GUI of the console front end, that is the AntTweakBar.
 
@@ -188,8 +190,8 @@ The second settings variable, specified on line 15, activates (or deactivates) t
     mmSetConfigValue("consolegui", "on")
 ```
 
-This concludes the building and configuring of MegaMol&trade; . Test your installation following
-the description in the following section.
+This concludes the building and configuring of MegaMol&trade; .
+Test your installation following the description in the following section.
 
 <a name="tests"></a>
 
@@ -245,12 +247,12 @@ The resulting output should look something like this:
     200|Core Instance destroyed
     200|LRH Server socket closed
 
-Alternatively, you can decend into the bin directory and start the front end directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
+Alternatively, you can descend into the bin directory and start the front end directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
 
     cd bin
     LD_LIBRARY_PATH=../lib ./mmconsole
 
-This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script. MegaMol&trade; should start and print several messages to the console. The leading number of each line, is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above. For a better test you should invoke MegaMol&trade; requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries and shader codes are correctly found and are working. To do this, try: 
+This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script. MegaMol&trade; should start and print several messages to the console. The leading number of each line is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above. For a better test, you should invoke MegaMol&trade; requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. To do this, try: 
 
     $ ./megamol.sh -i testspheres inst
 
@@ -258,25 +260,25 @@ This direct invocation is not recommended. Thus, the remaining examples in this 
 <a name="testrunpic"></a>
 <img src="pics/testspheres.png" alt="First test results" style="width: 768px;"/>
 <p style="text-align: left; width: 768px;">
-MegaMol running the testspheres instance. The highlighted option in the AntTweak-
-Bar on the right side of the window adjusts the animation speed.
+Screenshot MegaMol running the test spheres instance. 
+The highlighted option in the AntTweak-Bar on the right side of the window adjusts the animation speed.
 </p>
 </center>
 
-Dont mind the `Ignoring Xlib error: error code n request code m` messages.
-MegaMol&trade; should now open a rendering window showing a generated data set with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol&trade; instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter you can adjust the playback speed of the animation.
+Do not mind the `Ignoring Xlib error: error code n request code m` messages.
+MegaMol&trade; should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol&trade; instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter, you can adjust the playback speed of the animation.
 
 <a name="viewing-data-sets"></a>
 
 ## Viewing Data Sets
 
-In this chapter we discuss the principle usage of the prepared project files for data set viewing. This project script files are available in the *script and example* package from the MegaMol&trade; project website.
+In this chapter, we discuss the principle usage of the prepared project files for data set viewing. This project script files are available in the *script and example* package from the MegaMol&trade; project website.
 
 <a name="modules-views-calls"></a>
 
 ### Modules, Views and Calls
 
-The run time functionality of MegaMol&trade; is constructed by *modules* and *calls*. These two type of objects are instantiated at run time, interconnected and build the *module graph*. The figure [Example Graph](#examplegraph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. The connection end point at the modules are *CallerSlots*, shown as red triangles, and *CalleeSlots* shown as green triangles.
+The runtime functionality of MegaMol&trade; is constructed by *modules* and *calls*. These two type of objects are instantiated at runtime, interconnected and build the *module graph*. The figure [Example Graph](#examplegraph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. The connection endpoints at the modules are *CallerSlots*, shown as red triangles, and *CalleeSlots* shown as green triangles.
 
 <center>
 <a name="examplegraph"></a>
@@ -286,23 +288,22 @@ An example module graph. Left-most module view of class View3D represents the re
 </p>
 </center>
 
-The module graph follows the pull pattern. This means, that modules request function invocation by other modules. For example, the *view* modules needs to update the window content. The *view* modules thus invokes the *renderer* module to provide a new rendering. The *renderer* calls the data source if new data is available or to provide the old cached data.
+The module graph follows the pull pattern. This means that modules request function invocation by other modules. For example, the *view* module needs to update the window content. The *view* module thus invokes the *renderer* module to provide a new rendering. The *renderer* calls the data source if new data is available or to provide the old cached data.
 
 #### Modules and calls
 
-*Modules* are the functional entities of MegaMol&trade; . They provide several programmatic access points, the *slots*. Two types of these slots are shown in figure [Example Graph](#examplegraph) as colored arrow heads.
+*Modules* are the functional entities of MegaMol&trade; . They provide several programmatic access points, the *slots*. Two types of these slots are shown in figure [Example Graph](#examplegraph) as colored arrowheads.
 
 *CalleeSlots* are access points of modules, through which these can be called to perform a function. For example, modules of class `SimpleSphereRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked.The counterparts are CallerSlots which are outgoing access points. These allow modules to call other modules. Modules of class `View3D` provide a corresponding slot `rendering` to call a connected renderer.
 These two types of slots are connected using objects of *call* classes. These are shown as gray boxes in figure [Example Graph](#examplegraph). Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
 
-*Calls* do not contain signification functionality. Instead they are thin interfaces meant for data transport. For example, data to be visualized is loaded by data source modules. In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data trough it’s  CalleeSlot*. The data is accessed through a *MultiParticleDataCall*. The call, however, does not copy the data, but provides access to the data in terms of memory pointers, and meta data. This avoidance of copy operations is most important and one of the core design ideas of MegaMol&trade; .
+*Calls* should be lightweight. Instead, they are thin interfaces meant for data transport. For example, data to be visualized is loaded by data source modules. In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. The data is accessed through a *MultiParticleDataCall*. The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. This avoidance of copy operations is most important and one of the core design ideas of MegaMol&trade; .
 
-*Parameter slots* are the third type of slots. These are access points to exposed parameters controlling the functionality. Such parameters are automatically included in the  front end’s GUI. Examples of such parameters are the setup of the virtual camera and light source in modules of type `View3D` or the data set file name in data source modules.  
+*Parameter slots* are the third type of slots. These are access points to exposed parameters controlling the functionality. Such parameters are automatically included in the front end’s GUI. Examples of such parameters are the setup of the virtual camera and light source in modules of type `View3D` or the dataset file name in data source modules.  
 
 The *module graph* is configured for MegaMol&trade; using a project file. These files define modules
-and interconnecting calls for different instance specifications. There are two type of instances:
-views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). The starting command line of the console front
-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
+and interconnecting calls for different instance specifications. There are two types of instances:
+views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). The starting command line of the console front-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
 
 #### Views 
 <a name=views></a>
@@ -311,16 +312,16 @@ end loads project files (using `-p`) and requests instantiation of views and job
 
     $ ./megamol.sh -p ../docs/samples/projects/pdbcartoonview.mmprj -i pdbcartoonview pv --paramfile ../docs/samples/projects/pdbmolview02.param -v ::pdbdata::pdbFilename ../docs/samples/sampledata/1m40_sim.pdb -v ::pdbdata::xtcFilename ../docs/samples/sampledata/1m40_100frames.xtc
 
-, then the module will be created with the full name `::inst::data`. Correspondingly, it’s parameter slot `filename` can be globally addressed by `::inst::data::filename`. This allows for the instantiation of several independent view instances. For each view instance a rendering window will be created. To provide the content for the rendering window, each view instance description needs to provide a *default view*, usually via the `viewmod` attribute of the view tag in the MegaMol&trade; project file. The value of this attribute is the name for the view module to be called by the window management code. This module class must be implemented by deriving from `::megamol::core::view::AbstractView`. Typically, you use `View3D` or `View2D`.
+Then the module will be created with the full name `::inst::data`. Correspondingly, it’s parameter slot `filename` can be globally addressed by `::inst::data::filename`. This allows for the instantiation of several independent view instances. For each view instance, a rendering window will be created. To provide the content for the rendering window, each view instance description needs to provide a *default view*, usually via the `viewmod` attribute of the view tag in the MegaMol&trade; project file. The value of this attribute is the name for the view module to be called by the window management code. This module class must be implemented by deriving from `::megamol::core::view::AbstractView`. Typically, you use `View3D` or `View2D`.
 MegaMol&trade; provides some internal description of views which can be instantiated without loading a project file first. The view description *TestSpheres* used in section [Test](#tests) is one example of such a built-in description.
 
 <a name="project-files"></a>
 
 ### Project Files
 
-Project files are the primary method to start up MegaMol&trade; . The snippets below show the content of the project file `simple_siff.mmprj` and `pdbcartoonview.mmprj` which can be used to simply view the sample particle data sets.
+Project files are the primary method to start up MegaMol&trade; . The snippets below show the content of the project file `simple_siff.mmprj` and `pdbcartoonview.mmprj` which can be used to view the sample particle datasets.
 
-Although, it is possible to host multiple instance descriptions in a single project file its is recommended to only have one description per file. Both file define a *view*, which is the only node in the top level node `MegaMol`. The other keywords give a description for the behavior of this view.
+Although, it is possible to host multiple instance descriptions in a single project file it is recommended to only have one description per file. Both files define a *view*, which is the only node in the top level node `MegaMol`. The other keywords describe the behavior of this view.
 
 Example 1: `simple_siff.mmprj`
 ```xml
@@ -403,9 +404,10 @@ All used data source modules use mainly slots with the same names, i.e. a *Param
                 <param name="colour" value="#80808000" />
         </module>
 ```
+
 One important function of project files can be seen in the code for `simple_siff.mmprj`: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
 
-The following block deals with the modules being interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does therefore work using relative names.
+The following block deals with the modules being interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targetted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does, therefore, work using relative names.
 
 ```xml
         <!-- connecting calls pdbcartoonview.mmprj -->
@@ -427,7 +429,7 @@ Additionally, the `simple_siff.mmprj` project includes the module *ScreenShooter
         </module>
 ```
 
-<b>Note</b>: If you experience problems with one of the renderers, for example due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e. change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
+<b>Note</b>: If you experience problems with one of the renderers, for example, due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e., change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
 
 ### View Interaction
 
@@ -440,7 +442,7 @@ Some useful controls:
 - Hold *alt* while holding and dragging the *left mouse button* moves the camera orthogonally to the viewing direction.
 - Hold the *middle mouse button* and move your mouse up or down to zoom the view by move the camera forwards or backwards. Note that if you zoom in too much, parts of the data set will be clipped by the near-clipping plane.
 - Hold *alt* while holding and dragging the *middle mouse button* zoom the view by changing the opening angle of the camera.
-- Hold *control* while holding and dragging the *middle mouse button* moves the look-at point forwards or backwards, changing the center for the corresponding rotation. Use the parameter
+- Hold *control* while holding and dragging the *middle mouse button* moves the look-at point forwards or backwards, changing the center of the corresponding rotation. Use the parameter
 `showLookAt` of the view to visualize the look-at point for better adjustment.
 
 <a name="makescreenshot"></a>
@@ -451,7 +453,7 @@ MegaMol&trade; has special functions to create high-resolution screen shoots of 
 
 To connect the `ScreenShooter` with your view, you need to set the instance name of your view instance in the corresponding variable `inst::screenshooter::anim` (e.g. to `inst`). When making single screen shots, set the option `makeAnim` in the group `inst::screenshooter::anim` to `disabled`, as shown in the figure. Ignore the remaining options in that group. These options will be explained in section [Making Simple Videos](#makevideo), as they are used to produce videos.
 
-The parameters `imgWidth` and `imgHeight` specify the size of the screenshot to be rendered. These values are not limited to the window size and can be, in theory, arbitrarily large. If these values are getting large, the image can be rendered in several tiles, i.e. subimages. The size for these tiles is specified by `tileWidth` and `tileHeight`. However, many renderers have problems with producing these tiled images. It is, thus, recommended to set `tileWidth` and `tileHeight` to be at least as large as `imgWidth` and `imgHeight`. The values for `tileWidth` and `tileHeight` are limited by the maximum texture size, maximum frame buffer object size and graphics memory size of your graphics card. Thus, these values are often limited.
+The parameters `imgWidth` and `imgHeight` specify the size of the screenshot to be rendered. These values are not limited to the window size and can be, in theory, arbitrarily large. If these values are getting large, the image can be rendered in several tiles, i.e., sub-images. The size for these tiles is specified by `tileWidth` and `tileHeight`. However, many renderers have problems with producing these tiled images. It is, thus, recommended to set `tileWidth` and `tileHeight` to be at least as large as `imgWidth` and `imgHeight`. The values for `tileWidth` and `tileHeight` are limited by the maximum texture size, maximum frame buffer object size and graphics memory size of your graphics card. Thus, these values are often limited.
 
 <center>
 <a name="screenshooter"></a>
@@ -465,16 +467,16 @@ The parameter filename specifies the path to the image file to be created. MegaM
 
 ### Making simple Videos
 
-MegaMol&trade; cannot create video files directly. However, MegaMol&trade; can create a sequence of screen shots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screen shots ([ScreenShots](#makescreenshot)).
-Enable the option `makeAnim` to make a screen shot sequence.
+MegaMol&trade; cannot create video files directly. However, MegaMol&trade; can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
+Enable the option `makeAnim` to make a screenshot sequence.
 
-The parameters `from` and `to` specify the time codes to start and end the animation. The parameter `step` specifies the time code increment between two screen shots.
-For example, if you specify `from=0`, `to=100`, and `step= 10` (assuming the data set stores enough time frames), 11 screen shots will be created and stored. These will show the data set at the times 0, 10, 20, ... , 90, and 100. The screen shot files names will be extended by an increasing number: e.g. `test.00000.png`, `test.00001.png`, `test.00002.png`, ...
+The parameters `from` and `to` specify the time codes to start and end the animation. The parameter `step` specifies the time code increment between two screenshots.
+For example, if you specify `from=0`, `to=100`, and `step= 10` (assuming the dataset stores enough time frames), 11 screenshots will be created and stored. These will show the data set at times 0, 10, 20, ... , 90, and 100. The screenshot files names will be extended by an increasing number: e.g. `test.00000.png`, `test.00001.png`, `test.00002.png`, ...
 This sequence of image files can then be merged to produce a video file, e.g. using avconv:
 
     $ avconv -r 30 -i test.%05d.png test.mp4
 
-<b>KNOWN BUG</b>: several renderers will request the best data they can get. As usually data is loaded asynchronously, the correct data is often not available yet and the best data is the data from a slightly wrong time. While this is not a big deal for viewing data, it is fatal when rendering images for videos. Many renderers thus expose a parameter `forceTime`, or with a similar name. Set this parameter to `true` and the renderer will always show the correct data. It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
+<b>KNOWN BUG</b>: several renderers will request the best data they can get. As usually data is loaded asynchronously, the correct data is often not available yet, and the best data is the data from a slightly wrong time. While this is not a big deal for viewing data, it is fatal when rendering images for videos. Many renderers thus expose a parameter `forceTime`, or with a similar name. Set this parameter to `true` and the renderer will always show the correct data. It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
 
 <a name="jobs"></a>
 
@@ -490,12 +492,12 @@ Jobs are the second type of instances available at the MegaMol&trade; runtime (c
     <job name="convjob" jobmod="job">
 ```
 
-One significant limitation of this release, is that the MegaMol&trade; Configurator is only able to edit view instance descriptions, see section [Configurator](#configurator). If you want graphical assistance in creating a job description, the recommended way is to create a view instance description with all required modules and calls. Use a `DataWriterJob` module as entry point. Save the corresponding project file and edit it manually with a text editor. Replace the `<view>` tags with the similarly behaving
+One significant limitation of this release is that the MegaMol&trade; Configurator is only able to edit view instance descriptions, see section [Configurator](#configurator). If you want graphical assistance in creating a job description, the recommended way is to create a view instance description with all required modules and calls. Use a `DataWriterJob` module as an entry point. Save the corresponding project file and edit it manually with a text editor. Replace the `<view>` tags with the similarly behaving
 `<job>` tags and adjust the corresponding attributes.
 
 ### Converting to MMPLD
 
-The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading binary memory dump of MegaMol&trade; meant for small and mid-sized data sets (1-10 mio. particles). MegaMol&trade; can convert most of it’s supported file formats to MMPLD file format. More precisely, all file formats which are loaded by a MegaMol&trade; module supporting the `MultiParticleDataCall` can be converted to MMPLD. For this, specify a converter job using a `DataWriterJob` module and a `MMPLDWriter` module. The content of the project file `makemmpld.mmprj` which can be used to convert data into the MMPLD file format, is shown below.
+The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading binary memory dump of MegaMol&trade; meant for small and mid-sized datasets (1-10 mio. particles). MegaMol&trade; can convert most of it’s supported file formats to MMPLD file format. More precisely, all file formats which are loaded by a MegaMol&trade; module supporting the `MultiParticleDataCall` can be converted to MMPLD. For this, specify a converter job using a `DataWriterJob` module and a `MMPLDWriter` module. The content of the project file `makemmpld.mmprj` which can be used to convert data into the MMPLD file format, is shown below.
 
 ```xml
     <?xml version="1.0" encoding="utf-8"?>
@@ -516,11 +518,12 @@ The MegaMol&trade; Particle List Data file format (MMPLD) is a very fast loading
             </job>
     </MegaMol>
 ```
-The entry module for data conversion is of class `DataWriterJob`, see line 11. This job module controls writing several files into a new data set. The output is implemented in corresponding write modules, like the `MMPLDWriter`, see line 12. This writer module is then connected to a module providing the data. In the simplest scenario this is directly a data loader module. The above example selects one module from several options, in the same way the data viewing project does (see section [Project Files](#project-files)). The job is instantiated similarly using the command line. The paths for `makemmpld.mmprj` and `inputfile.siff` might need to be adjusted:
+
+The entry module for data conversion is of class `DataWriterJob`, see line 11. This job module controls writing several files into a new data set. The output is implemented in corresponding write modules, like the `MMPLDWriter`, see line 12. This writer module is then connected to a module providing the data. In the simplest scenario, this is directly a data loader module. The above example selects one module from several options, in the same way the data viewing project does (see section [Project Files](#project-files)). The job is instantiated similarly using the command line. The paths for `makemmpld.mmprj` and `inputfile.siff` might need to be adjusted:
 
     $ mmconsole -p makemmpld.mmprj -i convjob j -v j::data::filename inputfile.siff -v j::writer::filename outputfile.mmpld
 
-The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After all data is written, MegaMol&trade; terminates itself. The console output should be similar to this listing:
+The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After data is written, MegaMol&trade; terminates itself. The console output should be similar to this listing:
 
     0200|MegaMol� Console
     0200|Console: (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
@@ -597,7 +600,7 @@ This chapter discusses advanced usage of MegaMol&trade; .
 
 ### Configurator (Windows)
 
-The Configurator is a utility application for editing MegaMol&trade; project files. More specifically, it allows to edit the modules, calls and parameters to be instantiated and set for view instances (see sections [Modules, View and Calls](#modules-views-calls) and [Project Files](#project-files)). The [image](#configurator-pic) below shows the main GUI window of the application.
+The Configurator is a utility application for editing MegaMol&trade; project files. More specifically, it allows us to edit the modules, calls, and parameters to be instantiated and set for view instances (see sections [Modules, View, and Calls](#modules-views-calls) and [Project Files](#project-files)). The [image](#configurator-pic) below shows the main GUI window of the application.
 
 <center>
 <a name="configurator-pic"></a>
@@ -607,29 +610,29 @@ The Configurator main GUI.
 </p>
 </center>
 
-The Configurator is written in C#. The Configurator can be run on Linux using Mono 1. However, we never tested compiling the Configurator with Mono and do not support this process. The right editing pane allows you to place modules and interconnect their *CallerSlots* and *CalleeSlots* with matching calls. The tabs above that pane allow to open and edit several project files at once. On the left side you have the list of modules available and, below, the parameters of the currently selected module (which is marked in the editing pane by a dashed border). The menu strip contains direct access to all functions. The Configurator is a stand-alone editor for MegaMol&trade; project files. There is no way to connect the editor to a running instance of MegaMol&trade; , e.g. to edit parameters on the fly.
+The Configurator is written in C#. The Configurator can be run on Linux using Mono 1. However, we never tested the Configurator with Mono and thus will not support it. The right editing pane allows you to place modules and interconnect their *CallerSlots* and *CalleeSlots* with matching calls. The tabs above that pane allow to open and edit several project files at once. On the left side, you have the list of modules available and, below, the parameters of the currently selected module (which is marked in the editing pane by a dashed border). The menu strip contains direct access to all functions. The Configurator is a stand-alone editor for MegaMol&trade; project files. There is no way to connect the editor to a running instance of MegaMol&trade; , e.g., to edit parameters on the fly.
 
 ### Class Data Base
 
-To fill the left list of available modules, the Configurator requires a data base containing all classes of the MegaMol&trade; module graph engine. This file is called the state file. You can load and save the state file using the Settings menu. There, you can also view a summary of the contents of the loaded state file. The MegaMol&trade; release package contains a state file of all modules and classes available in the released MegaMol&trade; binary. You can directly load this state file.
+To fill the left list of available modules, the Configurator requires a database containing all classes of the MegaMol&trade; module graph engine. This file is called the state file. You can load and save the state file using the Settings menu. There, you can also view a summary of the contents of the loaded state file. The MegaMol&trade; release package contains a state file of all modules and classes available in the released MegaMol&trade; binary. You can directly load this state file.
 
-On Windows operating systems you can also analyze MegaMol&trade; binaries to generate a state file containing their classes. You find this function also in the Settings menu. This function relies on system Dlls and direct invoke of native, unmanaged code. So, this function will not work on Linux with Mono. A dialog window will open in which you can select the folder to analyze. After a short time, the list in this dialog will show you all compatible MegaMol&trade; binaries, including versions of the core library and all plugins. Select all binaries you want to be included in the state file. Be aware that you can only select binaries which depend on the exactly same core library. Select Ok, and
+On Windows operating systems you can also analyze MegaMol&trade; binaries to generate a state file containing their classes. You find this function also in the Settings menu. This function relies on system DLLs and native, unmanaged code. So, this function will not work on Linux with Mono. A dialog window will open in which you can select the folder to analyze. After a short time, the list in this dialog will show you all compatible MegaMol&trade; binaries, including versions of the core library and all plugins. Select all binaries you want to be included in the state file. Be aware that you can only select binaries which depend on the exact same core library. Select Ok, and
 the new state file will be created and loaded. Per default, a dialog will appear, allowing you to save the newly generated state file.
 
 ### Editing
 
-Project files can be saved and loaded using the corresponding functions for the menu bar. Save will always ask you for a file name, but will use the last file name as default value. New creates a new editing tab. To close a tab use the x button on the right or click a tab with the middle mouse button.
+Project files can be saved and loaded using the corresponding functions for the menu bar. Save will always ask you for a file name, but will use the last file name as the default value. New creates a new editing tab. To close a tab use the x button on the right or click a tab with the middle mouse button.
 
 #### Modules
 
-To add a new module to the current project, double click on the corresponding entry in the module list. The module will be created in the upper left corner and will be automatically selected. To select a module click it with any mouse button. You can move all modules by simple dragging and dropping them with the mouse. This has no influence on the functionality. To delete the selected module hit the `Del` key.
+To add a new module to the current project, double-click on the corresponding entry in the module list. The module will be created in the upper left corner and will be automatically selected. To select a module click it with any mouse button. You can move all modules by simple dragging and dropping them with the mouse. This has no influence on the functionality. To delete the selected module hit the `Del` key.
 While a module is selected, the parameter editor on the left shows all parameters of that module. In addition to the parameters exposed by *parameter slots*, there are some management parameters. You can edit the name of all module instances. For view modules, you can select if this module is the main view module for the whole project.
 Click on a free space to deselect any module, call or slot. This will select the project itself.
 You can now edit project parameters in the parameter editor on the left.
 
 #### Calls
 
-To select a *CallerSlot* (red triangles) or a *CalleeSlot* (green triangles), click the corresponding triangle of the module. The selected slot will be highlighted in yellow. All matching slots, compatible with the selected slot using any call are highlighted by a yellow outline. If the *Filter Compatible* option is active, the module list will then only show modules which have compatible slots. To connect two slot, drag with your mouse a line from one onto the other. The drag direction does not matter. If boths slots are compatible, a matching call object is created and shown by a gray box. These call boxes are placed automatically. If the connection could be established by different call classes, a dialog window will appear asking to you select the call class to be used. To delete a call, select it by clicking on it’s box and press the `Del` key.
+To select a *CallerSlot* (red triangles) or a *CalleeSlot* (green triangles), click the corresponding triangle of the module. The selected slot will be highlighted in yellow. All matching slots that are compatible with the selected slot are highlighted by a yellow outline. If the *Filter Compatible* option is active, the module list will then only show modules which have compatible slots. To connect two slots, drag with your mouse a line from one onto the other. The drag direction does not matter. If both slots are compatible, a matching call object is created and shown by a gray box. These call boxes are placed automatically. If the connection could be established by different call classes, a dialog window will appear asking to you select the call class to be used. To delete a call, select it by clicking on its box and press the `Del` key.
 A (red) *CallerSlot* can only have a single outgoing call, while (green) *CalleeSlots* may be connected by multiple calls. Therefore, if you drag from a *CallerSlot* to a *CalleeSlot* which already has incoming connections, a new connection is added. If you, however, drag from a *CalleeSlot to a *CallerSlot* which already has an outgoing connection, this connection is replaced.
 
 ### Starting MegaMol
@@ -644,10 +647,9 @@ MegaMol&trade; startup arguments dialog.
 </p>
 </center>
 
-After launching the Configurator, selecting the menu item `MegaMol Start Arguments...` opens the dialog window shown in the above [figure](#configurator-start). Here you can edit all start settings. The menu item `Start MegaMol` directly starts MegaMol&trade; with these settings. So does the `Start` button in this dialog window. The `Ok` button
-stores changes to the settings and closes the dialog window without starting MegaMol&trade; . The top line of elements control the way MegaMol&trade; starts. Tick directly to directly spawn the MegaMol&trade; process from the configurator. This is the only working option for Linux operating systems. Tick `in Cmd` or `in Windows Powershell` and the configurator will first start the corresponding shell and then spawn the MegaMol&trade; process inside this shell. Tick the `Keep Open` option to start these shells in a way that they will remain open after the MegaMol&trade; process terminates. 
+After launching the Configurator, selecting the menu item `MegaMol Start Arguments...` opens the dialog window shown in the above [figure](#configurator-start). Here you can edit all start settings. The menu item `Start MegaMol` directly starts MegaMol&trade; with these settings. So does the `Start` button in this dialog window. The `Ok` button stores changes to the settings and closes the dialog window without starting MegaMol&trade; . The top line of elements controls the way MegaMol&trade; starts. Tick directly to directly spawn the MegaMol&trade; process from the configurator. This is the only working option for Linux operating systems. Tick `in Cmd` or `in Windows Powershell` and the configurator will first start the corresponding shell and then spawn the MegaMol&trade; process inside this shell. Tick the `Keep Open` option to start these shells in a way that they will remain open after the MegaMol&trade; process terminates. 
 
-This configuration is useful in case of errors which cause MegaMol&trade; to instantly terminate. The next text box control holds the full path to the MegaMol&trade; front end executable. This should be set by the state file. You can then use the directory of this executable as working directory for the MegaMol&trade; process, or you can specify another one. Specifying another working directory is not recommended, as it influences the way the paths inside configuration file will be interpreted. The last text box control holds the command line arguments for the MegaMol&trade; process. The last used command line arguments are available via the drop down list. The start button gives
+This configuration is useful in case of errors which cause MegaMol&trade; to instantly terminate. The next text box control holds the full path to the MegaMol&trade; front-end executable. This should be set by the state file. You can then use the directory of this executable as the working directory for the MegaMol&trade; process, or you can specify another one. Specifying another working directory is not recommended, as it influences the way the paths inside configuration file will be interpreted. The last text box control holds the command line arguments for the MegaMol&trade; process. The last used command line arguments are available via the drop-down list. The start button gives
 you access to the default command lines for your project.
 
-The whole process start command line can be copied to the clipboard using the remaining menu items in the Start menu. The differences for Cmd shell and Powershell are only the way how special characters and strings are escaped.
+The whole process command line can be copied to the clipboard using the remaining menu items in the Start menu. The differences for Cmd shell and Powershell are only the way how special characters and strings are escaped.
