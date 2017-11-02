@@ -40,7 +40,8 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     paramImgBottomLeft(   "07_imageBottomLeft", "The image file name for the bottom left watermark."),
     paramScaleBottomLeft( "08_scaleBottomLeft", "The scale factor for the botttom left watermark."),
     paramImgBottomRight(  "09_imageBottomRight", "The image file name for the bottom right watermark."),
-    paramScaleBottomRight("10_scaleBottomRight", "The scale factor for the bottom right watermark.")
+    paramScaleBottomRight("10_scaleBottomRight", "The scale factor for the bottom right watermark."),
+    textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight()
     {
 
     /* Init image file name params */
@@ -94,10 +95,10 @@ WatermarkRenderer::~WatermarkRenderer(void) {
 * WatermarkRenderer::release
 */
 void WatermarkRenderer::release(void) {
-    this->textureBottomLeft.Release();
-    this->textureBottomRight.Release();
-    this->textureTopLeft.Release();
-    this->textureTopRight.Release();
+    //this->textureBottomLeft.Release();
+    //this->textureBottomRight.Release();
+    //this->textureTopLeft.Release();
+    //this->textureTopRight.Release();
 }
 
 
@@ -251,7 +252,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     float scale;
     vislib::graphics::gl::OpenGLTexture2D *tex = NULL;
     float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
-    float fixImgWidth = vpW* 0.1f;
+    float fixImgWidth = vpW* 1.0f;
 
     switch (cor) {
     case(WatermarkRenderer::TOP_LEFT):
@@ -365,23 +366,26 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
                 img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
                 texSize->SetX(img.Width());
                 texSize->SetY(img.Height());
-                for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
-                    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
-                    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
-                    BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
-                    if (r + g + b > 0) {
-                        img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
-                    }
-                    else {
-                        img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
-                    }
-                }
+                //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
+                //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
+                //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
+                //    BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
+                //    if (r + g + b > 0) {
+                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
+                //    }
+                //    else {
+                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
+                //    }
+                //}
                 if (tex->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                     vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
                     ARY_SAFE_DELETE(buf);
                     return false;
                 }
-                tex->SetFilter(GL_LINEAR, GL_LINEAR);
+                tex->Bind();
+                glGenerateMipmap(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                tex->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
                 tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
                 ARY_SAFE_DELETE(buf);
                 return true;
