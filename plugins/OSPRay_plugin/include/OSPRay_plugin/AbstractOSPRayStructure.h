@@ -32,6 +32,7 @@ protected:
     virtual bool getExtends(megamol::core::Call &call) { return true; }
     bool getExtendsCallback(megamol::core::Call &call);
     bool getStructureCallback(core::Call& call);
+    void processMaterial();
 
     /** The callee for Structure */
     core::CalleeSlot deployStructureSlot;
