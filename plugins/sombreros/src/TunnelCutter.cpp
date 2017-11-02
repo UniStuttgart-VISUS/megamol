@@ -313,7 +313,7 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		}
 
 		/*
-		 * third step: find start vertex for the connection component
+		 * third step: find start vertex for the connected component
 		 */
 		if (bsCall->GetBindingSiteCount() < 1) {
 			vislib::sys::Log::DefaultLog.WriteError("There are not binding sites provided. No further computation is possible!");
@@ -324,8 +324,8 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		unsigned int firstMol;
 		unsigned int firstRes;
 		unsigned int firstAtom;
-		std::vector<vislib::math::Vector<float, 3>> atomPositions;
-		std::set<int> atx;
+		std::vector<vislib::math::Vector<float, 3>> atomPositions; // the atom positions
+		std::set<int> atx; // the atom indices
 		for (unsigned int cCnt = 0; cCnt < molCall->ChainCount(); cCnt++) {
 			firstMol = molCall->Chains()[cCnt].FirstMoleculeIndex();
 			for (unsigned int mCnt = firstMol; mCnt < firstMol + molCall->Chains()[cCnt].MoleculeCount(); mCnt++) {
@@ -356,16 +356,77 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 			}
 		}
 
-		// TODO compute the average position of close atoms
+		// compute the average position of close atoms
+		vislib::math::Vector<float, 3> avgPos(0.0f, 0.0f, 0.0f);
+		for (auto s : atx) {
+			avgPos += vislib::math::Vector<float, 3>(&molCall->AtomPositions()[3 * s]);
+		}
+		avgPos /= static_cast<float>(atx.size());
 
 		// search for the vertex closest to the given position
 		float minDist = FLT_MAX;
 		unsigned int minIndex = UINT_MAX;
-		for (unsigned int j = 0; j < vertCount / 3; j++) {
-			if (this->vertexKeepFlags[i][j * 3]) {
-					
+		for (unsigned int j = 0; j < vertCount; j++) {
+			if (this->vertexKeepFlags[i][j]) {
+				vislib::math::Vector<float, 3> vertPos = vislib::math::Vector<float, 3>(&meshCall->Objects()[i].GetVertexPointerFloat()[j * 3]);
+				vislib::math::Vector<float, 3> distVec = avgPos - vertPos;
+				if (distVec.Length() < minDist) {
+					minDist = distVec.Length();
+					minIndex = j;
+				}
 			}
 		}
+
+		// perform a region growing starting from minIndex
+		// reusing the previously performed data structures.
+		std::vector<bool> keepVector(this->vertexKeepFlags[i].size(), false);
+		keepVector[minIndex] = true;
+		allowedVerticesSet.clear();
+		allowedVerticesSet.insert(minIndex);
+		keptVertices = 1; // reset the value if we want to have just 1 connected component
+		
+		while (!allowedVerticesSet.empty()) {
+			newset.clear();
+			// for each currently allowed vertex
+			for (auto element : allowedVerticesSet) {
+				// search for the start indices in both edge lists
+				auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+
+				// go through all forward edges starting with the vertex
+				while ((*forward).first == element && forward != edgesForward.end()) {
+					auto val = (*forward).second;
+					// check whether the endpoint val is not yet in our sets
+					if (!keepVector[val] && this->vertexKeepFlags[i][val]) {
+						// if it is not, assign the distance
+						keepVector[val] = true;
+						newset.insert(val);
+						keptVertices++;
+					}
+					forward++;
+				}
+
+				// do the same thing for all reverse edges
+				while ((*reverse).first == element && reverse != edgesReverse.end()) {
+					auto val = (*reverse).second;
+					// check whether the endpoint val is not yet in our sets
+					if (!keepVector[val] && this->vertexKeepFlags[i][val]) {
+						// if it is not, assign the distance
+						keepVector[val] = true;
+						newset.insert(val);
+						keptVertices++;
+					}
+					reverse++;
+				}
+			}
+			allowedVerticesSet = newset;
+		}
+
+		this->vertexKeepFlags[i] = keepVector; // overwrite the vector
 
 		/*
 		 * fourth step: mesh cutting
@@ -395,6 +456,13 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				this->colors[i][help * 3 + 0] = meshCall->Objects()[i].GetColourPointerByte()[j * 3 + 0];
 				this->colors[i][help * 3 + 1] = meshCall->Objects()[i].GetColourPointerByte()[j * 3 + 1];
 				this->colors[i][help * 3 + 2] = meshCall->Objects()[i].GetColourPointerByte()[j * 3 + 2];
+
+				// DEBUG
+				/*if (j == minIndex) {
+					this->colors[i][help * 3 + 0] = 255;
+					this->colors[i][help * 3 + 1] = 0;
+					this->colors[i][help * 3 + 2] = 0;
+				}*/
 
 				this->attributes[i][help] = meshCall->Objects()[i].GetVertexAttribPointerUInt32()[j];
 
