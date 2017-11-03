@@ -647,12 +647,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(uint8_t * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_BYTE);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataByte = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_BYTE;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataByte = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -661,12 +663,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(double * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_DOUBLE);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataDouble = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_DOUBLE;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataDouble = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -675,12 +679,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(float * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_FLOAT);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataFloat = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_FLOAT;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataFloat = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -689,12 +695,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(int16_t * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_INT16);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataInt16 = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_INT16;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataInt16 = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -703,12 +711,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(int32_t * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_INT32);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataInt32 = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_INT32;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataInt32 = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -717,12 +727,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(uint16_t * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_UINT16);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataUInt16 = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_UINT16;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataUInt16 = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
 			/**
@@ -731,12 +743,14 @@ namespace trisoup {
 			 * @return The index of the newly added attribute
 			 */
 			inline unsigned int AddVertexAttribPointer(unsigned int * ptr, std::string name = "") {
-				this->vattDTypes.push_back(DT_UINT32);
-				_vatt_t p;
-				this->vattVector.push_back(p);
-				p.dataUInt32 = ptr;
-				this->vattName.push_back(name);
-				return static_cast<unsigned int>(this->vattVector.size() - 1);
+				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				this->vattDTypes[this->vattCount] = DT_UINT32;
+				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+				this->vattVector[this->vattCount].dataUInt32 = ptr;
+				this->vattName = this->allocateAdditionalEntry(this->vattName, this->vattCount);
+				this->vattName[this->vattCount] = name;
+				this->vattCount = this->vattCount + 1;
+				return this->vattCount - 1;
 			}
 
             /**
@@ -745,7 +759,7 @@ namespace trisoup {
             * @return The data type for vertex attrib
             */
             inline DataType GetVertexAttribDataType(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return DT_NONE;
 				}
                 return this->vattDTypes[attribID];
@@ -757,7 +771,7 @@ namespace trisoup {
 			 * @return The number of vertex attributes.
 			 */
 			inline unsigned int GetVertexAttribCount(void) const {
-				return static_cast<unsigned int>(this->vattDTypes.size());
+				return this->vattCount;
 			}
 
 			/**
@@ -767,7 +781,7 @@ namespace trisoup {
 			 * @return The name of the attribute. May be an empty string if the attribute is not present.
 			 */
 			inline std::string GetVertexAttribName(unsigned int attribID) const {
-				if (attribID >= this->vattName.size()) {
+				if (attribID >= this->vattCount) {
 					return "";
 				}
 				return this->vattName[attribID];
@@ -779,7 +793,7 @@ namespace trisoup {
             * @return True if vertex attrib data is present
             */
             inline bool HasVertexAttribPointer(void) const {
-				bool hasPointer = (this->vattDTypes.size()>0)&&(this->vattVector.size()>0);
+				bool hasPointer = (this->vattCount > 0);
 				bool hasData = false;
 				if (hasPointer) {
 					hasData = hasData || (this->vattVector[0].dataByte != nullptr);
@@ -799,7 +813,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const uint8_t * GetVertexAttribPointerByte(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_BYTE);
@@ -812,7 +826,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const double * GetVertexAttribPointerDouble(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_DOUBLE);
@@ -825,7 +839,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const float * GetVertexAttribPointerFloat(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_FLOAT);
@@ -838,7 +852,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const int16_t * GetVertexAttribPointerInt16(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_INT16);
@@ -851,7 +865,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const int * GetVertexAttribPointerInt32(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_INT32);
@@ -864,7 +878,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const uint16_t * GetVertexAttribPointerUInt16(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_UINT16);
@@ -877,7 +891,7 @@ namespace trisoup {
              * @return vertex attrib
              */
             inline const unsigned int * GetVertexAttribPointerUInt32(unsigned int attribID) const {
-				if (attribID >= this->vattDTypes.size()) {
+				if (attribID >= this->vattCount) {
 					return nullptr;
 				}
 				ASSERT(this->vattDTypes[attribID] == DT_UINT32);
@@ -1211,7 +1225,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(uint8_t *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_BYTE;
                 this->vattVector[attribID].dataByte = v;
 				this->vattName[attribID] = name;
@@ -1225,7 +1239,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(double *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_DOUBLE;
                 this->vattVector[attribID].dataDouble = v;
 				this->vattName[attribID] = name;
@@ -1239,7 +1253,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(float *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_FLOAT;
                 this->vattVector[attribID].dataFloat = v;
 				this->vattName[attribID] = name;
@@ -1253,7 +1267,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(int16_t *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_INT16;
                 this->vattVector[attribID].dataInt16 = v;
 				this->vattName[attribID] = name;
@@ -1267,7 +1281,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(int *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_INT32;
                 this->vattVector[attribID].dataInt32 = v;
 				this->vattName[attribID] = name;
@@ -1281,7 +1295,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(uint16_t *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_UINT16;
                 this->vattVector[attribID].dataUInt16 = v;
 				this->vattName[attribID] = name;
@@ -1295,7 +1309,7 @@ namespace trisoup {
              * @param v The new pointer value
              */
             inline void setVertexAttribData(unsigned int *v, unsigned int attribID, std::string name = "") {
-				if (attribID >= this->vattDTypes.size()) return;
+				if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_UINT32;
                 this->vattVector[attribID].dataUInt32 = v;
 				this->vattName[attribID] = name;
@@ -1322,8 +1336,25 @@ namespace trisoup {
 			 * @param attribID The id of the attribute of which the name shall be changed.
 			 */
 			inline void changeVertexAttribName(std::string name, unsigned int attribID) {
-				if (attribID >= this->vattName.size()) return;
+				if (attribID >= this->vattCount) return;
 				this->vattName[attribID] = name;
+			}
+
+			/**
+			 * Reallocates an array containing an additional entry
+			 *
+			 * @param arrayPtr The array pointer.
+			 * @param oldSize The number of elements of the input array. 
+			 * @return New array pointer for an array one element bigger.
+			 *         Ideally, this pointer is assigned to the old one.
+			 */
+			template<class Tp>
+			inline Tp * allocateAdditionalEntry(Tp * arrayPtr, unsigned int oldSize) {
+				Tp * result = new Tp[oldSize + 1];
+				std::memcpy(result, arrayPtr, oldSize * sizeof(Tp));
+				delete[] arrayPtr;
+				arrayPtr = nullptr;
+				return result;
 			}
 
             /** Triangle count (ignored if t is NULL) */
@@ -1386,7 +1417,7 @@ namespace trisoup {
             } tex;
 
             /** The vertex attrob data types */			
-			std::vector<DataType> vattDTypes;
+			DataType * vattDTypes;
 
             /** Vertex attrib data possibilities */
             union _vatt_t {
@@ -1400,13 +1431,16 @@ namespace trisoup {
             };
 
 			/** Vector with pointers to all attributes */
-			std::vector<_vatt_t> vattVector;
+			_vatt_t * vattVector;
 
 			/** 
 			 * Vector with the names of the vertex attributes.
 			 * Names are not mandatory and may be empty strings.
 			 */
-			std::vector<std::string> vattName;
+			std::string * vattName;
+
+			/** Count of currently present vertex attributes */
+			unsigned int vattCount;
 
             /**
              * Flag indicating the if the vertex data memory is owned by this
@@ -1416,7 +1450,6 @@ namespace trisoup {
 
             /** The material */
             const Material * mat;
-
         };
 
         /**

@@ -341,10 +341,10 @@ bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
         && (this->vrtCnt == rhs.vrtCnt)
         && (this->vrtMemOwned == rhs.vrtMemOwned);
 	// this is necessary if we do not want to crash in the next few lines
-	if (this->vattDTypes.size() != rhs.vattDTypes.size() || this->vattVector.size() != rhs.vattVector.size()) {
+	if (this->vattCount != rhs.vattCount || !isEqual) {
 		return false;
 	}
-	for (size_t i = 0; i < this->vattDTypes.size(); i++) {
+	for (size_t i = 0; i < this->vattCount; i++) {
 		isEqual = isEqual && (this->vattDTypes[i] == rhs.vattDTypes[i]);
 		isEqual = isEqual && (this->vattVector[i].dataByte == rhs.vattVector[i].dataByte);
 	}
@@ -407,7 +407,7 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
             default: ASSERT(false);
             }
         }
-		for (size_t i = 0; i < this->vattVector.size(); i++) {
+		for (size_t i = 0; i < this->vattCount; i++) {
 			// we have to check only one of the unified pointers, because its a union...
 			if (this->vattVector[i].dataByte != nullptr) {
 				switch (this->vattDTypes[i]) {
@@ -422,6 +422,15 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
 				}
 			}
 		}
+		if (this->vattDTypes != NULL) {
+			delete[] this->vattDTypes;
+		}
+		if (this->vattName != NULL) {
+			delete[] this->vattName;
+		}
+		if (this->vattVector != NULL) {
+			delete[] this->vattVector;
+		}
     }
     this->vrtDT = DT_NONE;
     this->vrt.dataFloat = NULL;
@@ -431,8 +440,9 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     this->col.dataByte = NULL;
     this->texDT = DT_NONE;
     this->tex.dataFloat = NULL;
-	this->vattDTypes.clear();
-	this->vattVector.clear();
+	this->vattDTypes = NULL;
+	this->vattName = NULL;
+	this->vattVector = NULL;
 }
 
 /****************************************************************************/
