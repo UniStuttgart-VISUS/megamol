@@ -220,16 +220,26 @@ bool PBSDataSource::read(void) {
             //double lBBox[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
             std::ifstream file(filename + ".zfp", std::ios::binary | std::ios::ate);
-            if (file.good()) {
+            std::ifstream header(filename + ".txt");
+            if (file.good() && header.good()) {
                 std::streamsize file_size = file.tellg();
                 file.seekg(0, std::ios::beg);
 
-                file.read(reinterpret_cast<char*>(this->g_bbox.get()), 6 * sizeof(double));
+                /*file.read(reinterpret_cast<char*>(this->g_bbox.get()), 6 * sizeof(double));
                 file.read(reinterpret_cast<char*>(this->l_bbox.get()), 6 * sizeof(double));
                 file.read(reinterpret_cast<char*>(&num_elements), sizeof(unsigned int));
                 file.read(reinterpret_cast<char*>(&tol), sizeof(double));
                 file.read(reinterpret_cast<char*>(&_type), sizeof(int));
-                file.read(reinterpret_cast<char*>(&num_buffers), sizeof(unsigned int));
+                file.read(reinterpret_cast<char*>(&num_buffers), sizeof(unsigned int));*/
+                char dump;
+                file >> this->g_bbox.get()[0] >> dump >> this->g_bbox.get()[1] >> dump >> this->g_bbox.get()[2] >> dump;
+                file >> this->g_bbox.get()[3] >> dump >> this->g_bbox.get()[4] >> dump >> this->g_bbox.get()[5] >> dump;
+                file >> this->l_bbox.get()[0] >> dump >> this->l_bbox.get()[1] >> dump >> this->l_bbox.get()[2] >> dump;
+                file >> this->l_bbox.get()[3] >> dump >> this->l_bbox.get()[4] >> dump >> this->l_bbox.get()[5] >> dump;
+                file >> num_elements >> dump;
+                file >> tol >> dump;
+                file >> _type >> dump;
+                file >> num_buffers >> dump;
 
                 auto type = static_cast<zfp_type>(_type);
 
