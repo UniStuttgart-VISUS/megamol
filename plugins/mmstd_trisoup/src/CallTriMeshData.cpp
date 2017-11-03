@@ -442,6 +442,7 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     this->tex.dataFloat = NULL;
 	this->vattDTypes = NULL;
 	this->vattVector = NULL;
+	this->vattCount = 0;
 }
 
 /****************************************************************************/
