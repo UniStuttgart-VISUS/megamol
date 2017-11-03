@@ -75,3 +75,18 @@ bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call &call) {
     return true;
 }
 
+void AbstractOSPRayStructure::processMaterial() {
+    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
+    if (cm != NULL) {
+        this->structureContainer.materialChanged = false;
+        if (cm->InterfaceIsDirty()) {
+            this->structureContainer.materialChanged = true;
+        }
+        auto gmp = cm->getMaterialParameter();
+        if (gmp->isValid) {
+            this->structureContainer.materialContainer = cm->getMaterialParameter();
+        }
+    } else {
+        this->structureContainer.materialContainer = NULL;
+    }
+}

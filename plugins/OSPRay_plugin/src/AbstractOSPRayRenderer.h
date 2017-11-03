@@ -103,6 +103,8 @@ protected:
     */
     bool fillWorld();
 
+    void changeMaterial();
+
     /**
     * Releases the created geometries and volumes.
     *

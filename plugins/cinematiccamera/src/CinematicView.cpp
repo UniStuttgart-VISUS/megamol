@@ -33,8 +33,8 @@ CinematicView::CinematicView(void) : View3D(),
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
 	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resHeightParam(           "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    resWidthParam(            "05_cinematicWidth","The width resolution of the cineamtic view to render."),
+    resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
+    resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     shownKeyframe()
     {
@@ -326,19 +326,26 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
     else {
         // Calculate reduced fbo width and height
-        fboWidth = vpWidth;
-        fboHeight = vpHeight;
-        if (cineRatio > vpRatio) {
-            fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+        if ((this->cineWidth < vpWidth) && (this->cineHeight < vpHeight)) {
+            fboWidth  = this->cineWidth;
+            fboHeight = this->cineHeight;
         }
-        else if (cineRatio < vpRatio) {
-            fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
-        }
-        // Check for viewport changes
-        if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
-            this->vpW = vpWidth;
-            this->vpH = vpHeight;
-            this->resetFbo = true;
+        else {
+            fboWidth = vpWidth;
+            fboHeight = vpHeight;
+
+            if (cineRatio > vpRatio) {
+                fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+            }
+            else if (cineRatio < vpRatio) {
+                fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
+            }
+            // Check for viewport changes
+            if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
+                this->vpW = vpWidth;
+                this->vpH = vpHeight;
+                this->resetFbo = true;
+            }
         }
     }
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
@@ -381,8 +388,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    //GLenum callOutBuffer = cr3d->OutputBuffer();
-    cr3d->SetOutputBuffer(this->fbo.GetID());
+    cr3d->SetOutputBuffer(&this->fbo);
 
     this->overrideCall = cr3d;
 
@@ -390,8 +396,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     Base::Render(context);
 
     this->fbo.Disable();
-
-    //cr3d->SetOutputBuffer(callOutBuffer);
 
     // Reset override render call
     this->overrideCall = NULL;
