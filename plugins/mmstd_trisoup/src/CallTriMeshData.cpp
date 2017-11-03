@@ -317,6 +317,8 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
 
 	this->vattDTypes = rhs.vattDTypes;
 	this->vattVector = rhs.vattVector;
+	this->vattCount = rhs.vattCount;
+	this->vattName = rhs.vattName;
 
     this->mat = rhs.mat;
 
