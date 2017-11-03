@@ -299,7 +299,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     normal[i * 3 + 0] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 0];
                     normal[i * 3 + 1] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 1];
                     normal[i * 3 + 2] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 2];
-                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32()[i];
+                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
 
 					// create hightmap colours or read per atom colours
 					if (currentColoringMode0 == m_hightmp_col || currentColoringMode1 == m_hightmp_col) {
@@ -632,9 +632,29 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         if (this->obj.Count() < frameID) {
             return false;
         }
-        this->obj[frameID]->SetVertexData(this->vertexCount, vertex, normal, color, NULL, atomIndex, true);
+        this->obj[frameID]->SetVertexData(this->vertexCount, vertex, normal, color, NULL, true);
         this->obj[frameID]->SetTriangleData(this->faceCount, face, true);
         this->obj[frameID]->SetMaterial(NULL);
+		
+		// check whether the mesh already has a vertex attribute with the name "atomID"
+		std::string name = "atomID";
+		auto atCnt = this->obj[frameID]->GetVertexAttribCount();
+		bool found = false;
+		if (atCnt != 0) {
+			for (attIdx = 0; attIdx < atCnt; attIdx++) {
+				if (!name.compare(this->obj[frameID]->GetVertexAttribName(attIdx))) { // string equality check
+					found = true;
+					break;
+				}
+			}
+		}
+		// add an attribute or set the existing one
+		if (atCnt == 0 || !found) {
+			this->obj[frameID]->AddVertexAttribPointer(atomIndex, name);
+		} else {
+			this->obj[frameID]->setVertexAttribData(atomIndex, attIdx, name);
+		}
+
 
         return true;
     }

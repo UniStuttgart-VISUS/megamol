@@ -990,7 +990,7 @@ namespace trisoup {
                     this->setNrmData(normals);
                     this->setColData(colours);
                     this->setTexData(textureCoordinates);
-                    this->setVertexAttribData(vertexAttribute);
+                    this->setVertexAttribData(vertexAttribute, );
                     this->vrtMemOwned = takeOwnership;
                 }
             }
@@ -1216,7 +1216,7 @@ namespace trisoup {
                 this->texDT = DT_NONE;
                 this->tex.dataDouble = NULL;
             }
-
+			public:
 			/**
              * Sets the vertex attrib data pointer
 			 * for a specific attribute.
@@ -1328,6 +1328,7 @@ namespace trisoup {
                 this->vattVector[attribID].dataUInt32 = NULL;
 				this->vattName[attribID] = "";
             }
+			private:
 
 			/**
 			 * Changes the name of specific vertex attributes.
