@@ -6,6 +6,7 @@
 
 #include "pbs.h"
 #include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 #include "PBSStorage.h"
 
@@ -206,6 +207,9 @@ private:
 
     std::weak_ptr<double> l_bbox;
 }; /* end class PBSDataCall */
+
+/** Description class typedef */
+typedef core::factories::CallAutoDescription<PBSDataCall> PBSDataCallDescription;
 
 } /* end namespace pbs */
 } /* end namespace megamol */

@@ -14,6 +14,7 @@
 
 // Modules
 #include "PBSDataSource.h"
+#include "PBSRenderer.h"
 
 // Calls
 #include "pbs/PBSDataCall.h"
@@ -45,6 +46,7 @@ namespace {
 
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSRenderer>();
             //
             // TODO: Register your plugin's modules here
             // like:
