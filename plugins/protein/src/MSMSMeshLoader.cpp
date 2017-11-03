@@ -292,13 +292,12 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 				std::vector<unsigned char> col;
 				unsigned int bin;
 				float alpha, upper_bound, lower_bound;
-				// search for the correct attrib index:
-				std::string name = "atomID";
+				// search for the correct attrib index (the first attrib with uint32 type):
 				auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
 				bool found = false;
 				if (atCnt != 0) {
 					for (attIdx = 0; attIdx < atCnt; attIdx++) {
-						if (!name.compare(this->obj[ctmd->FrameID()]->GetVertexAttribName(attIdx))) { // string equality check
+						if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(attIdx) == CallTriMeshData::Mesh::DataType::DT_UINT32) {
 							found = true;
 							break;
 						}
@@ -306,7 +305,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 				}
 				// add an attribute or set the existing one
 				if (atCnt == 0 || !found) {
-					this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex, name);
+					this->attIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
 				}
 
                 for (unsigned int i = 0; i < this->obj[ctmd->FrameID()]->GetVertexCount(); i++) {
@@ -396,7 +395,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 }
 
 				this->obj[ctmd->FrameID()]->SetVertexData(this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
-				this->obj[ctmd->FrameID()]->setVertexAttribData(atomIndex, attIdx, "atomID");
+				this->obj[ctmd->FrameID()]->setVertexAttribData(atomIndex, attIdx);
 				this->datahash++;
 
                 this->coloringModeParam0.ResetDirty();
@@ -655,12 +654,11 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         this->obj[frameID]->SetMaterial(NULL);
 		
 		// check whether the mesh already has a vertex attribute with the name "atomID"
-		std::string name = "atomID";
 		auto atCnt = this->obj[frameID]->GetVertexAttribCount();
 		bool found = false;
 		if (atCnt != 0) {
 			for (attIdx = 0; attIdx < atCnt; attIdx++) {
-				if (!name.compare(this->obj[frameID]->GetVertexAttribName(attIdx))) { // string equality check
+				if (this->obj[frameID]->GetVertexAttribDataType(attIdx) == CallTriMeshData::Mesh::DataType::DT_UINT32) {
 					found = true;
 					break;
 				}
@@ -668,9 +666,9 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
 		}
 		// add an attribute or set the existing one
 		if (atCnt == 0 || !found) {
-			this->obj[frameID]->AddVertexAttribPointer(atomIndex, name);
+			this->obj[frameID]->AddVertexAttribPointer(atomIndex);
 		} else {
-			this->obj[frameID]->setVertexAttribData(atomIndex, attIdx, name);
+			this->obj[frameID]->setVertexAttribData(atomIndex, attIdx);
 		}
 
 

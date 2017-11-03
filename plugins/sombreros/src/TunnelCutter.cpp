@@ -212,12 +212,11 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 
 		// check for the index of the atomIdx attribute
 		auto atCnt = meshCall->Objects()[i].GetVertexAttribCount();
-		std::string name = "atomID";
 		unsigned int attIdx;
 		bool found = false;
 		if (atCnt != 0) {
 			for (attIdx = 0; attIdx < atCnt; attIdx++) {
-				if (!name.compare(meshCall->Objects()[i].GetVertexAttribName(attIdx))) { // string equality check
+				if (meshCall->Objects()[i].GetVertexAttribDataType(attIdx) == CallTriMeshData::Mesh::DataType::DT_UINT32) {
 					found = true;
 					break;
 				}
