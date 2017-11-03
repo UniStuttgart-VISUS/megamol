@@ -255,12 +255,15 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
  */
 CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */triMemOwned(false),
         vrtCnt(0), vrtDT(DT_NONE), /*vrt(NULL), */nrmDT(DT_NONE), /*nrm(NULL), */
-        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL) {
+        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL), vattCount(0) {
     this->tri.dataByte = NULL;
     this->vrt.dataFloat = NULL;
     this->nrm.dataFloat = NULL;
     this->col.dataByte = NULL;
     this->tex.dataFloat = NULL;
+	this->vattDTypes = NULL;
+	this->vattName = NULL;
+	this->vattVector = NULL;
 }
 
 
