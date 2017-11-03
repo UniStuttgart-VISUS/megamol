@@ -199,11 +199,13 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 	this->normals.clear();
 	this->colors.clear();
 	this->attributes.clear();
+	this->levelAttributes.clear();
 	this->faces.clear();
 	this->vertices.resize(meshCall->Count());
 	this->normals.resize(meshCall->Count());
 	this->colors.resize(meshCall->Count());
 	this->attributes.resize(meshCall->Count());
+	this->levelAttributes.resize(meshCall->Count());
 	this->faces.resize(meshCall->Count());
 
 	for (int i = 0; i < static_cast<int>(meshCall->Count()); i++) {
@@ -453,6 +455,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		this->normals[i].resize(keptVertices * 3);
 		this->colors[i].resize(keptVertices * 3); // TODO accept other color configurations
 		this->attributes[i].resize(keptVertices);
+		this->levelAttributes[i].resize(keptVertices);
 
 		// compute vertex mapping and fill vertex vectors
 		std::vector<unsigned int> vertIndexMap(vertCount, UINT_MAX); // mapping of old vertex indices to new ones
@@ -483,6 +486,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				}*/
 
 				this->attributes[i][help] = meshCall->Objects()[i].GetVertexAttribPointerUInt32(attIdx)[j];
+				this->levelAttributes[i][help] = vertexDistances[j];
 
 				help++;
 			}
@@ -510,6 +514,8 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		this->meshVector[i].SetVertexData(static_cast<unsigned int>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), NULL, false);
 		this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces[i].size() / 3), this->faces[i].data(), false);
 		this->meshVector[i].SetMaterial(nullptr);
+		this->meshVector[i].AddVertexAttribPointer(this->attributes[i].data());
+		this->meshVector[i].AddVertexAttribPointer(this->levelAttributes[i].data());
 	}
 
 	return true;

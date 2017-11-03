@@ -139,8 +139,11 @@ namespace sombreros {
 		/** Container for the kept colors */
 		std::vector<std::vector<unsigned char>> colors;
 
-		/** Container for the kept vertex attributes */
+		/** Container for the kept atom index vertex attributes */
 		std::vector<std::vector<unsigned int>> attributes;
+
+		/** Container for the kept vertex level attributes */
+		std::vector<std::vector<unsigned int>> levelAttributes;
 
 		/** Container for the kept faces */
 		std::vector<std::vector<unsigned int>> faces;
