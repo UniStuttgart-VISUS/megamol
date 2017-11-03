@@ -60,8 +60,10 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
 
 bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
+    // fill material container
+    this->processMaterial();
+
     // read Data, calculate  shape parameters, fill data vectors
-    
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
@@ -233,20 +235,6 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
     this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
-
-    // material container
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    if (cm != NULL) {
-        auto gmp = cm->getMaterialParameter();
-        if (gmp->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    } else {
-        this->structureContainer.materialContainer = NULL;
-    }
-
-
-
     return true;
 }
 
@@ -300,10 +288,7 @@ void OSPRaySphereGeometry::release() {
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRaySphereGeometry::InterfaceIsDirty() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    cm->getMaterialParameter();
     if (
-        cm->InterfaceIsDirty() ||
         this->particleList.IsDirty()
         ) {
         this->particleList.ResetDirty();

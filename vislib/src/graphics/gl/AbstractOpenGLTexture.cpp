@@ -61,7 +61,7 @@ GLenum vislib::graphics::gl::AbstractOpenGLTexture::Bind(GLenum textureUnit,
  * vislib::graphics::gl::AbstractOpenGLTexture::IsValid
  */
 bool vislib::graphics::gl::AbstractOpenGLTexture::IsValid(void) const throw() {
-    return (::glIsTexture(this->id) != GL_FALSE);
+    return (id != UINT_MAX) && (::glIsTexture(this->id) != GL_FALSE);
 }
 
 
