@@ -395,7 +395,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 }
 
 				this->obj[ctmd->FrameID()]->SetVertexData(this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
-				this->obj[ctmd->FrameID()]->setVertexAttribData(atomIndex, attIdx);
+				// setVertexData clears all attributes, so we have to add a new one
+				this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
 				this->datahash++;
 
                 this->coloringModeParam0.ResetDirty();
