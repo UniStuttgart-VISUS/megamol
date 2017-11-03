@@ -292,6 +292,23 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 				std::vector<unsigned char> col;
 				unsigned int bin;
 				float alpha, upper_bound, lower_bound;
+				// search for the correct attrib index:
+				std::string name = "atomID";
+				auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
+				bool found = false;
+				if (atCnt != 0) {
+					for (attIdx = 0; attIdx < atCnt; attIdx++) {
+						if (!name.compare(this->obj[ctmd->FrameID()]->GetVertexAttribName(attIdx))) { // string equality check
+							found = true;
+							break;
+						}
+					}
+				}
+				// add an attribute or set the existing one
+				if (atCnt == 0 || !found) {
+					this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex, name);
+				}
+
                 for (unsigned int i = 0; i < this->obj[ctmd->FrameID()]->GetVertexCount(); i++) {
                     vertex[i * 3 + 0] = this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0];
                     vertex[i * 3 + 1] = this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1];
@@ -378,7 +395,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 					}
                 }
 
-				this->obj[ctmd->FrameID()]->SetVertexData(this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, atomIndex, true);
+				this->obj[ctmd->FrameID()]->SetVertexData(this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
 				this->datahash++;
 
                 this->coloringModeParam0.ResetDirty();
