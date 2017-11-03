@@ -963,39 +963,6 @@ namespace trisoup {
             }
 
             /**
-            * Sets the vertex data
-            *
-            * @param cnt The number of vertices
-            * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
-            * @param normals Pointer to 3 times cnt floats holding the normal vectors
-            * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
-            * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
-            * @param vertexAttribute Pointer to cnt insigned int holding the per-vertex attribute
-            * @param takeOwnership If true the object will take ownership of
-            *                      all the memory of the pointers provided
-            *                      and will free the memory on its
-            *                      destruction. Otherwise the caller must
-            *                      ensure the memory stays valid as long as
-            *                      it is used.
-            */
-            template<class Tp1, class Tp2, class Tp3, class Tp4, class Tp5>
-            inline void SetVertexData(unsigned int cnt,
-                Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
-                Tp5 vertexAttribute, bool takeOwnership) {
-                this->clearVrtData();
-                this->vrtCnt = cnt;
-                if (cnt > 0) {
-                    ASSERT(vertices != NULL);
-                    this->setVrtData(vertices);
-                    this->setNrmData(normals);
-                    this->setColData(colours);
-                    this->setTexData(textureCoordinates);
-                    this->setVertexAttribData(vertexAttribute);
-                    this->vrtMemOwned = takeOwnership;
-                }
-            }
-
-            /**
              * Sets the material
              * The ownership of the 'mat' object is not changed. The caller
              * must ensure that the object stays valid as long as it is used
