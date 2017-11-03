@@ -262,7 +262,6 @@ CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */tr
     this->col.dataByte = NULL;
     this->tex.dataFloat = NULL;
 	this->vattDTypes = NULL;
-	this->vattName = NULL;
 	this->vattVector = NULL;
 }
 
@@ -318,7 +317,6 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
 	this->vattDTypes = rhs.vattDTypes;
 	this->vattVector = rhs.vattVector;
 	this->vattCount = rhs.vattCount;
-	this->vattName = rhs.vattName;
 
     this->mat = rhs.mat;
 
@@ -430,9 +428,6 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
 		if (this->vattDTypes != NULL) {
 			delete[] this->vattDTypes;
 		}
-		if (this->vattName != NULL) {
-			delete[] this->vattName;
-		}
 		if (this->vattVector != NULL) {
 			delete[] this->vattVector;
 		}
@@ -446,7 +441,6 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     this->texDT = DT_NONE;
     this->tex.dataFloat = NULL;
 	this->vattDTypes = NULL;
-	this->vattName = NULL;
 	this->vattVector = NULL;
 }
 
