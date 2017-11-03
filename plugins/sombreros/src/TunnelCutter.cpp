@@ -179,7 +179,7 @@ bool TunnelCutter::getExtent(Call& call) {
 /*
  * TunnelCutter::cutMesh
  */
-void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, MolecularDataCall * molCall, BindingSiteCall * bsCall) {
+bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, MolecularDataCall * molCall, BindingSiteCall * bsCall) {
 
 	// generate set of allowed residue indices
 	std::set<int> allowedSet;
@@ -210,11 +210,30 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		unsigned int vertCount = meshCall->Objects()[i].GetVertexCount();
 		unsigned int triCount = meshCall->Objects()[i].GetTriCount();
 
+		// check for the index of the atomIdx attribute
+		auto atCnt = meshCall->Objects()[i].GetVertexAttribCount();
+		std::string name = "atomID";
+		unsigned int attIdx;
+		bool found = false;
+		if (atCnt != 0) {
+			for (attIdx = 0; attIdx < atCnt; attIdx++) {
+				if (!name.compare(meshCall->Objects()[i].GetVertexAttribName(attIdx))) { // string equality check
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if (!found) {
+			vislib::sys::Log::DefaultLog.WriteError("The %i th object had no atom index attribute and can therefore not be processed", i);
+			return false;
+		}
+
 		/*
 		 * first step: compute which vertices to keep
 		 */
 		this->vertexKeepFlags[i].resize(vertCount);
-		auto atomIndices = meshCall->Objects()[i].GetVertexAttribPointerUInt32();
+		auto atomIndices = meshCall->Objects()[i].GetVertexAttribPointerUInt32(attIdx);
 		
 		int keptVertices = 0;
 		for (int j = 0; j < static_cast<int>(vertCount); j++) {
@@ -317,7 +336,7 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		 */
 		if (bsCall->GetBindingSiteCount() < 1) {
 			vislib::sys::Log::DefaultLog.WriteError("There are not binding sites provided. No further computation is possible!");
-			return;
+			return false;
 		}
 
 		// get the atom indices for the binding site
@@ -335,7 +354,7 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 					// we take the average location of the first described amino acid as starting point
 					if (bsCall->GetBindingSite(0)->Count() < 1) {
 						vislib::sys::Log::DefaultLog.WriteError("The provided binding site was empty. No further computation possible!");
-						return;
+						return false;
 					}
 					vislib::Pair<char, unsigned int> bsRes = bsCall->GetBindingSite(0)->operator[](0);
 					if (molCall->Chains()[cCnt].Name() == bsRes.First() &&
@@ -464,7 +483,7 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 					this->colors[i][help * 3 + 2] = 0;
 				}*/
 
-				this->attributes[i][help] = meshCall->Objects()[i].GetVertexAttribPointerUInt32()[j];
+				this->attributes[i][help] = meshCall->Objects()[i].GetVertexAttribPointerUInt32(attIdx)[j];
 
 				help++;
 			}
@@ -493,4 +512,6 @@ void TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces[i].size() / 3), this->faces[i].data(), false);
 		this->meshVector[i].SetMaterial(nullptr);
 	}
+
+	return true;
 }

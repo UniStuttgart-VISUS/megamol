@@ -93,8 +93,9 @@ namespace sombreros {
 		 * @param tunnelCall The call containing the tunnel data the cut region is based on.
 		 * @param molCall The call containing the molecular data.
 		 * @param bsCall The call containing the binding site data.
+		 * @return True on success, false otherwise.
 		 */
-		void cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+		bool cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
