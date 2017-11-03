@@ -78,7 +78,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleModelBBoxParam.SetParameter(new param::ButtonParam('t'));
+    this->toggleModelBBoxParam.SetParameter(new param::ButtonParam('b'));
     this->MakeSlotAvailable(&this->toggleModelBBoxParam);
 
     // Load spline interpolation keyframes at startup
@@ -288,7 +288,7 @@ bool CinematicRenderer::Render(Call& call) {
     // Get current viewport
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0];
+    int   vpWidth  = vp[2] - vp[0];
     int   vpHeight = vp[3] - vp[1];
 
     // Get pointer to keyframes array
@@ -340,8 +340,7 @@ bool CinematicRenderer::Render(Call& call) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-        GLenum callOutBuffer = oc->OutputBuffer();
-        oc->SetOutputBuffer(this->fbo.GetID());
+        oc->SetOutputBuffer(&this->fbo);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -352,13 +351,10 @@ bool CinematicRenderer::Render(Call& call) {
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
 
-        // Reset output buffer
-        oc->SetOutputBuffer(callOutBuffer);
-
         // Disable fbo
         this->fbo.Disable();
 
-
+       
         // Draw textures ------------------------------------------------------
 
         glDisable(GL_LINE_SMOOTH);
@@ -520,9 +516,10 @@ bool CinematicRenderer::Render(Call& call) {
         tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
         tmpStr += "[tab] Move or Selection mode.\n";
         tmpStr += "[m] Toggle different Keyframe manipulators.\n";
-        tmpStr += "[t] Show model or bounding box.\n";
+        tmpStr += "[b] Show model or bounding box.\n";
         tmpStr += "-----[ TIME LINES ]-----\n";
         tmpStr += "[f] Snap keyframes to animation frames.\n";
+        tmpStr += "[t] Straighten tangent between two keyframes.\n";
         tmpStr += "[left mouse] Selection.\n";
         tmpStr += "[right mouse] Drag & Drop.\n";
         tmpStr += "[middle mouse] Axis scaling.\n";
