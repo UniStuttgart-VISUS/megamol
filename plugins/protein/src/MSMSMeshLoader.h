@@ -161,6 +161,9 @@ namespace protein {
         /** the number of atoms */
         unsigned int atomCount;
 
+		/** the index of the vertex attribute */
+		unsigned int attIdx;
+
         vislib::Array<trisoup::CallTriMeshData::Mesh*> obj;
 
 		int prevTime;
