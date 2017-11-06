@@ -30,7 +30,7 @@ PBSRenderer::~PBSRenderer(void) {
 }
 
 
-bool printShaderInfoLog(GLuint shader) {
+bool PBSRenderer::printShaderInfoLog(GLuint shader) const {
     int infoLogLen = 0;
     int charsWritten = 0;
     GLchar *infoLog;
@@ -50,7 +50,7 @@ bool printShaderInfoLog(GLuint shader) {
 }
 
 
-bool printProgramInfoLog(GLuint shaderProg) {
+bool PBSRenderer::printProgramInfoLog(GLuint shaderProg) const {
     int infoLogLen = 0;
     int charsWritten = 0;
     GLchar *infoLog;

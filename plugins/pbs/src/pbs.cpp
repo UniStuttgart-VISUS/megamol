@@ -15,6 +15,8 @@
 // Modules
 #include "PBSDataSource.h"
 #include "PBSRenderer.h"
+#include "FBOTransmitter.h"
+#include "FBOCompositor.h"
 
 // Calls
 #include "pbs/PBSDataCall.h"
@@ -47,6 +49,8 @@ namespace {
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor>();
             //
             // TODO: Register your plugin's modules here
             // like:

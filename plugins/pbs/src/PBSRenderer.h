@@ -81,6 +81,10 @@ protected:
     virtual bool GetExtents(core::Call &call) override;
 
 private:
+    bool printShaderInfoLog(GLuint shader) const;
+
+    bool printProgramInfoLog(GLuint shaderProg) const;
+
     core::CallerSlot getDataSlot;
 
     core::param::ParamSlot radiusParamSlot;

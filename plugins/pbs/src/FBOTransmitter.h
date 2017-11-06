@@ -120,12 +120,21 @@ protected:
      */
     virtual void BeforeRender(core::view::AbstractView *view);
 
+    /**
+     * Hook method to be called after the view is rendered.
+     *
+     * @param view The calling view
+     */
+    virtual void AfterRender(core::view::AbstractView *view);
+
 private:
     bool connectSocketCallback(core::param::ParamSlot &p);
 
     void connectSocket(std::string &address);
 
     core::param::ParamSlot *findTimeParam(core::view::AbstractView *view);
+
+    bool triggerButtonClicked(core::param::ParamSlot &slot);
 
     bool resizeCallback(core::param::ParamSlot &p);
 
@@ -135,6 +144,8 @@ private:
 
     std::string ip_address;
 
+    core::param::ParamSlot viewNameSlot;
+
     core::param::ParamSlot fboWidthSlot;
 
     core::param::ParamSlot fboHeightSlot;
@@ -143,6 +154,8 @@ private:
 
     core::param::ParamSlot animTimeParamNameSlot;
 
+    core::param::ParamSlot triggerButtonSlot;
+
     int width;
 
     int height;
@@ -150,6 +163,10 @@ private:
     GLuint color_rbo, depth_rbo, fbo;
 
     std::vector<unsigned char> color_buf, depth_buf;
+
+    bool is_running = false;
+
+    bool is_connected = false;
 }; /* end class FBOTransmitter */
 
 GLuint createTexture(GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type);
