@@ -18,6 +18,7 @@
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 
+#define MAX_PARAMETER_NUMBER 100
 
 namespace megamol {
 namespace trisoup {
@@ -644,10 +645,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(uint8_t * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_BYTE;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataByte = ptr;
@@ -658,10 +659,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(double * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_DOUBLE;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataDouble = ptr;
@@ -672,10 +673,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(float * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_FLOAT;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataFloat = ptr;
@@ -686,10 +687,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(int16_t * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_INT16;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataInt16 = ptr;
@@ -700,10 +701,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(int32_t * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_INT32;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataInt32 = ptr;
@@ -714,10 +715,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(uint16_t * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_UINT16;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataUInt16 = ptr;
@@ -728,10 +729,10 @@ namespace trisoup {
 			/**
 			 * Adds a new vertex attribute.
 			 *
-			 * @return The index of the newly added attribute
+			 * @return The index of the newly added attribute, or UINT_MAX in the case of failure
 			 */
 			inline unsigned int AddVertexAttribPointer(unsigned int * ptr) {
-				this->vattDTypes = this->allocateAdditionalEntry(this->vattDTypes, this->vattCount);
+				if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
 				this->vattDTypes[this->vattCount] = DT_UINT32;
 				this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
 				this->vattVector[this->vattCount].dataUInt32 = ptr;
@@ -1337,8 +1338,8 @@ namespace trisoup {
                 double * dataDouble;
             } tex;
 
-            /** The vertex attrob data types */			
-			DataType * vattDTypes;
+            /** The vertex attrib data types */			
+			DataType vattDTypes[MAX_PARAMETER_NUMBER];
 
             /** Vertex attrib data possibilities */
             union _vatt_t {
