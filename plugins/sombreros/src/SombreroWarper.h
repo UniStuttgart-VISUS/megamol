@@ -20,6 +20,8 @@
 namespace megamol {
 namespace sombreros {
 
+	typedef unsigned int uint;
+
 	class SombreroWarper : public core::Module {
 	public:
 
@@ -82,6 +84,26 @@ namespace sombreros {
 
 	private:
 
+		/**
+		 * Checks for dirty parameters and sets the dirty flag, if needed
+		 */
+		void checkParameters(void);
+
+		/**
+		 * Copies the mesh data into local buffers to make modification possible.
+		 *
+		 * @param ctmd The incoming call with the source data.
+		 * @return True on success, false otherwise.
+		 */
+		bool copyMeshData(megamol::trisoup::CallTriMeshData& ctmd);
+
+		/**
+		 * Searches for the outer vertices of the sombrero brim.
+		 *
+		 * @return True on success, false otherwise.
+		 */
+		bool findSombreroBorder(void);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
@@ -96,6 +118,27 @@ namespace sombreros {
 
 		/** Vector containing the modified mesh data */
 		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
+
+		/** The vertex positions of the mesh */
+		std::vector<std::vector<float>> vertices;
+
+		/** The vertex normals of the mesh */
+		std::vector<std::vector<float>> normals;
+		
+		/** The vertex colors of the mesh */
+		std::vector<std::vector<unsigned char>> colors;
+
+		/** The atom indices per vertex for the mesh */
+		std::vector<std::vector<uint>> atomIndexAttachment;
+
+		/** The vertex levels of the mesh */
+		std::vector<std::vector<uint>> vertexLevelAttachment;
+		
+		/** The faces of the mesh */
+		std::vector<std::vector<uint>> faces;
+
+		/** Flag set when a parameter is dirty */
+		bool dirtyFlag;
 	};
 
 } /* end namespace sombreros */
