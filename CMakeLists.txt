@@ -80,4 +80,4 @@ foreach(d ${DEP_LIST})
   CHECK_MMDEP(${plugin} "${SINGLE_LIST}")
 endforeach()
 
-set(DEP_LIST "" CACHE INTERNAL "")
+unset(DEP_LIST CACHE)
