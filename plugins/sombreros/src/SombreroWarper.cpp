@@ -70,23 +70,17 @@ bool SombreroWarper::getData(Call& call) {
 
 	if (!(*inCall)(0)) return false;
 
-	// something happened with the input data, we have to recopy it
+	// something happened with the input data, we have to recompute it
 	if ((lastDataHash != inCall->DataHash()) || dirtyFlag) {
 		lastDataHash = inCall->DataHash();
 		dirtyFlag = false;
 
+		// copy
 		copyMeshData(*inCall);
 
-		//this->meshVector.resize(inCall->Count());
-		//for (int i = 0; i < inCall->Count(); i++) {
-		//	// TODO change
-		//	this->meshVector[i] = inCall->Objects()[i];
-		//}
-
-		//bool borderResult = this->findSombreroBorder();
-		//if (!borderResult) return false;
-
-
+		// search the sombrero border
+		bool borderResult = this->findSombreroBorder();
+		if (!borderResult) return false;
 	}
 
 	outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
@@ -206,33 +200,39 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
  * SombreroWarper::findSombreroBorder
  */
 bool SombreroWarper::findSombreroBorder(void) {
-	for (auto mesh : this->meshVector) {
-		uint attribCnt = mesh.GetVertexAttribCount();
-		// we need 2 unsigned int attributes
-		uint atomIndexAttrib = UINT_MAX;
-		uint vertexLvlAttrib = UINT_MAX;
-		if (attribCnt < 2) {
-			vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the Sombrero warper needs at least two UINT32 vertex attributes.");
-			return false;
-		}
-		// determine the location of the needed attributes
-		for (uint i = 0; i < attribCnt; i++) {
-			auto dt = mesh.GetVertexAttribDataType(i);
-			if (atomIndexAttrib == UINT_MAX && dt == mesh.DT_UINT32) {
-				atomIndexAttrib = i;
-			} else if (vertexLvlAttrib == UINT_MAX && dt == mesh.DT_UINT32) {
-				vertexLvlAttrib = i;
-			}
-		}
-		if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX) {
-			vislib::sys::Log::DefaultLog.WriteError("Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least two UINT32 vertex attributes.");
-			return false;
-		}
-#if 1
-		// adjust the color
+	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+		CallTriMeshData::Mesh& mesh = this->meshVector[i];
+
+		// NOTE: the direct manipulation of the vectors and not the meshes only works because the mesh does not own 
+		// the data storage. If this is changed, the code below has to be changed, too.
+
 		uint vCnt = mesh.GetVertexCount();
-		for (uint i = 0; i < vCnt; i++) {
-			
+
+#if 0
+		// adjust the color
+		uint maxVal = 0;
+		for (uint j = 0; j < vCnt; j++) {
+			uint atVal = this->vertexLevelAttachment[i][j];
+			if (atVal > maxVal) maxVal = atVal;
+		}
+		float mvf = static_cast<float>(maxVal);
+		for (uint j = 0; j < vCnt; j++) {
+			float atVal = static_cast<float>(this->vertexLevelAttachment[i][j]);
+			float factor = atVal / mvf;
+			vislib::math::Vector<float, 3> resCol;
+			if (factor < 0.5f) {
+				vislib::math::Vector<float, 3> blue(0.0f, 0.0f, 1.0f);
+				vislib::math::Vector<float, 3> white(1.0f, 1.0f, 1.0f);
+				resCol = (factor * 2.0f) * white + (1.0f - (factor * 2.0f)) * blue;
+
+			} else {
+				vislib::math::Vector<float, 3> red(1.0f, 0.0f, 0.0f);
+				vislib::math::Vector<float, 3> white(1.0f, 1.0f, 1.0f);
+				resCol = ((factor - 0.5f) * 2.0f) * red + (1.0f - ((factor - 0.5f) * 2.0f)) * white;
+			}
+			this->colors[i][j * 3 + 0] = static_cast<unsigned char>(resCol.X() * 255.0f);
+			this->colors[i][j * 3 + 1] = static_cast<unsigned char>(resCol.Y() * 255.0f);
+			this->colors[i][j * 3 + 2] = static_cast<unsigned char>(resCol.Z() * 255.0f);
 		}
 #endif
 	}

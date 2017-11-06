@@ -17,6 +17,8 @@
 
 #include "mmstd_trisoup/CallTriMeshData.h"
 
+#include <set>
+
 namespace megamol {
 namespace sombreros {
 
@@ -136,6 +138,9 @@ namespace sombreros {
 		
 		/** The faces of the mesh */
 		std::vector<std::vector<uint>> faces;
+
+		/** Set containing the indices of the border vertices */
+		std::set<uint> borderVertices;
 
 		/** Flag set when a parameter is dirty */
 		bool dirtyFlag;
