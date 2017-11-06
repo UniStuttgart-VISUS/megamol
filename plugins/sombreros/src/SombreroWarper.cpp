@@ -165,13 +165,13 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 			return false;
 		}
 		// determine the location of the needed attributes
-		for (uint i = 0; i < attribCount; i++) {
-			auto dt = ctmd.Objects()[i].GetVertexAttribDataType(i);
+		for (uint j = 0; j < attribCount; j++) {
+			auto dt = ctmd.Objects()[i].GetVertexAttribDataType(j);
 			if (atomIndexAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
-				atomIndexAttrib = i;
+				atomIndexAttrib = j;
 			}
 			else if (vertexLvlAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
-				vertexLvlAttrib = i;
+				vertexLvlAttrib = j;
 			}
 		}
 		if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX) {
