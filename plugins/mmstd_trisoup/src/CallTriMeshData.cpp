@@ -429,8 +429,8 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
 				}
 			}
 		}
-		if (this->vattDTypes != NULL) {
-			delete[] this->vattDTypes;
+		for (int i = 0; i < MAX_PARAMETER_NUMBER; i++) {
+			this->vattDTypes[i] = DT_NONE;
 		}
 		if (this->vattVector != NULL) {
 			delete[] this->vattVector;
