@@ -37,7 +37,7 @@ SombreroWarper::SombreroWarper(void) : Module(),
 	this->MakeSlotAvailable(&this->meshInSlot);
 
 	// Param slots
-	this->minBrimLevelParam.SetParameter(new param::IntParam(1, 0, 100));
+	this->minBrimLevelParam.SetParameter(new param::IntParam(1, 1, 100));
 	this->MakeSlotAvailable(&this->minBrimLevelParam);
 
 	this->maxBrimLevelParam.SetParameter(new param::IntParam(-1, -1, 100));
@@ -336,7 +336,7 @@ bool SombreroWarper::findSombreroBorder(void) {
 				});
 
 				// go through all forward edges
-				while ((*forward).first == current && forward != edgesForward[i].end()) {
+				while (forward != edgesForward[i].end() && (*forward).first == current) {
 					auto target = (*forward).second;
 					if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 && localBorder[setIndex].count(target) == 0) {
 						// when we have found an edge target which is not yet known, add it as local candidate and to the border set
@@ -348,7 +348,7 @@ bool SombreroWarper::findSombreroBorder(void) {
 				}
 
 				// go through all backward edges
-				while ((*reverse).first == current && reverse != edgesReverse[i].end()) {
+				while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
 					auto target = (*reverse).second;
 					if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 && localBorder[setIndex].count(target) == 0) {
 						// when we have found an edge target which is not yet known, add it as local candidate and to the border set
@@ -375,7 +375,11 @@ bool SombreroWarper::findSombreroBorder(void) {
 		// write all indices to the storage
 		this->borderVertices[i] = localBorder[maxIndex];
 
-#if 1 // color the border vertices red, the rest white
+		/**
+			At this point, the border is found, we now try to extend it to form the brim
+		 */
+
+#if 0 // color the border vertices red, the rest white
 		vislib::math::Vector<float, 3> red(1.0f, 0.0f, 0.0f);
 		vislib::math::Vector<float, 3> white(1.0f, 1.0f, 1.0f);
 		for (uint j = 0; j < vCnt; j++) {
@@ -390,6 +394,60 @@ bool SombreroWarper::findSombreroBorder(void) {
 			}
 		}
 #endif
+		std::vector<uint> vertexLevels(vCnt, UINT_MAX);
+		this->brimFlags[i].resize(vCnt, false);
+		for (size_t j = 0; j < vCnt; j++) {
+			if (this->borderVertices[i].count(static_cast<uint>(j)) > 0) {
+				this->brimFlags[i][j] = true;
+				vertexLevels[j] = 0;
+			}
+		}
+
+		// perform a region growing starting from the found border
+		std::set<uint> brimCandidates = this->borderVertices[i];
+		while (!brimCandidates.empty()) {
+			uint current = static_cast<uint>(*brimCandidates.begin());
+			brimCandidates.erase(current);
+
+			// search for the start indices in both edge lists
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (vertexLevels[target] > vertexLevels[current] + 1) {
+					vertexLevels[target] = vertexLevels[current] + 1;
+					brimCandidates.insert(target);
+				}
+				forward++;
+			}
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+				auto target = (*reverse).second;
+				if (vertexLevels[target] > vertexLevels[current] + 1) {
+					vertexLevels[target] = vertexLevels[current] + 1;
+					brimCandidates.insert(target);
+				}
+				reverse++;
+			}
+		}
+
+		// go through all vertices. Where the level is <= than maxBrim - minBrim, assign the brim
+		for (size_t j = 0; j < vCnt; j++) {
+			if (vertexLevels[j] <= maxBrim - minBrim) {
+				this->brimFlags[i][j] = true;
+#if 0 // coloring of brim vertices
+				if (vertexLevels[j] != 0) {
+					this->colors[i][j * 3 + 0] = 0;
+					this->colors[i][j * 3 + 1] = 255;
+					this->colors[i][j * 3 + 2] = 0;
+				}
+#endif
+			}
+		}
 	}
 
 	return true;

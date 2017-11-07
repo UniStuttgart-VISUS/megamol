@@ -298,7 +298,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				});
 
 				// go through all forward edges starting with the vertex
-				while ((*forward).first == element && forward != edgesForward.end()) {
+				while (forward != edgesForward.end() && (*forward).first == element) {
 					auto val = (*forward).second;
 					// check whether the endpoint val is not yet in our sets
 					if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
@@ -314,7 +314,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				}
 
 				// do the same thing for all reverse edges
-				while ((*reverse).first == element && reverse != edgesReverse.end()) {
+				while (reverse != edgesReverse.end() && (*reverse).first == element) {
 					auto val = (*reverse).second;
 					// check whether the endpoint val is not yet in our sets
 					if (vertexDistances[val] > static_cast<unsigned int>(s + 1)) {
