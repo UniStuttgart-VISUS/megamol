@@ -318,16 +318,10 @@ bool FBOTransmitter::triggerButtonClicked(core::param::ParamSlot &slot) {
 
     this->ModuleGraphLock().LockExclusive();
     AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn.c_str());
-    core::ViewInstance *vi = dynamic_cast<core::ViewInstance *>(ano.get());
+    AbstractNamedObject::ptr_type ano = anoc->FindNamedObject(mvn.c_str());
+    core::view::AbstractView *vi = dynamic_cast<core::view::AbstractView *>(ano.get());
     if (vi != NULL) {
-        if (vi->View() != NULL) {
-            vi->View()->RegisterHook(this);
-        } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "View \"%s\" is not usable for ScreenShot (Not initialized)",
-                mvn.c_str());
-        }
+        vi->RegisterHook(this);
     } else {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to find view \"%s\" for ScreenShot",
