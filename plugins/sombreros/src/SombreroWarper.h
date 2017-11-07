@@ -118,6 +118,12 @@ namespace sombreros {
 		/** Slot for the ouput of the cut mesh */
 		core::CalleeSlot warpedMeshOutSlot;
 
+		/** Parameter for the minimal brim level */
+		core::param::ParamSlot minBrimLevelParam;
+
+		/** Parameter fo the maximum brim level */
+		core::param::ParamSlot maxBrimLevelParam;
+
 		/** Vector containing the modified mesh data */
 		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
 
@@ -139,8 +145,17 @@ namespace sombreros {
 		/** The faces of the mesh */
 		std::vector<std::vector<uint>> faces;
 
+		/** The face edges in forward order */
+		std::vector<std::vector<std::pair<uint, uint>>> edgesForward;
+
+		/** The face edges in reverse order */
+		std::vector<std::vector<std::pair<uint, uint>>> edgesReverse;
+
 		/** Set containing the indices of the border vertices */
-		std::set<uint> borderVertices;
+		std::vector<std::set<uint>> borderVertices;
+
+		/** Flags for each vertex if they belong to the brim */
+		std::vector<std::vector<bool>> brimFlags;
 
 		/** Flag set when a parameter is dirty */
 		bool dirtyFlag;
