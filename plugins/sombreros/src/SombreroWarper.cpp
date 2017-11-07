@@ -9,6 +9,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmstd_trisoup/CallTriMeshData.h"
+#include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
 #include <climits>
 #include <iostream>
@@ -17,12 +18,15 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::trisoup;
 using namespace megamol::sombreros;
+using namespace megamol::protein_calls;
 
 /*
  * SombreroWarper::SombreroWarper
  */
 SombreroWarper::SombreroWarper(void) : Module(),
 		meshInSlot("dataIn", "Receives the input mesh"),
+		bindingSiteInSlot("bsIn", "Receives the binding site data"),
+		tunnelInSlot("tunnelIn", "Receives the tunnel data"),
 		warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
 		minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
 		maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level") {
@@ -35,6 +39,12 @@ SombreroWarper::SombreroWarper(void) : Module(),
 	// Caller slots
 	this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
 	this->MakeSlotAvailable(&this->meshInSlot);
+
+	this->bindingSiteInSlot.SetCompatibleCall<BindingSiteCallDescription>();
+	this->MakeSlotAvailable(&this->bindingSiteInSlot);
+
+	this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
+	this->MakeSlotAvailable(&this->tunnelInSlot);
 
 	// Param slots
 	this->minBrimLevelParam.SetParameter(new param::IntParam(1, 1, 100));
@@ -78,9 +88,18 @@ bool SombreroWarper::getData(Call& call) {
 	CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
 	if (inCall == nullptr) return false;
 
+	BindingSiteCall * bsCall = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
+	if (bsCall == nullptr) return false;
+
+	TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+	if (tunnelCall == nullptr) return false;
+
 	inCall->SetFrameID(outCall->FrameID());
+	tunnelCall->SetFrameID(outCall->FrameID());
 
 	if (!(*inCall)(0)) return false;
+	if (!(*bsCall)(0)) return false;
+	if (!(*tunnelCall)(0)) return false;
 
 	// something happened with the input data, we have to recompute it
 	if ((lastDataHash != inCall->DataHash()) || dirtyFlag) {
@@ -92,6 +111,9 @@ bool SombreroWarper::getData(Call& call) {
 
 		// search the sombrero border
 		if (!this->findSombreroBorder()) return false;
+
+		// warp the mesh in the correct position
+		if (!this->warpMesh(*bsCall, *tunnelCall)) return false;
 	}
 
 	outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
@@ -109,6 +131,9 @@ bool SombreroWarper::getExtent(Call& call) {
 	CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
 	if (inCall == nullptr) return false;
 
+	TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+	if (tunnelCall == nullptr) return false;
+
 	this->checkParameters();
 	
 	if (dirtyFlag) {
@@ -116,8 +141,10 @@ bool SombreroWarper::getExtent(Call& call) {
 	}
 
 	inCall->SetFrameID(outCall->FrameID());
+	tunnelCall->SetFrameID(outCall->FrameID());
 
 	if (!(*inCall)(1)) return false;
+	if (!(*tunnelCall)(1)) return false;
 
 	outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
 	outCall->SetFrameCount(inCall->FrameCount());
@@ -448,6 +475,20 @@ bool SombreroWarper::findSombreroBorder(void) {
 #endif
 			}
 		}
+	}
+
+	return true;
+}
+
+/*
+ * SombreroWarper::warpMesh
+ */
+bool SombreroWarper::warpMesh(BindingSiteCall& bsCall, TunnelResidueDataCall& tunnelCall) {
+	for (size_t i = 0; i < this->meshVector.size(); i++) {
+		uint vCnt = static_cast<uint>(this->vertices[i].size() / 3);
+		uint fCnt = static_cast<uint>(this->faces[i].size() / 3);
+
+
 	}
 
 	return true;

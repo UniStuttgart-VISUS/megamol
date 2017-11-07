@@ -16,6 +16,8 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_trisoup/CallTriMeshData.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "TunnelResidueDataCall.h"
 
 #include <set>
 
@@ -106,6 +108,15 @@ namespace sombreros {
 		 */
 		bool findSombreroBorder(void);
 
+		/**
+		 * Warps the mesh to resemble a sombrero.
+		 *
+		 * @bsCall Call containing the binding site data.
+		 * @tunnelCall Call containing the tunnel data.
+		 * @return True on success, false otherwise.
+		 */
+		bool warpMesh(protein_calls::BindingSiteCall& bsCall, TunnelResidueDataCall& tunnelCall);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
@@ -114,6 +125,12 @@ namespace sombreros {
 
 		/** Slot for the mesh input. */
 		core::CallerSlot meshInSlot;
+
+		/** Slot for the binding site input. */
+		core::CallerSlot bindingSiteInSlot;
+
+		/** Slot for the tunnel input */
+		core::CallerSlot tunnelInSlot;
 
 		/** Slot for the ouput of the cut mesh */
 		core::CalleeSlot warpedMeshOutSlot;
