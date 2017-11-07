@@ -43,6 +43,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     setKeyframesToSameSpeed(       "03_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
     snapAnimFramesParam(           "04_snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames."),
     snapSimFramesParam(            "05_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
+    simTangentParam(               "06_straightenSimTangent", "Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe."),
 
     deleteSelectedKeyframeParam(   "editSelected::01_deleteKeyframe", "Deletes the currently selected keyframe."),
     changeKeyframeParam(           "editSelected::02_applyView", "Apply current view to selected keyframe."),
@@ -101,6 +102,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->camViewPosition      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
     this->camViewLookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->camViewApertureangle = 30.0f;
+    this->simTangentStatus     = false;
 
     // init parameters
     this->addKeyframeParam.SetParameter(new param::ButtonParam('a'));
@@ -154,6 +156,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
     this->snapSimFramesParam.SetParameter(new param::ButtonParam('g'));
     this->MakeSlotAvailable(&this->snapSimFramesParam);
+
+    this->simTangentParam.SetParameter(new param::ButtonParam('t'));
+    this->MakeSlotAvailable(&this->simTangentParam);
 }
 
 
@@ -261,6 +266,41 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
     this->selectedKeyframe = this->interpolateKeyframe(ccc->getSelectedKeyframe().getAnimTime());
     this->updateEditParameters(this->selectedKeyframe, false);
     ccc->setSelectedKeyframe(this->selectedKeyframe);
+
+    // Straighten tangent between simTangentKf and currently selected keyframe by shifting all inbetween keyframes simulation time
+    if (this->simTangentStatus) {
+        if (this->keyframes.Contains(this->selectedKeyframe)) {
+            if (this->keyframes.Contains(this->simTangentKf)) {
+                // Calculate liner equation between the two selected keyframes 
+                // f(x) = mx + b
+                vislib::math::Point<float, 2> p1 = vislib::math::Point<float, 2>(this->selectedKeyframe.getAnimTime(), this->selectedKeyframe.getSimTime());
+                vislib::math::Point<float, 2> p2 = vislib::math::Point<float, 2>(this->simTangentKf.getAnimTime(), this->simTangentKf.getSimTime());
+                float m = (p1.Y() - p2.Y()) / (p1.X() - p2.X());
+                float b = m * (-p1.X()) + p1.Y();
+                // Get indices
+                int iKf1 = this->keyframes.IndexOf(this->selectedKeyframe);
+                int iKf2 = this->keyframes.IndexOf(this->simTangentKf);
+                if (iKf1 > iKf2) {
+                    int tmp = iKf1;
+                    iKf1 = iKf2;
+                    iKf2 = tmp;
+                }
+                // Consider only keyframes lying between the two selected ones
+                float newSimTime;
+                for (unsigned int i = iKf1 + 1; i < iKf2; i++) {
+                    newSimTime = m * (this->keyframes[i].getAnimTime()) + b;
+                    this->keyframes[i].setSimTime(newSimTime);
+                }
+            }
+            else {
+                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [straighten tangent] First selectred keyframe doesn't exist any more.");
+            }
+            this->simTangentStatus = false;
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [straighten tangent] Select existing keyframe to finish straightening the tangent.");
+        }
+    }
 
 	return true;
 }
@@ -595,7 +635,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->snapKeyframe2AnimFrame(&this->selectedKeyframe);
     }
 
-
     // snapSimFramesParam -----------------------------------------------------
     if (this->snapSimFramesParam.IsDirty()) {
         this->snapSimFramesParam.ResetDirty();
@@ -604,6 +643,22 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->snapKeyframe2SimFrame(&this->keyframes[i]);
         }
         this->snapKeyframe2SimFrame(&this->selectedKeyframe);      
+    }
+
+    // simTangentParam -----------------------------------------------------
+    if (this->simTangentParam.IsDirty()) {
+        this->simTangentParam.ResetDirty();
+
+        this->simTangentStatus = true;
+
+        // Straighten tangent only between existing keyframes
+        if (this->keyframes.Contains(this->selectedKeyframe)) {
+            this->simTangentKf = this->selectedKeyframe;
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [straighten tangent] Select existing keyframe before trying to straighten the tangent.");
+            this->simTangentStatus = false;
+        }
     }
 
 

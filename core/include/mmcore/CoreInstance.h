@@ -29,6 +29,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include "vislib/sys/Lockable.h"
+#include "vislib/sys/AutoLock.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
@@ -79,6 +81,8 @@ namespace plugins {
         public factories::AbstractAssemblyInstance {
     public:
 
+        friend class megamol::core::LuaState;
+
         typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
 
         /**
@@ -121,6 +125,13 @@ namespace plugins {
         inline LuaState* GetLuaState(void) {
             return this->lua;
         }
+
+        /** return whether loaded project files are Lua-based or legacy */
+        inline bool IsLuaProject() const {
+            return this->loadedLuaProjects.Count() > 0;
+        }
+
+        vislib::StringA GetMergedLuaProject() const;
 
         /**
          * Answers the log object of the instance.
@@ -247,13 +258,48 @@ namespace plugins {
             const ParamValueSetRequest *param = NULL);
 
         /**
+         * Request deletion of the module with the given id.
+         */
+        bool RequestModuleDeletion(const vislib::StringA& id);
+
+        /**
+         * Request deletion of call connecting callerslot from
+         * to calleeslot to.
+         */
+        bool RequestCallDeletion(const vislib::StringA& from,
+            const vislib::StringA& to);
+
+        /**
+         * Request instantiation of a module of class className
+         * with the name id.
+         */
+        bool RequestModuleInstantiation(const vislib::StringA& className,
+            const vislib::StringA& id);
+
+        /**
+         * Request instantiation of a call of class className, connecting
+         * Callerslot from to Calleeslot to.
+         */
+        bool RequestCallInstantiation(const vislib::StringA& className,
+            const vislib::StringA& from, const vislib::StringA& to);
+
+        /**
+         * Request setting the parameter id to the value.
+         */
+        bool RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
+
+        //** do everything that is queued w.r.t. modules and calls */
+        void PerformGraphUpdates();
+
+        /**
          * Answer whether the core has pending requests of instantiations of
          * views.
          *
          * @return 'true' if there are pending view instantiation requests,
          *         'false' otherwise.
          */
-        inline bool HasPendingViewInstantiationRequests(void) const {
+        inline bool HasPendingViewInstantiationRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
             return !this->pendingViewInstRequests.IsEmpty();
         }
 
@@ -264,11 +310,23 @@ namespace plugins {
          * @return 'true' if there are pending job instantiation requests,
          *         'false' otherwise.
          */
-        inline bool HasPendingJobInstantiationRequests(void) const {
+        inline bool HasPendingJobInstantiationRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
             return !this->pendingJobInstRequests.IsEmpty();
         }
 
-        vislib::StringA GetPendingViewName(void) const;
+        inline bool HasPendingRequests(void) {
+            vislib::sys::AutoLock l(this->graphUpdateLock);
+            return !this->pendingViewInstRequests.IsEmpty()
+                || !this->pendingJobInstRequests.IsEmpty()
+                || !this->pendingCallDelRequests.IsEmpty()
+                || !this->pendingCallInstRequests.IsEmpty()
+                || !this->pendingModuleDelRequests.IsEmpty()
+                || !this->pendingModuleInstRequests.IsEmpty()
+                || !this->pendingParamSetRequests.IsEmpty();
+        }
+
+        vislib::StringA GetPendingViewName(void);
 
         /**
          * Instantiates the next pending view, if there is one.
@@ -443,6 +501,17 @@ namespace plugins {
          */
         Call* InstantiateCall(const vislib::StringA fromPath,
             const vislib::StringA toPath, factories::CallDescription::ptr desc);
+
+        /**
+        * Instantiates a module
+        *
+        * @param path The full namespace path
+        * @param desc The module description
+        *
+        * @return The new module or 'NULL' in case of an error
+        */
+        Module::ptr_type instantiateModule(const vislib::StringA path,
+            factories::ModuleDescription::ptr desc);
 
         /**
          * Fired whenever a parameter updates it's value
@@ -818,17 +887,6 @@ namespace plugins {
             ParamHashMap_t &map) const;
 
         /**
-         * Instantiates a module
-         *
-         * @param path The full namespace path
-         * @param desc The module description
-         *
-         * @return The new module or 'NULL' in case of an error
-         */
-        Module::ptr_type instantiateModule(const vislib::StringA path,
-            factories::ModuleDescription::ptr desc);
-
-        /**
          * Enumerates all parameters. The callback function is called for each
          * parameter name.
          *
@@ -951,6 +1009,14 @@ namespace plugins {
         /** The Lua state */
         megamol::core::LuaState *lua;
 
+        /**
+        * All of the verbatim loaded project files. We need to keep them to send them
+        * to interested parties, like the simpleclusterclient, so they can interpret
+        * them THEMSELVES. All control flow must be retained to allow for asymmetric
+        * MegaMol execution.
+        */
+        vislib::Array<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
+
         /** The manager of the builtin view descriptions */
         megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;
 
@@ -968,6 +1034,30 @@ namespace plugins {
 
         /** The list of pending jobs to be instantiated */
         vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
+
+        /** the list of calls to be instantiated: (class,(from,to))* */
+        vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingCallInstRequests;
+
+        /** the list of modules to be instantiated: (class, id)* */
+        vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> pendingModuleInstRequests;
+
+        /** the list of calls to be deleted: (from,to)* */
+        vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>>
+            pendingCallDelRequests;
+
+        /** the list of modules to be deleted: (id)* */
+        vislib::SingleLinkedList<vislib::StringA> pendingModuleDelRequests;
+
+        /** the list of (parameter = value) pairs that need to be set */
+        vislib::SingleLinkedList<vislib::Pair< vislib::StringA, vislib::StringA>>
+            pendingParamSetRequests;
+
+        /**
+         * You need to lock this if you manipulate any pending* lists. The lists
+         * are designed to be manipulated from the Lua interface which CAN be
+         * invoked from another thread (the LuaRemoteHost, for example).
+         */
+        vislib::sys::CriticalSection graphUpdateLock;
 
         /** The module namespace root */
         RootModuleNamespace::ptr_type namespaceRoot;

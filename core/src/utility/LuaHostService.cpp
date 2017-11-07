@@ -103,7 +103,7 @@ bool megamol::core::utility::LuaHostService::enableImpl() {
     assert(serverRunning == false);
     serverThread = std::thread([&](){
         this->serve();
-	  });
+      });
     while (!serverRunning) std::this_thread::sleep_for(std::chrono::milliseconds(10));
     return true;
 }

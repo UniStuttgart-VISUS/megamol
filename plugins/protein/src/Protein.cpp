@@ -79,6 +79,7 @@
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "protein/RMSF.h"
 
 #include "MoleculeBallifier.h"
 

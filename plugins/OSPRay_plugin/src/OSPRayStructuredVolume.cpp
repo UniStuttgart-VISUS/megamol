@@ -63,8 +63,10 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
 
 bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
 
-    // read Data, calculate  shape parameters, fill data vectors
+    // fill material container
+    this->processMaterial();
 
+    // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::VolumeDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::VolumeDataCall>();
 
@@ -124,18 +126,6 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     std::vector<float> iValue = { this->IsoValue.Param<core::param::FloatParam>()->Value() };
     this->structureContainer.isoValue = std::make_shared<std::vector<float>>(std::move(iValue));
 
-
-    // material container
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    if (cm != NULL) {
-        auto gmp = cm->getMaterialParameter();
-        if (gmp->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    } else {
-        this->structureContainer.materialContainer = NULL;
-    }
-
     return true;
 }
 
@@ -156,10 +146,7 @@ void OSPRayStructuredVolume::release() {
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayStructuredVolume::InterfaceIsDirty() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    cm->getMaterialParameter();
     if (
-        cm->InterfaceIsDirty() ||
         this->clippingBoxActive.IsDirty() ||
         this->clippingBoxLower.IsDirty() ||
         this->clippingBoxUpper.IsDirty() || 

@@ -88,6 +88,9 @@ namespace netmessages {
     /** Message to cross the network VSync barrier */
     const UINT32 MSG_NETVSYNC_CROSS = 20;
 
+    /** Message with verbatim lua code for graph setup from master */
+    const UINT32 MSG_GRAPHSETUP_LUA = 21;
+
     /************************************************************************/
 
     /** The number of pings used for time syncing */

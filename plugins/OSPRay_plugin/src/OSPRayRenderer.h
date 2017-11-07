@@ -121,6 +121,8 @@ private:
 
     // rendering conditions
     bool data_has_changed;
+    bool material_has_changed;
+    bool light_has_changed;
     bool cam_has_changed;
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;

@@ -35,6 +35,7 @@ using namespace megamol::core;
 cluster::simple::View::View(void) : view::AbstractTileView(),
         firstFrame(false), frozen(false), frozenTime(0.0), frozenCam(NULL),
         registerSlot("register", "The slot registering this view"), client(NULL), initMsg(NULL),
+        isFirstInitMsg(false),
         heartBeatPortSlot("heartbeat::port", "The port the heartbeat server communicates on"),
         heartBeatServerSlot("heartbeat::server", "The machine the heartbeat server runs on"),
         directCamSyncSlot("directCamSyn", "Flag controlling whether or not this view directly syncs it's camera without using the heartbeat server. It is not recommended to change this setting!"),
@@ -261,6 +262,7 @@ void cluster::simple::View::SetSetupMessage(const vislib::net::AbstractSimpleMes
     if (this->initMsg != NULL) {
         SAFE_DELETE(this->initMsg);
     }
+    this->isFirstInitMsg = true;
     this->initMsg = new vislib::net::SimpleMessage(msg);
 }
 
@@ -300,17 +302,36 @@ bool cluster::simple::View::create(void) {
  * cluster::simple::View::processInitialisationMessage
  */
 void cluster::simple::View::processInitialisationMessage(void) {
+    bool deleteInitMessage = true;
     if (this->initMsg != NULL) {
         if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
             this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
             this->client->ContinueSetup();
+        } else if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH_LUA) {
+            std::string result;
+            char *mg = this->initMsg->GetBodyAs<char>();
+            if (this->isFirstInitMsg) {
+                // queue graph changes. they will be executed at the start of the next frame.
+                if (this->GetCoreInstance()->GetLuaState()->RunString(mg, result)) {
+                    this->isFirstInitMsg = false;
+                    deleteInitMessage = false;
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("processInitialisationMessage: %s", result.c_str());
+                }
+            } else {
+                // this needs to be delayed until the 'next' frame, otherwise the graph does not exist yet!!!
+                this->client->ContinueSetup();
+            }
+
         } else {
             this->directCamSyncUpdated(this->directCamSyncSlot);
             if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
                 this->client->ContinueSetup(2);
             }
         }
-        SAFE_DELETE(this->initMsg);
+        if (deleteInitMessage) {
+            SAFE_DELETE(this->initMsg);
+        }
     }
 }
 

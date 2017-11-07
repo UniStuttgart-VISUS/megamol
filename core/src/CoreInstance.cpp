@@ -75,6 +75,8 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
+#include <sstream>
+
 #include "mmcore/utility/LuaHostService.h"
 
 /*****************************************************************************/
@@ -123,6 +125,10 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         shaderSourceFactory(config), log(), lua(nullptr),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
+        pendingCallInstRequests(), pendingCallDelRequests(),
+        pendingModuleInstRequests(), pendingModuleDelRequests(),
+        pendingParamSetRequests(),
+        graphUpdateLock(), loadedLuaProjects(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
     // setup log as early as possible.
@@ -678,6 +684,7 @@ megamol::core::CoreInstance::FindJobDescription(const char *name) {
  * megamol::core::CoreInstance::RequestAllInstantiations
  */
 void megamol::core::CoreInstance::RequestAllInstantiations() {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     for (auto vd : this->projViewDescs) {
         int cnt = static_cast<int>(this->pendingViewInstRequests.Count());
         std::string s = std::to_string(cnt);
@@ -721,6 +728,7 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
     if (param != NULL) {
         static_cast<ParamValueSetRequest&>(req) = *param;
     }
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingViewInstRequests.Add(req);
 }
 
@@ -745,14 +753,289 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
     if (param != NULL) {
         static_cast<ParamValueSetRequest&>(req) = *param;
     }
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     this->pendingJobInstRequests.Add(req);
+}
+
+
+bool megamol::core::CoreInstance::RequestModuleDeletion(const vislib::StringA& id) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingModuleDelRequests.Add(id);
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestCallDeletion(const vislib::StringA& from,
+    const vislib::StringA& to) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingCallDelRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(
+        from, to));
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestModuleInstantiation(const vislib::StringA& className,
+    const vislib::StringA& id) {
+
+    factories::ModuleDescription::ptr md =
+        this->GetModuleDescriptionManager().Find(vislib::StringA(className));
+    if (md == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of module"
+            " \"%s\": class \"%s\" not found.", id, className);
+        return false;
+    }
+
+    core::InstanceDescription::ModuleInstanceRequest mir;
+    mir.SetFirst(id);
+    mir.SetSecond(md);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingModuleInstRequests.Add(mir);
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestCallInstantiation(const vislib::StringA& className,
+    const vislib::StringA& from, const vislib::StringA& to) {
+
+    factories::CallDescription::ptr cd =
+        this->GetCallDescriptionManager().Find(vislib::StringA(className));
+    if (cd == NULL) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of "
+            " unknown call class \"%s\".", className);
+        return false;
+    }
+
+    core::InstanceDescription::CallInstanceRequest cir(from, to, cd, false);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingCallInstRequests.Add(cir);
+    return true;
+}
+
+
+bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, const vislib::StringA& value) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingParamSetRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(id, value));
+    return true;
+}
+
+
+void megamol::core::CoreInstance::PerformGraphUpdates() {
+    vislib::sys::AutoLock u(this->graphUpdateLock);
+    vislib::sys::AutoLock m(this->ModuleGraphRoot()->ModuleGraphLock());
+
+    AbstractNamedObject::ptr_type ano = this->namespaceRoot;
+    AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+    if (!root) {
+        vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates: no root");
+        return;
+    }
+
+    // delete modules
+    while (this->pendingModuleDelRequests.Count() > 0) {
+        auto mdr = this->pendingModuleDelRequests.First();
+        this->pendingModuleDelRequests.RemoveFirst();
+
+        Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
+        if (!mod) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr);
+            continue;
+        }
+
+        if (mod.get()->Parent() != nullptr) {
+            auto p = mod.get()->Parent();
+            auto n = dynamic_cast<core::ModuleNamespace *>(p.get());
+            if (n) {
+
+                // find all incoming calls. these need to be disconnected properly and deleted.
+                std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+                anoStack.push_back(root);
+                while (anoStack.size() > 0) {
+                    AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+                    anoStack.pop_back();
+
+                    if (anoc) {
+                        auto it_end = anoc->ChildList_End();
+                        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                            AbstractNamedObject::ptr_type ano = *it;
+                            AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                            if (anoc) {
+                                anoStack.push_back(anoc);
+                            } else {
+                                core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                                if (callerSlot != nullptr) {
+                                    core::Call *call = callerSlot->CallAs<Call>();
+                                    if (call != nullptr) {
+                                        auto target = call->PeekCalleeSlot()->Parent();
+                                        if (target->FullName().Equals(mod->FullName())) {
+                                            // this call points to mod
+                                            //vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                            //   call->PeekCalleeSlot()->FullName());
+                                            callerSlot->ConnectCall(nullptr);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // delete all outgoing calls of mod
+                AbstractNamedObjectContainer::child_list_type::iterator children, childrenend;
+                childrenend = mod->ChildList_End();
+                std::vector<AbstractNamedObject::ptr_type> deletionQueue;
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+                    if (anoc) {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "PerformGraphUpdates: found container \"%s\" inside module \"%s\"",
+                            anoc->FullName(), mod->FullName());
+                        continue;
+                    }
+                    core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
+                    if (callerSlot != nullptr) {
+                        core::Call *call = callerSlot->CallAs<Call>();
+                        if (call != nullptr) {
+                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                call->PeekCalleeSlot()->FullName());
+                            callerSlot->ConnectCall(nullptr);
+                        }
+                        deletionQueue.push_back(child);
+                    }
+                    core::param::ParamSlot *paramSlot = dynamic_cast<core::param::ParamSlot*>(child.get());
+                    if (paramSlot != nullptr) {
+                        //paramSlot->SetCleanupMark(true);
+                        //paramSlot->PerformCleanup();
+                        deletionQueue.push_back(child);
+                    }
+                    core::CalleeSlot *calleeSlot = dynamic_cast<core::CalleeSlot*>(child.get());
+                    if (calleeSlot != nullptr) {
+                        deletionQueue.push_back(child);
+                    }
+                }
+
+                for (auto &c : deletionQueue) {
+                    mod->RemoveChild(c);
+                }
+
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    vislib::sys::Log::DefaultLog.WriteError("child remaining in %s: %s", mod->FullName(), child->FullName());
+                }
+
+                // remove mod
+                n->RemoveChild(mod);
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.", mdr);
+                continue;
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr);
+            continue;
+        }
+
+    }
+
+    // delete calls
+    while (this->pendingCallDelRequests.Count() > 0) {
+        auto cdr = this->pendingCallDelRequests.First();
+        this->pendingCallDelRequests.RemoveFirst();
+        bool found = false;
+        // find the call
+        std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+        anoStack.push_back(root);
+        while (anoStack.size() > 0) {
+            AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+            anoStack.pop_back();
+
+            if (anoc) {
+                auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::ptr_type ano = *it;
+                    AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        anoStack.push_back(anoc);
+                    } else {
+                        core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                        if (callerSlot != nullptr) {
+                            core::Call *call = callerSlot->CallAs<Call>();
+                            if (call != nullptr) {
+                                auto target = call->PeekCalleeSlot();
+                                auto source = call->PeekCallerSlot();
+                                if (source->FullName().Equals(cdr.First()) && target->FullName().Equals(cdr.Second())) {
+                                    // this should be the right call
+                                    //vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s", call->PeekCallerSlot()->FullName(),
+                                    //    call->PeekCalleeSlot()->FullName());
+                                    callerSlot->SetCleanupMark(true);
+                                    callerSlot->DisconnectCalls();
+                                    callerSlot->PerformCleanup();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!found) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot delete call from \"%s\" to \"%s\"",
+                cdr.First(), cdr.Second());
+        }
+    }
+
+    // make modules
+    while (this->pendingModuleInstRequests.Count() > 0) {
+        auto mir = this->pendingModuleInstRequests.First();
+        this->pendingModuleInstRequests.RemoveFirst();
+        if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
+                " of class \"%s\".", mir.First(), mir.Second()->ClassName());
+        }
+    }
+
+    // make calls
+    while (this->pendingCallInstRequests.Count() > 0) {
+        auto cir = this->pendingCallInstRequests.First();
+        this->pendingCallInstRequests.RemoveFirst();
+        if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+                " from \"%s\" to \"%s\".", cir.Description()->ClassName(), cir.From(), cir.To());
+        }
+    }
+
+    // set parameter values;
+    while (this->pendingParamSetRequests.Count() > 0) {
+        auto psr = this->pendingParamSetRequests.First();
+        this->pendingParamSetRequests.RemoveFirst();
+
+        auto p = this->FindParameter(psr.First());
+        if (p != nullptr) {
+            vislib::TString val;
+            vislib::UTF8Encoder::Decode(val, psr.Second());
+
+            if (!p->ParseValue(val)) {
+                vislib::sys::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.", psr.First(), psr.Second());
+                continue;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\".", psr.First(), psr.Second());
+            }
+        } else {
+            // the error is already shown
+            continue;
+        }
+    }
 }
 
 
 /*
  * megamol::core::CoreInstance::GetPendingViewName
  */
-vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) const {
+vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     if (this->pendingViewInstRequests.IsEmpty()) return nullptr;
     ViewInstanceRequest request = this->pendingViewInstRequests.First();
     return request.Name();
@@ -768,6 +1051,7 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1001,6 +1285,7 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
@@ -1285,16 +1570,36 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
-    megamol::core::utility::xml::XmlReader reader;
-    if (!reader.OpenFile(filename)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to open project file \"%s\"",
-            filename.PeekBuffer());
-        return;
+    // TODO if endswith lua, execute, save for later
+    if (filename.EndsWith(".lua")) {
+        vislib::StringA content;
+        std::string result;
+        if (!vislib::sys::ReadTextFile(content, filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                filename.PeekBuffer());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Loading project file \"%s\"", filename.PeekBuffer());
+            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                    "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+            } else {
+                this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
+            }
+        }
+    } else {
+        megamol::core::utility::xml::XmlReader reader;
+        if (!reader.OpenFile(filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                filename.PeekBuffer());
+            return;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Loading project file \"%s\"", filename.PeekBuffer());
+        this->addProject(reader);
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Loading project file \"%s\"", filename.PeekBuffer());
-    this->addProject(reader);
 }
 
 
@@ -1302,17 +1607,39 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
-    megamol::core::utility::xml::XmlReader reader;
-    if (!reader.OpenFile(filename)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to open project file \"%s\"",
+    // TODO if endswith lua, execute, save for later
+    if (filename.EndsWith(L".lua")) {
+        vislib::StringA content;
+        std::string result;
+        if (!vislib::sys::ReadTextFile(content, filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                vislib::StringA(filename).PeekBuffer());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                    "Failed loading project file \"%s\": %s",
+                    vislib::StringA(filename).PeekBuffer(), result.c_str());
+            } else {
+                this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(
+                    vislib::StringA(filename), content));
+            }
+        }
+    } else {
+        megamol::core::utility::xml::XmlReader reader;
+        if (!reader.OpenFile(filename)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"",
+                vislib::StringA(filename).PeekBuffer());
+            return;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Loading project file \"%s\"",
             vislib::StringA(filename).PeekBuffer());
-        return;
+        this->addProject(reader);
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Loading project file \"%s\"",
-        vislib::StringA(filename).PeekBuffer());
-    this->addProject(reader);
 }
 
 
@@ -1330,6 +1657,20 @@ size_t megamol::core::CoreInstance::GetGlobalParameterHash(void) {
 
     return this->parameterHash;
 }
+
+
+vislib::StringA megamol::core::CoreInstance::GetMergedLuaProject() const {
+    if (this->loadedLuaProjects.Count() == 1) {
+        return this->loadedLuaProjects[0].Second();
+    }
+    std::stringstream out;
+    for (auto x = 0; x < this->loadedLuaProjects.Count(); x++) {
+        out << this->loadedLuaProjects[x].Second();
+        out << std::endl;
+    }
+    return out.str().c_str();
+}
+
 
 /*
  * megamol::core::CoreInstance::getGlobalParameterHash

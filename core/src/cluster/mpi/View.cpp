@@ -159,6 +159,7 @@ bool megamol::core::cluster::mpi::View::OnMessageReceived(
     switch (msg.GetHeader().GetMessageID()) {
         case MSG_TIMESYNC:
         case MSG_MODULGRAPH:
+        case MSG_MODULGRAPH_LUA:
         case MSG_VIEWCONNECT:
         case MSG_PARAMUPDATE:
         case MSG_CAMERAUPDATE:
