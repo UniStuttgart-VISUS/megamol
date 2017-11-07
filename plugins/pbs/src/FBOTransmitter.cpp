@@ -206,31 +206,50 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     try {
         if (this->zmq_socket.connected()) {
             // do stuff
-            while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
+            /*while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for viewport request\n");
-            }
-            /*if (!this->zmq_socket.send(zmq::message_t(&MSG_STARTFRAME, sizeof(int)))) {
-                return;
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
             }*/
-            /*if (!this->zmq_socket.send(zmq::message_t(&MSG_SENDVIEWPORT, sizeof(int)))) {
-                return;
-            }*/
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying viewport\n");
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
+            this->zmq_socket.recv(&dump);
+            zmq::message_t msg(sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
             int viewport[] = {0, 0, this->width, this->height};
-            if (!this->zmq_socket.send(zmq::message_t(viewport, sizeof(int) * 4))) {
-                return;
-            }
-            this->zmq_socket.recv(&dump);
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying color\n");
-            if (!this->zmq_socket.send(this->color_buf.begin(), this->color_buf.end())) {
-                return;
-            }
-            this->zmq_socket.recv(&dump);
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying depth\n");
-            if (!this->zmq_socket.send(this->depth_buf.begin(), this->depth_buf.end())) {
-                return;
-            }
+            char *ptr = reinterpret_cast<char*>(msg.data());
+            memcpy(ptr, viewport, sizeof(viewport));
+            ptr += sizeof(viewport);
+            memcpy(ptr, this->color_buf.data(), this->color_buf.size());
+            ptr += color_buf.size();
+            memcpy(ptr, this->depth_buf.data(), this->depth_buf.size());
+            this->zmq_socket.send(msg);
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+            
+            //while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
+            //    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for viewport request\n");
+            //}
+            ///*if (!this->zmq_socket.send(zmq::message_t(&MSG_STARTFRAME, sizeof(int)))) {
+            //    return;
+            //}*/
+            ///*if (!this->zmq_socket.send(zmq::message_t(&MSG_SENDVIEWPORT, sizeof(int)))) {
+            //    return;
+            //}*/
+            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying viewport\n");
+            //int viewport[] = {0, 0, this->width, this->height};
+            //if (!this->zmq_socket.send(zmq::message_t(viewport, sizeof(int) * 4))) {
+            //    return;
+            //}
+            //this->zmq_socket.recv(&dump);
+            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying color\n");
+            //if (!this->zmq_socket.send(this->color_buf.begin(), this->color_buf.end())) {
+            //    return;
+            //}
+            //this->zmq_socket.recv(&dump);
+            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying depth\n");
+            //if (!this->zmq_socket.send(this->depth_buf.begin(), this->depth_buf.end())) {
+            //    return;
+            //}
         } else {
             // connect socket
             this->connectSocketCallback(this->ipAddressSlot);

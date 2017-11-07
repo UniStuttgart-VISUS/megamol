@@ -23,8 +23,7 @@ fboHeightSlot("height", "Sets height of FBO"),
 ipAddressSlot("address", "IP address of reciever"),
 numRenderNodesSlot("numRenderNodes", "Number of render nodes connected to this compositor"),
 zmq_ctx(1),
-zmq_socket(zmq_ctx, zmq::socket_type::req),
-ip_address("localhost:34242") {
+zmq_socket(zmq_ctx, zmq::socket_type::req) {
     this->fboWidthSlot << new core::param::IntParam(1, 1, 3840);
     this->MakeSlotAvailable(&this->fboWidthSlot);
 
@@ -163,7 +162,9 @@ void FBOCompositor::release(void) {
     glDeleteVertexArrays(1, &this->vao);
     glDeleteBuffers(1, &this->vbo);
 
-    this->zmq_socket.disconnect("tcp://" + this->ip_address);
+    for (int i = 0; i < this->ip_address.size(); i++) {
+        this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
+    }
 }
 
 
@@ -204,7 +205,8 @@ bool FBOCompositor::Render(core::Call &call) {
         std::lock_guard<std::mutex> guard(this->swap_guard);
 
         // do upload
-        for (int i = 0; i < this->num_render_nodes; i++) {
+        //for (int i = 0; i < this->num_render_nodes; i++) {
+        for (int i = this->num_render_nodes-1; i >= 0; i--) {
             auto &data = this->renderData[i];
 
             glActiveTexture(GL_TEXTURE0);
@@ -265,12 +267,28 @@ bool FBOCompositor::Render(core::Call &call) {
 
 bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
     if (this->is_connected) {
-        this->zmq_socket.disconnect("tcp://" + this->ip_address);
+        for (int i = 0; i < this->ip_address.size(); i++) {
+            this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
+        }
         this->is_connected = false;
     }
 
-    this->ip_address = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
-    this->connectSocket(this->ip_address);
+    this->ip_address.clear();
+    std::string addresses = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
+    // https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+    size_t pos = 0;
+    std::string del(";");
+    while ((pos = addresses.find(del)) != std::string::npos) {
+        this->ip_address.push_back(addresses.substr(0, pos));
+        addresses.erase(0, pos + del.length());
+    }
+    if (!addresses.empty()) {
+        this->ip_address.push_back(addresses);
+    }
+
+    for (int i = 0; i < this->ip_address.size(); i++) {
+        this->connectSocket(this->ip_address[i]);
+    }
 
     return true;
 }
@@ -290,6 +308,7 @@ void FBOCompositor::receiverCallback(void) {
     try {
         zmq::message_t msg;
         size_t idx = 0;
+        std::vector<unsigned char> buffer;
         /*if (!this->zmq_socket.connected()) {
             this->ip_address = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
             this->connectSocket(this->ip_address);
@@ -297,28 +316,50 @@ void FBOCompositor::receiverCallback(void) {
         while (true) {
             for (int i = 0; i < this->num_render_nodes; i++) {
                 auto &data = this->receiverData[i];
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting viewport\n");
-                this->zmq_socket.send("Viewport", strlen("Viewport"));
-                this->zmq_socket.recv(&msg); //<-- viewport
-                memcpy(data.viewport, msg.data(), msg.size());
-                data.color_buf.resize(data.viewport[2] * data.viewport[3] * 4);
-                data.depth_buf.resize(data.viewport[2] * data.viewport[3] * 4);
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting color\n");
-                this->zmq_socket.send("Color", strlen("Color"));
-                idx = 0;
-                do {
-                    this->zmq_socket.recv(&msg);
-                    memcpy(data.color_buf.data() + idx, msg.data(), msg.size());
-                    idx += msg.size();
-                } while (msg.more());
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting depth\n");
-                this->zmq_socket.send("Depth", strlen("Depth"));
-                idx = 0;
-                do {
-                    this->zmq_socket.recv(&msg);
-                    memcpy(data.depth_buf.data() + idx, msg.data(), msg.size());
-                    idx += msg.size();
-                } while (msg.more());
+
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
+                this->zmq_socket.send("Frame", strlen("Frame"));
+                this->zmq_socket.recv(&msg);
+                if (msg.size() < sizeof(data.viewport)) {
+                    throw std::runtime_error("FBOCompositor receiver thread: message (viewport) corrupted\n");
+                }
+                char *ptr = reinterpret_cast<char*>(msg.data());
+                memcpy(data.viewport, ptr, sizeof(data.viewport));
+                ptr += sizeof(data.viewport);
+                int width = data.viewport[2] - data.viewport[0];
+                int height = data.viewport[3] - data.viewport[1];
+                int datasize = (width)*(height)*4;
+                if (width < 0 || height < 0 || datasize < 0 || msg.size() < datasize + sizeof(data.viewport)) {
+                    throw std::runtime_error("FBOCompositor receiver thread: message (data) corrupted\n");
+                }
+                data.color_buf.resize(datasize);
+                data.depth_buf.resize(datasize);
+                memcpy(data.color_buf.data(), ptr, datasize);
+                ptr += datasize;
+                memcpy(data.depth_buf.data(), ptr, datasize);
+
+                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting viewport\n");
+                //this->zmq_socket.send("Viewport", strlen("Viewport"));
+                //this->zmq_socket.recv(&msg); //<-- viewport
+                //memcpy(data.viewport, msg.data(), msg.size());
+                //data.color_buf.resize(data.viewport[2] * data.viewport[3] * 4);
+                //data.depth_buf.resize(data.viewport[2] * data.viewport[3] * 4);
+                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting color\n");
+                //this->zmq_socket.send("Color", strlen("Color"));
+                //idx = 0;
+                //do {
+                //    this->zmq_socket.recv(&msg);
+                //    memcpy(data.color_buf.data() + idx, msg.data(), msg.size());
+                //    idx += msg.size();
+                //} while (msg.more());
+                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting depth\n");
+                //this->zmq_socket.send("Depth", strlen("Depth"));
+                //idx = 0;
+                //do {
+                //    this->zmq_socket.recv(&msg);
+                //    memcpy(data.depth_buf.data() + idx, msg.data(), msg.size());
+                //    idx += msg.size();
+                //} while (msg.more());
             }
 
             this->swapFBOData();

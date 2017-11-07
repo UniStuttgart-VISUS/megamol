@@ -99,7 +99,7 @@ private:
 
     zmq::socket_t zmq_socket;
 
-    std::string ip_address;
+    std::vector<std::string> ip_address;
 
     std::thread receiverThread;
 

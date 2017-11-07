@@ -17,6 +17,6 @@ uniform mat4 project;
 void main () {
     ws_pos = in_pos;
 
-    gl_Position = project*modelview*vec4(ws_pos, 1.0);
-    //gl_Position = vec4(ws_pos, 1.0);
+    //gl_Position = project*modelview*vec4(ws_pos, 1.0);
+    gl_Position = vec4(ws_pos, 1.0);
 }
