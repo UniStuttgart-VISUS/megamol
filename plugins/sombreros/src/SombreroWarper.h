@@ -111,11 +111,10 @@ namespace sombreros {
 		/**
 		 * Warps the mesh to resemble a sombrero.
 		 *
-		 * @bsCall Call containing the binding site data.
 		 * @tunnelCall Call containing the tunnel data.
 		 * @return True on success, false otherwise.
 		 */
-		bool warpMesh(protein_calls::BindingSiteCall& bsCall, TunnelResidueDataCall& tunnelCall);
+		bool warpMesh(TunnelResidueDataCall& tunnelCall);
 
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
@@ -125,9 +124,6 @@ namespace sombreros {
 
 		/** Slot for the mesh input. */
 		core::CallerSlot meshInSlot;
-
-		/** Slot for the binding site input. */
-		core::CallerSlot bindingSiteInSlot;
 
 		/** Slot for the tunnel input */
 		core::CallerSlot tunnelInSlot;
@@ -158,6 +154,9 @@ namespace sombreros {
 
 		/** The vertex levels of the mesh */
 		std::vector<std::vector<uint>> vertexLevelAttachment;
+
+		/** The distance of each vertex to the binding site */
+		std::vector<std::vector<uint>> bsDistanceAttachment;
 		
 		/** The faces of the mesh */
 		std::vector<std::vector<uint>> faces;

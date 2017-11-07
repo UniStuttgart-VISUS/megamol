@@ -200,12 +200,14 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 	this->colors.clear();
 	this->attributes.clear();
 	this->levelAttributes.clear();
+	this->bindingDistanceAttributes.clear();
 	this->faces.clear();
 	this->vertices.resize(meshCall->Count());
 	this->normals.resize(meshCall->Count());
 	this->colors.resize(meshCall->Count());
 	this->attributes.resize(meshCall->Count());
 	this->levelAttributes.resize(meshCall->Count());
+	this->bindingDistanceAttributes.resize(meshCall->Count());
 	this->faces.resize(meshCall->Count());
 
 	for (int i = 0; i < static_cast<int>(meshCall->Count()); i++) {
@@ -418,7 +420,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				});
 
 				// go through all forward edges starting with the vertex
-				while ((*forward).first == element && forward != edgesForward.end()) {
+				while (forward != edgesForward.end() && (*forward).first == element) {
 					auto val = (*forward).second;
 					// check whether the endpoint val is not yet in our sets
 					if (!keepVector[val] && this->vertexKeepFlags[i][val]) {
@@ -431,7 +433,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 				}
 
 				// do the same thing for all reverse edges
-				while ((*reverse).first == element && reverse != edgesReverse.end()) {
+				while (reverse != edgesReverse.end() && (*reverse).first == element) {
 					auto val = (*reverse).second;
 					// check whether the endpoint val is not yet in our sets
 					if (!keepVector[val] && this->vertexKeepFlags[i][val]) {
@@ -456,6 +458,7 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 		this->colors[i].resize(keptVertices * 3); // TODO accept other color configurations
 		this->attributes[i].resize(keptVertices);
 		this->levelAttributes[i].resize(keptVertices);
+		this->bindingDistanceAttributes[i].resize(keptVertices, UINT_MAX);
 
 		// compute vertex mapping and fill vertex vectors
 		std::vector<unsigned int> vertIndexMap(vertCount, UINT_MAX); // mapping of old vertex indices to new ones
@@ -507,15 +510,62 @@ bool TunnelCutter::cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDat
 			}
 		}	
 
+		/*
+		 * fifth step: vertex level computation
+		 */
+		allowedVerticesSet.clear();
+		allowedVerticesSet.insert(minIndex);
+		this->bindingDistanceAttributes[i][vertIndexMap[minIndex]] = 0;
+		while (!allowedVerticesSet.empty()) {
+			newset.clear();
+			// for each currently allowed vertex
+			for (auto element : allowedVerticesSet) {
+				// search for the start indices in both edge lists
+				auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+
+				// go through all forward edges starting with the vertex
+				while (forward != edgesForward.end() && (*forward).first == element) {
+					auto val = (*forward).second;
+					// check whether the endpoint is valid
+					if (this->vertexKeepFlags[i][val]) {
+						if (this->bindingDistanceAttributes[i][vertIndexMap[val]] > this->bindingDistanceAttributes[i][vertIndexMap[element]] + 1) {
+							this->bindingDistanceAttributes[i][vertIndexMap[val]] = this->bindingDistanceAttributes[i][vertIndexMap[element]] + 1;
+							newset.insert(val);
+						}
+					}
+					forward++;
+				}
+
+				// do the same thing for all reverse edges
+				while (reverse != edgesReverse.end() && (*reverse).first == element) {
+					auto val = (*reverse).second;
+					// check whether the endpoint is valid
+					if (this->vertexKeepFlags[i][val]) {
+						if (this->bindingDistanceAttributes[i][vertIndexMap[val]] > this->bindingDistanceAttributes[i][vertIndexMap[element]] + 1) {
+							this->bindingDistanceAttributes[i][vertIndexMap[val]] = this->bindingDistanceAttributes[i][vertIndexMap[element]] + 1;
+							newset.insert(val);
+						}
+					}
+					reverse++;
+				}
+			}
+			allowedVerticesSet = newset;
+		}
 
 		/*
-		 * nth step: fill the data into the structure
+		 * sixth step: fill the data into the structure
 		 */
 		this->meshVector[i].SetVertexData(static_cast<unsigned int>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), NULL, false);
 		this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces[i].size() / 3), this->faces[i].data(), false);
 		this->meshVector[i].SetMaterial(nullptr);
 		this->meshVector[i].AddVertexAttribPointer(this->attributes[i].data());
 		this->meshVector[i].AddVertexAttribPointer(this->levelAttributes[i].data());
+		this->meshVector[i].AddVertexAttribPointer(this->bindingDistanceAttributes[i].data());
 	}
 
 	return true;

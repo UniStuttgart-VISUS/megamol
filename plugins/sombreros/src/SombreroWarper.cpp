@@ -25,7 +25,6 @@ using namespace megamol::protein_calls;
  */
 SombreroWarper::SombreroWarper(void) : Module(),
 		meshInSlot("dataIn", "Receives the input mesh"),
-		bindingSiteInSlot("bsIn", "Receives the binding site data"),
 		tunnelInSlot("tunnelIn", "Receives the tunnel data"),
 		warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
 		minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
@@ -39,9 +38,6 @@ SombreroWarper::SombreroWarper(void) : Module(),
 	// Caller slots
 	this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
 	this->MakeSlotAvailable(&this->meshInSlot);
-
-	this->bindingSiteInSlot.SetCompatibleCall<BindingSiteCallDescription>();
-	this->MakeSlotAvailable(&this->bindingSiteInSlot);
 
 	this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
 	this->MakeSlotAvailable(&this->tunnelInSlot);
@@ -88,9 +84,6 @@ bool SombreroWarper::getData(Call& call) {
 	CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
 	if (inCall == nullptr) return false;
 
-	BindingSiteCall * bsCall = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
-	if (bsCall == nullptr) return false;
-
 	TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
 	if (tunnelCall == nullptr) return false;
 
@@ -98,7 +91,6 @@ bool SombreroWarper::getData(Call& call) {
 	tunnelCall->SetFrameID(outCall->FrameID());
 
 	if (!(*inCall)(0)) return false;
-	if (!(*bsCall)(0)) return false;
 	if (!(*tunnelCall)(0)) return false;
 
 	// something happened with the input data, we have to recompute it
@@ -113,7 +105,7 @@ bool SombreroWarper::getData(Call& call) {
 		if (!this->findSombreroBorder()) return false;
 
 		// warp the mesh in the correct position
-		if (!this->warpMesh(*bsCall, *tunnelCall)) return false;
+		if (!this->warpMesh(*tunnelCall)) return false;
 	}
 
 	outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
@@ -189,6 +181,9 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 	this->vertexLevelAttachment.clear();
 	this->vertexLevelAttachment.resize(ctmd.Count());
 
+	this->bsDistanceAttachment.clear();
+	this->bsDistanceAttachment.resize(ctmd.Count());
+
 	this->edgesForward.clear();
 	this->edgesForward.resize(ctmd.Count());
 
@@ -205,8 +200,9 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 
 		uint atomIndexAttrib = UINT_MAX;
 		uint vertexLvlAttrib = UINT_MAX;
-		if (attribCount < 2) {
-			vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the Sombrero warper needs at least two UINT32 vertex attributes.");
+		uint bsDistAttrib = UINT_MAX;
+		if (attribCount < 3) {
+			vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the Sombrero warper needs at least three UINT32 vertex attributes.");
 			return false;
 		}
 		// determine the location of the needed attributes
@@ -214,13 +210,14 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 			auto dt = ctmd.Objects()[i].GetVertexAttribDataType(j);
 			if (atomIndexAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
 				atomIndexAttrib = j;
-			}
-			else if (vertexLvlAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
+			} else if (vertexLvlAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
 				vertexLvlAttrib = j;
+			} else if (bsDistAttrib == UINT_MAX && dt == ctmd.Objects()[i].DT_UINT32) {
+				bsDistAttrib = j;
 			}
 		}
-		if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX) {
-			vislib::sys::Log::DefaultLog.WriteError("Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least two UINT32 vertex attributes.");
+		if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX || bsDistAttrib == UINT_MAX) {
+			vislib::sys::Log::DefaultLog.WriteError("Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least three UINT32 vertex attributes.");
 			return false;
 		}
 
@@ -229,13 +226,15 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 		this->colors[i].resize(vertCount * 3);
 		this->atomIndexAttachment[i].resize(vertCount);
 		this->vertexLevelAttachment[i].resize(vertCount);
+		this->bsDistanceAttachment[i].resize(vertCount);
 		this->faces[i].resize(triCount * 3);
 
 		std::memcpy(this->vertices[i].data(), ctmd.Objects()[i].GetVertexPointerFloat(), vertCount * 3 * sizeof(float));
 		std::memcpy(this->normals[i].data(), ctmd.Objects()[i].GetNormalPointerFloat(), vertCount * 3 * sizeof(float));
 		std::memcpy(this->colors[i].data(), ctmd.Objects()[i].GetColourPointerByte(), vertCount * 3 * sizeof(unsigned char));
-		std::memcpy(this->atomIndexAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(0), vertCount * sizeof(uint));
-		std::memcpy(this->vertexLevelAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(1), vertCount * sizeof(uint));
+		std::memcpy(this->atomIndexAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(atomIndexAttrib), vertCount * sizeof(uint));
+		std::memcpy(this->vertexLevelAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(vertexLvlAttrib), vertCount * sizeof(uint));
+		std::memcpy(this->bsDistanceAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(bsDistAttrib), vertCount * sizeof(uint));
 		std::memcpy(this->faces[i].data(), ctmd.Objects()[i].GetTriIndexPointerUInt32(), triCount * 3 * sizeof(uint));
 
 		this->meshVector[i].SetVertexData(vertCount, this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
@@ -243,6 +242,7 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 		this->meshVector[i].SetMaterial(nullptr);
 		this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
 		this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
+		this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
 
 		// copy the edges
 		this->edgesForward[i].clear();
@@ -483,7 +483,11 @@ bool SombreroWarper::findSombreroBorder(void) {
 /*
  * SombreroWarper::warpMesh
  */
-bool SombreroWarper::warpMesh(BindingSiteCall& bsCall, TunnelResidueDataCall& tunnelCall) {
+bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
+	
+	
+
+
 	for (size_t i = 0; i < this->meshVector.size(); i++) {
 		uint vCnt = static_cast<uint>(this->vertices[i].size() / 3);
 		uint fCnt = static_cast<uint>(this->faces[i].size() / 3);

@@ -145,6 +145,9 @@ namespace sombreros {
 		/** Container for the kept vertex level attributes */
 		std::vector<std::vector<unsigned int>> levelAttributes;
 
+		/** Container for the kept binding site distance attributes */
+		std::vector<std::vector<unsigned int>> bindingDistanceAttributes;
+
 		/** Container for the kept faces */
 		std::vector<std::vector<unsigned int>> faces;
 
