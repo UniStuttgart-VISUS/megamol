@@ -82,7 +82,7 @@ bool megamol::pbs::FBOTransmitter::Terminate(void) {
 
 
 bool FBOTransmitter::create(void) {
-    connectSocketCallback(this->ipAddressSlot);
+    //connectSocketCallback(this->ipAddressSlot);
 
     // create FBO
     this->width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();

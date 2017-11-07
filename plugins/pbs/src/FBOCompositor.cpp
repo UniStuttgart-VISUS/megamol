@@ -228,11 +228,11 @@ bool FBOCompositor::Render(core::Call &call) {
                 GL_RGBA, GL_UNSIGNED_BYTE, data.color_buf.data());
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            /*glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
             glTexSubImage2D(GL_TEXTURE_2D, 0, data.viewport[0], data.viewport[1], data.viewport[2], data.viewport[3],
-                GL_DEPTH_COMPONENT24, GL_UNSIGNED_INT_24_8, data.depth_buf.data());
-            glBindTexture(GL_TEXTURE_2D, 0);*/
+                GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data.depth_buf.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         //glBindTexture(GL_TEXTURE_2D, 0);
@@ -243,6 +243,7 @@ bool FBOCompositor::Render(core::Call &call) {
     // do render
     
     glViewport(this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3]);
+    glEnable(GL_DEPTH_TEST);
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
@@ -275,6 +276,8 @@ bool FBOCompositor::Render(core::Call &call) {
 
     // disable shader
     glUseProgram(0);
+
+    glDisable(GL_DEPTH_TEST);
 
     return true;
 }
