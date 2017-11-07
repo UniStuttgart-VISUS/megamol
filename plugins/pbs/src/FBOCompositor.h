@@ -85,6 +85,8 @@ private:
 
     bool updateNumRenderNodesCallback(core::param::ParamSlot &p);
 
+    void resizeBuffers(const int oldSize);
+
     void swapFBOData(void);
 
     core::param::ParamSlot ipAddressSlot;
@@ -126,6 +128,8 @@ private:
     GLuint vao, vbo;
 
     bool is_connected = false;
+
+    int viewport[4];
 }; /* end class FBOCompositor */
 
 } /* end namespace pbs */

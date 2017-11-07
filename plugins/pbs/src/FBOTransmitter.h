@@ -167,6 +167,8 @@ private:
     bool is_running = false;
 
     bool is_connected = false;
+
+    int viewport[4];
 }; /* end class FBOTransmitter */
 
 GLuint createTexture(GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type);

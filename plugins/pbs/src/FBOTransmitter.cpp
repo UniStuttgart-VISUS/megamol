@@ -105,7 +105,11 @@ void FBOTransmitter::release(void) {
 
 
 void FBOTransmitter::BeforeRender(core::view::AbstractView *view) {
-    view->Resize(this->width, this->height);
+
+    glGetIntegerv(GL_VIEWPORT, this->viewport);
+
+
+    //view->Resize(this->width, this->height);
 
     //view->UnregisterHook(this);
 
@@ -175,11 +179,11 @@ void FBOTransmitter::BeforeRender(core::view::AbstractView *view) {
 
 
 bool FBOTransmitter::resizeCallback(core::param::ParamSlot &p) {
-    this->width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
+    /*this->width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
     this->height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
 
     this->color_buf.resize(this->width*this->height*4);
-    this->depth_buf.resize(this->width*this->height*4);
+    this->depth_buf.resize(this->width*this->height*4);*/
 
     /*deleteRBO(this->color_rbo);
     deleteRBO(this->depth_rbo);
@@ -196,6 +200,12 @@ bool FBOTransmitter::resizeCallback(core::param::ParamSlot &p) {
 void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     //view->UnregisterHook(this);
 
+    this->width = this->viewport[2] - this->viewport[0];
+    this->height = this->viewport[3] - this->viewport[1];
+
+    this->color_buf.resize(this->width*this->height * 4);
+    this->depth_buf.resize(this->width*this->height * 4);
+
     glReadPixels(0, 0, this->width, this->height, GL_RGBA, GL_UNSIGNED_BYTE, this->color_buf.data());
 
     glReadPixels(0, 0, this->width, this->height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_INT_24_8, this->depth_buf.data());
@@ -206,17 +216,17 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     try {
         if (this->zmq_socket.connected()) {
             // do stuff
-            /*while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
+            while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
-            }*/
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
-            this->zmq_socket.recv(&dump);
+            }
+            /*vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
+            this->zmq_socket.recv(&dump);*/
             zmq::message_t msg(sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
-            int viewport[] = {0, 0, this->width, this->height};
+            //int viewport[] = {0, 0, this->width, this->height};
             char *ptr = reinterpret_cast<char*>(msg.data());
-            memcpy(ptr, viewport, sizeof(viewport));
-            ptr += sizeof(viewport);
+            memcpy(ptr, this->viewport, sizeof(this->viewport));
+            ptr += sizeof(this->viewport);
             memcpy(ptr, this->color_buf.data(), this->color_buf.size());
             ptr += color_buf.size();
             memcpy(ptr, this->depth_buf.data(), this->depth_buf.size());
