@@ -54,7 +54,6 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `06_straightenSimTangent` (Assigned key: `t`): Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe.
 * `07_addFixedPerCentAnimTime` (`0.1`): Adds fixed per cent of animation time to currently selected keyframe when new keyframe is added.
 * `08_addFixedPerCentSimTime` (`0.0`): Adds fixed per cent of simulation time to currently selected keyframe when new keyframe is added.
-
 * `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
 * `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
@@ -64,7 +63,6 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `editSelected - 07_resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
 * `editSelected - 08_up`:  Edit the up vector of the selected keyframe.
 * `editSelected - 09_apertureAngle`: Edit aperture angle of the selected keyframe.
-
 * `storage - 01_filename`:  The name of the file to load or save keyframes. 
 * `storage - 02_save` (Assigned key: `s`): Save keyframes to file.
 * `storage - 03_autoLoad` (`true`): Load keyframes from file when filename changes.
