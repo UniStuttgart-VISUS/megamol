@@ -30,6 +30,7 @@
 #include <map>
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/Process.h"
+#include "vislib/sys/Environment.h"
 
 extern "C" {
 #include "lua.h"
@@ -84,6 +85,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMCREATEJOB "mmCreateJob"
 #define MMC_LUA_MMDELETEJOB "mmDeleteJob"
 #define MMC_LUA_MMQUERYMODULES "mmQueryModules"
+#define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
 
 
@@ -123,7 +125,8 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMCREATEJOB, MMC_LUA_MMCREATEJOB"(string jobName, string jobModuleClass, string jobModuleName)"
     "\n\tCreate a new background job and the according namespace <jobName> alongside it."
     "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window." },
-    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB"TODO" }
+    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB"TODO" },
+    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE"(string name)\n\tReturn the value of env variable <name>." }
 };
 
 // clang-format off
@@ -161,6 +164,7 @@ MMC_LUA_MMCREATEVIEW "=" MMC_LUA_MMCREATEVIEW ","
 MMC_LUA_MMDELETEVIEW "=" MMC_LUA_MMDELETEVIEW ","
 MMC_LUA_MMCREATEJOB "=" MMC_LUA_MMCREATEJOB ","
 MMC_LUA_MMDELETEJOB "=" MMC_LUA_MMDELETEJOB ","
+MMC_LUA_MMGETENVVALUE "=" MMC_LUA_MMGETENVVALUE ","
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -342,6 +346,8 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMDELETEJOB, &dispatch<&LuaState::DeleteJob>);
 
         lua_register(L, MMC_LUA_MMQUERYMODULES, &dispatch<&LuaState::QueryModules>);
+
+        lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
 
@@ -754,6 +760,18 @@ int megamol::core::LuaState::GetConfigValue(lua_State *L) {
         return 1;
     }
     return 0;
+}
+
+
+int megamol::core::LuaState::GetEnvValue(lua_State *L) {
+    auto name = luaL_checkstring(L, 1);
+    if (vislib::sys::Environment::IsSet(name)) {
+        lua_pushstring(L, vislib::sys::Environment::GetVariable(name));
+        return 1;
+    } else {
+        lua_pushstring(L, "undef");
+        return 1;
+    }
 }
 
 
