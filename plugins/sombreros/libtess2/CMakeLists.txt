@@ -13,14 +13,14 @@ project(libtess2 C)
 
 include_directories("include" "src")
 
-file(GLOB header_files "include/*.h")
-file(GLOB source_files "src/*.h" "src/*.c")
+file(GLOB libtess2_header_files "include/*.h")
+file(GLOB libtess2_source_files "src/*.h" "src/*.c")
 
-add_library(${PROJECT_NAME} ${header_files} ${source_files})
+add_library(${PROJECT_NAME} ${libtess2_header_files} ${libtess2_source_files})
 	
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
-source_group("Header Files" FILES ${header_files})
-source_group("Source Files" FILES ${source_files})
+source_group("Header Files" FILES ${libtess2_header_files})
+source_group("Source Files" FILES ${libtess2_source_files})
 
 install(TARGETS ${PROJECT_NAME} 
   DESTINATION lib)
