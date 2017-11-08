@@ -2,27 +2,24 @@
 # LIBTESS2 - Modified Version for MegaMol
 #
 
-cmake_minimum_required(VERSION 3.2)
+project(libtess2)
 
-option(BUILD_LIBTESS2 "Build LIBTESS2" ON)
-
-if(BUILD_LIBTESS2)
-
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}")
-project(libtess2 C)
+# public header files for installation
+file(GLOB_RECURSE libtess2_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+# source files for compilation
+file(GLOB_RECURSE libtess2_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" "src/*.c")
 
 include_directories("include" "src")
 
-file(GLOB libtess2_header_files "include/*.h")
-file(GLOB libtess2_source_files "src/*.h" "src/*.c")
-
-add_library(${PROJECT_NAME} ${libtess2_header_files} ${libtess2_source_files})
+# Target definition
+add_library(${PROJECT_NAME} STATIC ${libtess2_header_files} ${libtess2_source_files})
+# Dependent projects only need to link against the core.so itself.
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 	
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
 source_group("Header Files" FILES ${libtess2_header_files})
 source_group("Source Files" FILES ${libtess2_source_files})
 
-install(TARGETS ${PROJECT_NAME} 
-  DESTINATION lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
 
-endif(BUILD_LIBTESS2)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER external)
