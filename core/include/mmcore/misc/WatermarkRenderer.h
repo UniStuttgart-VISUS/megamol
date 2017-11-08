@@ -45,7 +45,7 @@ namespace megamol {
             * @return A human readable description of this module.
             */
             static const char *Description(void) {
-                return "Render watermarks using PNG-files in all four corners of the viewport.";
+                return "Render watermarks (logos) in all four corners of the viewport using PNG-files.";
             }
 
             /**
@@ -117,7 +117,7 @@ namespace megamol {
                 TOP_LEFT     = 0,
                 TOP_RIGHT    = 1,
                 BOTTOM_LEFT  = 2,
-                BOTTOM_RIGHT = 3,
+                BOTTOM_RIGHT = 3
             };
 
             vislib::graphics::gl::OpenGLTexture2D textureTopLeft;

@@ -44,7 +44,7 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight()
     {
 
-    /* Init image file name params */
+    // Init image file name params
     this->paramImgTopLeft.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->paramImgTopLeft);
 
@@ -57,7 +57,7 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     this->paramImgBottomRight.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->paramImgBottomRight);
 
-    /* Init scale params */
+    // Init scale params
     this->paramScaleAll.SetParameter(new param::FloatParam(1.0));
     this->MakeSlotAvailable(&this->paramScaleAll);
 
@@ -73,11 +73,11 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     this->paramScaleBottomRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
     this->MakeSlotAvailable(&this->paramScaleBottomRight);
 
-    /* Init alpha param */
+    // Init alpha param 
     this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->paramAlpha);
 
-    /* Init variables */
+    // Init variables 
     this->lastScaleAll     = 1.0f;
     this->firstParamChange = false;
 }
@@ -156,7 +156,7 @@ bool WatermarkRenderer::Render(Call& call) {
         return false;
     }
 
-    /* Update parameters */
+    // Update parameters 
     if (this->paramImgTopLeft.IsDirty()) {
         this->paramImgTopLeft.ResetDirty();
         this->loadTexture(WatermarkRenderer::TOP_LEFT, static_cast<vislib::StringA>(this->paramImgTopLeft.Param<param::FilePathParam>()->Value()));
@@ -217,10 +217,10 @@ bool WatermarkRenderer::Render(Call& call) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    // Draw help text in front of all
+    // Draw textures in front of all
     glTranslatef(0.0f, 0.0f, 1.0f);
 
-    // Render watermarks ...
+    // Render watermarks 
     glEnable(GL_TEXTURE_2D);
     this->renderWatermark(WatermarkRenderer::TOP_LEFT, vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::TOP_RIGHT, vpHeight, vpWidth);
@@ -252,7 +252,9 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     float scale;
     vislib::graphics::gl::OpenGLTexture2D *tex = NULL;
     float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
-    float fixImgWidth = vpW* 1.0f;
+
+    // Set default image width ... e.g. depending on viewport size
+    float fixImgWidth = imageWidth; // vpW* 1.0f;
 
     switch (cor) {
     case(WatermarkRenderer::TOP_LEFT):
@@ -266,7 +268,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
         bottom       = vpH - imageHeight;
         break;
     case(WatermarkRenderer::TOP_RIGHT):
-        tex = &this->textureTopRight;
+        tex          = &this->textureTopRight;
         scale        = this->paramScaleTopRight.Param<param::FloatParam>()->Value();
         imageWidth   = fixImgWidth * scale;
         imageHeight  = fixImgWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X()) * scale;
@@ -360,12 +362,13 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
         void *buf = NULL;
         SIZE_T size = 0;
 
-        //if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+        // If textures should be loaded as resources:  if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
         if ((size = this->loadFile(filename, &buf)) > 0) {
             if (pbc.Load(buf, size)) {
                 img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
                 texSize->SetX(img.Width());
                 texSize->SetY(img.Height());
+                // Set alpha to zero for black background
                 //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
                 //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
@@ -395,7 +398,7 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
             }
         }
         else {
-            // Error is already catch by loadFile function ...
+            // Error is already catched by loadFile function
             //vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
         }
         return false;
