@@ -87,6 +87,37 @@ namespace sombreros {
 		bool getExtent(megamol::core::Call& call);
 
 	private:
+		/**
+		 * structure representing a triangle
+		 */
+		struct Triangle {
+			uint v1; // first vertex index
+			uint v2; // second vertex index
+			uint v3; // third vertex index
+
+			/** Ctor. */
+			Triangle() {
+				v1 = 0;
+				v2 = 0;
+				v3 = 0;
+			}
+
+			/** Ctor */
+			Triangle(uint v1, uint v2, uint v3) {
+				this->v1 = v1;
+				this->v2 = v2;
+				this->v3 = v3;
+				// sort the vertices ascending
+				if (this->v1 > this->v3) std::swap(this->v1, this->v3);
+				if (this->v1 > this->v2) std::swap(this->v1, this->v2);
+				if (this->v2 > this->v3) std::swap(this->v2, this->v3);
+			}
+
+			/** equality operator overload */
+			inline bool operator==(Triangle& o) {
+				return this->v1 == o.v1 && this->v2 == o.v2 && this->v3 == o.v3;
+			}
+		};
 
 		/**
 		 * Checks for dirty parameters and sets the dirty flag, if needed
@@ -137,6 +168,12 @@ namespace sombreros {
 		/** Parameter fo the maximum brim level */
 		core::param::ParamSlot maxBrimLevelParam;
 
+		/** Parameter for the maximum target distance after vertex lifting  */
+		core::param::ParamSlot liftingTargetDistance;
+
+		/** Parameter for the maximum allowed distance before lifting*/
+		core::param::ParamSlot maxAllowedLiftingDistance;
+
 		/** Vector containing the modified mesh data */
 		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
 
@@ -157,6 +194,9 @@ namespace sombreros {
 
 		/** The distance of each vertex to the binding site */
 		std::vector<std::vector<uint>> bsDistanceAttachment;
+
+		/** The newly computed binding site distances after vertex lifting */
+		std::vector<std::vector<uint>> newBsDistances;
 		
 		/** The faces of the mesh */
 		std::vector<std::vector<uint>> faces;
@@ -169,6 +209,9 @@ namespace sombreros {
 
 		/** Set containing the indices of the border vertices */
 		std::vector<std::set<uint>> borderVertices;
+
+		/** Sets containing the indices of all different cut vertices */
+		std::vector<std::vector<std::set<uint>>> cutVertices;
 
 		/** Flags for each vertex if they belong to the brim */
 		std::vector<std::vector<bool>> brimFlags;

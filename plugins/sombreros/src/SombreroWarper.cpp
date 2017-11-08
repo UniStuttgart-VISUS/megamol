@@ -28,7 +28,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 		tunnelInSlot("tunnelIn", "Receives the tunnel data"),
 		warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
 		minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
-		maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level") {
+		maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level"),
+		liftingTargetDistance("meshDeformation::liftingTargetDistance", "The distance that is applied to a vertex during the lifting process."),
+		maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.") {
 
 	// Callee slot
 	this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -48,6 +50,12 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
 	this->maxBrimLevelParam.SetParameter(new param::IntParam(-1, -1, 100));
 	this->MakeSlotAvailable(&this->maxBrimLevelParam);
+
+	this->liftingTargetDistance.SetParameter(new param::IntParam(2, 2, 10));
+	this->MakeSlotAvailable(&this->liftingTargetDistance);
+
+	this->maxAllowedLiftingDistance.SetParameter(new param::IntParam(2, 2, 10));
+	this->MakeSlotAvailable(&this->maxAllowedLiftingDistance);
 
 	this->lastDataHash = 0;
 	this->hashOffset = 0;
@@ -155,6 +163,14 @@ void SombreroWarper::checkParameters(void) {
 	}
 	if (this->maxBrimLevelParam.IsDirty()) {
 		this->maxBrimLevelParam.ResetDirty();
+		this->dirtyFlag = true;
+	}
+	if (this->maxAllowedLiftingDistance.IsDirty()) {
+		this->maxAllowedLiftingDistance.ResetDirty();
+		this->dirtyFlag = true;
+	}
+	if (this->liftingTargetDistance.IsDirty()) {
+		this->liftingTargetDistance.ResetDirty();
 		this->dirtyFlag = true;
 	}
 }
@@ -278,6 +294,8 @@ bool SombreroWarper::findSombreroBorder(void) {
 	this->borderVertices.resize(this->meshVector.size());
 	this->brimFlags.clear();
 	this->brimFlags.resize(this->meshVector.size());
+	this->cutVertices.clear();
+	this->cutVertices.resize(this->meshVector.size());
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		CallTriMeshData::Mesh& mesh = this->meshVector[i];
 
@@ -399,11 +417,32 @@ bool SombreroWarper::findSombreroBorder(void) {
 				maxIndex = j;
 			}
 		}
+
+		if (localBorder.size() < 1) {
+			vislib::sys::Log::DefaultLog.WriteError("No brim border found. No calculation possible!");
+			return false;
+		}
+
 		// write all indices to the storage
 		this->borderVertices[i] = localBorder[maxIndex];
+#if 0 // color all found vertices blue
+		for (uint j = 0; j < localBorder.size(); j++) {
+			for (uint k = 0; k < vCnt; k++) {
+				if (localBorder[j].count(k) > 0) {
+					this->colors[i][k * 3 + 0] = 0;
+					this->colors[i][k * 3 + 1] = 0;
+					this->colors[i][k * 3 + 2] = 255;
+				} else {
+					this->colors[i][k * 3 + 0] = 255;
+					this->colors[i][k * 3 + 1] = 255;
+					this->colors[i][k * 3 + 2] = 255;
+				}
+			}
+		}
+#endif
 
 		/**
-			At this point, the border is found, we now try to extend it to form the brim
+		 *	At this point, the border is found, we now try to extend it to form the brim
 		 */
 
 #if 0 // color the border vertices red, the rest white
@@ -415,9 +454,9 @@ bool SombreroWarper::findSombreroBorder(void) {
 				this->colors[i][j * 3 + 1] = static_cast<unsigned char>(red.Y() * 255.0f);
 				this->colors[i][j * 3 + 2] = static_cast<unsigned char>(red.Z() * 255.0f);
 			} else {
-				this->colors[i][j * 3 + 0] = static_cast<unsigned char>(white.X() * 255.0f);
-				this->colors[i][j * 3 + 1] = static_cast<unsigned char>(white.Y() * 255.0f);
-				this->colors[i][j * 3 + 2] = static_cast<unsigned char>(white.Z() * 255.0f);
+				//this->colors[i][j * 3 + 0] = static_cast<unsigned char>(white.X() * 255.0f);
+				//this->colors[i][j * 3 + 1] = static_cast<unsigned char>(white.Y() * 255.0f);
+				//this->colors[i][j * 3 + 2] = static_cast<unsigned char>(white.Z() * 255.0f);
 			}
 		}
 #endif
@@ -475,6 +514,94 @@ bool SombreroWarper::findSombreroBorder(void) {
 #endif
 			}
 		}
+
+		// build triangle search structures
+		std::vector<Triangle> firstOrder;
+		std::vector<Triangle> secondOrder;
+		std::vector<Triangle> thirdOrder;
+		firstOrder.resize(fCnt);
+		for (uint j = 0; j < fCnt; j++) {
+			firstOrder[j] = Triangle(this->faces[i][j * 3 + 0], this->faces[i][j * 3 + 1], this->faces[i][j * 3 + 2]);
+		}
+		secondOrder = firstOrder;
+		thirdOrder = firstOrder;
+		std::sort(firstOrder.begin(), firstOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v1 < b.v1;
+		});
+		std::sort(secondOrder.begin(), secondOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v2 < b.v2;
+		});
+		std::sort(thirdOrder.begin(), thirdOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v3 < b.v3;
+		});
+
+		this->cutVertices[i].resize(localBorder.size() - 1);
+
+		uint myIndex = 0;
+		// identify all real cut vertices
+		for (size_t j = 0; j < localBorder.size(); j++) {
+			if (j != maxIndex) { // we do this only when it is not the brim
+				// iterate over all identified vertices
+				for (auto vIdx : localBorder[j]) {
+					// we iterate over all outgoing triangles and add up the angles they produce
+					// if the resulting angle is not very close to 360°, it is a cut vertex
+					auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
+						return t.v1 < s;
+					});
+					auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
+						return t.v2 < s;
+					});
+					auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
+						return t.v3 < s;
+					});
+
+					std::set<uint> vertexSet;
+					uint triCount = 0;
+					while (firstIt != firstOrder.end() && (*firstIt).v1 == vIdx) {
+						vertexSet.insert((*firstIt).v2);
+						vertexSet.insert((*firstIt).v3);
+						triCount++;
+						firstIt++;
+					}
+					while (secondIt != secondOrder.end() && (*secondIt).v2 == vIdx) {
+						vertexSet.insert((*secondIt).v1);
+						vertexSet.insert((*secondIt).v3);
+						triCount++;
+						secondIt++;
+					}
+					while (thirdIt != thirdOrder.end() && (*thirdIt).v3 == vIdx) {
+						vertexSet.insert((*thirdIt).v2);
+						vertexSet.insert((*thirdIt).v1);
+						triCount++;
+						thirdIt++;
+					}
+					// if we have more adjacent vertices than adjacent triangles, we have a cut vertex
+					if (vertexSet.size() > triCount) {
+						this->cutVertices[i][myIndex].insert(vIdx);
+					}
+				}
+				myIndex++;
+			}
+		}
+
+#if 0 // color all cut vertices
+		for (uint j = 0; j < vCnt; j++) {
+			bool colored = false;
+			for (uint s = 0; s < this->cutVertices[i].size(); s++) {
+				if (this->cutVertices[i][s].count(j) > 0) {
+					this->colors[i][j * 3 + 0] = 0;
+					this->colors[i][j * 3 + 1] = 0;
+					this->colors[i][j * 3 + 2] = 255;
+					colored = true;
+				}
+			}
+			if (!colored) {
+				this->colors[i][j * 3 + 0] = 255;
+				this->colors[i][j * 3 + 1] = 255;
+				this->colors[i][j * 3 + 2] = 255;
+			}
+		}
+#endif
 	}
 
 	return true;
@@ -485,12 +612,25 @@ bool SombreroWarper::findSombreroBorder(void) {
  */
 bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 	
-	
-
+	this->newBsDistances = this->bsDistanceAttachment;
 
 	for (size_t i = 0; i < this->meshVector.size(); i++) {
 		uint vCnt = static_cast<uint>(this->vertices[i].size() / 3);
 		uint fCnt = static_cast<uint>(this->faces[i].size() / 3);
+
+		// find the index of the binding site vertex
+		auto bsIt = std::find(this->bsDistanceAttachment[i].begin(), this->bsDistanceAttachment[i].end(), 0);
+		uint bsVertex = 0; // index of binding site vertex
+		if (bsIt != this->bsDistanceAttachment[i].end()) {
+			bsVertex = static_cast<uint>(bsIt - this->bsDistanceAttachment[i].begin());
+		} else {
+			vislib::sys::Log::DefaultLog.WriteError("No binding site vertex present. No computation possible!");
+			return false;
+		}
+
+		/*
+		 * step 1: vertex level computation
+		 */
 
 
 	}
