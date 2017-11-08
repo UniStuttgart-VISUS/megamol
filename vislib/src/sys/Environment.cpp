@@ -561,10 +561,10 @@ vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
 bool vislib::sys::Environment::IsSet(const char *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableA(name, NULL, 0) == 0) {
-        throw SystemException(__FILE__, __LINE__);
+        return false;
+    } else {
+        return true;
     }
-
-    return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
 #else /* _WIN32 */
     return (::getenv(name) != NULL);
 #endif /* _WIN32 */
@@ -577,10 +577,10 @@ bool vislib::sys::Environment::IsSet(const char *name) {
 bool vislib::sys::Environment::IsSet(const wchar_t *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableW(name, NULL, 0) == 0) {
-        throw SystemException(__FILE__, __LINE__);
+        return false;
+    } else {
+        return true;
     }
-
-    return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
 #else /* _WIN32 */
     return Environment::IsSet(W2A(name));
 #endif /* _WIN32 */
