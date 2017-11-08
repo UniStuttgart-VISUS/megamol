@@ -32,8 +32,9 @@ FBOTransmitter::FBOTransmitter(void)
       ipAddressSlot("address", "IP address of reciever"),
       animTimeParamNameSlot("timeparamname", "Name of the time parameter"),
       triggerButtonSlot("trigger", "The trigger button"),
+      identifierSlot("id", "the mpi rank"),
       zmq_ctx(1),
-      zmq_socket(zmq_ctx, zmq::socket_type::rep),
+      zmq_socket(zmq_ctx, zmq::socket_type::push),
       ip_address("*:34242") {
     this->viewNameSlot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -56,6 +57,9 @@ FBOTransmitter::FBOTransmitter(void)
     this->triggerButtonSlot << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 't');
     this->triggerButtonSlot.SetUpdateCallback(&FBOTransmitter::triggerButtonClicked);
     this->MakeSlotAvailable(&this->triggerButtonSlot);
+
+    this->identifierSlot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->identifierSlot);
 }
 
 
@@ -199,6 +203,14 @@ bool FBOTransmitter::resizeCallback(core::param::ParamSlot &p) {
 
 void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     //view->UnregisterHook(this);
+    static std::chrono::high_resolution_clock::time_point last;
+    auto now = std::chrono::high_resolution_clock::now();
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last) >= 
+        std::chrono::milliseconds(50)) {
+        last = now;
+    } else {
+        return;
+    }
 
     this->width = this->viewport[2] - this->viewport[0];
     this->height = this->viewport[3] - this->viewport[1];
@@ -208,7 +220,7 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
 
     glReadPixels(0, 0, this->width, this->height, GL_RGBA, GL_UNSIGNED_BYTE, this->color_buf.data());
 
-    glReadPixels(0, 0, this->width, this->height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_INT_24_8, this->depth_buf.data());
+    glReadPixels(0, 0, this->width, this->height, GL_DEPTH_COMPONENT, GL_FLOAT, this->depth_buf.data());
 
 
     // send buffers over socket
@@ -216,15 +228,18 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     try {
         if (this->zmq_socket.connected()) {
             // do stuff
-            while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
+           /* while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
-            }
-            /*vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
-            this->zmq_socket.recv(&dump);*/
-            zmq::message_t msg(sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
+            }*/
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
+            //this->zmq_socket.recv(&dump);*/
+            zmq::message_t msg(sizeof(int32_t) + sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
             //int viewport[] = {0, 0, this->width, this->height};
             char *ptr = reinterpret_cast<char*>(msg.data());
+            int32_t *rank = reinterpret_cast<int32_t*>(ptr);
+            *rank = this->identifierSlot.Param<core::param::IntParam>()->Value();
+            ptr += sizeof(int32_t);
             memcpy(ptr, this->viewport, sizeof(this->viewport));
             ptr += sizeof(this->viewport);
             memcpy(ptr, this->color_buf.data(), this->color_buf.size());

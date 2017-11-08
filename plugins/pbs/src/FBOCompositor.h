@@ -83,7 +83,7 @@ private:
 
     void receiverCallback(void);
 
-    bool updateNumRenderNodesCallback(core::param::ParamSlot &p);
+    //bool updateNumRenderNodesCallback(core::param::ParamSlot &p);
 
     void resizeBuffers(const int oldSize);
 
@@ -129,7 +129,7 @@ private:
 
     bool is_connected = false;
 
-    int viewport[4];
+    //int viewport[4];
 }; /* end class FBOCompositor */
 
 } /* end namespace pbs */

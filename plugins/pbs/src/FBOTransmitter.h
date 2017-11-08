@@ -156,6 +156,8 @@ private:
 
     core::param::ParamSlot triggerButtonSlot;
 
+    core::param::ParamSlot identifierSlot;
+
     int width;
 
     int height;

@@ -23,21 +23,21 @@ fboHeightSlot("height", "Sets height of FBO"),
 ipAddressSlot("address", "IP address of reciever"),
 numRenderNodesSlot("numRenderNodes", "Number of render nodes connected to this compositor"),
 zmq_ctx(1),
-zmq_socket(zmq_ctx, zmq::socket_type::req),
+zmq_socket(zmq_ctx, zmq::socket_type::pull),
 num_render_nodes(0),
 fbo_width(-1),
 fbo_height(-1),
 color_textures(nullptr),
 depth_textures(nullptr) {
-    this->viewport[0] = 0;
+    /*this->viewport[0] = 0;
     this->viewport[1] = 0;
     this->viewport[2] = 1;
-    this->viewport[3] = 1;
-    /*this->fboWidthSlot << new core::param::IntParam(1, 1, 3840);
+    this->viewport[3] = 1;*/
+    this->fboWidthSlot << new core::param::IntParam(1, 1, 3840);
     this->MakeSlotAvailable(&this->fboWidthSlot);
 
     this->fboHeightSlot << new core::param::IntParam(1, 1, 2160);
-    this->MakeSlotAvailable(&this->fboHeightSlot);*/
+    this->MakeSlotAvailable(&this->fboHeightSlot);
 
     this->ipAddressSlot << new core::param::StringParam("localhost:34242");
     this->ipAddressSlot.SetUpdateCallback(&FBOCompositor::connectSocketCallback);
@@ -231,7 +231,7 @@ bool FBOCompositor::Render(core::Call &call) {
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
             glTexSubImage2D(GL_TEXTURE_2D, 0, data.viewport[0], data.viewport[1], data.viewport[2], data.viewport[3],
-                GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data.depth_buf.data());
+                GL_DEPTH_COMPONENT, GL_FLOAT, data.depth_buf.data());
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
@@ -242,7 +242,7 @@ bool FBOCompositor::Render(core::Call &call) {
 
     // do render
     
-    glViewport(this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3]);
+    glViewport(0, 0, this->fbo_width, this->fbo_height);
     glEnable(GL_DEPTH_TEST);
 
     // this is the apex of suck and must die
@@ -308,9 +308,14 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
         this->connectSocket(this->ip_address[i]);
     }
 
-    auto tmp = this->num_render_nodes;
+    //auto tmp = this->num_render_nodes;
     this->num_render_nodes = this->ip_address.size();
-    this->resizeBuffers(tmp);
+    //this->resizeBuffers(tmp);
+
+    std::lock_guard<std::mutex> guard(this->swap_guard);
+
+    this->renderData.resize(this->num_render_nodes);
+    this->receiverData.resize(this->num_render_nodes);
 
     this->receiverThread.swap(std::thread(&FBOCompositor::receiverCallback, this));
 
@@ -337,19 +342,26 @@ void FBOCompositor::receiverCallback(void) {
             this->ip_address = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
             this->connectSocket(this->ip_address);
         }*/
+        std::vector<bool> gotData(this->num_render_nodes, false);
         while (true) {
-            for (int i = 0; i < this->num_render_nodes; i++) {
-                auto &data = this->receiverData[i];
+            std::fill(gotData.begin(), gotData.end(), false);
+            //for (int i = 0; i < this->num_render_nodes; i++) {
+            while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
+                //auto &data = this->receiverData[i];
 
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
-                this->zmq_socket.send("Frame", strlen("Frame"));
+                //this->zmq_socket.send("Frame", strlen("Frame"));
                 this->zmq_socket.recv(&msg);
-                if (msg.size() < sizeof(data.viewport)) {
+                char *ptr = reinterpret_cast<char*>(msg.data());
+                int32_t rank = *reinterpret_cast<int32_t*>(msg.data());
+                ASSERT(rank >= 0 && rank < receiverData.size());
+                auto &data = this->receiverData[rank];
+                if (msg.size() < sizeof(data.viewport) + sizeof(int32_t)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (viewport) corrupted\n");
                 }
-                char *ptr = reinterpret_cast<char*>(msg.data());
+                ptr += sizeof(int32_t);
                 memcpy(data.viewport, ptr, sizeof(data.viewport));
-                memcpy(this->viewport, data.viewport, sizeof(data.viewport));
+                //memcpy(this->viewport, data.viewport, sizeof(data.viewport));
                 ptr += sizeof(data.viewport);
                 int width = data.viewport[2] - data.viewport[0];
                 int height = data.viewport[3] - data.viewport[1];
@@ -362,6 +374,8 @@ void FBOCompositor::receiverCallback(void) {
                 memcpy(data.color_buf.data(), ptr, datasize);
                 ptr += datasize;
                 memcpy(data.depth_buf.data(), ptr, datasize);
+
+                gotData[rank] = true;
 
                 //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting viewport\n");
                 //this->zmq_socket.send("Viewport", strlen("Viewport"));
@@ -395,83 +409,81 @@ void FBOCompositor::receiverCallback(void) {
 }
 
 
-bool FBOCompositor::updateNumRenderNodesCallback(core::param::ParamSlot &p) {
-    std::lock_guard<std::mutex> guard(this->swap_guard);
-
-    auto old_num = this->num_render_nodes;
-
-    //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
-    //this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
-    //this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
-
-    auto old_fbo_width = this->fbo_width;
-    auto old_fbo_height = this->fbo_height;
-
-    this->fbo_width = this->viewport[2] - this->viewport[0];
-    this->fbo_height = this->viewport[3] - this->viewport[1];
-
-    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width) {
-
-        this->renderData.resize(this->num_render_nodes);
-        this->receiverData.resize(this->num_render_nodes);
-
-        glDeleteTextures(old_num, this->color_textures);
-        glDeleteTextures(old_num, this->depth_textures);
-
-        this->color_textures = new GLuint[this->num_render_nodes];
-
-        this->depth_textures = new GLuint[this->num_render_nodes];
-
-        glGenTextures(this->num_render_nodes, this->color_textures);
-        glGenTextures(this->num_render_nodes, this->depth_textures);
-
-        for (int i = 0; i < this->num_render_nodes; i++) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->fbo_width, this->fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-
-        //glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    return true;
-}
+//bool FBOCompositor::updateNumRenderNodesCallback(core::param::ParamSlot &p) {
+//    std::lock_guard<std::mutex> guard(this->swap_guard);
+//
+//    auto old_num = this->num_render_nodes;
+//
+//    //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
+//    //this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
+//    //this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
+//
+//    auto old_fbo_width = this->fbo_width;
+//    auto old_fbo_height = this->fbo_height;
+//
+//    this->fbo_width = this->viewport[2] - this->viewport[0];
+//    this->fbo_height = this->viewport[3] - this->viewport[1];
+//
+//    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width) {
+//
+//        this->renderData.resize(this->num_render_nodes);
+//        this->receiverData.resize(this->num_render_nodes);
+//
+//        glDeleteTextures(old_num, this->color_textures);
+//        glDeleteTextures(old_num, this->depth_textures);
+//
+//        this->color_textures = new GLuint[this->num_render_nodes];
+//
+//        this->depth_textures = new GLuint[this->num_render_nodes];
+//
+//        glGenTextures(this->num_render_nodes, this->color_textures);
+//        glGenTextures(this->num_render_nodes, this->depth_textures);
+//
+//        for (int i = 0; i < this->num_render_nodes; i++) {
+//            glActiveTexture(GL_TEXTURE0);
+//            glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
+//            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->fbo_width, this->fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//            glBindTexture(GL_TEXTURE_2D, 0);
+//
+//            glActiveTexture(GL_TEXTURE1);
+//            glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
+//            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//            glBindTexture(GL_TEXTURE_2D, 0);
+//        }
+//
+//        //glBindTexture(GL_TEXTURE_2D, 0);
+//    }
+//
+//    return true;
+//}
 
 
 void FBOCompositor::resizeBuffers(const int oldSize) {
-    std::lock_guard<std::mutex> guard(this->swap_guard);
+    //std::lock_guard<std::mutex> guard(this->swap_guard);
 
-    this->renderData.resize(this->num_render_nodes);
-    this->receiverData.resize(this->num_render_nodes);
-
-    this->fbo_width = this->viewport[2] - this->viewport[0];
-    this->fbo_height = this->viewport[3] - this->viewport[1];
-
+    //this->renderData.resize(this->num_render_nodes);
+    //this->receiverData.resize(this->num_render_nodes);
+    
     auto old_fbo_width = this->fbo_width;
     auto old_fbo_height = this->fbo_height;
 
-    this->fbo_width = this->viewport[2] - this->viewport[0];
-    this->fbo_height = this->viewport[3] - this->viewport[1];
+    this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
+    this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
 
-    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width || oldSize != this->num_render_nodes) {
+    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width/* || oldSize != this->num_render_nodes*/) {
 
-        glDeleteTextures(oldSize, this->color_textures);
-        glDeleteTextures(oldSize, this->depth_textures);
-
-        if (this->color_textures != nullptr)
+        if (this->color_textures != nullptr) {
+            glDeleteTextures(oldSize, this->color_textures);
             delete[] this->color_textures;
-        if (this->depth_textures != nullptr)
+        }
+        if (this->depth_textures != nullptr) {
+            glDeleteTextures(oldSize, this->depth_textures);
             delete[] this->depth_textures;
+        }
 
         this->color_textures = new GLuint[this->num_render_nodes];
 
@@ -490,7 +502,7 @@ void FBOCompositor::resizeBuffers(const int oldSize) {
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -507,7 +519,7 @@ void FBOCompositor::swapFBOData(void) {
         this->is_new_data.store(true);
     }
 
-    resizeBuffers(this->num_render_nodes);
+    //resizeBuffers(this->num_render_nodes);
 
     //updateNumRenderNodesCallback(this->ipAddressSlot);
 }
