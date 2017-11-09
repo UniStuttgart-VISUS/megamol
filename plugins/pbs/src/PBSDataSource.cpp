@@ -194,7 +194,7 @@ bool PBSDataSource::read(void) {
 
     this->clearBuffers();
 
-    const std::string path_to_pbs = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+    const std::string path_to_pbs = std::string(this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
 
 
     const auto start_idx = this->start_idx_slot.Param<core::param::IntParam>()->Value();

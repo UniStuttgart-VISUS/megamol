@@ -123,7 +123,7 @@ bool FBOCompositor::create(void) {
     auto path_to_vert = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbscompositor.vert.glsl");
     auto path_to_frag = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbscompositor.frag.glsl");
 
-    std::ifstream shader_file(path_to_vert);
+    std::ifstream shader_file(path_to_vert.PeekBuffer());
     std::string shader_string = std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
     shader_file.close();
 
@@ -131,7 +131,7 @@ bool FBOCompositor::create(void) {
     GLint string_size = shader_string.size();
     glShaderSource(vert_shader, 1, &shader_cstring, &string_size);
 
-    shader_file.open(path_to_frag);
+    shader_file.open(path_to_frag.PeekBuffer());
     shader_string = std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
     shader_file.close();
 
@@ -294,7 +294,7 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
     }
 
     this->ip_address.clear();
-    std::string addresses = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
+    std::string addresses = std::string(this->ipAddressSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
     // https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
     size_t pos = 0;
     std::string del(";");
@@ -319,7 +319,7 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
     this->renderData->resize(this->num_render_nodes);
     this->receiverData->resize(this->num_render_nodes);
 
-    this->receiverThread.swap(std::thread(&FBOCompositor::receiverCallback, this));
+    this->receiverThread = std::thread(&FBOCompositor::receiverCallback, this);
 
     return true;
 }
