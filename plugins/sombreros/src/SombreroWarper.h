@@ -154,6 +154,13 @@ namespace sombreros {
 		 */
 		bool warpMesh(TunnelResidueDataCall& tunnelCall);
 
+		/**
+		 * Recomputes the distances of the vertices after vertex insertion.
+		 *
+		 * @return True on success, false otherwise
+		 */
+		bool recomputeVertexDistances(void);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 

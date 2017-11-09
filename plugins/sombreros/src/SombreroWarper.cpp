@@ -113,16 +113,19 @@ bool SombreroWarper::getData(Call& call) {
 		// search the sombrero border
 		if (!this->findSombreroBorder()) return false;
 
-		// warp the mesh in the correct position
-		if (!this->warpMesh(*tunnelCall)) return false;
-
 		// fill the holes of the mesh
 		if (!this->fillMeshHoles()) return false;
 
+		// recompute the broken vertex distances
+		if (!this->recomputeVertexDistances()) return false;
+
+		// warp the mesh in the correct position
+		if (!this->warpMesh(*tunnelCall)) return false;
+
 		// reset the mesh vector
 		for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-			this->meshVector[i].SetVertexData(this->vertices[i].size() / 3, this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
-			this->meshVector[i].SetTriangleData(this->faces[i].size() / 3, this->faces[i].data(), false);
+			this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
+			this->meshVector[i].SetTriangleData(static_cast<uint>(this->faces[i].size() / 3), this->faces[i].data(), false);
 			this->meshVector[i].SetMaterial(nullptr);
 			this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
 			this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
@@ -754,6 +757,7 @@ bool SombreroWarper::fillMeshHoles(void) {
 
 
 		for (uint j = 0; j < this->cutVertices[i].size(); j++) {
+#if 0 
 			// allocate everythin necessary for libtess
 			TESSalloc ma;
 			TESStesselator* tess = nullptr;
@@ -762,7 +766,7 @@ bool SombreroWarper::fillMeshHoles(void) {
 			ma.memalloc = libtessAlloc;
 			ma.memfree = libtessFree;
 			ma.userData = (void*)&allocated;
-			ma.extraVertices = 0;
+			ma.extraVertices = 256;
 
 			tess = tessNewTess(&ma);
 			if (tess == nullptr) {
@@ -797,11 +801,9 @@ bool SombreroWarper::fillMeshHoles(void) {
 			const int nverts = tessGetVertexCount(tess);
 			const int nelems = tessGetElementCount(tess);
 
-			std::vector<int> help = std::vector<int>(vinds, vinds + nverts);
-			std::vector<int> help2 = std::vector<int>(elems, elems + nelems * 3);
 			std::vector<uint> newVertices;
 			uint oldVCount = static_cast<uint>(this->atomIndexAttachment[i].size());
-			for (uint k = 0; k < nverts; k++) {
+			for (uint k = 0; k < static_cast<uint>(nverts); k++) {
 				if (vinds[k] == TESS_UNDEF) {
 					newVertices.push_back(k);
 					this->vertices[i].push_back(verts[3 * k + 0]);
@@ -824,24 +826,27 @@ bool SombreroWarper::fillMeshHoles(void) {
 				uint x = elems[k * 3 + 0];
 				uint y = elems[k * 3 + 1];
 				uint z = elems[k * 3 + 2];
-				
+
 				if (vinds[x] != TESS_UNDEF) {
 					x = indexMap[vinds[x]];
-				} else {
+				}
+				else {
 					auto it = std::find(newVertices.begin(), newVertices.end(), x);
 					uint index = static_cast<uint>(it - newVertices.begin());
 					x = oldVCount + index;
 				}
 				if (vinds[y] != TESS_UNDEF) {
 					y = indexMap[vinds[y]];
-				} else {
+				}
+				else {
 					auto it = std::find(newVertices.begin(), newVertices.end(), y);
 					uint index = static_cast<uint>(it - newVertices.begin());
 					y = oldVCount + index;
 				}
 				if (vinds[z] != TESS_UNDEF) {
 					z = indexMap[vinds[z]];
-				} else {
+				}
+				else {
 					auto it = std::find(newVertices.begin(), newVertices.end(), z);
 					uint index = static_cast<uint>(it - newVertices.begin());
 					z = oldVCount + index;
@@ -856,7 +861,56 @@ bool SombreroWarper::fillMeshHoles(void) {
 				this->edgesReverse[i].push_back(std::pair<uint, uint>(y, x));
 				this->edgesReverse[i].push_back(std::pair<uint, uint>(z, y));
 				this->edgesReverse[i].push_back(std::pair<uint, uint>(x, z));
-			}	
+			}
+#else 
+			vislib::math::Vector<float, 3> avgPos(0.0f, 0.0f, 0.0f);
+			vislib::math::Vector<float, 3> avgNormal(0.0f, 0.0f, 0.0f);
+			vislib::math::Vector<float, 3> avgColor(0.0f, 0.0f, 0.0f);
+
+			for (auto v : this->cutVertices[i][j]) {
+				vislib::math::Vector<float, 3> pos(&this->vertices[i][v * 3]);
+				vislib::math::Vector<float, 3> normal(&this->normals[i][v * 3]);
+				vislib::math::Vector<float, 3> color(static_cast<float>(this->colors[i][v * 3]),
+					static_cast<float>(this->colors[i][v * 3 + 1]), static_cast<float>(this->colors[i][v * 3 + 2]));
+				avgPos += pos;
+				avgNormal += normal;
+				avgColor += color;
+			}
+			avgPos /= static_cast<float>(this->cutVertices[i][j].size());
+			avgColor /= static_cast<float>(this->cutVertices[i][j].size());
+			avgNormal.Normalise();
+
+			this->vertices[i].push_back(avgPos[0]);
+			this->vertices[i].push_back(avgPos[1]);
+			this->vertices[i].push_back(avgPos[2]);
+			this->normals[i].push_back(avgNormal[0]);
+			this->normals[i].push_back(avgNormal[1]);
+			this->normals[i].push_back(avgNormal[2]);
+			this->colors[i].push_back(static_cast<unsigned char>(avgColor[0]));
+			this->colors[i].push_back(static_cast<unsigned char>(avgColor[1]));
+			this->colors[i].push_back(static_cast<unsigned char>(avgColor[2]));
+			this->atomIndexAttachment[i].push_back(0);
+			this->bsDistanceAttachment[i].push_back(UINT_MAX);
+			this->vertexLevelAttachment[i].push_back(0);
+
+			// vertex was added, now add all triangles
+			uint siz = static_cast<uint>(sortedCuts[j].size());
+			for (uint k = 0; k < siz; k++) {
+				uint x = static_cast<uint>(this->atomIndexAttachment[i].size() - 1);
+				uint y = sortedCuts[j][k];
+				uint z = sortedCuts[j][(k+1) % siz];
+				this->faces[i].push_back(x);
+				this->faces[i].push_back(y);
+				this->faces[i].push_back(z);
+
+				this->edgesForward[i].push_back(std::pair<uint, uint>(x, y));
+				this->edgesForward[i].push_back(std::pair<uint, uint>(y, z));
+				this->edgesForward[i].push_back(std::pair<uint, uint>(z, x));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(y, x));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(z, y));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(x, z));
+			}
+#endif
 		}
 		// resort the search structures
 		std::sort(edgesForward[i].begin(), edgesForward[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
@@ -865,6 +919,29 @@ bool SombreroWarper::fillMeshHoles(void) {
 		std::sort(edgesReverse[i].begin(), edgesReverse[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
 			return left.first < right.first;
 		});
+		// remove edge duplicates
+		edgesForward[i].erase(std::unique(edgesForward[i].begin(), edgesForward[i].end()), edgesForward[i].end());
+		edgesReverse[i].erase(std::unique(edgesReverse[i].begin(), edgesReverse[i].end()), edgesReverse[i].end());
+	}
+
+	return true;
+}
+
+/*
+ * SombreroWarper::recomputeVertexDistances
+ */
+bool SombreroWarper::recomputeVertexDistances(void) {
+	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+		auto it = std::find(this->bsDistanceAttachment[i].begin(), this->bsDistanceAttachment[i].end(), 0);
+		uint bsIndex = UINT_MAX;
+		if (it != this->bsDistanceAttachment[i].end()) {
+			bsIndex = static_cast<uint>(it - this->bsDistanceAttachment[i].begin());
+		} else {
+			vislib::sys::Log::DefaultLog.WriteError("No binding site index found!");
+			return false;
+		}
+		
+		
 	}
 
 	return true;
