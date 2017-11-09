@@ -11,6 +11,7 @@
 #include "mmstd_trisoup/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
+#include "tesselator.h"
 #include <climits>
 #include <iostream>
 
@@ -114,6 +115,19 @@ bool SombreroWarper::getData(Call& call) {
 
 		// warp the mesh in the correct position
 		if (!this->warpMesh(*tunnelCall)) return false;
+
+		// fill the holes of the mesh
+		if (!this->fillMeshHoles()) return false;
+
+		// reset the mesh vector
+		for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+			this->meshVector[i].SetVertexData(this->vertices[i].size() / 3, this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
+			this->meshVector[i].SetTriangleData(this->faces[i].size() / 3, this->faces[i].data(), false);
+			this->meshVector[i].SetMaterial(nullptr);
+			this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
+			this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
+			this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
+		}
 	}
 
 	outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
@@ -632,7 +646,225 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 		 * step 1: vertex level computation
 		 */
 
+		// TODO
+	}
 
+	return true;
+}
+
+/*
+ * libtessAlloc
+ */
+void * libtessAlloc(void * userData, unsigned int size) {
+	int * allocated = (int*)userData;
+	TESS_NOTUSED(userData);
+	*allocated += static_cast<int>(size);
+	return malloc(size);
+}
+
+/*
+ * libtessFree
+ */
+void libtessFree(void * userData, void * ptr) {
+	TESS_NOTUSED(userData);
+	free(ptr);
+}
+
+/*
+ * SombreroWarper::fillMeshHoles
+ */
+bool SombreroWarper::fillMeshHoles(void) {
+	// for each mesh
+	for (uint i = 0; i < this->meshVector.size(); i++) {
+		// for each hole in the mesh
+
+		std::vector<std::vector<uint>> sortedCuts;
+		sortedCuts.resize(this->cutVertices[i].size());
+		// we have to sort the mesh vertices to be consecutive along the border
+		for (uint j = 0; j < this->cutVertices[i].size(); j++) {
+			sortedCuts[j].resize(this->cutVertices[i][j].size());
+
+			auto localSet = this->cutVertices[i][j];
+			uint current = *localSet.begin();
+			uint setsize = static_cast<uint>(this->cutVertices[i][j].size());
+			localSet.erase(current);
+			sortedCuts[j][0] = current;
+			uint k = 0;
+			while (!localSet.empty()) {
+				auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				bool found = false;
+				while (forward != edgesForward[i].end() && (*forward).first == current) {
+					auto target = (*forward).second;
+					if (this->cutVertices[i][j].count(target) > 0) {
+						if (localSet.count(target) > 0 || k == setsize - 1) {
+							if (k == 0) {
+								// the direction does not matter with k == 0
+								localSet.erase(target);
+								sortedCuts[j][k + 1] = target;
+								found = true;
+							} else {
+								if (sortedCuts[j][k - 1] != target) {
+									localSet.erase(target);
+									if (k != setsize - 1) {
+										sortedCuts[j][k + 1] = target;
+									}
+									found = true;
+								}
+							}
+						}
+					}
+					forward++;
+				}
+				if (!found) {
+					while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+						auto target = (*reverse).second;
+						if (this->cutVertices[i][j].count(target) > 0) {
+							if (localSet.count(target) > 0 || k == setsize - 1) {
+								if (k == 0) {
+									// the direction does not matter with k == 0
+									localSet.erase(target);
+									sortedCuts[j][k + 1] = target;
+									found = true;
+								}
+								else {
+									if (sortedCuts[j][k - 1] != target) {
+										localSet.erase(target);
+										if (k != setsize - 1) {
+											sortedCuts[j][k + 1] = target;
+										}
+										found = true;
+									}
+								}
+							}
+						}
+						reverse++;
+					}
+				}
+				if (k != setsize - 1) {
+					current = sortedCuts[j][k + 1];
+				}
+				k++;
+			}
+		}
+
+
+		for (uint j = 0; j < this->cutVertices[i].size(); j++) {
+			// allocate everythin necessary for libtess
+			TESSalloc ma;
+			TESStesselator* tess = nullptr;
+			int allocated = 0;
+			memset(&ma, 0, sizeof(ma));
+			ma.memalloc = libtessAlloc;
+			ma.memfree = libtessFree;
+			ma.userData = (void*)&allocated;
+			ma.extraVertices = 0;
+
+			tess = tessNewTess(&ma);
+			if (tess == nullptr) {
+				vislib::sys::Log::DefaultLog.WriteError("No tessellator could be acquired!");
+				return false;
+			}
+
+			// build input arrays for libtess
+			std::vector<float> vertexPositions(this->cutVertices[i][j].size() * 3);
+			std::vector<float> vertexNormals(this->cutVertices[i][j].size() * 3);
+			std::vector<uint> indexMap(this->cutVertices[i][j].size());
+			uint k = 0;
+			for (uint v : sortedCuts[j]) {
+				vertexPositions[k * 3 + 0] = this->vertices[i][v * 3 + 0];
+				vertexPositions[k * 3 + 1] = this->vertices[i][v * 3 + 1];
+				vertexPositions[k * 3 + 2] = this->vertices[i][v * 3 + 2];
+				vertexNormals[k * 3 + 0] = this->normals[i][v * 3 + 0];
+				vertexNormals[k * 3 + 1] = this->normals[i][v * 3 + 1];
+				vertexNormals[k * 3 + 2] = this->normals[i][v * 3 + 2];
+				indexMap[k] = v;
+				k++;
+			}
+			tessAddContour(tess, 3, vertexPositions.data(), sizeof(float) * 3, static_cast<int>(vertexPositions.size() / 3));
+			if (!tessTesselate(tess, TESS_WINDING_NONZERO, TESS_POLYGONS, 3, 3, vertexNormals.data())) {
+				vislib::sys::Log::DefaultLog.WriteError("The tessellation of a mesh hole failed!");
+				return false;
+			}
+
+			const float * verts = tessGetVertices(tess);
+			const int * vinds = tessGetVertexIndices(tess);
+			const int * elems = tessGetElements(tess);
+			const int nverts = tessGetVertexCount(tess);
+			const int nelems = tessGetElementCount(tess);
+
+			std::vector<int> help = std::vector<int>(vinds, vinds + nverts);
+			std::vector<int> help2 = std::vector<int>(elems, elems + nelems * 3);
+			std::vector<uint> newVertices;
+			uint oldVCount = static_cast<uint>(this->atomIndexAttachment[i].size());
+			for (uint k = 0; k < nverts; k++) {
+				if (vinds[k] == TESS_UNDEF) {
+					newVertices.push_back(k);
+					this->vertices[i].push_back(verts[3 * k + 0]);
+					this->vertices[i].push_back(verts[3 * k + 1]);
+					this->vertices[i].push_back(verts[3 * k + 2]);
+					this->normals[i].push_back(0.0f);
+					this->normals[i].push_back(0.0f);
+					this->normals[i].push_back(0.0f);
+					this->colors[i].push_back(255);
+					this->colors[i].push_back(0);
+					this->colors[i].push_back(0);
+					// unsure about the following ones
+					this->vertexLevelAttachment[i].push_back(0);
+					this->bsDistanceAttachment[i].push_back(UINT_MAX);
+					this->atomIndexAttachment[i].push_back(0);
+				}
+			}
+
+			for (int k = 0; k < nelems; k++) {
+				uint x = elems[k * 3 + 0];
+				uint y = elems[k * 3 + 1];
+				uint z = elems[k * 3 + 2];
+				
+				if (vinds[x] != TESS_UNDEF) {
+					x = indexMap[vinds[x]];
+				} else {
+					auto it = std::find(newVertices.begin(), newVertices.end(), x);
+					uint index = static_cast<uint>(it - newVertices.begin());
+					x = oldVCount + index;
+				}
+				if (vinds[y] != TESS_UNDEF) {
+					y = indexMap[vinds[y]];
+				} else {
+					auto it = std::find(newVertices.begin(), newVertices.end(), y);
+					uint index = static_cast<uint>(it - newVertices.begin());
+					y = oldVCount + index;
+				}
+				if (vinds[z] != TESS_UNDEF) {
+					z = indexMap[vinds[z]];
+				} else {
+					auto it = std::find(newVertices.begin(), newVertices.end(), z);
+					uint index = static_cast<uint>(it - newVertices.begin());
+					z = oldVCount + index;
+				}
+				this->faces[i].push_back(x);
+				this->faces[i].push_back(y);
+				this->faces[i].push_back(z);
+
+				this->edgesForward[i].push_back(std::pair<uint, uint>(x, y));
+				this->edgesForward[i].push_back(std::pair<uint, uint>(y, z));
+				this->edgesForward[i].push_back(std::pair<uint, uint>(z, x));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(y, x));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(z, y));
+				this->edgesReverse[i].push_back(std::pair<uint, uint>(x, z));
+			}	
+		}
+		// resort the search structures
+		std::sort(edgesForward[i].begin(), edgesForward[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+			return left.first < right.first;
+		});
+		std::sort(edgesReverse[i].begin(), edgesReverse[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+			return left.first < right.first;
+		});
 	}
 
 	return true;

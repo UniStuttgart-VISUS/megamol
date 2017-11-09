@@ -133,6 +133,13 @@ namespace sombreros {
 		bool copyMeshData(megamol::trisoup::CallTriMeshData& ctmd);
 
 		/**
+		 * Fills holes in the generated mesh that were detected beforehand by findSombreroBorder(void)
+		 *
+		 * @return True on success, false otherwise.
+		 */
+		bool fillMeshHoles(void);
+
+		/**
 		 * Searches for the outer vertices of the sombrero brim.
 		 *
 		 * @return True on success, false otherwise.
