@@ -119,6 +119,8 @@ bool SombreroWarper::getData(Call& call) {
 		// recompute the broken vertex distances
 		if (!this->recomputeVertexDistances()) return false;
 
+		if (!this->computeVertexAngles()) return false;
+
 		// warp the mesh in the correct position
 		if (!this->warpMesh(*tunnelCall)) return false;
 
@@ -313,6 +315,8 @@ bool SombreroWarper::findSombreroBorder(void) {
 	this->brimFlags.resize(this->meshVector.size());
 	this->cutVertices.clear();
 	this->cutVertices.resize(this->meshVector.size());
+	this->brimIndices.clear();
+	this->brimIndices.resize(this->meshVector.size());
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		CallTriMeshData::Mesh& mesh = this->meshVector[i];
 
@@ -479,9 +483,11 @@ bool SombreroWarper::findSombreroBorder(void) {
 #endif
 		std::vector<uint> vertexLevels(vCnt, UINT_MAX);
 		this->brimFlags[i].resize(vCnt, false);
+		this->brimIndices[i].clear();
 		for (size_t j = 0; j < vCnt; j++) {
 			if (this->borderVertices[i].count(static_cast<uint>(j)) > 0) {
 				this->brimFlags[i][j] = true;
+				this->brimIndices[i].push_back(static_cast<uint>(j));
 				vertexLevels[j] = 0;
 			}
 		}
@@ -956,7 +962,6 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
 					return x.first < val;
 				});
-
 				// go through all forward edges starting with the vertex
 				while (forward != edgesForward[i].end() && (*forward).first == element) {
 					auto val = (*forward).second;
@@ -966,7 +971,6 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 					}
 					forward++;
 				}
-
 				// do the same thing for all reverse edges
 				while (reverse != edgesReverse[i].end() && (*reverse).first == element) {
 					auto val = (*reverse).second;
@@ -980,6 +984,88 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 			}
 			allowedVerticesSet = newset;
 		}
+	}
+	return true;
+}
+
+/*
+ * SombreroWarper::computeVertexAngles
+ */
+bool SombreroWarper::computeVertexAngles(void) {
+
+	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+		// first: find the meridian
+
+		// startpoint: the binding site vertex
+		auto it = std::find(this->bsDistanceAttachment[i].begin(), this->bsDistanceAttachment[i].end(), 0);
+		uint startIndex = UINT_MAX;
+		if (it != this->bsDistanceAttachment[i].end()) {
+			startIndex = static_cast<uint>(it - this->bsDistanceAttachment[i].begin());
+		}
+		else {
+			vislib::sys::Log::DefaultLog.WriteError("No start binding site index found!");
+			return false;
+		}
+
+		// end-point the brim vertex with the lowest level
+		uint lowestLevel = UINT_MAX;
+		uint endIndex = UINT_MAX;
+		for (auto v : this->brimIndices[i]) {
+			if (this->bsDistanceAttachment[i][v] < lowestLevel) {
+				lowestLevel = this->bsDistanceAttachment[i][v];
+				endIndex = v;
+			}
+		}
+
+		std::vector<uint> meridian;
+		meridian.push_back(endIndex);
+
+		uint current = endIndex;
+		for (uint j = 0; j < lowestLevel - 1; j++) {
+
+			uint mylevel = lowestLevel - j;
+
+			// search for the start indices in both edge lists
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+
+			bool found = false;
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (this->bsDistanceAttachment[i][target] == mylevel - 1) {
+					meridian.push_back(target);
+					current = target;
+					found = true;
+					break;
+				}
+				forward++;
+			}
+			if (found) continue;
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+				auto target = (*reverse).second;
+				if (this->bsDistanceAttachment[i][target] == mylevel - 1) {
+					meridian.push_back(target);
+					current = target;
+					found = true;
+					break;
+				}
+				reverse++;
+			}
+		}
+
+		meridian.push_back(startIndex);
+
+#if 1 // color start and end vertex
+		for (auto v : meridian) {
+			this->colors[i][3 * v + 0] = 255;
+			this->colors[i][3 * v + 1] = 0;
+			this->colors[i][3 * v + 2] = 0;
+		}
+#endif
 	}
 
 	return true;

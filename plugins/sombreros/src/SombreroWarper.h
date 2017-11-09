@@ -161,6 +161,13 @@ namespace sombreros {
 		 */
 		bool recomputeVertexDistances(void);
 
+		/**
+		 * Computes the angles for each vertex using an adapted method by rahi and sharp
+		 *
+		 * @return True on success, false otherwise.
+		 */
+		bool computeVertexAngles(void);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
@@ -227,8 +234,14 @@ namespace sombreros {
 		/** Sets containing the indices of all different cut vertices */
 		std::vector<std::vector<std::set<uint>>> cutVertices;
 
+		/** vertex angles computed by rahi and sharp */
+		std::vector<std::vector<float>> rahiAngles;
+
 		/** Flags for each vertex if they belong to the brim */
 		std::vector<std::vector<bool>> brimFlags;
+
+		/** Indices of all vertices belonging to the brim */
+		std::vector<std::vector<uint>> brimIndices;
 
 		/** Flag set when a parameter is dirty */
 		bool dirtyFlag;
