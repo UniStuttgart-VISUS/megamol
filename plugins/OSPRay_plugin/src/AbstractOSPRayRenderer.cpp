@@ -679,12 +679,33 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData voxels     = NULL;
         OSPData isovalues  = NULL;
         OSPData planes     = NULL;
+        OSPError error;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
+            case geometryTypeEnum::PKD:
+                if (element.raw == NULL) {
+                    returnValue = false;
+                    break;
+                }                
+                
+                error = ospLoadModule("pkd");
+                if (error != OSPError::OSP_NO_ERROR) {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
+                }
+
+                geo.push_back(ospNewGeometry("pkd_geometry"));
+
+                vertexData = ospNewData(element.partCount * 3, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                ospCommit(vertexData);
+
+                ospSet1f(geo.back(), "radius", element.globalRadius);
+                ospSetData(geo.back(), "ospPositionData", vertexData);
+
+                break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     returnValue = false;

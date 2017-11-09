@@ -124,6 +124,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<5> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<10> >();
+    instance.RegisterAutoDescription<view::MuxRenderer3D<40> >();
     instance.RegisterAutoDescription<view::special::AnaglyphStereoView>();
     instance.RegisterAutoDescription<view::special::ChronoGraph>();
     instance.RegisterAutoDescription<view::special::DemoRenderer2D>();

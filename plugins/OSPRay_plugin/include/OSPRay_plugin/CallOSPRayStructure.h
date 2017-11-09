@@ -28,7 +28,8 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS
+    CYLINDERS,
+    PKD
 };
 
 enum volumeTypeEnum {
