@@ -102,7 +102,7 @@ bool PBSRenderer::create(void) {
     auto path_to_vert = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbssphere.vert.glsl");
     auto path_to_frag = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbssphere.frag.glsl");
 
-    std::ifstream shader_file(path_to_vert.PeekBuffer());
+    std::ifstream shader_file(W2A(path_to_vert.PeekBuffer()));
     std::string shader_string = std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
     shader_file.close();
 
@@ -110,7 +110,7 @@ bool PBSRenderer::create(void) {
     GLint string_size = shader_string.size();
     glShaderSource(vert_shader, 1, &shader_cstring, &string_size);
 
-    shader_file.open(path_to_frag.PeekBuffer());
+    shader_file.open(W2A(path_to_frag.PeekBuffer()));
     shader_string = std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
     shader_file.close();
 
