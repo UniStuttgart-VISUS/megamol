@@ -940,8 +940,46 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 			vislib::sys::Log::DefaultLog.WriteError("No binding site index found!");
 			return false;
 		}
-		
-		
+
+		std::set<uint> allowedVerticesSet;
+		std::set<uint> newset;
+		allowedVerticesSet.insert(bsIndex);
+		this->bsDistanceAttachment[i][bsIndex] = 0;
+		while (!allowedVerticesSet.empty()) {
+			newset.clear();
+			// for each currently allowed vertex
+			for (auto element : allowedVerticesSet) {
+				// search for the start indices in both edge lists
+				auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+					return x.first < val;
+				});
+
+				// go through all forward edges starting with the vertex
+				while (forward != edgesForward[i].end() && (*forward).first == element) {
+					auto val = (*forward).second;
+					if (this->bsDistanceAttachment[i][val] > this->bsDistanceAttachment[i][element] + 1) {
+						this->bsDistanceAttachment[i][val] = this->bsDistanceAttachment[i][element] + 1;
+						newset.insert(val);
+					}
+					forward++;
+				}
+
+				// do the same thing for all reverse edges
+				while (reverse != edgesReverse[i].end() && (*reverse).first == element) {
+					auto val = (*reverse).second;
+					// check whether the endpoint is valid
+					if (this->bsDistanceAttachment[i][val] > this->bsDistanceAttachment[i][element] + 1) {
+						this->bsDistanceAttachment[i][val] = this->bsDistanceAttachment[i][element] + 1;
+						newset.insert(val);
+					}
+					reverse++;
+				}
+			}
+			allowedVerticesSet = newset;
+		}
 	}
 
 	return true;
