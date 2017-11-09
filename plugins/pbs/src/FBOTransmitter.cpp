@@ -27,25 +27,26 @@ FBOTransmitter::FBOTransmitter(void)
     : core::Module(),
       core::job::AbstractJob(),
       viewNameSlot("view", "The name of the view instance to be used"),
-      fboWidthSlot("width", "Sets width of FBO"),
-      fboHeightSlot("height", "Sets height of FBO"),
+      /*fboWidthSlot("width", "Sets width of FBO"),
+      fboHeightSlot("height", "Sets height of FBO"),*/
       ipAddressSlot("address", "IP address of reciever"),
       animTimeParamNameSlot("timeparamname", "Name of the time parameter"),
       triggerButtonSlot("trigger", "The trigger button"),
       identifierSlot("id", "the mpi rank"),
+      frameSkipSlot("frame_skip", "Sets the number of frame to skip before comm"),
       zmq_ctx(1),
       zmq_socket(zmq_ctx, zmq::socket_type::push),
       ip_address("*:34242") {
     this->viewNameSlot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
 
-    this->fboWidthSlot << new core::param::IntParam(1, 1, 3840);
+    /*this->fboWidthSlot << new core::param::IntParam(1, 1, 3840);
     this->fboWidthSlot.SetUpdateCallback(&FBOTransmitter::resizeCallback);
     this->MakeSlotAvailable(&this->fboWidthSlot);
 
     this->fboHeightSlot << new core::param::IntParam(1, 1, 2160);
     this->fboHeightSlot.SetUpdateCallback(&FBOTransmitter::resizeCallback);
-    this->MakeSlotAvailable(&this->fboHeightSlot);
+    this->MakeSlotAvailable(&this->fboHeightSlot);*/
 
     this->ipAddressSlot << new core::param::StringParam("*:34242");
     this->ipAddressSlot.SetUpdateCallback(&FBOTransmitter::connectSocketCallback);
@@ -60,6 +61,9 @@ FBOTransmitter::FBOTransmitter(void)
 
     this->identifierSlot << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->identifierSlot);
+
+    this->frameSkipSlot << new core::param::IntParam(3, 0);
+    this->MakeSlotAvailable(&this->frameSkipSlot);
 }
 
 
@@ -89,15 +93,15 @@ bool FBOTransmitter::create(void) {
     //connectSocketCallback(this->ipAddressSlot);
 
     // create FBO
-    this->width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
-    this->height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
+    /*this->width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
+    this->height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();*/
 
     /*this->color_rbo = createRBO(GL_RGBA8, this->width, this->height);
     this->depth_rbo = createRBO(GL_DEPTH_COMPONENT24, width, height);
     this->fbo = createFBOFromRBO(this->color_rbo, this->depth_rbo);*/
 
-    this->color_buf = std::vector<unsigned char>(this->width * this->height * 4);
-    this->depth_buf = std::vector<unsigned char>(this->width * this->height * 3);
+    /*this->color_buf = std::vector<unsigned char>(this->width * this->height * 4);
+    this->depth_buf = std::vector<unsigned char>(this->width * this->height * 3);*/
 
     return true;
 }
@@ -109,76 +113,7 @@ void FBOTransmitter::release(void) {
 
 
 void FBOTransmitter::BeforeRender(core::view::AbstractView *view) {
-
     glGetIntegerv(GL_VIEWPORT, this->viewport);
-
-
-    //view->Resize(this->width, this->height);
-
-    //view->UnregisterHook(this);
-
-    //core::view::CallRenderView crv;
-
-    //float frameTime = -1.0f;
-    //core::param::ParamSlot *time = this->findTimeParam(view);
-    //if (time != NULL) {
-    //    frameTime = time->Param<core::param::FloatParam>()->Value();
-    //}
-
-    //// save old framebuffer state
-    //GLint old_draw_fbo = 0, old_read_fbo = 0;
-    //glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &old_read_fbo);
-    //glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &old_draw_fbo);
-
-    //// bind FBO
-    //glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
-    //glViewport(0, 0, this->width, this->height);
-    //crv.SetOutputBuffer(this->fbo, this->width, this->height);
-    //crv.SetTile(static_cast<float>(this->width), static_cast<float>(this->height),
-    //    0.0f, 0.0f, static_cast<float>(this->width), static_cast<float>(this->height));
-    //crv.SetTime(frameTime);
-
-    //view->OnRenderView(crv);
-    //glFlush();
-    //
-    //glReadPixels(0, 0, this->width, this->height, GL_RGBA, GL_UNSIGNED_BYTE, this->color_buf.data());
-    //
-    //glReadPixels(0, 0, this->width, this->height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, this->depth_buf.data());
-
-    //// restore old framebuffer state
-    //glBindFramebuffer(GL_READ_FRAMEBUFFER, old_read_fbo);
-    //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, old_draw_fbo);
-
-    //// send buffers over socket
-    //if (this->zmq_socket.connected()) {
-    //    // do stuff
-    //    if (!this->zmq_socket.send(zmq::message_t(&MSG_STARTFRAME, sizeof(int)))) {
-    //        return;
-    //    }
-    //    if (!this->zmq_socket.send(zmq::message_t(&MSG_SENDVIEWPORT, sizeof(int)))) {
-    //        return;
-    //    }
-    //    int viewport[] = {0, 0, this->width, this->height};
-    //    if (!this->zmq_socket.send(zmq::message_t(viewport, sizeof(int) * 4))) {
-    //        return;
-    //    }
-    //    if (!this->zmq_socket.send(zmq::message_t(&MSG_SENDDATA, sizeof(int)))) {
-    //        return;
-    //    }
-    //    if (!this->zmq_socket.send(this->color_buf.begin(), this->color_buf.end())) {
-    //        return;
-    //    }
-    //    if (!this->zmq_socket.send(this->depth_buf.begin(), this->depth_buf.end())) {
-    //        return;
-    //    }
-    //    if (!this->zmq_socket.send(zmq::message_t(&MSG_ENDFRAME, sizeof(int)))) {
-    //        return;
-    //    }
-    //} else {
-    //    // connect socket
-    //    this->ip_address = this->ipAddressSlot.Param<core::param::StringParam>()->Value();
-    //    this->connectSocket(this->ip_address);
-    //}
 }
 
 
@@ -203,12 +138,18 @@ bool FBOTransmitter::resizeCallback(core::param::ParamSlot &p) {
 
 void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     //view->UnregisterHook(this);
-    static std::chrono::high_resolution_clock::time_point last;
+    /*static std::chrono::high_resolution_clock::time_point last;
     auto now = std::chrono::high_resolution_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last) >= 
         std::chrono::milliseconds(50)) {
         last = now;
     } else {
+        return;
+    }*/
+
+    uint32_t skip = this->frameSkipSlot.Param<core::param::IntParam>()->Value();
+    this->frame_id++;
+    if (this->frame_id % skip != 0) {
         return;
     }
 
@@ -234,47 +175,22 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
             }*/
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
             //this->zmq_socket.recv(&dump);*/
-            zmq::message_t msg(sizeof(int32_t) + sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
+            zmq::message_t msg(sizeof(int32_t) + sizeof(uint32_t) + sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
             //int viewport[] = {0, 0, this->width, this->height};
             char *ptr = reinterpret_cast<char*>(msg.data());
             int32_t *rank = reinterpret_cast<int32_t*>(ptr);
             *rank = this->identifierSlot.Param<core::param::IntParam>()->Value();
             ptr += sizeof(int32_t);
+            uint32_t *fid = reinterpret_cast<uint32_t*>(ptr);
+            *fid = this->frame_id;
+            ptr += sizeof(uint32_t);
             memcpy(ptr, this->viewport, sizeof(this->viewport));
             ptr += sizeof(this->viewport);
             memcpy(ptr, this->color_buf.data(), this->color_buf.size());
             ptr += color_buf.size();
             memcpy(ptr, this->depth_buf.data(), this->depth_buf.size());
             this->zmq_socket.send(msg);
-
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-            
-            //while (!this->zmq_socket.recv(&dump, ZMQ_DONTWAIT)) {
-            //    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            //    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for viewport request\n");
-            //}
-            ///*if (!this->zmq_socket.send(zmq::message_t(&MSG_STARTFRAME, sizeof(int)))) {
-            //    return;
-            //}*/
-            ///*if (!this->zmq_socket.send(zmq::message_t(&MSG_SENDVIEWPORT, sizeof(int)))) {
-            //    return;
-            //}*/
-            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying viewport\n");
-            //int viewport[] = {0, 0, this->width, this->height};
-            //if (!this->zmq_socket.send(zmq::message_t(viewport, sizeof(int) * 4))) {
-            //    return;
-            //}
-            //this->zmq_socket.recv(&dump);
-            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying color\n");
-            //if (!this->zmq_socket.send(this->color_buf.begin(), this->color_buf.end())) {
-            //    return;
-            //}
-            //this->zmq_socket.recv(&dump);
-            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Replying depth\n");
-            //if (!this->zmq_socket.send(this->depth_buf.begin(), this->depth_buf.end())) {
-            //    return;
-            //}
+            //this->frame_id++;
         } else {
             // connect socket
             this->connectSocketCallback(this->ipAddressSlot);

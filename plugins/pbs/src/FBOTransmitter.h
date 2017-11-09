@@ -146,9 +146,9 @@ private:
 
     core::param::ParamSlot viewNameSlot;
 
-    core::param::ParamSlot fboWidthSlot;
+    /*core::param::ParamSlot fboWidthSlot;
 
-    core::param::ParamSlot fboHeightSlot;
+    core::param::ParamSlot fboHeightSlot;*/
 
     core::param::ParamSlot ipAddressSlot;
 
@@ -157,6 +157,8 @@ private:
     core::param::ParamSlot triggerButtonSlot;
 
     core::param::ParamSlot identifierSlot;
+
+    core::param::ParamSlot frameSkipSlot;
 
     int width;
 
@@ -171,6 +173,8 @@ private:
     bool is_connected = false;
 
     int viewport[4];
+
+    uint32_t frame_id = 0;
 }; /* end class FBOTransmitter */
 
 GLuint createTexture(GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type);

@@ -2,6 +2,7 @@
 #include "FBOCompositor.h"
 
 #include <fstream>
+#include <queue>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/StringParam.h"
@@ -97,7 +98,8 @@ bool FBOCompositor::printProgramInfoLog(GLuint shaderProg) const {
 bool FBOCompositor::create(void) {
     //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
 
-    
+    this->renderData = new std::vector<fbo_data>();
+    this->receiverData = new std::vector<fbo_data>();
 
     glGenVertexArrays(1, &this->vao);
     glBindVertexArray(this->vao);
@@ -209,7 +211,7 @@ bool FBOCompositor::GetExtents(core::Call &call) {
 
 bool FBOCompositor::Render(core::Call &call) {
     //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
-    this->resizeBuffers(this->num_render_nodes);
+    this->resizeBuffers();
 
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
@@ -220,7 +222,7 @@ bool FBOCompositor::Render(core::Call &call) {
         // do upload
         for (int i = 0; i < this->num_render_nodes; i++) {
         //for (int i = this->num_render_nodes-1; i >= 0; i--) {
-            auto &data = this->renderData[i];
+            auto &data = (*this->renderData)[i];
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
@@ -314,8 +316,8 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
 
     std::lock_guard<std::mutex> guard(this->swap_guard);
 
-    this->renderData.resize(this->num_render_nodes);
-    this->receiverData.resize(this->num_render_nodes);
+    this->renderData->resize(this->num_render_nodes);
+    this->receiverData->resize(this->num_render_nodes);
 
     this->receiverThread.swap(std::thread(&FBOCompositor::receiverCallback, this));
 
@@ -343,6 +345,7 @@ void FBOCompositor::receiverCallback(void) {
             this->connectSocket(this->ip_address);
         }*/
         std::vector<bool> gotData(this->num_render_nodes, false);
+        std::vector<std::queue<fbo_data>> fifo(this->num_render_nodes);
         while (true) {
             std::fill(gotData.begin(), gotData.end(), false);
             //for (int i = 0; i < this->num_render_nodes; i++) {
@@ -352,21 +355,28 @@ void FBOCompositor::receiverCallback(void) {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
                 //this->zmq_socket.send("Frame", strlen("Frame"));
                 this->zmq_socket.recv(&msg);
-                char *ptr = reinterpret_cast<char*>(msg.data());
-                int32_t rank = *reinterpret_cast<int32_t*>(msg.data());
-                ASSERT(rank >= 0 && rank < receiverData.size());
-                auto &data = this->receiverData[rank];
-                if (msg.size() < sizeof(data.viewport) + sizeof(int32_t)) {
+                fbo_data data;
+                if (msg.size() < sizeof(data.viewport) + sizeof(int32_t) + sizeof(uint32_t)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (viewport) corrupted\n");
                 }
+                char *ptr = reinterpret_cast<char*>(msg.data());
+                int32_t rank = *reinterpret_cast<int32_t*>(msg.data());
                 ptr += sizeof(int32_t);
+                data.fid = *reinterpret_cast<uint32_t*>(msg.data());
+                ptr += sizeof(uint32_t);
+
+                ASSERT(rank >= 0 && rank < receiverData->size());
+                
+
+                //auto &data = (*this->receiverData)[rank];
+                
                 memcpy(data.viewport, ptr, sizeof(data.viewport));
                 //memcpy(this->viewport, data.viewport, sizeof(data.viewport));
                 ptr += sizeof(data.viewport);
                 int width = data.viewport[2] - data.viewport[0];
                 int height = data.viewport[3] - data.viewport[1];
                 int datasize = (width)*(height)*4;
-                if (width < 0 || height < 0 || datasize < 0 || msg.size() < datasize + sizeof(data.viewport)) {
+                if (width < 0 || height < 0 || datasize < 0 || msg.size() < 2*datasize + sizeof(data.viewport)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (data) corrupted\n");
                 }
                 data.color_buf.resize(datasize);
@@ -375,30 +385,23 @@ void FBOCompositor::receiverCallback(void) {
                 ptr += datasize;
                 memcpy(data.depth_buf.data(), ptr, datasize);
 
+                fifo[rank].push(data);
                 gotData[rank] = true;
+            }
 
-                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting viewport\n");
-                //this->zmq_socket.send("Viewport", strlen("Viewport"));
-                //this->zmq_socket.recv(&msg); //<-- viewport
-                //memcpy(data.viewport, msg.data(), msg.size());
-                //data.color_buf.resize(data.viewport[2] * data.viewport[3] * 4);
-                //data.depth_buf.resize(data.viewport[2] * data.viewport[3] * 4);
-                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting color\n");
-                //this->zmq_socket.send("Color", strlen("Color"));
-                //idx = 0;
-                //do {
-                //    this->zmq_socket.recv(&msg);
-                //    memcpy(data.color_buf.data() + idx, msg.data(), msg.size());
-                //    idx += msg.size();
-                //} while (msg.more());
-                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Requesting depth\n");
-                //this->zmq_socket.send("Depth", strlen("Depth"));
-                //idx = 0;
-                //do {
-                //    this->zmq_socket.recv(&msg);
-                //    memcpy(data.depth_buf.data() + idx, msg.data(), msg.size());
-                //    idx += msg.size();
-                //} while (msg.more());
+            uint32_t max_fid = 0;
+            for (int i = 0; i < this->num_render_nodes; i++) {
+                if (max_fid < fifo[i].front().fid) {
+                    max_fid = fifo[i].front().fid;
+                }
+            }
+
+            for (int i = 0; i < this->num_render_nodes; i++) {
+                while (fifo[i].front().fid != max_fid && fifo[i].size() > 1) {
+                    fifo[i].pop();
+                }
+                (*this->receiverData)[i] = fifo[i].front();
+                fifo[i].pop();
             }
 
             this->swapFBOData();
@@ -409,60 +412,7 @@ void FBOCompositor::receiverCallback(void) {
 }
 
 
-//bool FBOCompositor::updateNumRenderNodesCallback(core::param::ParamSlot &p) {
-//    std::lock_guard<std::mutex> guard(this->swap_guard);
-//
-//    auto old_num = this->num_render_nodes;
-//
-//    //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
-//    //this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
-//    //this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
-//
-//    auto old_fbo_width = this->fbo_width;
-//    auto old_fbo_height = this->fbo_height;
-//
-//    this->fbo_width = this->viewport[2] - this->viewport[0];
-//    this->fbo_height = this->viewport[3] - this->viewport[1];
-//
-//    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width) {
-//
-//        this->renderData.resize(this->num_render_nodes);
-//        this->receiverData.resize(this->num_render_nodes);
-//
-//        glDeleteTextures(old_num, this->color_textures);
-//        glDeleteTextures(old_num, this->depth_textures);
-//
-//        this->color_textures = new GLuint[this->num_render_nodes];
-//
-//        this->depth_textures = new GLuint[this->num_render_nodes];
-//
-//        glGenTextures(this->num_render_nodes, this->color_textures);
-//        glGenTextures(this->num_render_nodes, this->depth_textures);
-//
-//        for (int i = 0; i < this->num_render_nodes; i++) {
-//            glActiveTexture(GL_TEXTURE0);
-//            glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
-//            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->fbo_width, this->fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//            glBindTexture(GL_TEXTURE_2D, 0);
-//
-//            glActiveTexture(GL_TEXTURE1);
-//            glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
-//            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//            glBindTexture(GL_TEXTURE_2D, 0);
-//        }
-//
-//        //glBindTexture(GL_TEXTURE_2D, 0);
-//    }
-//
-//    return true;
-//}
-
-
-void FBOCompositor::resizeBuffers(const int oldSize) {
+void FBOCompositor::resizeBuffers(void) {
     //std::lock_guard<std::mutex> guard(this->swap_guard);
 
     //this->renderData.resize(this->num_render_nodes);
@@ -477,11 +427,11 @@ void FBOCompositor::resizeBuffers(const int oldSize) {
     if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width/* || oldSize != this->num_render_nodes*/) {
 
         if (this->color_textures != nullptr) {
-            glDeleteTextures(oldSize, this->color_textures);
+            glDeleteTextures(this->num_render_nodes, this->color_textures);
             delete[] this->color_textures;
         }
         if (this->depth_textures != nullptr) {
-            glDeleteTextures(oldSize, this->depth_textures);
+            glDeleteTextures(this->num_render_nodes, this->depth_textures);
             delete[] this->depth_textures;
         }
 

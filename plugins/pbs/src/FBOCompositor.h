@@ -68,6 +68,7 @@ protected:
     virtual bool Render(core::Call &call) override;
 private:
     typedef struct _fbo_data {
+        uint32_t fid;
         int viewport[4];
         std::vector<unsigned char> color_buf;
         std::vector<unsigned char> depth_buf;
@@ -83,9 +84,7 @@ private:
 
     void receiverCallback(void);
 
-    //bool updateNumRenderNodesCallback(core::param::ParamSlot &p);
-
-    void resizeBuffers(const int oldSize);
+    void resizeBuffers(void);
 
     void swapFBOData(void);
 
@@ -105,9 +104,9 @@ private:
 
     std::thread receiverThread;
 
-    std::vector<fbo_data> receiverData;
+    std::vector<fbo_data> *receiverData;
 
-    std::vector<fbo_data> renderData;
+    std::vector<fbo_data> *renderData;
 
     std::mutex swap_guard;
 
