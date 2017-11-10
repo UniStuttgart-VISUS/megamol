@@ -1248,7 +1248,35 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			left = sortedBrim[sortedBrim.size() - 1];
 		}
 
+		// determine candidate vertices
+		for (auto current : meridian) {
+			if (current == startIndex) continue;
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (vTypes[target] == 0) {
+					vTypes[target] = 4;
+				}
+				forward++;
+			}
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+				auto target = (*reverse).second;
+				if (vTypes[target] == 0) {
+					vTypes[target] = 4;
+				}
+				reverse++;
+			}
+		}
+
 		// propagate the values
+
+
 
 
 #if 1 // color meridian vertices
@@ -1264,6 +1292,10 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			} else if (vTypes[v] == 3) { // blue right
 				this->colors[i][3 * v + 0] = 0;
 				this->colors[i][3 * v + 1] = 0;
+				this->colors[i][3 * v + 2] = 255;
+			} else if(vTypes[v] == 4) { // candidates yellow
+				this->colors[i][3 * v + 0] = 0;
+				this->colors[i][3 * v + 1] = 255;
 				this->colors[i][3 * v + 2] = 255;
 			} else {
 				this->colors[i][3 * v + 0] = 255;
