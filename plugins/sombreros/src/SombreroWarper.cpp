@@ -1275,9 +1275,86 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		}
 
 		// propagate the values
-
-
-
+		// on the left
+		current = left;
+		while (current != UINT_MAX) {
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			bool found = false;
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (vTypes[target] == 4) {
+					vTypes[target] = 2;
+					current = target;
+					found = true;
+					break;
+				} else if (vTypes[target] == -1) {
+					current = UINT_MAX;
+					found = true;
+					break;
+				}
+				forward++;
+			}
+			if (found) continue;
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+				auto target = (*reverse).second;
+				if (vTypes[target] == 4) {
+					vTypes[target] = 2;
+					current = target;
+					found = true;
+					break;
+				} else if (vTypes[target] == -1) {
+					current = UINT_MAX;
+					found = true;
+					break;
+				}
+				reverse++;
+			}
+		}
+		// on the right
+		current = right;
+		while (current != UINT_MAX) {
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			bool found = false;
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (vTypes[target] == 4) {
+					vTypes[target] = 3;
+					current = target;
+					found = true;
+					break;
+				} else if (vTypes[target] == -1) {
+					current = UINT_MAX;
+					found = true;
+					break;
+				}
+				forward++;
+			}
+			if (found) continue;
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+				auto target = (*reverse).second;
+				if (vTypes[target] == 4) {
+					vTypes[target] = 3;
+					current = target;
+					found = true;
+					break;
+				} else if (vTypes[target] == -1) {
+					current = UINT_MAX;
+					found = true;
+					break;
+				}
+				reverse++;
+			}
+		}
 
 #if 1 // color meridian vertices
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
@@ -1294,9 +1371,9 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 				this->colors[i][3 * v + 1] = 0;
 				this->colors[i][3 * v + 2] = 255;
 			} else if(vTypes[v] == 4) { // candidates yellow
-				this->colors[i][3 * v + 0] = 0;
+				this->colors[i][3 * v + 0] = 255;
 				this->colors[i][3 * v + 1] = 255;
-				this->colors[i][3 * v + 2] = 255;
+				this->colors[i][3 * v + 2] = 0;
 			} else {
 				this->colors[i][3 * v + 0] = 255;
 				this->colors[i][3 * v + 1] = 255;
