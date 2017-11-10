@@ -16,6 +16,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallRenderView.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/CallRender3D.h"
 
 #include "vislib/sys/Log.h"
 
@@ -136,6 +138,37 @@ bool FBOTransmitter::resizeCallback(core::param::ParamSlot &p) {
 }
 
 
+bool FBOTransmitter::extractBoundingBox(float bbox[6]) {
+    bool success = true;
+    std::string mvn(this->viewNameSlot.Param<core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    AbstractNamedObject::ptr_type ano = anoc->FindNamedObject(mvn.c_str());
+    core::view::AbstractView *vi = dynamic_cast<core::view::AbstractView *>(ano.get());
+    if (vi != NULL) {
+        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+            core::CallerSlot *sl = dynamic_cast<core::CallerSlot*>((*c).get());
+            if (sl != nullptr) {
+                core::view::CallRender3D *r = sl->CallAs<core::view::CallRender3D>();
+                if (r != nullptr) {
+                    bbox[0] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
+                    bbox[1] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
+                    bbox[2] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
+                    bbox[3] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
+                    bbox[4] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
+                    bbox[5] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
+                    break;
+                }
+            }
+        }
+    } else {
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
 void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     //view->UnregisterHook(this);
     /*static std::chrono::high_resolution_clock::time_point last;
@@ -162,7 +195,11 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
     glReadPixels(0, 0, this->width, this->height, GL_RGBA, GL_UNSIGNED_BYTE, this->color_buf.data());
 
     glReadPixels(0, 0, this->width, this->height, GL_DEPTH_COMPONENT, GL_FLOAT, this->depth_buf.data());
-
+    
+    float bbox[6];
+    if (!this->extractBoundingBox(bbox)) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter: could not extract bounding box");
+    }
 
     // send buffers over socket
     zmq::message_t dump;
@@ -175,7 +212,8 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
             }*/
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
             //this->zmq_socket.recv(&dump);*/
-            zmq::message_t msg(sizeof(int32_t) + sizeof(uint32_t) + sizeof(int) * 4 + this->color_buf.size() + this->depth_buf.size());
+            zmq::message_t msg(sizeof(int32_t) + sizeof(uint32_t) + sizeof(int) * 4 
+                + sizeof(float) * 6 + this->color_buf.size() + this->depth_buf.size());
             //int viewport[] = {0, 0, this->width, this->height};
             char *ptr = reinterpret_cast<char*>(msg.data());
             int32_t *rank = reinterpret_cast<int32_t*>(ptr);
@@ -186,6 +224,8 @@ void FBOTransmitter::AfterRender(core::view::AbstractView *view) {
             ptr += sizeof(uint32_t);
             memcpy(ptr, this->viewport, sizeof(this->viewport));
             ptr += sizeof(this->viewport);
+            memcpy(ptr, bbox, sizeof(bbox));
+            ptr += sizeof(bbox);
             memcpy(ptr, this->color_buf.data(), this->color_buf.size());
             ptr += color_buf.size();
             memcpy(ptr, this->depth_buf.data(), this->depth_buf.size());

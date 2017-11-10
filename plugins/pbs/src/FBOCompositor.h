@@ -70,6 +70,7 @@ private:
     typedef struct _fbo_data {
         uint32_t fid;
         int viewport[4];
+        float bbox[6];
         std::vector<unsigned char> color_buf;
         std::vector<unsigned char> depth_buf;
     } fbo_data;

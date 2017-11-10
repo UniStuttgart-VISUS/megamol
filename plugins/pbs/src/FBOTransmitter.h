@@ -138,6 +138,8 @@ private:
 
     bool resizeCallback(core::param::ParamSlot &p);
 
+    bool extractBoundingBox(float bbox[6]);
+
     zmq::context_t zmq_ctx;
 
     zmq::socket_t zmq_socket;

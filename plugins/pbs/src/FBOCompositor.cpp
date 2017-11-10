@@ -207,10 +207,19 @@ bool FBOCompositor::GetExtents(core::Call &call) {
 
     auto &out_bbox = cr->AccessBoundingBoxes();
 
-    out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    out_bbox.MakeScaledWorld(1.0f);
-
+    if (this->num_render_nodes > 0) {
+        out_bbox.SetObjectSpaceBBox((*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_LEFT],
+            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BOTTOM],
+            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BACK],
+            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_RIGHT],
+            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_TOP],
+            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_FRONT]);
+        out_bbox.SetObjectSpaceClipBox(out_bbox.ObjectSpaceBBox());
+        out_bbox.MakeScaledWorld(1.0f);
+    } else {
+        out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    }
     return true;
 }
 
@@ -382,6 +391,8 @@ void FBOCompositor::receiverCallback(void) {
                 ptr += sizeof(data.viewport);
                 int width = data.viewport[2] - data.viewport[0];
                 int height = data.viewport[3] - data.viewport[1];
+                memcpy(data.bbox, ptr, sizeof(data.bbox));
+                ptr += sizeof(data.bbox);
                 int datasize = (width)*(height)*4;
                 if (width < 0 || height < 0 || datasize < 0 || msg.size() < 2*datasize + sizeof(data.viewport)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (data) corrupted\n");
