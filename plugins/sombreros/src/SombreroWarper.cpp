@@ -670,6 +670,12 @@ bool SombreroWarper::findSombreroBorder(void) {
 			}
 		}
 #endif
+		for (size_t j = 0; j < this->cutVertices[i].size(); j++) {
+			if (this->cutVertices[i][j].size() == 0) {
+				this->cutVertices[i].erase(this->cutVertices[i].begin() + j);
+				j--;
+			}
+		}
 	}
 
 	return true;
@@ -1231,15 +1237,15 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		if (normal.Dot(dir) >= 0) {
 			// the brim index 1 vertex is left of the end vertex
 			vTypes[sortedBrim[1]] = 2;
-			vTypes[sortedBrim[sortedBrim.size()]] = 3;
+			vTypes[sortedBrim[sortedBrim.size() - 1]] = 3;
 			left = sortedBrim[1];
-			right = sortedBrim[sortedBrim.size()];
+			right = sortedBrim[sortedBrim.size() - 1];
 		} else {
 			// the brim index 1 vertex is right of the end vertex
 			vTypes[sortedBrim[1]] = 3;
 			vTypes[sortedBrim[sortedBrim.size() - 1]] = 2;
 			right = sortedBrim[1];
-			left = sortedBrim[sortedBrim.size()];
+			left = sortedBrim[sortedBrim.size() - 1];
 		}
 
 		// propagate the values
