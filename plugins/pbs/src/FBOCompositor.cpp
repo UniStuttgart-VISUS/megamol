@@ -355,7 +355,8 @@ void FBOCompositor::receiverCallback(void) {
         while (true) {
             std::fill(gotData.begin(), gotData.end(), false);
             //for (int i = 0; i < this->num_render_nodes; i++) {
-            while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
+            //while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
+            while (std::any_of(fifo.begin(), fifo.end(), [](const std::queue<fbo_data> &a) {return (a.size()==0); })) {
                 //auto &data = this->receiverData[i];
 
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
@@ -395,7 +396,7 @@ void FBOCompositor::receiverCallback(void) {
                 gotData[rank] = true;
             }
 
-            uint32_t max_fid = 0;
+            /*uint32_t max_fid = 0;
             for (int i = 0; i < this->num_render_nodes; i++) {
                 if (max_fid < fifo[i].front().fid) {
                     max_fid = fifo[i].front().fid;
@@ -406,6 +407,11 @@ void FBOCompositor::receiverCallback(void) {
                 while (fifo[i].front().fid != max_fid && fifo[i].size() > 1) {
                     fifo[i].pop();
                 }
+                (*this->receiverData)[i] = fifo[i].front();
+                fifo[i].pop();
+            }*/
+
+            for (int i = 0; i < this->num_render_nodes; i++) {
                 (*this->receiverData)[i] = fifo[i].front();
                 fifo[i].pop();
             }
