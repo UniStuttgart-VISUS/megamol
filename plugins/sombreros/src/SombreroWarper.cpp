@@ -1203,12 +1203,6 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		}
 		v1 = vislib::math::Vector<float, 3>(&this->vertices[i][3 * v1Idx]);
 		v2 = vislib::math::Vector<float, 3>(&this->vertices[i][3 * v2Idx]);
-		vislib::math::Vector<float, 3> d1 = v1 - endVertex;
-		vislib::math::Vector<float, 3> d2 = v2 - endVertex;
-		d1.Normalise();
-		d2.Normalise();
-		auto normal = d1.Cross(d2);
-		normal.Normalise();
 
 		// compute the average brim center
 		vislib::math::Vector<float, 3> centerVertex(0.0f, 0.0f, 0.0f);
@@ -1218,22 +1212,42 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			centerVertex[2] += this->vertices[i][3 * v + 2];
 		}
 		centerVertex /= static_cast<float>(sortedBrim.size());
+
 		auto dir = centerVertex - startVertex;
 		dir.Normalise();
 
+		// project v1 and v2 onto the plane by centerVertex and dir
+		v1 = v1 - (v1 - centerVertex).Dot(dir) * dir;
+		v2 = v2 - (v2 - centerVertex).Dot(dir) * dir;
+
+		vislib::math::Vector<float, 3> d1 = v1 - endVertex;
+		vislib::math::Vector<float, 3> d2 = v2 - endVertex;
+		d1.Normalise();
+		d2.Normalise();
+		auto normal = d1.Cross(d2);
+		normal.Normalise();
+
+		uint left, right;
 		if (normal.Dot(dir) >= 0) {
-			// the brim index 1 vertex is right of the end vertex
-			vTypes[sortedBrim[1]] = 3;
-			vTypes[sortedBrim[sortedBrim.size()]] = 2;
-		} else {
 			// the brim index 1 vertex is left of the end vertex
 			vTypes[sortedBrim[1]] = 2;
-			vTypes[sortedBrim[sortedBrim.size() - 1]] = 3;
+			vTypes[sortedBrim[sortedBrim.size()]] = 3;
+			left = sortedBrim[1];
+			right = sortedBrim[sortedBrim.size()];
+		} else {
+			// the brim index 1 vertex is right of the end vertex
+			vTypes[sortedBrim[1]] = 3;
+			vTypes[sortedBrim[sortedBrim.size() - 1]] = 2;
+			right = sortedBrim[1];
+			left = sortedBrim[sortedBrim.size()];
 		}
+
+		// propagate the values
+
 
 #if 1 // color meridian vertices
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
-			if (vTypes[v] == 1) { // red middle
+			if (vTypes[v] == 1 || vTypes[v] == -1) { // red middle
 				this->colors[i][3 * v + 0] = 255;
 				this->colors[i][3 * v + 1] = 0;
 				this->colors[i][3 * v + 2] = 0;
