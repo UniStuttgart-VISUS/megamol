@@ -119,7 +119,7 @@ bool SombreroWarper::getData(Call& call) {
 		// recompute the broken vertex distances
 		if (!this->recomputeVertexDistances()) return false;
 
-		if (!this->computeVertexAngles()) return false;
+		if (!this->computeVertexAngles(*tunnelCall)) return false;
 
 		// warp the mesh in the correct position
 		if (!this->warpMesh(*tunnelCall)) return false;
@@ -326,6 +326,26 @@ bool SombreroWarper::findSombreroBorder(void) {
 		// NOTE: the direct manipulation of the vectors and not the meshes only works because the mesh does not own 
 		// the data storage. If this is changed, the code below has to be changed, too.
 
+		// build triangle search structures
+		std::vector<Triangle> firstOrder;
+		std::vector<Triangle> secondOrder;
+		std::vector<Triangle> thirdOrder;
+		firstOrder.resize(fCnt);
+		for (uint j = 0; j < fCnt; j++) {
+			firstOrder[j] = Triangle(this->faces[i][j * 3 + 0], this->faces[i][j * 3 + 1], this->faces[i][j * 3 + 2]);
+		}
+		secondOrder = firstOrder;
+		thirdOrder = firstOrder;
+		std::sort(firstOrder.begin(), firstOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v1 < b.v1;
+		});
+		std::sort(secondOrder.begin(), secondOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v2 < b.v2;
+		});
+		std::sort(thirdOrder.begin(), thirdOrder.end(), [](const Triangle& a, const Triangle& b) {
+			return a.v3 < b.v3;
+		});
+
 		// adjust the color
 		uint maxVal = 0;
 		for (uint j = 0; j < vCnt; j++) {
@@ -444,6 +464,49 @@ bool SombreroWarper::findSombreroBorder(void) {
 			return false;
 		}
 
+		// clean the border
+		std::set<uint> newLocalBorder;
+		for (auto it = localBorder[maxIndex].begin(); it != localBorder[maxIndex].end(); it++) {
+			auto vIdx = *it;
+			// we iterate over all outgoing triangles and add up the angles they produce
+			// if the resulting angle is not very close to 360°, it is a cut vertex
+			auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
+				return t.v1 < s;
+			});
+			auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
+				return t.v2 < s;
+			});
+			auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
+				return t.v3 < s;
+			});
+
+			std::set<uint> vertexSet;
+			uint triCount = 0;
+			while (firstIt != firstOrder.end() && (*firstIt).v1 == vIdx) {
+				vertexSet.insert((*firstIt).v2);
+				vertexSet.insert((*firstIt).v3);
+				triCount++;
+				firstIt++;
+			}
+			while (secondIt != secondOrder.end() && (*secondIt).v2 == vIdx) {
+				vertexSet.insert((*secondIt).v1);
+				vertexSet.insert((*secondIt).v3);
+				triCount++;
+				secondIt++;
+			}
+			while (thirdIt != thirdOrder.end() && (*thirdIt).v3 == vIdx) {
+				vertexSet.insert((*thirdIt).v2);
+				vertexSet.insert((*thirdIt).v1);
+				triCount++;
+				thirdIt++;
+			}
+			// if we have more adjacent vertices than adjacent triangles, we have a cut vertex
+			if (vertexSet.size() > triCount) {
+				newLocalBorder.insert(vIdx);
+			}
+		}
+		localBorder[maxIndex] = newLocalBorder;
+
 		// write all indices to the storage
 		this->borderVertices[i] = localBorder[maxIndex];
 #if 0 // color all found vertices blue
@@ -538,71 +601,53 @@ bool SombreroWarper::findSombreroBorder(void) {
 			}
 		}
 
-		// build triangle search structures
-		std::vector<Triangle> firstOrder;
-		std::vector<Triangle> secondOrder;
-		std::vector<Triangle> thirdOrder;
-		firstOrder.resize(fCnt);
-		for (uint j = 0; j < fCnt; j++) {
-			firstOrder[j] = Triangle(this->faces[i][j * 3 + 0], this->faces[i][j * 3 + 1], this->faces[i][j * 3 + 2]);
-		}
-		secondOrder = firstOrder;
-		thirdOrder = firstOrder;
-		std::sort(firstOrder.begin(), firstOrder.end(), [](const Triangle& a, const Triangle& b) {
-			return a.v1 < b.v1;
-		});
-		std::sort(secondOrder.begin(), secondOrder.end(), [](const Triangle& a, const Triangle& b) {
-			return a.v2 < b.v2;
-		});
-		std::sort(thirdOrder.begin(), thirdOrder.end(), [](const Triangle& a, const Triangle& b) {
-			return a.v3 < b.v3;
-		});
-
 		this->cutVertices[i].resize(localBorder.size() - 1);
 
 		uint myIndex = 0;
 		// identify all real cut vertices
 		for (size_t j = 0; j < localBorder.size(); j++) {
-			if (j != maxIndex) { // we do this only when it is not the brim
-				// iterate over all identified vertices
-				for (auto vIdx : localBorder[j]) {
-					// we iterate over all outgoing triangles and add up the angles they produce
-					// if the resulting angle is not very close to 360°, it is a cut vertex
-					auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
-						return t.v1 < s;
-					});
-					auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
-						return t.v2 < s;
-					});
-					auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
-						return t.v3 < s;
-					});
+			// iterate over all identified vertices
+			for (auto vIdx : localBorder[j]) {
+				// we iterate over all outgoing triangles and add up the angles they produce
+				// if the resulting angle is not very close to 360°, it is a cut vertex
+				auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
+					return t.v1 < s;
+				});
+				auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
+					return t.v2 < s;
+				});
+				auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
+					return t.v3 < s;
+				});
 
-					std::set<uint> vertexSet;
-					uint triCount = 0;
-					while (firstIt != firstOrder.end() && (*firstIt).v1 == vIdx) {
-						vertexSet.insert((*firstIt).v2);
-						vertexSet.insert((*firstIt).v3);
-						triCount++;
-						firstIt++;
-					}
-					while (secondIt != secondOrder.end() && (*secondIt).v2 == vIdx) {
-						vertexSet.insert((*secondIt).v1);
-						vertexSet.insert((*secondIt).v3);
-						triCount++;
-						secondIt++;
-					}
-					while (thirdIt != thirdOrder.end() && (*thirdIt).v3 == vIdx) {
-						vertexSet.insert((*thirdIt).v2);
-						vertexSet.insert((*thirdIt).v1);
-						triCount++;
-						thirdIt++;
-					}
-					// if we have more adjacent vertices than adjacent triangles, we have a cut vertex
-					if (vertexSet.size() > triCount) {
+				std::set<uint> vertexSet;
+				uint triCount = 0;
+				while (firstIt != firstOrder.end() && (*firstIt).v1 == vIdx) {
+					vertexSet.insert((*firstIt).v2);
+					vertexSet.insert((*firstIt).v3);
+					triCount++;
+					firstIt++;
+				}
+				while (secondIt != secondOrder.end() && (*secondIt).v2 == vIdx) {
+					vertexSet.insert((*secondIt).v1);
+					vertexSet.insert((*secondIt).v3);
+					triCount++;
+					secondIt++;
+				}
+				while (thirdIt != thirdOrder.end() && (*thirdIt).v3 == vIdx) {
+					vertexSet.insert((*thirdIt).v2);
+					vertexSet.insert((*thirdIt).v1);
+					triCount++;
+					thirdIt++;
+				}
+				// if we have more adjacent vertices than adjacent triangles, we have a cut vertex
+				if (vertexSet.size() > triCount) {
+					if (j != maxIndex) {
 						this->cutVertices[i][myIndex].insert(vIdx);
 					}
 				}
+			}
+			if (j != maxIndex) {
 				myIndex++;
 			}
 		}
@@ -991,7 +1036,7 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 /*
  * SombreroWarper::computeVertexAngles
  */
-bool SombreroWarper::computeVertexAngles(void) {
+bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		// first: find the meridian
@@ -1010,6 +1055,7 @@ bool SombreroWarper::computeVertexAngles(void) {
 		// end-point the brim vertex with the lowest level
 		uint lowestLevel = UINT_MAX;
 		uint endIndex = UINT_MAX;
+		std::sort(this->brimIndices[i].begin(), this->brimIndices[i].end());
 		for (auto v : this->brimIndices[i]) {
 			if (this->bsDistanceAttachment[i][v] < lowestLevel) {
 				lowestLevel = this->bsDistanceAttachment[i][v];
@@ -1059,11 +1105,151 @@ bool SombreroWarper::computeVertexAngles(void) {
 
 		meridian.push_back(startIndex);
 
-#if 1 // color start and end vertex
+#if 0 // color meridian vertices
 		for (auto v : meridian) {
 			this->colors[i][3 * v + 0] = 255;
 			this->colors[i][3 * v + 1] = 0;
 			this->colors[i][3 * v + 2] = 0;
+		}
+#endif
+		/**
+		 * The indices mean the following:
+		 * -1: polar vertex (only assigned for the binding site vertex
+		 * 1 : meridian vertex
+		 * 2 : vertex adjacent to the meridian to the left
+		 * 3 : vertex adjacent to the meridian to the right
+		 * 0 : all other vertices
+		 */
+		std::vector<char> vTypes(this->vertexLevelAttachment[i].size(), 0);
+		for (auto v : meridian) {
+			vTypes[v] = 1;
+		}
+		vTypes[startIndex] = -1;
+
+#if 0 // color brim vertices
+		for (auto v : this->brimIndices[i]) {
+			this->colors[i][3 * v + 0] = 255;
+			this->colors[i][3 * v + 1] = 0;
+			this->colors[i][3 * v + 2] = 0;
+		}
+#endif
+
+		// have to sort the brim indices in a circular manner
+		std::vector<uint> sortedBrim;
+		std::set<uint> brimTest(this->brimIndices[i].begin(), this->brimIndices[i].end());
+		std::set<uint> readySet;
+		sortedBrim.push_back(endIndex);
+		readySet.insert(endIndex);
+		uint k = 0;
+		while (sortedBrim.size() != brimTest.size()) {
+			current = sortedBrim[sortedBrim.size() - 1];
+			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
+				return x.first < val;
+			});
+			bool found = false;
+			while (forward != edgesForward[i].end() && (*forward).first == current) {
+				auto target = (*forward).second;
+				if (brimTest.count(target) > 0 && readySet.count(target) == 0) {
+					sortedBrim.push_back(target);
+					readySet.insert(target);
+					found = true;
+					break;
+				}
+				forward++;
+			}
+			if (!found) {
+				while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+					auto target = (*reverse).second;
+					if (brimTest.count(target) > 0 && readySet.count(target) == 0) {
+						sortedBrim.push_back(target);
+						readySet.insert(target);
+						found = true;
+						break;
+					}
+					reverse++;
+				}
+			}
+			k++;
+			if (!found) {
+				vislib::sys::Log::DefaultLog.WriteError("The brim of the sombrero is not continous. Aborting...");
+				return false;
+			}
+		}
+#if 0
+		vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
+		float factor = 1.0f / static_cast<float>(sortedBrim.size());
+		int f = 0;
+		for (auto v : sortedBrim) {
+			this->colors[i][3 * v + 0] = static_cast<unsigned char>(f * factor * red[0]);
+			this->colors[i][3 * v + 1] = static_cast<unsigned char>(f * factor * red[1]);
+			this->colors[i][3 * v + 2] = static_cast<unsigned char>(f * factor * red[2]);
+			f++;
+		}
+#endif
+
+		// the brim is sorted, now we can estimate the directions
+		// we assume that the endIndex is in the front
+		vislib::math::Vector<float, 3> endVertex(&this->vertices[i][3 * endIndex]);
+		vislib::math::Vector<float, 3> startVertex(&this->vertices[i][3 * startIndex]);
+		vislib::math::Vector<float, 3> v1, v2;
+		uint v1Idx = static_cast<uint>(sortedBrim.size() / 4);
+		uint v2Idx = static_cast<uint>(sortedBrim.size() / 2);
+		if (endIndex == v1Idx || endIndex == v2Idx || v1Idx == v2Idx) {
+			vislib::sys::Log::DefaultLog.WriteError("The brim is too small to compute further");
+			return false;
+		}
+		v1 = vislib::math::Vector<float, 3>(&this->vertices[i][3 * v1Idx]);
+		v2 = vislib::math::Vector<float, 3>(&this->vertices[i][3 * v2Idx]);
+		vislib::math::Vector<float, 3> d1 = v1 - endVertex;
+		vislib::math::Vector<float, 3> d2 = v2 - endVertex;
+		d1.Normalise();
+		d2.Normalise();
+		auto normal = d1.Cross(d2);
+		normal.Normalise();
+
+		// compute the average brim center
+		vislib::math::Vector<float, 3> centerVertex(0.0f, 0.0f, 0.0f);
+		for (auto v : sortedBrim) {
+			centerVertex[0] += this->vertices[i][3 * v + 0];
+			centerVertex[1] += this->vertices[i][3 * v + 1];
+			centerVertex[2] += this->vertices[i][3 * v + 2];
+		}
+		centerVertex /= static_cast<float>(sortedBrim.size());
+		auto dir = centerVertex - startVertex;
+		dir.Normalise();
+
+		if (normal.Dot(dir) >= 0) {
+			// the brim index 1 vertex is right of the end vertex
+			vTypes[sortedBrim[1]] = 3;
+			vTypes[sortedBrim[sortedBrim.size()]] = 2;
+		} else {
+			// the brim index 1 vertex is left of the end vertex
+			vTypes[sortedBrim[1]] = 2;
+			vTypes[sortedBrim[sortedBrim.size() - 1]] = 3;
+		}
+
+#if 1 // color meridian vertices
+		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
+			if (vTypes[v] == 1) { // red middle
+				this->colors[i][3 * v + 0] = 255;
+				this->colors[i][3 * v + 1] = 0;
+				this->colors[i][3 * v + 2] = 0;
+			} else if (vTypes[v] == 2) { // green left
+				this->colors[i][3 * v + 0] = 0;
+				this->colors[i][3 * v + 1] = 255;
+				this->colors[i][3 * v + 2] = 0;
+			} else if (vTypes[v] == 3) { // blue right
+				this->colors[i][3 * v + 0] = 0;
+				this->colors[i][3 * v + 1] = 0;
+				this->colors[i][3 * v + 2] = 255;
+			} else {
+				this->colors[i][3 * v + 0] = 255;
+				this->colors[i][3 * v + 1] = 255;
+				this->colors[i][3 * v + 2] = 255;
+			}
 		}
 #endif
 	}

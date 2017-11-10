@@ -164,9 +164,10 @@ namespace sombreros {
 		/**
 		 * Computes the angles for each vertex using an adapted method by rahi and sharp
 		 *
+		 * @param The call containing the tunnel data.
 		 * @return True on success, false otherwise.
 		 */
-		bool computeVertexAngles(void);
+		bool computeVertexAngles(TunnelResidueDataCall& tunnelCall);
 
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
