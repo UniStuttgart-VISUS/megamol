@@ -168,6 +168,9 @@ void FBOCompositor::release(void) {
     glDeleteTextures(this->num_render_nodes, this->color_textures);
     glDeleteTextures(this->num_render_nodes, this->depth_textures);
 
+    ARY_SAFE_DELETE(this->color_textures);
+    ARY_SAFE_DELETE(this->depth_textures);
+
     glDeleteProgram(this->shader);
 
     glDeleteVertexArrays(1, &this->vao);
@@ -176,6 +179,9 @@ void FBOCompositor::release(void) {
     for (int i = 0; i < this->ip_address.size(); i++) {
         this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
     }
+
+    SAFE_DELETE(this->receiverData);
+    SAFE_DELETE(this->renderData);
 }
 
 
