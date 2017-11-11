@@ -60,6 +60,7 @@
 #include "io/MMGDDDataSource.h"
 #include "floattable/FloatTableColumnScaler.h"
 #include "floattable/FloatTableObserverPlane.h"
+#include "ParticleVelocities.h"
 
 
 /*
@@ -183,6 +184,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnScaler>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableObserverPlane>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
