@@ -88,8 +88,8 @@ datatools::ParticleVelocities::ParticleVelocities(void)
     this->cyclZSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclZSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
@@ -115,7 +115,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
     if (this->cachedTime != time - 1 || this->datahash != in->DataHash()) {
         for (auto i = 0; i < cachedNumLists; i++) {
             if (cachedVertexDataType[i] != MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE)
-            delete this->cachedVertexData[i];
+                delete this->cachedVertexData[i];
             delete this->cachedDirData[i];
             this->cachedListLength[i] = 0;
         }
@@ -125,6 +125,10 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         // load previous Frame
         in->SetFrameID(time - 1, true);
         if (!(*in)(1)) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
+            return false;
+        }
+        if (!(*in)(0)) {
             vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
             return false;
         }
@@ -133,6 +137,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         cachedGlobalRadius.resize(in->GetParticleListCount(), 0.0f);
         cachedDirData.resize(in->GetParticleListCount());
         cachedStride.resize(in->GetParticleListCount());
+        cachedListLength.resize(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); i++) {
             size_t stride = in->AccessParticles(i).GetVertexDataStride();
             this->cachedVertexDataType[i] = in->AccessParticles(i).GetVertexDataType();
@@ -160,59 +165,70 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
         this->cachedTime = time - 1;
-    }
-    in->SetFrameID(time, true);
-    if (!(*in)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time);
-        return false;
-    }
-    if (cachedNumLists != in->GetParticleListCount()) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
-            "between frames %u (%u) and %u (%u)", time - 1, cachedNumLists, time, in->GetParticleListCount());
-        return false;
-    }
+        this->cachedNumLists = in->GetParticleListCount();
 
-    bool cycleX = this->cyclXSlot.Param<core::param::BoolParam>()->Value();
-    bool cycleY = this->cyclYSlot.Param<core::param::BoolParam>()->Value();
-    bool cycleZ = this->cyclZSlot.Param<core::param::BoolParam>()->Value();
+        in->SetFrameID(time, true);
+        if (!(*in)(1)) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+            return false;
+        }
+        if (!(*in)(0)) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
+            return false;
+        }
+        if (cachedNumLists != in->GetParticleListCount()) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
+                "between frames %u (%u) and %u (%u)", time - 1, cachedNumLists, time, in->GetParticleListCount());
+            return false;
+        }
 
-    out->SetParticleListCount(cachedNumLists);
-    float *cachedPtr, *currentPtr;
-    vislib::math::Vector<float, 3> diff;
+        bool cycleX = this->cyclXSlot.Param<core::param::BoolParam>()->Value();
+        bool cycleY = this->cyclYSlot.Param<core::param::BoolParam>()->Value();
+        bool cycleZ = this->cyclZSlot.Param<core::param::BoolParam>()->Value();
+
+        out->SetParticleListCount(cachedNumLists);
+        float *cachedPtr, *currentPtr;
+        vislib::math::Vector<float, 3> diff;
+        for (auto i = 0; i < cachedNumLists; i++) {
+            if (cachedVertexDataType[i] != in->AccessParticles(i).GetVertexDataType()) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent vertex data type"
+                    "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedVertexDataType[i],
+                    time, in->AccessParticles(i).GetVertexDataType(), i);
+                return false;
+            }
+            if (cachedListLength[i] != in->AccessParticles(i).GetCount()) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent list length"
+                    "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedListLength[i],
+                    time, in->AccessParticles(i).GetCount(), i);
+                return false;
+            }
+
+            auto &bbox = in->GetBoundingBoxes().ObjectSpaceBBox();
+            this->cachedDirData[i] = new float[cachedListLength[i] * 3];
+            for (auto p = 0; p < this->cachedListLength[i]; p++) {
+                cachedPtr = reinterpret_cast<float*>(static_cast<char*>(this->cachedVertexData[i]) + p * this->cachedStride[i]);
+                currentPtr = reinterpret_cast<float*>(static_cast<char*>(const_cast<void*>(in->AccessParticles(i).GetVertexData()))
+                    + p * this->cachedStride[i]);
+                diff = getDifference(cachedPtr, currentPtr, cycleX, cycleY, cycleZ, bbox.Width(), bbox.Height(), bbox.Depth());
+                this->cachedDirData[i][p * 3 + 0] = diff[0];
+                this->cachedDirData[i][p * 3 + 1] = diff[1];
+                this->cachedDirData[i][p * 3 + 2] = diff[2];
+            }
+
+        }
+    }
     for (auto i = 0; i < cachedNumLists; i++) {
-        if (cachedVertexDataType[i] != in->AccessParticles(i).GetVertexDataType()) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent vertex data type"
-                "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedVertexDataType[i],
-                time, in->AccessParticles(i).GetVertexDataType(), i);
-            return false;
-        }
-        if (cachedListLength[i] != in->AccessParticles(i).GetCount()) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent list length"
-                "between frames %u (%u) and %u (%u)in list %u", time - 1, cachedListLength[i],
-                time, in->AccessParticles(i).GetCount(), i);
-            return false;
-        }
         out->AccessParticles(i).SetCount(this->cachedListLength[i]);
         out->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
             in->AccessParticles(i).GetVertexDataStride());
-
-        auto &bbox = in->GetBoundingBoxes().ObjectSpaceBBox();
-        this->cachedDirData[i] = new float[cachedListLength[i] * 3];
-        for (auto p = 0; p < this->cachedListLength[i]; p++) {
-            cachedPtr = reinterpret_cast<float*>(static_cast<char*>(this->cachedVertexData[i]) + p * this->cachedStride[i]);
-            currentPtr = reinterpret_cast<float*>(static_cast<char*>(const_cast<void*>(in->AccessParticles(i).GetVertexData()))
-                + p * this->cachedStride[i]);
-            diff = getDifference(cachedPtr, currentPtr, cycleX, cycleY, cycleZ, bbox.Width(), bbox.Height(), bbox.Depth());
-            this->cachedDirData[i][p * 3 + 0] = diff[0];
-            this->cachedDirData[i][p * 3 + 1] = diff[1];
-            this->cachedDirData[i][p * 3 + 2] = diff[2];
-        }
-
+        out->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
+            in->AccessParticles(i).GetColourDataStride());
         out->AccessParticles(i).SetDirData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
             cachedDirData[i], 0);
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(in->GetBoundingBoxes().ObjectSpaceBBox());
     out->AccessBoundingBoxes().SetObjectSpaceClipBox(in->GetBoundingBoxes().ObjectSpaceClipBox());
+    out->SetFrameCount(in->FrameCount() - 1);
     return true;
 }
 
