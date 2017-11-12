@@ -27,19 +27,19 @@ inline vislib::math::Vector<float, 3> getDifference(const float p1[3], const flo
     // dr = np.remainder(r1 - r2 + L/2., L) - L/2.
     // remainder = x1 - floor(x1 / x2) * x2
     dx = p2[0] - p1[0];
-    if (cyclicX && dx > width / 2) {
+    if (cyclicX && fabs(dx) > width / 2) {
         float x1 = p1[0] - p2[0] + width / 2;
         dx = x1 - floor(x1 / width) * width;
         dx -= width / 2;
     }
     dy = p2[1] - p1[1];
-    if (cyclicY && dy > height / 2) {
+    if (cyclicY && fabs(dy) > height / 2) {
         float y1 = p1[1] - p2[1] + height / 2;
         dy = y1 - floor(y1 / height) * height;
         dy -= height / 2;
     }
     dz = p2[2] - p1[2];
-    if (cyclicZ && dz > depth / 2) {
+    if (cyclicZ && fabs(dz) > depth / 2) {
         float z1 = p1[2] - p2[2] + depth / 2;
         dz = z1 - floor(z1 / depth) * depth;
         dz -= depth / 2;
@@ -87,6 +87,8 @@ datatools::ParticleVelocities::ParticleVelocities(void)
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
@@ -103,9 +105,13 @@ datatools::ParticleVelocities::~ParticleVelocities(void) {
 
 
 bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCall *in,
-    core::moldyn::DirectionalParticleDataCall *out) {
+    core::moldyn::MultiParticleDataCall *outMPDC, core::moldyn::DirectionalParticleDataCall *outDPDC) {
 
     using megamol::core::moldyn::MultiParticleDataCall;
+
+    megamol::core::AbstractGetData3DCall *out;
+    if (outMPDC != nullptr) out = outMPDC;
+    if (outDPDC != nullptr) out = outDPDC;
 
     unsigned int time = out->FrameID() + 1; // we do not give out the original frame 0 because it has no previous frame
 
@@ -161,6 +167,8 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             this->cachedVertexData[i] = new char[thesize];
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
+        // TODO: what am I actually doing here
+        in->SetUnlocker(nullptr, false);
         in->Unlock();
         this->cachedTime = time - 1;
         this->cachedNumLists = in->GetParticleListCount();
@@ -184,7 +192,6 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         bool cycleY = this->cyclYSlot.Param<core::param::BoolParam>()->Value();
         bool cycleZ = this->cyclZSlot.Param<core::param::BoolParam>()->Value();
 
-        out->SetParticleListCount(cachedNumLists);
         float *cachedPtr, *currentPtr;
         vislib::math::Vector<float, 3> diff;
         for (auto i = 0; i < cachedNumLists; i++) {
@@ -214,16 +221,32 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             }
 
         }
+        // TODO: what am I actually doing here
+        in->SetUnlocker(nullptr, false);
+        in->Unlock();
     }
-    for (auto i = 0; i < cachedNumLists; i++) {
-        out->AccessParticles(i).SetCount(this->cachedListLength[i]);
-        out->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
-            in->AccessParticles(i).GetVertexDataStride());
-        out->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
-            in->AccessParticles(i).GetColourDataStride());
-        out->AccessParticles(i).SetDirData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
-            cachedDirData[i], 0);
+    if (outMPDC != nullptr) {
+        outMPDC->SetParticleListCount(cachedNumLists);
+        for (auto i = 0; i < cachedNumLists; i++) {
+            outMPDC->AccessParticles(i).SetCount(this->cachedListLength[i]);
+            outMPDC->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
+                in->AccessParticles(i).GetVertexDataStride());
+            outMPDC->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
+                in->AccessParticles(i).GetColourDataStride());
+        }
+    } else if (outDPDC != nullptr) {
+        outDPDC->SetParticleListCount(cachedNumLists);
+        for (auto i = 0; i < cachedNumLists; i++) {
+            outDPDC->AccessParticles(i).SetCount(this->cachedListLength[i]);
+            outDPDC->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
+                in->AccessParticles(i).GetVertexDataStride());
+            outDPDC->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
+                in->AccessParticles(i).GetColourDataStride());
+            outDPDC->AccessParticles(i).SetDirData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                cachedDirData[i], 0);
+        }
     }
+    this->datahash = in->DataHash();
     out->SetUnlocker(in->GetUnlocker());
     return true;
 }
@@ -234,25 +257,31 @@ bool datatools::ParticleVelocities::getExtentCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::DirectionalParticleDataCall;
 
     DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
-    if (outDpdc == NULL) return false;
+    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
+    if (outMpdc == nullptr && outDpdc == nullptr) return false;
 
     MultiParticleDataCall *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inMpdc == NULL) return false;
+    if (inMpdc == nullptr) return false;
+
+    megamol::core::AbstractGetData3DCall *out;
+    if (outMpdc != nullptr) out = outMpdc;
+    if (outDpdc != nullptr) out = outDpdc;
 
     //if (!this->assertData(inMpdc, outDpdc)) return false;
-    inMpdc->SetFrameID(outDpdc->FrameID(), true);
+    inMpdc->SetFrameID(out->FrameID(), true);
     if (!(*inMpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
         return false;
     }
-    outDpdc->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
-    outDpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+    out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
+    out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
     if (inMpdc->FrameCount() < 2) {
         vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: you cannot use this module for single-timestep data!");
         return false;
     }
-    outDpdc->SetFrameCount(inMpdc->FrameCount() - 1);
-
+    out->SetFrameCount(inMpdc->FrameCount() - 1);
+    // TODO: what am I actually doing here
+    inMpdc->SetUnlocker(nullptr, false);
     inMpdc->Unlock();
 
     return true;
@@ -263,12 +292,13 @@ bool datatools::ParticleVelocities::getDataCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::DirectionalParticleDataCall;
 
     DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
-    if (outDpdc == NULL) return false;
+    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
+    if (outMpdc == nullptr && outDpdc == nullptr) return false;
 
     MultiParticleDataCall *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inMpdc == NULL) return false;
+    if (inMpdc == nullptr) return false;
 
-    if (!this->assertData(inMpdc, outDpdc)) return false;
+    if (!this->assertData(inMpdc, outMpdc, outDpdc)) return false;
 
     //inMpdc->Unlock();
 

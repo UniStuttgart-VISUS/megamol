@@ -85,7 +85,7 @@ namespace datatools {
         bool getExtentCallback(megamol::core::Call& c);
 
         bool assertData(megamol::core::moldyn::MultiParticleDataCall *in,
-            core::moldyn::DirectionalParticleDataCall *out);
+            core::moldyn::MultiParticleDataCall *outMPDC,  core::moldyn::DirectionalParticleDataCall *outDPDC);
 
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
