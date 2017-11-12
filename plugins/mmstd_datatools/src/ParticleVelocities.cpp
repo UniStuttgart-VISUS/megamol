@@ -26,26 +26,23 @@ inline vislib::math::Vector<float, 3> getDifference(const float p1[3], const flo
     
     // dr = np.remainder(r1 - r2 + L/2., L) - L/2.
     // remainder = x1 - floor(x1 / x2) * x2
-    if (cyclicX) {
+    dx = p2[0] - p1[0];
+    if (cyclicX && dx > width / 2) {
         float x1 = p1[0] - p2[0] + width / 2;
         dx = x1 - floor(x1 / width) * width;
         dx -= width / 2;
-    } else {
-        dx = p2[0] - p1[0];
     }
-    if (cyclicY) {
+    dy = p2[1] - p1[1];
+    if (cyclicY && dy > height / 2) {
         float y1 = p1[1] - p2[1] + height / 2;
         dy = y1 - floor(y1 / height) * height;
         dy -= height / 2;
-    } else {
-        dy = p2[1] - p1[1];
     }
-    if (cyclicZ) {
+    dz = p2[2] - p1[2];
+    if (cyclicZ && dz > depth / 2) {
         float z1 = p1[2] - p2[2] + depth / 2;
         dz = z1 - floor(z1 / depth) * depth;
         dz -= depth / 2;
-    } else {
-        dz = p2[2] - p1[2];
     }
 
     return vislib::math::Vector<float, 3>(dx, dy, dz);
@@ -124,10 +121,10 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         this->cachedNumLists = 0;
         // load previous Frame
         in->SetFrameID(time - 1, true);
-        if (!(*in)(1)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
-            return false;
-        }
+        //if (!(*in)(1)) {
+        //    vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
+        //    return false;
+        //}
         if (!(*in)(0)) {
             vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
             return false;
@@ -164,6 +161,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             this->cachedVertexData[i] = new char[thesize];
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
+        in->Unlock();
         this->cachedTime = time - 1;
         this->cachedNumLists = in->GetParticleListCount();
 
@@ -226,9 +224,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         out->AccessParticles(i).SetDirData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
             cachedDirData[i], 0);
     }
-    out->AccessBoundingBoxes().SetObjectSpaceBBox(in->GetBoundingBoxes().ObjectSpaceBBox());
-    out->AccessBoundingBoxes().SetObjectSpaceClipBox(in->GetBoundingBoxes().ObjectSpaceClipBox());
-    out->SetFrameCount(in->FrameCount() - 1);
+    out->SetUnlocker(in->GetUnlocker());
     return true;
 }
 
@@ -243,7 +239,19 @@ bool datatools::ParticleVelocities::getExtentCallback(megamol::core::Call& c) {
     MultiParticleDataCall *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == NULL) return false;
 
-    if (!this->assertData(inMpdc, outDpdc)) return false;
+    //if (!this->assertData(inMpdc, outDpdc)) return false;
+    inMpdc->SetFrameID(outDpdc->FrameID(), true);
+    if (!(*inMpdc)(1)) {
+        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+        return false;
+    }
+    outDpdc->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
+    outDpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+    if (inMpdc->FrameCount() < 2) {
+        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: you cannot use this module for single-timestep data!");
+        return false;
+    }
+    outDpdc->SetFrameCount(inMpdc->FrameCount() - 1);
 
     inMpdc->Unlock();
 
@@ -262,7 +270,7 @@ bool datatools::ParticleVelocities::getDataCallback(megamol::core::Call& c) {
 
     if (!this->assertData(inMpdc, outDpdc)) return false;
 
-    inMpdc->Unlock();
+    //inMpdc->Unlock();
 
     return true;
 }
