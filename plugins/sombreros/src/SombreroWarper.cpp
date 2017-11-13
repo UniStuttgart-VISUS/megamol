@@ -1044,6 +1044,8 @@ bool SombreroWarper::recomputeVertexDistances(void) {
  */
 bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
+	this->rahiAngles.resize(this->meshVector.size());
+
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		// first: find the meridian
 
@@ -1381,6 +1383,9 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			}
 		}
 #endif
+
+		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size());
+
 	}
 
 	return true;

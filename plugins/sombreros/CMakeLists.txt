@@ -6,8 +6,17 @@
 string(TOUPPER sombreros EXPORT_NAME)
 option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build sombreros" ON)
 
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(sombreros)
+  project(sombreros LANGUAGES CXX CUDA)
+
+  #NVCC options
+  set(CMAKE_CUDA_STANDARD 11)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
+  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
+
+  get_filename_component(cuda_compiler_directory "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
