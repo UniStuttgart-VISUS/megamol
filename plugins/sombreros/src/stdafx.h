@@ -32,4 +32,6 @@
 
 #include "vislib/types.h"
 
+typedef unsigned int uint;
+
 #endif /* SOMBREROS_STDAFX_H_INCLUDED */

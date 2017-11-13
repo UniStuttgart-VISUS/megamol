@@ -24,8 +24,9 @@
 namespace megamol {
 namespace sombreros {
 
-	typedef unsigned int uint;
-
+	/**
+	 * Class for the warping of a given mesh into a sombrero shape
+	 */
 	class SombreroWarper : public core::Module {
 	public:
 
