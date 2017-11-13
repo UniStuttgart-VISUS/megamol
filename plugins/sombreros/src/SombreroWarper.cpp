@@ -202,6 +202,7 @@ void SombreroWarper::checkParameters(void) {
 bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 	this->meshVector.clear();
 	this->meshVector.resize(ctmd.Count());
+	this->meshVector.shrink_to_fit();
 	
 	this->vertices.clear();
 	this->vertices.resize(ctmd.Count());
@@ -1029,6 +1030,7 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
 	this->rahiAngles.resize(this->meshVector.size());
+	this->rahiAngles.shrink_to_fit();
 
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		// first: find the meridian
@@ -1108,7 +1110,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		 * 3 : vertex adjacent to the meridian to the right
 		 * 0 : all other vertices
 		 */
-		std::vector<char> vTypes(this->vertexLevelAttachment[i].size(), 0);
+		std::vector<int> vTypes(this->vertexLevelAttachment[i].size(), 0);
+		vTypes.shrink_to_fit();
 		for (auto v : meridian) {
 			vTypes[v] = 1;
 		}
@@ -1322,7 +1325,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			}
 		}
 
-#if 1 // color meridian vertices
+#if 0 // color meridian vertices
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
 			if (vTypes[v] == 1 || vTypes[v] == -1) { // red middle
 				this->colors[i][3 * v + 0] = 255;
@@ -1349,7 +1352,58 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 #endif
 
 		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size());
+		this->rahiAngles[i].shrink_to_fit();
+		// compute valid vertex vector
+		std::vector<bool> validVertices(this->vertexLevelAttachment[i].size(), true);
+		validVertices.shrink_to_fit();
+		validVertices[startIndex] = false;
+		validVertices[endIndex] = false;
+		for (auto c : meridian) {
+			validVertices[c] = false;
+		}
+		// vertex edge offset vector
+		std::vector<std::vector<CUDAKernels::Edge>> vertex_edge_offset_local(this->vertexLevelAttachment[i].size());
+		std::vector<uint> offsetDepth(this->vertexLevelAttachment[i].size());
+		vertexEdgeOffsets.shrink_to_fit();
+		for (uint j = 0; j < static_cast<uint>(vertex_edge_offset_local.size()); j++) {
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][j].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][j].second;
 
+			uint cnt = 0;
+			while (forward != edgesForward[i].end() && (*forward).first == j) {
+				auto target = (*forward).second;
+				CUDAKernels::Edge edge;
+				edge.vertex_id_0 = j;
+				edge.vertex_id_1 = target;
+				vertex_edge_offset_local[j].push_back(edge);
+				cnt++;
+				forward++;
+			}
+			while (reverse != edgesReverse[i].end() && (*reverse).first == j) {
+				auto target = (*reverse).second;
+				CUDAKernels::Edge edge;
+				edge.vertex_id_0 = j;
+				edge.vertex_id_1 = target;
+				vertex_edge_offset_local[j].push_back(edge);
+				cnt++;
+				reverse++;
+			}
+			offsetDepth[j] = cnt;
+		}
+
+		this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
+
+#if 1 // color by angle
+		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
+			std::cout << this->rahiAngles[i][v] << std::endl;
+		}
+
+		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
+			this->colors[i][3 * v + 0] = 255 * (this->rahiAngles[i][v] / (2.0f * 3.14159265358979f));
+			this->colors[i][3 * v + 1] = 0;
+			this->colors[i][3 * v + 2] = 0;
+		}
+#endif
 	}
 
 	return true;
@@ -1409,5 +1463,4 @@ void SombreroWarper::reconstructEdgeSearchStructures(uint index, uint vertex_cou
 			}
 		}
 	}
-	std::cout << "done!" << std::endl;
 }
