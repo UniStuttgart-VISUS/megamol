@@ -104,31 +104,6 @@ namespace sombreros {
 		~CUDAKernels(void);
 
 		/**
-		 * Create the mesh topology by extracting the edges from the
-		 * mesh and creating the vertex edge offset and face edge
-		 * offset information. The vertex edge offset stores the 
-		 * edges to which a vertex blongs and the face edge offset
-		 * stores the edges that belong to a face.
-		 *
-		 * @param p_faces The faces of the mesh.
-		 * @param p_vertex_edge_offset Will contain the edge IDs that
-		 * a vertex belongs to.
-		 * @param p_face_edge_offset Will contain the edge IDs that
-		 * belong to a face.
-		 * @param p_vertex_edge_offset_depth Will contain the number
-		 * of edges that contain the vertex.
-		 * @param p_face_edge_offset_depth Will contain the number
-		 * of edges that belong to the face.
-		 *
-		 * @return True if no error occured, false otherwise.
-		 */
-		bool CreateMeshTopology(const std::vector<uint>& p_faces,
-			std::vector<std::vector<Edge>>& p_vertex_edge_offset, 
-			std::vector<std::vector<Edge>>& p_face_edge_offset,
-			std::vector<uint>& p_vertex_edge_offset_depth,
-			std::vector<uint>& p_face_edge_offset_depth);
-
-		/**
 		 * Compute the phi values for the Rahi and Sharp representation of
 		 * a SES as a sphere. The iterative process is stopped after
 		 * the given number of iterations and only the phi values of valid
@@ -154,23 +129,6 @@ namespace sombreros {
 			const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
 			const std::vector<uint>& p_vertex_edge_offset_depth,
 			const std::vector<int>& p_vertex_type);
-
-		/**
-		 * Compute the theta values for the Rahi and Sharp representation of
-		 * a SES as a sphere. Only the phi values of valid vertices are changed. 
-		 * The poles are not valid vertices.
-		 *
-		 * @param p_theta One step on the angle from the north to the south pole.
-		 * @param p_theta_values The theta values of each vertex.
-		 * @param p_valid_theta_vertices Remebers if a vertex is valid.
-		 * @param p_zvalues The z value of each vertex.
-		 * @param p_min_z the z value of the south pole.
-		 *
-		 * @return True if no error occured, false otherwise.
-		 */
-		bool CreateThetaValues(const float p_theta, std::vector<float>& p_theta_values,
-			std::vector<bool> p_valid_theta_vertices, const std::vector<float>& p_zvalues,
-			const float p_min_z);
 	
 		/**
 		 * Initialise a empty instance.
@@ -187,39 +145,6 @@ namespace sombreros {
 		 * @return false if the id is neither 0 nor 1, true otherwise
 		 */
 		bool SortEdges(std::vector<Edge>& p_edges, const uint p_id);
-	
-	private:
-	
-		/**
-		 * Resize each vector inside of the vector to the correct
-		 * size. The size is determined by the first element that
-		 * is not equal to the given value.
-		 *
-		 * @param p_offset_in The 1D offset from the kernel.
-		 * @param p_offset_out The 2D offset with the correct sizes.
-		 * @param p_depth The maximum depth that each offset has.
-		 * @param p_depth The initial value that determines the size.
-		 * @param p_value The empty edge value that stops the offset loop.
-		 */
-		void resizeOffsetVertices(std::vector<Edge>& p_offset_in,
-			std::vector<std::vector<Edge>>& p_offset_out,
-			std::vector<uint>& p_offset_depth,
-			const std::vector<uint>& p_depth, const Edge p_value);
-
-		/**
-		 * Resize each vector inside of the vector to the correct
-		 * size. The size is determined by the first element that
-		 * is not equal to the given value.
-		 *
-		 * @param p_offset_in The 1D offset from the kernel.
-		 * @param p_offset_out The 2D offset with the correct sizes.
-		 * @param p_depth The maximum depth that each offset has.
-		 * @param p_depth The initial value that determines the size.
-		 */
-		void resizeOffsetFaces(std::vector<Edge>& p_offset_in,
-			std::vector<std::vector<Edge>>& p_offset_out,
-			std::vector<uint>& p_offset_depth,
-			const std::vector<uint>& p_depth);
 	};
 
 } /* end namespace molecularmaps */
