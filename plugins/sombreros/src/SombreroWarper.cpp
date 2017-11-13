@@ -61,6 +61,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
 	this->lastDataHash = 0;
 	this->hashOffset = 0;
 	this->dirtyFlag = false;
+
+	this->cuda_kernels = std::unique_ptr<CUDAKernels>(new CUDAKernels());
 }
 
 /*

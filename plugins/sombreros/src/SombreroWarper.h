@@ -18,6 +18,7 @@
 #include "mmstd_trisoup/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
+#include "CUDAKernels.cuh"
 
 #include <set>
 
@@ -244,6 +245,9 @@ namespace sombreros {
 
 		/** Indices of all vertices belonging to the brim */
 		std::vector<std::vector<uint>> brimIndices;
+
+		/** Unique pointer to the CUDA kernels */
+		std::unique_ptr<CUDAKernels> cuda_kernels;
 
 		/** Flag set when a parameter is dirty */
 		bool dirtyFlag;
