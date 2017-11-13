@@ -227,6 +227,9 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 	this->edgesReverse.clear();
 	this->edgesReverse.resize(ctmd.Count());
 
+	this->vertexEdgeOffsets.clear();
+	this->vertexEdgeOffsets.resize(ctmd.Count());
+
 	this->faces.clear();
 	this->faces.resize(ctmd.Count());
 
@@ -296,13 +299,7 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 			edgesReverse[i].push_back(std::pair<uint, uint>(vert3, vert2));
 			edgesReverse[i].push_back(std::pair<uint, uint>(vert1, vert3));
 		}
-		// sort the search structures
-		std::sort(edgesForward[i].begin(), edgesForward[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-			return left.first < right.first;
-		});
-		std::sort(edgesReverse[i].begin(), edgesReverse[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-			return left.first < right.first;
-		});
+		reconstructEdgeSearchStructures(i, vertCount);
 	}
 	return true;
 }
@@ -416,12 +413,8 @@ bool SombreroWarper::findSombreroBorder(void) {
 				auto current = static_cast<uint>(*localCandidates.begin());
 				localCandidates.erase(current);
 
-				auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
-				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
+				auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+				auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 
 				// go through all forward edges
 				while (forward != edgesForward[i].end() && (*forward).first == current) {
@@ -564,12 +557,8 @@ bool SombreroWarper::findSombreroBorder(void) {
 			brimCandidates.erase(current);
 
 			// search for the start indices in both edge lists
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
 				auto target = (*forward).second;
@@ -753,12 +742,8 @@ bool SombreroWarper::fillMeshHoles(void) {
 			sortedCuts[j][0] = current;
 			uint k = 0;
 			while (!localSet.empty()) {
-				auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
-				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
+				auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+				auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 				bool found = false;
 				while (forward != edgesForward[i].end() && (*forward).first == current) {
 					auto target = (*forward).second;
@@ -981,6 +966,7 @@ bool SombreroWarper::fillMeshHoles(void) {
 		// remove edge duplicates
 		edgesForward[i].erase(std::unique(edgesForward[i].begin(), edgesForward[i].end()), edgesForward[i].end());
 		edgesReverse[i].erase(std::unique(edgesReverse[i].begin(), edgesReverse[i].end()), edgesReverse[i].end());
+		reconstructEdgeSearchStructures(i, static_cast<uint>(this->vertices[i].size() / 3));
 	}
 
 	return true;
@@ -1009,12 +995,8 @@ bool SombreroWarper::recomputeVertexDistances(void) {
 			// for each currently allowed vertex
 			for (auto element : allowedVerticesSet) {
 				// search for the start indices in both edge lists
-				auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
-				auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-					return x.first < val;
-				});
+				auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][element].first;
+				auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][element].second;
 				// go through all forward edges starting with the vertex
 				while (forward != edgesForward[i].end() && (*forward).first == element) {
 					auto val = (*forward).second;
@@ -1082,12 +1064,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			uint mylevel = lowestLevel - j;
 
 			// search for the start indices in both edge lists
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 
 			bool found = false;
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
@@ -1153,12 +1131,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		uint k = 0;
 		while (sortedBrim.size() != brimTest.size()) {
 			current = sortedBrim[sortedBrim.size() - 1];
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 			bool found = false;
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
 				auto target = (*forward).second;
@@ -1255,12 +1229,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		// determine candidate vertices
 		for (auto current : meridian) {
 			if (current == startIndex) continue;
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
 				auto target = (*forward).second;
@@ -1282,12 +1252,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		// on the left
 		current = left;
 		while (current != UINT_MAX) {
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 			bool found = false;
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
 				auto target = (*forward).second;
@@ -1322,12 +1288,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		// on the right
 		current = right;
 		while (current != UINT_MAX) {
-			auto forward = std::lower_bound(edgesForward[i].begin(), edgesForward[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
-			auto reverse = std::lower_bound(edgesReverse[i].begin(), edgesReverse[i].end(), current, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-				return x.first < val;
-			});
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 			bool found = false;
 			while (forward != edgesForward[i].end() && (*forward).first == current) {
 				auto target = (*forward).second;
@@ -1391,4 +1353,61 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 	}
 
 	return true;
+}
+
+/*
+ * SombreroWarper::reconstructEdgeSearchStructures
+ */
+void SombreroWarper::reconstructEdgeSearchStructures(uint index, uint vertex_count) {
+	// sort the array
+	std::sort(edgesForward[index].begin(), edgesForward[index].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+		return left.first < right.first;
+	});
+	std::sort(edgesReverse[index].begin(), edgesReverse[index].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
+		return left.first < right.first;
+	});
+	// construct the offset array
+	this->vertexEdgeOffsets[index] = std::vector<std::pair<uint, uint>>(vertex_count, std::pair<uint, uint>(UINT_MAX, UINT_MAX));
+	for (uint i = 0; i < edgesForward[index].size(); i++) {
+		uint jj = edgesForward[index][i].first;
+		if (this->vertexEdgeOffsets[index][jj].first == UINT_MAX) {
+			this->vertexEdgeOffsets[index][jj].first = i;
+		}
+	}
+	for (uint i = 0; i < edgesReverse[index].size(); i++) {
+		uint jj = edgesReverse[index][i].first;
+		if (this->vertexEdgeOffsets[index][jj].second == UINT_MAX) {
+			this->vertexEdgeOffsets[index][jj].second = i;
+		}
+	}
+	// repair unset entries
+	for (uint i = 0; i < vertex_count; i++) {
+		if (this->vertexEdgeOffsets[index][i].first == UINT_MAX) {
+			uint j = i + 1;
+			while (j < vertex_count) {
+				if (this->vertexEdgeOffsets[index][j].first != UINT_MAX) {
+					this->vertexEdgeOffsets[index][i].first = this->vertexEdgeOffsets[index][j].first;
+					break;
+				}
+				j++;
+			}
+			if (j >= vertex_count) {
+				this->vertexEdgeOffsets[index][i].first = static_cast<uint>(this->edgesForward[index].size() - 1);
+			}
+		}
+		if (this->vertexEdgeOffsets[index][i].second == UINT_MAX) {
+			uint j = i + 1;
+			while (j < vertex_count) {
+				if (this->vertexEdgeOffsets[index][j].second != UINT_MAX) {
+					this->vertexEdgeOffsets[index][i].second = this->vertexEdgeOffsets[index][j].second;
+					break;
+				}
+				j++;
+			}
+			if (j >= vertex_count) {
+				this->vertexEdgeOffsets[index][i].second = static_cast<uint>(this->edgesReverse[index].size() - 1);
+			}
+		}
+	}
+	std::cout << "done!" << std::endl;
 }

@@ -171,6 +171,15 @@ namespace sombreros {
 		 */
 		bool computeVertexAngles(TunnelResidueDataCall& tunnelCall);
 
+		/**
+		 * Reconstructs the edge search structures based on the edges stored in the edge fields.
+		 * It is assumed, that the offset fields already have the correct size.
+		 *
+		 * @param index The index of the mesh the search structure should be updated
+		 * @param vertex_cnt The new vertex count of the mesh
+		 */
+		void reconstructEdgeSearchStructures(uint index, uint vertex_cnt);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
@@ -230,6 +239,9 @@ namespace sombreros {
 
 		/** The face edges in reverse order */
 		std::vector<std::vector<std::pair<uint, uint>>> edgesReverse;
+
+		/** The offset arrays for both forward and backward sorted edges (first: forward, second: backward) */
+		std::vector<std::vector<std::pair<uint, uint>>> vertexEdgeOffsets;
 
 		/** Set containing the indices of the border vertices */
 		std::vector<std::set<uint>> borderVertices;
