@@ -1351,7 +1351,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		}
 #endif
 
-		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size());
+		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
 		this->rahiAngles[i].shrink_to_fit();
 		// compute valid vertex vector
 		std::vector<bool> validVertices(this->vertexLevelAttachment[i].size(), true);
@@ -1390,7 +1390,6 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			}
 			offsetDepth[j] = cnt;
 		}
-
 		this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
 
 #if 1 // color by angle
