@@ -1390,7 +1390,11 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			}
 			offsetDepth[j] = cnt;
 		}
-		this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
+		bool ret = this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
+		if (!ret) {
+			vislib::sys::Log::DefaultLog.WriteError("The CUDA angle diffusion failed");
+			return false;
+		}
 
 #if 1 // color by angle
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
