@@ -286,6 +286,7 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
 	uint begin = p_vertex_edge_offset_depth[idx] + p_vertex_neighbours_offset[idx];
 	uint end = p_vertex_edge_offset_depth[idx + 1];
 	float count = end - begin;
+
 	float tmp = 0.0f;
 	// Add up the phivalues of the neighbouring vertices and increase the counter.
 	if (p_vertex_type[idx] == 0 || p_vertex_type[idx] == 2) {
@@ -421,7 +422,6 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
 	float diff = 2.0f * p_threshold;
 	size_t round = 0;
 	while (diff > p_threshold) {
-		std::cout << round << std::endl;
 		SetPhiValues <<< Grid(vertex_cnt, 256), 256 >>> (
 			thrust::raw_pointer_cast(p_phi_values_one_d.data().get()),
 			thrust::raw_pointer_cast(p_phi_values_two_d.data().get()),

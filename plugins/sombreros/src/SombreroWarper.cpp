@@ -1327,6 +1327,10 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 				reverse++;
 			}
 		}
+		if (meridian.size() < 2) {
+			vislib::sys::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
+			return false;
+		}
 
 #if 0 // color meridian vertices
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
@@ -1354,46 +1358,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		}
 #endif
 
-		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
-		this->rahiAngles[i].shrink_to_fit();
-		// compute valid vertex vector
-		std::vector<bool> validVertices(this->vertexLevelAttachment[i].size(), true);
-		validVertices.shrink_to_fit();
-		validVertices[startIndex] = false;
-		validVertices[endIndex] = false;
-		for (auto c : meridian) {
-			validVertices[c] = false;
-		}
-		// vertex edge offset vector
-		std::vector<std::vector<CUDAKernels::Edge>> vertex_edge_offset_local(this->vertexLevelAttachment[i].size());
-		std::vector<uint> offsetDepth(this->vertexLevelAttachment[i].size());
-		vertexEdgeOffsets.shrink_to_fit();
-		for (uint j = 0; j < static_cast<uint>(vertex_edge_offset_local.size()); j++) {
-			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][j].first;
-			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][j].second;
-
-			uint cnt = 0;
-			while (forward != edgesForward[i].end() && (*forward).first == j) {
-				auto target = (*forward).second;
-				CUDAKernels::Edge edge;
-				edge.vertex_id_0 = j;
-				edge.vertex_id_1 = target;
-				vertex_edge_offset_local[j].push_back(edge);
-				cnt++;
-				forward++;
-			}
-			while (reverse != edgesReverse[i].end() && (*reverse).first == j) {
-				auto target = (*reverse).second;
-				CUDAKernels::Edge edge;
-				edge.vertex_id_0 = j;
-				edge.vertex_id_1 = target;
-				vertex_edge_offset_local[j].push_back(edge);
-				cnt++;
-				reverse++;
-			}
-			offsetDepth[j] = cnt;
-		}
-
+#if 0
 		const float thePi = 3.14159265358979f;
 		// initialize the angle values of the circumpolar vertices
 		// for the brim
@@ -1405,10 +1370,6 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
 				this->rahiAngles[i][sortedBrim[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
 			}
-		}
-		if (meridian.size() < 2) {
-			vislib::sys::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
-			return false;
 		}
 
 		// for the vertices around the binding site vertex
@@ -1469,6 +1430,82 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		for (uint j = 0; j < static_cast<uint>(bsVertexCircle.size()); j++) {
 			this->rahiAngles[i][bsVertexCircle[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(bsVertexCircle.size()));
 		}
+#endif
+
+		// add north pole vertex to the mesh to be able to use the old code
+		uint newIndex = static_cast<uint>(this->vertexLevelAttachment[i].size());
+		this->vertices[i].push_back(0.0f);
+		this->vertices[i].push_back(0.0f);
+		this->vertices[i].push_back(0.0f);
+		this->colors[i].push_back(0);
+		this->colors[i].push_back(0);
+		this->colors[i].push_back(0);
+		this->normals[i].push_back(0.0f);
+		this->normals[i].push_back(1.0f);
+		this->normals[i].push_back(0.0f);
+		this->vertexLevelAttachment[i].push_back(UINT_MAX);
+		this->atomIndexAttachment[i].push_back(UINT_MAX);
+		this->bsDistanceAttachment[i].push_back(UINT_MAX);
+
+		vTypes.push_back(-1);
+		// add a face for each neighbor of the new vertex
+		for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
+			this->faces[i].push_back(newIndex);
+			this->faces[i].push_back(sortedBrim[j]);
+			this->faces[i].push_back(sortedBrim[(j + 1) % sortedBrim.size()]);
+			this->edgesForward[i].push_back(std::pair<uint, uint>(newIndex, sortedBrim[j]));
+			this->edgesReverse[i].push_back(std::pair<uint, uint>(sortedBrim[j], newIndex));
+			this->edgesForward[i].push_back(std::pair<uint, uint>(newIndex, sortedBrim[(j + 1) % sortedBrim.size()]));
+			this->edgesReverse[i].push_back(std::pair<uint, uint>(sortedBrim[(j + 1) % sortedBrim.size()], newIndex));
+			// the other two edges should exist already
+		}
+		reconstructEdgeSearchStructures(i, newIndex + 1);
+
+		this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
+		this->rahiAngles[i].shrink_to_fit();
+		// compute valid vertex vector
+		std::vector<bool> validVertices(this->vertexLevelAttachment[i].size(), true);
+		validVertices.shrink_to_fit();
+		validVertices[startIndex] = false;
+		validVertices[endIndex] = false;
+		for (auto c : meridian) {
+			validVertices[c] = false;
+		}
+		// vertex edge offset vector
+		std::vector<std::vector<CUDAKernels::Edge>> vertex_edge_offset_local(this->vertexLevelAttachment[i].size());
+		std::vector<uint> offsetDepth(this->vertexLevelAttachment[i].size(), 0);
+		vertex_edge_offset_local.shrink_to_fit();
+		for (uint j = 0; j < static_cast<uint>(vertex_edge_offset_local.size()); j++) {
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][j].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][j].second;
+			while (forward != edgesForward[i].end() && (*forward).first == j) {
+				auto target = (*forward).second;
+				CUDAKernels::Edge edge;
+				edge.vertex_id_0 = j;
+				edge.vertex_id_1 = target;
+				vertex_edge_offset_local[j].push_back(edge);
+				forward++;
+			}
+			while (reverse != edgesReverse[i].end() && (*reverse).first == j) {
+				auto target = (*reverse).second;
+				CUDAKernels::Edge edge;
+				edge.vertex_id_0 = j;
+				edge.vertex_id_1 = target;
+				vertex_edge_offset_local[j].push_back(edge);
+				reverse++;
+			}
+		}
+		for (auto e : edgesForward[i]) { // compute the number of adjacent edges
+			offsetDepth[e.first]++;
+			offsetDepth[e.second]++;
+		}
+		uint sum = offsetDepth[0];
+		offsetDepth[0] = 0;
+		for (uint j = 1; j < offsetDepth.size(); j++) {
+			uint oldVal = offsetDepth[j];
+			offsetDepth[j] = sum;
+			sum += oldVal;
+		}
 
 		bool ret = this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
 		if (!ret) {
@@ -1476,11 +1513,26 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			return false;
 		}
 
-#if 0 // color by angle
-		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
-			std::cout << this->rahiAngles[i][v] << std::endl;
-		}
+		// remove the added vertex
+		this->vertices[i].erase(this->vertices[i].end() - 3, this->vertices[i].end());
+		this->colors[i].erase(this->colors[i].end() - 3, this->colors[i].end());
+		this->normals[i].erase(this->normals[i].end() - 3, this->normals[i].end());
+		this->vertexLevelAttachment[i].pop_back();
+		this->atomIndexAttachment[i].pop_back();
+		this->bsDistanceAttachment[i].pop_back();
+		uint addedFaceValues = sortedBrim.size() * 3;
+		this->faces[i].erase(this->faces[i].end() - addedFaceValues, this->faces[i].end());
+		uint oldIndex = static_cast<uint>(this->vertexLevelAttachment[i].size());
+		auto rit = std::remove_if(this->edgesForward[i].begin(), this->edgesForward[i].end(), [oldIndex](const std::pair<uint, uint>& e) {
+			return ((e.first == oldIndex) || (e.second == oldIndex));
+		});
+		this->edgesForward[i].erase(rit, this->edgesForward[i].end());
+		rit = std::remove_if(this->edgesReverse[i].begin(), this->edgesReverse[i].end(), [oldIndex](const std::pair<uint, uint>& e) {
+			return ((e.first == oldIndex) || (e.second == oldIndex));
+		});
+		this->reconstructEdgeSearchStructures(i, oldIndex);
 
+#if 1 // color by angle
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
 			this->colors[i][3 * v + 0] = 255 * (this->rahiAngles[i][v] / (2.0f * 3.14159265358979f));
 			this->colors[i][3 * v + 1] = 0;
