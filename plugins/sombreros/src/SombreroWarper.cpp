@@ -1131,6 +1131,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		std::set<uint> readySet;
 		sortedBrim.push_back(endIndex);
 		readySet.insert(endIndex);
+		bool isClockwise = false;
 		uint k = 0;
 		while (sortedBrim.size() != brimTest.size()) {
 			current = sortedBrim[sortedBrim.size() - 1];
@@ -1221,12 +1222,14 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			vTypes[sortedBrim[sortedBrim.size() - 1]] = 3;
 			left = sortedBrim[1];
 			right = sortedBrim[sortedBrim.size() - 1];
+			isClockwise = true;
 		} else {
 			// the brim index 1 vertex is right of the end vertex
 			vTypes[sortedBrim[1]] = 3;
 			vTypes[sortedBrim[sortedBrim.size() - 1]] = 2;
 			right = sortedBrim[1];
 			left = sortedBrim[sortedBrim.size() - 1];
+			isClockwise = false;
 		}
 
 		// determine candidate vertices
@@ -1390,13 +1393,90 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 			}
 			offsetDepth[j] = cnt;
 		}
+
+		const float thePi = 3.14159265358979f;
+		// initialize the angle values of the circumpolar vertices
+		// for the brim
+		if (isClockwise) {
+			for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
+				this->rahiAngles[i][sortedBrim[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size())));
+			}
+		} else {
+			for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
+				this->rahiAngles[i][sortedBrim[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
+			}
+		}
+		if (meridian.size() < 2) {
+			vislib::sys::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
+			return false;
+		}
+
+		// for the vertices around the binding site vertex
+		std::set<uint> bsVertices;
+		// search for the vertex right of the first meridian vertex
+		auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][startIndex].first;
+		auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][startIndex].second;
+		while (forward != edgesForward[i].end() && (*forward).first == startIndex) {
+			auto target = (*forward).second;
+			bsVertices.insert(target);
+			forward++;
+		}
+		while (reverse != edgesReverse[i].end() && (*reverse).first == startIndex) {
+			auto target = (*reverse).second;
+			bsVertices.insert(target);
+			reverse++;
+		}
+		if (bsVertices.size() < 3) {
+			vislib::sys::Log::DefaultLog.WriteError("The binding site vertex lies in a degenerate region. Aborting...");
+			return false;
+		}
+		std::vector<uint> bsVertexCircle;
+		bsVertexCircle.push_back(meridian[meridian.size() - 2]);
+		for (auto v : bsVertices) {
+			if (vTypes[v] == 3) {
+				bsVertexCircle.push_back(v);
+			}
+		}
+		if (bsVertexCircle.size() != 2) {
+			vislib::sys::Log::DefaultLog.WriteError("Something went wrong during the circle computation. Aborting...");
+			return false;
+		}
+		std::set<uint> doneset = std::set<uint>(bsVertexCircle.begin(), bsVertexCircle.end());
+		while (bsVertexCircle.size() != bsVertices.size()) {
+			current = bsVertexCircle[bsVertexCircle.size() - 1];
+			auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+			auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
+			bool found = false;
+			while (forward != edgesForward[i].end() && (*forward).first == current && !found) {
+				auto target = (*forward).second;
+				if (doneset.count(target) == 0 && bsVertices.count(target) > 0) {
+					doneset.insert(target);
+					bsVertexCircle.push_back(target);
+					found = true;
+				}
+				forward++;
+			}
+			while (reverse != edgesReverse[i].end() && (*reverse).first == current && !found) {
+				auto target = (*reverse).second;
+				if (doneset.count(target) == 0 && bsVertices.count(target) > 0) {
+					doneset.insert(target);
+					bsVertexCircle.push_back(target);
+					found = true;
+				}
+				reverse++;
+			}
+		}
+		for (uint j = 0; j < static_cast<uint>(bsVertexCircle.size()); j++) {
+			this->rahiAngles[i][bsVertexCircle[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(bsVertexCircle.size()));
+		}
+
 		bool ret = this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
 		if (!ret) {
 			vislib::sys::Log::DefaultLog.WriteError("The CUDA angle diffusion failed");
 			return false;
 		}
 
-#if 1 // color by angle
+#if 0 // color by angle
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
 			std::cout << this->rahiAngles[i][v] << std::endl;
 		}

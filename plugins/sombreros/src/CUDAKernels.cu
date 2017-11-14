@@ -421,6 +421,7 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
 	float diff = 2.0f * p_threshold;
 	size_t round = 0;
 	while (diff > p_threshold) {
+		std::cout << round << std::endl;
 		SetPhiValues <<< Grid(vertex_cnt, 256), 256 >>> (
 			thrust::raw_pointer_cast(p_phi_values_one_d.data().get()),
 			thrust::raw_pointer_cast(p_phi_values_two_d.data().get()),
