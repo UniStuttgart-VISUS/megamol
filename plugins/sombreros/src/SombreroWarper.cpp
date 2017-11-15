@@ -679,6 +679,12 @@ bool SombreroWarper::findSombreroBorder(void) {
 bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 	
 	this->newBsDistances = this->bsDistanceAttachment;
+	this->sombreroLength.clear();
+	this->sombreroLength.resize(this->meshVector.size());
+	this->sombreroRadius.clear();
+	this->sombreroRadius.resize(this->meshVector.size());
+	this->brimWidth.clear();
+	this->brimWidth.resize(this->meshVector.size());
 
 	for (size_t i = 0; i < this->meshVector.size(); i++) {
 		uint vCnt = static_cast<uint>(this->vertices[i].size() / 3);
@@ -697,8 +703,98 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 		/*
 		 * step 1: vertex level computation
 		 */
+#if 1 
+		this->liftVertices();
+#endif
+	
 
-		// TODO
+		/*
+		 * step 2: compute the necessary parameters
+		 */
+		// the length of the sombrero is the length of the longest tunnel
+		float longestLength = 0.0f;
+		for (uint j = 0; j < static_cast<uint>(tunnelCall.getTunnelNumber()); j++) {
+			auto& tunnel = tunnelCall.getTunnelDescriptions()[j];
+			float localLength = 0.0f;
+			vislib::math::Vector<float, 3> first, second;
+			for (uint k = 4; k < static_cast<uint>(tunnel.coordinates.size()); k += 4) {
+				first = vislib::math::Vector<float, 3>(&tunnel.coordinates[k - 4]);
+				second = vislib::math::Vector<float, 3>(&tunnel.coordinates[k]);
+				localLength += (second - first).Length();
+			}
+			if (localLength > longestLength) {
+				longestLength = localLength;
+			}
+		}
+		this->sombreroLength[i] = longestLength;
+
+		// the inner radius is the median of the sphere radii
+		std::vector<float> radii;
+		for (uint j = 0; j < static_cast<uint>(tunnelCall.getTunnelNumber()); j++) {
+			auto& tunnel = tunnelCall.getTunnelDescriptions()[j];
+			for (uint k = 3; k < static_cast<uint>(tunnel.coordinates.size()); k += 4) {
+				radii.push_back(tunnel.coordinates[k]);
+			}
+		}
+		std::sort(radii.begin(), radii.end());
+		this->sombreroRadius[i] = radii[static_cast<uint>(radii.size() / 2)];
+
+		// the brim radius is the average closest distance between the brim border vertices and the kink
+		uint minLevel = static_cast<uint>(this->minBrimLevelParam.Param<param::IntParam>()->Value());
+		float avg = 0.0f;
+		for (uint j = 0; j < static_cast<uint>(this->brimIndices.size()); j++) {
+			uint level = this->vertexLevelAttachment[i][this->brimIndices[i][j]];
+			uint current = this->brimIndices[i][j];
+			float dist = 0.0f;
+			while (level > minLevel) {
+				auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+				auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
+
+				bool found = false;
+				while (forward != edgesForward[i].end() && (*forward).first == current && !found) {
+					auto target = (*forward).second;
+					if (this->vertexLevelAttachment[i][target] < level) {
+						level = this->vertexLevelAttachment[i][target];
+						found = true;
+						// compute the distance between the two vertices
+						vislib::math::Vector<float, 3> curPos(&this->vertices[i][current * 3]);
+						vislib::math::Vector<float, 3> targetPos(&this->vertices[i][target * 3]);
+						dist += (targetPos - curPos).Length();
+						current = target;
+					}
+					forward++;
+				}
+				while (reverse != edgesReverse[i].end() && (*reverse).first == current && !found) {
+					auto target = (*reverse).second;
+					if (this->vertexLevelAttachment[i][target] < level) {	
+						level = this->vertexLevelAttachment[i][target];
+						found = true;
+						// compute the distance between the two vertices
+						vislib::math::Vector<float, 3> curPos(&this->vertices[i][current * 3]);
+						vislib::math::Vector<float, 3> targetPos(&this->vertices[i][target * 3]);
+						dist += (targetPos - curPos).Length();
+						current = target;
+					}
+					reverse++;
+				}
+			}
+			avg += dist;
+		}
+		this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
+
+		/**
+		 * step 3: mesh deformation
+		 */
+
+		// determine the maximal binding site level that still belongs to the brim
+		uint maxLvl = 0;
+		for (uint j = 0; j < static_cast<uint>(this->vertexLevelAttachment[i].size()); j++) {
+			if (this->brimFlags[i][j] && this->vertexLevelAttachment[i][j] == minLevel) {
+				if (this->newBsDistances[i][j] > maxLvl) {
+					maxLvl = this->newBsDistances[i][j];
+				}
+			}
+		}
 	}
 
 	return true;
@@ -1598,4 +1694,13 @@ void SombreroWarper::reconstructEdgeSearchStructures(uint index, uint vertex_cou
 			}
 		}
 	}
+}
+
+/**
+ * SombreroWarper::liftVertices
+ */
+bool SombreroWarper::liftVertices(void) {
+
+
+	return true;
 }

@@ -157,6 +157,13 @@ namespace sombreros {
 		bool warpMesh(TunnelResidueDataCall& tunnelCall);
 
 		/**
+		 * Performs the vertex level lifting necessary for the sombrero computation
+		 *
+		 * @return True on success, false otherwise.
+		 */
+		bool liftVertices(void);
+
+		/**
 		 * Recomputes the distances of the vertices after vertex insertion.
 		 *
 		 * @return True on success, false otherwise
@@ -260,6 +267,15 @@ namespace sombreros {
 
 		/** Unique pointer to the CUDA kernels */
 		std::unique_ptr<CUDAKernels> cuda_kernels;
+
+		/** The length of the sombrero */
+		std::vector<float> sombreroLength;
+
+		/** The width of the brim */
+		std::vector<float> brimWidth;
+
+		/** The inner radius of the sombrero ellipsoid */
+		std::vector<float> sombreroRadius;
 
 		/** Flag set when a parameter is dirty */
 		bool dirtyFlag;
