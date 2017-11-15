@@ -700,11 +700,15 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 			return false;
 		}
 
+		
+#if 0 
 		/*
 		 * step 1: vertex level computation
 		 */
-#if 1 
-		this->liftVertices();
+		bool liftResult = this->liftVertices();
+		if (!liftResult) {
+			return false;
+		}
 #endif
 	
 
@@ -785,16 +789,11 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 		/**
 		 * step 3: mesh deformation
 		 */
+		bool yResult = this->computeHeightPerVertex(bsVertex);
+		if (!yResult) return false;
 
-		// determine the maximal binding site level that still belongs to the brim
-		uint maxLvl = 0;
-		for (uint j = 0; j < static_cast<uint>(this->vertexLevelAttachment[i].size()); j++) {
-			if (this->brimFlags[i][j] && this->vertexLevelAttachment[i][j] == minLevel) {
-				if (this->newBsDistances[i][j] > maxLvl) {
-					maxLvl = this->newBsDistances[i][j];
-				}
-			}
-		}
+		bool xzResult = this->computeXZCoordinatePerVertex();
+		if (!xzResult) return false;
 	}
 
 	return true;
@@ -1700,7 +1699,80 @@ void SombreroWarper::reconstructEdgeSearchStructures(uint index, uint vertex_cou
  * SombreroWarper::liftVertices
  */
 bool SombreroWarper::liftVertices(void) {
+	// TODO currently not implemented, maybe needed later on
+	return true;
+}
 
+/**
+ * SombreroWarper::computeHeightPerVertex
+ */
+bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
+
+	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+		float maxHeight = this->sombreroLength[i] / 2.0f;
+		float minHeight = 0.0f - maxHeight;
+
+		// all brim vertices have a y-position of + tunnellength / 2
+		for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
+			if (this->brimFlags[i][j]) {
+				this->vertices[i][3 * j + 1] = maxHeight;
+			}
+		}
+
+		// for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
+		// first step: identify these vertices
+		std::set<uint> borderSet;
+		// go through all forward edges, if one vertex is on the brim and one is not, take the second one
+		for (auto e : this->edgesForward[i]) {
+			if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
+				borderSet.insert(e.second);
+			} else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
+				borderSet.insert(e.first);
+			}
+		}
+
+		// get the number of non-brim vertices
+		uint newVertNum = static_cast<uint>(std::count(this->brimFlags[i].begin(), this->brimFlags[i].end(), false));
+		std::set<uint> newVertices;
+		// mapping of the new vertices to the old ones
+		std::vector<uint> vertMappingToOld(newVertNum);
+		// mapping of the old vertices to the new ones
+		std::vector<uint> vertMappingToNew(this->vertexLevelAttachment[i].size(), UINT_MAX);
+		uint idx = 0;
+		for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
+			if (!this->brimFlags[i][j]) {
+				vertMappingToOld[idx] = j;
+				vertMappingToNew[j] = idx;
+				newVertices.insert(j);
+				idx++;
+			}
+		}
+
+		// build the necessary input fields
+		std::vector<float> zValues(newVertNum, 0.0f);
+		std::vector<bool> zValidity(newVertNum, true);
+		std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
+		std::vector<uint> zEdgeOffsetDepth(newVertNum);
+
+		zValues[vertMappingToNew[bsVertex]] = 2.0f * maxHeight;
+		zValidity[vertMappingToNew[bsVertex]] = false;
+		for (auto v : borderSet) { // north border
+			zValues[vertMappingToNew[v]] = maxHeight;
+			zValidity[vertMappingToNew[v]] = false;
+		}
+
+		// TODO edges
+		for (auto e : this->edgesForward) {
+
+		}
+	}
+	return true;
+}
+
+/**
+ * SombreroWarper::computeXZCoordinatePerVertex
+ */
+bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 
 	return true;
 }

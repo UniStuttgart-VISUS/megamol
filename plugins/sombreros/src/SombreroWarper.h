@@ -187,6 +187,22 @@ namespace sombreros {
 		 */
 		void reconstructEdgeSearchStructures(uint index, uint vertex_cnt);
 
+		/**
+		 * Computes the height (the y-coordinate) of each vertex.
+		 *
+		 * @param bsVertex The index of the binding site vertex
+		 * @return True on success, false otherwise.
+		 */
+		bool computeHeightPerVertex(uint bsVertex);
+
+		/**
+		 * Computes the the x- and z-coordinates of each vertex.
+		 * To do this, the height already has to be computed.
+		 *
+		 * @return True on success, false otherwise.
+		 */
+		bool computeXZCoordinatePerVertex(void);
+
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
 
