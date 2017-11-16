@@ -10,9 +10,9 @@ if(BUILD_PROTEIN_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_MMSTD_VOLUME_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
   
-  set(LIBS vislib core glad mmstd_trisoup protein_calls)
+  set(LIBS vislib core glad mmstd_trisoup mmstd_volume protein_calls)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -23,7 +23,7 @@ if(BUILD_PROTEIN_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core mmstd_trisoup protein_calls)
+  add_dependencies(${PROJECT_NAME} vislib core mmstd_trisoup mmstd_volume protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.

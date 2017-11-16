@@ -59,7 +59,7 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
         volIsoOpacity(0.4f), volClipPlaneFlag(false), volClipPlaneOpacity(0.4f), hashValVol(-1)
 {
     // set caller slot for different data calls
-    this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
+    this->volDataCallerSlot.SetCompatibleCall<stdplugin::volume::VolumeDataCallDescription>();
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
@@ -252,14 +252,14 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
+    stdplugin::volume::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<stdplugin::volume::VolumeDataCall>();
 
     float xoff, yoff, zoff;
     vislib::math::Cuboid<float> boundingBox;
     vislib::math::Point<float, 3> bbc;
 
     // try to call the volume data
-    if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetExtent)) return false;
+    if (!(*volume)(stdplugin::volume::VolumeDataCall::CallForGetExtent)) return false;
     // get bounding box
     boundingBox = volume->BoundingBox();
     // get the pointer to CallRender3D for the secondary renderer 
@@ -302,7 +302,7 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
  * DirectVolumeRenderer::Render
  */
 bool volume::DirectVolumeRenderer::Render(core::Call& call) {
-    using core::moldyn::VolumeDataCall;
+    using stdplugin::volume::VolumeDataCall;
     // cast the call to Render3D
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (!cr3d) return false;
@@ -432,7 +432,7 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
 /*
  * Volume rendering using volume data.
  */
-bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *call, core::moldyn::VolumeDataCall *volume) {
+bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *call, stdplugin::volume::VolumeDataCall *volume) {
     glEnable (GL_DEPTH_TEST);
     glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -602,7 +602,7 @@ void volume::DirectVolumeRenderer::ParameterRefresh(core::view::CallRender3D *ca
 /*
  * Create a volume containing the voxel map
  */
-void volume::DirectVolumeRenderer::UpdateVolumeTexture(const core::moldyn::VolumeDataCall *volume) {
+void volume::DirectVolumeRenderer::UpdateVolumeTexture(const stdplugin::volume::VolumeDataCall *volume) {
     // generate volume, if necessary
     if (!glIsTexture(this->volumeTex)) {
         glGenTextures(1, &this->volumeTex);

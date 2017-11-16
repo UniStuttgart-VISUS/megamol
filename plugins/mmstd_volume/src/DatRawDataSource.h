@@ -16,7 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
+#include "mmstd_volume/VolumeDataCall.h"
 #include "datRaw.h"
 
 

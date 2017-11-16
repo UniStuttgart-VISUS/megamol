@@ -65,8 +65,8 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
         volIsoOpacity(0.4f), volClipPlaneFlag(false), randNoiseTex(0), lastHash(-1)
 {
     // set caller slot for different data calls
-    this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
-	this->volDataCallerSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
+    this->volDataCallerSlot.SetCompatibleCall<stdplugin::volume::VolumeDataCallDescription>();
+    this->volDataCallerSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
@@ -296,10 +296,10 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
     view::CallRender3D *rencr3d = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     unsigned int rencr3dFrames = rencr3d->TimeFramesCount();
 
-    core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
+    stdplugin::volume::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<stdplugin::volume::VolumeDataCall>();
     if( volume ) {
         // try to call the volume data
-        if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetExtent)) return false;
+        if (!(*volume)(stdplugin::volume::VolumeDataCall::CallForGetExtent)) return false;
         // get bounding box
         boundingBox = volume->BoundingBox();
 
@@ -317,7 +317,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         cr3d->SetTimeFramesCount( vislib::math::Max( volume->FrameCount(), rencr3dFrames));
         
     } else {
-		protein_calls::VTIDataCall *vti = this->volDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+        protein_calls::VTIDataCall *vti = this->volDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
         if( vti == NULL ) return false;
         // set call time
         // SFB-DEMO
@@ -325,9 +325,9 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         vti->SetCalltime(callTime);
         vti->SetFrameID(static_cast<int>(callTime));
         // try to call for extent
-		if (!(*vti)(protein_calls::VTIDataCall::CallForGetExtent)) return false;
+        if (!(*vti)(protein_calls::VTIDataCall::CallForGetExtent)) return false;
         // try to call for data
-		if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
+        if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
         
         // get bounding box
         boundingBox = vti->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -368,15 +368,15 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (!cr3d) return false;
     
-    // get pointer to core::moldyn::VolumeDataCall
-    core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
-    // get pointer to core::moldyn::VolumeDataCall
-	protein_calls::VTIDataCall *vti = this->volDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+    // get pointer to stdplugin::volume::VolumeDataCall
+    stdplugin::volume::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<stdplugin::volume::VolumeDataCall>();
+    // get pointer to stdplugin::volume::VolumeDataCall
+    protein_calls::VTIDataCall *vti = this->volDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     
     // set frame ID and call data
     if (volume) {
         volume->SetFrameID(static_cast<int>(cr3d->Time()));
-        if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetData)) {
+        if (!(*volume)(stdplugin::volume::VolumeDataCall::CallForGetData)) {
             return false;
         }
     } else if (vti) {
@@ -389,7 +389,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         vti->SetCalltime(callTime);
         vti->SetFrameID(static_cast<int>(callTime));
         // try to call for data
-		if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
+        if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
     } else {
         return false;
     }
@@ -498,7 +498,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
 /*
  * Volume rendering using volume data.
  */
-bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core::moldyn::VolumeDataCall *volume) {
+bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, stdplugin::volume::VolumeDataCall *volume) {
     glEnable (GL_DEPTH_TEST);
     glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -714,7 +714,7 @@ void LayeredIsosurfaceRenderer::ParameterRefresh(view::CallRender3D *call) {
 /*
  * Create a volume containing the voxel map
  */
-void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VolumeDataCall *volume) {
+void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const stdplugin::volume::VolumeDataCall *volume) {
     // generate volume, if necessary
     if (!glIsTexture(this->volumeTex)) {
         glGenTextures(1, &this->volumeTex);

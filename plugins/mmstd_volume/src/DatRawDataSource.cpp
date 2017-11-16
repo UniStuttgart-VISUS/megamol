@@ -33,11 +33,11 @@ volume::DatRawDataSource::DatRawDataSource(void) : Module(),
     this->datFilenameSlot.SetUpdateCallback(&DatRawDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->datFilenameSlot);
     
-    this->getDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(), 
-        core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetData),
+    this->getDataSlot.SetCallback(stdplugin::volume::VolumeDataCall::ClassName(), 
+        stdplugin::volume::VolumeDataCall::FunctionName(stdplugin::volume::VolumeDataCall::CallForGetData),
         &DatRawDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(), 
-        core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetExtent),
+    this->getDataSlot.SetCallback(stdplugin::volume::VolumeDataCall::ClassName(), 
+        stdplugin::volume::VolumeDataCall::FunctionName(stdplugin::volume::VolumeDataCall::CallForGetExtent),
         &DatRawDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
@@ -123,7 +123,7 @@ bool volume::DatRawDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * volume::DatRawDataSource::getDataCallback
  */
 bool volume::DatRawDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::VolumeDataCall *vdc = dynamic_cast<core::moldyn::VolumeDataCall*>(&caller);
+    stdplugin::volume::VolumeDataCall *vdc = dynamic_cast<stdplugin::volume::VolumeDataCall*>(&caller);
     if (vdc == NULL) return false;
 
     vdc->SetUnlocker(NULL);
@@ -160,7 +160,7 @@ bool volume::DatRawDataSource::getDataCallback(core::Call& caller) {
  * volume::DatRawDataSource::getExtentCallback
  */
 bool volume::DatRawDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::VolumeDataCall *vdc = dynamic_cast<core::moldyn::VolumeDataCall*>(&caller);
+    stdplugin::volume::VolumeDataCall *vdc = dynamic_cast<stdplugin::volume::VolumeDataCall*>(&caller);
     if (vdc == NULL) return false;
 
     // TODO fix frame count

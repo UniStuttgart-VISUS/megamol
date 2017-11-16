@@ -67,7 +67,6 @@
 #include "mmcore/view/LinkedView3D.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"

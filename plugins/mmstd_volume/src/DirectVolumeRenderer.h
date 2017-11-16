@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "slicing.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
+#include "mmstd_volume/VolumeDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -122,7 +122,7 @@ namespace volume {
         /**
          * Volume rendering using volume data.
         */
-        bool RenderVolumeData(megamol::core::view::CallRender3D *call, megamol::core::moldyn::VolumeDataCall *volume);
+        bool RenderVolumeData(megamol::core::view::CallRender3D *call, megamol::stdplugin::volume::VolumeDataCall *volume);
         
         /**
          * Refresh all parameters.
@@ -148,7 +148,7 @@ namespace volume {
          *
          * @param volume The data interface.
          */
-        void UpdateVolumeTexture(const megamol::core::moldyn::VolumeDataCall *volume);
+        void UpdateVolumeTexture(const megamol::stdplugin::volume::VolumeDataCall *volume);
 
         /**
          * Draw the bounding box of the protein around the origin.

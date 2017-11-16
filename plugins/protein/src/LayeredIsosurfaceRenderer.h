@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "slicing.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
+#include "mmstd_volume/VolumeDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -117,12 +117,12 @@ namespace protein {
         /**
          * Volume rendering using volume data.
         */
-        bool RenderVolumeData(megamol::core::view::CallRender3D *call, core::moldyn::VolumeDataCall *volume);
+        bool RenderVolumeData(megamol::core::view::CallRender3D *call, stdplugin::volume::VolumeDataCall *volume);
         
         /**
          * Volume rendering using volume data.
         */
-		bool RenderVolumeData(megamol::core::view::CallRender3D *call, protein_calls::VTIDataCall *volume);
+        bool RenderVolumeData(megamol::core::view::CallRender3D *call, protein_calls::VTIDataCall *volume);
         
         /**
          * Initialize parameters for the LIC calculation and setup random texture.
@@ -155,14 +155,14 @@ namespace protein {
          *
          * @param volume The data interface.
          */
-        void UpdateVolumeTexture(const core::moldyn::VolumeDataCall *volume);
+        void UpdateVolumeTexture(const stdplugin::volume::VolumeDataCall *volume);
 
         /**
          * Create a volume containing the voxel map.
          *
          * @param volume The data interface.
          */
-		void UpdateVolumeTexture(const protein_calls::VTIDataCall *volume);
+        void UpdateVolumeTexture(const protein_calls::VTIDataCall *volume);
 
         /**
          * Draw the bounding box of the protein around the origin.

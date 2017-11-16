@@ -1,16 +1,18 @@
 /*
  * VolumeDataCall.h
  *
- * Copyright (C) 2012 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2012-2017 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
 
-#ifndef MEGAMOL_CORE_VOLUMEDATACALL_H_INCLUDED
-#define MEGAMOL_CORE_VOLUMEDATACALL_H_INCLUDED
+#ifndef MMSTD_VOLUME_VOLUMEDATACALL_H_INCLUDED
+#define MMSTD_VOLUME_VOLUMEDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "mmstd_volume.h"
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -24,13 +26,13 @@
 #endif /* _WIN32 */
 
 namespace megamol {
-namespace core {
-namespace moldyn {
+namespace stdplugin {
+namespace volume {
 
     /**
      * Base class of rendering graph calls and data interfaces for volumetric data.
      */
-    class MEGAMOLCORE_API VolumeDataCall : public megamol::core::AbstractGetData3DCall {
+    class MMSTD_VOLUME_API VolumeDataCall : public megamol::core::AbstractGetData3DCall {
     public:
 
         /** Index of the 'GetData' function */
@@ -289,8 +291,8 @@ namespace moldyn {
     typedef megamol::core::factories::CallAutoDescription<VolumeDataCall> VolumeDataCallDescription;
 
 
-} /* end namespace moldyn */
-} /* end namespace core */
+} /* end namespace volume */
+} /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CORE_VOLUMEDATACALL_H_INCLUDED */
+#endif /* MMSTD_VOLUME_VOLUMEDATACALL_H_INCLUDED */

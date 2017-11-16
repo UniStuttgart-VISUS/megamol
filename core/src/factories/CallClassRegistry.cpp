@@ -30,7 +30,6 @@
 #include "mmcore/view/CallCamParams.h"
 #include "mmcore/view/CallCamParamSync.h"
 #include "mmcore/CallVolumeData.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/misc/QRCodeDataCall.h"
@@ -64,7 +63,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallTimeControl>();
     instance.RegisterAutoDescription<DataWriterCtrlCall>();
     instance.RegisterAutoDescription<CallVolumeData>();
-    instance.RegisterAutoDescription<moldyn::VolumeDataCall>();
     instance.RegisterAutoDescription<misc::BezierCurvesListDataCall>();
     instance.RegisterAutoDescription<misc::VolumetricDataCall>();
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
