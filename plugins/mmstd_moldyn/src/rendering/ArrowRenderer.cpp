@@ -1,13 +1,13 @@
 /*
  * ArrowRenderer.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/ArrowRenderer.h"
+#include "ArrowRenderer.h"
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
@@ -16,20 +16,25 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /*
- * moldyn::ArrowRenderer::ArrowRenderer
+ * ArrowRenderer::ArrowRenderer
  */
-moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
+ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0),
         lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length") {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -40,24 +45,24 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
     
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
-	
+    
     this->lengthFilterSlot << new param::FloatParam( 0.0f, 0.0);
     this->MakeSlotAvailable(&this->lengthFilterSlot);
 }
 
 
 /*
- * moldyn::ArrowRenderer::~ArrowRenderer
+ * ArrowRenderer::~ArrowRenderer
  */
-moldyn::ArrowRenderer::~ArrowRenderer(void) {
+ArrowRenderer::~ArrowRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::ArrowRenderer::create
+ * ArrowRenderer::create
  */
-bool moldyn::ArrowRenderer::create(void) {
+bool ArrowRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
@@ -112,9 +117,9 @@ bool moldyn::ArrowRenderer::create(void) {
 
 
 /*
- * moldyn::ArrowRenderer::GetCapabilities
+ * ArrowRenderer::GetCapabilities
  */
-bool moldyn::ArrowRenderer::GetCapabilities(Call& call) {
+bool ArrowRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -129,9 +134,9 @@ bool moldyn::ArrowRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * moldyn::ArrowRenderer::GetExtents
+ * ArrowRenderer::GetExtents
  */
-bool moldyn::ArrowRenderer::GetExtents(Call& call) {
+bool ArrowRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -158,18 +163,18 @@ bool moldyn::ArrowRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::ArrowRenderer::release
+ * ArrowRenderer::release
  */
-void moldyn::ArrowRenderer::release(void) {
+void ArrowRenderer::release(void) {
     this->arrowShader.Release();
     ::glDeleteTextures(1, &this->greyTF);
 }
 
 
 /*
- * moldyn::ArrowRenderer::Render
+ * ArrowRenderer::Render
  */
-bool moldyn::ArrowRenderer::Render(Call& call) {
+bool ArrowRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -193,7 +198,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
         return false;
     }
   
-	float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
+    float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
@@ -238,7 +243,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
-	glScalef(scaling, scaling, scaling);
+    glScalef(scaling, scaling, scaling);
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
