@@ -34,7 +34,6 @@
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/OracleSphereRenderer.h"
-#include "mmcore/moldyn/SimpleGeoSphereRenderer.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
 #include "mmcore/moldyn/ClusteredSphereRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
@@ -104,7 +103,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::MMPGDWriter>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterAutoDescription<moldyn::SimpleGeoSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::ClusteredSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();

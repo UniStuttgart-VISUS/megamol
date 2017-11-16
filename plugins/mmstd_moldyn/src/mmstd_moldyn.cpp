@@ -35,6 +35,7 @@
 #include "rendering/BrickStatsRenderer.h"
 
 #include "rendering/SphereOutlineRenderer.h"
+#include "rendering/SimpleGeoSphereRenderer.h"
 
 #include "mmstd_moldyn/EllipsoidalDataCall.h"
 
@@ -134,7 +135,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
-            this->module_descriptions.RegisterAutoDescription < megamol::stdplugin::moldyn::rendering::SphereOutlineRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SphereOutlineRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SimpleGeoSphereRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::EllipsoidalParticleDataCall>();

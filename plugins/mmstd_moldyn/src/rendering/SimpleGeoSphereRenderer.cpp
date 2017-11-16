@@ -2,12 +2,14 @@
  * SimpleGeoSphereRenderer.cpp
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
+ * Copyright (C) 2017 by MegaMol Team (VISUS)
+ *
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/SimpleGeoSphereRenderer.h"
+#include "SimpleGeoSphereRenderer.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "mmcore/CoreInstance.h"
@@ -15,30 +17,36 @@
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
+using namespace megamol;
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /*
- * moldyn::SimpleGeoSphereRenderer::SimpleGeoSphereRenderer
+ * SimpleGeoSphereRenderer::SimpleGeoSphereRenderer
  */
-moldyn::SimpleGeoSphereRenderer::SimpleGeoSphereRenderer(void) : AbstractSimpleSphereRenderer(),
+SimpleGeoSphereRenderer::SimpleGeoSphereRenderer(void) : AbstractSimpleSphereRenderer(),
         sphereShader() {
     // intentionally empty
 }
 
 
 /*
- * moldyn::SimpleGeoSphereRenderer::~SimpleGeoSphereRenderer
+ * SimpleGeoSphereRenderer::~SimpleGeoSphereRenderer
  */
-moldyn::SimpleGeoSphereRenderer::~SimpleGeoSphereRenderer(void) {
+SimpleGeoSphereRenderer::~SimpleGeoSphereRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::SimpleGeoSphereRenderer::create
+ * SimpleGeoSphereRenderer::create
  */
-bool moldyn::SimpleGeoSphereRenderer::create(void) {
+bool SimpleGeoSphereRenderer::create(void) {
     using vislib::sys::Log;
     ASSERT(IsAvailable());
 
@@ -94,18 +102,18 @@ bool moldyn::SimpleGeoSphereRenderer::create(void) {
 
 
 /*
- * moldyn::SimpleGeoSphereRenderer::release
+ * SimpleGeoSphereRenderer::release
  */
-void moldyn::SimpleGeoSphereRenderer::release(void) {
+void SimpleGeoSphereRenderer::release(void) {
     this->sphereShader.Release();
     AbstractSimpleSphereRenderer::release();
 }
 
 
 /*
- * moldyn::SimpleGeoSphereRenderer::Render
+ * SimpleGeoSphereRenderer::Render
  */
-bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
+bool SimpleGeoSphereRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
