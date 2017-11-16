@@ -1,14 +1,14 @@
 /*
  * SphereOutlineRenderer.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #define USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/SphereOutlineRenderer.h"
+#include "SphereOutlineRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
@@ -26,13 +26,16 @@
 #include "vislib/graphics/ColourParser.h"
 #include <cmath>
 
-using namespace megamol::core;
+using namespace megamol;
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
 
 
 /*
- * moldyn::SphereOutlineRenderer::SphereOutlineRenderer
+ * SphereOutlineRenderer::SphereOutlineRenderer
  */
-moldyn::SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
+SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
         getDataSlot("getdata", "Connects to the data source"),
         colourSlot("col", "The base colour for the sphere outline"),
         repSlot("representation", "The shape to represent the sphere"),
@@ -41,57 +44,57 @@ moldyn::SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
         multiOutLineDistSlot("multiOutline::dist", "The distance of the additional outlines as angles in radians"),
         sphereQuadric(NULL) {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->colourSlot << new param::StringParam("white");
+    this->colourSlot << new core::param::StringParam("white");
     this->MakeSlotAvailable(&this->colourSlot);
 
-    param::EnumParam *repType = new param::EnumParam(1);
+    core::param::EnumParam *repType = new core::param::EnumParam(1);
     repType->SetTypePair(0, "Outline");
     repType->SetTypePair(1, "Wireframe");
     this->repSlot << repType;
     this->MakeSlotAvailable(&this->repSlot);
 
-    this->circleSegSlot << new param::IntParam(32, 8);
+    this->circleSegSlot << new core::param::IntParam(32, 8);
     this->MakeSlotAvailable(&this->circleSegSlot);
 
-    this->multiOutlineCntSlot << new param::IntParam(3, 0);
+    this->multiOutlineCntSlot << new core::param::IntParam(3, 0);
     this->MakeSlotAvailable(&this->multiOutlineCntSlot);
 
-    this->multiOutLineDistSlot << new param::FloatParam(0.1f, 0.0f);
+    this->multiOutLineDistSlot << new core::param::FloatParam(0.1f, 0.0f);
     this->MakeSlotAvailable(&this->multiOutLineDistSlot);
 
 }
 
 
 /*
- * moldyn::SphereOutlineRenderer::~SphereOutlineRenderer
+ * SphereOutlineRenderer::~SphereOutlineRenderer
  */
-moldyn::SphereOutlineRenderer::~SphereOutlineRenderer(void) {
+SphereOutlineRenderer::~SphereOutlineRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::SphereOutlineRenderer::create
+ * SphereOutlineRenderer::create
  */
-bool moldyn::SphereOutlineRenderer::create(void) {
+bool SphereOutlineRenderer::create(void) {
     // intentionally empty
     return true;
 }
 
 
 /*
- * moldyn::SphereOutlineRenderer::GetCapabilities
+ * SphereOutlineRenderer::GetCapabilities
  */
-bool moldyn::SphereOutlineRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool SphereOutlineRenderer::GetCapabilities(core::Call& call) {
+    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
     cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_ANIMATION
+        core::view::CallRender3D::CAP_RENDER
+        | core::view::CallRender3D::CAP_ANIMATION
         );
 
     return true;
@@ -99,13 +102,13 @@ bool moldyn::SphereOutlineRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * moldyn::SphereOutlineRenderer::GetExtents
+ * SphereOutlineRenderer::GetExtents
  */
-bool moldyn::SphereOutlineRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool SphereOutlineRenderer::GetExtents(core::Call& call) {
+    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
@@ -128,9 +131,9 @@ bool moldyn::SphereOutlineRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::SphereOutlineRenderer::release
+ * SphereOutlineRenderer::release
  */
-void moldyn::SphereOutlineRenderer::release(void) {
+void SphereOutlineRenderer::release(void) {
     if (this->sphereQuadric != NULL) {
         ::gluDeleteQuadric(static_cast<GLUquadric *>(this->sphereQuadric));
         this->sphereQuadric = NULL;
@@ -139,13 +142,13 @@ void moldyn::SphereOutlineRenderer::release(void) {
 
 
 /*
- * moldyn::SphereOutlineRenderer::Render
+ * SphereOutlineRenderer::Render
  */
-bool moldyn::SphereOutlineRenderer::Render(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool SphereOutlineRenderer::Render(core::Call& call) {
+    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     float scaling = 1.0f;
     if (c2 != NULL) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -167,14 +170,14 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling); // ... unklar ob problematisch, aber eigentlich nicht
 
-    const int rep = this->repSlot.Param<param::EnumParam>()->Value();
-    const unsigned int segCnt = this->circleSegSlot.Param<param::IntParam>()->Value();
+    const int rep = this->repSlot.Param<core::param::EnumParam>()->Value();
+    const unsigned int segCnt = this->circleSegSlot.Param<core::param::IntParam>()->Value();
     float colR = 1.0f;
     float colG = 1.0f;
     float colB = 1.0f;
     try {
         vislib::graphics::ColourParser::FromString(
-            T2A(this->colourSlot.Param<param::StringParam>()->Value()),
+            T2A(this->colourSlot.Param<core::param::StringParam>()->Value()),
             colR, colG, colB);
     } catch(...) {
     }
@@ -186,8 +189,8 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3> camX = cr->GetCameraParameters()->EyeRightVector();
         vislib::math::Vector<float, 3> camY = cr->GetCameraParameters()->EyeUpVector();
 
-        const int angleOffsetSteps = this->multiOutlineCntSlot.Param<param::IntParam>()->Value();
-        const float angleOffsetStepSize = this->multiOutLineDistSlot.Param<param::FloatParam>()->Value();
+        const int angleOffsetSteps = this->multiOutlineCntSlot.Param<core::param::IntParam>()->Value();
+        const float angleOffsetStepSize = this->multiOutLineDistSlot.Param<core::param::FloatParam>()->Value();
 
         vislib::math::Vector<float, 3> *vec = new vislib::math::Vector<float, 3>[segCnt];
         float *ang = new float[segCnt];
@@ -209,12 +212,12 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
 
         if (c2 != NULL) {
             for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-                MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+                core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
                 float rad = parts.GetGlobalRadius();
-                bool loadRad = parts.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
+                bool loadRad = parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
                 const float *posData = static_cast<const float*>(parts.GetVertexData());
-                if ((parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                    && (parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)) continue;
+                if ((parts.GetVertexDataType() != core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                    && (parts.GetVertexDataType() != core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)) continue;
                 unsigned int stride = vislib::math::Max<unsigned int>((loadRad ? 4 : 3) * sizeof(float), parts.GetVertexDataStride());
                 // colour ignored (for now)
                 for (UINT64 j = 0; j < parts.GetCount(); j++) {
@@ -280,12 +283,12 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         ::glEnable(GL_CULL_FACE);
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-            MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+            core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
             float rad = parts.GetGlobalRadius();
-            bool loadRad = parts.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
+            bool loadRad = parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
             const float *posData = static_cast<const float*>(parts.GetVertexData());
-            if ((parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                && (parts.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)) continue;
+            if ((parts.GetVertexDataType() != core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                && (parts.GetVertexDataType() != core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)) continue;
             unsigned int stride = vislib::math::Max<unsigned int>((loadRad ? 4 : 3) * sizeof(float), parts.GetVertexDataStride());
             // colour ignored (for now)
             for (UINT64 j = 0; j < parts.GetCount(); j++) {
