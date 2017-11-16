@@ -11,6 +11,8 @@
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
+
+// Modules
 #include "DatRawDataSource.h"
 #include "DirectVolumeRenderer.h"
 #include "BuckyBall.h"
@@ -18,6 +20,9 @@
 #include "DirPartVolume.h"
 #include "VolumeCache.h"
 #include "RenderVolumeSlice.h"
+
+// Calls
+#include "mmstd_volume/VolumeDataCall.h"
 
 
 /*
@@ -86,7 +91,7 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 MMSTD_VOLUME_API int mmplgCallCount(void) {
-    return 0;
+    return 1;
 }
 
 
@@ -94,6 +99,9 @@ MMSTD_VOLUME_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 MMSTD_VOLUME_API void* mmplgCallDescription(int idx) {
+    switch (idx) {
+    case 0: return new megamol::core::factories::CallAutoDescription<megamol::stdplugin::volume::VolumeDataCall>();
+    }
     return NULL;
 }
 
