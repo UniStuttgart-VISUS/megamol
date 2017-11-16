@@ -1,15 +1,17 @@
 /*
  * DirectionalParticleDataCall.h
  *
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMCORE_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED
-#define MMCORE_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED
+#ifndef MMSTD_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED
+#define MMSTD_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "mmstd_moldyn.h"
 
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -18,9 +20,8 @@
 
 
 namespace megamol {
-namespace core {
+namespace stdplugin {
 namespace moldyn {
-
 
     /**
      * Class holding all data of a single ellipsoidal particle type
@@ -31,7 +32,7 @@ namespace moldyn {
      *  You must set the quaternion data
      *  You must set the radii data
      */
-    class MEGAMOLCORE_API EllipsoidalParticles : public SimpleSphericalParticles {
+    class MMSTD_MOLDYN_API EllipsoidalParticles : public core::moldyn::SimpleSphericalParticles {
     public:
 
         /**
@@ -161,13 +162,13 @@ namespace moldyn {
     };
 
 
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API AbstractParticleDataCall<EllipsoidalParticles>;
+    MEGAMOLCORE_APIEXT template class MMSTD_MOLDYN_API core::moldyn::AbstractParticleDataCall<EllipsoidalParticles>;
 
 
     /**
      * Call for multi-stream particle data.
      */
-    class MEGAMOLCORE_API EllipsoidalParticleDataCall : public AbstractParticleDataCall<EllipsoidalParticles> {
+    class MMSTD_MOLDYN_API EllipsoidalParticleDataCall : public core::moldyn::AbstractParticleDataCall<EllipsoidalParticles> {
     public:
 
         /** typedef for legacy name */
@@ -206,12 +207,12 @@ namespace moldyn {
 
 
     /** Description class typedef */
-    typedef factories::CallAutoDescription<EllipsoidalParticleDataCall>
+    typedef core::factories::CallAutoDescription<EllipsoidalParticleDataCall>
         EllipsoidalParticleDataCallDescription;
 
 
 } /* end namespace moldyn */
-} /* end namespace core */
+} /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MMCORE_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED */
+#endif /* MMSTD_MOLDYN_ELLIPSOIDDATACALL_H_INCLUDED */

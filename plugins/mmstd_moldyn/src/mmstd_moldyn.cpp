@@ -34,6 +34,8 @@
 #include "io/BrickStatsDataSource.h"
 #include "rendering/BrickStatsRenderer.h"
 
+#include "mmstd_moldyn/EllipsoidalDataCall.h"
+
 
 /*
  * mmplgPluginAPIVersion
@@ -132,6 +134,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::EllipsoidalParticleDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

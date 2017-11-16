@@ -10,7 +10,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "mmstd_moldyn/EllipsoidalDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/Log.h"
@@ -400,8 +400,8 @@ VIMDataSource::VIMDataSource(void) : core::view::AnimDataModule(),
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData", &VIMDataSource::getDataCallback);
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &VIMDataSource::getExtentCallback);
-    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
-    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
+    this->getData.SetCallback(stdplugin::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
+    this->getData.SetCallback(stdplugin::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
@@ -860,7 +860,7 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
  */
 bool VIMDataSource::getDataCallback(core::Call& caller) {
     core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
-    core::moldyn::EllipsoidalParticleDataCall *c3 = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&caller);
+    stdplugin::moldyn::EllipsoidalParticleDataCall *c3 = dynamic_cast<stdplugin::moldyn::EllipsoidalParticleDataCall*>(&caller);
     if ((c2 == nullptr) && (c3 == nullptr)) return false;
 
     unsigned int fid = (c2 != nullptr) ? c2->FrameID() : c3->FrameID();

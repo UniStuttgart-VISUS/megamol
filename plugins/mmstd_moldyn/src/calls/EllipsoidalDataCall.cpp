@@ -1,16 +1,16 @@
 /*
  * DirectionalParticleDataCall.cpp
  *
- * Copyright (C) 2009-2015 by MegaMol Team.
+ * Copyright (C) 2009-2017 by MegaMol Team.
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "mmstd_moldyn/EllipsoidalDataCall.h"
 
 using namespace megamol;
-using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
 
 /****************************************************************************/
 
