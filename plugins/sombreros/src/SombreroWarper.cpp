@@ -1747,6 +1747,7 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 				idx++;
 			}
 		}
+		// TODO auseinanderziehen, da wir in ein set inserten und nicht wissen, wie groﬂ das resultat ist
 
 		// build the necessary input fields
 		std::vector<float> zValues(newVertNum, 0.0f);
@@ -1761,9 +1762,13 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 			zValidity[vertMappingToNew[v]] = false;
 		}
 
-		// TODO edges
-		for (auto e : this->edgesForward) {
-
+		for (auto e : this->edgesForward[i]) {
+			if (newVertices.count(e.first) > 0 && newVertices.count(e.second) > 0) {
+				CUDAKernels::Edge newEdge;
+				newEdge.vertex_id_0 = vertMappingToNew[e.first];
+				newEdge.vertex_id_1 = vertMappingToNew[e.second];
+				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
+			}
 		}
 	}
 	return true;
