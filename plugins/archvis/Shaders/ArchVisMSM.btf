@@ -27,6 +27,7 @@ uniform mat4 proj_mx;
 
 in vec3 v_normal;
 in vec3 v_position;
+in vec3 v_tangent;
 in vec2 v_uv;
 
 out vec3 normal;
@@ -54,6 +55,7 @@ out layout(location = 0) vec4 frag_colour;
 
 void main(void) {
     frag_colour = vec4( 1.0, 0.75, 0.2, 1.0);
+    frag_colour = vec4( normal, 1.0);
 }
 -->
 </snippet>

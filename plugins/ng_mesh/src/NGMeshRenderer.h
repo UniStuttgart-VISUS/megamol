@@ -167,6 +167,9 @@ namespace ngmesh {
 		class BufferObject
 		{
 		public:
+			// BufferObject likely to be allocated into unique_ptr. Make usage less verbose.
+			typedef std::unique_ptr<BufferObject> Ptr;
+
 			template<typename Container>
 			BufferObject(GLenum target, Container const& datastorage, GLenum usage = GL_DYNAMIC_DRAW)
 				: m_target(target), m_handle(0), m_byte_size(static_cast<GLsizeiptr>(datastorage.size() * sizeof(Container::value_type))), m_usage(usage)
@@ -299,17 +302,18 @@ namespace ngmesh {
 				GLenum					indices_type = GL_UNSIGNED_INT,
 				GLenum					usage = GL_STATIC_DRAW,
 				GLenum					primitive_type = GL_TRIANGLES)
-				: m_vbo(GL_ARRAY_BUFFER, vertices, usage),
-				m_ibo(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor might fail? needs a bound vao?
+				: m_ibo(GL_ELEMENT_ARRAY_BUFFER, indices, usage), //TODO ibo generation in constructor might fail? needs a bound vao?
 				m_vertex_descriptor(vertex_descriptor),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
+				m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertices, usage));
+
 				glGenVertexArrays(1, &m_va_handle);
 
 				// set attribute pointer and vao state
 				glBindVertexArray(m_va_handle);
 				m_ibo.bind();
-				m_vbo.bind();
+				m_vbos.back()->bind();
 				GLuint attrib_idx = 0;
 				for (auto& attribute : vertex_descriptor.attributes)
 				{
@@ -337,6 +341,9 @@ namespace ngmesh {
 				}
 			}
 
+			/**
+			* C-interface Mesh constructor for interleaved data with a single vertex buffer object.
+			*/
 			Mesh(GLvoid const*		vertex_data,
 				GLsizeiptr			vertex_data_byte_size,
 				GLvoid const*		index_data,
@@ -345,16 +352,17 @@ namespace ngmesh {
 				GLenum				indices_type = GL_UNSIGNED_INT,
 				GLenum				usage = GL_STATIC_DRAW,
 				GLenum				primitive_type = GL_TRIANGLES)
-				: m_vbo(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage),
-				m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
+				: m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
 				m_vertex_descriptor(vertex_descriptor),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
+				m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_size, usage));
+
 				glGenVertexArrays(1, &m_va_handle);
 
 				// set attribute pointer and vao state
 				glBindVertexArray(m_va_handle);
-				m_vbo.bind();
+				m_vbos.back()->bind();
 
 				// dirty hack to make ibo work as BufferObject
 				//m_ibo = std::make_unique<BufferObject>(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage);
@@ -386,14 +394,74 @@ namespace ngmesh {
 				}
 			}
 
+			/**
+			 * C-interface Mesh constructor for non-interleaved data with one vertex buffer object per vertex attribute.
+			 */
+			Mesh(GLvoid const*		vertex_data,
+				GLsizeiptr const*	vertex_data_byte_sizes,
+				unsigned int		vertex_buffer_cnt,
+				GLvoid const*		index_data,
+				GLsizeiptr			index_data_byte_size,
+				VertexLayout const& vertex_descriptor,
+				GLenum				indices_type = GL_UNSIGNED_INT,
+				GLenum				usage = GL_STATIC_DRAW,
+				GLenum				primitive_type = GL_TRIANGLES)
+				: m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
+				m_vertex_descriptor(vertex_descriptor),
+				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
+			{
+				for(unsigned int i=0; i <vertex_buffer_cnt; ++i)
+					m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_sizes[i], usage));
+
+				glGenVertexArrays(1, &m_va_handle);
+
+				// set attribute pointer and vao state
+				glBindVertexArray(m_va_handle);
+
+				// dirty hack to make ibo work as BufferObject
+				//m_ibo = std::make_unique<BufferObject>(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage);
+				m_ibo.bind();
+
+				// TODO check if vertex buffer count matches attribute count, throw exception if not?
+				GLuint attrib_idx = 0;
+				for (auto& attribute : vertex_descriptor.attributes)
+				{
+					m_vbos[attrib_idx]->bind();
+
+					glEnableVertexAttribArray(attrib_idx);
+					glVertexAttribPointer(attrib_idx, attribute.size, attribute.type, attribute.normalized, vertex_descriptor.stride, reinterpret_cast<GLvoid*>(attribute.offset));
+
+					attrib_idx++;
+				}
+				glBindVertexArray(0);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+				switch (m_indices_type)
+				{
+				case GL_UNSIGNED_INT:
+					m_indices_cnt = static_cast<GLuint>(index_data_byte_size / 4);
+					break;
+				case GL_UNSIGNED_SHORT:
+					m_indices_cnt = static_cast<GLuint>(index_data_byte_size / 2);
+					break;
+				case GL_UNSIGNED_BYTE:
+					m_indices_cnt = static_cast<GLuint>(index_data_byte_size / 1);
+					break;
+				}
+			}
+
 			~Mesh()
 			{
 				glDeleteVertexArrays(1, &m_va_handle);
 			}
 
 			template<typename VertexContainer>
-			void loadVertexSubData(VertexContainer const& vertices, GLsizeiptr byte_offset){
-				m_vbo.loadSubData<VertexContainer>(vertices, byte_offset);
+			void loadVertexSubData(size_t idx, VertexContainer const& vertices, GLsizeiptr byte_offset){
+				if (idx < m_vbos.size())
+				{
+					m_vbos[idx]->loadSubData<VertexContainer>(vertices, byte_offset);
+				}
 			}
 
 			void bindVertexArray() const { glBindVertexArray(m_va_handle); }
@@ -402,7 +470,13 @@ namespace ngmesh {
 
 			GLenum getPrimitiveType() const { return m_primitive_type; }
 
-			GLsizeiptr getVertexBufferByteSize() const { return m_vbo.getByteSize(); }
+			GLsizeiptr getVertexBufferByteSize(size_t idx) const {
+				if (idx < m_vbos.size())
+					return m_vbos[idx]->getByteSize();
+				else
+					return 0;
+				// TODO: log some kind of error?
+			}
 			GLsizeiptr getIndexBufferByteSize() const { return m_ibo.getByteSize(); }
 
 			Mesh(const Mesh &cpy) = delete;
@@ -411,16 +485,16 @@ namespace ngmesh {
 			Mesh& operator=(const Mesh& rhs) = delete;
 
 		private:
-			BufferObject	m_vbo;
-			BufferObject	m_ibo;
-			GLuint			m_va_handle;
+			std::vector<BufferObject::Ptr>	m_vbos;
+			BufferObject					m_ibo;
+			GLuint							m_va_handle;
 
-			VertexLayout	m_vertex_descriptor;
+			VertexLayout					m_vertex_descriptor;
 
-			GLuint			m_indices_cnt;
-			GLenum			m_indices_type;
-			GLenum			m_usage;
-			GLenum			m_primitive_type;
+			GLuint							m_indices_cnt;
+			GLenum							m_indices_type;
+			GLenum							m_usage;
+			GLenum							m_primitive_type;
 		};
 
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
