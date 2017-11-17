@@ -1,13 +1,13 @@
 /*
  * GrimRenderer.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/GrimRenderer.h"
+#include "GrimRenderer.h"
 #include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -40,24 +40,29 @@
 //#define SUPSAMP_LOOPCNT 16
 //#define SUPSAMP_LOOPCNT 64
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /****************************************************************************/
 
 
 /*
- * moldyn::GrimRenderer::CellInfo::CellInfo
+ * GrimRenderer::CellInfo::CellInfo
  */
-moldyn::GrimRenderer::CellInfo::CellInfo(void) {
+GrimRenderer::CellInfo::CellInfo(void) {
     ::glGenOcclusionQueriesNV(1, &this->oQuery);
 }
 
 
 /*
- * moldyn::GrimRenderer::CellInfo::~CellInfo
+ * GrimRenderer::CellInfo::~CellInfo
  */
-moldyn::GrimRenderer::CellInfo::~CellInfo(void) {
+GrimRenderer::CellInfo::~CellInfo(void) {
     ::glDeleteOcclusionQueriesNV(1, &this->oQuery);
     this->cache.Clear();
 }
@@ -66,9 +71,9 @@ moldyn::GrimRenderer::CellInfo::~CellInfo(void) {
 
 
 /*
- * moldyn::GrimRenderer::GrimRenderer
+ * GrimRenderer::GrimRenderer
  */
-moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
+GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
         sphereShader(), vanillaSphereShader(), initDepthShader(),
         initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
@@ -83,7 +88,7 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
         deferredSphereShader(), deferredVanillaSphereShader(), deferredPointShader(), deferredShader(),
         inhash(0) {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::ParticleGridDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<ParticleGridDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -113,17 +118,17 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
 
 
 /*
- * moldyn::GrimRenderer::~GrimRenderer
+ * GrimRenderer::~GrimRenderer
  */
-moldyn::GrimRenderer::~GrimRenderer(void) {
+GrimRenderer::~GrimRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::GrimRenderer::create
+ * GrimRenderer::create
  */
-bool moldyn::GrimRenderer::create(void) {
+bool GrimRenderer::create(void) {
     ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, geom, frag;
@@ -292,9 +297,9 @@ bool moldyn::GrimRenderer::create(void) {
 
 
 /*
- * moldyn::GrimRenderer::GetCapabilities
+ * GrimRenderer::GetCapabilities
  */
-bool moldyn::GrimRenderer::GetCapabilities(Call& call) {
+bool GrimRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -309,9 +314,9 @@ bool moldyn::GrimRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * moldyn::GrimRenderer::GetExtents
+ * GrimRenderer::GetExtents
  */
-bool moldyn::GrimRenderer::GetExtents(Call& call) {
+bool GrimRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -335,9 +340,9 @@ bool moldyn::GrimRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::GrimRenderer::release
+ * GrimRenderer::release
  */
-void moldyn::GrimRenderer::release(void) {
+void GrimRenderer::release(void) {
     this->sphereShader.Release();
     this->initDepthMapShader.Release();
     this->initDepthShader.Release();
@@ -357,9 +362,9 @@ void moldyn::GrimRenderer::release(void) {
 
 
 /*
- * moldyn::GrimRenderer::Render
+ * GrimRenderer::Render
  */
-bool moldyn::GrimRenderer::Render(Call& call) {
+bool GrimRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -1925,9 +1930,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
 
 /*
- * moldyn::GrimRenderer::depthSort
+ * GrimRenderer::depthSort
  */
-int moldyn::GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs,
+int GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs,
            const vislib::Pair<unsigned int, float>& rhs) {
     float d = rhs.Second() - lhs.Second();
     if (d > vislib::math::FLOAT_EPSILON) return 1;

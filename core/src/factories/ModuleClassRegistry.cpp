@@ -26,7 +26,6 @@
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
 #include "mmcore/moldyn/DataGridder.h"
-#include "mmcore/moldyn/GrimRenderer.h"
 #include "mmcore/moldyn/MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MMPGDDataSource.h"
 #include "mmcore/moldyn/MMPGDWriter.h"
@@ -95,7 +94,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::AddParticleColours>();
     instance.RegisterAutoDescription<moldyn::DataGridder>();
-    instance.RegisterAutoDescription<moldyn::GrimRenderer>();
     instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::MMPGDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPGDWriter>();

@@ -37,6 +37,7 @@
 #include "rendering/SphereOutlineRenderer.h"
 #include "rendering/SimpleGeoSphereRenderer.h"
 #include "rendering/ArrowRenderer.h"
+#include "rendering/GrimRenderer.h"
 
 #include "mmstd_moldyn/EllipsoidalDataCall.h"
 
@@ -139,6 +140,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SphereOutlineRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SimpleGeoSphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GrimRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::EllipsoidalParticleDataCall>();

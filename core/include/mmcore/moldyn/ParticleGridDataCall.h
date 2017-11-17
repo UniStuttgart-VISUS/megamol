@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/api/MegaMolCore.std.h"
+
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -28,7 +30,7 @@ namespace moldyn {
     /**
      * Call for gridded multi-stream particle data.
      */
-    class ParticleGridDataCall : public AbstractGetData3DCall {
+    class MEGAMOLCORE_API ParticleGridDataCall : public AbstractGetData3DCall {
     public:
 
         /**
@@ -228,7 +230,7 @@ namespace moldyn {
         /**
          * Class holding a list of particles of one type withing one grid cell
          */
-        class Particles {
+        class MEGAMOLCORE_API Particles {
         public:
 
             /**
