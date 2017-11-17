@@ -34,12 +34,18 @@
 #include "io/BrickStatsDataSource.h"
 #include "rendering/BrickStatsRenderer.h"
 
+#include "misc/DataGridder.h"
+
+#include "io/MMPGDWriter.h"
+#include "io/MMPGDDataSource.h"
+
 #include "rendering/SphereOutlineRenderer.h"
 #include "rendering/SimpleGeoSphereRenderer.h"
 #include "rendering/ArrowRenderer.h"
 #include "rendering/GrimRenderer.h"
 
 #include "mmstd_moldyn/EllipsoidalDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 
 
 /*
@@ -141,9 +147,13 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SimpleGeoSphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GrimRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::DataGridder>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::EllipsoidalParticleDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::ParticleGridDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

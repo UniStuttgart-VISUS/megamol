@@ -1,22 +1,27 @@
 /*
  * MMPGDDataSource.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/MMPGDDataSource.h"
+#include "MMPGDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/SystemInformation.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::io;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /* defines for the frame cache size */
@@ -30,18 +35,18 @@ using namespace megamol::core;
 /*****************************************************************************/
 
 /*
- * moldyn::MMPGDDataSource::Frame::Frame
+ * MMPGDDataSource::Frame::Frame
  */
-moldyn::MMPGDDataSource::Frame::Frame(view::AnimDataModule& owner)
+MMPGDDataSource::Frame::Frame(view::AnimDataModule& owner)
         : view::AnimDataModule::Frame(owner), dat(), types(NULL), cells(NULL) {
     // intentionally empty
 }
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::~Frame
+ * MMPGDDataSource::Frame::~Frame
  */
-moldyn::MMPGDDataSource::Frame::~Frame() {
+MMPGDDataSource::Frame::~Frame() {
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
     this->dat.EnforceSize(0);
@@ -49,9 +54,9 @@ moldyn::MMPGDDataSource::Frame::~Frame() {
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::LoadFrame
+ * MMPGDDataSource::Frame::LoadFrame
  */
-bool moldyn::MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
+bool MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
     this->frame = idx;
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
@@ -61,9 +66,9 @@ bool moldyn::MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::SetData
+ * MMPGDDataSource::Frame::SetData
  */
-void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
+void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
     if (this->dat.IsEmpty()) {
         call.SetFrameID(0);
         call.SetTypeDataRef(0, NULL);
@@ -182,9 +187,9 @@ void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 
 
 /*
- * moldyn::MMPGDDataSource::MMPGDDataSource
+ * MMPGDDataSource::MMPGDDataSource
  */
-moldyn::MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
+MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMPGD file to load."),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
@@ -204,34 +209,34 @@ moldyn::MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
 
 
 /*
- * moldyn::MMPGDDataSource::~MMPGDDataSource
+ * MMPGDDataSource::~MMPGDDataSource
  */
-moldyn::MMPGDDataSource::~MMPGDDataSource(void) {
+MMPGDDataSource::~MMPGDDataSource(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::MMPGDDataSource::constructFrame
+ * MMPGDDataSource::constructFrame
  */
-view::AnimDataModule::Frame* moldyn::MMPGDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<moldyn::MMPGDDataSource*>(this));
+view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
+    Frame *f = new Frame(*const_cast<MMPGDDataSource*>(this));
     return f;
 }
 
 
 /*
- * moldyn::MMPGDDataSource::create
+ * MMPGDDataSource::create
  */
-bool moldyn::MMPGDDataSource::create(void) {
+bool MMPGDDataSource::create(void) {
     return true;
 }
 
 
 /*
- * moldyn::MMPGDDataSource::loadFrame
+ * MMPGDDataSource::loadFrame
  */
-void moldyn::MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
+void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
         unsigned int idx) {
     using vislib::sys::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
@@ -250,9 +255,9 @@ void moldyn::MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
 
 
 /*
- * moldyn::MMPGDDataSource::release
+ * MMPGDDataSource::release
  */
-void moldyn::MMPGDDataSource::release(void) {
+void MMPGDDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File *f = this->file;
@@ -266,9 +271,9 @@ void moldyn::MMPGDDataSource::release(void) {
 
 
 /*
- * moldyn::MMPGDDataSource::filenameChanged
+ * MMPGDDataSource::filenameChanged
  */
-bool moldyn::MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
+bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     using vislib::sys::File;
     this->resetFrameCache();
@@ -366,9 +371,9 @@ bool moldyn::MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
 
 
 /*
- * moldyn::MMPGDDataSource::getDataCallback
+ * MMPGDDataSource::getDataCallback
  */
-bool moldyn::MMPGDDataSource::getDataCallback(Call& caller) {
+bool MMPGDDataSource::getDataCallback(Call& caller) {
     ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
     if (c2 == NULL) return false;
 
@@ -387,9 +392,9 @@ bool moldyn::MMPGDDataSource::getDataCallback(Call& caller) {
 
 
 /*
- * moldyn::MMPGDDataSource::getExtentCallback
+ * MMPGDDataSource::getExtentCallback
  */
-bool moldyn::MMPGDDataSource::getExtentCallback(Call& caller) {
+bool MMPGDDataSource::getExtentCallback(Call& caller) {
     ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
 
     if (c2 != NULL) {

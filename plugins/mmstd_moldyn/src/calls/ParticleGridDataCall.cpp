@@ -1,35 +1,39 @@
 /*
  * ParticleGridDataCall.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009-2017 by Universitaet Stuttgart (VISUS). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 //#include "vislib/memutils.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 /****************************************************************************/
 
 
 /*
- * moldyn::ParticleGridDataCall::ParticleType::ParticleType
+ * ParticleGridDataCall::ParticleType::ParticleType
  */
-moldyn::ParticleGridDataCall::ParticleType::ParticleType(void)
-        : colDataType(moldyn::MultiParticleDataCall::Particles::COLDATA_NONE),
+ParticleGridDataCall::ParticleType::ParticleType(void)
+        : colDataType(MultiParticleDataCall::Particles::COLDATA_NONE),
         maxColI(1.0f), minColI(0.0), radius(0.5f),
-        vertDataType(moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+        vertDataType(MultiParticleDataCall::Particles::VERTDATA_NONE) {
     this->col[0] = this->col[1] = this->col[2] = 128;
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::ParticleType::ParticleType
+ * ParticleGridDataCall::ParticleType::ParticleType
  */
-moldyn::ParticleGridDataCall::ParticleType::ParticleType(
-        const moldyn::ParticleGridDataCall::ParticleType& src)
+ParticleGridDataCall::ParticleType::ParticleType(
+        const ParticleGridDataCall::ParticleType& src)
         : colDataType(src.colDataType), maxColI(src.maxColI),
         minColI(src.minColI), radius(src.radius),
         vertDataType(src.vertDataType) {
@@ -40,19 +44,19 @@ moldyn::ParticleGridDataCall::ParticleType::ParticleType(
 
 
 /*
- * moldyn::ParticleGridDataCall::ParticleType::~ParticleType
+ * ParticleGridDataCall::ParticleType::~ParticleType
  */
-moldyn::ParticleGridDataCall::ParticleType::~ParticleType(void) {
+ParticleGridDataCall::ParticleType::~ParticleType(void) {
     // intentionally empty
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::ParticleType::operator=
+ * ParticleGridDataCall::ParticleType::operator=
  */
-moldyn::ParticleGridDataCall::ParticleType&
-moldyn::ParticleGridDataCall::ParticleType::operator=(
-        const moldyn::ParticleGridDataCall::ParticleType& rhs) {
+ParticleGridDataCall::ParticleType&
+ParticleGridDataCall::ParticleType::operator=(
+        const ParticleGridDataCall::ParticleType& rhs) {
     this->col[0] = rhs.col[0];
     this->col[1] = rhs.col[1];
     this->col[2] = rhs.col[2];
@@ -66,10 +70,10 @@ moldyn::ParticleGridDataCall::ParticleType::operator=(
 
 
 /*
- * moldyn::ParticleGridDataCall::ParticleType::operator==
+ * ParticleGridDataCall::ParticleType::operator==
  */
-bool moldyn::ParticleGridDataCall::ParticleType::operator==(
-        const moldyn::ParticleGridDataCall::ParticleType& rhs) const {
+bool ParticleGridDataCall::ParticleType::operator==(
+        const ParticleGridDataCall::ParticleType& rhs) const {
     return (this->col[0] == rhs.col[0])
         && (this->col[1] == rhs.col[1])
         && (this->col[2] == rhs.col[2])
@@ -84,19 +88,19 @@ bool moldyn::ParticleGridDataCall::ParticleType::operator==(
 
 
 /*
- * moldyn::ParticleGridDataCall::Particles::Particles
+ * ParticleGridDataCall::Particles::Particles
  */
-moldyn::ParticleGridDataCall::Particles::Particles(void) : colPtr(NULL),
+ParticleGridDataCall::Particles::Particles(void) : colPtr(NULL),
         colStride(0), count(0), maxRad(0.5f), vertPtr(NULL), vertStride(0) {
     // intentionally empty
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::Particles::Particles
+ * ParticleGridDataCall::Particles::Particles
  */
-moldyn::ParticleGridDataCall::Particles::Particles(
-        const moldyn::ParticleGridDataCall::Particles& src)
+ParticleGridDataCall::Particles::Particles(
+        const ParticleGridDataCall::Particles& src)
         : colPtr(src.colPtr), colStride(src.colStride), count(src.count),
         maxRad(src.maxRad), vertPtr(src.vertPtr), vertStride(src.vertStride) {
     // intentionally empty
@@ -104,20 +108,20 @@ moldyn::ParticleGridDataCall::Particles::Particles(
 
 
 /*
- * moldyn::ParticleGridDataCall::Particles::~Particles
+ * ParticleGridDataCall::Particles::~Particles
  */
-moldyn::ParticleGridDataCall::Particles::~Particles(void) {
+ParticleGridDataCall::Particles::~Particles(void) {
     this->colPtr = NULL; // DO NOT DELETE
     this->vertPtr = NULL; // DO NOT DELETE
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::Particles::operator=
+ * ParticleGridDataCall::Particles::operator=
  */
-moldyn::ParticleGridDataCall::Particles&
-moldyn::ParticleGridDataCall::Particles::operator=(
-        const moldyn::ParticleGridDataCall::Particles& rhs) {
+ParticleGridDataCall::Particles&
+ParticleGridDataCall::Particles::operator=(
+        const ParticleGridDataCall::Particles& rhs) {
     this->colPtr = rhs.colPtr;
     this->colStride = rhs.colStride;
     this->count = rhs.count;
@@ -129,10 +133,10 @@ moldyn::ParticleGridDataCall::Particles::operator=(
 
 
 /*
- * moldyn::ParticleGridDataCall::Particles::operator==
+ * ParticleGridDataCall::Particles::operator==
  */
-bool moldyn::ParticleGridDataCall::Particles::operator==(
-        const moldyn::ParticleGridDataCall::Particles& rhs) const {
+bool ParticleGridDataCall::Particles::operator==(
+        const ParticleGridDataCall::Particles& rhs) const {
     return (this->colPtr == rhs.colPtr)
         && (this->colStride == rhs.colStride)
         && (this->count == rhs.count)
@@ -144,48 +148,48 @@ bool moldyn::ParticleGridDataCall::Particles::operator==(
 /****************************************************************************/
 
 /*
- * moldyn::ParticleGridDataCall::GridCell::GridCell
+ * ParticleGridDataCall::GridCell::GridCell
  */
-moldyn::ParticleGridDataCall::GridCell::GridCell(void) : particles(NULL),
+ParticleGridDataCall::GridCell::GridCell(void) : particles(NULL),
         bbox() {
     // intentionally empty
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::GridCell::GridCell
+ * ParticleGridDataCall::GridCell::GridCell
  */
-moldyn::ParticleGridDataCall::GridCell::GridCell(
-        const moldyn::ParticleGridDataCall::GridCell& src) : particles(NULL),
+ParticleGridDataCall::GridCell::GridCell(
+        const ParticleGridDataCall::GridCell& src) : particles(NULL),
         bbox() {
     *this = src;
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::GridCell::~GridCell
+ * ParticleGridDataCall::GridCell::~GridCell
  */
-moldyn::ParticleGridDataCall::GridCell::~GridCell(void) {
+ParticleGridDataCall::GridCell::~GridCell(void) {
     ARY_SAFE_DELETE(this->particles);
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::GridCell::operator=
+ * ParticleGridDataCall::GridCell::operator=
  */
-moldyn::ParticleGridDataCall::GridCell&
-moldyn::ParticleGridDataCall::GridCell::operator=(
-        const moldyn::ParticleGridDataCall::GridCell& rhs) {
+ParticleGridDataCall::GridCell&
+ParticleGridDataCall::GridCell::operator=(
+        const ParticleGridDataCall::GridCell& rhs) {
     this->bbox = rhs.bbox;
     return *this;
 }
 
 
 /*
- * moldyn::ParticleGridDataCall::GridCell::operator==
+ * ParticleGridDataCall::GridCell::operator==
  */
-bool moldyn::ParticleGridDataCall::GridCell::operator==(
-        const moldyn::ParticleGridDataCall::GridCell& rhs) const {
+bool ParticleGridDataCall::GridCell::operator==(
+        const ParticleGridDataCall::GridCell& rhs) const {
     return this->bbox == rhs.bbox;
 }
 
@@ -193,9 +197,9 @@ bool moldyn::ParticleGridDataCall::GridCell::operator==(
 /****************************************************************************/
 
 /*
- * moldyn::ParticleGridDataCall::ParticleGridDataCall
+ * ParticleGridDataCall::ParticleGridDataCall
  */
-moldyn::ParticleGridDataCall::ParticleGridDataCall(void)
+ParticleGridDataCall::ParticleGridDataCall(void)
         : AbstractGetData3DCall(), cntCellsX(0), cntCellsY(0), cntCellsZ(0),
         cntCells(0), cells(NULL), ownCellMem(false), cntTypes(0),
         types(NULL), ownTypeMem(false) {
@@ -204,9 +208,9 @@ moldyn::ParticleGridDataCall::ParticleGridDataCall(void)
 
 
 /*
- * moldyn::ParticleGridDataCall::~ParticleGridDataCall
+ * ParticleGridDataCall::~ParticleGridDataCall
  */
-moldyn::ParticleGridDataCall::~ParticleGridDataCall(void) {
+ParticleGridDataCall::~ParticleGridDataCall(void) {
     this->Unlock();
     if (this->ownCellMem) {
         delete[] this->cells;
@@ -222,10 +226,10 @@ moldyn::ParticleGridDataCall::~ParticleGridDataCall(void) {
 
 
 /*
- * moldyn::ParticleGridDataCall::operator=
+ * ParticleGridDataCall::operator=
  */
-moldyn::ParticleGridDataCall& moldyn::ParticleGridDataCall::operator=(
-        const moldyn::ParticleGridDataCall& rhs) {
+ParticleGridDataCall& ParticleGridDataCall::operator=(
+        const ParticleGridDataCall& rhs) {
     AbstractGetData3DCall::operator=(rhs);
 
     this->SetGridDataRef(rhs.cntCellsX, rhs.cntCellsY, rhs.cntCellsZ, rhs.cells);

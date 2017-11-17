@@ -1,12 +1,12 @@
 /*
  * MMPGDWriter.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/MMPGDWriter.h"
+#include "MMPGDWriter.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
@@ -15,13 +15,18 @@
 #include "vislib/String.h"
 #include "vislib/sys/Thread.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::io;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /*
- * moldyn::MMPGDWriter::MMPGDWriter
+ * MMPGDWriter::MMPGDWriter
  */
-moldyn::MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
+MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMPGD file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
@@ -34,32 +39,32 @@ moldyn::MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
 
 
 /*
- * moldyn::MMPGDWriter::~MMPGDWriter
+ * MMPGDWriter::~MMPGDWriter
  */
-moldyn::MMPGDWriter::~MMPGDWriter(void) {
+MMPGDWriter::~MMPGDWriter(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::MMPGDWriter::create
+ * MMPGDWriter::create
  */
-bool moldyn::MMPGDWriter::create(void) {
+bool MMPGDWriter::create(void) {
     return true;
 }
 
 
 /*
- * moldyn::MMPGDWriter::release
+ * MMPGDWriter::release
  */
-void moldyn::MMPGDWriter::release(void) {
+void MMPGDWriter::release(void) {
 }
 
 
 /*
- * moldyn::MMPGDWriter::run
+ * MMPGDWriter::run
  */
-bool moldyn::MMPGDWriter::run(void) {
+bool MMPGDWriter::run(void) {
     using vislib::sys::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
@@ -195,18 +200,18 @@ bool moldyn::MMPGDWriter::run(void) {
 
 
 /*
- * moldyn::MMPGDWriter::getCapabilities
+ * MMPGDWriter::getCapabilities
  */
-bool moldyn::MMPGDWriter::getCapabilities(DataWriterCtrlCall& call) {
+bool MMPGDWriter::getCapabilities(DataWriterCtrlCall& call) {
     call.SetAbortable(false);
     return true;
 }
 
 
 /*
- * moldyn::MMPGDWriter::writeFrame
+ * MMPGDWriter::writeFrame
  */
-bool moldyn::MMPGDWriter::writeFrame(vislib::sys::File& file, moldyn::ParticleGridDataCall& data) {
+bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data) {
     using vislib::sys::Log;
 
     UINT32 typeCnt = static_cast<UINT32>(data.TypesCount());

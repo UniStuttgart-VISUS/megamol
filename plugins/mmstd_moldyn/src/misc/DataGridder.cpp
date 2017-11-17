@@ -1,15 +1,14 @@
 /*
  * DataGridder.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009-2017 by Universitaet Stuttgart (VISUS). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/DataGridder.h"
+#include "DataGridder.h"
 #include <climits>
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"
@@ -19,13 +18,18 @@
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::misc;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /*
- * moldyn::DataGridder::DataGridder
+ * DataGridder::DataGridder
  */
-moldyn::DataGridder::DataGridder(void) : Module(),
+DataGridder::DataGridder(void) : Module(),
         inDataSlot("indata", "Slot to fetch flat data"),
         outDataSlot("outdata", "Slot to publicate gridded data"),
         gridSizeXSlot("gridsizex", "The grid size in x direction"),
@@ -35,7 +39,7 @@ moldyn::DataGridder::DataGridder(void) : Module(),
         datahash(0), frameID(UINT_MAX), gridSizeX(0), gridSizeY(0),
         gridSizeZ(0), types(), grid(), vertData(), colData(), outhash(0) {
 
-    this->inDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->outDataSlot.SetCallback(moldyn::ParticleGridDataCall::ClassName(),
@@ -60,17 +64,17 @@ moldyn::DataGridder::DataGridder(void) : Module(),
 
 
 /*
- * moldyn::DataGridder::~DataGridder
+ * DataGridder::~DataGridder
  */
-moldyn::DataGridder::~DataGridder(void) {
+DataGridder::~DataGridder(void) {
     this->Release(); // implicitly calls 'release'
 }
 
 
 /*
- * moldyn::DataGridder::create
+ * DataGridder::create
  */
-bool moldyn::DataGridder::create(void) {
+bool DataGridder::create(void) {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();
@@ -81,9 +85,9 @@ bool moldyn::DataGridder::create(void) {
 
 
 /*
- * moldyn::DataGridder::release
+ * DataGridder::release
  */
-void moldyn::DataGridder::release(void) {
+void DataGridder::release(void) {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();
@@ -93,18 +97,18 @@ void moldyn::DataGridder::release(void) {
 
 
 /*
- * moldyn::DataGridder::doSort
+ * DataGridder::doSort
  */
-int moldyn::DataGridder::doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs,
+int DataGridder::doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs,
         const vislib::Pair<SIZE_T, unsigned int>& rhs) {
     return lhs.Second() - rhs.Second();
 }
 
 
 /*
- * moldyn::DataGridder::getData
+ * DataGridder::getData
  */
-bool moldyn::DataGridder::getData(Call& call) {
+bool DataGridder::getData(Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
     MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if ((pgdc == NULL) || (mpdc == NULL)) return false;
@@ -154,7 +158,7 @@ bool moldyn::DataGridder::getData(Call& call) {
             ParticleGridDataCall::ParticleType &t = this->types[i];
             MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
 
-            if (p.GetVertexDataType() == moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+            if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "[Critical] Unable to grid already quantized data!\n");
                 throw vislib::Exception("Critical Error: Unable to grid already quantized data!\n", __FILE__, __LINE__);
@@ -444,9 +448,9 @@ bool moldyn::DataGridder::getData(Call& call) {
 
 
 /*
- * moldyn::DataGridder::getExtend
+ * DataGridder::getExtend
  */
-bool moldyn::DataGridder::getExtend(Call& call) {
+bool DataGridder::getExtend(Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
     if (pgdc == NULL) return false;
 
