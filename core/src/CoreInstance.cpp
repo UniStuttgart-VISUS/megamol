@@ -782,7 +782,7 @@ bool megamol::core::CoreInstance::RequestModuleInstantiation(const vislib::Strin
         this->GetModuleDescriptionManager().Find(vislib::StringA(className));
     if (md == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of module"
-            " \"%s\": class \"%s\" not found.", id, className);
+            " \"%s\": class \"%s\" not found.", id.PeekBuffer(), className.PeekBuffer());
         return false;
     }
 
@@ -802,7 +802,7 @@ bool megamol::core::CoreInstance::RequestCallInstantiation(const vislib::StringA
         this->GetCallDescriptionManager().Find(vislib::StringA(className));
     if (cd == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of "
-            " unknown call class \"%s\".", className);
+            " unknown call class \"%s\".", className.PeekBuffer());
         return false;
     }
 
@@ -839,7 +839,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
         if (!mod) {
             vislib::sys::Log::DefaultLog.WriteError(
-                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr);
+                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr.PeekBuffer());
             continue;
         }
 
@@ -891,15 +891,15 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     if (anoc) {
                         vislib::sys::Log::DefaultLog.WriteError(
                             "PerformGraphUpdates: found container \"%s\" inside module \"%s\"",
-                            anoc->FullName(), mod->FullName());
+                            anoc->FullName().PeekBuffer(), mod->FullName().PeekBuffer());
                         continue;
                     }
                     core::CallerSlot *callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
                     if (callerSlot != nullptr) {
                         core::Call *call = callerSlot->CallAs<Call>();
                         if (call != nullptr) {
-                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s", call->PeekCallerSlot()->FullName(),
-                                call->PeekCalleeSlot()->FullName());
+                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s", call->PeekCallerSlot()->FullName().PeekBuffer(),
+                                call->PeekCalleeSlot()->FullName().PeekBuffer());
                             callerSlot->ConnectCall(nullptr);
                         }
                         deletionQueue.push_back(child);
@@ -922,19 +922,19 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
                 for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
                     AbstractNamedObject::ptr_type child = *children;
-                    vislib::sys::Log::DefaultLog.WriteError("child remaining in %s: %s", mod->FullName(), child->FullName());
+                    vislib::sys::Log::DefaultLog.WriteError("child remaining in %s: %s", mod->FullName().PeekBuffer(), child->FullName().PeekBuffer());
                 }
 
                 // remove mod
                 n->RemoveChild(mod);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.", mdr);
+                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.", mdr.PeekBuffer());
                 continue;
             }
         } else {
             vislib::sys::Log::DefaultLog.WriteError(
-                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr);
+                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr.PeekBuffer());
             continue;
         }
 
@@ -984,7 +984,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
         if (!found) {
             vislib::sys::Log::DefaultLog.WriteError("cannot delete call from \"%s\" to \"%s\"",
-                cdr.First(), cdr.Second());
+                cdr.First().PeekBuffer(), cdr.Second().PeekBuffer());
         }
     }
 
@@ -994,7 +994,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         this->pendingModuleInstRequests.RemoveFirst();
         if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
-                " of class \"%s\".", mir.First(), mir.Second()->ClassName());
+                " of class \"%s\".", mir.First().PeekBuffer(), mir.Second()->ClassName());
         }
     }
 
@@ -1004,7 +1004,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         this->pendingCallInstRequests.RemoveFirst();
         if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
-                " from \"%s\" to \"%s\".", cir.Description()->ClassName(), cir.From(), cir.To());
+                " from \"%s\" to \"%s\".", cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
         }
     }
 
@@ -1019,10 +1019,10 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
             if (!p->ParseValue(val)) {
-                vislib::sys::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.", psr.First(), psr.Second());
+                vislib::sys::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.", psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 continue;
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\".", psr.First(), psr.Second());
+                vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\".", psr.First().PeekBuffer(), psr.Second().PeekBuffer());
             }
         } else {
             // the error is already shown
