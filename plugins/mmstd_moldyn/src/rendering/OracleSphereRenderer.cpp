@@ -1,13 +1,13 @@
 /*
  * OracleSphereRenderer.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2017 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/OracleSphereRenderer.h"
+#include "OracleSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -19,19 +19,24 @@
 #include "vislib/Trace.h"
 #include "vislib/math/Vector.h"
 
+using namespace megamol::stdplugin;
+using namespace megamol::stdplugin::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
+
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 
 /*
- * moldyn::OracleSphereRenderer::OracleSphereRenderer
+ * OracleSphereRenderer::OracleSphereRenderer
  */
-moldyn::OracleSphereRenderer::OracleSphereRenderer(void) : Renderer3DModule(),
+OracleSphereRenderer::OracleSphereRenderer(void) : Renderer3DModule(),
         sphereShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0), fbo(), mixShader() {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -43,17 +48,17 @@ moldyn::OracleSphereRenderer::OracleSphereRenderer(void) : Renderer3DModule(),
 
 
 /*
- * moldyn::OracleSphereRenderer::~OracleSphereRenderer
+ * OracleSphereRenderer::~OracleSphereRenderer
  */
-moldyn::OracleSphereRenderer::~OracleSphereRenderer(void) {
+OracleSphereRenderer::~OracleSphereRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::OracleSphereRenderer::create
+ * OracleSphereRenderer::create
  */
-bool moldyn::OracleSphereRenderer::create(void) {
+bool OracleSphereRenderer::create(void) {
     ASSERT(IsAvailable());
 
     this->fbo.Create(1, 1);
@@ -148,9 +153,9 @@ bool moldyn::OracleSphereRenderer::create(void) {
 
 
 /*
- * moldyn::OracleSphereRenderer::GetCapabilities
+ * OracleSphereRenderer::GetCapabilities
  */
-bool moldyn::OracleSphereRenderer::GetCapabilities(Call& call) {
+bool OracleSphereRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -165,9 +170,9 @@ bool moldyn::OracleSphereRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * moldyn::OracleSphereRenderer::GetExtents
+ * OracleSphereRenderer::GetExtents
  */
-bool moldyn::OracleSphereRenderer::GetExtents(Call& call) {
+bool OracleSphereRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -194,9 +199,9 @@ bool moldyn::OracleSphereRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::OracleSphereRenderer::release
+ * OracleSphereRenderer::release
  */
-void moldyn::OracleSphereRenderer::release(void) {
+void OracleSphereRenderer::release(void) {
     this->fbo.Release();
     this->sphereShader.Release();
     ::glDeleteTextures(1, &this->greyTF);
@@ -204,9 +209,9 @@ void moldyn::OracleSphereRenderer::release(void) {
 
 
 /*
- * moldyn::OracleSphereRenderer::Render
+ * OracleSphereRenderer::Render
  */
-bool moldyn::OracleSphereRenderer::Render(Call& call) {
+bool OracleSphereRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
