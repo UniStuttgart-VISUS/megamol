@@ -162,7 +162,7 @@ namespace moldyn {
     };
 
 
-    MEGAMOLCORE_APIEXT template class MMSTD_MOLDYN_API core::moldyn::AbstractParticleDataCall<EllipsoidalParticles>;
+    //MEGAMOLCORE_APIEXT template class MMSTD_MOLDYN_API core::moldyn::AbstractParticleDataCall<EllipsoidalParticles>;
 
 
     /**

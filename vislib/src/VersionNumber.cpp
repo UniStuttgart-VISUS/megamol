@@ -197,7 +197,7 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
-        if (this->revisionNumber > 0) num = 3;
+        if (atoi(this->revisionNumber) > 0) num = 3;
     }
     if (num == 1) {
         tmp.Format(L"%u", static_cast<unsigned int>(this->majorNumber));

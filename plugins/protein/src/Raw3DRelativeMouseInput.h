@@ -1,7 +1,7 @@
 /*
  * Raw3DRelativeMouseInput.h
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2011-2017 by Universitaet Stuttgart (VISUS). 
  * Alle Rechte vorbehalten.
  */
 
@@ -79,7 +79,7 @@ public:
     * 
     * @param Delegate of the function to be set as the call.
     */
-    void SetMotionFunction(Raw3DMotionDelegate& function) {
+    void SetMotionFunction(Raw3DMotionDelegate&& function) {
         this->pMotion = function;
     }
 
@@ -88,7 +88,7 @@ public:
     *
     * @param Delegate of the function to be set as the call.
     */
-    void SetButtonFunction(Raw3DButtonDelegate& function) {
+    void SetButtonFunction(Raw3DButtonDelegate&& function) {
         this->pButton = function;
     }
 
