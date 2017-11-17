@@ -29,7 +29,6 @@
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
-#include "mmcore/moldyn/ClusteredSphereRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
@@ -93,7 +92,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
     instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::ClusteredSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
