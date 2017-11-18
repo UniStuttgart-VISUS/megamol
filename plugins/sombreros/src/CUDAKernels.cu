@@ -314,6 +314,37 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
 	p_phivalues_out[idx] = p_phivalues_in[idx] + tmp_phi * 1.025f;
 }
 
+
+/**
+ * Compute the average z value in the neighbourhood and assign it to the
+ * current vertex.
+ *
+ * @param p_zvalues The z value of each vertex.
+ * @param p_valid_z_values Remebers if a vertex is valid.
+ * @param p_vertex_neighbours The IDs of the neighbouring vertices.
+ * @param p_vertex_edge_offset_depth The number of edges per vertex.
+ * @param p_vertex_cnt The number of vertices in the mesh.
+ */
+__global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values,
+		const uint* p_vertex_neighbours, const uint* p_vertex_edge_offset_depth,
+		uint p_vertex_cnt) {
+	const uint idx = GetThreadIndex();
+	if (idx >= p_vertex_cnt) return;
+	if (!p_valid_z_values[idx]) return;
+
+	uint begin = p_vertex_edge_offset_depth[idx];
+	uint end = p_vertex_edge_offset_depth[idx + 1];
+	float count = end - begin;
+	float tmp = 0.0f;
+	// Add up the zvalues of the neighbouring vertices and increase the counter.
+	for (uint i = begin; i < end; i++) {
+		tmp += p_zvalues[p_vertex_neighbours[i]];
+	}
+	float tmp_z = (tmp / count) - p_zvalues[idx];
+	p_zvalues[idx] = p_zvalues[idx] + tmp_z * 1.025f;
+
+}
+
 /**
  * Sort the neighbour IDs ascending to the types of the neighbours.
  *
@@ -456,6 +487,61 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
 
 	return true;
 
+}
+
+/*
+ * CUDAKernels::CreateZValues
+ */
+bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_zvalues,
+		std::vector<bool> p_valid_z_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
+		const std::vector<uint>& p_vertex_edge_offset_depth) {
+	// Convert vertex edge offset to CUDA
+	uint vertex_cnt = static_cast<uint>(p_zvalues.size());
+	std::vector<CUDAKernels::Edge> cuda_vertex_offset;
+	cuda_vertex_offset.reserve(static_cast<size_t>(p_vertex_edge_offset_depth.back()) * 30);
+
+	for (const auto& offset : p_vertex_edge_offset) {
+		for (const auto& edge : offset) {
+			cuda_vertex_offset.push_back(edge);
+		}
+	}
+
+	// Store the vertex IDs of neighbouring vertices.
+	std::vector<uint> vertex_neighbours = std::vector<uint>(cuda_vertex_offset.size());
+
+	// Upload data and delete local copy.
+	thrust::device_vector<float> p_zvalues_d = p_zvalues;
+	thrust::device_vector<bool> p_valid_z_values_d = p_valid_z_values;
+	thrust::device_vector<CUDAKernels::Edge> cuda_vertex_offset_d = cuda_vertex_offset;
+	thrust::device_vector<uint> p_vertex_edge_offset_depth_d = p_vertex_edge_offset_depth;
+	thrust::device_vector<uint> vertex_neighbours_d = vertex_neighbours;
+	cuda_vertex_offset.clear();
+	cuda_vertex_offset.shrink_to_fit();
+	vertex_neighbours.clear();
+	vertex_neighbours.shrink_to_fit();
+
+	// Get the neighbours of every vertex.
+	GetNeighbourIds <<< Grid(vertex_cnt, 256), 256 >>> (
+		thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
+		thrust::raw_pointer_cast(p_valid_z_values_d.data().get()),
+		thrust::raw_pointer_cast(cuda_vertex_offset_d.data().get()),
+		thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
+		vertex_cnt);
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	// Perform iterations.
+	for (uint i = 0; i < p_iterations; i++) {
+		SetZValues <<< Grid(vertex_cnt, 256), 256 >>> (
+			thrust::raw_pointer_cast(p_zvalues_d.data().get()),
+			thrust::raw_pointer_cast(p_valid_z_values_d.data().get()), 
+			thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
+			thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
+			vertex_cnt);
+		checkCudaErrors(cudaDeviceSynchronize());
+	}
+	thrust::copy(p_zvalues_d.begin(), p_zvalues_d.end(), p_zvalues.begin());
+
+	return true;
 }
 
 /*

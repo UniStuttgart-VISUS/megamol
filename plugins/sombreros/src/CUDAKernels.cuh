@@ -129,6 +129,27 @@ namespace sombreros {
 			const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
 			const std::vector<uint>& p_vertex_edge_offset_depth,
 			const std::vector<int>& p_vertex_type);
+
+		/**
+		 * Compute the z values for the Rahi and Sharp representation of
+		 * a SES as a sphere. The iterative process is stopped after
+		 * the given number of iterations and only the z values of valid
+		 * vertices are changed. Vertices like the poles or the neighbours
+		 * of the poles are not considerd valid.
+		 *
+		 * @param p_iterations The number of iterations.
+		 * @param p_zvalues The z value of each vertex.
+		 * @param p_valid_z_vlaues Remebers if a vertex is valid.
+		 * @param p_vertex_edge_offset The edges that contain the vertex.
+		 * @param p_vertex_edge_offset_depth The number of edges per vertex.
+		 *
+		 * @return True if no error occured, false otherwise.
+		 */
+		bool CreateZValues(const uint p_iterations, 
+			std::vector<float>& p_zvalues, 
+			std::vector<bool> p_valid_z_values,
+			const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
+			const std::vector<uint>& p_vertex_edge_offset_depth);
 	
 		/**
 		 * Initialise a empty instance.

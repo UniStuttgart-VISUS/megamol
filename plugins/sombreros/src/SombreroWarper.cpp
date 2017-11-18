@@ -1627,7 +1627,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		});
 		this->reconstructEdgeSearchStructures(i, oldIndex);
 
-#if 1 // color by angle
+#if 0 // color by angle
 		for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
 			this->colors[i][3 * v + 0] = 255 * (this->rahiAngles[i][v] / (2.0f * 3.14159265358979f));
 			this->colors[i][3 * v + 1] = 0;
@@ -1711,23 +1711,29 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
 		float maxHeight = this->sombreroLength[i] / 2.0f;
 		float minHeight = 0.0f - maxHeight;
-
+#if 1
 		// all brim vertices have a y-position of + tunnellength / 2
 		for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
 			if (this->brimFlags[i][j]) {
 				this->vertices[i][3 * j + 1] = maxHeight;
 			}
 		}
-
+#endif
 		// for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
 		// first step: identify these vertices
 		std::set<uint> borderSet;
+		std::set<uint> southBorder;
 		// go through all forward edges, if one vertex is on the brim and one is not, take the second one
 		for (auto e : this->edgesForward[i]) {
 			if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
 				borderSet.insert(e.second);
 			} else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
 				borderSet.insert(e.first);
+			}
+			if (e.first == bsVertex) {
+				southBorder.insert(e.second);
+			} else if (e.second == bsVertex) {
+				southBorder.insert(e.first);
 			}
 		}
 
@@ -1741,13 +1747,16 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 		uint idx = 0;
 		for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
 			if (!this->brimFlags[i][j]) {
-				vertMappingToOld[idx] = j;
-				vertMappingToNew[j] = idx;
+				auto cnt = newVertices.size();
 				newVertices.insert(j);
-				idx++;
+				// we have to do this to prevent multiple inserts
+				if (newVertices.size() != cnt) {
+					vertMappingToOld[idx] = j;
+					vertMappingToNew[j] = idx;
+					idx++;
+				}
 			}
 		}
-		// TODO auseinanderziehen, da wir in ein set inserten und nicht wissen, wie groﬂ das resultat ist
 
 		// build the necessary input fields
 		std::vector<float> zValues(newVertNum, 0.0f);
@@ -1755,10 +1764,14 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 		std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
 		std::vector<uint> zEdgeOffsetDepth(newVertNum);
 
-		zValues[vertMappingToNew[bsVertex]] = 2.0f * maxHeight;
+		zValues[vertMappingToNew[bsVertex]] = 2.0f * minHeight;
 		zValidity[vertMappingToNew[bsVertex]] = false;
 		for (auto v : borderSet) { // north border
 			zValues[vertMappingToNew[v]] = maxHeight;
+			zValidity[vertMappingToNew[v]] = false;
+		}
+		for (auto v : southBorder) {
+			zValues[vertMappingToNew[v]] = minHeight;
 			zValidity[vertMappingToNew[v]] = false;
 		}
 
@@ -1770,6 +1783,28 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
 			}
 		}
+		for (uint j = 0; j < zEdgeOffsetDepth.size(); j++) {
+			zEdgeOffsetDepth[j] = static_cast<uint>(zEdgeOffset[j].size());
+		}
+		uint sum = zEdgeOffsetDepth[0];
+		zEdgeOffsetDepth[0] = 0;
+		for (uint j = 1; j < zEdgeOffsetDepth.size(); j++) {
+			uint oldVal = zEdgeOffsetDepth[j];
+			zEdgeOffsetDepth[j] = sum;
+			sum += oldVal;
+		}
+
+		bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth);
+		if (!kernelRes) {
+			vislib::sys::Log::DefaultLog.WriteError("The z-values kernel failed!");
+			return false;
+		}
+
+		for (uint j = 0; j < zValues.size(); j++) {
+			auto idx = vertMappingToOld[j];
+			this->vertices[i][3 * idx + 1] = zValues[j];
+		}
+
 	}
 	return true;
 }
