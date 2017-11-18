@@ -1783,6 +1783,14 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
 			}
 		}
+		for (auto e : this->edgesReverse[i]) {
+			if (newVertices.count(e.first) > 0 && newVertices.count(e.second) > 0) {
+				CUDAKernels::Edge newEdge;
+				newEdge.vertex_id_0 = vertMappingToNew[e.first];
+				newEdge.vertex_id_1 = vertMappingToNew[e.second];
+				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
+			}
+		}
 		for (uint j = 0; j < zEdgeOffsetDepth.size(); j++) {
 			zEdgeOffsetDepth[j] = static_cast<uint>(zEdgeOffset[j].size());
 		}
@@ -1796,7 +1804,7 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 
 		bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth);
 		if (!kernelRes) {
-			vislib::sys::Log::DefaultLog.WriteError("The z-values kernel failed!");
+			vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
 			return false;
 		}
 
@@ -1813,6 +1821,96 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
  * SombreroWarper::computeXZCoordinatePerVertex
  */
 bool SombreroWarper::computeXZCoordinatePerVertex(void) {
+
+	for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+		float minRad = this->sombreroRadius[i];
+		float maxRad = minRad + this->brimWidth[i];
+
+		std::set<uint> innerBorderSet;
+		// go through all forward edges, if one vertex is on the brim and one is not, take the second one
+		for (auto e : this->edgesForward[i]) {
+			if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
+				innerBorderSet.insert(e.second);
+			} else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
+				innerBorderSet.insert(e.first);
+			}
+		}
+		std::set<uint> outerBorderSet = std::set<uint>(this->brimIndices[i].begin(), this->brimIndices[i].end());
+
+		std::set<uint> completeSet;
+		for (uint j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
+			if (this->brimFlags[i][j]) {
+				completeSet.insert(j);
+			}
+		}
+		completeSet.insert(innerBorderSet.begin(), innerBorderSet.end());
+		uint newVertNum = static_cast<uint>(completeSet.size());
+
+		std::vector<float> zValues(newVertNum, 0.0f);
+		std::vector<bool> zValidity(newVertNum, true);
+		std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
+		std::vector<uint> zEdgeOffsetDepth(newVertNum);
+
+		// mapping of the new vertices to the old ones
+		std::vector<uint> vertMappingToOld(newVertNum);
+		// mapping of the old vertices to the new ones
+		std::vector<uint> vertMappingToNew(this->vertexLevelAttachment[i].size(), UINT_MAX);
+		for (uint j = 0; j < newVertNum; j++) {
+			uint idx = *std::next(completeSet.begin(), j);
+			vertMappingToOld[j] = idx;
+			vertMappingToNew[idx] = j;
+		}
+		// compute validity flags and init values
+		for (auto v : completeSet) {
+			if (innerBorderSet.count(v) > 0) {
+				zValues[vertMappingToNew[v]] = minRad;
+				zValidity[vertMappingToNew[v]] = false;
+			}
+			if (outerBorderSet.count(v) > 0) {
+				zValues[vertMappingToNew[v]] = maxRad;
+				zValidity[vertMappingToNew[v]] = false;
+			}
+		}
+		
+		// add edges
+		for (auto e : this->edgesForward[i]) {
+			if (completeSet.count(e.first) > 0 && completeSet.count(e.second) > 0) {
+				CUDAKernels::Edge newEdge;
+				newEdge.vertex_id_0 = vertMappingToNew[e.first];
+				newEdge.vertex_id_1 = vertMappingToNew[e.second];
+				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
+			}
+		}
+		for (auto e : this->edgesReverse[i]) {
+			if (completeSet.count(e.first) > 0 && completeSet.count(e.second) > 0) {
+				CUDAKernels::Edge newEdge;
+				newEdge.vertex_id_0 = vertMappingToNew[e.first];
+				newEdge.vertex_id_1 = vertMappingToNew[e.second];
+				zEdgeOffset[newEdge.vertex_id_0].push_back(newEdge);
+			}
+		}
+		// compute edge offset
+		for (uint j = 0; j < zEdgeOffsetDepth.size(); j++) {
+			zEdgeOffsetDepth[j] = static_cast<uint>(zEdgeOffset[j].size());
+		}
+		uint sum = zEdgeOffsetDepth[0];
+		zEdgeOffsetDepth[0] = 0;
+		for (uint j = 1; j < zEdgeOffsetDepth.size(); j++) {
+			uint oldVal = zEdgeOffsetDepth[j];
+			zEdgeOffsetDepth[j] = sum;
+			sum += oldVal;
+		}
+
+		bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth);
+		if (!kernelRes) {
+			vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
+			return false;
+		}
+
+		// radius computation finished
+
+		// TODO do this for the rest of the vertices
+	}
 
 	return true;
 }
