@@ -1764,14 +1764,14 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 		std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
 		std::vector<uint> zEdgeOffsetDepth(newVertNum);
 
-		zValues[vertMappingToNew[bsVertex]] = 2.0f * minHeight;
+		zValues[vertMappingToNew[bsVertex]] = minHeight; // TODO
 		zValidity[vertMappingToNew[bsVertex]] = false;
 		for (auto v : borderSet) { // north border
 			zValues[vertMappingToNew[v]] = maxHeight;
 			zValidity[vertMappingToNew[v]] = false;
 		}
 		for (auto v : southBorder) {
-			zValues[vertMappingToNew[v]] = minHeight;
+			zValues[vertMappingToNew[v]] = minHeight; // TODO
 			zValidity[vertMappingToNew[v]] = false;
 		}
 
