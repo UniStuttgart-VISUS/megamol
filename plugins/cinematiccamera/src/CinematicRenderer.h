@@ -17,7 +17,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/Renderer3DModule.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/SimpleFont.h"
@@ -156,20 +155,12 @@ namespace megamol {
             unsigned int                     interpolSteps;
             bool                             toggleManipulator;
             bool                             showHelpText;
-            bool                             toggleModelBBox;
+
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;
-            vislib::math::Cuboid<float>      ocBbox;
 
             /** The render to texture */
             vislib::graphics::gl::GLSLShader textureShader;
-
-            /**********************************************************************
-            * functions
-            **********************************************************************/
-
-            /** */
-            void drawBoundingBox(void);
 
             /**********************************************************************
             * callback stuff
@@ -191,8 +182,7 @@ namespace megamol {
             core::param::ParamSlot toggleManipulateParam;
             /**  */
             core::param::ParamSlot toggleHelpTextParam;
-            /**  */
-            core::param::ParamSlot toggleModelBBoxParam;
+
 		};
 
 	} /* end namespace cinematiccamera */
