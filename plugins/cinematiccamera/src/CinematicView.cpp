@@ -362,7 +362,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->rtf_create_frame();
     }
 
-// Suppress TRACE output of fbo.Enable() and fbo.Create()
+        // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
@@ -382,7 +382,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         throw vislib::Exception("[CINEMATIC VIEW] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
-// Reset TRACE output level
+        // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
@@ -400,7 +400,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Reset override render call
     this->overrideCall = NULL;
     // Reset override viewport
-    this->overrideViewport = NULL; 
+    this->overrideViewport = NULL;
+
 
     // Write frame to file
     if (this->rendering) {
@@ -745,3 +746,5 @@ bool CinematicView::setSimTime(float st) {
 
     return true;
 }
+
+
