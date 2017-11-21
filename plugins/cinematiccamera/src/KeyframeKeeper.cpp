@@ -44,6 +44,8 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     snapAnimFramesParam(           "04_snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames."),
     snapSimFramesParam(            "05_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
     simTangentParam(               "06_straightenSimTangent", "Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe."),
+    addFixedAnimTimeParam(         "07_addFixedPerCentAnimTime", "Adds fixed per cent of animation time to currently selected keyframe when new keyframe is added."),
+    addFixedSimTimeParam(          "08_addFixedPerCentSimTime", "Adds fixed per cent of simulation time to currently selected keyframe when new keyframe is added."),
 
     deleteSelectedKeyframeParam(   "editSelected::01_deleteKeyframe", "Deletes the currently selected keyframe."),
     changeKeyframeParam(           "editSelected::02_applyView", "Apply current view to selected keyframe."),
@@ -159,6 +161,12 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
     this->simTangentParam.SetParameter(new param::ButtonParam('t'));
     this->MakeSlotAvailable(&this->simTangentParam);
+
+    this->addFixedAnimTimeParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->addFixedAnimTimeParam);
+
+    this->addFixedSimTimeParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->addFixedSimTimeParam);
 }
 
 
@@ -396,14 +404,16 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (!this->addKeyframe(this->selectedKeyframe)) {
             // Choose new time if the last keyframe was tried to be replaced
             if (this->keyframes.Last().getAnimTime() < this->totalAnimTime) {
+
                 float t = this->selectedKeyframe.getAnimTime();
-                t += (0.1f * this->totalAnimTime);
+                t += (this->totalAnimTime * this->addFixedAnimTimeParam.Param<param::FloatParam>()->Value());
                 t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
+                this->selectedKeyframe.setAnimTime(t);
+
                 float s = this->selectedKeyframe.getSimTime();
-                s += (0.1f);
+                s += this->addFixedSimTimeParam.Param<param::FloatParam>()->Value();
                 s = (s > 1.0f) ? (1.0f) : (s);
                 this->selectedKeyframe.setSimTime(s);
-                this->selectedKeyframe.setAnimTime(t);
 
                 this->selectedKeyframe.setAnimTime(t);
                 this->addKeyframe(this->selectedKeyframe);
