@@ -1909,8 +1909,12 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 
 		// radius computation finished
 
+		float maxHeight = this->sombreroLength[i] / 2.0f;
+		float minHeight = 0.0f - maxHeight;
+
 		// compute the vertex position
 		for (uint v = 0; v < static_cast<uint>(this->vertexLevelAttachment[i].size()); v++) {
+
 			if (completeSet.count(v) > 0) {
 				// special case for the brim vertices
 				float radius = zValues[vertMappingToNew[v]];
@@ -1919,8 +1923,8 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 				this->vertices[i][3 * v + 0] = xCoord;
 				this->vertices[i][3 * v + 2] = zCoord;
 			} else {
-				float l = this->sombreroLength[i] * 2.0f;
-				float t = std::asinf(this->vertices[i][3 * v + 1] / l);
+				float l = this->sombreroLength[i];
+				float t = std::asinf((this->vertices[i][3 * v + 1] - maxHeight) / l);
 				float cost = std::cosf(t);
 				float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
 				float zCoord = minRad * cost * std::sinf(this->rahiAngles[i][v]);
