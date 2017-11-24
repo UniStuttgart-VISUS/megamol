@@ -41,10 +41,17 @@ namespace ngmesh {
 
 	struct MeshDataAccessor
 	{
+		/**
+		 * Vertex data starts of with buffer_cnt many uint32_t
+		 * that denote the byte offset of individual vertex
+		 * attribute buffers contained in the raw_data.
+		 */
 		struct VertexData
 		{
 			uint8_t*	raw_data;
 			size_t		byte_size;
+
+			size_t		buffer_cnt;
 		};
 
 		struct IndexData
@@ -376,6 +383,7 @@ namespace ngmesh {
 
 					m_head.meshes[idx].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
 					m_head.meshes[idx].vertex_data.byte_size = mesh_data.vertex_data.byte_size;
+					m_head.meshes[idx].vertex_data.buffer_cnt = mesh_data.vertex_data.buffer_cnt;
 					offset += m_head.meshes[idx].vertex_data.byte_size;
 					std::memcpy(m_head.meshes[idx].vertex_data.raw_data, mesh_data.vertex_data.raw_data, mesh_data.vertex_data.byte_size);
 

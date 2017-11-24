@@ -78,26 +78,33 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
-	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
+	mesh_data.vertex_data.buffer_cnt = 2;
+	mesh_data.vertex_data.byte_size = 3 * 6 * 4 + (4 * mesh_data.vertex_data.buffer_cnt);
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
-	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
+	uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+
+	uint32_view[0] = 8;
+	uint32_view[1] = 8 + 9*4;
+
+	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data + 8);
+	// position attribute
 	float_view[0] = -0.5f;
 	float_view[1] = 0.0f;
 	float_view[2] = 0.0f;
-	float_view[3] = 0.0f;
+	float_view[3] = 0.5f;
 	float_view[4] = 0.0f;
-	float_view[5] = 1.0f;
-
-	float_view[6] = 0.5f;
-	float_view[7] = 0.0f;
+	float_view[5] = 0.0f;
+	float_view[6] = 0.0f;
+	float_view[7] = 1.0f;
 	float_view[8] = 0.0f;
+
+	// normal attribute
 	float_view[9] = 0.0f;
 	float_view[10] = 0.0f;
 	float_view[11] = 1.0f;
-
 	float_view[12] = 0.0f;
-	float_view[13] = 1.0f;
-	float_view[14] = 0.0f;
+	float_view[13] = 0.0f;
+	float_view[14] = 1.0f;
 	float_view[15] = 0.0f;
 	float_view[16] = 0.0f;
 	float_view[17] = 1.0f;
@@ -110,7 +117,8 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	uint_view[1] = 1;
 	uint_view[2] = 2;
 
-	mesh_data.vertex_descriptor.stride = 24;
+	//mesh_data.vertex_descriptor.stride = 24;
+	mesh_data.vertex_descriptor.stride = 0;
 	mesh_data.vertex_descriptor.attribute_cnt = 2;
 	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;
@@ -123,7 +131,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	mesh_data.vertex_descriptor.attributes[1].offset = 12;
 
 	std::mt19937 generator(4215);
-	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
+	std::uniform_real_distribution<float> distr(0.01f, 0.03f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
 	draw_command_data.draw_cnt = 1000000;

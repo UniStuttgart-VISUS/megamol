@@ -393,25 +393,25 @@ namespace ngmesh {
 					break;
 				}
 			}
-
+			
 			/**
-			 * C-interface Mesh constructor for non-interleaved data with one vertex buffer object per vertex attribute.
+			 * Hybrid C-interface Mesh constructor for non-interleaved data with one vertex buffer object per vertex attribute.
 			 */
-			Mesh(GLvoid const*		vertex_data,
-				GLsizeiptr const*	vertex_data_byte_sizes,
-				unsigned int		vertex_buffer_cnt,
-				GLvoid const*		index_data,
-				GLsizeiptr			index_data_byte_size,
-				VertexLayout const& vertex_descriptor,
-				GLenum				indices_type = GL_UNSIGNED_INT,
-				GLenum				usage = GL_STATIC_DRAW,
-				GLenum				primitive_type = GL_TRIANGLES)
+			 
+			Mesh(std::vector<uint8_t*> const&	vertex_data,
+				std::vector<size_t> const&		vertex_data_byte_sizes,
+				GLvoid const*					index_data,
+				GLsizeiptr						index_data_byte_size,
+				VertexLayout const&				vertex_descriptor,
+				GLenum							indices_type = GL_UNSIGNED_INT,
+				GLenum							usage = GL_STATIC_DRAW,
+				GLenum							primitive_type = GL_TRIANGLES)
 				: m_ibo(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage),
 				m_vertex_descriptor(vertex_descriptor),
 				m_va_handle(0), m_indices_cnt(0), m_indices_type(indices_type), m_usage(usage), m_primitive_type(primitive_type)
 			{
-				for(unsigned int i=0; i <vertex_buffer_cnt; ++i)
-					m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertex_data, vertex_data_byte_sizes[i], usage));
+				for(unsigned int i=0; i <vertex_data.size(); ++i)
+					m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertex_data[i], vertex_data_byte_sizes[i], usage));
 
 				glGenVertexArrays(1, &m_va_handle);
 
@@ -450,7 +450,7 @@ namespace ngmesh {
 					break;
 				}
 			}
-
+			
 			~Mesh()
 			{
 				glDeleteVertexArrays(1, &m_va_handle);

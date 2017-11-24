@@ -176,14 +176,41 @@ void NGMeshRenderer::addRenderBatch(
 			mesh_data.vertex_descriptor.attributes[i].offset)
 		);
 	}
-	m_render_batches.back().mesh = std::make_unique<Mesh>(
-		mesh_data.vertex_data.raw_data,
-		mesh_data.vertex_data.byte_size,
-		mesh_data.index_data.raw_data,
-		mesh_data.index_data.byte_size,
-		layout,
-		mesh_data.index_data.index_type 
-		);
+
+	if (mesh_data.vertex_data.buffer_cnt > 1 && mesh_data.vertex_data.buffer_cnt == mesh_data.vertex_descriptor.attribute_cnt)
+	{
+		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
+		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
+		uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
+		{
+			vertex_data_ptrs[i] = mesh_data.vertex_data.raw_data + uint32_view[i]; //da fuck...
+			vertex_data_sizes[i] = (i < mesh_data.vertex_data.buffer_cnt - 1) ? uint32_view[i + 1] - uint32_view[i] : mesh_data.vertex_data.byte_size - uint32_view[i];
+		}
+		
+		m_render_batches.back().mesh = std::make_unique<Mesh>(
+			vertex_data_ptrs,
+			vertex_data_sizes,
+			mesh_data.index_data.raw_data,
+			mesh_data.index_data.byte_size,
+			layout,
+			mesh_data.index_data.index_type
+			);
+			
+	}
+	else
+	{
+		uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+
+		m_render_batches.back().mesh = std::make_unique<Mesh>(
+			mesh_data.vertex_data.raw_data + uint32_view[0],
+			mesh_data.vertex_data.byte_size - uint32_view[0],
+			mesh_data.index_data.raw_data,
+			mesh_data.index_data.byte_size,
+			layout,
+			mesh_data.index_data.index_type
+			);
+	}
 
 	// Create GPU buffer for draw commands
 	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
