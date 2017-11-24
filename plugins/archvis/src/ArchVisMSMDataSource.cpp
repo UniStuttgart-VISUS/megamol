@@ -71,10 +71,10 @@ bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 		auto vislib_shader_filename = m_shaderFilename_slot.Param<core::param::FilePathParam>()->Value();
 		std::string shdr_filename(vislib_shader_filename.PeekBuffer());
 
-		auto vislib_geometry_filename = m_partsList_slot.Param<core::param::FilePathParam>()->Value();
-		std::string geom_filename(vislib_geometry_filename.PeekBuffer());
+		auto vislib_partsList_filename = m_partsList_slot.Param<core::param::FilePathParam>()->Value();
+		std::string partsList_filename(vislib_partsList_filename.PeekBuffer());
 
-		load(shdr_filename, geom_filename);
+		load(shdr_filename, partsList_filename);
 	}
 
 	// TODO handle IP slot is dirty
@@ -84,7 +84,7 @@ bool ArchVisMSMDataSource::getDataCallback(core::Call& caller)
 	return true;
 }
 
-bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
+bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string const& partsList_filename)
 {
 	std::cout << "loading data" << std::endl;	
 
@@ -98,13 +98,21 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 	
+	// TODO parse parts list
+
+	// TODO create vector of glTF models
+
+	// TODO create mesh data that holds all models
+
+	// TODO log first index and base vertex for all individual models
+
 	// Begin test gltf
 
 	tinygltf::Model model;
 	tinygltf::TinyGLTF loader;
 	std::string err;
 
-	bool ret = loader.LoadASCIIFromFile(&model, &err, geometry_filename);
+	bool ret = loader.LoadASCIIFromFile(&model, &err, partsList_filename);
 	if (!err.empty()) {
 		printf("Err: %s\n", err.c_str());
 	}
@@ -113,11 +121,14 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		printf("Failed to parse glTF\n");
 	}
 
+
+	// For now, assume glTF will supply non-interleaved data (this seems to be mostly the case,..how do I even identify interleaved data?)
+
+
 	//mesh_data.vertex_descriptor.stride = model.bufferViews[model.accessors[model.meshes.front().primitives.front().attributes.begin()->second].bufferView].byteStride;
 	mesh_data.vertex_descriptor.attribute_cnt = model.meshes.front().primitives.front().attributes.size();
 	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
 	size_t i = 0;
-	GLsizei attrib_interleaved_offset = 0;
 	for (auto& attribute : model.meshes.front().primitives.front().attributes)
 	{
 		std::cout << "Attribute "<< attribute.first << std::endl;
@@ -133,9 +144,8 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		mesh_data.vertex_descriptor.attributes[i].type = model.accessors[attribute.second].componentType;
 		mesh_data.vertex_descriptor.attributes[i].size = model.accessors[attribute.second].type;
 		mesh_data.vertex_descriptor.attributes[i].normalized = model.accessors[attribute.second].normalized;
-		//mesh_data.vertex_descriptor.attributes[i].offset = model.accessors[attribute.second].byteOffset;
-		mesh_data.vertex_descriptor.attributes[i].offset = attrib_interleaved_offset;
-		attrib_interleaved_offset += bufferView.byteStride;
+		// we use a seperated VBO per vertex attribute, therefore offset should always be zero...
+		mesh_data.vertex_descriptor.attributes[i].offset = 0;
 
 		++i;
 	}
@@ -161,42 +171,50 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 
 
 	// sum up required memory for all attributes
-	mesh_data.vertex_descriptor.stride = 0;
+	mesh_data.vertex_descriptor.stride = 0; //we currently cannot handle a different stride per attribute buffer, assuming data to be tightly packed
 	mesh_data.vertex_data.byte_size = 0;
+	mesh_data.vertex_data.buffer_cnt = mesh_data.vertex_descriptor.attribute_cnt;
 	for (auto& attrib : model.meshes.front().primitives.front().attributes)
 	{
 		auto& accessor = model.accessors[attrib.second];
 		auto& bufferView = model.bufferViews[accessor.bufferView];
 
 		mesh_data.vertex_data.byte_size += bufferView.byteLength;
-
-		mesh_data.vertex_descriptor.stride += bufferView.byteStride;
 	}
+
+	// need additional storage for storing byte offsets of individual buffers (4byte per buffer)
+	mesh_data.vertex_data.byte_size += 4 * mesh_data.vertex_data.buffer_cnt;
 
 	// allocate memory for vertex data
 	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size];
+	uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
 
 	// get vertex count
 	size_t vertex_cnt = model.accessors[model.meshes.front().primitives.front().attributes.begin()->second].count;
 	//TODO check if count matches for all attributes (it really should or else wtf...)
 
-	//TODO copy data from gltf to interleaved buffer format
-	size_t bytes_copied = 0;
-	for (size_t i = 0; i < vertex_cnt; ++i)
+	//TODO copy data from gltf to buffers, start after offset values
+	size_t bytes_copied = 4 * mesh_data.vertex_data.buffer_cnt;
+
+	//TODO sort attribute to match shader?
+
+	size_t attrib_counter = 0;
+	for (auto& attrib : model.meshes.front().primitives.front().attributes)
 	{
-		for (auto& attrib : model.meshes.front().primitives.front().attributes)
-		{
-			auto& accessor = model.accessors[attrib.second];
-			auto& bufferView = model.bufferViews[accessor.bufferView];
+		auto& accessor = model.accessors[attrib.second];
+		auto& bufferView = model.bufferViews[accessor.bufferView];
 
-			auto tgt = mesh_data.vertex_data.raw_data + bytes_copied;
-			auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset + (bufferView.byteStride * i);
-			auto size = bufferView.byteStride;
+		auto tgt = mesh_data.vertex_data.raw_data + bytes_copied;
+		auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
+		auto size = bufferView.byteLength;
 
-			std::memcpy(tgt, src, size);
+		std::memcpy(tgt, src, size);
 
-			bytes_copied += size;
-		}
+		uint32_view[attrib_counter] = bytes_copied;
+		std::cout << "Offset " << attrib_counter << ": " << bytes_copied<<std::endl;
+		attrib_counter++;
+
+		bytes_copied += size;
 	}
 
 	//auto vertex_buffer_accessor_0 = model.accessors[model.meshes.front().primitives.front().attributes.begin()->second];
@@ -228,7 +246,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
-	draw_command_data.draw_cnt = 1;
+	draw_command_data.draw_cnt = 1000;
 	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
@@ -245,14 +263,14 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 
 		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
 		GLfloat scale = distr(generator);
-		scale = 0.01f;
+		scale = 0.1f;
 		object_transform.SetAt(0, 0, scale);
 		object_transform.SetAt(1, 1, scale);
 		object_transform.SetAt(2, 2, scale);
 
-		//object_transform.SetAt(0, 3, loc_distr(generator));
-		//object_transform.SetAt(1, 3, loc_distr(generator));
-		//object_transform.SetAt(2, 3, loc_distr(generator));
+		object_transform.SetAt(0, 3, loc_distr(generator));
+		object_transform.SetAt(1, 3, loc_distr(generator));
+		object_transform.SetAt(2, 3, loc_distr(generator));
 
 		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 	}
