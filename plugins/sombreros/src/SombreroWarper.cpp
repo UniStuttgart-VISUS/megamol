@@ -1615,7 +1615,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 		this->vertexLevelAttachment[i].pop_back();
 		this->atomIndexAttachment[i].pop_back();
 		this->bsDistanceAttachment[i].pop_back();
-		uint addedFaceValues = sortedBrim.size() * 3;
+		uint addedFaceValues = static_cast<uint>(sortedBrim.size() * 3);
 		this->faces[i].erase(this->faces[i].end() - addedFaceValues, this->faces[i].end());
 		uint oldIndex = static_cast<uint>(this->vertexLevelAttachment[i].size());
 		auto rit = std::remove_if(this->edgesForward[i].begin(), this->edgesForward[i].end(), [oldIndex](const std::pair<uint, uint>& e) {
@@ -1748,10 +1748,10 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 		for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
 			if (!this->brimFlags[i][j]) {
 				auto cnt = newVertices.size();
-				newVertices.insert(j);
+				newVertices.insert(static_cast<uint>(j));
 				// we have to do this to prevent multiple inserts
 				if (newVertices.size() != cnt) {
-					vertMappingToOld[idx] = j;
+					vertMappingToOld[idx] = static_cast<uint>(j);
 					vertMappingToNew[j] = idx;
 					idx++;
 				}
@@ -1909,7 +1909,25 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 
 		// radius computation finished
 
-		// TODO do this for the rest of the vertices
+		// compute the vertex position
+		for (uint v = 0; v < static_cast<uint>(this->vertexLevelAttachment[i].size()); v++) {
+			if (completeSet.count(v) > 0) {
+				// special case for the brim vertices
+				float radius = zValues[vertMappingToNew[v]];
+				float xCoord = radius * std::cosf(this->rahiAngles[i][v]);
+				float zCoord = radius * std::sinf(this->rahiAngles[i][v]);
+				this->vertices[i][3 * v + 0] = xCoord;
+				this->vertices[i][3 * v + 2] = zCoord;
+			} else {
+				float l = this->sombreroLength[i] * 2.0f;
+				float t = std::asinf(this->vertices[i][3 * v + 1] / l);
+				float cost = std::cosf(t);
+				float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
+				float zCoord = minRad * cost * std::sinf(this->rahiAngles[i][v]);
+				this->vertices[i][3 * v + 0] = xCoord;
+				this->vertices[i][3 * v + 2] = zCoord;
+			}
+		}
 	}
 
 	return true;
