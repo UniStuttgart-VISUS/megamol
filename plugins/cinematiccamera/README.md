@@ -1,4 +1,4 @@
-# MegaMol plugin "Cinematic Camera"
+# MegaMol™ Plugin "Cinematic Camera"
 
 This module allows the video rendering of simulations.
 By defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.

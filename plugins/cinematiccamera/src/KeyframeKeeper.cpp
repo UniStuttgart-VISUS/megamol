@@ -976,6 +976,16 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
         kf.setSimTime(simT);
 
+        // Skip interpolation of camera parameters if p1 == p2 
+        // => Prevent loops if time of keyframes is different, but postion is the same
+        if (keyframes[i1].getCamPosition() == keyframes[i2].getCamPosition()) {
+            kf.setCameraPosition(keyframes[i1].getCamPosition());
+            kf.setCameraLookAt(keyframes[i1].getCamLookAt());
+            kf.setCameraUp(keyframes[i1].getCamUp());
+            kf.setCameraApertureAngele(keyframes[i1].getCamApertureAngle());
+            return kf;
+        }
+
         //interpolate position
         vislib::math::Vector<float, 3> p0(keyframes[i0].getCamPosition());
         vislib::math::Vector<float, 3> p1(keyframes[i1].getCamPosition());
@@ -986,11 +996,6 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             (p2 - p0) * iT +
             (p0 * 2 - p1 * 5 + p2 * 4 - p3) * iT * iT +
             (-p0 + p1 * 3 - p2 * 3 + p3) * iT * iT * iT) * 0.5);
-
-        // Prevent loops if time of keyframes is different, but postion is the same
-        if (p1 == p2) {
-            pk = p1;
-        }
 
         kf.setCameraPosition(Point<float, 3>(pk.X(), pk.Y(), pk.Z()));
 
