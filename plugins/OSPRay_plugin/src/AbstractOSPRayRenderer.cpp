@@ -19,6 +19,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "vislib/sys/SystemInformation.h"
 
 
 
@@ -140,6 +141,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
     if (dvce == NULL) {
         dvce = ospNewDevice("default");
+        ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() -1);
         ospDeviceCommit(dvce);
     }
     ospSetCurrentDevice(dvce);
@@ -699,11 +701,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("pkd_geometry"));
 
-                vertexData = ospNewData(element.partCount * 3, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                vertexData = ospNewData(element.partCount, OSP_FLOAT3, *element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
                 ospSet1f(geo.back(), "radius", element.globalRadius);
-                ospSetData(geo.back(), "ospPositionData", vertexData);
+                ospSetData(geo.back(), "position", vertexData);
 
                 break;
             case geometryTypeEnum::SPHERES:

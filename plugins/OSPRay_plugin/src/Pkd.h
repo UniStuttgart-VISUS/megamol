@@ -95,7 +95,6 @@ private:
     size_t outDataHash;
     unsigned int frameID;
     unsigned int vertexLength;
-    std::vector<std::vector<float>> vd;
 
     std::shared_ptr<ParticleModel> model;
     size_t numParticles;
