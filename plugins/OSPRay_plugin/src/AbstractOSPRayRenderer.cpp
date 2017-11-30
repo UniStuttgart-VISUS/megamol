@@ -679,6 +679,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData voxels     = NULL;
         OSPData isovalues  = NULL;
         OSPData planes     = NULL;
+        OSPData xData      = NULL;
+        OSPData yData      = NULL;
+        OSPData zData      = NULL;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
@@ -753,6 +756,34 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 //ospCommit(colorData);
                 ospSetData(geo.back(), "spheres", vertexData);
                 ospSetData(geo.back(), "colorData", NULL);
+
+                break;
+            case geometryTypeEnum::PBS:
+                if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                {
+                    auto ret = ospLoadModule("ngpf_spheres");
+                    if (ret != OSP_NO_ERROR) {
+                        vislib::sys::Log::DefaultLog.WriteError("Could not load ngpfSpheres module of OSPRay");
+                        throw std::runtime_error("Could not load ngpfSpheres module of OSPRay");
+                    }
+                }
+                geo.push_back(ospNewGeometry("ngpf_spheres"));
+
+                xData = ospNewData(element.partCount, OSP_DOUBLE, element.xData->data(), OSP_DATA_SHARED_BUFFER);
+                yData = ospNewData(element.partCount, OSP_DOUBLE, element.yData->data(), OSP_DATA_SHARED_BUFFER);
+                zData = ospNewData(element.partCount, OSP_DOUBLE, element.zData->data(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(xData);
+                ospCommit(yData);
+                ospCommit(zData);
+
+                ospSetData(geo.back(), "x_data", xData);
+                ospSetData(geo.back(), "y_data", yData);
+                ospSetData(geo.back(), "z_data", zData);
+
+                ospSet1f(geo.back(), "radius", element.globalRadius);
 
                 break;
             case geometryTypeEnum::TRIANGLES:

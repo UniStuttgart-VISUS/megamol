@@ -11,9 +11,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core glad ${ZFP_LIB} ${ZMQ_LIB})
+  set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB})
   include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 

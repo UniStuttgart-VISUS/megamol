@@ -29,7 +29,10 @@ OSPRayStructureContainer::OSPRayStructureContainer() :
  sliceData(NULL),
  clipPlaneData(NULL),
  clipPlaneColor(NULL),
-raw(NULL),
+ raw(NULL),
+ xData(NULL),
+ yData(NULL),
+ zData(NULL),
 type(structureTypeEnum::UNINITIALIZED) { }
 
 OSPRayStructureContainer::~OSPRayStructureContainer() {

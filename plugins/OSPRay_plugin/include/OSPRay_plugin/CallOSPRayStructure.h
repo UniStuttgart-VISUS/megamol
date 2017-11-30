@@ -28,7 +28,8 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS
+    CYLINDERS,
+    PBS
 };
 
 enum volumeTypeEnum {
@@ -68,6 +69,9 @@ public:
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
     std::shared_ptr<const void*> raw;
+    std::shared_ptr<std::vector<double>> xData;
+    std::shared_ptr<std::vector<double>> yData;
+    std::shared_ptr<std::vector<double>> zData;
 
 
     unsigned int voxelCount = voxelCount;
