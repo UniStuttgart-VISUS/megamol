@@ -976,67 +976,75 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
         kf.setSimTime(simT);
 
-        // Skip interpolation of camera parameters if p1 == p2 
-        // => Prevent loops if time of keyframes is different, but postion is the same
-        if (keyframes[i1].getCamPosition() == keyframes[i2].getCamPosition()) {
-            kf.setCameraPosition(keyframes[i1].getCamPosition());
-            kf.setCameraLookAt(keyframes[i1].getCamLookAt());
-            kf.setCameraUp(keyframes[i1].getCamUp());
-            kf.setCameraApertureAngele(keyframes[i1].getCamApertureAngle());
-            return kf;
-        }
+        // ! Skip interpolation of camera parameters if they are equal for ?1 and ?2.
+        // => Prevent interpolation loops if time of keyframes is different, but cam params are the same.
 
         //interpolate position
         vislib::math::Vector<float, 3> p0(keyframes[i0].getCamPosition());
         vislib::math::Vector<float, 3> p1(keyframes[i1].getCamPosition());
         vislib::math::Vector<float, 3> p2(keyframes[i2].getCamPosition());
         vislib::math::Vector<float, 3> p3(keyframes[i3].getCamPosition());
-
         vislib::math::Vector<float, 3> pk = (((p1 * 2.0f) +
             (p2 - p0) * iT +
             (p0 * 2 - p1 * 5 + p2 * 4 - p3) * iT * iT +
             (-p0 + p1 * 3 - p2 * 3 + p3) * iT * iT * iT) * 0.5);
+        if (p1 == p2) {
+            kf.setCameraPosition(keyframes[i1].getCamPosition());
+        }
+        else {
+            kf.setCameraPosition(Point<float, 3>(pk.X(), pk.Y(), pk.Z()));
+        }
 
-        kf.setCameraPosition(Point<float, 3>(pk.X(), pk.Y(), pk.Z()));
-
-        //interpolate lookAt
         vislib::math::Vector<float, 3> l0(keyframes[i0].getCamLookAt());
         vislib::math::Vector<float, 3> l1(keyframes[i1].getCamLookAt());
         vislib::math::Vector<float, 3> l2(keyframes[i2].getCamLookAt());
         vislib::math::Vector<float, 3> l3(keyframes[i3].getCamLookAt());
+        if (l1 == l2) {
+            kf.setCameraLookAt(keyframes[i1].getCamLookAt());
+        }
+        else {
+            //interpolate lookAt
+            vislib::math::Vector<float, 3> lk = (((l1 * 2) +
+                (l2 - l0) * iT +
+                (l0 * 2 - l1 * 5 + l2 * 4 - l3) * iT * iT +
+                (-l0 + l1 * 3 - l2 * 3 + l3) * iT * iT * iT) * 0.5);
 
-        vislib::math::Vector<float, 3> lk = (((l1 * 2) +
-            (l2 - l0) * iT +
-            (l0 * 2 - l1 * 5 + l2 * 4 - l3) * iT * iT +
-            (-l0 + l1 * 3 - l2 * 3 + l3) * iT * iT * iT) * 0.5);
+            kf.setCameraLookAt(Point<float, 3>(lk.X(), lk.Y(), lk.Z()));
+        }
 
-        kf.setCameraLookAt(Point<float, 3>(lk.X(), lk.Y(), lk.Z()));
-
-        //interpolate up
         vislib::math::Vector<float, 3> u0 = p0 + keyframes[i0].getCamUp();
         vislib::math::Vector<float, 3> u1 = p1 + keyframes[i1].getCamUp();
         vislib::math::Vector<float, 3> u2 = p2 + keyframes[i2].getCamUp();
         vislib::math::Vector<float, 3> u3 = p3 + keyframes[i3].getCamUp();
+        if (u1 == u2) {
+            kf.setCameraUp(keyframes[i1].getCamUp());
+        }
+        else {
+            //interpolate up
+            vislib::math::Vector<float, 3> uk = (((u1 * 2) +
+                (u2 - u0) * iT +
+                (u0 * 2 - u1 * 5 + u2 * 4 - u3) * iT * iT +
+                (-u0 + u1 * 3 - u2 * 3 + u3) * iT * iT * iT) * 0.5);
 
-        vislib::math::Vector<float, 3> uk = (((u1 * 2) +
-            (u2 - u0) * iT +
-            (u0 * 2 - u1 * 5 + u2 * 4 - u3) * iT * iT +
-            (-u0 + u1 * 3 - u2 * 3 + u3) * iT * iT * iT) * 0.5);
-
-        kf.setCameraUp(uk - pk);
+            kf.setCameraUp(uk - pk);
+        }
 
         //interpolate aperture angle
         float a0 = keyframes[i0].getCamApertureAngle();
         float a1 = keyframes[i1].getCamApertureAngle();
         float a2 = keyframes[i2].getCamApertureAngle();
         float a3 = keyframes[i3].getCamApertureAngle();
+        if (a1 == a2) {
+            kf.setCameraApertureAngele(keyframes[i1].getCamApertureAngle());
+        }
+        else {
+            a0 = (((a1 * 2) +
+                (a2 - a0) * iT +
+                (a0 * 2 - a1 * 5 + a2 * 4 - a3) * iT * iT +
+                (-a0 + a1 * 3 - a2 * 3 + a3) * iT * iT * iT) * 0.5f);
 
-        a0 = (((a1 * 2) +
-            (a2 - a0) * iT +
-            (a0 * 2 - a1 * 5 + a2 * 4 - a3) * iT * iT +
-            (-a0 + a1 * 3 - a2 * 3 + a3) * iT * iT * iT) * 0.5f);
-
-        kf.setCameraApertureAngele(a0);
+            kf.setCameraApertureAngele(a0);
+        }
 
         return kf;
     }
