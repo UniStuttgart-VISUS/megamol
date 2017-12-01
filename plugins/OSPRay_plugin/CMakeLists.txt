@@ -32,6 +32,7 @@ if(BUILD_OSPRAY_PLUGIN)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-narrowing -Wno-unknown-pragmas -Wstrict-aliasing=1 -ffast-math  -fPIC")
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -45,8 +46,8 @@ if(BUILD_OSPRAY_PLUGIN)
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
     foreach(lib ${OSPRAY_LIBRARIES})
       get_filename_component(dir ${lib} DIRECTORY)
-      get_filename_component(libname ${lib} NAME)
-      install(DIRECTORY ${dir} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "${libname}*")
+      file(GLOB OSP_LIB_FILES "${dir}/lib*")
+      install(FILES ${OSP_LIB_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
     endforeach()
   endif()
 
