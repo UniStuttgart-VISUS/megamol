@@ -254,7 +254,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
 
     // Set default image width ... e.g. depending on viewport size
-    float fixImgWidth = imageWidth; // vpW* 1.0f;
+    float fixImgWidth = vpW* 1.0f;
 
     switch (cor) {
     case(WatermarkRenderer::TOP_LEFT):
@@ -366,8 +366,8 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
         if ((size = this->loadFile(filename, &buf)) > 0) {
             if (pbc.Load(buf, size)) {
                 img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-                texSize->SetX(img.Width());
-                texSize->SetY(img.Height());
+                texSize->SetX(static_cast<vislib::graphics::SceneSpaceType>(img.Width()));
+                texSize->SetY(static_cast<vislib::graphics::SceneSpaceType>(img.Height()));
                 // Set alpha to zero for black background
                 //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
