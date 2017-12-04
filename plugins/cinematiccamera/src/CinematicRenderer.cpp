@@ -128,6 +128,12 @@ bool CinematicRenderer::create(void) {
         return false;
     }
 
+    // initialise font
+    if (!this->theFont.Initialise()) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
+        return false;
+    }
+
 	return true;
 }
 
@@ -471,10 +477,7 @@ bool CinematicRenderer::Render(Call& call) {
     glDisableClientState(GL_COLOR_ARRAY);
 
     glColor4fv(fgColor);
-    if (!this->theFont.Initialise()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
-        return false;
-    }
+
     float fontSize = (float)(vpWidth)*0.03f; // 3% of viewport width
     vislib::StringA tmpStr = "";
 
@@ -486,22 +489,22 @@ bool CinematicRenderer::Render(Call& call) {
             strHeight = 20.0f * this->theFont.LineHeight(fontSize);
         }
         tmpStr += "-----[ GLOBAL ]-----\n";
-        tmpStr += "[h] Hide help text.\n";
         tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[d] Delete selected Keyframe.\n";
-        tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
-        tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[r] Toggle rendering complete animation.\n";
-        tmpStr += "[space] Toggle animation preview.\n";
-        tmpStr += "[v] Set same velocity between all Keyframes.\n";
         tmpStr += "[c] Apply cinematic view to selected Keyframe.\n";
-        tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
-        tmpStr += "[tab] Move or Selection mode for left mouse button.\n";
-        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
-        tmpStr += "-----[ TIME LINES ]-----\n";
+        tmpStr += "[d] Delete selected Keyframe.\n";
         tmpStr += "[f] Snap keyframes to animation frames.\n";
         tmpStr += "[g] Snap keyframes to simulation frames.\n";
+        tmpStr += "[h] Hide help text.\n";
+        tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
+        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
+        tmpStr += "[r] Toggle rendering complete animation.\n";
+        tmpStr += "[s] Save Keyframes to file.\n";
         tmpStr += "[t] Straighten tangent between two Keyframes.\n";
+        tmpStr += "[v] Set same velocity between all Keyframes.\n";
+        tmpStr += "[space] Toggle animation preview.\n";
+        tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
+        tmpStr += "[tab] Toggle Selection mode for manipulators.\n";
+        tmpStr += "-----[ TIME LINES ]-----\n";
         tmpStr += "[left mouse button] Select Keyframe.\n";
         tmpStr += "[right mouse button] Drag & Drop Keyframe.\n";
         tmpStr += "[middle mouse button] Time axis scaling at mouse position.\n";

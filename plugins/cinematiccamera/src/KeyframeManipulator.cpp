@@ -72,8 +72,8 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
     this->worldCamDir         = wcd;
 
     // Update viewport --------------------------------------------------------
-    this->viewportSize.SetHeight(vph);
-    this->viewportSize.SetWidth(vpw);
+    this->viewportSize.SetHeight(static_cast<int>(vph));
+    this->viewportSize.SetWidth(static_cast<int>(vpw));
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
