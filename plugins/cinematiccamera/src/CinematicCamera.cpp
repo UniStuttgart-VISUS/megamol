@@ -18,7 +18,7 @@
 #include "CallCinematicCamera.h"
 #include "KeyframeKeeper.h"
 #include "CinematicView.h"
-
+#include "ReplacementRenderer.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -50,6 +50,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::TimeLineRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::KeyframeKeeper>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicView>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::ReplacementRenderer>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription < megamol::cinematiccamera::CallCinematicCamera>();

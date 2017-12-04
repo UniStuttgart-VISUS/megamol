@@ -521,7 +521,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         timeStep += this->simSegmValue;
     }
     // selected keyframe info
-    glColor4fv(skColor);
+    glColor4fv(fgColor);
     float aT = skf.getAnimTime();
     float aF = skf.getAnimTime() * (float)(this->fps);;
     float sT = skf.getSimTime()*this->simTotalTime;
@@ -535,7 +535,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->simAxisEndPos.Y() + this->keyfMarkSize,
                              strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
     // axis captions
-    glColor4fv(skColor);
     tmpStr = "animation time / frames ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen/2.0f - strWidth/2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,

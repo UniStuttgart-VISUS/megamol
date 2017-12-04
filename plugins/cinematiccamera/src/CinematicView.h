@@ -16,6 +16,8 @@
 #include "CinematicCamera/CinematicCamera.h"
 
 #include "mmcore/view/View3D.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/CallRender3D.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
@@ -201,6 +203,7 @@ namespace megamol {
             /**********************************************************************
             * callback
             **********************************************************************/
+
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;
 
