@@ -286,8 +286,8 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
                 float m = (p1.Y() - p2.Y()) / (p1.X() - p2.X());
                 float b = m * (-p1.X()) + p1.Y();
                 // Get indices
-                int iKf1 = this->keyframes.IndexOf(this->selectedKeyframe);
-                int iKf2 = this->keyframes.IndexOf(this->simTangentKf);
+                int iKf1 = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
+                int iKf2 = static_cast<int>(this->keyframes.IndexOf(this->simTangentKf));
                 if (iKf1 > iKf2) {
                     int tmp = iKf1;
                     iKf1 = iKf2;
@@ -295,7 +295,7 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
                 }
                 // Consider only keyframes lying between the two selected ones
                 float newSimTime;
-                for (unsigned int i = iKf1 + 1; i < iKf2; i++) {
+                for (int i = iKf1 + 1; i < iKf2; i++) {
                     newSimTime = m * (this->keyframes[i].getAnimTime()) + b;
                     this->keyframes[i].setSimTime(newSimTime);
                 }
@@ -1060,7 +1060,8 @@ void KeyframeKeeper::saveKeyframes() {
         vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Save Keyframes] No filename given. Using default filename.");
 
         time_t t = std::time(0);  // get time now
-        struct tm * now = std::localtime(&t);
+        struct tm *now = new struct tm;
+        localtime_s(now, &t);
         this->filename.Format("keyframes_%i%i%i-%i%i%i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
         this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 

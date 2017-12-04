@@ -25,9 +25,14 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 #include "Keyframe.h"
 #include "png.h"
+
+// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -103,7 +108,16 @@ namespace megamol {
             * variables
             **********************************************************************/
 
+            // font rendering
+#ifdef USE_SIMPLE_FONT
+            vislib::graphics::gl::SimpleFont  theFont;
+#else
+            vislib::graphics::gl::OutlineFont theFont;
+#endif
+
             clock_t                                 deltaAnimTime;
+            clock_t                                 deltaRipPrompt; // Rip = rendering in progress
+
             Keyframe                                shownKeyframe;
             bool                                    playAnim;
 
