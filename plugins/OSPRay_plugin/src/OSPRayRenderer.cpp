@@ -400,8 +400,10 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
     }
     if (frameCnt == 0) {
         frameCnt = 1;
-        float scale = 1.0f;
-        finalBox.Clear();
+        //float scale = 1.0f;
+        //finalBox.Clear();
+        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
+        finalBox.MakeScaledWorld(scale);
     } else {
         float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
         finalBox.MakeScaledWorld(scale);

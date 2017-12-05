@@ -69,9 +69,9 @@ public:
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
     std::shared_ptr<const void*> raw;
-    std::shared_ptr<std::vector<double>> xData;
-    std::shared_ptr<std::vector<double>> yData;
-    std::shared_ptr<std::vector<double>> zData;
+    std::shared_ptr<std::vector<float>> xData;
+    std::shared_ptr<std::vector<float>> yData;
+    std::shared_ptr<std::vector<float>> zData;
 
 
     unsigned int voxelCount = voxelCount;

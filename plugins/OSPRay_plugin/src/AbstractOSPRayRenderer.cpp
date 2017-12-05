@@ -772,19 +772,22 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 geo.push_back(ospNewGeometry("ngpf_spheres"));
 
-                xData = ospNewData(element.partCount, OSP_DOUBLE, element.xData->data(), OSP_DATA_SHARED_BUFFER);
-                yData = ospNewData(element.partCount, OSP_DOUBLE, element.yData->data(), OSP_DATA_SHARED_BUFFER);
-                zData = ospNewData(element.partCount, OSP_DOUBLE, element.zData->data(), OSP_DATA_SHARED_BUFFER);
-                ospCommit(xData);
-                ospCommit(yData);
-                ospCommit(zData);
+                {
 
-                ospSetData(geo.back(), "x_data", xData);
-                ospSetData(geo.back(), "y_data", yData);
-                ospSetData(geo.back(), "z_data", zData);
+                    xData = ospNewData(element.partCount, OSP_FLOAT, element.xData->data());
+                    yData = ospNewData(element.partCount, OSP_FLOAT, element.yData->data());
+                    zData = ospNewData(element.partCount, OSP_FLOAT, element.zData->data());
 
-                ospSet1f(geo.back(), "radius", element.globalRadius);
+                    ospCommit(xData);
+                    ospCommit(yData);
+                    ospCommit(zData);
 
+                    ospSetData(geo.back(), "x_data", xData);
+                    ospSetData(geo.back(), "y_data", yData);
+                    ospSetData(geo.back(), "z_data", zData);
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {

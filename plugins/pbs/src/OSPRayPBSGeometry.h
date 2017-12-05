@@ -69,6 +69,9 @@ private:
 
 
     //data objects
+    std::vector<float> x_data_float;
+    std::vector<float> y_data_float;
+    std::vector<float> z_data_float;
 
 };
 

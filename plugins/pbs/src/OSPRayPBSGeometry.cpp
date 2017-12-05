@@ -62,15 +62,20 @@ bool OSPRayPBSGeometry::readData(megamol::core::Call &call) {
         return false;
     }
 
+    x_data_float = std::vector<float>(x_data->begin(), x_data->end());
+    y_data_float = std::vector<float>(y_data->begin(), y_data->end());
+    z_data_float = std::vector<float>(z_data->begin(), z_data->end());
+
+
     unsigned int partCount = x_data->size();
     float globalRadius = radiusSlot.Param<core::param::FloatParam>()->Value();
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::PBS;
-    this->structureContainer.xData = std::move(x_data);
-    this->structureContainer.yData = std::move(y_data);
-    this->structureContainer.zData = std::move(z_data);
+    this->structureContainer.xData = std::make_shared<std::vector<float>>(std::move(x_data_float));
+    this->structureContainer.yData = std::make_shared<std::vector<float>>(std::move(y_data_float));
+    this->structureContainer.zData = std::make_shared<std::vector<float>>(std::move(z_data_float));
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
 
@@ -116,7 +121,27 @@ bool OSPRayPBSGeometry::getExtends(megamol::core::Call &call) {
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
                                          // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
     (*cd)(1);
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    (*cd)(0);
+    // local bounding box is not valid if more than one chunk is loaded!
+    //auto localBB = cd->GetLocalBBox().lock();
+    //vislib::math::Cuboid<float> cuboid(static_cast<float>(localBB.get()[0]),
+    //                                 static_cast<float>(localBB.get()[1]),
+    //                                 static_cast<float>(localBB.get()[2]),
+    //                                 static_cast<float>(localBB.get()[3]),
+    //                                 static_cast<float>(localBB.get()[4]),
+    //                                 static_cast<float>(localBB.get()[5]));
+    auto globalBB = cd->GetGlobalBBox().lock();
+    vislib::math::Cuboid<float> cuboid(static_cast<float>(globalBB.get()[0]),
+                                       static_cast<float>(globalBB.get()[1]),
+                                       static_cast<float>(globalBB.get()[2]),
+                                       static_cast<float>(globalBB.get()[3]),
+                                       static_cast<float>(globalBB.get()[4]),
+                                       static_cast<float>(globalBB.get()[5]));
+    megamol::core::BoundingBoxes bbox;
+    bbox.Clear();
+    bbox.SetObjectSpaceBBox(cuboid);
+    bbox.SetObjectSpaceClipBox(cuboid);
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(std::move(bbox));
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 
