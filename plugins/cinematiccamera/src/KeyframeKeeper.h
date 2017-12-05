@@ -200,6 +200,11 @@ namespace megamol {
             core::param::ParamSlot  snapSimFramesParam;
             /** */
             core::param::ParamSlot  simTangentParam;
+
+            /** */
+            core::param::ParamSlot  addFixedAnimTimeParam;
+            /** */
+            core::param::ParamSlot  addFixedSimTimeParam;
 		};
 
 		/** Description class typedef */
