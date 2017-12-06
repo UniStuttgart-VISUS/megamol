@@ -110,9 +110,19 @@ TimeLineRenderer::~TimeLineRenderer(void) {
 */
 bool TimeLineRenderer::create(void) {
 	
-    this->LoadTexture("arrow.png");  // this->markerTextures[0]
-	
-	return true;
+    // Initialise font
+    if (!this->theFont.Initialise()) {
+        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
+        return false;
+    }
+
+    // Initialise texture
+    if (!this->LoadTexture("arrow.png")) {
+        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [Render] Couldn't initialize the texture.");
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -207,12 +217,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->fontSize = this->rulerFontParam.Param<param::FloatParam>()->Value();
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
-    }
-
-    // Initialise font
-    if (!this->theFont.Initialise()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
-        return false;
     }
 
     vislib::StringA tmpStr;
@@ -521,7 +525,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         timeStep += this->simSegmValue;
     }
     // selected keyframe info
-    glColor4fv(skColor);
+    glColor4fv(fgColor);
     float aT = skf.getAnimTime();
     float aF = skf.getAnimTime() * (float)(this->fps);;
     float sT = skf.getSimTime()*this->simTotalTime;
@@ -535,7 +539,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->simAxisEndPos.Y() + this->keyfMarkSize,
                              strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
     // axis captions
-    glColor4fv(skColor);
     tmpStr = "animation time / frames ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen/2.0f - strWidth/2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,
@@ -639,12 +642,14 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                     else {
                         ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
                     }
-                    // Set hit keyframe as selected
-                    if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
                     hit = true;
                 }
             }
 		}
+        if (hit) {
+            // Set hit keyframe as selected
+            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        }
 
         // Get interpolated keyframe selection
         if (!hit && ((x >= this->axisStartPos.X()) && (x <= this->animAxisEndPos.X()))) {
@@ -662,21 +667,39 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
         //Check all keyframes if they are hit
         this->dragDropActive = false;
         float animAxisX, posX;
+
+        bool hit = false;
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
             animAxisX = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
-                float posX = this->axisStartPos.X() + animAxisX;
-                if ((x < (posX + (this->keyfMarkSize / 2.0f))) && (x > (posX - (this->keyfMarkSize / 2.0f)))) {
-                    // Store hit keyframe locally
-                    this->dragDropKeyframe = (*keyframes)[i];
-                    this->dragDropActive = true;
-                    this->dragDropAxis = 0;
-                    this->lastMousePos.Set(x, y);
-                    ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
-                    if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
-                    break; // Exit loop on hit
+                posX = this->axisStartPos.X() + animAxisX;
+                if ((x < (posX + (this->keyfMarkSize / 2.0f))) && (x >(posX - (this->keyfMarkSize / 2.0f)))) {
+                    // If another keyframe is already hit, check which keyframe is closer to mouse position
+                    if (hit) {
+                        float deltaX = vislib::math::Abs(posX - x);
+                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().getAnimTime() * this->animLenTimeFrac;
+                        if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                            posX = this->axisStartPos.X() + animAxisX;
+                            if (deltaX < vislib::math::Abs(posX - x)) {
+                                this->dragDropKeyframe = (*keyframes)[i];
+                                ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                            }
+                        }
+                    }
+                    else {
+                        this->dragDropKeyframe = (*keyframes)[i];
+                        ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                    }
+                    hit = true;
                 }
             }
+        }
+        if (hit) {
+            // Store hit keyframe locally
+            this->dragDropActive = true;
+            this->dragDropAxis = 0;
+            this->lastMousePos.Set(x, y);
+            if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
         }
     }
     else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {

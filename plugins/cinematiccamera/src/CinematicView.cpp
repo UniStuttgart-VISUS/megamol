@@ -18,6 +18,8 @@
 #include "vislib/Trace.h"
 #include "vislib/sys/Path.h"
 
+#include <ctime>
+
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
 
@@ -30,11 +32,14 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+#ifndef USE_SIMPLE_FONT
+    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
+#endif // USE_SIMPLE_FONT
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
 	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resHeightParam(           "04_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    resWidthParam(            "05_cinematicWidth","The width resolution of the cineamtic view to render."),
+    resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
+    resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     shownKeyframe()
     {
@@ -45,6 +50,7 @@ CinematicView::CinematicView(void) : View3D(),
     // init variables
 
     this->deltaAnimTime   = clock();
+    this->deltaRipPrompt  = clock();
     this->playAnim        = false;
     this->sbSide          = CinematicView::SkyboxSides::SKYBOX_NONE;
     this->cineWidth       = 1920;
@@ -226,6 +232,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->renderParam.ResetDirty();
         if (!this->rendering) {
             this->rtf_setup();
+            this->deltaRipPrompt = clock();
         }
         else {
             this->rtf_finish();
@@ -326,19 +333,26 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
     else {
         // Calculate reduced fbo width and height
-        fboWidth = vpWidth;
-        fboHeight = vpHeight;
-        if (cineRatio > vpRatio) {
-            fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+        if ((this->cineWidth < vpWidth) && (this->cineHeight < vpHeight)) {
+            fboWidth  = this->cineWidth;
+            fboHeight = this->cineHeight;
         }
-        else if (cineRatio < vpRatio) {
-            fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
-        }
-        // Check for viewport changes
-        if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
-            this->vpW = vpWidth;
-            this->vpH = vpHeight;
-            this->resetFbo = true;
+        else {
+            fboWidth = vpWidth;
+            fboHeight = vpHeight;
+
+            if (cineRatio > vpRatio) {
+                fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+            }
+            else if (cineRatio < vpRatio) {
+                fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
+            }
+            // Check for viewport changes
+            if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
+                this->vpW = vpWidth;
+                this->vpH = vpHeight;
+                this->resetFbo = true;
+            }
         }
     }
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
@@ -355,7 +369,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->rtf_create_frame();
     }
 
-// Suppress TRACE output of fbo.Enable() and fbo.Create()
+        // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
@@ -375,14 +389,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         throw vislib::Exception("[CINEMATIC VIEW] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
-// Reset TRACE output level
+        // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    //GLenum callOutBuffer = cr3d->OutputBuffer();
-    cr3d->SetOutputBuffer(this->fbo.GetID());
+    cr3d->SetOutputBuffer(&this->fbo);
 
     this->overrideCall = cr3d;
 
@@ -391,12 +404,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     this->fbo.Disable();
 
-    //cr3d->SetOutputBuffer(callOutBuffer);
-
     // Reset override render call
     this->overrideCall = NULL;
     // Reset override viewport
-    this->overrideViewport = NULL; 
+    this->overrideViewport = NULL;
+
 
     // Write frame to file
     if (this->rendering) {
@@ -456,11 +468,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Draw letter box  -------------------------------------------------------
 
-    // Color stuff ------------------------------------------------------------
+    // Color stuff 
     const float *bgColor = this->bkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    // Adapt colors depending on  Lightness
+    // Adapt colors depending on lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L > 0.5f) {
         for (unsigned int i = 0; i < 3; i++) {
@@ -492,11 +504,67 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         glVertex2i(vpWidth,     vpHeight - y);
     glEnd();
 
+    // Draw "rendering in progress"  -------------------------------------------------------
+
+    if (this->rendering) {
+
+        clock_t tmpTime = clock();
+        clock_t cTime = tmpTime - this->deltaRipPrompt;
+
+        float intervall = 0.5f * (float)(CLOCKS_PER_SEC); // in seconds ...
+
+        if ((float)cTime > (2.0f * intervall)) {
+            this->deltaRipPrompt = tmpTime;
+        }
+
+        if ((float)cTime > intervall) {
+
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glEnable(GL_POLYGON_SMOOTH);
+
+            // initialise font
+            if (!this->theFont.Initialise()) {
+                vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [Render] Couldn't initialize the font.");
+                return;
+            }
+
+            // Text to be shown while rendering is in progress:
+            vislib::StringA tmpStr = "rendering in progress ... ";
+
+            float fontSize  = (float)(vpWidth)*0.05f; // 3% of viewport width
+            float strWidth  = this->theFont.LineWidth(fontSize, tmpStr);
+            float strHeight = this->theFont.LineHeight(fontSize);
+            float xPos      = ((float)vpWidth - strWidth) / 2.0f;
+            float yPos      = (float)(vpHeight);
+
+            glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+            glBegin(GL_QUADS);
+                glVertex2f(xPos,                    yPos);
+                glVertex2f(xPos,                    yPos - strHeight);
+                glVertex2f((float)(vpWidth) - xPos, yPos - strHeight);
+                glVertex2f((float)(vpWidth) - xPos, yPos);
+            glEnd();
+
+            glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+            this->theFont.DrawString(xPos, yPos, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+            glDisable(GL_BLEND);
+            glDisable(GL_POLYGON_SMOOTH);
+        }
+    }
+
+    // ------------------------------------------------------------------------
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     
+
     // Reset opengl
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
@@ -538,7 +606,8 @@ bool CinematicView::rtf_setup() {
     // Create new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
-    struct tm *now = std::localtime(&t);
+    struct tm *now = new struct tm;
+    localtime_s(now, &t);
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
@@ -741,3 +810,5 @@ bool CinematicView::setSimTime(float st) {
 
     return true;
 }
+
+

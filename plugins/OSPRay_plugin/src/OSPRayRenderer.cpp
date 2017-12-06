@@ -137,22 +137,27 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     if (!os->fillStructureMap()) return false;
     // check if data has changed
     data_has_changed = false;
+    material_has_changed = false;
     for (auto element : this->structureMap) {
         auto structure = element.second;
         if (structure.dataChanged) {
             data_has_changed = true;
         }
+        if (structure.materialChanged) {
+            material_has_changed = true;
+        }
     }
 
     // Light setup
     CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+    light_has_changed = false;
     if (gl != NULL) {
         gl->setLightMap(&lightMap);
         gl->fillLightMap();
         for (auto element : this->lightMap) {
             auto light = element.second;
             if (light.dataChanged) {
-                data_has_changed = true;
+                light_has_changed = true;
             }
         }
     }
@@ -210,6 +215,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
     if (data_has_changed ||
+        material_has_changed ||
+        light_has_changed ||
         cam_has_changed ||
         renderer_has_changed ||
         !(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
@@ -221,6 +228,9 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             this->InterfaceIsDirty()) {
             if (!this->fillWorld()) return false;
             ospCommit(world);
+        }
+        if (material_has_changed && !data_has_changed) {
+            this->changeMaterial();
         }
         this->InterfaceResetDirty();
         time = cr->Time();
