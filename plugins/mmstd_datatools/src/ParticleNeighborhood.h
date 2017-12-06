@@ -87,18 +87,12 @@ namespace datatools {
 
             typedef float coord_t;
 
-            directionalPointcloud(megamol::core::moldyn::DirectionalParticleDataCall *dat, std::vector<size_t> &indices, bool cycleX, bool cycleY, bool cycleZ) : dat(dat), indices(indices),
-                cycleX(cycleX), cycleY(cycleY), cycleZ(cycleZ) {
+            directionalPointcloud(megamol::core::moldyn::DirectionalParticleDataCall *dat, std::vector<size_t> &indices) 
+                    : dat(dat), indices(indices) {
                 // intentionally empty
             }
             ~directionalPointcloud() {
                 // intentionally empty
-            }
-
-            void SetCyclicBoundary(bool cycleX, bool cycleY, bool cycleZ) {
-                this->cycleX = cycleX;
-                this->cycleY = cycleY;
-                this->cycleZ = cycleZ;
             }
 
             // Must return the number of data points
@@ -110,39 +104,11 @@ namespace datatools {
             inline coord_t kdtree_distance(const coord_t *p1, const size_t idx_p2, size_t /*size*/) const {
                 float const *p2 = get_position(idx_p2);
 
-                //const coord_t d0 = p1[0] - p2[0];
-                //const coord_t d1 = p1[1] - p2[1];
-                //const coord_t d2 = p1[2] - p2[2];
+                const coord_t d0 = p1[0] - p2[0];
+                const coord_t d1 = p1[1] - p2[1];
+                const coord_t d2 = p1[2] - p2[2];
 
-                coord_t dx, dy, dz;
-                const auto& bbox = dat->AccessBoundingBoxes().ObjectSpaceBBox();
-                coord_t width = bbox.Width();
-                coord_t height = bbox.Height();
-                coord_t depth = bbox.Depth();
-
-                // dr = np.remainder(r1 - r2 + L/2., L) - L/2.
-                // remainder = x1 - floor(x1 / x2) * x2
-                dx = p2[0] - p1[0];
-                if (this->cycleX && fabs(dx) > width / 2) {
-                    float x1 = p1[0] - p2[0] + width / 2;
-                    dx = x1 - floor(x1 / width) * width;
-                    dx -= width / 2;
-                }
-                dy = p2[1] - p1[1];
-                if (this->cycleY && fabs(dy) > height / 2) {
-                    float y1 = p1[1] - p2[1] + height / 2;
-                    dy = y1 - floor(y1 / height) * height;
-                    dy -= height / 2;
-                }
-                dz = p2[2] - p1[2];
-                if (this->cycleZ && fabs(dz) > depth / 2) {
-                    float z1 = p1[2] - p2[2] + depth / 2;
-                    dz = z1 - floor(z1 / depth) * depth;
-                    dz -= depth / 2;
-                }
-
-                //return d0 * d0 + d1 * d1 + d2 * d2;
-                return dx * dx + dy*dy + dz*dz;
+                return d0 * d0 + d1 * d1 + d2 * d2;
             }
 
             // Returns the dim'th component of the idx'th point in the class:
