@@ -9,10 +9,12 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "vislib/sys/Log.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>
 #include <cassert>
+#include <limits>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -25,10 +27,11 @@ datatools::ParticleThermometer::ParticleThermometer(void)
         cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction"),
         cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction"),
         radiusSlot("radius", "the radius in which to look for neighbors"),
+        minTempSlot("minTemp", "the detected minimum temperature"),
+        maxTempSlot("maxTemp", "the detected maximum temperature"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
-        datahash(0), lastTime(-1), newColors(), minCol(0.0f), maxCol(1.0f), radius(-1.0),
-        allParts(), particleTree(nullptr), myPts(nullptr) {
+        datahash(0), lastTime(-1), newColors(), allParts(), particleTree(nullptr), myPts(nullptr) {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclXSlot);
@@ -41,6 +44,12 @@ datatools::ParticleThermometer::ParticleThermometer(void)
 
     this->radiusSlot.SetParameter(new core::param::FloatParam(2.0));
     this->MakeSlotAvailable(&this->radiusSlot);
+
+    this->minTempSlot.SetParameter(new core::param::FloatParam(0));
+    this->MakeSlotAvailable(&this->minTempSlot);
+
+    this->maxTempSlot.SetParameter(new core::param::FloatParam(0));
+    this->MakeSlotAvailable(&this->maxTempSlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermometer::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermometer::getExtentCallback);
@@ -68,6 +77,14 @@ bool datatools::ParticleThermometer::create(void) {
 }
 
 
+bool isListOK(megamol::core::moldyn::DirectionalParticleDataCall *in, unsigned int i) {
+    using megamol::core::moldyn::DirectionalParticleDataCall;
+    auto& pl = in->AccessParticles(i);
+    return pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ
+        || DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR;
+}
+
+
 /*
 * datatools::ParticleThermometer::release
 */
@@ -85,9 +102,11 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     if (outDPDC != nullptr) out = outDPDC;
 
     unsigned int time = out->FrameID();
+    unsigned int plc = in->GetParticleListCount();
+    float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
+    size_t allpartcnt = 0;
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
-        // load previous Frame
         in->SetFrameID(time, true);
 
         if (!(*in)(0)) {
@@ -96,23 +115,23 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         }
 
         size_t totalParts = 0;
-        size_t plc = in->GetParticleListCount();
+        plc = in->GetParticleListCount();
+
         for (unsigned int i = 0; i < plc; i++) {
-            if (in->AccessParticles(i).GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ
-                || in->AccessParticles(i).GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)
+            if (isListOK(in, i))
                 totalParts += in->AccessParticles(i).GetCount();
         }
 
-        this->newColors.resize(totalParts);
+        this->newColors.resize(totalParts, theRadius);
 
+        allParts.clear();
         allParts.reserve(totalParts);
 
         // we could now filter particles according to something. but currently we need not.
-        size_t allpartcnt = 0;
+        allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if ((pl.GetVertexDataType() != DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)
-                && (pl.GetVertexDataType() != DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)) {
+            if (!isListOK(in, pli)) {
                 continue;
             }
 
@@ -123,80 +142,124 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
             vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
             const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
-            int part_cnt = static_cast<int>(pl.GetCount());
+            UINT64 part_cnt = pl.GetCount();
 
             for (int part_i = 0; part_i < part_cnt; ++part_i) {
-                const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
                 allParts.push_back(allpartcnt + part_i);
             }
-            allpartcnt += static_cast<size_t>(pl.GetCount());
+            allpartcnt += pl.GetCount();
         }
 
         // allocate nanoflann data structures for border
         assert(allpartcnt == totalParts);
-        // TODO: can I really keep the Kd-Tree when cyclicness is changed? I'd say why not. But who knows the implementation!
-        this->myPts = std::make_shared<directionalPointcloud>(in, allParts,
-            this->cyclXSlot.Param<core::param::BoolParam>()->Value(), this->cyclYSlot.Param<core::param::BoolParam>()->Value(), this->cyclZSlot.Param<core::param::BoolParam>()->Value());
+        this->myPts = std::make_shared<directionalPointcloud>(in, allParts);
 
+        vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: building acceleration structure...");
         particleTree = std::make_shared<my_kd_tree_t>(3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
+        vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: done.");
+
+        this->datahash = in->DataHash();
+        this->lastTime = time;
+        this->radiusSlot.ForceSetDirty();
     }
-    float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
-    if (radius != theRadius) {
+
+    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()) {
         size_t allpartcnt = 0;
         size_t cursor = 0;
-        float v[3];
-        float v2[3];
-        float vel[3];
-        float vel2[3];
-        size_t plc = in->GetParticleListCount();
+        float theVertex[3];
+        float theTemperature[3];
+
         std::vector<std::pair<size_t, float> > ret_matches;
+        std::vector<std::pair<size_t, float> > ret_localMatches;
         nanoflann::SearchParams params;
         params.sorted = false;
-        // TODO: can I really keep the Kd-Tree when cyclicness is changed? I'd say why not. But who knows the implementation! see above.
-        this->myPts->SetCyclicBoundary(this->cyclXSlot.Param<core::param::BoolParam>()->Value(),
-            this->cyclYSlot.Param<core::param::BoolParam>()->Value(), this->cyclZSlot.Param<core::param::BoolParam>()->Value());
 
+        // final computation
+        bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+        bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+        bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+        auto bbox = in->AccessBoundingBoxes().ObjectSpaceBBox();
+        //bbox.EnforcePositiveSize(); // paranoia
+        auto bbox_cntr = bbox.CalcCenter();
+
+        ret_matches.reserve(100);
+
+        vislib::sys::ConsoleProgressBar cpb;
+        const int progressDivider = 100;
+        cpb.Start("measuring temperature", static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
+
+        float minTemp = FLT_MAX;
+        float maxTemp = 0;
+
+        allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if ((pl.GetVertexDataType() != DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ)
-                && (pl.GetVertexDataType() != DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)) {
+            if (!isListOK(in, pli)) {
                 continue;
             }
-            unsigned int vert_stride = 0;
-            if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-            else if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-            else continue;
-            vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
-            const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
             size_t part_cnt = pl.GetCount();
             for (size_t part_i = 0; part_i < part_cnt; ++part_i) {
-                // did we consider this particle?
-                while (allParts[cursor] < allpartcnt + part_i) cursor++;
-                if (allParts[cursor] == allpartcnt + part_i) {
-                    const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
-                    const float *v2 = myPts->get_position(allpartcnt + part_i);
 
-                    particleTree->radiusSearch(v, theRadius, ret_matches, params);
-                    // does the query return the point itself? YES!
-                    for (int i = 0; i < ret_matches.size(); ++i) {
-                        if (ret_matches[i].first == allpartcnt + part_i) {
-                            // this is me
-                        } else {
-                            // these are others
-                            // add to the running average of velocities
+                size_t myIndex = part_i + allpartcnt;
+                ret_matches.clear();
+                const float *vertexBase = this->myPts->get_position(myIndex);
+                const float *velocityBase = this->myPts->get_velocity(myIndex);
+
+                for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
+                    for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
+                        for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+
+                            theVertex[0] = vertexBase[0];
+                            theVertex[1] = vertexBase[1];
+                            theVertex[2] = vertexBase[2];
+                            if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
+                            if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
+                            if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+
+                            particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                            ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(), 
+                                [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
                         }
                     }
-                } else {
-                    newColors[allpartcnt + part_i] = 0.0f;
                 }
+
+                //sort(ret_matches.begin(), ret_matches.end());
+                ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
+
+                int n = 1;
+                float averageX = 0;
+                float averageY = 0;
+                float averageZ = 0;
+                for (auto &m : ret_matches) {
+                    const float *velo = myPts->get_velocity(m.first);
+                    averageX += (velo[0] - averageX) / n;
+                    averageY += (velo[1] - averageY) / n;
+                    averageZ += (velo[2] - averageZ) / n;
+                    ++n;
+                }
+                theTemperature[0] = averageX - velocityBase[0];
+                theTemperature[1] = averageY - velocityBase[1];
+                theTemperature[2] = averageZ - velocityBase[2];
+                float tempMag = sqrtf(theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2]);
+                newColors[myIndex] = tempMag;
+                if (tempMag < minTemp) minTemp = tempMag;
+                if (tempMag > maxTemp) maxTemp = tempMag;
+                if ((myIndex % progressDivider) == 0) cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(myIndex / progressDivider));
             }
-            allpartcnt += part_cnt;
+            allpartcnt += pl.GetCount();
         }
+        cpb.Stop();
 
+        this->minTempSlot.Param<core::param::FloatParam>()->SetValue(minTemp);
+        this->maxTempSlot.Param<core::param::FloatParam>()->SetValue(maxTemp);
 
-        radius = theRadius;
+        this->radiusSlot.ResetDirty();
+        this->cyclXSlot.ResetDirty();
+        this->cyclYSlot.ResetDirty();
+        this->cyclZSlot.ResetDirty();
     }
 
     // now the colors are known, inject them
@@ -278,28 +341,43 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         //}
 #pragma endregion
 
+    //vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: found temperatures between %f and %f", minTemp, maxTemp);
+
+    allpartcnt = 0;
     if (outMPDC != nullptr) {
         outMPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
             auto &pl = in->AccessParticles(i);
+            if (!isListOK(in, i)) {
+                outMPDC->AccessParticles(i).SetCount(0);
+                continue;
+            }
             outMPDC->AccessParticles(i).SetCount(pl.GetCount());
             outMPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, 
-                this->newColors.data(), 0);
+                this->newColors.data() + allpartcnt, 0);
+            outMPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
+                this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            allpartcnt += pl.GetCount();
         }
     } else if (outDPDC != nullptr) {
         outDPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
             auto &pl = in->AccessParticles(i);
+            if (!isListOK(in, i)) {
+                outDPDC->AccessParticles(i).SetCount(0);
+                continue;
+            }
             outDPDC->AccessParticles(i).SetCount(pl.GetCount());
             outDPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outDPDC->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data(), 0);
+                this->newColors.data() + allpartcnt, 0);
             outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
+            outDPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
+                this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            allpartcnt += pl.GetCount();
         }
     }
-    this->datahash = in->DataHash();
-    this->lastTime = time;
     out->SetUnlocker(in->GetUnlocker());
     return true;
 }
@@ -320,7 +398,6 @@ bool datatools::ParticleThermometer::getExtentCallback(megamol::core::Call& c) {
     if (outMpdc != nullptr) out = outMpdc;
     if (outDpdc != nullptr) out = outDpdc;
 
-    //if (!this->assertData(inMpdc, outDpdc)) return false;
     inDpdc->SetFrameID(out->FrameID(), true);
     if (!(*inDpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError("ParticleThermometer: could not get current frame extents (%u)", out->FrameID());

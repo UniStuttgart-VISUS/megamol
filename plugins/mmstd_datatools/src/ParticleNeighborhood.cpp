@@ -133,7 +133,6 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
     int thePart = this->particleNumberSlot.Param<core::param::IntParam>()->Value();
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
-        // load previous Frame
         in->SetFrameID(time, true);
 
         if (!(*in)(0)) {
@@ -151,6 +150,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
         this->newColors.resize(totalParts, theRadius);
 
+        allParts.clear();
         allParts.reserve(totalParts);
 
         // we could now filter particles according to something. but currently we need not.
@@ -207,77 +207,80 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         }
         this->datahash = in->DataHash();
         this->lastTime = time;
+        this->radiusSlot.ForceSetDirty();
     }
 
     if (this->radiusSlot.IsDirty() || this->particleNumberSlot.IsDirty()
         || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()) {
 
-        if (thePart >= newColors.size()) {
-            if (newColors.size() > 0) {
-                this->particleNumberSlot.Param<core::param::IntParam>()->SetValue(0);
-                thePart = 0;
-            } else {
-                this->particleNumberSlot.Param<core::param::IntParam>()->SetValue(-1);
-                return true;
-            }
-        }
-
         // reset all colors
         std::fill(newColors.begin(), newColors.end(), theRadius);
 
-        const float *vbase;
-        if (inDpdc != nullptr) {
-            vbase = myDirPts->get_position(thePart);
-        } else {
-            vbase = myPts->get_position(thePart);
-        }
-        float theVertex[3];
-        std::vector<std::pair<size_t, float> > ret_matches;
-        std::vector<std::pair<size_t, float> > ret_localMatches;
-        nanoflann::SearchParams params;
-        params.sorted = false;
+        if (thePart >= 0) {
 
-        // final computation
-        bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
-        bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
-        bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
-        auto bbox = in->AccessBoundingBoxes().ObjectSpaceBBox();
-        //bbox.EnforcePositiveSize(); // paranoia
-        auto bbox_cntr = bbox.CalcCenter();
+            if (thePart >= newColors.size()) {
+                if (newColors.size() > 0) {
+                    this->particleNumberSlot.Param<core::param::IntParam>()->SetValue(0);
+                    thePart = 0;
+                } else {
+                    this->particleNumberSlot.Param<core::param::IntParam>()->SetValue(-1);
+                    return true;
+                }
+            }
 
-        ret_matches.clear();
-        ret_matches.reserve(100);
+            const float *vbase;
+            if (inDpdc != nullptr) {
+                vbase = myDirPts->get_position(thePart);
+            } else {
+                vbase = myPts->get_position(thePart);
+            }
+            float theVertex[3];
+            std::vector<std::pair<size_t, float> > ret_matches;
+            std::vector<std::pair<size_t, float> > ret_localMatches;
+            nanoflann::SearchParams params;
+            params.sorted = false;
 
-        for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
-            for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
-                for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+            // final computation
+            bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+            bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+            bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+            auto bbox = in->AccessBoundingBoxes().ObjectSpaceBBox();
+            //bbox.EnforcePositiveSize(); // paranoia
+            auto bbox_cntr = bbox.CalcCenter();
 
-                    theVertex[0] = vbase[0];
-                    theVertex[1] = vbase[1];
-                    theVertex[2] = vbase[2];
-                    if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
-                    if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
-                    if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+            ret_matches.clear();
+            ret_matches.reserve(100);
 
-                    if (inMpdc != nullptr) {
-                        particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                        ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
-                    } else {
-                        dirParticleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                        ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+            for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
+                for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
+                    for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+
+                        theVertex[0] = vbase[0];
+                        theVertex[1] = vbase[1];
+                        theVertex[2] = vbase[2];
+                        if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
+                        if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
+                        if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+
+                        if (inMpdc != nullptr) {
+                            particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                        } else {
+                            dirParticleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                        }
                     }
                 }
             }
+
+            // TODO this probably is not even worth it, writing something several times is probably cheaper.
+            //sort(ret_matches.begin(), ret_matches.end());
+            //ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
+
+            for (auto &m : ret_matches) {
+                this->newColors[m.first] = m.second;
+            }
         }
-
-        // TODO this probably is not even worth it, writing something several times is probably cheaper.
-        //sort(ret_matches.begin(), ret_matches.end());
-        //ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
-
-        for (auto &m : ret_matches) {
-            this->newColors[m.first] = m.second;
-        }
-
         this->radiusSlot.ResetDirty();
         this->particleNumberSlot.ResetDirty();
         this->cyclXSlot.ResetDirty();
