@@ -186,6 +186,9 @@ void NGMeshRenderer::addRenderBatch(
 		{
 			vertex_data_ptrs[i] = mesh_data.vertex_data.raw_data + uint32_view[i]; //da fuck...
 			vertex_data_sizes[i] = (i < mesh_data.vertex_data.buffer_cnt - 1) ? uint32_view[i + 1] - uint32_view[i] : mesh_data.vertex_data.byte_size - uint32_view[i];
+
+			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
 		}
 		
 		m_render_batches.back().mesh = std::make_unique<Mesh>(

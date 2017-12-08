@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <random>
+#include <string>
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
@@ -98,14 +99,175 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 	
-	// TODO parse parts list
+	// parse parts list
+	std::vector<std::string> parts_meshes_paths;
 
-	// TODO create vector of glTF models
+	std::ifstream file;
+	file.open(partsList_filename, std::ifstream::in);
 
-	// TODO create mesh data that holds all models
+	if (file.is_open())
+	{
+		file.seekg(0, std::ifstream::beg);
 
-	// TODO log first index and base vertex for all individual models
+		while (!file.eof())
+		{
+			parts_meshes_paths.push_back(std::string());
 
+			getline(file, parts_meshes_paths.back(), '\n');
+
+			std::cout << parts_meshes_paths.back() << std::endl;
+		}
+	}
+
+
+	// Create vector of glTF models
+	std::vector<tinygltf::Model> models;
+	tinygltf::TinyGLTF loader;
+	std::string err;
+
+	for (auto path : parts_meshes_paths)
+	{
+		models.push_back(tinygltf::Model());
+
+		bool ret = loader.LoadASCIIFromFile(&models.back(), &err, path);
+		if (!err.empty()) {
+			printf("Err: %s\n", err.c_str());
+		}
+
+		if (!ret) {
+			printf("Failed to parse glTF\n");
+		}
+	}
+
+	// set vertex attribute layout
+	std::vector<std::string> attribute_names;
+	mesh_data.vertex_descriptor.attribute_cnt = models.front().meshes.front().primitives.front().attributes.size();
+	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
+	mesh_data.vertex_descriptor.stride = 0; //we currently cannot handle a different stride per attribute buffer, assuming data to be tightly packed
+	size_t attribute_counter = 0;
+	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
+	{
+		std::cout << "Attribute " << attribute.first << std::endl;
+
+		attribute_names.push_back(attribute.first);
+
+		std::cout << models.front().accessors[attribute.second].type << std::endl;
+		std::cout << models.front().accessors[attribute.second].componentType << std::endl;
+		std::cout << models.front().accessors[attribute.second].count << std::endl;
+		std::cout << models.front().accessors[attribute.second].byteOffset << std::endl;
+		std::cout << models.front().accessors[attribute.second].normalized << std::endl;
+
+		//auto& bufferView = models.front().bufferViews[models.front().accessors[attribute.second].bufferView];
+
+		mesh_data.vertex_descriptor.attributes[attribute_counter].type = models.front().accessors[attribute.second].componentType;
+		mesh_data.vertex_descriptor.attributes[attribute_counter].size = models.front().accessors[attribute.second].type;
+		mesh_data.vertex_descriptor.attributes[attribute_counter].normalized = models.front().accessors[attribute.second].normalized;
+		// we use a seperated VBO per vertex attribute, therefore offset should always be zero...
+		mesh_data.vertex_descriptor.attributes[attribute_counter].offset = 0;
+
+		++attribute_counter;
+	}
+
+	// Create mesh data that holds all models
+	// For now, assume glTF will supply non-interleaved data (this seems to be mostly the case,..how do I even identify interleaved data?)
+	// Also assume that all glTF files contain a single mesh and all meshes use the same vertex format (i.e. go into a single render batch)
+	mesh_data.index_data.byte_size = 0;
+	mesh_data.vertex_data.byte_size = 0;
+	mesh_data.vertex_data.buffer_cnt = mesh_data.vertex_descriptor.attribute_cnt;
+
+	std::vector<uint32_t> first_indices; // index of the first index of the different meshes stored in the buffer
+	std::vector<uint32_t> base_vertices; // base vertices of the different meshes stored in the buffer
+	first_indices.push_back(0);
+	base_vertices.push_back(0);
+
+	// Sum up required storage for index and vertex data
+	for (auto& model : models)
+	{
+		auto index_buffer_accessor = model.accessors[model.meshes.front().primitives.front().indices];
+		auto index_bufferView = model.bufferViews[index_buffer_accessor.bufferView];
+		mesh_data.index_data.index_type = index_buffer_accessor.componentType;
+		mesh_data.index_data.byte_size += index_bufferView.byteLength;
+
+		for (auto& attrib : model.meshes.front().primitives.front().attributes)
+		{
+			auto& accessor = model.accessors[attrib.second];
+			auto& bufferView = model.bufferViews[accessor.bufferView];
+
+			mesh_data.vertex_data.byte_size += bufferView.byteLength;
+		}
+
+		// log first index and base vertex for each model
+		uint32_t base_vertex = base_vertices.back() + model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names.front())].count;
+		base_vertices.push_back(base_vertex);
+
+		uint32_t first_index = first_indices.back() + index_buffer_accessor.count;
+		first_indices.push_back(first_index);
+	}
+	// need additional storage for storing byte offsets of individual buffers (4byte per buffer)
+	mesh_data.vertex_data.byte_size += 4 * mesh_data.vertex_data.buffer_cnt;
+
+	// Allocate shared buffer for vertex data and copy data from gltf to buffer, start after offset values
+	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size];
+	uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+	uint32_t bytes_copied = 4 * mesh_data.vertex_data.buffer_cnt;
+
+	for (int i = 0; i < mesh_data.vertex_data.buffer_cnt; ++i)
+	{
+		uint32_view[i] = bytes_copied;
+
+		for (auto& model : models)
+		{
+			auto& accessor = model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names[i])];
+			auto& bufferView = model.bufferViews[accessor.bufferView];
+
+			auto tgt = mesh_data.vertex_data.raw_data + bytes_copied;
+			auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
+			auto size = bufferView.byteLength;
+
+			std::memcpy(tgt, src, size);
+
+			bytes_copied += size;
+		}
+	}
+
+	// Allocate shared buffer for index data and copy data from gltf to buffer
+	mesh_data.index_data.raw_data = new uint8_t[mesh_data.index_data.byte_size];
+
+	bytes_copied = 0;
+	for (auto& model : models)
+	{
+		auto& accessor = model.accessors[model.meshes.front().primitives.front().indices];
+		auto& bufferView = model.bufferViews[accessor.bufferView];
+
+		auto tgt = mesh_data.index_data.raw_data + bytes_copied;
+		auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
+		auto size = bufferView.byteLength;
+
+		std::memcpy(tgt, src, size);
+
+		bytes_copied += size;
+	}
+
+	assert(bytes_copied == mesh_data.index_data.byte_size);
+
+	//std::cout << "==========================" << std::endl;
+	//float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data + 16);
+	//for (int i = 0; i < base_vertices.back() * 8; ++i)
+	//{
+	//	std::cout << float_view[i] << std::endl;
+	//}
+	//std::cout << "==========================" << std::endl;
+	//
+	//std::cout << "==========================" << std::endl;
+	//uint16_t* uint_view = reinterpret_cast<uint16_t*>(mesh_data.index_data.raw_data);
+	//for (int i = 0; i < first_indices.back(); ++i)
+	//{
+	//	std::cout << uint_view[i] << std::endl;
+	//}
+	//std::cout << "==========================" << std::endl;
+
+
+	/*
 	// Begin test gltf
 
 	tinygltf::Model model;
@@ -241,17 +403,54 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	std::cout << "Vertex buffer byte stride: " << mesh_data.vertex_descriptor.stride << std::endl;
 
 	// End test gltf
+	*/
 
 	std::mt19937 generator(4215);
 	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
-	draw_command_data.draw_cnt = 1000;
+	draw_command_data.draw_cnt = models.size();
 	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
 
+
+	int counter = 0;
+	for (auto& model : models)
+	{
+		auto& accessor = model.accessors[model.meshes.front().primitives.front().indices];
+		auto& bufferView = model.bufferViews[accessor.bufferView];
+
+		draw_command_data.data[counter].cnt = accessor.count;
+		draw_command_data.data[counter].instance_cnt = 1;
+		draw_command_data.data[counter].first_idx = first_indices[counter];
+		draw_command_data.data[counter].base_vertex = base_vertices[counter];
+		draw_command_data.data[counter].base_instance = 0;
+
+		std::cout << "Draw Command:" << std::endl;
+		std::cout << "Count:" << accessor.count << std::endl;
+		std::cout << "First index:" << first_indices[counter] << std::endl;
+		std::cout << "Base vertex:" << base_vertices[counter] << std::endl;
+
+		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
+		GLfloat scale = distr(generator);
+		scale = 1.0f;
+		object_transform.SetAt(0, 0, scale);
+		object_transform.SetAt(1, 1, scale);
+		object_transform.SetAt(2, 2, scale);
+
+		object_transform.SetAt(0, 3, loc_distr(generator));
+		object_transform.SetAt(1, 3, loc_distr(generator));
+		object_transform.SetAt(2, 3, loc_distr(generator));
+
+		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
+
+
+		counter++;
+	}
+
+	/*
 	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
 	{
 		draw_command_data.data[i].cnt = index_buffer_accessor.count;
@@ -274,9 +473,9 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 
 		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 	}
+	*/
 
 	mtl_shader_params.elements_cnt = 0;
-
 	
 	m_render_batches.addBatch(
 		shader_prgm_data,
@@ -284,7 +483,6 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
-
 
 	/*
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
@@ -330,6 +528,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 	mesh_data.vertex_descriptor.attributes[1].size = 3;
 	mesh_data.vertex_descriptor.attributes[1].normalized = GL_FALSE;
 	mesh_data.vertex_descriptor.attributes[1].offset = 12;
+	
 
 	std::mt19937 generator(4215);
 	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
@@ -371,8 +570,8 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename, std::string 
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
-
 	*/
+
 	
 	return true;
 }

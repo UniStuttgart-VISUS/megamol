@@ -397,7 +397,6 @@ namespace ngmesh {
 			/**
 			 * Hybrid C-interface Mesh constructor for non-interleaved data with one vertex buffer object per vertex attribute.
 			 */
-			 
 			Mesh(std::vector<uint8_t*> const&	vertex_data,
 				std::vector<size_t> const&		vertex_data_byte_sizes,
 				GLvoid const*					index_data,
@@ -418,8 +417,6 @@ namespace ngmesh {
 				// set attribute pointer and vao state
 				glBindVertexArray(m_va_handle);
 
-				// dirty hack to make ibo work as BufferObject
-				//m_ibo = std::make_unique<BufferObject>(GL_ELEMENT_ARRAY_BUFFER, index_data, index_data_byte_size, usage);
 				m_ibo.bind();
 
 				// TODO check if vertex buffer count matches attribute count, throw exception if not?
