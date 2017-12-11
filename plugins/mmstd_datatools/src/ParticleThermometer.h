@@ -28,6 +28,11 @@ namespace datatools {
     class ParticleThermometer : public megamol::core::Module {
     public:
 
+        enum searchTypeEnum {
+            RADIUS,
+            NUM_NEIGHBORS
+        };
+
         /** Return module class name */
         static const char *ClassName(void) {
             return "ParticleThermometer";
@@ -84,16 +89,16 @@ namespace datatools {
         core::param::ParamSlot cyclYSlot;
         core::param::ParamSlot cyclZSlot;
         core::param::ParamSlot radiusSlot;
+        core::param::ParamSlot numNeighborSlot;
+        core::param::ParamSlot searchTypeSlot;
         core::param::ParamSlot minTempSlot;
         core::param::ParamSlot maxTempSlot;
         
         size_t datahash;
         int lastTime;
-        //float minTemp, maxTemp = 0;
         std::vector<float> newColors;
-        //std::vector<float*> 
-        //float minCol, maxCol, radius;
         std::vector<size_t> allParts;
+        float maxDist;
 
         typedef nanoflann::KDTreeSingleIndexAdaptor<
             nanoflann::L2_Simple_Adaptor<float, directionalPointcloud>,

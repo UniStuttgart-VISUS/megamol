@@ -8,6 +8,8 @@
 #include "ParticleThermometer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ConsoleProgressBar.h"
 #include <cstdint>
@@ -27,10 +29,13 @@ datatools::ParticleThermometer::ParticleThermometer(void)
         cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction"),
         cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction"),
         radiusSlot("radius", "the radius in which to look for neighbors"),
+        numNeighborSlot("numNeighbors", "how many neighbors to collect"),
+        searchTypeSlot("searchType", "num of neighbors or radius"),
         minTempSlot("minTemp", "the detected minimum temperature"),
         maxTempSlot("maxTemp", "the detected maximum temperature"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
+        maxDist(0.0f),
         datahash(0), lastTime(-1), newColors(), allParts(), particleTree(nullptr), myPts(nullptr) {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
@@ -44,6 +49,15 @@ datatools::ParticleThermometer::ParticleThermometer(void)
 
     this->radiusSlot.SetParameter(new core::param::FloatParam(2.0));
     this->MakeSlotAvailable(&this->radiusSlot);
+
+    this->numNeighborSlot.SetParameter(new core::param::IntParam(10));
+    this->MakeSlotAvailable(&this->numNeighborSlot);
+
+    core::param::EnumParam *st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
+    st->SetTypePair(searchTypeEnum::RADIUS, "Radius");
+    st->SetTypePair(searchTypeEnum::NUM_NEIGHBORS, "Num. Neighbors");
+    this->searchTypeSlot << st;
+    this->MakeSlotAvailable(&this->searchTypeSlot);
 
     this->minTempSlot.SetParameter(new core::param::FloatParam(0));
     this->MakeSlotAvailable(&this->minTempSlot);
@@ -104,6 +118,9 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
+    theRadius = theRadius * theRadius;
+    int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
+    auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     size_t allpartcnt = 0;
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
@@ -122,7 +139,11 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                 totalParts += in->AccessParticles(i).GetCount();
         }
 
-        this->newColors.resize(totalParts, theRadius);
+        if (theSearchType == searchTypeEnum::RADIUS) {
+            this->newColors.resize(totalParts, theRadius);
+        } else {
+            this->newColors.resize(totalParts);
+        }
 
         allParts.clear();
         allParts.reserve(totalParts);
@@ -135,12 +156,12 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                 continue;
             }
 
-            unsigned int vert_stride = 0;
-            if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-            else if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-            else continue;
-            vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
-            const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
+            //unsigned int vert_stride = 0;
+            //if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
+            //else if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
+            //else continue;
+            //vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
+            //const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
             UINT64 part_cnt = pl.GetCount();
 
@@ -164,7 +185,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         this->radiusSlot.ForceSetDirty();
     }
 
-    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()) {
+    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
+        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()) {
         size_t allpartcnt = 0;
         size_t cursor = 0;
         float theVertex[3];
@@ -172,6 +194,9 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
 
         std::vector<std::pair<size_t, float> > ret_matches;
         std::vector<std::pair<size_t, float> > ret_localMatches;
+        std::vector<size_t> ret_index(theNumber);
+        std::vector<float> out_dist_sqr(theNumber);
+        nanoflann::KNNResultSet<float> resultSet(theNumber);
         nanoflann::SearchParams params;
         params.sorted = false;
 
@@ -218,33 +243,56 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                             if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
                             if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
 
-                            particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                            ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(), 
-                                [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
-                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                            if (theSearchType == searchTypeEnum::RADIUS) {
+                                particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
+                                    [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                            } else {
+                                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                particleTree->findNeighbors(resultSet, theVertex, params);
+                                for (size_t i = 0; i < resultSet.size(); ++i) {
+                                    if (ret_index[i] != myIndex) {
+                                        ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
-                //sort(ret_matches.begin(), ret_matches.end());
+                // no neighbor should count twice!
                 ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
+
+                size_t num_matches = 0;
+                if (theSearchType == searchTypeEnum::RADIUS) {
+                    maxDist = theRadius;
+                    num_matches = ret_matches.size();
+                } else {
+                    // find overall closest! we did search around periodic boundary conditions, so there will be huge distances!
+                    sort(ret_matches.begin(), ret_matches.end(),
+                        [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
+                    // the furthest is theNumber closest or the last one if fewer.
+                    num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
+                    maxDist = ret_matches[num_matches - 1].second;
+                }
 
                 int n = 1;
                 float averageX = 0;
                 float averageY = 0;
                 float averageZ = 0;
-                for (auto &m : ret_matches) {
-                    const float *velo = myPts->get_velocity(m.first);
+                for (size_t i = 0; i < num_matches; ++i) {
+                    const float *velo = myPts->get_velocity(ret_matches[i].first);
                     averageX += (velo[0] - averageX) / n;
                     averageY += (velo[1] - averageY) / n;
                     averageZ += (velo[2] - averageZ) / n;
                     ++n;
                 }
-                // TODO if alone, do something.
+                // TODO if alone, do something? only happens with radius search.
                 theTemperature[0] = velocityBase[0] - averageX;
                 theTemperature[1] = velocityBase[1] - averageY;
                 theTemperature[2] = velocityBase[2] - averageZ;
-                // die wurzel muss raus. fuer bessere unterscheidbarkeit. das ist jetzt die kinetische energie.
+                // no square root, so actually kinetic energy
                 float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
                 newColors[myIndex] = tempMag;
                 if (tempMag < minTemp) minTemp = tempMag;
@@ -262,86 +310,13 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         this->cyclXSlot.ResetDirty();
         this->cyclYSlot.ResetDirty();
         this->cyclZSlot.ResetDirty();
+        this->numNeighborSlot.ResetDirty();
+        this->searchTypeSlot.ResetDirty();
     }
 
     // now the colors are known, inject them
     in->SetUnlocker(nullptr, false);
     in->Unlock();
-
-#pragma region oldstuff
-        //// final computation
-        //bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
-        //bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
-        //bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
-        //auto bbox = dat.AccessBoundingBoxes().ObjectSpaceBBox();
-        //bbox.EnforcePositiveSize(); // paranoia
-        //auto bbox_cntr = bbox.CalcCenter();
-
-        //allpartcnt = 0;
-        //for (unsigned int pli = 0; pli < plc; pli++) {
-        //    auto& pl = dat.AccessParticles(pli);
-        //    if (pl.GetColourDataType() != SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
-        //    if ((pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-        //        && (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
-        //        continue;
-        //    }
-
-        //    unsigned int vert_stride = 0;
-        //    if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-        //    else if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-        //    else continue;
-        //    vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
-        //    const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
-
-        //    int part_cnt = static_cast<int>(pl.GetCount());
-        //    const unsigned char *col = static_cast<const unsigned char*>(pl.GetColourData());
-        //    unsigned int col_stride = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
-
-        //    for (int part_i = 0; part_i < part_cnt; ++part_i) {
-        //        float c = *reinterpret_cast<const float *>(col + (part_i * col_stride));
-        //        const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
-
-        //        if ((-border_epsilon < c) && (c < border_epsilon)) {
-        //            c = 0.0f;
-        //        } else {
-        //            float q[3];
-        //            float dist, distsq = static_cast<float>(DBL_MAX);
-        //            my_kd_tree_t& tree = (c < 0.0f) ? posTree : negTree;
-
-        //            for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
-        //                for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
-        //                    for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
-
-        //                        q[0] = v[0];
-        //                        q[1] = v[1];
-        //                        q[2] = v[2];
-        //                        if (x_s > 0) q[0] = v[0] + ((v[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
-        //                        if (y_s > 0) q[1] = v[1] + ((v[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
-        //                        if (z_s > 0) q[2] = v[2] + ((v[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
-
-        //                        size_t n_idx;
-        //                        float n_distsq;
-        //                        tree.knnSearch(q, 1, &n_idx, &n_distsq);
-        //                        if (n_distsq < distsq) distsq = n_distsq;
-
-        //                    }
-        //                }
-        //            }
-
-        //            dist = sqrt(distsq);
-        //            if (c < 0.0f) dist = -dist;
-        //            c = static_cast<float>(dist);
-        //        }
-
-        //        if (c < this->minCol) this->minCol = c;
-        //        if (c > this->maxCol) this->maxCol = c;
-
-        //        this->newColors[allpartcnt + part_i] = c;
-        //    }
-
-        //    allpartcnt += static_cast<size_t>(part_cnt);
-        //}
-#pragma endregion
 
     //vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: found temperatures between %f and %f", minTemp, maxTemp);
 

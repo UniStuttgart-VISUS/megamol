@@ -182,7 +182,6 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             UINT64 part_cnt = getListCount(in, pli);
 
             for (int part_i = 0; part_i < part_cnt; ++part_i) {
-                //const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
                 allParts.push_back(allpartcnt + part_i);
             }
             allpartcnt += getListCount(in, pli);
