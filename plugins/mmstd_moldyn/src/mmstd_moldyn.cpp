@@ -35,6 +35,7 @@
 #include "rendering/BrickStatsRenderer.h"
 
 #include "misc/DataGridder.h"
+#include "misc/ParticleListFilter.h"
 
 #include "io/MMPGDWriter.h"
 #include "io/MMPGDDataSource.h"
@@ -151,6 +152,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GrimRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::DataGridder>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::ParticleListFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::OracleSphereRenderer>();

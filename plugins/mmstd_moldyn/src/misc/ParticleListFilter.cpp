@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/ParticleListFilter.h"
+#include "ParticleListFilter.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -15,12 +15,14 @@
 #include "vislib/StringTokeniser.h"
 
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
+using namespace megamol::stdplugin::moldyn::misc;
 
 
 /*
- * moldyn::ParticleListFilter::ParticleListFilter
+ * ParticleListFilter::ParticleListFilter
  */
-moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
+ParticleListFilter::ParticleListFilter(void) : Module(),
         inParticlesDataSlot("inPartData", "Input for (oriented) particle data"),
         outParticlesDataSlot("outPartData", "Output of (oriented) particle data"),
         includedListsSlot("includedTypes", "Comma-separated list of particle types to include"),
@@ -30,8 +32,8 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
         datahashParticlesIn(0), datahashParticlesOut(0),
         frameID(0) {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<DirectionalParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetData", &ParticleListFilter::getDataCallback);
@@ -54,30 +56,30 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
 
 
 /*
- * moldyn::ParticleListFilter::~ParticleListFilter
+ * ParticleListFilter::~ParticleListFilter
  */
-moldyn::ParticleListFilter::~ParticleListFilter(void) {
+ParticleListFilter::~ParticleListFilter(void) {
     this->Release(); // implicitly calls 'release'
 }
 
 
 /*
- * moldyn::ParticleListFilter::create
+ * ParticleListFilter::create
  */
-bool moldyn::ParticleListFilter::create(void) {
+bool ParticleListFilter::create(void) {
     // intentionally empty
     return true;
 }
 
 
 /*
- * moldyn::ParticleListFilter::release
+ * ParticleListFilter::release
  */
-void moldyn::ParticleListFilter::release(void) {
+void ParticleListFilter::release(void) {
     // intentionally empty
 }
 
-vislib::Array<unsigned int> moldyn::ParticleListFilter::getSelectedLists() {
+vislib::Array<unsigned int> ParticleListFilter::getSelectedLists() {
     vislib::StringA str = this->includedListsSlot.Param<megamol::core::param::StringParam>()->Value();
     vislib::StringTokeniserA sta(str, ',');
     vislib::Array<unsigned int> result;
@@ -92,9 +94,9 @@ vislib::Array<unsigned int> moldyn::ParticleListFilter::getSelectedLists() {
 }
 
 /*
- * moldyn::ParticleListFilter::getData
+ * ParticleListFilter::getData
  */
-bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
+bool ParticleListFilter::getDataCallback(Call& call) {
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
@@ -319,7 +321,7 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
 /*
  * moldyn::DirPartColModulate::getExtent
  */
-bool moldyn::ParticleListFilter::getExtentCallback(Call& call) {
+bool ParticleListFilter::getExtentCallback(Call& call) {
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
     if ((outMpdc == NULL) && (outDpdc == NULL)) return false;
