@@ -240,10 +240,12 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                     averageZ += (velo[2] - averageZ) / n;
                     ++n;
                 }
-                theTemperature[0] = averageX - velocityBase[0];
-                theTemperature[1] = averageY - velocityBase[1];
-                theTemperature[2] = averageZ - velocityBase[2];
-                float tempMag = sqrtf(theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2]);
+                // TODO if alone, do something.
+                theTemperature[0] = velocityBase[0] - averageX;
+                theTemperature[1] = velocityBase[1] - averageY;
+                theTemperature[2] = velocityBase[2] - averageZ;
+                // die wurzel muss raus. fuer bessere unterscheidbarkeit. das ist jetzt die kinetische energie.
+                float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
                 newColors[myIndex] = tempMag;
                 if (tempMag < minTemp) minTemp = tempMag;
                 if (tempMag > maxTemp) maxTemp = tempMag;

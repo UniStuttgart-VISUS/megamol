@@ -35,7 +35,7 @@ namespace datatools {
 
         /** Return module class description */
         static const char *Description(void) {
-            return "Computes an intensity from the velocity magnitude difference between a particle and its surroundings.";
+            return "Computes an intensity from the kinetic energy of a particle (compared to its surroundings).";
         }
 
         /** Module is always available */
