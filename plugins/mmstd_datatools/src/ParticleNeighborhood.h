@@ -94,11 +94,8 @@ namespace datatools {
         size_t datahash;
         int lastTime;
         std::vector<float> newColors;
-        //std::vector<float*> 
-        float minCol, maxCol;
-        //float lastRadius, lastPart;
-        //bool lastCycleX, lastCycleY, lastCycleZ;
         std::vector<size_t> allParts;
+        float maxDist;
 
         typedef nanoflann::KDTreeSingleIndexAdaptor<
             nanoflann::L2_Simple_Adaptor<float, simplePointcloud>,

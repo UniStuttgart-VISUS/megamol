@@ -32,7 +32,7 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
         particleNumberSlot("idx", "the particle to track"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
-        datahash(0), lastTime(-1), newColors(), minCol(0.0f), maxCol(1.0f),
+        datahash(0), lastTime(-1), newColors(), maxDist(0),
         allParts(), particleTree(nullptr), dirParticleTree(nullptr), myPts(nullptr), myDirPts(nullptr) {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
@@ -142,6 +142,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
     unsigned int plc = (inMpdc == nullptr) ? inDpdc->GetParticleListCount() : inMpdc->GetParticleListCount();
 
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
+    theRadius = theRadius * theRadius;
     int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
     auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     int thePart = this->particleNumberSlot.Param<core::param::IntParam>()->Value();
@@ -162,7 +163,11 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 totalParts += getListCount(in, i);
         }
 
-        this->newColors.resize(totalParts, -1);
+        if (theSearchType == searchTypeEnum::RADIUS) {
+            this->newColors.resize(totalParts, theRadius);
+        } else {
+            this->newColors.resize(totalParts);
+        }
 
         allParts.clear();
         allParts.reserve(totalParts);
@@ -173,26 +178,6 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             if (!isListOK(in, pli)) {
                 continue;
             }
-
-            //unsigned int vert_stride = 0;
-            //unsigned int data_stride = 0;
-            //const unsigned char *vert = nullptr;
-            //if (inMpdc != nullptr) {
-            //    auto t = inMpdc->AccessParticles(pli).GetVertexDataType();
-            //    if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-            //    if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-            //    data_stride = inMpdc->AccessParticles(pli).GetVertexDataStride();
-            //    vert = static_cast<const unsigned char*>(inMpdc->AccessParticles(pli).GetVertexData());
-            //} else if (inDpdc != nullptr) {
-            //    auto t = inDpdc->AccessParticles(pli).GetVertexDataType();
-            //    if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-            //    if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-            //    data_stride = inDpdc->AccessParticles(pli).GetVertexDataStride();
-            //    vert = static_cast<const unsigned char*>(inDpdc->AccessParticles(pli).GetVertexData());
-            //} else {
-            //    continue;
-            //}
-            //vert_stride = std::max<unsigned int>(vert_stride, data_stride);
 
             UINT64 part_cnt = getListCount(in, pli);
 
@@ -225,10 +210,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
     }
 
     if (this->radiusSlot.IsDirty() || this->particleNumberSlot.IsDirty()
-        || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()) {
-
-        // reset all colors
-        std::fill(newColors.begin(), newColors.end(), -1);
+        || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
+        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()) {
 
         if (thePart >= 0) {
 
@@ -249,8 +232,12 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 vbase = myPts->get_position(thePart);
             }
             float theVertex[3];
+            maxDist = 0.0f;
             std::vector<std::pair<size_t, float> > ret_matches;
             std::vector<std::pair<size_t, float> > ret_localMatches;
+            std::vector<size_t> ret_index(theNumber);
+            std::vector<float> out_dist_sqr(theNumber);
+            nanoflann::KNNResultSet<float> resultSet(theNumber);
             nanoflann::SearchParams params;
             params.sorted = false;
 
@@ -278,31 +265,66 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
                         if (inMpdc != nullptr) {
                             if (theSearchType == searchTypeEnum::RADIUS) {
-                            particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                                particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                            } else {
+                                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                particleTree->findNeighbors(resultSet, theVertex, params);
+                                for (size_t i = 0; i < resultSet.size(); ++i) {
+                                    ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                }
+                            }
                         } else {
-                            dirParticleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                            if (theSearchType == searchTypeEnum::RADIUS) {
+                                dirParticleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                            } else {
+                                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                dirParticleTree->findNeighbors(resultSet, theVertex, params);
+                                for (size_t i = 0; i < resultSet.size(); ++i) {
+                                    ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                }
+                            }
                         }
                     }
                 }
             }
 
+            size_t num_matches = 0;
+
             // TODO this probably is not even worth it, writing something several times is probably cheaper.
             //sort(ret_matches.begin(), ret_matches.end());
             //ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
 
-            for (auto &m : ret_matches) {
-                this->newColors[m.first] = m.second;
+            // reset all colors
+            if (theSearchType == searchTypeEnum::RADIUS) {
+                maxDist = theRadius;
+                num_matches = ret_matches.size();
+            } else {
+                // find overall closest! we did search around periodic boundary conditions, so there will be huge distances!
+                sort(ret_matches.begin(), ret_matches.end(),
+                    [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
+                // the furthest is theNumber closest or the last one if fewer.
+                num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
+                maxDist = ret_matches[num_matches - 1].second;
             }
+            std::fill(newColors.begin(), newColors.end(), maxDist);
+
+            for (size_t i = 0; i < num_matches; ++i) {
+                this->newColors[ret_matches[i].first] = ret_matches[i].second;
+            }
+        } else {
+        // reset all colors
+            std::fill(newColors.begin(), newColors.end(), 0.0f);
         }
         this->radiusSlot.ResetDirty();
         this->particleNumberSlot.ResetDirty();
         this->cyclXSlot.ResetDirty();
         this->cyclYSlot.ResetDirty();
         this->cyclZSlot.ResetDirty();
+        this->numNeighborSlot.ResetDirty();
+        this->searchTypeSlot.ResetDirty();
     }
-
     in->SetUnlocker(nullptr, false);
     in->Unlock();
 
@@ -325,7 +347,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             }
             outMpdc->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
-            outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, theRadius);
+            outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
             allpartcnt += theCount;
         }
     } else if (outDpdc != nullptr) {
@@ -349,7 +371,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             }
             outDpdc->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
-            outDpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, theRadius);
+            outDpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
             allpartcnt += theCount;
         }
     }
