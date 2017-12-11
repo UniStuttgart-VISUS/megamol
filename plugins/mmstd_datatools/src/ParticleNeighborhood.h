@@ -28,6 +28,11 @@ namespace datatools {
     class ParticleNeighborhood : public megamol::core::Module {
     public:
 
+        enum searchTypeEnum {
+            RADIUS,
+            NUM_NEIGHBORS
+        };
+
         /** Return module class name */
         static const char *ClassName(void) {
             return "ParticleNeighborhood";
@@ -83,6 +88,8 @@ namespace datatools {
         core::param::ParamSlot cyclYSlot;
         core::param::ParamSlot cyclZSlot;
         core::param::ParamSlot radiusSlot;
+        core::param::ParamSlot numNeighborSlot;
+        core::param::ParamSlot searchTypeSlot;
         core::param::ParamSlot particleNumberSlot;
         size_t datahash;
         int lastTime;

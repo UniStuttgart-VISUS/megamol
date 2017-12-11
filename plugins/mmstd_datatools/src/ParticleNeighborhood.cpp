@@ -9,6 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include <cstdint>
 #include <algorithm>
@@ -26,6 +27,8 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
         cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction"),
         cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction"),
         radiusSlot("radius", "the radius in which to look for neighbors"),
+        numNeighborSlot("numNeighbors", "how many neighbors to collect"),
+        searchTypeSlot("searchType", "num of neighbors or radius"),
         particleNumberSlot("idx", "the particle to track"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
@@ -43,6 +46,15 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
 
     this->radiusSlot.SetParameter(new core::param::FloatParam(2.0));
     this->MakeSlotAvailable(&this->radiusSlot);
+
+    this->numNeighborSlot.SetParameter(new core::param::IntParam(10));
+    this->MakeSlotAvailable(&this->numNeighborSlot);
+
+    core::param::EnumParam *st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
+    st->SetTypePair(searchTypeEnum::RADIUS, "Radius");
+    st->SetTypePair(searchTypeEnum::NUM_NEIGHBORS, "Num. Neighbors");
+    this->searchTypeSlot << st;
+    this->MakeSlotAvailable(&this->searchTypeSlot);
 
     this->particleNumberSlot.SetParameter(new core::param::IntParam(-1));
     this->MakeSlotAvailable(&this->particleNumberSlot);
@@ -130,6 +142,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
     unsigned int plc = (inMpdc == nullptr) ? inDpdc->GetParticleListCount() : inMpdc->GetParticleListCount();
 
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
+    int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
+    auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     int thePart = this->particleNumberSlot.Param<core::param::IntParam>()->Value();
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
@@ -148,7 +162,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 totalParts += getListCount(in, i);
         }
 
-        this->newColors.resize(totalParts, theRadius);
+        this->newColors.resize(totalParts, -1);
 
         allParts.clear();
         allParts.reserve(totalParts);
@@ -160,25 +174,25 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 continue;
             }
 
-            unsigned int vert_stride = 0;
-            unsigned int data_stride = 0;
-            const unsigned char *vert = nullptr;
-            if (inMpdc != nullptr) {
-                auto t = inMpdc->AccessParticles(pli).GetVertexDataType();
-                if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-                if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-                data_stride = inMpdc->AccessParticles(pli).GetVertexDataStride();
-                vert = static_cast<const unsigned char*>(inMpdc->AccessParticles(pli).GetVertexData());
-            } else if (inDpdc != nullptr) {
-                auto t = inDpdc->AccessParticles(pli).GetVertexDataType();
-                if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-                if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-                data_stride = inDpdc->AccessParticles(pli).GetVertexDataStride();
-                vert = static_cast<const unsigned char*>(inDpdc->AccessParticles(pli).GetVertexData());
-            } else {
-                continue;
-            }
-            vert_stride = std::max<unsigned int>(vert_stride, data_stride);
+            //unsigned int vert_stride = 0;
+            //unsigned int data_stride = 0;
+            //const unsigned char *vert = nullptr;
+            //if (inMpdc != nullptr) {
+            //    auto t = inMpdc->AccessParticles(pli).GetVertexDataType();
+            //    if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
+            //    if (t == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
+            //    data_stride = inMpdc->AccessParticles(pli).GetVertexDataStride();
+            //    vert = static_cast<const unsigned char*>(inMpdc->AccessParticles(pli).GetVertexData());
+            //} else if (inDpdc != nullptr) {
+            //    auto t = inDpdc->AccessParticles(pli).GetVertexDataType();
+            //    if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
+            //    if (t == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
+            //    data_stride = inDpdc->AccessParticles(pli).GetVertexDataStride();
+            //    vert = static_cast<const unsigned char*>(inDpdc->AccessParticles(pli).GetVertexData());
+            //} else {
+            //    continue;
+            //}
+            //vert_stride = std::max<unsigned int>(vert_stride, data_stride);
 
             UINT64 part_cnt = getListCount(in, pli);
 
@@ -214,7 +228,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()) {
 
         // reset all colors
-        std::fill(newColors.begin(), newColors.end(), theRadius);
+        std::fill(newColors.begin(), newColors.end(), -1);
 
         if (thePart >= 0) {
 
@@ -263,6 +277,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                         if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
 
                         if (inMpdc != nullptr) {
+                            if (theSearchType == searchTypeEnum::RADIUS) {
                             particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
                             ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
                         } else {
