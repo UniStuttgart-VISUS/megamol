@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/MipDepthSphereRenderer.h"
+#include "MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -16,42 +16,42 @@
 #include "vislib/assert.h"
 #include "vislib/Trace.h"
 
-using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::rendering;
 
 
 /*
- * moldyn::MipDepthSphereRenderer::MipDepthSphereRenderer
+ * MipDepthSphereRenderer::MipDepthSphereRenderer
  */
-moldyn::MipDepthSphereRenderer::MipDepthSphereRenderer(void) : Renderer3DModule(),
+MipDepthSphereRenderer::MipDepthSphereRenderer(void) : Renderer3DModule(),
         sphereShader(), initDepthShader(), fbo(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0) {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->getClipPlaneSlot.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 }
 
 
 /*
- * moldyn::MipDepthSphereRenderer::~MipDepthSphereRenderer
+ * MipDepthSphereRenderer::~MipDepthSphereRenderer
  */
-moldyn::MipDepthSphereRenderer::~MipDepthSphereRenderer(void) {
+MipDepthSphereRenderer::~MipDepthSphereRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::MipDepthSphereRenderer::create
+ * MipDepthSphereRenderer::create
  */
-bool moldyn::MipDepthSphereRenderer::create(void) {
+bool MipDepthSphereRenderer::create(void) {
     ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, frag;
@@ -136,16 +136,16 @@ bool moldyn::MipDepthSphereRenderer::create(void) {
 
 
 /*
- * moldyn::MipDepthSphereRenderer::GetCapabilities
+ * MipDepthSphereRenderer::GetCapabilities
  */
-bool moldyn::MipDepthSphereRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool MipDepthSphereRenderer::GetCapabilities(megamol::core::Call& call) {
+    megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
     cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        //| view::CallRender3D::CAP_ANIMATION
+        megamol::core::view::CallRender3D::CAP_RENDER
+        | megamol::core::view::CallRender3D::CAP_LIGHTING
+        //| megamol::core::view::CallRender3D::CAP_ANIMATION
         );
 
     return true;
@@ -153,13 +153,13 @@ bool moldyn::MipDepthSphereRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * moldyn::MipDepthSphereRenderer::GetExtents
+ * MipDepthSphereRenderer::GetExtents
  */
-bool moldyn::MipDepthSphereRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool MipDepthSphereRenderer::GetExtents(megamol::core::Call& call) {
+    megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
@@ -182,22 +182,22 @@ bool moldyn::MipDepthSphereRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::MipDepthSphereRenderer::release
+ * MipDepthSphereRenderer::release
  */
-void moldyn::MipDepthSphereRenderer::release(void) {
+void MipDepthSphereRenderer::release(void) {
     this->sphereShader.Release();
     ::glDeleteTextures(1, &this->greyTF);
 }
 
 
 /*
- * moldyn::MipDepthSphereRenderer::Render
+ * MipDepthSphereRenderer::Render
  */
-bool moldyn::MipDepthSphereRenderer::Render(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool MipDepthSphereRenderer::Render(megamol::core::Call& call) {
+    megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     float scaling = 1.0f;
     if (c2 != NULL) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -217,7 +217,7 @@ bool moldyn::MipDepthSphereRenderer::Render(Call& call) {
         return false;
     }
 
-    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    megamol::core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<megamol::core::view::CallClipPlane>();
     float clipDat[4];
     float clipCol[3];
     if ((ccp != NULL) && (*ccp)()) {
@@ -282,18 +282,18 @@ bool moldyn::MipDepthSphereRenderer::Render(Call& call) {
     glDisableClientState(GL_COLOR_ARRAY);
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-        MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
         // radius and position
         switch (parts.GetVertexDataType()) {
-            case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                 glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                 glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());

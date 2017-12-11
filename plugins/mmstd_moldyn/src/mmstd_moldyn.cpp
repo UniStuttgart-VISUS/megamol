@@ -45,6 +45,7 @@
 #include "rendering/GrimRenderer.h"
 #include "rendering/OracleSphereRenderer.h"
 #include "rendering/ClusteredSphereRenderer.h"
+#include "rendering/MipDepthSphereRenderer.h"
 
 #include "mmstd_moldyn/EllipsoidalDataCall.h"
 #include "mmstd_moldyn/ParticleGridDataCall.h"
@@ -154,6 +155,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::OracleSphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::ClusteredSphereRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::MipDepthSphereRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::EllipsoidalParticleDataCall>();

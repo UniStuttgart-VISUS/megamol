@@ -25,7 +25,6 @@
 #include "mmcore/misc/WatermarkRenderer.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
-#include "mmcore/moldyn/MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
@@ -88,7 +87,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<misc::WatermarkRenderer>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::AddParticleColours>();
-    instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
     instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
