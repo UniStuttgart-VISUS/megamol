@@ -17,6 +17,7 @@
 #include <cfloat>
 #include <cassert>
 #include <limits>
+#include <omp.h>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -188,17 +189,6 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
         || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()) {
         size_t allpartcnt = 0;
-        size_t cursor = 0;
-        float theVertex[3];
-        float theTemperature[3];
-
-        std::vector<std::pair<size_t, float> > ret_matches;
-        std::vector<std::pair<size_t, float> > ret_localMatches;
-        std::vector<size_t> ret_index(theNumber);
-        std::vector<float> out_dist_sqr(theNumber);
-        nanoflann::KNNResultSet<float> resultSet(theNumber);
-        nanoflann::SearchParams params;
-        params.sorted = false;
 
         // final computation
         bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -208,14 +198,12 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         //bbox.EnforcePositiveSize(); // paranoia
         auto bbox_cntr = bbox.CalcCenter();
 
-        ret_matches.reserve(100);
-
         vislib::sys::ConsoleProgressBar cpb;
         const int progressDivider = 100;
         cpb.Start("measuring temperature", static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
 
-        float minTemp = FLT_MAX;
-        float maxTemp = 0;
+        float theMinTemp = FLT_MAX;
+        float theMaxTemp = 0.0f;
 
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
@@ -224,87 +212,117 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                 continue;
             }
 
-            size_t part_cnt = pl.GetCount();
-            for (size_t part_i = 0; part_i < part_cnt; ++part_i) {
+            int num_thr = omp_get_max_threads();
+            INT64 counter = 0;
 
-                size_t myIndex = part_i + allpartcnt;
-                ret_matches.clear();
-                const float *vertexBase = this->myPts->get_position(myIndex);
-                const float *velocityBase = this->myPts->get_velocity(myIndex);
+            std::vector<float> minTemp(num_thr, FLT_MAX);
+            std::vector<float> maxTemp(num_thr, 0.0f);
 
-                for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
-                    for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
-                        for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+#pragma omp parallel num_threads(num_thr)
+            {
+                float theVertex[3];
+                float theTemperature[3];
+                std::vector<std::pair<size_t, float> > ret_matches;
+                std::vector<std::pair<size_t, float> > ret_localMatches;
+                std::vector<size_t> ret_index(theNumber);
+                std::vector<float> out_dist_sqr(theNumber);
+                nanoflann::KNNResultSet<float> resultSet(theNumber);
+                nanoflann::SearchParams params;
+                params.sorted = false;
+                ret_matches.reserve(100);
+                ret_localMatches.reserve(100);
+                int threadIdx = omp_get_thread_num();
 
-                            theVertex[0] = vertexBase[0];
-                            theVertex[1] = vertexBase[1];
-                            theVertex[2] = vertexBase[2];
-                            if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
-                            if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
-                            if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+                INT64 part_cnt = pl.GetCount();
+#pragma omp for
+                for (INT64 part_i = 0; part_i < part_cnt; ++part_i) {
 
-                            if (theSearchType == searchTypeEnum::RADIUS) {
-                                particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                                ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
-                                    [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
-                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
-                            } else {
-                                resultSet.init(ret_index.data(), out_dist_sqr.data());
-                                particleTree->findNeighbors(resultSet, theVertex, params);
-                                for (size_t i = 0; i < resultSet.size(); ++i) {
-                                    if (ret_index[i] != myIndex) {
-                                        ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                    INT64 myIndex = part_i + allpartcnt;
+                    ret_matches.clear();
+                    const float *vertexBase = this->myPts->get_position(myIndex);
+                    const float *velocityBase = this->myPts->get_velocity(myIndex);
+
+                    for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
+                        for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
+                            for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+
+                                theVertex[0] = vertexBase[0];
+                                theVertex[1] = vertexBase[1];
+                                theVertex[2] = vertexBase[2];
+                                if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
+                                if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
+                                if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+
+                                if (theSearchType == searchTypeEnum::RADIUS) {
+                                    particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                    ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
+                                        [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                                    ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                                } else {
+                                    resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                    particleTree->findNeighbors(resultSet, theVertex, params);
+                                    for (size_t i = 0; i < resultSet.size(); ++i) {
+                                        if (ret_index[i] != myIndex) {
+                                            ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                // no neighbor should count twice!
-                ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
+                    // no neighbor should count twice!
+                    ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
 
-                size_t num_matches = 0;
-                if (theSearchType == searchTypeEnum::RADIUS) {
-                    maxDist = theRadius;
-                    num_matches = ret_matches.size();
-                } else {
-                    // find overall closest! we did search around periodic boundary conditions, so there will be huge distances!
-                    sort(ret_matches.begin(), ret_matches.end(),
-                        [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
-                    // the furthest is theNumber closest or the last one if fewer.
-                    num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
-                    maxDist = ret_matches[num_matches - 1].second;
-                }
+                    size_t num_matches = 0;
+                    if (theSearchType == searchTypeEnum::RADIUS) {
+                        maxDist = theRadius;
+                        num_matches = ret_matches.size();
+                    } else {
+                        // find overall closest! we did search around periodic boundary conditions, so there will be huge distances!
+                        sort(ret_matches.begin(), ret_matches.end(),
+                            [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
+                        // the furthest is theNumber closest or the last one if fewer.
+                        num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
+                        maxDist = ret_matches[num_matches - 1].second;
+                    }
 
-                int n = 1;
-                float averageX = 0;
-                float averageY = 0;
-                float averageZ = 0;
-                for (size_t i = 0; i < num_matches; ++i) {
-                    const float *velo = myPts->get_velocity(ret_matches[i].first);
-                    averageX += (velo[0] - averageX) / n;
-                    averageY += (velo[1] - averageY) / n;
-                    averageZ += (velo[2] - averageZ) / n;
-                    ++n;
+                    int n = 1;
+                    float averageX = 0;
+                    float averageY = 0;
+                    float averageZ = 0;
+                    for (size_t i = 0; i < num_matches; ++i) {
+                        const float *velo = myPts->get_velocity(ret_matches[i].first);
+                        averageX += (velo[0] - averageX) / n;
+                        averageY += (velo[1] - averageY) / n;
+                        averageZ += (velo[2] - averageZ) / n;
+                        ++n;
+                    }
+                    // TODO if alone, do something? only happens with radius search.
+                    theTemperature[0] = velocityBase[0] - averageX;
+                    theTemperature[1] = velocityBase[1] - averageY;
+                    theTemperature[2] = velocityBase[2] - averageZ;
+                    // no square root, so actually kinetic energy
+                    float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
+                    newColors[myIndex] = tempMag;
+                    if (tempMag < minTemp[threadIdx]) minTemp[threadIdx] = tempMag;
+                    if (tempMag > maxTemp[threadIdx]) maxTemp[threadIdx] = tempMag;
+#pragma omp atomic
+                    ++counter;
+                    if ((counter % progressDivider) == 0) cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(counter / progressDivider));
                 }
-                // TODO if alone, do something? only happens with radius search.
-                theTemperature[0] = velocityBase[0] - averageX;
-                theTemperature[1] = velocityBase[1] - averageY;
-                theTemperature[2] = velocityBase[2] - averageZ;
-                // no square root, so actually kinetic energy
-                float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
-                newColors[myIndex] = tempMag;
-                if (tempMag < minTemp) minTemp = tempMag;
-                if (tempMag > maxTemp) maxTemp = tempMag;
-                if ((myIndex % progressDivider) == 0) cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(myIndex / progressDivider));
+            } // end #pragma omp parallel num_threads(num_thr)
+            for (auto i = 0; i < num_thr; ++i) {
+                if (minTemp[i] < theMinTemp) theMinTemp = minTemp[i];
+                if (maxTemp[i] > theMaxTemp) theMaxTemp = maxTemp[i];
             }
             allpartcnt += pl.GetCount();
         }
         cpb.Stop();
 
-        this->minTempSlot.Param<core::param::FloatParam>()->SetValue(minTemp);
-        this->maxTempSlot.Param<core::param::FloatParam>()->SetValue(maxTemp);
+        this->minTempSlot.Param<core::param::FloatParam>()->SetValue(theMinTemp);
+        this->maxTempSlot.Param<core::param::FloatParam>()->SetValue(theMaxTemp);
+        vislib::sys::Log::DefaultLog.WriteInfo("Thermometer: min temp: %f max temp: %f", theMinTemp, theMaxTemp);
 
         this->radiusSlot.ResetDirty();
         this->cyclXSlot.ResetDirty();
