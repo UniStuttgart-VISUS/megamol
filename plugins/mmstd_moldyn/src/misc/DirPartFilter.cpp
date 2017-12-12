@@ -6,19 +6,20 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/DirPartFilter.h"
+#include "DirPartFilter.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 //#include "vislib/ColourParser.h"
 #include <climits>
 
 using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::misc;
 
 
 /*
- * moldyn::DirPartFilter::DirPartFilter
+ * DirPartFilter::DirPartFilter
  */
-moldyn::DirPartFilter::DirPartFilter(void) : Module(),
+DirPartFilter::DirPartFilter(void) : Module(),
         inParticlesDataSlot("inPartData", "Input for oriented particle data"),
         inVolumeDataSlot("inVolData", "Input for volume data"),
         outDataSlot("outData", "Output of oriented particle data"),
@@ -28,16 +29,16 @@ moldyn::DirPartFilter::DirPartFilter(void) : Module(),
         datahashOut(0), datahashParticlesIn(0), datahashVolumeIn(0),
         frameID(0), vertData() {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<megamol::core::moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->inVolumeDataSlot.SetCompatibleCall<CallVolumeDataDescription>();
     this->MakeSlotAvailable(&this->inVolumeDataSlot);
 
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(0), &DirPartFilter::getData);
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(1), &DirPartFilter::getExtend);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(),
+        megamol::core::moldyn::DirectionalParticleDataCall::FunctionName(0), &DirPartFilter::getData);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(),
+        megamol::core::moldyn::DirectionalParticleDataCall::FunctionName(1), &DirPartFilter::getExtend);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->attributeSlot << new param::StringParam("0");
@@ -52,40 +53,40 @@ moldyn::DirPartFilter::DirPartFilter(void) : Module(),
 
 
 /*
- * moldyn::DirPartFilter::~DirPartFilter
+ * DirPartFilter::~DirPartFilter
  */
-moldyn::DirPartFilter::~DirPartFilter(void) {
+DirPartFilter::~DirPartFilter(void) {
     this->Release(); // implicitly calls 'release'
 }
 
 
 /*
- * moldyn::DirPartFilter::create
+ * DirPartFilter::create
  */
-bool moldyn::DirPartFilter::create(void) {
+bool DirPartFilter::create(void) {
     // intentionally empty
     return true;
 }
 
 
 /*
- * moldyn::DirPartFilter::release
+ * DirPartFilter::release
  */
-void moldyn::DirPartFilter::release(void) {
+void DirPartFilter::release(void) {
     // intentionally empty
 }
 
 
 /*
- * moldyn::DirPartFilter::getData
+ * DirPartFilter::getData
  */
-bool moldyn::DirPartFilter::getData(Call& call) {
+bool DirPartFilter::getData(Call& call) {
     bool rebuildData = false;
     if (this->datahashOut == 0) rebuildData = true;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+    megamol::core::moldyn::DirectionalParticleDataCall *outDpdc = dynamic_cast<megamol::core::moldyn::DirectionalParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    megamol::core::moldyn::DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<megamol::core::moldyn::DirectionalParticleDataCall>();
     if (inDpdc == NULL) return false;
     CallVolumeData *inCvd = this->inVolumeDataSlot.CallAs<CallVolumeData>();
     if (inCvd == NULL) return false;
@@ -116,9 +117,9 @@ bool moldyn::DirPartFilter::getData(Call& call) {
         //        return false;
         //}
         switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
-            case DirectionalParticleDataCall::Particles::VERTDATA_NONE: // falls through
-            case DirectionalParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
-            case DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: // falls through
+            case megamol::core::moldyn::DirectionalParticleDataCall::Particles::VERTDATA_NONE: // falls through
+            case megamol::core::moldyn::DirectionalParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
+            case megamol::core::moldyn::DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: // falls through
                 return false;
         }
     }
@@ -251,14 +252,14 @@ bool moldyn::DirPartFilter::getData(Call& call) {
     if (this->vertData.IsEmpty()) {
         // no particles for you :-/
         for (int i = outDpdc->GetParticleListCount() - 1; i >= 0; i--) {
-            outDpdc->AccessParticles(i).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+            outDpdc->AccessParticles(i).SetVertexData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
         }
 
     } else {
         unsigned int cnt = outDpdc->GetParticleListCount();
         SIZE_T off = 0;
         for (unsigned int i = 0; i < cnt; i++) {
-            outDpdc->AccessParticles(i).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->vertData.At(off));
+            outDpdc->AccessParticles(i).SetVertexData(megamol::core::moldyn::DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->vertData.At(off));
             off += static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount() * 4) * sizeof(float);
         }
     }
@@ -268,12 +269,12 @@ bool moldyn::DirPartFilter::getData(Call& call) {
 
 
 /*
- * moldyn::DirPartFilter::getExtend
+ * DirPartFilter::getExtend
  */
-bool moldyn::DirPartFilter::getExtend(Call& call) {
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+bool DirPartFilter::getExtend(Call& call) {
+    megamol::core::moldyn::DirectionalParticleDataCall *outDpdc = dynamic_cast<megamol::core::moldyn::DirectionalParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    megamol::core::moldyn::DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<megamol::core::moldyn::DirectionalParticleDataCall>();
     if (inDpdc == NULL) return false;
 
     *inDpdc = *outDpdc;
