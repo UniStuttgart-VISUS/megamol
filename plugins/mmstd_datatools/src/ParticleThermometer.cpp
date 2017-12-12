@@ -34,6 +34,7 @@ datatools::ParticleThermometer::ParticleThermometer(void)
         searchTypeSlot("searchType", "num of neighbors or radius"),
         minTempSlot("minTemp", "the detected minimum temperature"),
         maxTempSlot("maxTemp", "the detected maximum temperature"),
+        massSlot("mass", "the mass of the particles"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         maxDist(0.0f),
@@ -65,6 +66,9 @@ datatools::ParticleThermometer::ParticleThermometer(void)
 
     this->maxTempSlot.SetParameter(new core::param::FloatParam(0));
     this->MakeSlotAvailable(&this->maxTempSlot);
+
+    this->massSlot.SetParameter(new core::param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->massSlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermometer::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermometer::getExtentCallback);
@@ -120,6 +124,7 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     unsigned int plc = in->GetParticleListCount();
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
     theRadius = theRadius * theRadius;
+    float theMass = this->massSlot.Param<core::param::FloatParam>()->Value();
     int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
     auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     size_t allpartcnt = 0;
@@ -205,6 +210,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
 
+        const bool remove_self = false;
+
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
@@ -255,14 +262,16 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
 
                                 if (theSearchType == searchTypeEnum::RADIUS) {
                                     particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                                    ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
-                                        [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                                    if (remove_self) {
+                                        ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
+                                            [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                                    }
                                     ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
                                 } else {
                                     resultSet.init(ret_index.data(), out_dist_sqr.data());
                                     particleTree->findNeighbors(resultSet, theVertex, params);
                                     for (size_t i = 0; i < resultSet.size(); ++i) {
-                                        if (ret_index[i] != myIndex) {
+                                        if (!remove_self || ret_index[i] != myIndex) {
                                             ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
                                         }
                                     }
@@ -287,21 +296,21 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                         maxDist = ret_matches[num_matches - 1].second;
                     }
 
-                    int n = 1;
-                    float averageX = 0;
-                    float averageY = 0;
-                    float averageZ = 0;
+                    std::vector<float> sum(3, 0);
+                    std::vector<float> sqsum(3, 0);
                     for (size_t i = 0; i < num_matches; ++i) {
                         const float *velo = myPts->get_velocity(ret_matches[i].first);
-                        averageX += (velo[0] - averageX) / n;
-                        averageY += (velo[1] - averageY) / n;
-                        averageZ += (velo[2] - averageZ) / n;
-                        ++n;
+                        for (int c = 0; c < 3; ++c) {
+                            float v = velo[c];
+                            sum[c] += v;
+                            sqsum[c] += v * v;
+                        }
                     }
-                    // TODO if alone, do something? only happens with radius search.
-                    theTemperature[0] = velocityBase[0] - averageX;
-                    theTemperature[1] = velocityBase[1] - averageY;
-                    theTemperature[2] = velocityBase[2] - averageZ;
+                    for (int c = 0; c < 3; ++c) {
+                        float vd = sum[c] / num_matches;
+                        theTemperature[c] = (theMass / 2) * (sqsum[c] - num_matches * vd * vd);
+                    }
+
                     // no square root, so actually kinetic energy
                     float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
                     newColors[myIndex] = tempMag;
