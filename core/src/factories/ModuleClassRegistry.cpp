@@ -27,7 +27,6 @@
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
-#include "mmcore/moldyn/DirPartColModulate.h"
 //#include "mmcore/special/ColStereoDisplay.h"
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
@@ -85,7 +84,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
     instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
