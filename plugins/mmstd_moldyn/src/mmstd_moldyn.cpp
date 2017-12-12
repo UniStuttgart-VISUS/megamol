@@ -38,6 +38,7 @@
 #include "misc/ParticleListFilter.h"
 #include "misc/DirPartFilter.h"
 #include "misc/AddParticleColours.h"
+#include "misc/AddClusterColours.h"
 
 #include "io/MMPGDWriter.h"
 #include "io/MMPGDDataSource.h"
@@ -157,6 +158,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::ParticleListFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::DirPartFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::AddParticleColours>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::AddClusterColours>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::OracleSphereRenderer>();
