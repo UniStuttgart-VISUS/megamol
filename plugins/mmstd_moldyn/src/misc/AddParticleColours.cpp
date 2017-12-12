@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/AddParticleColours.h"
+#include "AddParticleColours.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "vislib/RawStorage.h"
@@ -15,31 +15,32 @@
 #include <algorithm>
 
 using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::misc;
 
 /****************************************************************************/
 
 /*
- * moldyn::AddParticleColours::Unlocker::Unlocker
+ * AddParticleColours::Unlocker::Unlocker
  */
-moldyn::AddParticleColours::Unlocker::Unlocker(
-        MultiParticleDataCall::Unlocker *inner)
-        : MultiParticleDataCall::Unlocker(), inner(inner) {
+AddParticleColours::Unlocker::Unlocker(
+        megamol::core::moldyn::MultiParticleDataCall::Unlocker *inner)
+        : megamol::core::moldyn::MultiParticleDataCall::Unlocker(), inner(inner) {
     // intentionally empty ATM
 }
 
 
 /*
- * moldyn::AddParticleColours::Unlocker::~Unlocker
+ * AddParticleColours::Unlocker::~Unlocker
  */
-moldyn::AddParticleColours::Unlocker::~Unlocker(void) {
+AddParticleColours::Unlocker::~Unlocker(void) {
     this->Unlock();
 }
 
 
 /*
- * moldyn::AddParticleColours::Unlocker::Unlock
+ * AddParticleColours::Unlocker::Unlock
  */
-void moldyn::AddParticleColours::Unlocker::Unlock(void) {
+void AddParticleColours::Unlocker::Unlock(void) {
     if (this->inner != NULL) {
         this->inner->Unlock();
         SAFE_DELETE(this->inner);
@@ -51,9 +52,9 @@ void moldyn::AddParticleColours::Unlocker::Unlock(void) {
 
 
 /*
- * moldyn::AddParticleColours::AddParticleColours
+ * AddParticleColours::AddParticleColours
  */
-moldyn::AddParticleColours::AddParticleColours(void) : Module(),
+AddParticleColours::AddParticleColours(void) : Module(),
         putDataSlot("putdata", "Connects from the data consumer"),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
@@ -68,7 +69,7 @@ moldyn::AddParticleColours::AddParticleColours(void) : Module(),
         &AddParticleColours::getExtentCallback);
     this->MakeSlotAvailable(&this->putDataSlot);
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -80,39 +81,39 @@ moldyn::AddParticleColours::AddParticleColours(void) : Module(),
 
 
 /*
- * moldyn::AddParticleColours::~AddParticleColours
+ * AddParticleColours::~AddParticleColours
  */
-moldyn::AddParticleColours::~AddParticleColours(void) {
+AddParticleColours::~AddParticleColours(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::AddParticleColours::create
+ * AddParticleColours::create
  */
-bool moldyn::AddParticleColours::create(void) {
+bool AddParticleColours::create(void) {
     return true;
 }
 
 
 /*
- * moldyn::AddParticleColours::release
+ * AddParticleColours::release
  */
-void moldyn::AddParticleColours::release(void) {
+void AddParticleColours::release(void) {
     // intentionally empty ATM
 }
 
 
 /*
- * moldyn::AddParticleColours::getDataCallback
+ * AddParticleColours::getDataCallback
  */
-bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
+bool AddParticleColours::getDataCallback(Call& caller) {
     static vislib::RawStorage updateHash;
     static vislib::RawStorageWriter uhWriter(updateHash);
-    MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
+    megamol::core::moldyn::MultiParticleDataCall *inCall = dynamic_cast<megamol::core::moldyn::MultiParticleDataCall*>(&caller);
     if (inCall == NULL) return false;
 
-    MultiParticleDataCall *outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     if (outCall == NULL) return false;
 
     *outCall = *inCall;
@@ -122,8 +123,8 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
         SIZE_T cntCol = 0;
         for (unsigned int i = 0; i < outCall->GetParticleListCount(); i++) {
-            MultiParticleDataCall::Particles &part = outCall->AccessParticles(i);
-            if (part.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            megamol::core::moldyn::MultiParticleDataCall::Particles &part = outCall->AccessParticles(i);
+            if (part.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                 SIZE_T cnt = static_cast<SIZE_T>(part.GetCount());
                 cntCol += cnt;
                 uhWriter.Write(part.GetMinColourIndexValue());
@@ -201,8 +202,8 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
                 cntCol = 0;
                 for (unsigned int i = 0; i < outCall->GetParticleListCount(); i++) {
-                    MultiParticleDataCall::Particles &parts = outCall->AccessParticles(i);
-                    if (parts.GetColourDataType() != MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
+                    megamol::core::moldyn::MultiParticleDataCall::Particles &parts = outCall->AccessParticles(i);
+                    if (parts.GetColourDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
                     const float *values = static_cast<const float*>(parts.GetColourData());
                     unsigned int stride = std::max<unsigned int>(parts.GetColourDataStride(), sizeof(float));
 
@@ -246,11 +247,11 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
             cntCol = 0;
             for (unsigned int i = 0; i < inCall->GetParticleListCount(); i++) {
-                if (inCall->AccessParticles(i).GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                if (inCall->AccessParticles(i).GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                     inCall->AccessParticles(i).SetColourData(
                         (colcompcnt == 3)
-                        ? MultiParticleDataCall::Particles::COLDATA_UINT8_RGB
-                        : MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA,
+                        ? megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB
+                        : megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA,
                         this->colData.At(cntCol));
                     cntCol += colcompcnt * static_cast<SIZE_T>(inCall->AccessParticles(i).GetCount());
                 }
@@ -270,13 +271,13 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
 
 /*
- * moldyn::AddParticleColours::getExtentCallback
+ * AddParticleColours::getExtentCallback
  */
-bool moldyn::AddParticleColours::getExtentCallback(Call& caller) {
-    MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
+bool AddParticleColours::getExtentCallback(Call& caller) {
+    megamol::core::moldyn::MultiParticleDataCall *inCall = dynamic_cast<megamol::core::moldyn::MultiParticleDataCall*>(&caller);
     if (inCall == NULL) return false;
 
-    MultiParticleDataCall *outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     if (outCall == NULL) return false;
 
     *outCall = *inCall;
