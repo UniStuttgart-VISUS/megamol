@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include "mmcore/moldyn/DynDensityGradientEstimator.h"
+#include "DynDensityGradientEstimator.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <omp.h>
@@ -16,11 +16,12 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::misc;
 
 /*
- * moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator
+ * DynDensityGradientEstimator::DynDensityGradientEstimator
  */
-moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
+DynDensityGradientEstimator::DynDensityGradientEstimator(void)
         : Module(), getPartDataSlot("getPartData", "..."),
              putDirDataSlot("putDirData", "..."),
              dens(NULL),
@@ -29,7 +30,7 @@ moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
              zResSlot("sizez", "The size of the volume in numbers of voxels") {
 
     this->getPartDataSlot.SetCompatibleCall<
-            moldyn::MultiParticleDataCallDescription>();
+            megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getPartDataSlot);
 
     this->putDirDataSlot.SetCallback("DirectionalParticleDataCall", "GetData",
@@ -50,37 +51,37 @@ moldyn::DynDensityGradientEstimator::DynDensityGradientEstimator(void)
 }
 
 /*
- * moldyn::DynDensityGradientEstimator::~DynDensityGradientEstimator
+ * DynDensityGradientEstimator::~DynDensityGradientEstimator
  */
-moldyn::DynDensityGradientEstimator::~DynDensityGradientEstimator(void) {
+DynDensityGradientEstimator::~DynDensityGradientEstimator(void) {
     this->Release();
 }
 
 /*
- * moldyn::DynDensityGradientEstimator::create
+ * DynDensityGradientEstimator::create
  */
-bool moldyn::DynDensityGradientEstimator::create(void) {
+bool DynDensityGradientEstimator::create(void) {
     return true;
 }
 
 /*
- * moldyn::DynDensityGradientEstimator::release
+ * DynDensityGradientEstimator::release
  */
-void moldyn::DynDensityGradientEstimator::release(void) {
+void DynDensityGradientEstimator::release(void) {
     if (this->dens) delete[] this->dens;
 }
 
 /*
- * moldyn::DynDensityGradientEstimator::getExtent
+ * DynDensityGradientEstimator::getExtent
  */
-bool moldyn::DynDensityGradientEstimator::getExtent(Call& call) {
+bool DynDensityGradientEstimator::getExtent(Call& call) {
 
     // Get a pointer to the incoming data call.
-    moldyn::DirectionalParticleDataCall *callIn = dynamic_cast<moldyn::DirectionalParticleDataCall*>(&call);
+    megamol::core::moldyn::DirectionalParticleDataCall *callIn = dynamic_cast<megamol::core::moldyn::DirectionalParticleDataCall*>(&call);
     if(callIn == NULL) return false;
 
     // Get a pointer to the outgoing data call.
-    moldyn::MultiParticleDataCall *callOut = this->getPartDataSlot.CallAs<moldyn::MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *callOut = this->getPartDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     if(callOut == NULL) return false;
 
     // Get extend.
@@ -94,18 +95,18 @@ bool moldyn::DynDensityGradientEstimator::getExtent(Call& call) {
 }
 
 /*
- * moldyn::DynDensityGradientEstimator::getData
+ * DynDensityGradientEstimator::getData
  */
-bool moldyn::DynDensityGradientEstimator::getData(Call& call) {
+bool DynDensityGradientEstimator::getData(Call& call) {
 
     // Get a pointer to the incoming data call.
-    moldyn::DirectionalParticleDataCall *callIn =
-            dynamic_cast<moldyn::DirectionalParticleDataCall*>(&call);
+    megamol::core::moldyn::DirectionalParticleDataCall *callIn =
+            dynamic_cast<megamol::core::moldyn::DirectionalParticleDataCall*>(&call);
     if (callIn == NULL) return false;
 
     // Get a pointer to the outgoing data call.
-    moldyn::MultiParticleDataCall *callOut =
-            this->getPartDataSlot.CallAs<moldyn::MultiParticleDataCall>();
+    megamol::core::moldyn::MultiParticleDataCall *callOut =
+            this->getPartDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     if (callOut == NULL) {
         return false;
     }
@@ -166,22 +167,22 @@ bool moldyn::DynDensityGradientEstimator::getData(Call& call) {
     callIn->SetParticleListCount(1);
     callIn->AccessParticles(0).SetCount(this->gridPos.Count()/4);
     callIn->AccessParticles(0).SetVertexData(
-                    MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                     this->gridPos.PeekElements());
     callIn->AccessParticles(0).SetDirData(
-                    DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    megamol::core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                     this->dir.PeekElements());
     callIn->AccessParticles(0).SetGlobalColour(255, 0, 0);
-    callIn->AccessParticles(0).SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL, 0);
+    callIn->AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL, 0);
 
     return true;
 }
 
 
 /*
- *  moldyn::DynDensityGradientEstimator::createVolumeCPU
+ *  DynDensityGradientEstimator::createVolumeCPU
  */
-bool moldyn::DynDensityGradientEstimator::createVolumeCPU(
+bool DynDensityGradientEstimator::createVolumeCPU(
         class megamol::core::moldyn::MultiParticleDataCall& c2) {
 
     int sx = this->xResSlot.Param<param::IntParam>()->Value();
