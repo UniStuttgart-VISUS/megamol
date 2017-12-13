@@ -1060,9 +1060,15 @@ void KeyframeKeeper::saveKeyframes() {
         vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Save Keyframes] No filename given. Using default filename.");
 
         time_t t = std::time(0);  // get time now
-        struct tm *now = new struct tm;
+        struct tm *now = nullptr;
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+        struct tm nowdata;
+        now = &nowdata;
         localtime_s(now, &t);
-        this->filename.Format("keyframes_%i%i%i-%i%i%i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+        now = localtime(&t);
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+        this->filename.Format("keyframes_%i%02i%02i-%02i%02i%02i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
         this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
