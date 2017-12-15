@@ -542,22 +542,18 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call,
 
     const ospcommon::vec3f dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
 
+    const double A = -(zFar + zNear) / (zFar - zNear);
+    const double B = -2. * zFar*zNear / (zFar - zNear);
+
     int j,i;
 #pragma omp parallel for private(i)
     for (j = 0; j<ospDepthBufferHeight; j++)
         for (i = 0; i<ospDepthBufferWidth; i++) {
             const ospcommon::vec3f dir_ij = normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du + float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
 
-            db[j*ospDepthBufferWidth + i] = ospDepthBuffer[j*ospDepthBufferWidth + i] * dot(cameraDir, dir_ij);
+            float tmp = ospDepthBuffer[j*ospDepthBufferWidth + i] * dot(cameraDir, dir_ij);
+            db[j*ospDepthBufferWidth + i] = 0.5*(-A*tmp + B) / tmp + 0.5;
         }
-
-    // transform from linear to nonlinear OpenGL depth
-    const double A = -(zFar + zNear) / (zFar - zNear);
-    const double B = -2. * zFar*zNear / (zFar - zNear);
-#pragma omp parallel for
-    for (int i = 0; i<ospDepthBufferWidth*ospDepthBufferHeight; i++)
-        db[i] = 0.5*(-A*db[i] + B) / db[i] + 0.5;
-
 
     // unmap OSPRay depth buffer
     ospUnmapFrameBuffer(ospDepthBuffer, this->framebuffer);
