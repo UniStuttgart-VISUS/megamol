@@ -45,7 +45,7 @@ protected:
     * @param image/window width
     * @param image/window heigth
     */
-    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, const float* db, int &width, int &height, core::view::CallRender3D& cr, const float farClip);
+    void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t* fb, const float* db, int &width, int &height, core::view::CallRender3D& cr);
 
     /**
     * helper function for setting up the OSPRay screen
@@ -96,7 +96,7 @@ protected:
 
     // vertex array, vertex buffer object, texture
     GLuint vaScreen, vbo, tex, depth;
-
+    vislib::graphics::gl::FramebufferObject new_fbo;
 
     /**
     * Reads the structure map and uses its parameteres to
@@ -151,6 +151,7 @@ protected:
     OSPDevice device;
     // renderer
     OSPRenderer renderer;
+    OSPTexture2D maxDepthTexture;
 
 	// structure vectors
 	std::vector<OSPGeometry> geo;
