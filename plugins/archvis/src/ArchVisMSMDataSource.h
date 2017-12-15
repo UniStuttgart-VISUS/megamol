@@ -57,31 +57,50 @@ namespace archvis {
 
 	protected:
 
-		virtual bool getDataCallback(core::Call& caller);
-
+		virtual bool getDataCallback(megamol::core::Call& caller);
+		
 		/**
 		* Loads the specified geometry and shader file
 		*
 		* @param shader_filename The shader file to load
 		* @param geometry_filename The geometry file to load
+		* @param nodeElement_filenamen The node-element table file
 		*
 		* @return True on success
 		*/
-		virtual bool load(std::string const& shader_filename, std::string const& geometry_filename);
+		virtual bool load(std::string const& shader_filename,
+			std::string const& geometry_filename,
+			std::string const& nodesElement_filename);
 
 	private:
 
+		typedef std::tuple<float, float, float> Node;
+		typedef std::tuple<int, int, int, int> FloorElement;
+		typedef std::tuple<int, int> BeamElement;
+		typedef std::tuple<int, int> DiagonalElement;
+
+
+		std::vector<std::string> parsePartsList(std::string const& filename);
+
+		void parseNodeElementTable(
+			std::string const& filename,
+			std::vector<Node>& nodes,
+			std::vector<FloorElement>& floor_elements,
+			std::vector<BeamElement>& beam_elements,
+			std::vector<DiagonalElement>& diagonal_elements);
+
+
 		/** The shader file name */
-		core::param::ParamSlot m_shaderFilename_slot;
+		megamol::core::param::ParamSlot m_shaderFilename_slot;
 
 		/** The mesh list file name */
-		core::param::ParamSlot m_partsList_slot;
+		megamol::core::param::ParamSlot m_partsList_slot;
 
 		/** The node/element list file name */
-		core::param::ParamSlot m_nodeElement_table_slot;
+		megamol::core::param::ParamSlot m_nodeElement_table_slot;
 
 		/** The IP Adress for sensor data transfer */
-		core::param::ParamSlot m_IPAdress_slot;
+		megamol::core::param::ParamSlot m_IPAdress_slot;
 
 		/** The socket that receives the sensor data */
 		vislib::net::Socket m_sensor_data_socket;
