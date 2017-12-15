@@ -76,7 +76,7 @@ SombreroWarper::SombreroWarper(void) : Module(),
     this->flatteningParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->flatteningParam);
 
-    this->southBorderWeightParam.SetParameter(new param::IntParam(5, 1, 30));
+    this->southBorderWeightParam.SetParameter(new param::IntParam(5, 1, 200));
     this->MakeSlotAvailable(&this->southBorderWeightParam);
 
     this->southBorderHeightFactor.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
@@ -896,6 +896,15 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         this->boundingBox.SetBottom(this->boundingBox.Bottom() - bbmargin);
         this->boundingBox.SetTop(this->boundingBox.Top() + bbmargin);
     }
+
+#define COMPARE
+#ifdef COMPARE
+    if (!this->flatteningParam.Param<param::BoolParam>()->Value() && this->sombreroLength.size() > 0) {
+        this->boundingBox.Set(-30.0f, -7.0f, -30.0f, 30.0f, 7.0f, 30.0f);
+    } else {
+        this->boundingBox.Set(-30.0f, -30.0f, (this->sombreroLength[0] / 2.0f) - bbmargin, 30.0f, 30.0f, (this->sombreroLength[0] / 2.0f) + bbmargin);
+    }
+#endif
 
     return true;
 }
@@ -2278,6 +2287,12 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
                 this->vertices[i][3 * v + 0] = xCoord;
                 this->vertices[i][3 * v + 1] = yCoord;
                 this->vertices[i][3 * v + 2] = zCoord;
+            }
+
+            if (flatmode) {
+                auto help = this->vertices[i][3 * v + 2];
+                this->vertices[i][3 * v + 2] = this->vertices[i][3 * v + 1];
+                this->vertices[i][3 * v + 1] = help;
             }
         }
     }

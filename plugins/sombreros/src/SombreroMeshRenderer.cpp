@@ -183,6 +183,9 @@ bool SombreroMeshRenderer::Render(Call& call) {
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(0)) return false;
 
+    //auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
+    //printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
+
     bool normals = false;
     bool colors = false;
     bool textures = false;

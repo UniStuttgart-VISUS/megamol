@@ -444,6 +444,23 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
 			if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+            #define SCALING_ISSUE
+            #ifdef SCALING_ISSUE
+                float width = bbox.Width();
+                float height = bbox.Height();
+                float depth = bbox.Depth();
+
+                float widthadd = 85.0f - width;
+                float heightadd = 75.0f - height;
+                float depthadd = 68.0f - depth;
+
+                this->bbox.SetLeft(this->bbox.GetLeft() - (widthadd / 2.0f));
+                this->bbox.SetBottom(this->bbox.GetBottom() - (heightadd / 2.0f));
+                this->bbox.SetBack(this->bbox.GetBack() - (depthadd / 2.0f));
+                this->bbox.SetRight(this->bbox.GetRight() + (widthadd / 2.0f));
+                this->bbox.SetTop(this->bbox.GetTop() + (heightadd / 2.0f));
+                this->bbox.SetFront(this->bbox.GetFront() + (depthadd / 2.0f));
+            #endif
 			}
 		}
     }
@@ -621,6 +638,22 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
             for (unsigned int i = 1; i < this->vertexCount; i++) {
                 this->bbox.GrowToPoint(vertex[i * 3], vertex[i * 3 + 1], vertex[i * 3 + 2]);
             }
+        #ifdef SCALING_ISSUE
+            float width = bbox.Width();
+            float height = bbox.Height();
+            float depth = bbox.Depth();
+
+            float widthadd = 85.0f - width;
+            float heightadd = 75.0f - height;
+            float depthadd = 68.0f - depth;
+
+            this->bbox.SetLeft(this->bbox.GetLeft() - (widthadd / 2.0f));
+            this->bbox.SetBottom(this->bbox.GetBottom() - (heightadd / 2.0f));
+            this->bbox.SetBack(this->bbox.GetBack() - (depthadd / 2.0f));
+            this->bbox.SetRight(this->bbox.GetRight() + (widthadd / 2.0f));
+            this->bbox.SetTop(this->bbox.GetTop() + (heightadd / 2.0f));
+            this->bbox.SetFront(this->bbox.GetFront() + (depthadd / 2.0f));
+        #endif
         }
 
         // try to call molecular data and compute colors
