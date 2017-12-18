@@ -16,7 +16,7 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
 
 
-  get_filename_component(cuda_compiler_directory  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
+  get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
   
   set(LIBS vislib core mmstd_trisoup protein_calls glad cufft)
   if(MSVC)
@@ -38,7 +38,7 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
   file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
-  file(GLOB_RECURSE cuda_std_header_files RELATIVE "${cuda_compiler_directory}/../include/*.h")
+  file(GLOB_RECURSE cuda_std_header_files RELATIVE "${CUDA_COMPILER_DIRECTORY}" "../include/*.h")
   
   set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
   set_source_files_properties(cuda_header_files PROPERTIES LANGUAGE CUDA)
