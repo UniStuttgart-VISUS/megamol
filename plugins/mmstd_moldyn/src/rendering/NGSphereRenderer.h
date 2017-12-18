@@ -25,9 +25,9 @@ namespace stdplugin {
 namespace moldyn {
 namespace rendering {
 
-	using namespace megamol::core;
-	using namespace megamol::core::moldyn;
-	using namespace vislib::graphics::gl;
+    using namespace megamol::core;
+    using namespace megamol::core::moldyn;
+    using namespace vislib::graphics::gl;
 
     /**
      * Renderer for simple sphere glyphs
@@ -104,38 +104,38 @@ namespace rendering {
     private:
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-		std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
-		std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-		bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-		bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-		void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-			unsigned int &colStride, unsigned int &vertStride);
+        std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
+        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+        void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
+            unsigned int &colStride, unsigned int &vertStride);
 
         void queueSignal(GLsync& syncObj);
-		void waitSignal(GLsync& syncObj);
+        void waitSignal(GLsync& syncObj);
 
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
         std::vector<GLsync> fences;
-		GLuint theSingleBuffer;
+        GLuint theSingleBuffer;
         unsigned int currBuf;
         GLuint colIdxAttribLoc;
         GLsizeiptr bufSize;
-		int numBuffers;
-		void *theSingleMappedMem;
-		GLuint singleBufferCreationBits;
-		GLuint singleBufferMappingBits;
-		SimpleSphericalParticles::ColourDataType colType;
-		SimpleSphericalParticles::VertexDataType vertType;
-		typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-		std::shared_ptr<GLSLShader> newShader;
-		shaderMap theShaders;
-		vislib::SmartPtr<ShaderSource> vert, frag;
+        int numBuffers;
+        void *theSingleMappedMem;
+        GLuint singleBufferCreationBits;
+        GLuint singleBufferMappingBits;
+        SimpleSphericalParticles::ColourDataType colType;
+        SimpleSphericalParticles::VertexDataType vertType;
+        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
+        std::shared_ptr<GLSLShader> newShader;
+        shaderMap theShaders;
+        vislib::SmartPtr<ShaderSource> vert, frag;
         core::param::ParamSlot scalingParam;
-		//TimeMeasure timer;
-		//megamol::core::utility::ShaderSourceFactory::sh
+        //TimeMeasure timer;
+        //megamol::core::utility::ShaderSourceFactory::sh
     };
 
 } /* end namespace rendering */
