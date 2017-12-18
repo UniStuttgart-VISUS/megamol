@@ -49,8 +49,6 @@ bool ospray::PkdBuilder::manipulateData(
     outData.SetFrameID(frameID);
     outData.SetDataHash(outDataHash);
 
-    // TODO support more than one particle list
-    vd.resize(inData.GetParticleListCount());
     for (unsigned int i = 0; i <inData.GetParticleListCount(); i++) {
         auto &parts = inData.AccessParticles(i);
         auto &out = outData.AccessParticles(i);
@@ -64,23 +62,9 @@ bool ospray::PkdBuilder::manipulateData(
         this->build();
 
 
-        vd[i].clear();
-        vd[i].reserve(parts.GetCount() * 3);
-        for (int j = 0; j < parts.GetCount(); j++) {
-            vd[i].push_back(this->model->position[j].x);
-            vd[i].push_back(this->model->position[j].y);
-            vd[i].push_back(this->model->position[j].z);
-        }
-
-        out.SetVertexData(megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, vd[i].data(), 12);
+        out.SetVertexData(megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &this->model->position[0].x, 12);
         out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_NONE, NULL, 0);
     }
-
-
-
-
-
-
 
     return true;
 }
