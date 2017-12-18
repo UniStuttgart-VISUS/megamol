@@ -440,16 +440,22 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
-    imgEnd[0] = cr->GetCameraParameters()->TileRect().GetRight() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgEnd[1] = cr->GetCameraParameters()->TileRect().GetTop() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
     // setup camera
     ospSet2fv(camera, "image_start", imgStart.data());
     ospSet2fv(camera, "image_end", imgEnd.data());
-    ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
+    ospSetf(camera, "aspect", static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
+    //ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
     ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());

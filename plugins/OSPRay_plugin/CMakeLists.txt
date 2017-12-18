@@ -32,7 +32,6 @@ if(BUILD_OSPRAY_PLUGIN)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-narrowing -Wno-unknown-pragmas -Wstrict-aliasing=1 -ffast-math  -fPIC")
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
