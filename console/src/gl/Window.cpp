@@ -42,7 +42,8 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
         : 
 #endif
         hView(), hWnd(nullptr), width(-1), height(-1), renderContext(), uiLayers(), mouseCapture(),
-        name(title), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false) {
+        name(title), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false),
+        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false) {
 
     if (::memcmp(name.c_str(), WindowManager::TitlePrefix, WindowManager::TitlePrefixLength) == 0) {
         name = name.substr(WindowManager::TitlePrefixLength);
@@ -209,12 +210,15 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
     vislib::graphics::gl::LoadAllGL();
     vislib::sys::Log::DefaultLog.WriteInfo("Successfully created EGL context.");
 #endif
-
+    glGenQueries(1, &fragmentQuery);
+    glGenQueries(1, &primsQuery);
     fpsSyncTime = std::chrono::system_clock::now();
 }
 
 gl::Window::~Window() {
     assert(hWnd == nullptr);
+    glDeleteQueries(1, &fragmentQuery);
+    glDeleteQueries(1, &primsQuery);
 }
 
 void gl::Window::EnableVSync() {
@@ -247,7 +251,25 @@ void gl::Window::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
 void gl::Window::SetShowFPSinTitle(bool show) {
     showFpsInTitle = show;
 #ifndef USE_EGL
-    if (!showFpsInTitle) {
+    if (!showFpsInTitle && !showFragmentsInTitle) {
+        ::glfwSetWindowTitle(hWnd, (std::string(WindowManager::TitlePrefix) + name).c_str());
+    }
+#endif
+}
+
+void gl::Window::SetShowSamplesinTitle(bool show) {
+    showFragmentsInTitle = show;
+#ifndef USE_EGL
+    if (!showFpsInTitle && !showFragmentsInTitle) {
+        ::glfwSetWindowTitle(hWnd, (std::string(WindowManager::TitlePrefix) + name).c_str());
+    }
+#endif
+}
+
+void gl::Window::SetShowPrimsinTitle(bool show) {
+    showPrimsInTitle = show;
+#ifndef USE_EGL
+    if (!showFpsInTitle && !showFragmentsInTitle && !showPrimsInTitle) {
         ::glfwSetWindowTitle(hWnd, (std::string(WindowManager::TitlePrefix) + name).c_str());
     }
 #endif
@@ -303,7 +325,11 @@ void gl::Window::Update() {
 
     fpsCntr.FrameBegin();
     if ((width > 0) && (height > 0)) {
+        if (showFragmentsInTitle) glBeginQuery(GL_SAMPLES_PASSED, fragmentQuery);
+        if (showPrimsInTitle) glBeginQuery(GL_PRIMITIVES_GENERATED, primsQuery);
         ::mmcRenderView(hView, &renderContext);
+        if (showFragmentsInTitle) glEndQuery(GL_SAMPLES_PASSED);
+        if (showPrimsInTitle) glEndQuery(GL_PRIMITIVES_GENERATED);
     }
 
     for (std::shared_ptr<AbstractUILayer> uil : this->uiLayers) {
@@ -317,8 +343,8 @@ void gl::Window::Update() {
 #else
     eglSwapBuffers( eglDisplay, eglSurface);
     
-	// Export rendered image for verification
-	//captureFramebufferPPM(0, width, height, "egl-test.ppm");
+    // Export rendered image for verification
+    //captureFramebufferPPM(0, width, height, "egl-test.ppm");
 #endif
     fpsCntr.FrameEnd();
 
@@ -482,11 +508,35 @@ void gl::Window::on_fps_value(float fps_val) {
     fpsList[fpsList.size() - 1] = fps;
 
 #ifndef USE_EGL
+    //if (showFpsInTitle) {
+    //    std::stringstream title;
+    //    if (showFragmentsInTitle) {
+    //        GLuint64 samp;
+    //        glGetQueryObjectui64v(fragmentQuery, GL_QUERY_RESULT, &samp);
+    //        title << WindowManager::TitlePrefix << name << " - [" << fps << " fps, " << samp << " samples]";
+    //    } else {
+    //        title << WindowManager::TitlePrefix << name << " - [" << fps << " fps]";
+    //    }
+    //    ::glfwSetWindowTitle(hWnd, title.str().c_str());
+    //}
+    std::stringstream title;
+    title << WindowManager::TitlePrefix << name;
+    if (showFpsInTitle || showFragmentsInTitle || showPrimsInTitle) title << " - [ ";
     if (showFpsInTitle) {
-        std::stringstream title;
-        title << WindowManager::TitlePrefix << name << " - [" << fps << " fps]";
-        ::glfwSetWindowTitle(hWnd, title.str().c_str());
+        title << fps << " fps ";
     }
+    if (showFragmentsInTitle) {
+        GLuint64 samp;
+        glGetQueryObjectui64v(fragmentQuery, GL_QUERY_RESULT, &samp);
+        title << samp << " samples ";
+    }
+    if (showPrimsInTitle) {
+        GLuint64 prims;
+        glGetQueryObjectui64v(primsQuery, GL_QUERY_RESULT, &prims);
+        title << prims << " primitives ";
+    }
+    if (showFpsInTitle || showFragmentsInTitle || showPrimsInTitle) title << "]";
+    ::glfwSetWindowTitle(hWnd, title.str().c_str());
 #endif
 }
 
