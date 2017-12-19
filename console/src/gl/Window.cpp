@@ -520,6 +520,7 @@ void gl::Window::on_fps_value(float fps_val) {
     //    ::glfwSetWindowTitle(hWnd, title.str().c_str());
     //}
     std::stringstream title;
+    title.imbue(std::locale(""));
     title << WindowManager::TitlePrefix << name;
     if (showFpsInTitle || showFragmentsInTitle || showPrimsInTitle) title << " - [ ";
     if (showFpsInTitle) {
