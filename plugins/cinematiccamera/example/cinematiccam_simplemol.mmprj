@@ -18,14 +18,11 @@ in PowerShell:
 			<param name="split.pos" value="0.6" />
 			<param name="split.colour" value="gray" />
 		</module>
-		<module class="SplitView" name="SplitView2" confpos="{X=215,Y=255}">
+		<module class="SplitView" name="SplitView2" confpos="{X=162,Y=247}">
 			<param name="split.pos" value="0.4" />
 			<param name="split.colour" value="gray" />
 		</module>
-		<module class="CinematicRenderer" name="CinematicRenderer1" confpos="{X=627,Y=178}">
-			<param name="01_splineSubdivision" value="25" />
-		</module>
-		<module class="CinematicView" name="CinematicView1" confpos="{X=438,Y=325}">
+		<module class="CinematicView" name="CinematicView1" confpos="{X=383,Y=282}">
 			<param name="backCol" value="gray" />
 			<param name="bboxCol" value="black" />
 			<param name="viewcube::show" value="False" />
@@ -33,36 +30,45 @@ in PowerShell:
 			<param name="04_cinematicWidth" value="640" />
 			<param name="06_fps" value="10" />
 		</module>
-		<module class="KeyframeKeeper" name="KeyframeKeeper1" confpos="{X=900,Y=361}" />
-		<module class="View2D" name="View2D1" confpos="{X=226,Y=465}">
+		<module class="KeyframeKeeper" name="KeyframeKeeper1" confpos="{X=761,Y=441}" />
+		<module class="View2D" name="View2D1" confpos="{X=145,Y=445}">
 			<param name="backCol" value="black" />
 			<param name="showBBox" value="False" />
 			<param name="resetViewOnBBoxChange" value="True" />
 		</module>
-		<module class="View3D" name="View3D1" confpos="{X=423,Y=175}">
+		<module class="View3D" name="View3D1" confpos="{X=293,Y=115}">
 			<param name="backCol" value="black" />
 			<param name="bboxCol" value="gray" />
 		</module>
-		<module class="SimpleMoleculeRenderer" name="SimpleMoleculeRenderer1" confpos="{X=901,Y=176}">
+		<module class="SimpleMoleculeRenderer" name="SimpleMoleculeRenderer1" confpos="{X=1026,Y=160}">
 			<param name="color::coloringMode0" value="0" />
 			<param name="renderMode" value="2" />
 		</module>
-		<module class="PDBLoader" name="PDBLoader1" confpos="{X=1124,Y=278}">
+		<module class="PDBLoader" name="PDBLoader1" confpos="{X=1250,Y=268}">
 			<param name="pdbFilename" value="data\2veo03.pdb" />
 			<param name="xtcFilename" value="data\2veo03.xtc" />
 		</module>
-		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=499,Y=484}" />
+		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=369,Y=440}" />
+		<module class="CinematicRenderer" name="CinematicRenderer1" confpos="{X=485,Y=117}" />
+		<module class="ReplacementRenderer" name="ReplacementRenderer1" confpos="{X=745,Y=118}">
+			<param name="03_replacmentKeyAssign" value="6" />
+		</module>
+		<module class="ReplacementRenderer" name="ReplacementRenderer2" confpos="{X=720,Y=214}">
+			<param name="03_replacmentKeyAssign" value="5" />
+		</module>
 		<call class="CallRenderView" from="SplitView1::render1" to="SplitView2::render" />
 		<call class="CallRenderView" from="SplitView1::render2" to="View2D1::render" />
-		<call class="CallRender3D" from="View3D1::rendering" to="CinematicRenderer1::rendering" />
 		<call class="CallCinematicCamera" from="CinematicView1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
-		<call class="CallCinematicCamera" from="CinematicRenderer1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
 		<call class="CallRenderView" from="SplitView2::render1" to="View3D1::render" />
 		<call class="CallRenderView" from="SplitView2::render2" to="CinematicView1::render" />
-		<call class="CallRender3D" from="CinematicRenderer1::renderer" to="SimpleMoleculeRenderer1::rendering" />
 		<call class="MolecularDataCall" from="SimpleMoleculeRenderer1::getData" to="PDBLoader1::dataout" />
-		<call class="CallRender3D" from="CinematicView1::rendering" to="SimpleMoleculeRenderer1::rendering" />
 		<call class="CallCinematicCamera" from="TimeLineRenderer1::getkeyframes" to="KeyframeKeeper1::scene3D" />
 		<call class="CallRender2D" from="View2D1::rendering" to="TimeLineRenderer1::rendering" />
+		<call class="CallRender3D" from="View3D1::rendering" to="CinematicRenderer1::rendering" />
+		<call class="CallCinematicCamera" from="CinematicRenderer1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
+		<call class="CallRender3D" from="CinematicRenderer1::renderer" to="ReplacementRenderer1::rendering" />
+		<call class="CallRender3D" from="CinematicView1::rendering" to="ReplacementRenderer2::rendering" />
+		<call class="CallRender3D" from="ReplacementRenderer2::renderer" to="SimpleMoleculeRenderer1::rendering" />
+		<call class="CallRender3D" from="ReplacementRenderer1::renderer" to="SimpleMoleculeRenderer1::rendering" />
 	</view>
 </MegaMol>

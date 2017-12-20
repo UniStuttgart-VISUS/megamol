@@ -364,8 +364,8 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
         if ((size = this->loadFile(filename, &buf)) > 0) {
             if (pbc.Load(buf, size)) {
                 img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-                texSize->SetX(img.Width());
-                texSize->SetY(img.Height());
+                texSize->SetX(static_cast<float>(img.Width()));
+                texSize->SetY(static_cast<float>(img.Height()));
                 //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
                 //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
