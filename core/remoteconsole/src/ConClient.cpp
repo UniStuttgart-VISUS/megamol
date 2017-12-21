@@ -39,14 +39,13 @@ int main(int argc, char* argv[]) {
             exit(0);
         }
 
-    host = options["open"].as<std::string>();
-    file = options["source"].as<std::string>();
-    script = options["exec"].as<std::string>();
-    keepOpen = options["keep-open"].as<bool>();
+        // greeting text
+        printGreeting();
 
         if (parseRes.count("open")) host = parseRes["open"].as<std::string>();
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
 
 
         //  Prepare our context and socket
@@ -73,15 +72,15 @@ int main(int argc, char* argv[]) {
             }
         }
 
-    if (!file.empty()) { 
-        runScript(conn, file);
-    } else if (!script.empty()) {
-        if (!execCommand(conn, script)) {
-            cout << "\tFailed" << endl;
+        if (!file.empty()) {
+            runScript(conn, file);
+        } else if (!script.empty()) {
+            if (!execCommand(conn, script)) {
+                cout << "\tFailed" << endl;
+            }
+        } else {
+            keepOpen = true;
         }
-    } else {
-        keepOpen = true;
-    }
 
         if (keepOpen) {
             interactiveConsole(conn);
