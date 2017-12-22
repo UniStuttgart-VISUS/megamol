@@ -1667,10 +1667,14 @@ bool MMSPDDataSource::getDataCallback(core::Call& caller) {
 
     Frame *f = NULL;
     if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
+        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
+        do {
+            f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
+        } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() && (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
         if (f == NULL) return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
+        //vislib::sys::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
         c2->SetDataHash(this->dataHash);
         f->SetData(*c2, this->dataHeader);
     }
