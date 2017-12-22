@@ -233,7 +233,7 @@ void main(void) {
             <![CDATA[
 #extension GL_ARB_conservative_depth:require
 layout (depth_greater) out float gl_FragDepth; // we think this is right
-// this should be wrong //layout (depth_less) out float gl_FragDepth;
+//layout (depth_less) out float gl_FragDepth; // this should be wrong 
 #extension GL_ARB_explicit_attrib_location : enable
 
 uniform mat4 MVP;
