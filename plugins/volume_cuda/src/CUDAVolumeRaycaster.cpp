@@ -200,11 +200,6 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 		return false;
 	}
 
-	if (vdc->GetScalarType() != misc::VolumetricDataCall::ScalarType::FLOATING_POINT) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Only floating point volumes are currently supported");
-		return false;
-	}
-
 	if (vdc->GetGridType() != misc::VolumetricDataCall::GridType::CARTESIAN) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Only cartesian grids are currently supported");
 		return false;
@@ -212,7 +207,7 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	if (vdc->DataHash() != this->lastDataHash) {
 		this->lastDataHash = vdc->DataHash();
-		auto volPtr = vdc->GetData();
+		auto volPtr = loadVolume(vdc);
 
 		if (volPtr != nullptr) {
 			transferNewVolume(volPtr, volumeExtent);
@@ -373,4 +368,106 @@ bool CUDAVolumeRaycaster::initPixelBuffer(megamol::core::view::CallRender3D & cr
 	checkCudaErrors(cudaMallocHost((void **)&this->cudaImage, viewport.GetWidth() * viewport.GetHeight() * sizeof(unsigned int)));
 
 	return true;
+}
+
+/*
+ *	CUDAVolumeRaycaster::loadVolume
+ */
+void * CUDAVolumeRaycaster::loadVolume(misc::VolumetricDataCall * vdc) {
+	auto volPtr = vdc->GetData();
+	this->localVolume.clear();
+	if (volPtr == nullptr) return nullptr;
+
+	auto numValues = vdc->GetResolution(0) * vdc->GetResolution(1) * vdc->GetResolution(2);
+	auto length = vdc->GetScalarLength();
+
+	switch (vdc->GetScalarType()) {
+		case misc::VolumetricDataCall::ScalarType::BITS:
+			return nullptr;
+		case misc::VolumetricDataCall::ScalarType::FLOATING_POINT:
+			return volPtr;
+		case misc::VolumetricDataCall::ScalarType::SIGNED_INTEGER:
+		{
+			this->localVolume.resize(numValues, 0.0f);
+			switch (length) {
+				case 1:
+				{
+					auto volPtrInt = reinterpret_cast<int8_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrInt[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 2:
+				{
+					auto volPtrInt = reinterpret_cast<int16_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrInt[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 4:
+				{
+					auto volPtrInt = reinterpret_cast<int32_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrInt[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 8:
+				{
+					auto volPtrInt = reinterpret_cast<int64_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrInt[i]);
+					}
+					return this->localVolume.data();
+				}
+				default:
+					return nullptr;
+			}
+		}
+		case misc::VolumetricDataCall::ScalarType::UNSIGNED_INTEGER:
+		{
+			this->localVolume.resize(numValues, 0.0f);
+			switch (length) {
+				case 1:
+				{
+					auto volPtrUint = reinterpret_cast<uint8_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrUint[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 2:
+				{
+					auto volPtrUint = reinterpret_cast<uint16_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrUint[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 4:
+				{
+					auto volPtrUint = reinterpret_cast<uint32_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrUint[i]);
+					}
+					return this->localVolume.data();
+				}
+				case 8:
+				{
+					auto volPtrUint = reinterpret_cast<uint64_t *>(volPtr);
+					for (size_t i = 0; i < numValues; i++) {
+						this->localVolume[i] = static_cast<float>(volPtrUint[i]);
+					}
+					return this->localVolume.data();
+				}
+				default:
+					return nullptr;
+			}
+		}
+		default:
+			return nullptr;
+	}
+
 }

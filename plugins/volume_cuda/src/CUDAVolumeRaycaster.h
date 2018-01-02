@@ -5,6 +5,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
@@ -163,6 +164,16 @@ namespace volume_cuda {
 		 */
 		bool initPixelBuffer(megamol::core::view::CallRender3D& cr3d);
 
+		/**
+		 * Loads the volume data. If the volume consists of float data, the original pointer is returned.
+		 * If the volume has other data types the data is converted to float and a pointer to the converted
+		 * data is returned.
+		 * 
+		 * @param vdc The call containing the volume data.
+		 * @return pointer to the volume data.
+		 */
+		void * loadVolume(megamol::core::misc::VolumetricDataCall* vdc);
+
 		/** caller slot */
 		megamol::core::CallerSlot volumeDataSlot;
 
@@ -201,6 +212,9 @@ namespace volume_cuda {
 
 		/** the data hash of the recently loaded data */
 		SIZE_T lastDataHash;
+
+		/** the float volume if the data type of the incoming data is not float */
+		std::vector<float> localVolume;
 
 #ifdef DEBUG_LUT
 		/** the lookup table */
