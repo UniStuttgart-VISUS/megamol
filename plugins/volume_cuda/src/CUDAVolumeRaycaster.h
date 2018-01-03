@@ -174,6 +174,22 @@ namespace volume_cuda {
 		 */
 		void * loadVolume(megamol::core::misc::VolumetricDataCall* vdc);
 
+		/**
+		 * Loads the lookup table from file
+		 *
+		 * @return True, if a new lookup table is available, false otherwise
+		 */
+		bool loadLut(void);
+
+		/**
+		 * Splits a given string by a character and returns the parts in a vector.
+		 *
+		 * @param text The text to split.
+		 * @param character The character to split by.
+		 * @return A list of substrings of the original text.
+		 */
+		std::vector<std::string> splitStringByCharacter(std::string text, char character = ',');
+
 		/** caller slot */
 		megamol::core::CallerSlot volumeDataSlot;
 
@@ -182,6 +198,12 @@ namespace volume_cuda {
 
 		/** parameter scaling the density of the volume */
 		megamol::core::param::ParamSlot densityParam;
+
+		/** parameter for the file path to the file containing the lookup table */
+		megamol::core::param::ParamSlot lutFileParam;
+
+		/** parameter for the number of components of the discretized lookup table */
+		megamol::core::param::ParamSlot lutSizeParam;
 
 		/** the viewport dimensions of the last frame */
 		vislib::math::Dimension<int, 2U> lastViewport;

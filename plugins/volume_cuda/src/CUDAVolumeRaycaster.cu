@@ -169,7 +169,7 @@ __global__ void d_render(uint * d_output, uint imageW, uint imageH, float fovx, 
 		float sample = tex3D(tex, samplePos.x, samplePos.y, samplePos.z);
 		
 		// normalize the sample
-		sample /= maxVal;
+		sample = (sample - minVal) / (maxVal - minVal);
 
 		float sampleCamDist = length(eyeRay.o - pos);
 

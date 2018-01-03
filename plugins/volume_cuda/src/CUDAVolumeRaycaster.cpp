@@ -3,6 +3,8 @@
 
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -12,6 +14,10 @@
 #include "cuda_gl_interop.h"
 #include "helper_cuda.h"
 
+#include <fstream>
+#include <sstream>
+#include <limits>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::volume_cuda;
@@ -20,9 +26,11 @@ using namespace megamol::volume_cuda;
  *	CUDAVolumeRaycaster::CUDAVolumeRaycaster
  */
 CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
-	volumeDataSlot("getData", "Connects the volume renderer with the volume data storage"),
-	brightnessParam("brightness", "Scaling factor for the brightness of the image"),
-	densityParam("density", "Scaling factor for the density of the volume") {
+		volumeDataSlot("getData", "Connects the volume renderer with the volume data storage"),
+		brightnessParam("brightness", "Scaling factor for the brightness of the image"),
+		densityParam("density", "Scaling factor for the density of the volume"),
+		lutFileParam("lut::lutfile", "File path to the file containing the lookup table"),
+		lutSizeParam("lut::lutSize", "The number of components the lookup table should have. If a discrete LUT is loaded, this value is ignored.") {
 
 	this->volumeDataSlot.SetCompatibleCall<misc::VolumeticDataCallDescription>();
 	this->MakeSlotAvailable(&this->volumeDataSlot);
@@ -33,6 +41,12 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 	this->densityParam.SetParameter(new param::FloatParam(0.05f, 0.0f));
 	this->MakeSlotAvailable(&this->densityParam);
 
+	this->lutFileParam.SetParameter(new param::FilePathParam(""));
+	this->MakeSlotAvailable(&this->lutFileParam);
+
+	this->lutSizeParam.SetParameter(new param::IntParam(256, 16, 2048));
+	this->MakeSlotAvailable(&this->lutSizeParam);
+
 	this->lastViewport.Set(0, 0);
 	this->texHandle = 0; 
 	this->setCUDAGLDevice = true;
@@ -42,7 +56,7 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 	this->cudaImage = NULL;
 
 #ifdef DEBUG_LUT
-	int lutSize = 256;
+	const int lutSize = 256;
 	float divisor = 255.0f;
 	float4 lutMin = make_float4(59.0f, 76.0f, 192.0f, 0.0f);
 	float4 lutMax = make_float4(180.0f, 4.0f, 38.0f, 255.0f);
@@ -211,9 +225,9 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 		if (volPtr != nullptr) {
 			transferNewVolume(volPtr, volumeExtent);
-#ifdef DEBUG_LUT
-			copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
-#endif // DEBUG_LUT
+			if (loadLut()) {
+				copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
+			}
 			checkCudaErrors(cudaDeviceSynchronize());
 		}
 		else {
@@ -469,5 +483,161 @@ void * CUDAVolumeRaycaster::loadVolume(misc::VolumetricDataCall * vdc) {
 		default:
 			return nullptr;
 	}
+}
 
+/*
+ *	CUDAVolumeRaycaster::loadLut
+ */
+bool CUDAVolumeRaycaster::loadLut(void) {
+	if (!this->lutFileParam.IsDirty() && !this->lutSizeParam.IsDirty()) return false;
+	this->lutFileParam.ResetDirty();
+	this->lutSizeParam.ResetDirty();
+	auto lutSave = this->lut;
+	auto path = this->lutFileParam.Param<param::FilePathParam>()->Value();
+	if (path.IsEmpty()) return false;
+	std::ifstream file;
+	file.open(path.PeekBuffer());
+
+	if (file.is_open()) {
+		std::string line;
+		bool discrete = false;
+		if (std::getline(file, line)) {
+			if (!line.compare("DISCRETE")) {
+				discrete = true;
+			} else if (!line.compare("POINTS")) {
+				discrete = false;
+			} else {
+				vislib::sys::Log::DefaultLog.WriteError("Unrecognized lookup file type. No new table loaded");
+				return false;
+			}
+		}
+		std::vector<float> values;
+		size_t row = 1;
+		// read all the values
+		while (std::getline(file, line)) {
+			++row;
+			if (line.empty()) continue;
+			auto splitText = splitStringByCharacter(line, ',');
+			if (discrete && splitText.size() < 4) {
+				vislib::sys::Log::DefaultLog.WriteError("Error at line %u: A discrete lookup table file needs at least 4 values per row", static_cast<uint>(row));
+				return false;
+			} else if (!discrete && splitText.size() < 5) {
+				vislib::sys::Log::DefaultLog.WriteError("Error at line %u: A point-based lookup table file needs at least 5 values per row", static_cast<uint>(row));
+				return false;
+			}
+			size_t nv = 4;
+			if (!discrete) nv = 5;
+			for (size_t i = 0; i < nv; i++) {
+				values.push_back(static_cast<float>(std::atof(splitText[i].c_str())));
+			}
+		}
+		// process the read values
+		if (discrete) {
+			this->lut.clear();
+			for (size_t i = 0; i < values.size(); i += 4) {
+				this->lut.push_back(make_float4(values[i], values[i + 1], values[i + 2], values[i + 3]));
+			}
+		} else {
+			this->lut.clear();
+			size_t lutSize = static_cast<size_t>(this->lutSizeParam.Param<param::IntParam>()->Value());
+			this->lut.resize(lutSize, make_float4(-1.0f));
+			size_t validVals = 0;
+			for (size_t i = 0; i < values.size(); i += 5) {
+				// determine bin of the current value
+				size_t bin = static_cast<size_t>(values[i] * (lutSize - 1));
+				if (bin >= this->lut.size()) {
+					vislib::sys::Log::DefaultLog.WriteWarn("Lut point of line %u is malformed, ignoring this value.", static_cast<uint>(i + 2));
+					continue;
+				}
+				validVals++;
+				this->lut[bin] = make_float4(values[i + 1], values[i + 2], values[i + 3], values[i + 4]);
+			}
+			// at this point only bins with control points in them have values >= 0
+			if (validVals == 0) {
+				for (auto& v : this->lut) { // when there are no
+					v = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+				}
+				return true;
+			}
+			// extend the first and the last read value to beginning and end
+			// find the first one
+			size_t index;
+			for (index = 0; index < this->lut.size(); index++) {
+				if (this->lut[index].w >= 0.0f) break;
+			}
+			if (index != this->lut.size()) {
+				for (size_t i = 0; i < index; i++) {
+					this->lut[i] = this->lut[index];
+				}
+			} else {
+				vislib::sys::Log::DefaultLog.WriteError("Something went wrong with the LUT reconstruction (1)");
+				this->lut = lutSave;
+				return false;
+			}
+			// find the last one
+			for (index = this->lut.size() - 1; index < this->lut.size(); index--) { // the buffer overflow at this point is intentional
+				if (this->lut[index].w >= 0.0f) break;
+			}
+			if (index < this->lut.size()) {
+				for (size_t i = index + 1; i < this->lut.size(); i++) {
+					this->lut[i] = this->lut[index];
+				}
+			} else {
+				vislib::sys::Log::DefaultLog.WriteError("Something went wrong with the LUT reconstruction (2)");
+				this->lut = lutSave;
+				return false;
+			}
+			// at this point the first and the last value should have been extended to the boundaries.
+			// now handle the interpolation between the values
+			std::vector<std::pair<size_t, size_t>> interpolationRanges;
+			std::pair<size_t, size_t> current;
+			bool detected = false;
+			// determine the ranges in which we want to interpolate
+			for (size_t i = 0; i < this->lut.size(); i++) {
+				if (this->lut[i].w < 0.0f) {
+					detected = true;
+				}
+				if (detected && this->lut[i].w >= 0.0f) {
+					current.second = i;
+					detected = false;
+					interpolationRanges.push_back(current);
+				}
+				if (!detected && this->lut[i].w >= 0.0f) {
+					current.first = i;
+				}
+			}
+			// perform the interpolation
+			for (auto r : interpolationRanges) {
+				auto c1 = this->lut[r.first];
+				auto c2 = this->lut[r.second];
+				vislib::math::Vector<float, 4> colorStart(c1.x, c1.y, c1.z, c1.w);
+				vislib::math::Vector<float, 4> colorEnd(c2.x, c2.y, c2.z, c2.w);
+				float length = static_cast<float>(r.second - r.first);
+				float step = 1.0f / length;
+				float val = step;
+				for (size_t i = r.first + 1; i < r.second; i++) {
+					auto cc = (1.0f - val) * colorStart + val * colorEnd;
+					this->lut[i] = make_float4(cc.GetX(), cc.GetY(), cc.GetZ(), cc.GetW());
+					val += step;
+				}
+			}
+		}
+	} else {
+		vislib::sys::Log::DefaultLog.WriteError("The lookup file could not be opened. No new table loaded");
+		return false;
+	}
+	return true;
+}
+
+/*
+ *	CUDAVolumeRaycaster::splitStringByCharacter
+ */
+std::vector<std::string> CUDAVolumeRaycaster::splitStringByCharacter(std::string text, char character) {
+	std::stringstream stream(text);
+	std::string segment;
+	std::vector<std::string> result;
+	while (std::getline(stream, segment, character)) {
+		result.push_back(segment);
+	}
+	return result;
 }
