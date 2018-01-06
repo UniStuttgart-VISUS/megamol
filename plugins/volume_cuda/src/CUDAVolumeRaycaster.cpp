@@ -225,15 +225,16 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 		if (volPtr != nullptr) {
 			transferNewVolume(volPtr, volumeExtent);
-			if (loadLut()) {
-				copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
-			}
 			checkCudaErrors(cudaDeviceSynchronize());
 		}
 		else {
 			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "The transferred volume is empty");
 			return false;
 		}
+	}
+
+	if (loadLut()) {
+		copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
 	}
 
 	vdc->Unlock();
