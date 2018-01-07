@@ -27,6 +27,7 @@ using namespace megamol::volume_cuda;
  */
 CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 		volumeDataSlot("getData", "Connects the volume renderer with the volume data storage"),
+		inputImageSlot("receiveImage", "Connects the volume renderer with another renderer to overlay both images"),
 		brightnessParam("brightness", "Scaling factor for the brightness of the image"),
 		densityParam("density", "Scaling factor for the density of the volume"),
 		lutFileParam("lut::lutfile", "File path to the file containing the lookup table"),
@@ -34,6 +35,9 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 
 	this->volumeDataSlot.SetCompatibleCall<misc::VolumeticDataCallDescription>();
 	this->MakeSlotAvailable(&this->volumeDataSlot);
+
+	this->inputImageSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
+	this->MakeSlotAvailable(&this->inputImageSlot);
 
 	this->brightnessParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->brightnessParam);
@@ -118,18 +122,32 @@ bool CUDAVolumeRaycaster::GetExtents(megamol::core::Call & call) {
 	misc::VolumetricDataCall *vdc = this->volumeDataSlot.CallAs<misc::VolumetricDataCall>();
 	if (vdc == NULL) return false;
 
+	view::CallRender3D * incCrd = this->inputImageSlot.CallAs<view::CallRender3D>();
+
 	if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
+
+	auto volumeBB = vdc->AccessBoundingBoxes().ObjectSpaceBBox();
+	auto fcnt = vdc->FrameCount();
+
+	if (incCrd != NULL) {
+		if (!(*incCrd)(1)) return false; // get extents
+		volumeBB.Union(incCrd->AccessBoundingBoxes().ObjectSpaceBBox());
+		fcnt = std::min(fcnt, incCrd->TimeFramesCount());
+	}
+
 	float scale;
-	if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-		scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+	if (!vislib::math::IsEqual(volumeBB.LongestEdge(), 0.0f)) {
+		scale = 2.0f / volumeBB.LongestEdge();
 	}
 	else {
 		scale = 1.0f;
 	}
 
-	cr3d->AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
+	cr3d->AccessBoundingBoxes().Clear();
+	cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(volumeBB);
+	cr3d->AccessBoundingBoxes().SetObjectSpaceClipBox(volumeBB);
 	cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-	cr3d->SetTimeFramesCount(vdc->FrameCount());
+	cr3d->SetTimeFramesCount(fcnt);
 
 	return true;
 }
@@ -146,6 +164,8 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	
 	misc::VolumetricDataCall *vdc = this->volumeDataSlot.CallAs<misc::VolumetricDataCall>();
 	if (vdc == NULL) return false;
+
+	view::CallRender3D * incCrd = this->inputImageSlot.CallAs<view::CallRender3D>();
 
 	vdc->SetFrameID(myTime);
 	if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
@@ -245,13 +265,6 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	/*for (int i = 0; i < viewport.GetWidth() * viewport.GetHeight(); i++) {
-		if (i % viewport.GetWidth() == 0)
-			printf("\n");
-
-		printf("%u ", this->cudaImage[i]);
-	}*/
-
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, this->texHandle);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, this->cudaImage);
@@ -348,6 +361,8 @@ bool CUDAVolumeRaycaster::initOpenGL() {
 
 	this->textureShader.Compile(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
 	this->textureShader.Link();
+
+	if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) return false;
 
 	return true;
 }
@@ -641,4 +656,24 @@ std::vector<std::string> CUDAVolumeRaycaster::splitStringByCharacter(std::string
 		result.push_back(segment);
 	}
 	return result;
+}
+
+/*
+ *	CUDAVolumeRaycaster::renderCallToFBO
+ */
+bool CUDAVolumeRaycaster::renderCallToFBO(view::CallRender3D * cr3d, view::CallRender3D * incoming, vislib::math::Dimension<float, 2> viewport) {
+	if (cr3d == nullptr) return false;
+	cr3d->operator=(*incoming);
+	
+	if (!this->copyFBO.IsValid() || this->copyFBO.GetWidth() != viewport.GetWidth() || this->copyFBO.GetHeight() != viewport.GetHeight()) {
+		if (!this->copyFBO.Create(static_cast<UINT>(viewport.GetWidth()), static_cast<UINT>(viewport.GetHeight()), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+			vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
+			vislib::sys::Log::DefaultLog.WriteError("Unable to create the framebuffer for the copy step");
+			return false;
+		}
+	}
+
+
+
+	return true;
 }

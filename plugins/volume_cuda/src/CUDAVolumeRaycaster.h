@@ -8,6 +8,7 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Matrix.h"
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
@@ -190,8 +191,22 @@ namespace volume_cuda {
 		 */
 		std::vector<std::string> splitStringByCharacter(std::string text, char character = ',');
 
+		/**
+		 * Sends out a render call over the givne callRender3D and renders
+		 * the result into a fbo.
+		 * 
+		 * @param cr3d Pointer to the call the rendering request is sent over.
+		 * @param incoming Pointer to the incoming render call that will be copied to the outgoing.
+		 * @param viewport The viewport that should be rendered
+		 * @return True if the rendering was completed succesfully. False if no image is available.
+		 */
+		bool renderCallToFBO(core::view::CallRender3D * cr3d, core::view::CallRender3D * incoming, vislib::math::Dimension<float, 2> viewport);
+
 		/** caller slot */
 		megamol::core::CallerSlot volumeDataSlot;
+
+		/** caller slot for the input image */
+		megamol::core::CallerSlot inputImageSlot;
 
 		/** parameter steering the brightness of the image */
 		megamol::core::param::ParamSlot brightnessParam;
@@ -207,6 +222,9 @@ namespace volume_cuda {
 
 		/** the viewport dimensions of the last frame */
 		vislib::math::Dimension<int, 2U> lastViewport;
+
+		/** fbo holding the old images */
+		vislib::graphics::gl::FramebufferObject copyFBO;
 
 		/** the texture handle */
 		GLuint texHandle;
