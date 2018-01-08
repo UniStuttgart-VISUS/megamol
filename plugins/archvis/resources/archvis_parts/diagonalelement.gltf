@@ -5,7 +5,7 @@
             "componentType" : 5121, 
             "count" : 396, 
             "max" : [
-                119
+                151
             ], 
             "min" : [
                 0
@@ -15,15 +15,15 @@
         {
             "bufferView" : 1, 
             "componentType" : 5126, 
-            "count" : 120, 
+            "count" : 152, 
             "max" : [
                 0.009999999776482582, 
-                0.18455611169338226, 
+                0.47709953784942627, 
                 0.009999999776482582
             ], 
             "min" : [
                 -0.009999999776482582, 
-                -0.46350574493408203, 
+                9.953975677490234e-05, 
                 -0.009999999776482582
             ], 
             "type" : "VEC3"
@@ -31,7 +31,7 @@
         {
             "bufferView" : 2, 
             "componentType" : 5126, 
-            "count" : 120, 
+            "count" : 152, 
             "max" : [
                 1.0, 
                 1.0, 
@@ -58,26 +58,26 @@
         }, 
         {
             "buffer" : 0, 
-            "byteLength" : 1440, 
+            "byteLength" : 1824, 
             "byteOffset" : 396, 
             "target" : 34962
         }, 
         {
             "buffer" : 0, 
-            "byteLength" : 1440, 
-            "byteOffset" : 1836, 
+            "byteLength" : 1824, 
+            "byteOffset" : 2220, 
             "target" : 34962
         }
     ], 
     "buffers" : [
         {
-            "byteLength" : 3276, 
+            "byteLength" : 4044, 
             "uri" : "diagonalelement.bin"
         }
     ], 
     "meshes" : [
         {
-            "name" : "Cylinder.001", 
+            "name" : "Cylinder", 
             "primitives" : [
                 {
                     "attributes" : {
@@ -92,17 +92,7 @@
     "nodes" : [
         {
             "mesh" : 0, 
-            "name" : "Cylinder.001", 
-            "scale" : [
-                1.0, 
-                0.7360408306121826, 
-                1.0
-            ], 
-            "translation" : [
-                0.0, 
-                0.10265916585922241, 
-                -0.0
-            ]
+            "name" : "Cylinder"
         }
     ], 
     "scene" : 0, 
