@@ -407,7 +407,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		object_transform.SetAt(2, 2, scale);
 
 		object_transform.SetAt(0, 3, std::get<0>(nodes[std::get<3>(element)]));
-		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<3>(element)]));
+		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<3>(element)]) -1.0f);
 		object_transform.SetAt(2, 3, std::get<2>(nodes[std::get<3>(element)]));
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
@@ -431,7 +431,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		object_transform.SetAt(2, 2, scale);
 
 		object_transform.SetAt(0, 3, std::get<0>(nodes[std::get<0>(element)]));
-		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]));
+		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]) - 1.0f);
 		object_transform.SetAt(2, 3, std::get<2>(nodes[std::get<0>(element)]));
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
@@ -464,7 +464,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		// compute element offset
 		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_translation;
 		object_translation.SetAt(0, 3, std::get<0>(nodes[std::get<0>(element)]));
-		object_translation.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]));
+		object_translation.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]) - 1.0f);
 		object_translation.SetAt(2, 3, std::get<2>(nodes[std::get<0>(element)]));
 
 		object_transform = object_translation * object_rotation;
