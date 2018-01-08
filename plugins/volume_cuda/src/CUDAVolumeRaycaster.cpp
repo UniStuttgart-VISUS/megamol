@@ -287,9 +287,6 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	vdc->Unlock();
 
-	std::vector<float> ts;
-	ts.resize(copyFBO.GetWidth() * copyFBO.GetHeight() * 4);
-
 	// render the stuff
 	render_kernel(gridSize, blockSize, this->cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness,
 		transferOffset, transferScale, bbMin, bbMax, this->volumeExtent);
@@ -297,8 +294,9 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	glActiveTexture(GL_TEXTURE14);
-	this->copyFBO.GetColourTexture(&ts[0], 0, GL_RGBA, GL_FLOAT);
-	this->copyFBO.BindColourTexture();
+	if (incCrd != nullptr) {
+		this->copyFBO.BindColourTexture();
+	}
 
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, this->texHandle);
