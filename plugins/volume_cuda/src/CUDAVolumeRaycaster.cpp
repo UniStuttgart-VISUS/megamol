@@ -129,11 +129,17 @@ bool CUDAVolumeRaycaster::GetExtents(megamol::core::Call & call) {
 	auto volumeBB = vdc->AccessBoundingBoxes().ObjectSpaceBBox();
 	auto fcnt = vdc->FrameCount();
 
+	//std::cout << "vol: " << volumeBB.Left() << " " << volumeBB.Bottom() << " " << volumeBB.Back() << " " << volumeBB.Right() << " " << volumeBB.Top() << " " << volumeBB.Front() << std::endl;
+
 	if (incCrd != NULL) {
 		if (!(*incCrd)(1)) return false; // get extents
+		//auto bla = incCrd->AccessBoundingBoxes().ObjectSpaceBBox();
+		//std::cout << "prot: " << bla.Left() << " " << bla.Bottom() << " " << bla.Back() << " " << bla.Right() << " " << bla.Top() << " " << bla.Front() << std::endl;
 		volumeBB.Union(incCrd->AccessBoundingBoxes().ObjectSpaceBBox());
 		fcnt = std::min(fcnt, incCrd->TimeFramesCount());
 	}
+
+	//std::cout << "vol: " << volumeBB.Left() << " " << volumeBB.Bottom() << " " << volumeBB.Back() << " " << volumeBB.Right() << " " << volumeBB.Top() << " " << volumeBB.Front() << std::endl;
 
 	float scale;
 	if (!vislib::math::IsEqual(volumeBB.LongestEdge(), 0.0f)) {
@@ -172,18 +178,30 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	if (!(*vdc)(vdc->IDX_GET_METADATA)) return false;
 	if (!(*vdc)(vdc->IDX_GET_DATA)) return false;
 
-	glPushMatrix();
 	float scale = 1.0f;
-	if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-		scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+	auto bb = vdc->AccessBoundingBoxes().ObjectSpaceBBox();
+
+	if (incCrd != NULL) {
+		if (!(*incCrd)(1)) return false; // get extents
+		bb.Union(incCrd->AccessBoundingBoxes().ObjectSpaceBBox());
 	}
-	glScalef(scale, scale, scale);
+
+	if (!vislib::math::IsEqual(bb.LongestEdge(), 0.0f)) {
+		scale = 2.0f / bb.LongestEdge();
+	}
 
 	initCuda(*cr3d);
 	initPixelBuffer(*cr3d);
 
 	// get all relevant parameters
 	auto viewport = cr3d->GetViewport().GetSize();
+
+	this->renderCallToFBO(incCrd, cr3d, viewport);
+
+	if (incCrd == nullptr) {
+		glPushMatrix();
+		glScalef(scale, scale, scale);
+	}
 
 	GLfloat m[16];
 	GLfloat m_proj[16];
@@ -200,6 +218,11 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	// the direction has to be negated because of the right-handed view space of OpenGL
 
 	auto cam = cr3d->GetCameraParameters();
+
+	if (incCrd != nullptr) {
+		glPushMatrix();
+		glScalef(scale, scale, scale);
+	}
 
 	float fovy = (float)(cam->ApertureAngle() * M_PI / 180.0f);
 
@@ -225,9 +248,14 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	
 	this->volumeExtent = make_cudaExtent(xDir, yDir, zDir);
 
-	auto bb = vdc->GetBoundingBoxes().ObjectSpaceBBox();
-	float3 bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
-	float3 bbMax = make_float3(bb.Right(), bb.Top(), bb.Front());
+	auto vbb = vdc->GetBoundingBoxes().ObjectSpaceBBox();
+	float3 bbMin = make_float3(vbb.Left(), vbb.Bottom(), vbb.Back());
+	float3 bbMax = make_float3(vbb.Right(), vbb.Top(), vbb.Front());
+
+	if (incCrd != nullptr) {
+		bbMin *= scale;
+		bbMax *= scale;
+	}
 
 	if (vdc->GetComponents() > 1 || vdc->GetComponents() < 1) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Only volumes with a single component are currently supported");
@@ -259,14 +287,22 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	vdc->Unlock();
 
+	std::vector<float> ts;
+	ts.resize(copyFBO.GetWidth() * copyFBO.GetHeight() * 4);
+
 	// render the stuff
 	render_kernel(gridSize, blockSize, this->cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness,
 		transferOffset, transferScale, bbMin, bbMax, this->volumeExtent);
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
 
+	glActiveTexture(GL_TEXTURE14);
+	this->copyFBO.GetColourTexture(&ts[0], 0, GL_RGBA, GL_FLOAT);
+	this->copyFBO.BindColourTexture();
+
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, this->texHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, this->cudaImage);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, this->cudaImage);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -277,14 +313,14 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	glDepthFunc(GL_ALWAYS);
 
 	textureShader.Enable();
-
+	
 	glBindVertexArray(this->textureVAO);
-
+	
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
+	
 	glBindVertexArray(0);
 	textureShader.Disable();
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
@@ -354,7 +390,7 @@ bool CUDAVolumeRaycaster::initOpenGL() {
 		return false;
 	}
 
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("cudavolumeraycaster::texture::textureFragment", fragSrc)) {
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("cudavolumeraycaster::texture::combineFragment", fragSrc)) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for texture shader");
 		return false;
 	}
@@ -663,17 +699,25 @@ std::vector<std::string> CUDAVolumeRaycaster::splitStringByCharacter(std::string
  */
 bool CUDAVolumeRaycaster::renderCallToFBO(view::CallRender3D * cr3d, view::CallRender3D * incoming, vislib::math::Dimension<float, 2> viewport) {
 	if (cr3d == nullptr) return false;
-	cr3d->operator=(*incoming);
 	
 	if (!this->copyFBO.IsValid() || this->copyFBO.GetWidth() != viewport.GetWidth() || this->copyFBO.GetHeight() != viewport.GetHeight()) {
-		if (!this->copyFBO.Create(static_cast<UINT>(viewport.GetWidth()), static_cast<UINT>(viewport.GetHeight()), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-			vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
+		if (!this->copyFBO.Create(static_cast<UINT>(viewport.GetWidth()), static_cast<UINT>(viewport.GetHeight()), GL_RGBA32F, GL_RGBA, GL_FLOAT,
+			vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
 			vislib::sys::Log::DefaultLog.WriteError("Unable to create the framebuffer for the copy step");
 			return false;
 		}
 	}
-
-
-
+	incoming->DisableOutputBuffer();
+	cr3d->operator=(*incoming);
+	this->copyFBO.Enable();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glPushMatrix();
+	cr3d->SetOutputBuffer(&this->copyFBO);
+	cr3d->EnableOutputBuffer();
+	(*cr3d)(); // render call
+	cr3d->DisableOutputBuffer();
+	glPopMatrix();
+	this->copyFBO.Disable();
+	incoming->EnableOutputBuffer();
 	return true;
 }

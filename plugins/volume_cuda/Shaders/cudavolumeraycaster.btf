@@ -39,5 +39,26 @@ void main()
 -->
             </snippet>
         </shader>
+		<shader name="combineFragment">
+			<snippet type="version">430</snippet>
+			<snippet type="string">
+			<!--
+layout(location = 0) out vec4 frag_color;
+
+layout(binding = 14) uniform sampler2D proteinTexture;
+layout(binding = 15) uniform sampler2D volTexture;
+
+in vec2 texCoord;
+
+void main()
+{
+	vec4 c1 = texture(volTexture, texCoord.st).rgba;
+	vec4 c2 = texture(proteinTexture, texCoord.st).rgba;
+    frag_color = vec4((c1 + c2).rgb, 1);
+    //frag_color = vec4(texCoord.st, 0, 1);
+}
+-->
+			</snippet>
+		</shader>
     </namespace>
 </btf>
