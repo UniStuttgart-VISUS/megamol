@@ -19,8 +19,8 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 
 extern "C" void setTextureFilterMode(bool bLinearFilter);
 extern "C" void freeCudaBuffers(void);
-extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, uint * d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
-	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
+extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, uint * d_output, float * d_depth, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
+	float3 camUp, float3 camRight, float zNear, float zFar, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1));
 extern "C" void copyTransferFunction(float4 * transferFunction, int functionSize = 256);
 extern "C" void transferNewVolume(void * h_volume, cudaExtent volumeSize);
@@ -231,6 +231,9 @@ namespace volume_cuda {
 
 		/** the resulting CUDA image */
 		unsigned int * cudaImage;
+
+		/** the depth image sent to cuda */
+		float * cudaDepthImage;
 
 		/** the shader program for texture drawing */
 		vislib::graphics::gl::GLSLShader textureShader;

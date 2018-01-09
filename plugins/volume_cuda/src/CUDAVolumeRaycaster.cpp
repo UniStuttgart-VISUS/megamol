@@ -58,6 +58,7 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 	this->volumeExtent = make_cudaExtent(0, 0, 0);
 	this->lastDataHash = 0;
 	this->cudaImage = NULL;
+	this->cudaDepthImage = NULL;
 
 #ifdef DEBUG_LUT
 	const int lutSize = 256;
@@ -218,6 +219,8 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	// the direction has to be negated because of the right-handed view space of OpenGL
 
 	auto cam = cr3d->GetCameraParameters();
+	auto z1 = cam->NearClip();
+	auto z2 = cam->FarClip();
 
 	if (incCrd != nullptr) {
 		glPushMatrix();
@@ -232,6 +235,11 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	float fovx = 2.0f * atan(tan(fovy / 2.0f) * aspect);
 	float zNear = (2.0f * projectionMatrix.GetAt(2, 3)) / (2.0f * projectionMatrix.GetAt(2, 2) - 2.0f);
+	float zFar = 1.0f; // UNKNOWN how to do this
+
+	// new plane computation (hopefully correct)
+	zNear = cam->NearClip();
+	zFar = cam->FarClip();
 
 	float density = this->densityParam.Param<param::FloatParam>()->Value();
 	float brightness = this->brightnessParam.Param<param::FloatParam>()->Value();
@@ -287,8 +295,15 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	vdc->Unlock();
 
+	glActiveTexture(GL_TEXTURE13);
+	if (incCrd != nullptr) {
+		// read the depth texture values if available
+		this->copyFBO.BindDepthTexture();
+		this->copyFBO.GetDepthTexture(this->cudaDepthImage, GL_DEPTH_COMPONENT, GL_FLOAT);
+	}
+
 	// render the stuff
-	render_kernel(gridSize, blockSize, this->cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness,
+	render_kernel(gridSize, blockSize, this->cudaImage, this->cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
 		transferOffset, transferScale, bbMin, bbMax, this->volumeExtent);
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -296,11 +311,12 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	glActiveTexture(GL_TEXTURE14);
 	if (incCrd != nullptr) {
 		this->copyFBO.BindColourTexture();
+	} else {
+		// TODO generate texture containing the background color
 	}
 
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, this->texHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, this->cudaImage);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, this->cudaImage);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -429,7 +445,13 @@ bool CUDAVolumeRaycaster::initPixelBuffer(megamol::core::view::CallRender3D & cr
 		cudaImage = NULL;
 	}
 
+	if (this->cudaDepthImage) {
+		checkCudaErrors(cudaFreeHost(this->cudaDepthImage));
+		cudaDepthImage = NULL;
+	}
+
 	checkCudaErrors(cudaMallocHost((void **)&this->cudaImage, viewport.GetWidth() * viewport.GetHeight() * sizeof(unsigned int)));
+	checkCudaErrors(cudaMallocHost((void **)&this->cudaDepthImage, viewport.GetWidth() * viewport.GetHeight() * sizeof(float)));
 
 	return true;
 }

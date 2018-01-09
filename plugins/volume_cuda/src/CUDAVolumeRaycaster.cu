@@ -106,7 +106,7 @@ __device__ uint rgbaFloatToInt(float4 rgba) {
 /**
  *	The CUDA Kernel for the rendering process
  */
-__global__ void d_render(uint * d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
+__global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float zFar,
 	float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1)) {
 
@@ -120,6 +120,16 @@ __global__ void d_render(uint * d_output, uint imageW, uint imageH, float fovx, 
 	uint y = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if ((x >= imageW) || (y >= imageH)) return;
+
+	// read the depth value and transform it to world coordinates
+	float dv = 1.0f;
+	if (d_depth != NULL) {
+		dv = d_depth[y * imageW + x];
+	}
+
+	// TODO correct depth value
+	float depthVal = (2.0f * zNear) / (zFar + zNear - dv * (zFar - zNear));
+	depthVal = zNear + depthVal * (zFar - zNear);
 
 	// texture coordinates
 	float u = (x / static_cast<float>(imageW)) * 2.0f - 1.0f;
@@ -172,6 +182,9 @@ __global__ void d_render(uint * d_output, uint imageW, uint imageH, float fovx, 
 		sample = (sample - minVal) / (maxVal - minVal);
 
 		float sampleCamDist = length(eyeRay.o - pos);
+		if (sampleCamDist >= depthVal) {
+			break;
+		}
 
 		// lookup in transfer function texture
 		float4 col = tex1D(customTransferTex, (sample - transferOffset) * transferScale);
@@ -227,6 +240,7 @@ void freeCudaBuffers(void) {
  *	@param gridSize The CUDA grid size.
  *	@param blockSize The CUDA block size.
  *	@param d_output Pointer to the output image.
+ *  @param d_depth Pointer to the already existing depth buffer image to test against.
  *	@param imageW The width of the output image.
  *	@param imageH The height of the output image.
  *	@param fovx The camera field of view in x direction (Radians).
@@ -245,11 +259,11 @@ void freeCudaBuffers(void) {
  *	@param volSize The size of the rendered volume.
  */
 extern "C" 
-void render_kernel(dim3 gridSize, dim3 blockSize, uint * d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
-	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
+void render_kernel(dim3 gridSize, dim3 blockSize, uint * d_output, float * d_depth, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
+	float3 camUp, float3 camRight, float zNear, float zFar, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1)) {
 
-	d_render <<<gridSize, blockSize >>>(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness,
+	d_render <<<gridSize, blockSize >>>(d_output, d_depth, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
 		transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
 }
 
