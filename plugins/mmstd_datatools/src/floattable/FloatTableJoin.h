@@ -83,8 +83,8 @@ private:
     /** data callback */
     bool processData(core::Call &c);
 
-	/** extent callback */
-	bool getExtent(core::Call &c);
+    /** extent callback */
+    bool getExtent(core::Call &c);
 
     /** concatenates two float tables */
     void concatenate(float * const out, const float * const first, const float * const second,
@@ -104,7 +104,8 @@ private:
     int frameID;
 
     /** datahash */
-    size_t dataHash;
+    size_t firstDataHash;
+    size_t secondDataHash;
 
     /** number of rows of the float table */
     size_t rows_count;

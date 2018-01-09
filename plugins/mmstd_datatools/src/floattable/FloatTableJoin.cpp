@@ -10,14 +10,19 @@
 
 
 std::string megamol::stdplugin::datatools::floattable::FloatTableJoin::ModuleName
-	= std::string("FloatTableJoin");
+    = std::string("FloatTableJoin");
+
+size_t hash_combine(size_t lhs, size_t rhs) {
+    lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
+    return lhs;
+}
 
 megamol::stdplugin::datatools::floattable::FloatTableJoin::FloatTableJoin(void) : core::Module(),
-	firstFloatTableInSlot("firstFloatTableIn", "First input"),
-	secondFloatTableInSlot("secondFloatTableIn", "Second input"),
-	dataOutSlot("dataOut", "Output"),
-	frameID(-1),
-	dataHash(MAXULONG_PTR) {
+    firstFloatTableInSlot("firstFloatTableIn", "First input"),
+    secondFloatTableInSlot("secondFloatTableIn", "Second input"),
+    dataOutSlot("dataOut", "Output"),
+    frameID(-1),
+    firstDataHash(MAXULONG_PTR), secondDataHash(MAXULONG_PTR) {
     this->firstFloatTableInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->firstFloatTableInSlot);
 
@@ -27,9 +32,9 @@ megamol::stdplugin::datatools::floattable::FloatTableJoin::FloatTableJoin(void) 
     this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
         CallFloatTableData::FunctionName(0),
         &FloatTableJoin::processData);
-	this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-		CallFloatTableData::FunctionName(1),
-		&FloatTableJoin::getExtent);
+    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
+        CallFloatTableData::FunctionName(1),
+        &FloatTableJoin::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
@@ -71,8 +76,11 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
         if (!(*firstInCall)()) return false;
         if (!(*secondInCall)()) return false;
 
-        if (this->dataHash != firstInCall->DataHash() || this->frameID != firstInCall->GetFrameID()) {
-            this->dataHash = firstInCall->DataHash();
+        if (this->firstDataHash != firstInCall->DataHash() || this->secondDataHash != secondInCall->DataHash()
+            || this->frameID != firstInCall->GetFrameID() || this->frameID != secondInCall->GetFrameID()) {
+            this->firstDataHash = firstInCall->DataHash();
+            this->secondDataHash = secondInCall->DataHash();
+            ASSERT(firstInCall->GetFrameID() == secondInCall->GetFrameID());
             this->frameID = firstInCall->GetFrameID();
 
             // retrieve data
@@ -111,7 +119,7 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
 
         outCall->SetFrameCount(firstInCall->GetFrameCount());
         outCall->SetFrameID(this->frameID);
-        outCall->SetDataHash(this->dataHash);
+        outCall->SetDataHash(hash_combine(this->firstDataHash, this->secondDataHash));
         outCall->Set(this->column_count, this->rows_count, this->column_info.data(), this->data.data());
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"),
@@ -137,23 +145,23 @@ void megamol::stdplugin::datatools::floattable::FloatTableJoin::concatenate(floa
 }
 
 bool megamol::stdplugin::datatools::floattable::FloatTableJoin::getExtent(core::Call &c) {
-	try {
-		CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
-		if (outCall == NULL) return false;
+    try {
+        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        if (outCall == NULL) return false;
 
-		CallFloatTableData *inCall = this->firstFloatTableInSlot.CallAs<CallFloatTableData>();
-		if (inCall == NULL) return false;
+        CallFloatTableData *inCall = this->firstFloatTableInSlot.CallAs<CallFloatTableData>();
+        if (inCall == NULL) return false;
 
-		inCall->SetFrameID(outCall->GetFrameID());
-		if (!(*inCall)(1)) return false;
+        inCall->SetFrameID(outCall->GetFrameID());
+        if (!(*inCall)(1)) return false;
 
-		outCall->SetFrameCount(inCall->GetFrameCount());
-		outCall->SetDataHash(this->dataHash);
-	}
-	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
-		return false;
-	}
+        outCall->SetFrameCount(inCall->GetFrameCount());
+        outCall->SetDataHash(hash_combine(this->firstDataHash, this->secondDataHash));
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
+        return false;
+    }
 
-	return true;
+    return true;
 }
