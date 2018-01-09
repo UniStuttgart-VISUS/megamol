@@ -69,8 +69,10 @@ OSPRayStreamLines::OSPRayStreamLines(void) :
 
 bool OSPRayStreamLines::readData(megamol::core::Call &call) {
 
-    // read Data, calculate  shape parameters, fill data vectors
+    // fill material container
+    this->processMaterial();
 
+    // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::protein_calls::VTIDataCall *cd = this->getDataSlot.CallAs<megamol::protein_calls::VTIDataCall>();
 
@@ -135,18 +137,6 @@ bool OSPRayStreamLines::readData(megamol::core::Call &call) {
     this->structureContainer.indexData = std::make_shared<std::vector<unsigned int>>(std::move(this->indexData));
     this->structureContainer.globalRadius = streamlineRadius.Param<core::param::FloatParam>()->Value();
 
-
-    // material container
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    if (cm != NULL) {
-        auto gmp = cm->getMaterialParameter();
-        if (gmp->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    } else {
-        this->structureContainer.materialContainer = NULL;
-    }
-
     return true;
 }
 
@@ -167,10 +157,7 @@ void OSPRayStreamLines::release() {
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayStreamLines::InterfaceIsDirty() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-    cm->getMaterialParameter();
     if (
-        cm->InterfaceIsDirty() ||
         this->nStreamlinesSlot.IsDirty() ||
         this->streamlineMaxStepsSlot.IsDirty() ||
         this->streamlineStepSlot.IsDirty() ||

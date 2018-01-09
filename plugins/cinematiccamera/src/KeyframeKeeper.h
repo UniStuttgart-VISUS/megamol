@@ -94,6 +94,8 @@ namespace megamol {
             
             // Variables only used in keyframe keeper
             vislib::StringA                      filename;
+            bool                                 simTangentStatus;
+            Keyframe                             simTangentKf;
 
             /**********************************************************************
             * functions
@@ -196,6 +198,13 @@ namespace megamol {
             core::param::ParamSlot  snapAnimFramesParam;
             /** */
             core::param::ParamSlot  snapSimFramesParam;
+            /** */
+            core::param::ParamSlot  simTangentParam;
+
+            /** */
+            core::param::ParamSlot  addFixedAnimTimeParam;
+            /** */
+            core::param::ParamSlot  addFixedSimTimeParam;
 		};
 
 		/** Description class typedef */

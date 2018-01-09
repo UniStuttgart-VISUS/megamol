@@ -22,6 +22,7 @@
 #include "mmcore/cluster/simple/Server.h"
 #include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
+#include "mmcore/misc/WatermarkRenderer.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
 #include "mmcore/moldyn/ArrowRenderer.h"
@@ -41,6 +42,7 @@
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
 //#include "mmcore/special/ColStereoDisplay.h"
+#include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/LinearTransferFunction.h"
 #include "mmcore/view/TransferFunctionRenderer.h"
@@ -93,6 +95,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
     instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
+    instance.RegisterAutoDescription<misc::WatermarkRenderer>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::AddParticleColours>();
     instance.RegisterAutoDescription<moldyn::ArrowRenderer>();
@@ -112,6 +115,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
+    instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::LinearTransferFunction>();
     instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
