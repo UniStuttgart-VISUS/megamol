@@ -128,8 +128,10 @@ __global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint ima
 	}
 
 	// TODO correct depth value
-	float depthVal = (2.0f * zNear) / (zFar + zNear - dv * (zFar - zNear));
-	depthVal = zNear + depthVal * (zFar - zNear);
+	//float depthVal = (2.0f * zNear) / (zFar + zNear - dv * (zFar - zNear));
+	//depthVal = zNear + depthVal * (zFar - zNear);
+
+	//printf("%f %f\n", dv, depthVal);
 
 	// texture coordinates
 	float u = (x / static_cast<float>(imageW)) * 2.0f - 1.0f;
@@ -168,6 +170,9 @@ __global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint ima
 	float3 step = eyeRay.d * tstep;
 	float3 diff = boxMax - boxMin;
 
+	float projA = -(zFar + zNear) / (zFar - zNear);
+	float projB = -2.0f * zNear * zFar / (zFar - zNear);
+
 	for (int i = 0; i < maxSteps; i++) {
 		// remap position to [0, 1] coordinates
 		float3 samplePos;
@@ -182,9 +187,12 @@ __global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint ima
 		sample = (sample - minVal) / (maxVal - minVal);
 
 		float sampleCamDist = length(eyeRay.o - pos);
-		//if (sampleCamDist >= depthVal) {
-		//	break;
-		//}
+
+		// depth correction if another image is already present
+		float localdepth = 0.5f * (-projA * sampleCamDist + projB) / sampleCamDist + 0.5f;
+		if (localdepth >= dv) {
+			break;
+		}
 
 		// lookup in transfer function texture
 		float4 col = tex1D(customTransferTex, (sample - transferOffset) * transferScale);

@@ -313,11 +313,12 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	glActiveTexture(GL_TEXTURE13);
 	if (incCrd != nullptr) {
 		// read the depth texture values if available
+		this->copyFBO.BindDepthTexture();
+		this->copyFBO.GetDepthTexture(this->cudaDepthImage, GL_DEPTH_COMPONENT, GL_FLOAT);
+	} else {
 		for (size_t i = 0; i < viewport.GetHeight() * viewport.GetWidth(); i++) {
 			this->cudaDepthImage[i] = 1.0f;
 		}
-		this->copyFBO.BindDepthTexture();
-		this->copyFBO.GetDepthTexture(this->cudaDepthImage, GL_DEPTH_COMPONENT, GL_FLOAT);
 	}
 
 	// render the stuff
