@@ -17,6 +17,7 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
+#include <array>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -130,24 +131,27 @@ bool CUDAVolumeRaycaster::GetExtents(megamol::core::Call & call) {
 	auto volumeBB = vdc->AccessBoundingBoxes().ObjectSpaceBBox();
 	auto fcnt = vdc->FrameCount();
 
-	//std::cout << "vol: " << volumeBB.Left() << " " << volumeBB.Bottom() << " " << volumeBB.Back() << " " << volumeBB.Right() << " " << volumeBB.Top() << " " << volumeBB.Front() << std::endl;
-
 	if (incCrd != NULL) {
 		if (!(*incCrd)(1)) return false; // get extents
-		//auto bla = incCrd->AccessBoundingBoxes().ObjectSpaceBBox();
-		//std::cout << "prot: " << bla.Left() << " " << bla.Bottom() << " " << bla.Back() << " " << bla.Right() << " " << bla.Top() << " " << bla.Front() << std::endl;
 		volumeBB.Union(incCrd->AccessBoundingBoxes().ObjectSpaceBBox());
 		fcnt = std::min(fcnt, incCrd->TimeFramesCount());
 	}
 
-	//std::cout << "vol: " << volumeBB.Left() << " " << volumeBB.Bottom() << " " << volumeBB.Back() << " " << volumeBB.Right() << " " << volumeBB.Top() << " " << volumeBB.Front() << std::endl;
-
 	float scale;
 	if (!vislib::math::IsEqual(volumeBB.LongestEdge(), 0.0f)) {
 		scale = 2.0f / volumeBB.LongestEdge();
-	}
-	else {
+	} else {
 		scale = 1.0f;
+	}
+
+	// with two incoming bounding boxes we have to take the already computed one as reference for the scale factor,
+	// since we cannot change the rendering done by external renderers
+	if (incCrd != NULL) {
+		if (!vislib::math::IsEqual(incCrd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+			scale = 2.0f / incCrd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		} else {
+			scale = 1.0f;
+		}
 	}
 
 	cr3d->AccessBoundingBoxes().Clear();
@@ -189,6 +193,17 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 
 	if (!vislib::math::IsEqual(bb.LongestEdge(), 0.0f)) {
 		scale = 2.0f / bb.LongestEdge();
+	}
+
+	// with two incoming bounding boxes we have to take the already computed one as reference for the scale factor,
+	// since we cannot change the rendering done by external renderers
+	if (incCrd != NULL) {
+		if (!vislib::math::IsEqual(incCrd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+			scale = 2.0f / incCrd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		}
+		else {
+			scale = 1.0f;
+		}
 	}
 
 	initCuda(*cr3d);
@@ -298,6 +313,9 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	glActiveTexture(GL_TEXTURE13);
 	if (incCrd != nullptr) {
 		// read the depth texture values if available
+		for (size_t i = 0; i < viewport.GetHeight() * viewport.GetWidth(); i++) {
+			this->cudaDepthImage[i] = 1.0f;
+		}
 		this->copyFBO.BindDepthTexture();
 		this->copyFBO.GetDepthTexture(this->cudaDepthImage, GL_DEPTH_COMPONENT, GL_FLOAT);
 	}
@@ -312,7 +330,9 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	if (incCrd != nullptr) {
 		this->copyFBO.BindColourTexture();
 	} else {
-		// TODO generate texture containing the background color
+		// generate texture containing the background color
+		this->setupBackgroundTexture();
+		glBindTexture(GL_TEXTURE_2D, this->bgTexHandle);
 	}
 
 	glActiveTexture(GL_TEXTURE15);
@@ -415,6 +435,27 @@ bool CUDAVolumeRaycaster::initOpenGL() {
 	if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) return false;
 
 	return true;
+}
+
+/*
+ *	CUDAVolumeRaycaster::initPixelBuffer
+ */
+void CUDAVolumeRaycaster::setupBackgroundTexture(void) {
+	
+	std::array<float, 4> bgcolor = { 0.0f, 0.0f, 0.0f, 0.0f };
+	glGetFloatv(GL_COLOR_CLEAR_VALUE, &bgcolor[0]);
+	
+	if(!this->bgTexHandle) {
+		glGenTextures(1, &this->bgTexHandle);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, this->bgTexHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_FLOAT, bgcolor.data());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 /*

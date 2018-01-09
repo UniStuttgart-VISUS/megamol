@@ -182,9 +182,9 @@ __global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint ima
 		sample = (sample - minVal) / (maxVal - minVal);
 
 		float sampleCamDist = length(eyeRay.o - pos);
-		if (sampleCamDist >= depthVal) {
-			break;
-		}
+		//if (sampleCamDist >= depthVal) {
+		//	break;
+		//}
 
 		// lookup in transfer function texture
 		float4 col = tex1D(customTransferTex, (sample - transferOffset) * transferScale);

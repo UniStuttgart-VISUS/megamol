@@ -202,6 +202,11 @@ namespace volume_cuda {
 		 */
 		bool renderCallToFBO(core::view::CallRender3D * cr3d, core::view::CallRender3D * incoming, vislib::math::Dimension<float, 2> viewport);
 
+		/**
+		 * Sets up the background texture
+		 */
+		void setupBackgroundTexture(void);
+
 		/** caller slot */
 		megamol::core::CallerSlot volumeDataSlot;
 
@@ -228,6 +233,9 @@ namespace volume_cuda {
 
 		/** the texture handle */
 		GLuint texHandle;
+
+		/** the texture handle for the background */
+		GLuint bgTexHandle;
 
 		/** the resulting CUDA image */
 		unsigned int * cudaImage;
