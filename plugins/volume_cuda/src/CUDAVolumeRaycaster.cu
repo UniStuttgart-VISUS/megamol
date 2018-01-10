@@ -110,9 +110,17 @@ __global__ void d_render(uint * d_output, float * d_depth, uint imageW, uint ima
 	float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1)) {
 
-	const int maxSteps = 450;
+	int maxSteps = 450;
 
-	const float tstep = (boxMax.x - boxMin.x) / static_cast<float>(maxSteps);
+	float tstep = (boxMax.x - boxMin.x) / static_cast<float>(maxSteps);
+	if ((boxMax.y - boxMin.y) / static_cast<float>(maxSteps) > tstep) {
+		tstep = (boxMax.y - boxMin.y) / static_cast<float>(maxSteps);
+	}
+	if ((boxMax.z - boxMin.z) / static_cast<float>(maxSteps) > tstep) {
+		tstep = (boxMax.z - boxMin.z) / static_cast<float>(maxSteps);
+	}
+	maxSteps *= 2; // security factor, could be sqrt(2)
+
 	const float opacityThreshold = 0.95f;
 
 	// pixel coordinates
