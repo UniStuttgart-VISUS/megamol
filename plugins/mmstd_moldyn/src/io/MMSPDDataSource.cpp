@@ -267,8 +267,6 @@ void MMSPDDataSource::Frame::SetData(core::moldyn::MultiParticleDataCall& call,
 
         // now use some because-I-know-magic:
         unsigned int off = 0;
-        // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
-        if (header.HasIDs()) off += 8;
         if (!hasX || !hasY || !hasZ) {
             // too empty
             pts.SetCount(0);
@@ -276,6 +274,15 @@ void MMSPDDataSource::Frame::SetData(core::moldyn::MultiParticleDataCall& call,
 
         } else {
             pts.SetCount(parts.Count());
+
+            // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
+            if (header.HasIDs()) {
+                off += 8;
+                pts.SetIDData(core::moldyn::MultiParticleDataCall::Particles::IDDATA_UINT64,
+                    parts.Data().At(0),
+                    static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
+            }
+
             pts.SetVertexData(hasR ? core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR
                 : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 parts.Data().At(off),
@@ -343,8 +350,7 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
 
         // now use some because-I-know-magic:
         unsigned int off = 0;
-        // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
-        if (header.HasIDs()) off += 8;
+        
         if (!hasX || !hasY || !hasZ) {
             // too empty
             pts.SetCount(0);
@@ -352,8 +358,17 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
 
         } else {
             pts.SetCount(parts.Count());
-            pts.SetVertexData(hasR ? core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR
-                : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+
+            // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
+            if (header.HasIDs()) {
+                off += 8;
+                pts.SetIDData(core::moldyn::DirectionalParticles::IDDATA_UINT64,
+                    parts.Data().At(0),
+                    static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
+            }
+
+            pts.SetVertexData(hasR ? core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZR
+                : core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZ,
                 parts.Data().At(off),
                 static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
 
@@ -370,11 +385,11 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
             //printf("%f %f %f\n", parts.Data().AsAt<float>(off)[0], parts.Data().AsAt<float>(off)[1], parts.Data().AsAt<float>(off)[2]);
 
             if (hasCR && hasCG && hasCB) {
-                pts.SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                pts.SetColourData(core::moldyn::DirectionalParticles::COLDATA_FLOAT_RGB,
                     parts.Data().At(off + parts.FieldMap()[cIdx] * sizeof(float)),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             } else {
-                pts.SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                pts.SetColourData(core::moldyn::DirectionalParticles::COLDATA_NONE, NULL);
             }
 
         }
