@@ -267,7 +267,7 @@ void MMSPDDataSource::Frame::SetData(core::moldyn::MultiParticleDataCall& call,
 
         // now use some because-I-know-magic:
         unsigned int off = 0;
-        if (!hasX || !hasY || !hasZ) {
+        if (!hasX || !hasY || !hasZ || parts.Count() == 0) {
             // too empty
             pts.SetCount(0);
             continue;
@@ -351,7 +351,7 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
         // now use some because-I-know-magic:
         unsigned int off = 0;
         
-        if (!hasX || !hasY || !hasZ) {
+        if (!hasX || !hasY || !hasZ || parts.Count() == 0) {
             // too empty
             pts.SetCount(0);
             continue;
