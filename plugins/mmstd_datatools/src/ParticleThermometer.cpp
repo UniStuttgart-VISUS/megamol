@@ -322,8 +322,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                     // no square root, so actually kinetic energy
                     float tempMag = theTemperature[0] + theTemperature[1] + theTemperature[2];
                     //tempMag /= (num_matches * num_matches * 4.0f) / 9.0f;
-                    //tempMag /= num_matches * theFreedom;
-                    tempMag /= theFreedom;
+                    tempMag /= num_matches * theFreedom;
+                    //tempMag /= theFreedom;
                     newColors[myIndex] = tempMag;
                     if (tempMag < minTemp[threadIdx]) minTemp[threadIdx] = tempMag;
                     if (tempMag > maxTemp[threadIdx]) maxTemp[threadIdx] = tempMag;
