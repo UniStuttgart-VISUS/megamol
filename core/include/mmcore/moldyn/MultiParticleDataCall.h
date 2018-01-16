@@ -42,6 +42,94 @@ namespace moldyn {
             virtual short const GetZs() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
             virtual VertexData_Detail& Clone() const = 0;
+            virtual ~VertexData_Detail() = default;
+        };
+
+        template<class T, bool hasRad>
+        class VertexData_Impl : public VertexData_Detail {
+        public:
+            VertexData_Impl() = default;
+
+            VertexData_Impl(VertexData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual float const GetXf() const override {
+                return GetX<float>();
+            }
+
+            virtual short const GetXs() const override {
+                return GetX<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetX() const {
+                return this->basePtr[0];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetX() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            virtual float const GetYf() const override {
+                return GetY<float>();
+            }
+
+            virtual short const GetYs() const override {
+                return GetY<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetY() const {
+                return this->basePtr[1];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetY() const {
+                return static_cast<R>(this->basePtr[1]);
+            }
+
+            virtual float const GetZf() const override {
+                return GetZ<float>();
+            }
+
+            virtual short const GetZs() const override {
+                return GetZ<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetZ() const {
+                return this->basePtr[2];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetZ() const {
+                return static_cast<R>(this->basePtr[2]);
+            }
+
+            virtual float const GetRf() const override {
+                return GetR<hasRad>();
+            }
+
+            template<bool hasRad_v>
+            std::enable_if_t<hasRad_v, float> const GetR() const {
+                return this->basePtr[3];
+            }
+
+            template<bool hasRad_v>
+            std::enable_if_t<!hasRad_v, float> const GetR() const {
+                return 0.0f;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual VertexData_Impl& Clone() const override {
+                return VertexData_Impl{*this};
+            }
+        private:
+            T const* basePtr;
         };
 
         class VertexData_Base {
@@ -51,174 +139,35 @@ namespace moldyn {
                 pimpl.SetBasePtr(basePtr);
             }
 
-            float const GetXf() {
+            float const GetXf() const {
                 return pimpl.GetXf();
             }
-            float const GetYf() {
+
+            float const GetYf() const {
                 return pimpl.GetYf();
             }
-            float const GetZf() {
+
+            float const GetZf() const {
                 return pimpl.GetZf();
             }
-            float const GetRf() {
+
+            float const GetRf() const {
                 return pimpl.GetRf();
             }
-            short const GetXs() {
+
+            short const GetXs() const {
                 return pimpl.GetXs();
             }
-            short const GetYs() {
+
+            short const GetYs() const {
                 return pimpl.GetYs();
             }
-            short const GetZs() {
+
+            short const GetZs() const {
                 return pimpl.GetZs();
             }
         private:
             VertexData_Detail& pimpl;
-        };
-
-        class VertexData_XYZf : public VertexData_Detail {
-        public:
-            VertexData_XYZf() = default;
-
-            VertexData_XYZf(VertexData_XYZf const& rhs)
-                : basePtr{rhs.basePtr} {
-
-            }
-
-            virtual float const GetXf() const override {
-                return basePtr[0];
-            }
-
-            virtual float const GetYf() const override {
-                return basePtr[1];
-            }
-
-            virtual float const GetZf() const override {
-                return basePtr[2];
-            }
-
-            virtual float const GetRf() const override {
-                return 0.0f;
-            }
-
-            virtual short const GetXs() const override {
-                return static_cast<short>(GetXf());
-            }
-
-            virtual short const GetYs() const override {
-                return static_cast<short>(GetYf());
-            }
-
-            virtual short const GetZs() const override {
-                return static_cast<short>(GetZf());
-            }
-
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<float const*>(ptr);
-            }
-
-            virtual VertexData_XYZf& Clone() const override {
-                return VertexData_XYZf{*this};
-            }
-        private:
-            float const* basePtr;
-        };
-
-        class VertexData_XYZRf : public VertexData_Detail {
-        public:
-            VertexData_XYZRf() = default;
-
-            VertexData_XYZRf(VertexData_XYZRf const& rhs)
-                : basePtr{rhs.basePtr} {
-
-            }
-
-            virtual float const GetXf() const override {
-                return basePtr[0];
-            }
-
-            virtual float const GetYf() const override {
-                return basePtr[1];
-            }
-
-            virtual float const GetZf() const override {
-                return basePtr[2];
-            }
-
-            virtual float const GetRf() const override {
-                return basePtr[3];
-            }
-
-            virtual short const GetXs() const override {
-                return static_cast<short>(GetXf());
-            }
-
-            virtual short const GetYs() const override {
-                return static_cast<short>(GetYf());
-            }
-
-            virtual short const GetZs() const override {
-                return static_cast<short>(GetZf());
-            }
-
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<float const*>(ptr);
-            }
-
-            virtual VertexData_XYZRf& Clone() const override {
-                return VertexData_XYZRf{*this};
-            }
-        private:
-            float const* basePtr;
-        };
-
-        class VertexData_XYZs : public VertexData_Detail {
-        public:
-            VertexData_XYZs() = default;
-
-            VertexData_XYZs(VertexData_XYZs const& rhs)
-                : basePtr{rhs.basePtr} {
-
-            }
-
-            virtual float const GetXf() const override {
-                return static_cast<float>(GetXf());
-            }
-
-            virtual float const GetYf() const override {
-                return static_cast<float>(GetYf());
-            }
-
-            virtual float const GetZf() const override {
-                return static_cast<short>(GetZf());
-            }
-
-            virtual float const GetRf() const override {
-                return 0.0f;
-            }
-
-            virtual short const GetXs() const override {
-                return basePtr[0];
-            }
-
-            virtual short const GetYs() const override {
-                return basePtr[1];
-            }
-
-            virtual short const GetZs() const override {
-                return basePtr[2];
-            }
-
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<short const*>(ptr);
-            }
-
-            virtual VertexData_XYZs& Clone() const override {
-                return VertexData_XYZs{*this};
-            }
-        private:
-
-            short const* basePtr;
         };
 
         class ColorData_Detail {
@@ -234,6 +183,142 @@ namespace moldyn {
             virtual float const GetIf() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
             virtual ColorData_Detail& Clone() const = 0;
+            virtual ~ColorData_Detail() = default;
+        };
+
+        template<class T, bool hasAlpha, bool isI>
+        class ColorData_Impl : public ColorData_Detail {
+        public:
+            ColorData_Impl() = default;
+
+            ColorData_Impl(ColorData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return GetR<uint8_t, isI>();
+            }
+
+            virtual float const GetRf() const override {
+                return GetR<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetR() const {
+                return this->basePtr[0];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetR() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetR() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetGu8() const override {
+                return GetG<uint8_t, isI>();
+            }
+
+            virtual float const GetGf() const override {
+                return GetG<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetG() const {
+                return this->basePtr[1];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetG() const {
+                return static_cast<R>(this->basePtr[1]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetG() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetBu8() const override {
+                return GetB<uint8_t, isI>();
+            }
+
+            virtual float const GetBf() const override {
+                return GetB<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetB() const {
+                return this->basePtr[2];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetB() const {
+                return static_cast<R>(this->basePtr[2]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetB() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetAu8() const override {
+                return GetA<uint8_t, hasAlpha, isI>();
+            }
+
+            virtual float const GetAf() const override {
+                return GetA<float, hasAlpha, isI>();
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
+                return this->basePtr[3];
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
+                return static_cast<R>(this->basePtr[3]);
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<!hasAlpha_v && !isI_v, R> const GetA() const {
+                return static_cast<R>(0.0);
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetA() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual float const GetIf() const override {
+                return GetI<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && isI_v, R> const GetI() const {
+                return this->basePtr[0];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && isI_v, R> const GetI() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!isI_v, R> const GetI() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual ColorData_Impl& Clone() const override {
+                return ColorData_Impl{*this};
+            }
+        private:
+            T const* basePtr;
         };
 
         class ColorData_Base {
@@ -274,232 +359,51 @@ namespace moldyn {
             ColorData_Detail& pimpl;
         };
 
-        class ColorData_RGBu8 : public ColorData_Detail {
-        public:
-            ColorData_RGBu8() = default;
-
-            ColorData_RGBu8(ColorData_RGBu8 const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint8_t const GetRu8() const override {
-                return basePtr[0];
-            }
-            virtual uint8_t const GetGu8() const override {
-                return basePtr[1];
-            }
-            virtual uint8_t const GetBu8() const override {
-                return basePtr[2];
-            }
-            virtual uint8_t const GetAu8() const override {
-                return 0;
-            }
-            virtual float const GetRf() const override {
-                return static_cast<float>(GetRu8());
-            }
-            virtual float const GetGf() const override {
-                return static_cast<float>(GetGu8());
-            }
-            virtual float const GetBf() const override {
-                return static_cast<float>(GetBu8());
-            }
-            virtual float const GetAf() const override {
-                return static_cast<float>(GetAu8());
-            }
-            virtual float const GetIf() const override {
-                return 0.0f;
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<uint8_t const*>(ptr);
-            }
-            virtual ColorData_RGBu8& Clone() const override {
-                return ColorData_RGBu8{*this};
-            }
-        private:
-            uint8_t const* basePtr;
-        };
-
-        class ColorData_RGBAu8 : public ColorData_Detail {
-        public:
-            ColorData_RGBAu8() = default;
-
-            ColorData_RGBAu8(ColorData_RGBAu8 const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint8_t const GetRu8() const override {
-                return basePtr[0];
-            }
-            virtual uint8_t const GetGu8() const override {
-                return basePtr[1];
-            }
-            virtual uint8_t const GetBu8() const override {
-                return basePtr[2];
-            }
-            virtual uint8_t const GetAu8() const override {
-                return basePtr[3];
-            }
-            virtual float const GetRf() const override {
-                return static_cast<float>(GetRu8());
-            }
-            virtual float const GetGf() const override {
-                return static_cast<float>(GetGu8());
-            }
-            virtual float const GetBf() const override {
-                return static_cast<float>(GetBu8());
-            }
-            virtual float const GetAf() const override {
-                return static_cast<float>(GetAu8());
-            }
-            virtual float const GetIf() const override {
-                return 0.0f;
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<uint8_t const*>(ptr);
-            }
-            virtual ColorData_RGBAu8& Clone() const override {
-                return ColorData_RGBAu8{*this};
-            }
-        private:
-            uint8_t const* basePtr;
-        };
-
-        class ColorData_RGBf : public ColorData_Detail {
-        public:
-            ColorData_RGBf() = default;
-
-            ColorData_RGBf(ColorData_RGBf const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint8_t const GetRu8() const override {
-                return static_cast<uint8_t>(GetRf());
-            }
-            virtual uint8_t const GetGu8() const override {
-                return static_cast<uint8_t>(GetGf());
-            }
-            virtual uint8_t const GetBu8() const override {
-                return static_cast<uint8_t>(GetBf());
-            }
-            virtual uint8_t const GetAu8() const override {
-                return 0;
-            }
-            virtual float const GetRf() const override {
-                return basePtr[0];
-            }
-            virtual float const GetGf() const override {
-                return basePtr[1];
-            }
-            virtual float const GetBf() const override {
-                return basePtr[2];
-            }
-            virtual float const GetAf() const override {
-                return 0.0f;
-            }
-            virtual float const GetIf() const override {
-                return 0.0f;
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<float const*>(ptr);
-            }
-            virtual ColorData_RGBf& Clone() const override {
-                return ColorData_RGBf{*this};
-            }
-        private:
-            float const* basePtr;
-        };
-
-        class ColorData_RGBAf : public ColorData_Detail {
-        public:
-            ColorData_RGBAf() = default;
-
-            ColorData_RGBAf(ColorData_RGBAf const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint8_t const GetRu8() const override {
-                return static_cast<uint8_t>(GetRf());
-            }
-            virtual uint8_t const GetGu8() const override {
-                return static_cast<uint8_t>(GetGf());
-            }
-            virtual uint8_t const GetBu8() const override {
-                return static_cast<uint8_t>(GetBf());
-            }
-            virtual uint8_t const GetAu8() const override {
-                return static_cast<uint8_t>(GetAf());
-            }
-            virtual float const GetRf() const override {
-                return basePtr[0];
-            }
-            virtual float const GetGf() const override {
-                return basePtr[1];
-            }
-            virtual float const GetBf() const override {
-                return basePtr[2];
-            }
-            virtual float const GetAf() const override {
-                return basePtr[3];
-            }
-            virtual float const GetIf() const override {
-                return 0.0f;
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<float const*>(ptr);
-            }
-            virtual ColorData_RGBAf& Clone() const override {
-                return ColorData_RGBAf{*this};
-            }
-        private:
-            float const* basePtr;
-        };
-
-        class ColorData_If : public ColorData_Detail {
-        public:
-            ColorData_If() = default;
-
-            ColorData_If(ColorData_If const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint8_t const GetRu8() const override {
-                return 0.0f;
-            }
-            virtual uint8_t const GetGu8() const override {
-                return 0.0f;
-            }
-            virtual uint8_t const GetBu8() const override {
-                return 0.0f;
-            }
-            virtual uint8_t const GetAu8() const override {
-                return 0.0f;
-            }
-            virtual float const GetRf() const override {
-                return 0.0f;
-            }
-            virtual float const GetGf() const override {
-                return 0.0f;
-            }
-            virtual float const GetBf() const override {
-                return 0.0f;
-            }
-            virtual float const GetAf() const override {
-                return 0.0f;
-            }
-            virtual float const GetIf() const override {
-                return basePtr[0];
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<float const*>(ptr);
-            }
-            virtual ColorData_If& Clone() const override {
-                return ColorData_If{*this};
-            }
-        private:
-            float const* basePtr;
-        };
-
         class IDData_Detail {
         public:
             virtual uint32_t const GetIDu32() const = 0;
             virtual uint64_t const GetIDu64() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
             virtual IDData_Detail& Clone() const = 0;
+            virtual ~IDData_Detail() = default;
+        };
+
+        template<class T>
+        class IDData_Impl : public IDData_Detail {
+        public:
+            IDData_Impl() = default;
+
+            IDData_Impl(IDData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint32_t const GetIDu32() const override {
+                return GetID<uint32_t>();
+            }
+
+            virtual uint64_t const GetIDu64() const override {
+                return GetID<uint64_t>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetID() const {
+                return this->basePtr[0];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetID() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual IDData_Impl& Clone() const override {
+                return IDData_Impl{*this};
+            }
+        private:
+
+            T const* basePtr;
         };
 
         class IDData_Base {
@@ -518,54 +422,6 @@ namespace moldyn {
         private:
 
             IDData_Detail& pimpl;
-        };
-
-        class IDData_u32 : public IDData_Detail {
-        public:
-            IDData_u32() = default;
-
-            IDData_u32(IDData_u32 const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint32_t const GetIDu32() const override {
-                return *basePtr;
-            }
-            virtual uint64_t const GetIDu64() const override {
-                return static_cast<uint64_t>(GetIDu32());
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<uint32_t const*>(ptr);
-            }
-            virtual IDData_u32& Clone() const override {
-                return IDData_u32{*this};
-            }
-        private:
-
-            uint32_t const* basePtr;
-        };
-
-        struct IDData_u64 : public IDData_Detail {
-        public:
-            IDData_u64() = default;
-
-            IDData_u64(IDData_u64 const& rhs)
-                : basePtr{rhs.basePtr} { }
-
-            virtual uint32_t const GetIDu32() const override {
-                return static_cast<uint32_t>(GetIDu64());
-            }
-            virtual uint64_t const GetIDu64() const override {
-                return *basePtr;
-            }
-            virtual void SetBasePtr(void const* ptr) override {
-                this->basePtr = reinterpret_cast<uint64_t const*>(ptr);
-            }
-            virtual IDData_u64& Clone() const override {
-                return IDData_u64{*this};
-            }
-        private:
-
-            uint64_t const* basePtr;
         };
 
         /** Struct holding pointers into data streams for a specific particle */
@@ -785,19 +641,19 @@ namespace moldyn {
 
             switch (this->colDataType) {
             case COLDATA_UINT8_RGB:
-                this->colorAccessor.reset(new ColorData_RGBu8{});
+                this->colorAccessor.reset(new ColorData_Impl<uint8_t, false, false>{});
                 break;
             case COLDATA_UINT8_RGBA:
-                this->colorAccessor.reset(new ColorData_RGBAu8{ });
+                this->colorAccessor.reset(new ColorData_Impl<uint8_t, true, false>{ });
                 break;
             case COLDATA_FLOAT_RGB:
-                this->colorAccessor.reset(new ColorData_RGBf{ });
+                this->colorAccessor.reset(new ColorData_Impl<float, false, false>{ });
                 break;
             case COLDATA_FLOAT_RGBA:
-                this->colorAccessor.reset(new ColorData_RGBAf{ });
+                this->colorAccessor.reset(new ColorData_Impl<float, true, false>{ });
                 break;
             case COLDATA_FLOAT_I:
-                this->colorAccessor.reset(new ColorData_If{ });
+                this->colorAccessor.reset(new ColorData_Impl<float, false, true>{ });
                 break;
             case COLDATA_NONE:
             default:
@@ -883,13 +739,13 @@ namespace moldyn {
 
             switch (this->vertDataType) {
             case VERTDATA_FLOAT_XYZ:
-                this->vertexAccessor.reset(new VertexData_XYZf{});
+                this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
                 break;
             case VERTDATA_FLOAT_XYZR:
-                this->vertexAccessor.reset(new VertexData_XYZRf{});
+                this->vertexAccessor.reset(new VertexData_Impl<float, true>{});
                 break;
             case VERTDATA_SHORT_XYZ:
-                this->vertexAccessor.reset(new VertexData_XYZs{});
+                this->vertexAccessor.reset(new VertexData_Impl<short, false>{});
                 break;
             case VERTDATA_NONE:
             default:
@@ -914,10 +770,10 @@ namespace moldyn {
 
             switch (this->idDataType) {
             case IDDATA_UINT32:
-                this->idAccessor.reset(new IDData_u32{ });
+                this->idAccessor.reset(new IDData_Impl<uint32_t>{ });
                 break;
             case IDDATA_UINT64:
-                this->idAccessor.reset(new IDData_u64{});
+                this->idAccessor.reset(new IDData_Impl<uint64_t>{});
                 break;
             case IDDATA_NONE:
             default:
