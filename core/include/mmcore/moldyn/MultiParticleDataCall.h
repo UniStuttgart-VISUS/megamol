@@ -31,31 +31,586 @@ namespace moldyn {
      */
     class MEGAMOLCORE_API SimpleSphericalParticles {
     public:
+        class VertexData_Detail {
+        public:
+            virtual float const GetXf() const = 0;
+            virtual float const GetYf() const = 0;
+            virtual float const GetZf() const = 0;
+            virtual float const GetRf() const = 0;
+            virtual short const GetXs() const = 0;
+            virtual short const GetYs() const = 0;
+            virtual short const GetZs() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual VertexData_Detail& Clone() const = 0;
+        };
+
+        class VertexData_Base {
+        public:
+            VertexData_Base(VertexData_Detail& impl, void const* basePtr)
+                : pimpl{impl} {
+                pimpl.SetBasePtr(basePtr);
+            }
+
+            float const GetXf() {
+                return pimpl.GetXf();
+            }
+            float const GetYf() {
+                return pimpl.GetYf();
+            }
+            float const GetZf() {
+                return pimpl.GetZf();
+            }
+            float const GetRf() {
+                return pimpl.GetRf();
+            }
+            short const GetXs() {
+                return pimpl.GetXs();
+            }
+            short const GetYs() {
+                return pimpl.GetYs();
+            }
+            short const GetZs() {
+                return pimpl.GetZs();
+            }
+        private:
+            VertexData_Detail& pimpl;
+        };
+
+        class VertexData_XYZf : public VertexData_Detail {
+        public:
+            VertexData_XYZf() = default;
+
+            VertexData_XYZf(VertexData_XYZf const& rhs)
+                : basePtr{rhs.basePtr} {
+
+            }
+
+            virtual float const GetXf() const override {
+                return basePtr[0];
+            }
+
+            virtual float const GetYf() const override {
+                return basePtr[1];
+            }
+
+            virtual float const GetZf() const override {
+                return basePtr[2];
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual short const GetXs() const override {
+                return static_cast<short>(GetXf());
+            }
+
+            virtual short const GetYs() const override {
+                return static_cast<short>(GetYf());
+            }
+
+            virtual short const GetZs() const override {
+                return static_cast<short>(GetZf());
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<float const*>(ptr);
+            }
+
+            virtual VertexData_XYZf& Clone() const override {
+                return VertexData_XYZf{*this};
+            }
+        private:
+            float const* basePtr;
+        };
+
+        class VertexData_XYZRf : public VertexData_Detail {
+        public:
+            VertexData_XYZRf() = default;
+
+            VertexData_XYZRf(VertexData_XYZRf const& rhs)
+                : basePtr{rhs.basePtr} {
+
+            }
+
+            virtual float const GetXf() const override {
+                return basePtr[0];
+            }
+
+            virtual float const GetYf() const override {
+                return basePtr[1];
+            }
+
+            virtual float const GetZf() const override {
+                return basePtr[2];
+            }
+
+            virtual float const GetRf() const override {
+                return basePtr[3];
+            }
+
+            virtual short const GetXs() const override {
+                return static_cast<short>(GetXf());
+            }
+
+            virtual short const GetYs() const override {
+                return static_cast<short>(GetYf());
+            }
+
+            virtual short const GetZs() const override {
+                return static_cast<short>(GetZf());
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<float const*>(ptr);
+            }
+
+            virtual VertexData_XYZRf& Clone() const override {
+                return VertexData_XYZRf{*this};
+            }
+        private:
+            float const* basePtr;
+        };
+
+        class VertexData_XYZs : public VertexData_Detail {
+        public:
+            VertexData_XYZs() = default;
+
+            VertexData_XYZs(VertexData_XYZs const& rhs)
+                : basePtr{rhs.basePtr} {
+
+            }
+
+            virtual float const GetXf() const override {
+                return static_cast<float>(GetXf());
+            }
+
+            virtual float const GetYf() const override {
+                return static_cast<float>(GetYf());
+            }
+
+            virtual float const GetZf() const override {
+                return static_cast<short>(GetZf());
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual short const GetXs() const override {
+                return basePtr[0];
+            }
+
+            virtual short const GetYs() const override {
+                return basePtr[1];
+            }
+
+            virtual short const GetZs() const override {
+                return basePtr[2];
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<short const*>(ptr);
+            }
+
+            virtual VertexData_XYZs& Clone() const override {
+                return VertexData_XYZs{*this};
+            }
+        private:
+
+            short const* basePtr;
+        };
+
+        class ColorData_Detail {
+        public:
+            virtual uint8_t const GetRu8() const = 0;
+            virtual uint8_t const GetGu8() const = 0;
+            virtual uint8_t const GetBu8() const = 0;
+            virtual uint8_t const GetAu8() const = 0;
+            virtual float const GetRf() const = 0;
+            virtual float const GetGf() const = 0;
+            virtual float const GetBf() const = 0;
+            virtual float const GetAf() const = 0;
+            virtual float const GetIf() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual ColorData_Detail& Clone() const = 0;
+        };
+
+        class ColorData_Base {
+        public:
+            ColorData_Base(ColorData_Detail& impl, void const* basePtr)
+                : pimpl{impl} {
+                pimpl.SetBasePtr(basePtr);
+            }
+
+            uint8_t const GetRu8() const {
+                return pimpl.GetRu8();
+            }
+            uint8_t const GetGu8() const {
+                return pimpl.GetGu8();
+            }
+            uint8_t const GetBu8() const {
+                return pimpl.GetBu8();
+            }
+            uint8_t const GetAu8() const {
+                return pimpl.GetAu8();
+            }
+            float const GetRf() const {
+                return pimpl.GetRf();
+            }
+            float const GetGf() const {
+                return pimpl.GetGf();
+            }
+            float const GetBf() const {
+                return pimpl.GetBf();
+            }
+            float const GetAf() const {
+                return pimpl.GetAf();
+            }
+            float const GetIf() const {
+                return pimpl.GetIf();
+            }
+        private:
+            ColorData_Detail& pimpl;
+        };
+
+        class ColorData_RGBu8 : public ColorData_Detail {
+        public:
+            ColorData_RGBu8() = default;
+
+            ColorData_RGBu8(ColorData_RGBu8 const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return basePtr[0];
+            }
+            virtual uint8_t const GetGu8() const override {
+                return basePtr[1];
+            }
+            virtual uint8_t const GetBu8() const override {
+                return basePtr[2];
+            }
+            virtual uint8_t const GetAu8() const override {
+                return 0;
+            }
+            virtual float const GetRf() const override {
+                return static_cast<float>(GetRu8());
+            }
+            virtual float const GetGf() const override {
+                return static_cast<float>(GetGu8());
+            }
+            virtual float const GetBf() const override {
+                return static_cast<float>(GetBu8());
+            }
+            virtual float const GetAf() const override {
+                return static_cast<float>(GetAu8());
+            }
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<uint8_t const*>(ptr);
+            }
+            virtual ColorData_RGBu8& Clone() const override {
+                return ColorData_RGBu8{*this};
+            }
+        private:
+            uint8_t const* basePtr;
+        };
+
+        class ColorData_RGBAu8 : public ColorData_Detail {
+        public:
+            ColorData_RGBAu8() = default;
+
+            ColorData_RGBAu8(ColorData_RGBAu8 const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return basePtr[0];
+            }
+            virtual uint8_t const GetGu8() const override {
+                return basePtr[1];
+            }
+            virtual uint8_t const GetBu8() const override {
+                return basePtr[2];
+            }
+            virtual uint8_t const GetAu8() const override {
+                return basePtr[3];
+            }
+            virtual float const GetRf() const override {
+                return static_cast<float>(GetRu8());
+            }
+            virtual float const GetGf() const override {
+                return static_cast<float>(GetGu8());
+            }
+            virtual float const GetBf() const override {
+                return static_cast<float>(GetBu8());
+            }
+            virtual float const GetAf() const override {
+                return static_cast<float>(GetAu8());
+            }
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<uint8_t const*>(ptr);
+            }
+            virtual ColorData_RGBAu8& Clone() const override {
+                return ColorData_RGBAu8{*this};
+            }
+        private:
+            uint8_t const* basePtr;
+        };
+
+        class ColorData_RGBf : public ColorData_Detail {
+        public:
+            ColorData_RGBf() = default;
+
+            ColorData_RGBf(ColorData_RGBf const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return static_cast<uint8_t>(GetRf());
+            }
+            virtual uint8_t const GetGu8() const override {
+                return static_cast<uint8_t>(GetGf());
+            }
+            virtual uint8_t const GetBu8() const override {
+                return static_cast<uint8_t>(GetBf());
+            }
+            virtual uint8_t const GetAu8() const override {
+                return 0;
+            }
+            virtual float const GetRf() const override {
+                return basePtr[0];
+            }
+            virtual float const GetGf() const override {
+                return basePtr[1];
+            }
+            virtual float const GetBf() const override {
+                return basePtr[2];
+            }
+            virtual float const GetAf() const override {
+                return 0.0f;
+            }
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<float const*>(ptr);
+            }
+            virtual ColorData_RGBf& Clone() const override {
+                return ColorData_RGBf{*this};
+            }
+        private:
+            float const* basePtr;
+        };
+
+        class ColorData_RGBAf : public ColorData_Detail {
+        public:
+            ColorData_RGBAf() = default;
+
+            ColorData_RGBAf(ColorData_RGBAf const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return static_cast<uint8_t>(GetRf());
+            }
+            virtual uint8_t const GetGu8() const override {
+                return static_cast<uint8_t>(GetGf());
+            }
+            virtual uint8_t const GetBu8() const override {
+                return static_cast<uint8_t>(GetBf());
+            }
+            virtual uint8_t const GetAu8() const override {
+                return static_cast<uint8_t>(GetAf());
+            }
+            virtual float const GetRf() const override {
+                return basePtr[0];
+            }
+            virtual float const GetGf() const override {
+                return basePtr[1];
+            }
+            virtual float const GetBf() const override {
+                return basePtr[2];
+            }
+            virtual float const GetAf() const override {
+                return basePtr[3];
+            }
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<float const*>(ptr);
+            }
+            virtual ColorData_RGBAf& Clone() const override {
+                return ColorData_RGBAf{*this};
+            }
+        private:
+            float const* basePtr;
+        };
+
+        class ColorData_If : public ColorData_Detail {
+        public:
+            ColorData_If() = default;
+
+            ColorData_If(ColorData_If const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return 0.0f;
+            }
+            virtual uint8_t const GetGu8() const override {
+                return 0.0f;
+            }
+            virtual uint8_t const GetBu8() const override {
+                return 0.0f;
+            }
+            virtual uint8_t const GetAu8() const override {
+                return 0.0f;
+            }
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+            virtual float const GetGf() const override {
+                return 0.0f;
+            }
+            virtual float const GetBf() const override {
+                return 0.0f;
+            }
+            virtual float const GetAf() const override {
+                return 0.0f;
+            }
+            virtual float const GetIf() const override {
+                return basePtr[0];
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<float const*>(ptr);
+            }
+            virtual ColorData_If& Clone() const override {
+                return ColorData_If{*this};
+            }
+        private:
+            float const* basePtr;
+        };
+
+        class IDData_Detail {
+        public:
+            virtual uint32_t const GetIDu32() const = 0;
+            virtual uint64_t const GetIDu64() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual IDData_Detail& Clone() const = 0;
+        };
+
+        class IDData_Base {
+        public:
+            IDData_Base(IDData_Detail& impl, void const* basePtr)
+                : pimpl{impl} {
+                pimpl.SetBasePtr(basePtr);
+            }
+
+            uint32_t const GetIDu32() const {
+                return pimpl.GetIDu32();
+            }
+            uint64_t const GetIDu64() const {
+                return pimpl.GetIDu64();
+            }
+        private:
+
+            IDData_Detail& pimpl;
+        };
+
+        class IDData_u32 : public IDData_Detail {
+        public:
+            IDData_u32() = default;
+
+            IDData_u32(IDData_u32 const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint32_t const GetIDu32() const override {
+                return *basePtr;
+            }
+            virtual uint64_t const GetIDu64() const override {
+                return static_cast<uint64_t>(GetIDu32());
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<uint32_t const*>(ptr);
+            }
+            virtual IDData_u32& Clone() const override {
+                return IDData_u32{*this};
+            }
+        private:
+
+            uint32_t const* basePtr;
+        };
+
+        struct IDData_u64 : public IDData_Detail {
+        public:
+            IDData_u64() = default;
+
+            IDData_u64(IDData_u64 const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint32_t const GetIDu32() const override {
+                return static_cast<uint32_t>(GetIDu64());
+            }
+            virtual uint64_t const GetIDu64() const override {
+                return *basePtr;
+            }
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<uint64_t const*>(ptr);
+            }
+            virtual IDData_u64& Clone() const override {
+                return IDData_u64{*this};
+            }
+        private:
+
+            uint64_t const* basePtr;
+        };
+
+        /** Struct holding pointers into data streams for a specific particle */
+        struct particle_t {
+            VertexData_Base const& vert;
+            ColorData_Base  const& col;
+            IDData_Base     const& id;
+            /*void const* vertPtr;
+            void const* colPtr;
+            void const* idPtr;*/
+        };
 
         /** possible values for the vertex data */
         enum VertexDataType {
-            VERTDATA_NONE, //< indicates that this object is void
-            VERTDATA_FLOAT_XYZ, //< use global radius
-            VERTDATA_FLOAT_XYZR,
-            VERTDATA_SHORT_XYZ //< quantized positions and global radius
+            VERTDATA_NONE = 0, //< indicates that this object is void
+            VERTDATA_FLOAT_XYZ = 1, //< use global radius
+            VERTDATA_FLOAT_XYZR = 2,
+            VERTDATA_SHORT_XYZ = 3 //< quantized positions and global radius
         };
 
         /** possible values for the colour data */
         enum ColourDataType {
-            COLDATA_NONE, //< use global colour
-            COLDATA_UINT8_RGB,
-            COLDATA_UINT8_RGBA,
-            COLDATA_FLOAT_RGB,
-            COLDATA_FLOAT_RGBA,
-            COLDATA_FLOAT_I //< single float value to be mapped by a transfer function
+            COLDATA_NONE = 0, //< use global colour
+            COLDATA_UINT8_RGB = 1,
+            COLDATA_UINT8_RGBA = 2,
+            COLDATA_FLOAT_RGB = 3,
+            COLDATA_FLOAT_RGBA = 4,
+            COLDATA_FLOAT_I = 5 //< single float value to be mapped by a transfer function
         };
 
         /** possible values for the id data */
         enum IDDataType {
-            IDDATA_NONE,
-            IDDATA_UINT32,
-            IDDATA_UINT64
+            IDDATA_NONE = 0,
+            IDDATA_UINT32 = 1,
+            IDDATA_UINT64 = 2
         };
+
+        /** possible values of accumulated data sizes over all vertex coordinates */
+        static unsigned int VertexDataSize[4];
+
+        /** possible values of accumulated data sizes over all color elements */
+        static unsigned int ColorDataSize[6];
+
+        /** possible values of data sizes of the id */
+        static unsigned int IDDataSize[3];
 
         /**
          * Ctor
@@ -99,7 +654,7 @@ namespace moldyn {
          * @return The colour data stride in byte.
          */
         inline unsigned int GetColourDataStride(void) const {
-            return this->colStride;
+            return this->colStride == ColorDataSize[this->colDataType] ? 0 : this->colStride;
         }
 
         /**
@@ -182,7 +737,7 @@ namespace moldyn {
          * @return The vertex data stride in byte.
          */
         inline unsigned int GetVertexDataStride(void) const {
-            return this->vertStride;
+            return this->vertStride == VertexDataSize[this->vertDataType] ? 0 : this->vertStride;
         }
 
         /**
@@ -210,7 +765,7 @@ namespace moldyn {
          * @return The id data stride in byte.
          */
         inline unsigned int GetIDDataStride(void) const {
-            return this->idStride;
+            return this->idStride == IDDataSize[this->idDataType] ? 0 : this->idStride;
         }
 
         /**
@@ -226,7 +781,28 @@ namespace moldyn {
         //    ASSERT((p != NULL) || (t == COLDATA_NONE));
             this->colDataType = t;
             this->colPtr = p;
-            this->colStride = s;
+            this->colStride = s == 0 ? ColorDataSize[t] : s;
+
+            switch (this->colDataType) {
+            case COLDATA_UINT8_RGB:
+                this->colorAccessor.reset(new ColorData_RGBu8{});
+                break;
+            case COLDATA_UINT8_RGBA:
+                this->colorAccessor.reset(new ColorData_RGBAu8{ });
+                break;
+            case COLDATA_FLOAT_RGB:
+                this->colorAccessor.reset(new ColorData_RGBf{ });
+                break;
+            case COLDATA_FLOAT_RGBA:
+                this->colorAccessor.reset(new ColorData_RGBAf{ });
+                break;
+            case COLDATA_FLOAT_I:
+                this->colorAccessor.reset(new ColorData_If{ });
+                break;
+            case COLDATA_NONE:
+            default:
+                this->colorAccessor.reset();
+            }
         }
 
         /**
@@ -247,9 +823,11 @@ namespace moldyn {
          */
         void SetCount(UINT64 cnt) {
             this->colDataType = COLDATA_NONE;
-            this->colPtr = NULL; // DO NOT DELETE
+            this->colPtr = nullptr; // DO NOT DELETE
             this->vertDataType = VERTDATA_NONE;
-            this->vertPtr = NULL; // DO NOT DELETE
+            this->vertPtr = nullptr; // DO NOT DELETE
+            this->idDataType = IDDATA_NONE;
+            this->idPtr = nullptr; // DO NOT DELETE
 
             this->count = cnt;
         }
@@ -301,7 +879,22 @@ namespace moldyn {
             ASSERT(this->disabledNullChecks || (p != NULL) || (t == VERTDATA_NONE));
             this->vertDataType = t;
             this->vertPtr = p;
-            this->vertStride = s;
+            this->vertStride = s == 0 ? VertexDataSize[t] : s;
+
+            switch (this->vertDataType) {
+            case VERTDATA_FLOAT_XYZ:
+                this->vertexAccessor.reset(new VertexData_XYZf{});
+                break;
+            case VERTDATA_FLOAT_XYZR:
+                this->vertexAccessor.reset(new VertexData_XYZRf{});
+                break;
+            case VERTDATA_SHORT_XYZ:
+                this->vertexAccessor.reset(new VertexData_XYZs{});
+                break;
+            case VERTDATA_NONE:
+            default:
+                this->vertexAccessor.reset();
+            }
         }
 
         /**
@@ -317,7 +910,19 @@ namespace moldyn {
             ASSERT(this->disabledNullChecks || (p != NULL) || (t == IDDATA_NONE));
             this->idDataType = t;
             this->idPtr = p;
-            this->idStride = s;
+            this->idStride = s == 0 ? IDDataSize[t] : s;
+
+            switch (this->idDataType) {
+            case IDDATA_UINT32:
+                this->idAccessor.reset(new IDData_u32{ });
+                break;
+            case IDDATA_UINT64:
+                this->idAccessor.reset(new IDData_u64{});
+                break;
+            case IDDATA_NONE:
+            default:
+                this->idAccessor.reset();
+            }
         }
 
         /**
@@ -337,6 +942,26 @@ namespace moldyn {
          * @return 'true' if 'this' and 'rhs' are equal.
          */
         bool operator==(const SimpleSphericalParticles& rhs) const;
+
+        /**
+         * Access particle at index without range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         */
+        particle_t const& operator[](size_t idx) const noexcept;
+
+        /**
+         * Access particle at index with range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         *
+         * @throws std::out_of_range if idx is larger than particle count.
+         */
+        particle_t const& At(size_t idx) const;
 
         /**
          * Disable NULL-checks in case we have an OpenGL-VAO
@@ -417,6 +1042,8 @@ namespace moldyn {
             cb = this->glCB;
         }
 
+
+
     private:
 
         /** The global colour */
@@ -479,6 +1106,15 @@ namespace moldyn {
 
         /** The particle ID stride */
         unsigned int idStride;
+
+        /** Polymorphic vertex access object */
+        std::unique_ptr<VertexData_Detail> vertexAccessor;
+
+        /** Polymorphic color access object */
+        std::unique_ptr<ColorData_Detail> colorAccessor;
+
+        /** Polymorphic id access object */
+        std::unique_ptr<IDData_Detail> idAccessor;
     };
 
 
