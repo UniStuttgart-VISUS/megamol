@@ -1103,6 +1103,14 @@ namespace protein_calls {
          */
         float* AtomBFactors(void) const { return atomBFactors; }
 
+		/**
+         * Get the atom RMSF values.
+         * Be careful! This could return a nullptr if no RMSF has been calculated
+		 *
+         * @return The atom RMSF array.
+         */
+		float* AtomRMSFValues(void) const { return atomRMSFValues; }
+
         /**
          * Get the atom charges.
          *
@@ -1344,10 +1352,11 @@ namespace protein_calls {
          * @param bfactor       The atom b-factors.
          * @param charge        The atom charges.
          * @param occupancies   The atom occupancies.
+		 * @param rmsf          The atom RMSF values.
          */
         void SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
             const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
-            float* bfactor, const float* charge, const float* occupancy);
+            float* bfactor, const float* charge, const float* occupancy, float* rmsf = nullptr);
 
 		void SetAtomPositions(const float *atomPositions) { atomPos = atomPositions; }
 
@@ -1358,8 +1367,16 @@ namespace protein_calls {
 			this->ownsBFactorMemory = ownsBFacMem;
 		}
 
+<<<<<<< HEAD
 		void SetFormerAtomIndices(const int *formerAtomIndices) {
 			this->atomFormerIdx = formerAtomIndices;
+=======
+		void SetAtomRMSF(float *rmsf, bool ownsRMSFMem = false) {
+			if (this->ownsRMSFMemory)
+				delete[] this->atomRMSFValues;
+			this->atomRMSFValues = rmsf;
+			this->ownsRMSFMemory = ownsRMSFMem;
+>>>>>>> 8b840ecc... added rmsf values to the moleculardatacall
 		}
 
         /**
@@ -1467,6 +1484,30 @@ namespace protein_calls {
          * @return The maximum bfactor value.
          */
         float MaximumBFactor() const { return this->maxBFactor; }
+
+		/**
+         * Set the RMSF range.
+         *
+         * @param min    The minimum RMSF.
+         * @param max    The maximum RMSF.
+         */
+		void SetRMSFRange(float min, float max) {
+			this->minRMSF = min; this->maxRMSF = max;
+		}
+
+		/**
+         * Get the minimum RMSF.
+         *
+         * @return The minimum RMSF value.
+         */
+		float MinimumRMSF() const { return this->minRMSF; }
+
+		/**
+         * Get the minimum RMSF.
+         *
+         * @return The minimum RMSF value.
+         */
+		float MaximumRMSF() const { return this->maxRMSF; }
 
         /**
          * Set the charge range.
@@ -1601,10 +1642,19 @@ namespace protein_calls {
 				this->atomBFactors = new float[this->atomCount];
 				memcpy(this->atomBFactors, s.atomBFactors, sizeof(float)*this->atomCount);
 			}
+			this->ownsRMSFMemory = s.ownsRMSFMemory;
+			if (!this->ownsRMSFMemory) {
+				this->atomRMSFValues = s.atomRMSFValues;
+			} else {
+				this->atomRMSFValues = new float[this->atomCount];
+				memcpy(this->atomRMSFValues, s.atomRMSFValues, sizeof(float)*this->atomCount);
+			}
             this->atomCharges = s.atomCharges;
             this->atomOccupancies = s.atomOccupancies;
             this->minBFactor = s.minBFactor;
             this->maxBFactor = s.maxBFactor;
+			this->minRMSF = s.minRMSF;
+			this->maxRMSF = s.maxRMSF;
             this->minCharge = s.minCharge;
             this->maxCharge = s.maxCharge;
             this->minOccupancy = s.minOccupancy;
@@ -1717,6 +1767,16 @@ namespace protein_calls {
         float minOccupancy;
         /** The maximum occupancies */
         float maxOccupancy;
+
+		/** The array of b-factors */
+		float* atomRMSFValues;
+		/** Flag whether the call owns the B-factor memory */
+		bool ownsRMSFMemory;
+		/** The minimum RMSF */
+		float minRMSF;
+		/** The maximum RMSF */
+		float maxRMSF;
+
         
         /** The exact requested/stored calltime. */
         float calltime;

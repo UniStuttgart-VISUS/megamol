@@ -528,7 +528,15 @@ MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
 	this->neighborhoods = nullptr;
 	this->neighborhoodSizes = nullptr;
 	this->hydrogenBonds = nullptr;
+<<<<<<< HEAD
 	this->atomFormerIdx = nullptr;
+=======
+	this->additionalParam = nullptr;
+	this->additionalParamType = AdditionalParamDataTypes::VALUE_NONE;
+	this->additionalParamMinMax = nullptr;
+	this->atomRMSFValues = nullptr;
+	this->atomBFactors = nullptr;
+>>>>>>> 8b840ecc... added rmsf values to the moleculardatacall
 }
 
 
@@ -544,7 +552,7 @@ MolecularDataCall::~MolecularDataCall(void) {
  */
 void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
         const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
-        float* bfactor, const float* charge, const float* occupancy) {
+        float* bfactor, const float* charge, const float* occupancy, float* rmsf) {
     // set all values
     this->atomCount = atomCnt;
     this->atomTypeCount = atomTypeCnt;
@@ -556,6 +564,7 @@ void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt
 	this->ownsBFactorMemory = false;
     this->atomCharges = charge;
     this->atomOccupancies = occupancy;
+	this->atomRMSFValues = rmsf;
 }
 
 /*
