@@ -115,39 +115,6 @@ bool moldyn::SimpleSphericalParticles::operator==(
 }
 
 
-/*
- * SimpleSphericalParticles::operator[]
- */
-megamol::core::moldyn::SimpleSphericalParticles::particle_t const&
-megamol::core::moldyn::SimpleSphericalParticles::operator[](size_t idx) const noexcept {
-    /*return particle_t{
-        this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr,
-        this->colPtr != nullptr ? static_cast<char const*>(this->colPtr) + idx * this->colStride : nullptr,
-        this->idPtr != nullptr ? static_cast<char const*>(this->idPtr) + idx * this->idStride : nullptr
-    };*/
-    return particle_t{
-        VertexData_Base{this->vertexAccessor->Clone(),
-            this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr},
-        ColorData_Base{this->colorAccessor->Clone(),
-            this->colPtr != nullptr ? static_cast<char const*>(this->colPtr) + idx * this->colStride : nullptr},
-        IDData_Base{this->idAccessor->Clone(),
-            this->idPtr != nullptr ? static_cast<char const*>(this->idPtr) + idx * this->idStride : nullptr}
-    };
-}
-
-
-/*
- * SimpleSphericalParticles::At
- */
-megamol::core::moldyn::SimpleSphericalParticles::particle_t const&
-megamol::core::moldyn::SimpleSphericalParticles::At(size_t idx) const {
-    if (idx < this->count) {
-        return this->operator[](idx);
-    } else {
-        throw std::out_of_range("Idx larger than particle count.");
-    }
-}
-
 /****************************************************************************/
 
 

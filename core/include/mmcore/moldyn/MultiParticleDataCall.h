@@ -139,6 +139,9 @@ namespace moldyn {
                 pimpl.SetBasePtr(basePtr);
             }
 
+            VertexData_Base(VertexData_Base const& rhs)
+                : pimpl{rhs.pimpl} { }
+
             float const GetXf() const {
                 return pimpl.GetXf();
             }
@@ -328,6 +331,9 @@ namespace moldyn {
                 pimpl.SetBasePtr(basePtr);
             }
 
+            ColorData_Base(ColorData_Base const& rhs)
+                : pimpl{rhs.pimpl} { }
+
             uint8_t const GetRu8() const {
                 return pimpl.GetRu8();
             }
@@ -413,6 +419,9 @@ namespace moldyn {
                 pimpl.SetBasePtr(basePtr);
             }
 
+            IDData_Base(IDData_Base const& rhs)
+                : pimpl{rhs.pimpl} { }
+
             uint32_t const GetIDu32() const {
                 return pimpl.GetIDu32();
             }
@@ -426,6 +435,16 @@ namespace moldyn {
 
         /** Struct holding pointers into data streams for a specific particle */
         struct particle_t {
+            particle_t(VertexData_Base const& v, ColorData_Base const& c, IDData_Base const& i)
+                : vert{v}
+                , col{c}
+                , id{i} { }
+
+            particle_t(particle_t const& rhs)
+                : vert{rhs.vert}
+                , col{rhs.col}
+                , id{rhs.id} { }
+
             VertexData_Base const& vert;
             ColorData_Base  const& col;
             IDData_Base     const& id;
@@ -639,7 +658,7 @@ namespace moldyn {
             this->colPtr = p;
             this->colStride = s == 0 ? ColorDataSize[t] : s;
 
-            switch (this->colDataType) {
+            switch (t) {
             case COLDATA_UINT8_RGB:
                 this->colorAccessor.reset(new ColorData_Impl<uint8_t, false, false>{});
                 break;
@@ -737,7 +756,7 @@ namespace moldyn {
             this->vertPtr = p;
             this->vertStride = s == 0 ? VertexDataSize[t] : s;
 
-            switch (this->vertDataType) {
+            switch (t) {
             case VERTDATA_FLOAT_XYZ:
                 this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
                 break;
@@ -768,7 +787,7 @@ namespace moldyn {
             this->idPtr = p;
             this->idStride = s == 0 ? IDDataSize[t] : s;
 
-            switch (this->idDataType) {
+            switch (t) {
             case IDDATA_UINT32:
                 this->idAccessor.reset(new IDData_Impl<uint32_t>{ });
                 break;
@@ -806,7 +825,16 @@ namespace moldyn {
          *
          * @return Struct of pointers to positions of the particle in the streams.
          */
-        particle_t const& operator[](size_t idx) const noexcept;
+        inline particle_t const& operator[](size_t idx) const noexcept {
+            return particle_t{
+                VertexData_Base{this->vertexAccessor->Clone(),
+                this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr},
+                ColorData_Base{this->colorAccessor->Clone(),
+                this->colPtr != nullptr ? static_cast<char const*>(this->colPtr) + idx * this->colStride : nullptr},
+                IDData_Base{this->idAccessor->Clone(),
+                this->idPtr != nullptr ? static_cast<char const*>(this->idPtr) + idx * this->idStride : nullptr}
+            };
+        }
 
         /**
          * Access particle at index with range check.
@@ -817,7 +845,13 @@ namespace moldyn {
          *
          * @throws std::out_of_range if idx is larger than particle count.
          */
-        particle_t const& At(size_t idx) const;
+        inline particle_t const& At(size_t idx) const {
+            if (idx < this->count) {
+                return this->operator[](idx);
+            } else {
+                throw std::out_of_range("Idx larger than particle count.");
+            }
+        }
 
         /**
          * Disable NULL-checks in case we have an OpenGL-VAO
@@ -897,8 +931,6 @@ namespace moldyn {
             vb = this->glVB;
             cb = this->glCB;
         }
-
-
 
     private:
 

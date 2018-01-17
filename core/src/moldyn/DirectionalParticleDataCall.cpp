@@ -14,6 +14,9 @@ using namespace megamol::core;
 /****************************************************************************/
 
 
+unsigned int megamol::core::moldyn::DirectionalParticles::DirDataSize[] = {0, 12};
+
+
 /*
  * moldyn::DirectionalParticles::DirectionalParticles
  */
@@ -66,6 +69,7 @@ bool moldyn::DirectionalParticles::operator==(
         && (this->dirPtr == rhs.dirPtr)
         && (this->dirStride == rhs.dirStride);
 }
+
 
 /****************************************************************************/
 

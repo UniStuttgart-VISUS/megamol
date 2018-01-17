@@ -28,12 +28,124 @@ namespace moldyn {
     class MEGAMOLCORE_API DirectionalParticles
         : public SimpleSphericalParticles {
     public:
+        class DirData_Detail {
+        public:
+            virtual float const GetDirXf() const = 0;
+            virtual float const GetDirYf() const = 0;
+            virtual float const GetDirZf() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual DirData_Detail& Clone() const = 0;
+            virtual ~DirData_Detail() = default;
+        };
+
+        template<class T>
+        class DirData_Impl : public DirData_Detail {
+        public:
+            DirData_Impl() = default;
+
+            DirData_Impl(DirData_Impl const& rhs)
+                : basePtr{rhs.basePtr} {
+
+            }
+
+            virtual float const GetDirXf() const override {
+                return GetDirX<float>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetDirX() const {
+                return this->basePtr[0];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetDirX() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            virtual float const GetDirYf() const override {
+                return GetDirY<float>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetDirY() const {
+                return this->basePtr[1];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetDirY() const {
+                return static_cast<R>(this->basePtr[1]);
+            }
+
+            virtual float const GetDirZf() const override {
+                return GetDirZ<float>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetDirZ() const {
+                return this->basePtr[2];
+            }
+
+            template<class R>
+            std::enable_if_t < !std::is_same<T, R>::value , R > const GetDirZ() const {
+                return static_cast<R>(this->basePtr[2]);
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual DirData_Impl& Clone() const {
+                return DirData_Impl{*this};
+            }
+        private:
+            T const* basePtr;
+        };
+
+        class DirData_Base {
+        public:
+            DirData_Base(DirData_Detail& impl, void const* basePtr)
+                : pimpl{impl} {
+                pimpl.SetBasePtr(basePtr);
+            }
+
+            DirData_Base(DirData_Base const& rhs)
+                : pimpl{rhs.pimpl} { }
+
+            float const GetDirXf() const {
+                return pimpl.GetDirXf();
+            }
+
+            float const GetDirYf() const {
+                return pimpl.GetDirYf();
+            }
+
+            float const GetDirZf() const {
+                return pimpl.GetDirZf();
+            }
+        private:
+            DirData_Detail& pimpl;
+        };
+
+        struct dir_particle_t : public particle_t {
+            dir_particle_t(VertexData_Base const& v, ColorData_Base const& c, IDData_Base const& i, DirData_Base const& d)
+                : particle_t{v, c, i}
+                , dir{d} { }
+
+            dir_particle_t(particle_t const& par, DirData_Base const& d)
+                : particle_t{par}
+                , dir{d} { }
+
+            DirData_Base const& dir;
+        };
 
         /** possible values for the direction data */
         enum DirDataType {
-            DIRDATA_NONE,
-            DIRDATA_FLOAT_XYZ
+            DIRDATA_NONE = 0,
+            DIRDATA_FLOAT_XYZ = 1
         };
+
+        /** possible values of data sizes over all directional dimensions */
+        static unsigned int DirDataSize[2];
 
         /**
          * Ctor
@@ -76,7 +188,7 @@ namespace moldyn {
          * @return The direction data stride
          */
         inline unsigned int GetDirDataStride(void) const {
-            return this->dirStride;
+            return this->dirStride == DirDataSize[this->dirDataType] ? 0 : this->dirStride;
         }
 
         /**
@@ -91,7 +203,16 @@ namespace moldyn {
             ASSERT((p != NULL) || (t == DIRDATA_NONE));
             this->dirDataType = t;
             this->dirPtr = p;
-            this->dirStride = s;
+            this->dirStride = s == 0 ? DirDataSize[t] : s;
+
+            switch (t) {
+            case DIRDATA_FLOAT_XYZ:
+                this->dirAccessor.reset(new DirData_Impl<float>{});
+                break;
+            case DIRDATA_NONE:
+            default:
+                this->dirAccessor.reset();
+            }
         }
 
         /**
@@ -123,6 +244,40 @@ namespace moldyn {
          */
         bool operator==(const DirectionalParticles& rhs) const;
 
+        /**
+         * Access particle at index without range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         */
+        inline dir_particle_t const& operator[](size_t idx) const noexcept {
+            auto par = dynamic_cast<SimpleSphericalParticles const*>(this)->operator[](idx);
+
+            return dir_particle_t{
+                par,
+                DirData_Base{this->dirAccessor->Clone(),
+                this->dirPtr != nullptr ? static_cast<char const*>(this->dirPtr) + idx * this->dirStride : nullptr}
+            };
+        }
+
+        /**
+         * Access particle at index with range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         *
+         * @throws std::out_of_range if idx is larger than particle count.
+         */
+        inline dir_particle_t const& At(size_t idx) const {
+            if (idx < this->GetCount()) {
+                return this->operator[](idx);
+            } else {
+                throw std::out_of_range("Idx larger than particle count.");
+            }
+        }
+
     private:
 
         /** The direction data type */
@@ -133,6 +288,9 @@ namespace moldyn {
 
         /** The direction data stride */
         unsigned int dirStride;
+
+        /** Polymorphic dir access object */
+        std::unique_ptr<DirData_Detail> dirAccessor;
 
     };
 
