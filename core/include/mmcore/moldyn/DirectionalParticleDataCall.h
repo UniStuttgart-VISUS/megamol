@@ -34,8 +34,34 @@ namespace moldyn {
             virtual float const GetDirYf() const = 0;
             virtual float const GetDirZf() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
-            virtual DirData_Detail& Clone() const = 0;
+            virtual std::unique_ptr<DirData_Detail> Clone() const = 0;
             virtual ~DirData_Detail() = default;
+        };
+
+        class DirData_None : public DirData_Detail {
+        public:
+            DirData_None() = default;
+
+            DirData_None(DirData_None const& rhs) = default;
+
+            virtual float const GetDirXf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetDirYf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetDirZf() const override {
+                return 0.0f;
+            }
+
+
+            virtual void SetBasePtr(void const* ptr) override { }
+
+            virtual std::unique_ptr<DirData_Detail> Clone() const override {
+                return std::unique_ptr<DirData_Detail>{new DirData_None{*this}};
+            }
         };
 
         template<class T>
@@ -94,8 +120,8 @@ namespace moldyn {
                 this->basePtr = reinterpret_cast<T const*>(ptr);
             }
 
-            virtual DirData_Impl& Clone() const {
-                return DirData_Impl{*this};
+            virtual std::unique_ptr<DirData_Detail> Clone() const {
+                return std::unique_ptr<DirData_Detail>{new DirData_Impl{*this}};
             }
         private:
             T const* basePtr;
@@ -103,39 +129,47 @@ namespace moldyn {
 
         class DirData_Base {
         public:
-            DirData_Base(DirData_Detail& impl, void const* basePtr)
-                : pimpl{impl} {
-                pimpl.SetBasePtr(basePtr);
+            DirData_Base(std::unique_ptr<DirData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<DirData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
             }
 
-            DirData_Base(DirData_Base const& rhs)
-                : pimpl{rhs.pimpl} { }
+            DirData_Base(DirData_Base const& rhs) = delete;
+
+            DirData_Base(DirData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<DirData_Detail>>(rhs.pimpl)} { }
+
+            DirData_Base& operator=(DirData_Base const& rhs) = delete;
+
+            DirData_Base& operator=(DirData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+            }
 
             float const GetDirXf() const {
-                return pimpl.GetDirXf();
+                return pimpl->GetDirXf();
             }
 
             float const GetDirYf() const {
-                return pimpl.GetDirYf();
+                return pimpl->GetDirYf();
             }
 
             float const GetDirZf() const {
-                return pimpl.GetDirZf();
+                return pimpl->GetDirZf();
             }
         private:
-            DirData_Detail& pimpl;
+            std::unique_ptr<DirData_Detail> pimpl;
         };
 
         struct dir_particle_t : public particle_t {
-            dir_particle_t(VertexData_Base const& v, ColorData_Base const& c, IDData_Base const& i, DirData_Base const& d)
-                : particle_t{v, c, i}
-                , dir{d} { }
+            dir_particle_t(VertexData_Base&& v, ColorData_Base&& c, IDData_Base&& i, DirData_Base&& d)
+                : particle_t{std::forward<VertexData_Base>(v), std::forward<ColorData_Base>(c), std::forward<IDData_Base>(i)}
+                , dir{std::forward<DirData_Base>(d)} { }
 
-            dir_particle_t(particle_t const& par, DirData_Base const& d)
-                : particle_t{par}
-                , dir{d} { }
+            dir_particle_t(particle_t&& par, DirData_Base&& d)
+                : particle_t{std::forward<particle_t>(par)}
+                , dir{std::forward<DirData_Base>(d)} { }
 
-            DirData_Base const& dir;
+            DirData_Base dir;
         };
 
         /** possible values for the direction data */
@@ -211,7 +245,7 @@ namespace moldyn {
                 break;
             case DIRDATA_NONE:
             default:
-                this->dirAccessor.reset();
+                this->dirAccessor.reset(new DirData_None{});
             }
         }
 
@@ -251,11 +285,11 @@ namespace moldyn {
          *
          * @return Struct of pointers to positions of the particle in the streams.
          */
-        inline dir_particle_t const& operator[](size_t idx) const noexcept {
-            auto par = dynamic_cast<SimpleSphericalParticles const*>(this)->operator[](idx);
+        inline dir_particle_t operator[](size_t idx) const noexcept {
+            auto that = dynamic_cast<SimpleSphericalParticles const*>(this);
 
             return dir_particle_t{
-                par,
+                (*that)[idx],
                 DirData_Base{this->dirAccessor->Clone(),
                 this->dirPtr != nullptr ? static_cast<char const*>(this->dirPtr) + idx * this->dirStride : nullptr}
             };

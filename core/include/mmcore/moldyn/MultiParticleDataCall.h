@@ -41,8 +41,49 @@ namespace moldyn {
             virtual short const GetYs() const = 0;
             virtual short const GetZs() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
-            virtual VertexData_Detail& Clone() const = 0;
+            virtual std::unique_ptr<VertexData_Detail> Clone() const = 0;
             virtual ~VertexData_Detail() = default;
+        };
+
+        class VertexData_None : public VertexData_Detail {
+        public:
+            VertexData_None() = default;
+
+            VertexData_None(VertexData_None const& rhs) = default;
+
+            virtual float const GetXf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetYf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetZf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual short const GetXs() const override {
+                return 0;
+            }
+
+            virtual short const GetYs() const override {
+                return 0;
+            }
+
+            virtual short const GetZs() const override {
+                return 0;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { };
+
+            virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                return std::unique_ptr<VertexData_Detail>{new VertexData_None{*this}};
+            }
         };
 
         template<class T, bool hasRad>
@@ -125,8 +166,8 @@ namespace moldyn {
                 this->basePtr = reinterpret_cast<T const*>(ptr);
             }
 
-            virtual VertexData_Impl& Clone() const override {
-                return VertexData_Impl{*this};
+            virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                return std::unique_ptr<VertexData_Detail>{new VertexData_Impl{*this}};
             }
         private:
             T const* basePtr;
@@ -134,43 +175,51 @@ namespace moldyn {
 
         class VertexData_Base {
         public:
-            VertexData_Base(VertexData_Detail& impl, void const* basePtr)
-                : pimpl{impl} {
-                pimpl.SetBasePtr(basePtr);
+            VertexData_Base(std::unique_ptr<VertexData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
             }
 
-            VertexData_Base(VertexData_Base const& rhs)
-                : pimpl{rhs.pimpl} { }
+            VertexData_Base(VertexData_Base const& rhs) = delete;
+
+            VertexData_Base(VertexData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(rhs.pimpl)} { }
+
+            VertexData_Base& operator=(VertexData_Base const& rhs) = delete;
+
+            VertexData_Base& operator=(VertexData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+            }
 
             float const GetXf() const {
-                return pimpl.GetXf();
+                return pimpl->GetXf();
             }
 
             float const GetYf() const {
-                return pimpl.GetYf();
+                return pimpl->GetYf();
             }
 
             float const GetZf() const {
-                return pimpl.GetZf();
+                return pimpl->GetZf();
             }
 
             float const GetRf() const {
-                return pimpl.GetRf();
+                return pimpl->GetRf();
             }
 
             short const GetXs() const {
-                return pimpl.GetXs();
+                return pimpl->GetXs();
             }
 
             short const GetYs() const {
-                return pimpl.GetYs();
+                return pimpl->GetYs();
             }
 
             short const GetZs() const {
-                return pimpl.GetZs();
+                return pimpl->GetZs();
             }
         private:
-            VertexData_Detail& pimpl;
+            std::unique_ptr<VertexData_Detail> pimpl;
         };
 
         class ColorData_Detail {
@@ -185,8 +234,57 @@ namespace moldyn {
             virtual float const GetAf() const = 0;
             virtual float const GetIf() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
-            virtual ColorData_Detail& Clone() const = 0;
+            virtual std::unique_ptr<ColorData_Detail> Clone() const = 0;
             virtual ~ColorData_Detail() = default;
+        };
+
+        class ColorData_None : public ColorData_Detail {
+        public:
+            ColorData_None() = default;
+
+            ColorData_None(ColorData_None const& rhs) = default;
+
+            virtual uint8_t const GetRu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetGu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetBu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetAu8() const override {
+                return 0;
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetGf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetBf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetAf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { }
+
+            virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                return std::unique_ptr<ColorData_Detail>{new ColorData_None{*this}};
+            }
         };
 
         template<class T, bool hasAlpha, bool isI>
@@ -317,8 +415,8 @@ namespace moldyn {
                 this->basePtr = reinterpret_cast<T const*>(ptr);
             }
 
-            virtual ColorData_Impl& Clone() const override {
-                return ColorData_Impl{*this};
+            virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                return std::unique_ptr<ColorData_Detail>{new ColorData_Impl{*this}};
             }
         private:
             T const* basePtr;
@@ -326,43 +424,53 @@ namespace moldyn {
 
         class ColorData_Base {
         public:
-            ColorData_Base(ColorData_Detail& impl, void const* basePtr)
-                : pimpl{impl} {
-                pimpl.SetBasePtr(basePtr);
+            ColorData_Base(std::unique_ptr<ColorData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
             }
 
-            ColorData_Base(ColorData_Base const& rhs)
-                : pimpl{rhs.pimpl} { }
+            ColorData_Base(ColorData_Base const& rhs) = delete;
+
+            ColorData_Base(ColorData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(rhs.pimpl)} {
+
+            }
+
+            ColorData_Base& operator=(ColorData_Base const& rhs) = delete;
+
+            ColorData_Base& operator=(ColorData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+            }
 
             uint8_t const GetRu8() const {
-                return pimpl.GetRu8();
+                return pimpl->GetRu8();
             }
             uint8_t const GetGu8() const {
-                return pimpl.GetGu8();
+                return pimpl->GetGu8();
             }
             uint8_t const GetBu8() const {
-                return pimpl.GetBu8();
+                return pimpl->GetBu8();
             }
             uint8_t const GetAu8() const {
-                return pimpl.GetAu8();
+                return pimpl->GetAu8();
             }
             float const GetRf() const {
-                return pimpl.GetRf();
+                return pimpl->GetRf();
             }
             float const GetGf() const {
-                return pimpl.GetGf();
+                return pimpl->GetGf();
             }
             float const GetBf() const {
-                return pimpl.GetBf();
+                return pimpl->GetBf();
             }
             float const GetAf() const {
-                return pimpl.GetAf();
+                return pimpl->GetAf();
             }
             float const GetIf() const {
-                return pimpl.GetIf();
+                return pimpl->GetIf();
             }
         private:
-            ColorData_Detail& pimpl;
+            std::unique_ptr<ColorData_Detail> pimpl;
         };
 
         class IDData_Detail {
@@ -370,8 +478,29 @@ namespace moldyn {
             virtual uint32_t const GetIDu32() const = 0;
             virtual uint64_t const GetIDu64() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
-            virtual IDData_Detail& Clone() const = 0;
+            virtual std::unique_ptr<IDData_Detail> Clone() const = 0;
             virtual ~IDData_Detail() = default;
+        };
+
+        class IDData_None : public IDData_Detail {
+        public:
+            IDData_None() = default;
+
+            IDData_None(IDData_None const& rhs) = default;
+
+            virtual uint32_t const GetIDu32() const override {
+                return 0;
+            }
+
+            virtual uint64_t const GetIDu64() const override {
+                return 0;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { }
+
+            virtual std::unique_ptr<IDData_Detail> Clone() const override {
+                return std::unique_ptr<IDData_Detail>{new IDData_None{*this}};
+            }
         };
 
         template<class T>
@@ -404,8 +533,8 @@ namespace moldyn {
                 this->basePtr = reinterpret_cast<T const*>(ptr);
             }
 
-            virtual IDData_Impl& Clone() const override {
-                return IDData_Impl{*this};
+            virtual std::unique_ptr<IDData_Detail> Clone() const override {
+                return std::unique_ptr<IDData_Detail>{new IDData_Impl{*this}};
             }
         private:
 
@@ -414,40 +543,60 @@ namespace moldyn {
 
         class IDData_Base {
         public:
-            IDData_Base(IDData_Detail& impl, void const* basePtr)
-                : pimpl{impl} {
-                pimpl.SetBasePtr(basePtr);
+            IDData_Base(std::unique_ptr<IDData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
             }
 
-            IDData_Base(IDData_Base const& rhs)
-                : pimpl{rhs.pimpl} { }
+            IDData_Base(IDData_Base const& rhs) = delete;
+
+            IDData_Base(IDData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(rhs.pimpl)} {
+
+            }
+
+            IDData_Base& operator=(IDData_Base const& rhs) = delete;
+
+            IDData_Base& operator=(IDData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+            }
 
             uint32_t const GetIDu32() const {
-                return pimpl.GetIDu32();
+                return pimpl->GetIDu32();
             }
             uint64_t const GetIDu64() const {
-                return pimpl.GetIDu64();
+                return pimpl->GetIDu64();
             }
         private:
 
-            IDData_Detail& pimpl;
+            std::unique_ptr<IDData_Detail> pimpl;
         };
 
         /** Struct holding pointers into data streams for a specific particle */
         struct particle_t {
-            particle_t(VertexData_Base const& v, ColorData_Base const& c, IDData_Base const& i)
-                : vert{v}
-                , col{c}
-                , id{i} { }
+            particle_t(VertexData_Base&& v, ColorData_Base&& c, IDData_Base&& i)
+                : vert{std::forward<VertexData_Base>(v)}
+                , col{std::forward<ColorData_Base>(c)}
+                , id{std::forward<IDData_Base>(i)} { }
 
-            particle_t(particle_t const& rhs)
-                : vert{rhs.vert}
-                , col{rhs.col}
-                , id{rhs.id} { }
+            particle_t(particle_t const& rhs) = delete;
 
-            VertexData_Base const& vert;
-            ColorData_Base  const& col;
-            IDData_Base     const& id;
+            particle_t(particle_t&& rhs)
+                : vert{std::move(rhs.vert)}
+                , col{std::move(rhs.col)}
+                , id{std::move(rhs.id)} { }
+
+            particle_t& operator=(particle_t const& rhs) = delete;
+
+            particle_t& operator=(particle_t&& rhs) {
+                vert = std::move(rhs.vert);
+                col  = std::move(rhs.col);
+                id   = std::move(rhs.id);
+            }
+
+            VertexData_Base vert;
+            ColorData_Base col;
+            IDData_Base id;
             /*void const* vertPtr;
             void const* colPtr;
             void const* idPtr;*/
@@ -676,7 +825,7 @@ namespace moldyn {
                 break;
             case COLDATA_NONE:
             default:
-                this->colorAccessor.reset();
+                this->colorAccessor.reset(new ColorData_None{});
             }
         }
 
@@ -768,7 +917,7 @@ namespace moldyn {
                 break;
             case VERTDATA_NONE:
             default:
-                this->vertexAccessor.reset();
+                this->vertexAccessor.reset(new VertexData_None{});
             }
         }
 
@@ -796,8 +945,17 @@ namespace moldyn {
                 break;
             case IDDATA_NONE:
             default:
-                this->idAccessor.reset();
+                this->idAccessor.reset(new IDData_None{});
             }
+        }
+
+        /**
+         * Reports existance of IDs.
+         *
+         * @return true, if the particles have IDs.
+         */
+        inline bool HasID() const {
+            return this->idDataType != IDDATA_NONE;
         }
 
         /**
@@ -825,7 +983,7 @@ namespace moldyn {
          *
          * @return Struct of pointers to positions of the particle in the streams.
          */
-        inline particle_t const& operator[](size_t idx) const noexcept {
+        inline particle_t operator[](size_t idx) const noexcept {
             return particle_t{
                 VertexData_Base{this->vertexAccessor->Clone(),
                 this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr},
