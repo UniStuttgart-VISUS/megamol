@@ -87,13 +87,15 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
 
     if (parListCount == 0) return false;
 
+    static size_t start_offset = sizeof(uint64_t) + sizeof(unsigned int);
+
     std::vector<std::unordered_map<uint64_t /*id*/, uint64_t /*offset*/>> file_id_offsets(parListCount);
 
     std::vector<std::unordered_map<uint64_t, std::pair<unsigned int, unsigned int>>> frame_id_assoc(parListCount);
 
     std::vector<std::unordered_map<uint64_t, trajectory_t<float>>> data(parListCount);
 
-    std::vector<size_t> max_offset(parListCount, 0);
+    std::vector<size_t> max_offset(parListCount, start_offset);
 
     static size_t const max_line_size = sizeof(uint64_t) + 2 * sizeof(unsigned int) + 3 * frameCount * sizeof(float);
 
@@ -101,6 +103,17 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
 
     std::string filepath = this->filepathSlot.Param<megamol::core::param::FilePathParam>()->Value();
     unsigned int max_frames_in_mem = this->maxFramesInMemSlot.Param<megamol::core::param::IntParam>()->Value();
+
+    // init files
+    for (unsigned int pli = 0; pli < parListCount; ++pli) {
+        FILE* file = fopen((filepath + "traj_" + std::to_string(pli) + ".raw").c_str(), "wb");
+
+        uint64_t dummy = 0;
+        fwrite(&dummy, sizeof(uint64_t), 1, file);
+        fwrite(&frameCount, sizeof(unsigned int), 1, file);
+
+        fclose(file);
+    }
 
     vislib::sys::ConsoleProgressBar cpb;
     cpb.Start("TrajectoryFactory", frameCount);
@@ -154,6 +167,12 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
             if (fi == frameCount - 1) {
                 // write the rest
                 write(filepath, pli, cur_data, cur_file_id_offsets, cur_frame_id_assoc, max_offset, max_line_size, zero_out_buf);
+
+                // write particle count
+                FILE* file = fopen((filepath + "traj_" + std::to_string(pli) + ".raw").c_str(), "r+b");
+                size_t count = cur_file_id_offsets.size();
+                fwrite(&count, sizeof(size_t), 1, file);
+                fclose(file);
             }
         }
 
@@ -172,7 +191,7 @@ void megamol::stdplugin::datatools::TrajectoryFactory::write(std::string const& 
     std::unordered_map<uint64_t, std::pair<unsigned int, unsigned int>>& cur_frame_id_assoc,
     std::vector<size_t>& max_offset, size_t const max_line_size,
     std::vector<char> const& zero_out_buf) const {
-    FILE* file = fopen((filepath + "traj_" + std::to_string(pli) + ".raw").c_str(), "wb");
+    FILE* file = fopen((filepath + "traj_" + std::to_string(pli) + ".raw").c_str(), "r+b");
 
     for (auto const& el : cur_data) {
         auto it_offset = cur_file_id_offsets.find(el.first);
