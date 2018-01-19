@@ -14,8 +14,8 @@
 #include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/Module.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmstd_trisoup/LinesDataCall.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/LinesDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "CallVolumetricData.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
@@ -269,9 +269,9 @@ namespace volumetrics {
          * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.
          * debugLines[*][0] contains the bounding boxes, [*][1] the boundaries (in future)
          */
-        trisoup::LinesDataCall::Lines debugLines[2][2];
+        megamol::geocalls::LinesDataCall::Lines debugLines[2][2];
 
-        trisoup::CallTriMeshData::Mesh debugMeshes[2];
+        megamol::geocalls::CallTriMeshData::Mesh debugMeshes[2];
 
         vislib::RawStorage bboxVertData[2];
 
