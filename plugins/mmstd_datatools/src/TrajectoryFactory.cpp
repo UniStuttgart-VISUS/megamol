@@ -87,7 +87,7 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
 
     if (parListCount == 0) return false;
 
-    static size_t start_offset = sizeof(uint64_t) + sizeof(unsigned int);
+    static size_t start_offset = sizeof(uint64_t) + sizeof(unsigned int) + 6 * sizeof(float);
 
     std::vector<std::unordered_map<uint64_t /*id*/, uint64_t /*offset*/>> file_id_offsets(parListCount);
 
@@ -111,6 +111,8 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
         uint64_t dummy = 0;
         fwrite(&dummy, sizeof(uint64_t), 1, file);
         fwrite(&frameCount, sizeof(unsigned int), 1, file);
+        auto bbox = inCall->AccessBoundingBoxes().ObjectSpaceBBox();
+        fwrite(bbox.PeekBounds(), sizeof(float), 6, file);
 
         fclose(file);
     }
@@ -126,7 +128,7 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
 
         for (unsigned int pli = 0; pli < parListCount; ++pli) {
             auto const& parts = dirInCall ? dirInCall->AccessParticles(pli) : simInCall->AccessParticles(pli);
-            if (!parts.HasID()) continue;
+            //if (!parts.HasID()) continue;
 
             auto const part_count = parts.GetCount();
 
