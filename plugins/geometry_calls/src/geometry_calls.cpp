@@ -13,6 +13,10 @@
 #include "vislib/vislibversion.h"
 
 
+#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls/LinesDataCall.h"
+
+
 /* anonymous namespace hides this type from any other object files */
 namespace {
     /** Implementing the instance class of this plugin */
@@ -48,7 +52,8 @@ namespace {
             //
 
             // register calls here:
-
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CallTriMeshData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
             //
             // TODO: Register your plugin's calls here
             // like:
