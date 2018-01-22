@@ -219,7 +219,7 @@ void megamol::stdplugin::datatools::TrajectoryFactory::write(std::string const& 
 
 
 void megamol::stdplugin::datatools::TrajectoryFactory::writeParticle(FILE* file, size_t const base_offset,
-    std::pair<unsigned int, unsigned int> const& frame_start_end, uint64_t const id, trajectory_t<float> const& toWrite, bool const new_par) const {
+    std::pair<unsigned int, unsigned int>& frame_start_end, uint64_t const id, trajectory_t<float> const& toWrite, bool const new_par) const {
     //static size_t start_offset = sizeof(uint64_t) + 2 * sizeof(unsigned int);
 
     fseek(file, base_offset, SEEK_SET);
@@ -235,4 +235,6 @@ void megamol::stdplugin::datatools::TrajectoryFactory::writeParticle(FILE* file,
     fseek(file, 3 * sizeof(float)*frame_start_end.first, SEEK_CUR);
 
     fwrite(toWrite.data(), sizeof(float) * 3, toWrite.size(), file);
+
+    frame_start_end.first = frame_start_end.second + 1;
 }

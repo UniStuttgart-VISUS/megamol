@@ -99,7 +99,7 @@ private:
         std::vector<char> const& zero_out_buf) const;
 
     void writeParticle(FILE* file, size_t const base_offset,
-        std::pair<unsigned int, unsigned int> const& frame_start_end, uint64_t const id,
+        std::pair<unsigned int, unsigned int>& frame_start_end, uint64_t const id,
         trajectory_t<float> const& toWrite, bool const new_par = false) const;
 
     megamol::core::CallerSlot inDataSlot;

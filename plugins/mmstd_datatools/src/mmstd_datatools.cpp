@@ -66,6 +66,7 @@
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
 #include "TrajectoryFactory.h"
+#include "io/TrajectoryDataSource.h"
 
 
 /*
@@ -195,6 +196,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TrajectoryFactory>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TrajectoryDataSource>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

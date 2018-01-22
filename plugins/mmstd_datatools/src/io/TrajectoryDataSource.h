@@ -1,10 +1,14 @@
 #ifndef MEGAMOL_STDPLUGIN_DATATOOLS_TRAJECTORYDATASOURCE_H_INCLUDED
 #define MEGAMOL_STDPLUGIN_DATATOOLS_TRAJECTORYDATASOURCE_H_INCLUDED
 
+#include <unordered_map>
+
 #include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "geometry_calls/LinesDataCall.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -44,11 +48,49 @@ private:
 
     bool getExtentCallback(megamol::core::Call& c);
 
+    bool filenameChanged(megamol::core::param::ParamSlot& p);
+
+    bool dataParamChanged(megamol::core::param::ParamSlot& p);
+
     bool assertData();
 
     megamol::core::CalleeSlot trajOutSlot;
 
     megamol::core::param::ParamSlot trajFilepath;
+
+    megamol::core::param::ParamSlot minFrameSlot;
+
+    megamol::core::param::ParamSlot maxFrameSlot;
+
+    megamol::core::param::ParamSlot minIDSlot;
+
+    megamol::core::param::ParamSlot maxIDSlot;
+
+    size_t datahash;
+
+    std::string filepath_;
+
+    std::pair<unsigned int, unsigned int> frame_begin_end_;
+
+    std::pair<uint64_t, uint64_t> id_begin_end_;
+
+    bool data_param_changed_;
+
+    struct file_header_t {
+        uint64_t particle_count;
+        unsigned int frame_count;
+        float* bbox;
+    } file_header_;
+
+    std::unordered_map<uint64_t /* id */, size_t /* offset */> particle_file_offsets_;
+
+    std::unordered_map<uint64_t /* id */, std::pair<unsigned int, unsigned int>> particle_frame_begin_end_;
+
+    std::vector<std::vector<float>> data;
+
+    std::vector<megamol::geocalls::LinesDataCall::Lines> lines_data;
+
+    std::vector<unsigned int> index_dummy;
 }; /* end class TrajectoryDataSource */
 
 } /* end namespace io */
