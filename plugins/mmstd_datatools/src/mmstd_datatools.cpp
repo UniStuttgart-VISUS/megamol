@@ -60,6 +60,11 @@
 #include "io/MMGDDDataSource.h"
 #include "floattable/FloatTableColumnScaler.h"
 #include "floattable/FloatTableObserverPlane.h"
+#include "floattable/FloatTableJoin.h"
+#include "floattable/FloatTableColumnFilter.h"
+#include "ParticleVelocities.h"
+#include "ParticleNeighborhood.h"
+#include "ParticleThermometer.h"
 
 
 /*
@@ -183,6 +188,11 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnScaler>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableObserverPlane>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableJoin>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

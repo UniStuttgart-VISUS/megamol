@@ -63,8 +63,8 @@ namespace plugins {
         info.name = nm;
         ::memcpy(nm, n.c_str(), n.length() + 1);
         info.version.resize(3);
-        info.version[0] = reinterpret_cast<const char*>(v1);
-        info.version[1] = reinterpret_cast<const char*>(v2);
+        info.version[0] = std::to_string(v1);
+        info.version[1] = std::to_string(v2);
         info.version[2] = v3;
         info.version_len = 3;
         info.flags = flags;
