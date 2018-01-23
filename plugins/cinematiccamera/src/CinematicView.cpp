@@ -332,6 +332,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         fboHeight = this->cineHeight;
     }
     else {
+
+        // Check for viewport changes
+        if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
+            this->vpW = vpWidth;
+            this->vpH = vpHeight;
+            this->resetFbo = true;
+        }
+
         // Calculate reduced fbo width and height
         if ((this->cineWidth < vpWidth) && (this->cineHeight < vpHeight)) {
             fboWidth  = this->cineWidth;
@@ -346,12 +354,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
             else if (cineRatio < vpRatio) {
                 fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
-            }
-            // Check for viewport changes
-            if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
-                this->vpW = vpWidth;
-                this->vpH = vpHeight;
-                this->resetFbo = true;
             }
         }
     }
@@ -402,7 +404,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Call Render-Function of parent View3D
     Base::Render(context);
 
-    this->fbo.Disable();
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
 
     // Reset override render call
     this->overrideCall = NULL;
@@ -517,14 +521,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             this->deltaRipPrompt = tmpTime;
         }
 
-        if ((float)cTime > intervall) {
-
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);
-            glEnable(GL_POLYGON_SMOOTH);
+        if ( true ) { // -> DISABLE blinking of message
+        //if ((float)cTime > intervall) {
 
             // initialise font
             if (!this->theFont.Initialise()) {
@@ -535,19 +533,27 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             // Text to be shown while rendering is in progress:
             vislib::StringA tmpStr = "rendering in progress ... ";
 
-            float fontSize  = (float)(vpWidth)*0.05f; // 3% of viewport width
-            float strWidth  = this->theFont.LineWidth(fontSize, tmpStr);
+            float fontSize = (float)(vpWidth)*0.05f; // 3% of viewport width
+            float strWidth = this->theFont.LineWidth(fontSize, tmpStr);
             float strHeight = this->theFont.LineHeight(fontSize);
-            float xPos      = ((float)vpWidth - strWidth) / 2.0f;
-            float yPos      = (float)(vpHeight);
+            float xPos = ((float)vpWidth - strWidth) / 2.0f;
+            float yPos = (float)(vpHeight);
+
 
             glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-            glBegin(GL_QUADS);
-                glVertex2f(xPos,                    yPos);
-                glVertex2f(xPos,                    yPos - strHeight);
-                glVertex2f((float)(vpWidth) - xPos, yPos - strHeight);
-                glVertex2f((float)(vpWidth) - xPos, yPos);
+                glBegin(GL_QUADS);
+                glVertex2f(xPos, yPos);
+                glVertex2f(xPos, yPos - strHeight);
+                glVertex2f((float)(vpWidth)-xPos, yPos - strHeight);
+                glVertex2f((float)(vpWidth)-xPos, yPos);
             glEnd();
+
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glEnable(GL_POLYGON_SMOOTH);
 
             glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
             this->theFont.DrawString(xPos, yPos, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);

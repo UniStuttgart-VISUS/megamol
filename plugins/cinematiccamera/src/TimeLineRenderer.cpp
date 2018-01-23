@@ -153,14 +153,18 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     else {
         tmpStr.Format("%.5f ", this->animTotalTime);
     }
+
+    float vpW = cr->GetViewport().GetSize().GetWidth();
+    float vpH = cr->GetViewport().GetSize().GetHeight();
+
     float strHeight = this->theFont.LineHeight(this->fontSize);
     float strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->rulerMarkSize = strHeight / 2.0f;
     this->keyfMarkSize = strHeight*1.5f;
 
-    this->axisStartPos   = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f,                         strHeight*2.5f);
-    this->animAxisEndPos = vislib::math::Vector<float, 2>(cr->GetViewport().GetSize().GetWidth() - strWidth, strHeight*2.5f);
-    this->simAxisEndPos  = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f,                         cr->GetViewport().GetSize().GetHeight() - this->keyfMarkSize - strHeight);
+    this->axisStartPos   = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f, strHeight*2.5f);
+    this->animAxisEndPos = vislib::math::Vector<float, 2>(vpW - strWidth,            strHeight*2.5f);
+    this->simAxisEndPos  = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f, vpH - this->keyfMarkSize - strHeight);
 
     float tmpLength = this->animAxisLen;
     this->animAxisLen = (this->animAxisEndPos - this->axisStartPos).Norm();

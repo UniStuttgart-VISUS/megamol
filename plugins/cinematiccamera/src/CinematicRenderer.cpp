@@ -353,9 +353,10 @@ bool CinematicRenderer::Render(Call& call) {
     glPopMatrix();
 
     // Disable fbo
-    this->fbo.Disable();
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
 
-       
     // Draw textures ------------------------------------------------------
 
     glDisable(GL_LINE_SMOOTH);
