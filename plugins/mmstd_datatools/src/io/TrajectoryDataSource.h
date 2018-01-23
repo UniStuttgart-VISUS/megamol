@@ -86,6 +86,8 @@ private:
 
     std::unordered_map<uint64_t /* id */, std::pair<unsigned int, unsigned int>> particle_frame_begin_end_;
 
+    std::vector<uint64_t> sorted_id_list;
+
     std::vector<std::vector<float>> data;
 
     std::vector<megamol::geocalls::LinesDataCall::Lines> lines_data;

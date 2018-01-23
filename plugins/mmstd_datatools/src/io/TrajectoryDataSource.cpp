@@ -107,6 +107,13 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::filenameChanged(me
     fread(&this->file_header_.frame_count, sizeof(unsigned int), 1, file);
     fread(this->file_header_.bbox, sizeof(float), 6, file);
 
+    this->particle_file_offsets_.clear();
+    this->particle_file_offsets_.reserve(this->file_header_.particle_count);
+    this->particle_frame_begin_end_.clear();
+    this->particle_frame_begin_end_.reserve(this->file_header_.particle_count);
+    this->sorted_id_list.clear();
+    this->sorted_id_list.reserve(this->file_header_.particle_count);
+
     size_t file_offset = sizeof(uint64_t) + sizeof(unsigned int) + 6 * sizeof(float);
     size_t offset_incr = sizeof(uint64_t) + 2 * sizeof(unsigned int) + 3 * sizeof(float)*this->file_header_.frame_count;
 
@@ -125,7 +132,10 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::filenameChanged(me
         file_offset += offset_incr;
         this->index_dummy[pi * 2] = pi;
         this->index_dummy[pi * 2 + 1] = pi + 1;
+        this->sorted_id_list.push_back(id);
     }
+
+    std::sort(this->sorted_id_list.begin(), this->sorted_id_list.end());
 
     fclose(file);
 
@@ -164,8 +174,14 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
 
         FILE* file = fopen(this->filepath_.c_str(), "rb");
 
-        for (uint64_t pid = this->id_begin_end_.first; pid <= this->id_begin_end_.second; ++pid) {
-            auto pid_it = this->particle_file_offsets_.find(pid);
+        auto start_it = std::find_if(this->sorted_id_list.cbegin(), this->sorted_id_list.cend(),
+            [&](auto const& a) {return a >= this->id_begin_end_.first; });
+        auto end_it = std::find_if(this->sorted_id_list.cbegin(), this->sorted_id_list.cend(),
+            [&](auto const& a) {return a >= this->id_begin_end_.second; });
+
+        //for (uint64_t pid = this->id_begin_end_.first; pid <= this->id_begin_end_.second; ++pid) {
+        for (auto it = start_it; it != end_it; ++it) {
+            auto pid_it = this->particle_file_offsets_.find(*it);
             if (pid_it != this->particle_file_offsets_.end()) {
                 auto id_offset = pid_it->second;
                 fseek(file, id_offset, SEEK_SET);
