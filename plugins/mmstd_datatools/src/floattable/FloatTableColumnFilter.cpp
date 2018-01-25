@@ -11,18 +11,20 @@
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
+#include <limits>
 
 
 std::string megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::ModuleName
     = std::string("FloatTableColumnFilter");
 
 megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::FloatTableColumnFilter(void) :
-	core::Module(),
-	dataOutSlot("dataOut", "Ouput"),
-	dataInSlot("dataIn", "Input"),
-	selectionStringSlot("selection", "Select columns by name separated by \";\""),
-	frameID(-1),
-	datahash(MAXULONG_PTR) {
+    core::Module(),
+    dataOutSlot("dataOut", "Ouput"),
+    dataInSlot("dataIn", "Input"),
+    selectionStringSlot("selection", "Select columns by name separated by \";\""),
+    frameID(-1),
+    datahash(std::numeric_limits<unsigned long>::max()) {
+
     this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
