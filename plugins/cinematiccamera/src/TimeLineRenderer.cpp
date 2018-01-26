@@ -110,9 +110,19 @@ TimeLineRenderer::~TimeLineRenderer(void) {
 */
 bool TimeLineRenderer::create(void) {
 	
-    this->LoadTexture("arrow.png");  // this->markerTextures[0]
-	
-	return true;
+    // Initialise font
+    if (!this->theFont.Initialise()) {
+        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
+        return false;
+    }
+
+    // Initialise texture
+    if (!this->LoadTexture("arrow.png")) {
+        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [Render] Couldn't initialize the texture.");
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -207,12 +217,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->fontSize = this->rulerFontParam.Param<param::FloatParam>()->Value();
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
-    }
-
-    // Initialise font
-    if (!this->theFont.Initialise()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
-        return false;
     }
 
     vislib::StringA tmpStr;

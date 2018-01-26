@@ -14,6 +14,7 @@
 #include "gl/ATWinBar.h"
 #include "gl/ATParamBar.h"
 #include "vislib/sys/Log.h"
+#include "utility/HotFixes.h"
 
 using namespace megamol;
 using namespace megamol::console;
@@ -39,6 +40,7 @@ gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *
         paramBar = std::make_shared<ATParamBar>(hCore);
     }
     lastParamUpdateTime = std::chrono::system_clock::now() - std::chrono::seconds(1);
+    isCoreHotFixed = utility::HotFixes::Instance().IsHotFixed("atbCore");
 }
 
 gl::ATBUILayer::~ATBUILayer() {
@@ -72,6 +74,13 @@ void gl::ATBUILayer::onDraw() {
     }
 
     ::TwDraw();
+
+    if (isCoreHotFixed) {
+        // dirty fix: clean up leftover ATB state
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_COLOR_ARRAY, 0);
+    }
 }
 
 bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mods) {
