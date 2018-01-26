@@ -6,6 +6,7 @@
 
 #include "mmcore/param/FloatParam.h"
 
+#include "vislib/sys/ConsoleProgressBar.h"
 
 
 megamol::stdplugin::datatools::DensityProfile::DensityProfile()
@@ -134,9 +135,12 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
 
         float tmp_slice_size = min_rad * sliceSizeFactor;
         float const slice_size = lng_edge / std::ceilf(lng_edge / tmp_slice_size);
-        unsigned int const bucket_count = lng_edge / slice_size;
+        unsigned int const bucket_count = static_cast<unsigned int>(std::ceilf(lng_edge / slice_size));
 
         std::vector<uint64_t> slices(bucket_count, 0);
+
+        vislib::sys::ConsoleProgressBar cpb;
+        cpb.Start("DensityProfile", frameCount);
 
         for (unsigned int fi = 0; fi < frameCount; ++fi) {
             do {
@@ -150,11 +154,16 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
                 for (uint64_t par_i = 0; par_i < part_count; ++par_i) {
                     megamol::core::moldyn::SimpleSphericalParticles::particle_t par = parts[par_i];
                     float par_pos[3] = {par.vert.GetXf(), par.vert.GetYf(), par.vert.GetZf()};
-                    unsigned int bucket_idx = static_cast<unsigned int>(std::floorf(par_pos[lng_edge_idx] / slice_size));
+                    unsigned int bucket_idx = static_cast<unsigned int>(std::floorf(par_pos[lng_edge_idx] / slice_size)) >= bucket_count
+                        ? bucket_count - 1 : static_cast<unsigned int>(std::floorf(par_pos[lng_edge_idx] / slice_size));
                     ++(slices[bucket_idx]);
                 }
             }
+
+            cpb.Set(fi);
         }
+
+        cpb.Stop();
 
         float slice_volume{slice_size};
         for (unsigned int d = 0; d < 3; ++d) {
@@ -164,7 +173,7 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
         }
 
         data_.resize(slices.size());
-        std::transform(data_.begin(), data_.end(), slices.begin(), [&](auto const& val)->float {return static_cast<float>(val / frameCount) / slice_volume; });
+        std::transform(slices.begin(), slices.end(), data_.begin(), [&](auto const& val)->float {return static_cast<float>(val / frameCount) / slice_volume; });
 
         auto tmp_minmax = std::minmax_element(data_.begin(), data_.end());
         data_minmax_.first = *(tmp_minmax.first);
