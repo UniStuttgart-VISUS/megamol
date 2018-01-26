@@ -15,141 +15,141 @@ using namespace megamol;
 using namespace megamol::core;
 
 /*
- *	trisoup::WavefrontObjWriter::WavefrontObjWriter
+ * trisoup::WavefrontObjWriter::WavefrontObjWriter
  */
 trisoup::WavefrontObjWriter::WavefrontObjWriter(void) : AbstractDataWriter(),
-	filenameSlot("filename", "The path to the .obj file to be written"),
-	frameIDSlot("frameID", "The ID of the frame to be written"),
-	dataSlot("data", "The slot requesting the data to be written") {
+    filenameSlot("filename", "The path to the .obj file to be written"),
+    frameIDSlot("frameID", "The ID of the frame to be written"),
+    dataSlot("data", "The slot requesting the data to be written") {
 
-	this->filenameSlot.SetParameter(new param::FilePathParam(""));
-	this->MakeSlotAvailable(&this->filenameSlot);
+    this->filenameSlot.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->filenameSlot);
 
-	this->frameIDSlot.SetParameter(new param::IntParam(0, 0));
-	this->MakeSlotAvailable(&this->frameIDSlot);
+    this->frameIDSlot.SetParameter(new param::IntParam(0, 0));
+    this->MakeSlotAvailable(&this->frameIDSlot);
 
-	this->dataSlot.SetCompatibleCall<LinesDataCallDescription>();
-	this->MakeSlotAvailable(&this->dataSlot);
+    this->dataSlot.SetCompatibleCall<megamol::geocalls::LinesDataCallDescription>();
+    this->MakeSlotAvailable(&this->dataSlot);
 
-	// TODO also accept CallTriMeshData
+    // TODO also accept CallTriMeshData
 }
 
 
 /*
- *	trisoup::WavefrontObjWriter::~WavefrontObjWriter
+ * trisoup::WavefrontObjWriter::~WavefrontObjWriter
  */
 trisoup::WavefrontObjWriter::~WavefrontObjWriter(void) {
-	this->Release();
+    this->Release();
 }
 
 
 /*
- *	trisoup::WavefrontObjWriter::create
+ * trisoup::WavefrontObjWriter::create
  */
 bool trisoup::WavefrontObjWriter::create(void) {
-	return true;
+    return true;
 }
 
 
 /*
- *	trisoup::WavefrontObjWriter::release
+ * trisoup::WavefrontObjWriter::release
  */
 void trisoup::WavefrontObjWriter::release(void) {
 }
 
 
 /*
- *	trisoup::WavefrontObjWriter::run
+ * trisoup::WavefrontObjWriter::run
  */
 bool trisoup::WavefrontObjWriter::run(void) {
-	using vislib::sys::Log;
-	vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
-	if (filename.IsEmpty()) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-			"No file name specified. Abort.");
-		return false;
-	}
+    using vislib::sys::Log;
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
+    if (filename.IsEmpty()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "No file name specified. Abort.");
+        return false;
+    }
 
-	LinesDataCall *ldc = this->dataSlot.CallAs<LinesDataCall>();
-	if (ldc == NULL) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-			"No data source connected. Abort.");
-		return false;
-	}
+    megamol::geocalls::LinesDataCall *ldc = this->dataSlot.CallAs<megamol::geocalls::LinesDataCall>();
+    if (ldc == NULL) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "No data source connected. Abort.");
+        return false;
+    }
 
-	/*if (vislib::sys::File::Exists(filename)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-			"File %s already exists and will be overwritten.",
-			vislib::StringA(filename).PeekBuffer());
-	}*/
+    /*if (vislib::sys::File::Exists(filename)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+            "File %s already exists and will be overwritten.",
+            vislib::StringA(filename).PeekBuffer());
+    }*/
 
-	return writeLines(ldc);
+    return writeLines(ldc);
 }
 
 
 /*
- *	trisoup::WavefrontObjWriter::getCapabilities
+ * trisoup::WavefrontObjWriter::getCapabilities
  */
 bool trisoup::WavefrontObjWriter::getCapabilities(DataWriterCtrlCall& call) {
-	call.SetAbortable(false);
-	return true;
+    call.SetAbortable(false);
+    return true;
 }
 
 
-bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
-	using vislib::sys::Log;
-	vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
-	vislib::math::Cuboid<float> bbox;
-	vislib::math::Cuboid<float> cbox;
-	UINT32 frameCnt = 1;
-	
+bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* ldc) {
+    using vislib::sys::Log;
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
+    vislib::math::Cuboid<float> bbox;
+    vislib::math::Cuboid<float> cbox;
+    UINT32 frameCnt = 1;
+    
     /*unsigned int myFrame = static_cast<unsigned int>(this->frameIDSlot.Param<param::IntParam>()->Value());
     ldc->SetFrameID(myFrame, true);*/
 
-	if (!(*ldc)(1)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data extents.");
-		bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-		cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else {
-		if (ldc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
-			|| ldc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-			if (ldc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
-				bbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
-			}
-			else {
-				bbox = ldc->AccessBoundingBoxes().ObjectSpaceClipBox();
-			}
-			if (ldc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-				cbox = ldc->AccessBoundingBoxes().ObjectSpaceClipBox();
-			}
-			else {
-				cbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
-			}
-		}
-		else {
-			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Object space bounding boxes not valid. Using defaults");
-			bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-			cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-		}
-		frameCnt = ldc->FrameCount();
-		if (frameCnt == 0) {
-			Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"WavefronObjWriter: Data source counts zero frames. Abort.");
-			ldc->Unlock();
-			return false;
-		}
-	}
+    if (!(*ldc)(1)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data extents.");
+        bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    else {
+        if (ldc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
+            || ldc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+            if (ldc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
+                bbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
+            }
+            else {
+                bbox = ldc->AccessBoundingBoxes().ObjectSpaceClipBox();
+            }
+            if (ldc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+                cbox = ldc->AccessBoundingBoxes().ObjectSpaceClipBox();
+            }
+            else {
+                cbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
+            }
+        }
+        else {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Object space bounding boxes not valid. Using defaults");
+            bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+            cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        }
+        frameCnt = ldc->FrameCount();
+        if (frameCnt == 0) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "WavefronObjWriter: Data source counts zero frames. Abort.");
+            ldc->Unlock();
+            return false;
+        }
+    }
 
-	/*if (myFrame >= frameCnt) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-			"The requested frame does not exist. Abort.");
-		ldc->Unlock();
-		return false;
-	}*/
+    /*if (myFrame >= frameCnt) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "The requested frame does not exist. Abort.");
+        ldc->Unlock();
+        return false;
+    }*/
 
 
-	ldc->Unlock();
+    ldc->Unlock();
     for (UINT32 myFrame = 0; myFrame < frameCnt; myFrame++) {
         vislib::sys::FastFile file;
         vislib::TString outFilename = filename + vislib::TString("_") + vislib::TString(std::to_string(myFrame).c_str()) + vislib::TString(".obj");
@@ -185,7 +185,7 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
         file.Close(); \
         return false; \
-		    }
+            }
 
         std::string header = "# OBJ file created by the MegaMol WavefrontObjWriter\n#\n";
         ASSERT_WRITEOUT(header.c_str(), header.size());
@@ -206,7 +206,7 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
                 continue;
             }
 
-            if (line.VertexArrayDataType() != LinesDataCall::Lines::DT_FLOAT && line.VertexArrayDataType() != LinesDataCall::Lines::DT_DOUBLE) {
+            if (line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_FLOAT && line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_DOUBLE) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u due to missing vertex data\n", i);
                 continue;
             }
@@ -214,28 +214,28 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
             lineIDs.push_back(line.ID());
 
             bool useIndexArray = true;
-            if (line.IndexArrayDataType() != LinesDataCall::Lines::DT_BYTE && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT16
-                && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT32) {
+            if (line.IndexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_BYTE && line.IndexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_UINT16
+                && line.IndexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_UINT32) {
                 useIndexArray = false;
             }
 
-            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE && line.IndexArrayByte() == NULL) {
+            if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_BYTE && line.IndexArrayByte() == NULL) {
                 useIndexArray = false;
             }
-            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16 && line.IndexArrayUInt16() == NULL) {
+            if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_UINT16 && line.IndexArrayUInt16() == NULL) {
                 useIndexArray = false;
             }
-            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32 && line.IndexArrayUInt32() == NULL) {
+            if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_UINT32 && line.IndexArrayUInt32() == NULL) {
                 useIndexArray = false;
             }
 
             for (unsigned int j = 0; j < line.Count(); j++) {
                 if (useIndexArray) {
-                    if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE) {
+                    if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_BYTE) {
                         indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayByte()[j]));
-                    } else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16) {
+                    } else if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_UINT16) {
                         indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt16()[j]));
-                    } else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32) {
+                    } else if (line.IndexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_UINT32) {
                         indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt32()[j]));
                     } // else should never happen (catched the possibility before)
                 } else {
@@ -244,12 +244,12 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
             }
 
             for (unsigned int j = 0; j < line.Count(); j++) {
-                if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_FLOAT) {
+                if (line.VertexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_FLOAT) {
                     const float * ptr = line.VertexArrayFloat();
                     vertexPositions.push_back(ptr[j * 3 + 0]);
                     vertexPositions.push_back(ptr[j * 3 + 1]);
                     vertexPositions.push_back(ptr[j * 3 + 2]);
-                } else if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_DOUBLE) {
+                } else if (line.VertexArrayDataType() == megamol::geocalls::LinesDataCall::Lines::DT_DOUBLE) {
                     const double * ptr = line.VertexArrayDouble();
                     vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 0]));
                     vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 1]));
@@ -288,10 +288,10 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
                 }
             }
         }
-	    file.Close();
+        file.Close();
     }
 
-	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "WavefrontObjWriter: Completed writing data\n");
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "WavefrontObjWriter: Completed writing data\n");
 
-	return true;
+    return true;
 }
