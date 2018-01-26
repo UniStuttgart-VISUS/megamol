@@ -543,7 +543,7 @@ MolecularDataCall::~MolecularDataCall(void) {
  */
 void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
         const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
-        const float* bfactor, const float* charge, const float* occupancy) {
+        float* bfactor, const float* charge, const float* occupancy) {
     // set all values
     this->atomCount = atomCnt;
     this->atomTypeCount = atomTypeCnt;
@@ -552,6 +552,7 @@ void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt
     this->atomPos = pos;
     this->atomType = types;
     this->atomBFactors = bfactor;
+	this->ownsBFactorMemory = false;
     this->atomCharges = charge;
     this->atomOccupancies = occupancy;
 }

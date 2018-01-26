@@ -36,6 +36,7 @@ KeyframeManipulator::KeyframeManipulator(void) :
     this->kfArray.Clear();
     this->manipArray.Clear();
     this->circleVertices.Clear();
+    this->modelBbox.SetNull();
 
     this->isDataSet = false;
 }
@@ -52,7 +53,7 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 /*
 * KeyframeManipulator::KeyframeManipulator
 */
-bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
+bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wcd) {
 
     if (kfa == NULL) {
@@ -71,8 +72,8 @@ bool KeyframeManipulator::update(vislib::Array<KeyframeManipulator::manipType> a
     this->worldCamDir         = wcd;
 
     // Update viewport --------------------------------------------------------
-    this->viewportSize.SetHeight(vph);
-    this->viewportSize.SetWidth(vpw);
+    this->viewportSize.SetHeight(static_cast<int>(vph));
+    this->viewportSize.SetWidth(static_cast<int>(vpw));
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
@@ -157,25 +158,88 @@ bool KeyframeManipulator::updateManipulators() {
     }
 
     // Adaptive axis length of manipulators
+    float radius = this->circleVertices[1].Length();
     float length = vislib::math::Max((this->worldCamDir.Length() * this->axisLengthFac), 1.0f);
+    vislib::math::Vector<float, 3> tmpV;
+    float len;
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         switch (static_cast<manipType>(i)) {
-            case (manipType::SELECTED_KF_POS_X):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_POS_Y):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); break;
-            case (manipType::SELECTED_KF_POS_Z):      tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); break;
-            case (manipType::SELECTED_KF_LOOKAT_X):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); break;
-            case (manipType::SELECTED_KF_LOOKAT_Y):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); break;
-            case (manipType::SELECTED_KF_LOOKAT_Z):   tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); break;
-            case (manipType::SELECTED_KF_UP):         tmpkfS.wsPos = this->selectedKf.getCamUp(); 
-                                                      tmpkfS.wsPos.ScaleToLength(length);
-                                                      tmpkfS.wsPos += skfPosV;
-                                                      break;
-            case (manipType::SELECTED_KF_POS_LOOKAT): tmpkfS.wsPos = skfPosV - skfLaV;
-                                                      tmpkfS.wsPos.ScaleToLength(length);
-                                                      tmpkfS.wsPos += skfPosV;
-                                                      break;
-            default: vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Bug: %i", i); return false;
+            case (manipType::SELECTED_KF_POS_X):      
+                tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); 
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
+                }
+               break;
+            case (manipType::SELECTED_KF_POS_Y):      
+                tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); 
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
+                }
+                break;
+            case (manipType::SELECTED_KF_POS_Z):      
+                tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); 
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
+                }
+                break;
+            case (manipType::SELECTED_KF_LOOKAT_X):  
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f);
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
+                }
+                break;
+            case (manipType::SELECTED_KF_LOOKAT_Y):   
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f);
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
+                }
+                break;
+            case (manipType::SELECTED_KF_LOOKAT_Z):   
+                tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length);
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
+                }
+                break;
+            case (manipType::SELECTED_KF_UP):         
+                tmpV = this->selectedKf.getCamUp();
+                tmpV.ScaleToLength(length);
+                tmpkfS.wsPos = skfPosV + tmpV;
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
+                    tmpV.ScaleToLength(len);
+                    tmpkfS.wsPos = skfPosV + tmpV;
+                    if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                        tmpV.ScaleToLength(2.0f * len);
+                        tmpkfS.wsPos = skfPosV + tmpV;
+                        if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                            tmpV.ScaleToLength(3.0f * len);
+                            tmpkfS.wsPos = skfPosV + tmpV;
+                        }
+                    }
+                }
+                break;
+            case (manipType::SELECTED_KF_POS_LOOKAT): 
+                tmpV = skfPosV - skfLaV;
+                tmpV.ScaleToLength(length);
+                tmpkfS.wsPos = skfPosV + tmpV;
+                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
+                    tmpV.ScaleToLength(len);
+                    tmpkfS.wsPos = skfPosV + tmpV;
+                    if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                        tmpV.ScaleToLength(2.0f * len);
+                        tmpkfS.wsPos = skfPosV + tmpV;
+                        if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                            tmpV.ScaleToLength(3.0f * len);
+                            tmpkfS.wsPos = skfPosV + tmpV;
+                        }
+                    }
+                }
+                break;
+            default: 
+                vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [updateManipulators] Bug: %i", i); 
+                return false;
         }
         tmpkfS.ssPos     = this->getScreenSpace(tmpkfS.wsPos);
         tmpkfS.offset    = (this->getScreenSpace(tmpkfS.wsPos + this->circleVertices[1]) - tmpkfS.ssPos).Norm();
@@ -189,8 +253,12 @@ bool KeyframeManipulator::updateManipulators() {
 /*
 * KeyframeManipulator::growBbox
 */
-void KeyframeManipulator::growBbox(vislib::math::Cuboid<float> *bb) {
+void KeyframeManipulator::updateExtents(vislib::math::Cuboid<float> *bb) {
 
+    // Store current bounding box of model
+    this->modelBbox = *bb;
+
+    // Grow bounding box of model to manipulators
     if (bb != NULL) {
         if (this->isDataSet) {
             for (unsigned int i = 0; i < this->manipArray.Count(); i++) {

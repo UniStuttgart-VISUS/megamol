@@ -1,20 +1,14 @@
-# MegaMol plugin "Cinematic Camera"
+# MegaMol™ Plugin "Cinematic Camera"
 
 This module allows the video rendering of simulations.
-Through defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
+By defining fixed keyframes of desired camera positions for specific animation times arbitrary tracking shots can be created.
 
 ![cinematic camera demo picture](https://github.com/tobiasrau/megamol-dev/blob/cinematiccamera/plugins/cinematiccamera/demo.png)
-
----
-
-## Use cases
-
-This plugin can be used to render a video of a simulation.
 
 --- 
 
 ## Module Descriptions
-This plugin provides the modules `KeyframeKeeper`,  `CinematicRenderer`, `CinematicView` and `TimeLineRenderer`.
+This plugin provides the modules `KeyframeKeeper`,  `CinematicRenderer`, `CinematicView`, `TimeLineRenderer` and `ReplacementRenderer`.
 
 #### KeyframeKeeper:
 
@@ -37,8 +31,13 @@ The complete final video can be rendered to png files by defining the resolution
 #### TimeLineRenderer:
 
 This module shows the temporal position of the keyframes on the animation time axis and the simulation time axis in an two-dimensional diagram.
-The manipulation of the simulation and the animation time of a keyframe can be done per drag and drop.
-The time axes can be zoomed independently at the current mouse position.
+The keyframes can be selected (left mouse button) or they can be shifted along the simulation or animation time axis per drag and drop (right mouse button).
+The time axes can be zoomed independently at the current mouse position (middle mouse button).
+
+#### ReplacementRenderer:
+
+This module offers replacement rendering for models with performance too low for interactivly creating the tracking shot. 
+Only the bounding box of the model which should be shown is drawn.
 
 --- 
 
@@ -52,6 +51,9 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `03_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
 * `04_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
 * `05_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
+* `06_straightenSimTangent` (Assigned key: `t`): Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe.
+* `07_addFixedPerCentAnimTime` (`0.1`): Adds fixed per cent of animation time to currently selected keyframe when new keyframe is added.
+* `08_addFixedPerCentSimTime` (`0.0`): Adds fixed per cent of simulation time to currently selected keyframe when new keyframe is added.
 * `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
 * `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
@@ -71,7 +73,6 @@ The module `CinematicRenderer` exposes the following parameters:
 * `01_splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
 * `02_toggleManipulators` (Assigned key: `m`): Toggle between the position manipulators and the look-at and up manipulators of the selected keyframe.            
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
-* `04_toggleModelBBox` (Assigned key: `t`): Toggle between full rendering of the model and semi-transparent bounding box as placeholder of the model.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
@@ -80,15 +81,24 @@ The module `CinematicView` exposes the following parameters:
    Whenever rendering is begun a new folder holding the new frame files is generated.
 * `02_playPreview` (Assigned key: `space`): Toggle playing animation as preview.
 * `03_skyboxSide` (`NONE`): Select the skybox side.
-* `04_cinematicHeight`(`1920`): The height resolution of the cinematic view to render.
-* `05_cinematicWidth` (`1080`): The width resolution of the cinematic view to render.
-* `05_fps` (`24`): The frames per second the animation should be rendered.
+* `04_cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
+* `05_cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
+* `06_fps` (`24`): The frames per second the animation should be rendered.
     
 The module `TimeLineRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_fontSize` (`15.0`): The font size.
 
+
+The module `ReplacementRenderer` exposes the following parameters:
+(The values in brackets indicate the default values.)
+
+* `01_replacementRendering` (`false`): Show/hide replacement rendering for the model.
+* `02_toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Key can be assigned via `03_replacmentKeyAssign` parameter. 
+* `03_replacmentKeyAssign` (` `): Assign a key for the replacement rendering button `02_toggleReplacement`.
+* `04_alpha` (`0.75`): The alpha value of the replacement rendering.
+    
 ---
 
 ## How to use the module
@@ -104,7 +114,7 @@ The light yellow tagged data source module has to be replaced by a suitable one 
 
 The sample project (`cinematiccam_simplemol.mmprj`) which is supported in the `example` folder of this plugin has to be copied into the `bin` folder of megamol.
 In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
-*Under Windows:* `".\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
-*Under Linux:* `"./megamol.sh -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance"`   
+*Under Windows:* `.\mmconsole.exe -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`   
+*Under Linux:* `./megamol.sh -p cinematiccam_simplemol.mmprj -i cinematiccamera_simplemol instance`   
 As data source for the PDBLoader (Parameter: pdbFilename) any protein from e.g. the [RCSB](http://www.rcsb.org/pdb/home/home.do) can be used.
 

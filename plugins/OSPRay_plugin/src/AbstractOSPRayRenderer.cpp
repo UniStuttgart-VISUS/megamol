@@ -440,16 +440,22 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
-    imgEnd[0] = cr->GetCameraParameters()->TileRect().GetRight() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgEnd[1] = cr->GetCameraParameters()->TileRect().GetTop() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) / 
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
     // setup camera
     ospSet2fv(camera, "image_start", imgStart.data());
     ospSet2fv(camera, "image_end", imgEnd.data());
-    ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
+    ospSetf(camera, "aspect", static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
+    //ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
     ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
@@ -495,6 +501,88 @@ void AbstractOSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &si
     fclose(file);
 }
 
+
+void AbstractOSPRayRenderer::changeMaterial() {
+
+    for (auto entry : this->structureMap) {
+        auto const &element = entry.second;
+
+        // custom material settings
+        OSPMaterial material;
+        material = NULL;
+        if (element.materialContainer != NULL) {
+            switch (element.materialContainer->materialType) {
+            case OBJMATERIAL:
+                material = ospNewMaterial(renderer, "OBJMaterial");
+                ospSet3fv(material, "Kd", element.materialContainer->Kd.data());
+                ospSet3fv(material, "Ks", element.materialContainer->Ks.data());
+                ospSet1f(material, "Ns", element.materialContainer->Ns);
+                ospSet1f(material, "d", element.materialContainer->d);
+                ospSet3fv(material, "Tf", element.materialContainer->Tf.data());
+                break;
+            case LUMINOUS:
+                material = ospNewMaterial(renderer, "Luminous");
+                ospSet3fv(material, "color", element.materialContainer->lumColor.data());
+                ospSet1f(material, "intensity", element.materialContainer->lumIntensity);
+                ospSet1f(material, "transparency", element.materialContainer->lumTransparency);
+                break;
+            case GLASS:
+                material = ospNewMaterial(renderer, "Glass");
+                ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
+                ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
+                ospSet3fv(material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
+                ospSet3fv(material, "attenuationColorOutside", element.materialContainer->glassAttenuationColorOutside.data());
+                ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
+                break;
+            case MATTE:
+                material = ospNewMaterial(renderer, "Matte");
+                ospSet3fv(material, "reflectance", element.materialContainer->matteReflectance.data());
+                break;
+            case METAL:
+                material = ospNewMaterial(renderer, "Metal");
+                ospSet3fv(material, "reflectance", element.materialContainer->metalReflectance.data());
+                ospSet3fv(material, "eta", element.materialContainer->metalEta.data());
+                ospSet3fv(material, "k", element.materialContainer->metalK.data());
+                ospSet1f(material, "roughness", element.materialContainer->metalRoughness);
+                break;
+            case METALLICPAINT:
+                material = ospNewMaterial(renderer, "MetallicPaint");
+                ospSet3fv(material, "shadeColor", element.materialContainer->metallicShadeColor.data());
+                ospSet3fv(material, "glitterColor", element.materialContainer->metallicGlitterColor.data());
+                ospSet1f(material, "glitterSpread", element.materialContainer->metallicGlitterSpread);
+                ospSet1f(material, "eta", element.materialContainer->metallicEta);
+                break;
+            case PLASTIC:
+                material = ospNewMaterial(renderer, "Plastic");
+                ospSet3fv(material, "pigmentColor", element.materialContainer->plasticPigmentColor.data());
+                ospSet1f(material, "eta", element.materialContainer->plasticEta);
+                ospSet1f(material, "roughness", element.materialContainer->plasticRoughness);
+                ospSet1f(material, "thickness", element.materialContainer->plasticThickness);
+                break;
+            case THINGLASS:
+                material = ospNewMaterial(renderer, "ThinGlass");
+                ospSet3fv(material, "transmission", element.materialContainer->thinglassTransmission.data());
+                ospSet1f(material, "eta", element.materialContainer->thinglassEta);
+                ospSet1f(material, "thickness", element.materialContainer->thinglassThickness);
+                break;
+            case VELVET:
+                material = ospNewMaterial(renderer, "Velvet");
+                ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
+                ospSet3fv(material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
+                ospSet1f(material, "backScattering", element.materialContainer->velvetBackScattering);
+                ospSet1f(material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
+                break;
+            }
+            ospCommit(material);
+        }
+
+        if (material != NULL) {
+            ospSetMaterial(geo.back(), material);
+        }
+        ospCommit(geo.back());
+
+    }
+}
 
 
 bool AbstractOSPRayRenderer::fillWorld() {
@@ -647,20 +735,20 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
 
             case geometryTypeEnum::NHSPHERES:
-                if (element.vertexData == NULL) {
+                if (element.raw == NULL) {
                     returnValue = false;
                     break;
                 }
 
                 geo.push_back(ospNewGeometry("spheres"));
 
-                if (element.vertexLength > 3 * sizeof(float)) {
+                if (element.vertexLength > 3) {
                     vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
                     ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
                 } else {
-                    vertexData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float)+ element.colorLength * sizeof(float));
                     ospSet1f(geo.back(), "radius", element.globalRadius);
                     //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
                     //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
@@ -759,14 +847,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             }
 
-            if (material != NULL) {
+            if (material != NULL && geo.size() > 0) {
                 ospSetMaterial(geo.back(), material);
             }
 
-            ospCommit(geo.back());
-
-            ospAddGeometry(world, geo.back());
-
+            if (geo.size() > 0) {
+                ospCommit(geo.back());
+                ospAddGeometry(world, geo.back());
+            }
 
             if (vertexData != NULL) ospRelease(vertexData);
             if (colorData != NULL) ospRelease(colorData);
