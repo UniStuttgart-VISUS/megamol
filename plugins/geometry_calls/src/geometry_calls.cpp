@@ -1,32 +1,20 @@
 /*
- * mmstd_trisoup.cpp
+ * geometry_calls.cpp
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmstd_trisoup/mmstd_trisoup.h"
+#include "geometry_calls/geometry_calls.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "TriSoupRenderer.h"
-#include "TriSoupDataSource.h"
-#include "WavefrontObjDataSource.h"
-#include "WavefrontObjWriter.h"
-#include "BlockVolumeMesh.h"
-#include "volumetrics/VoluMetricJob.h"
-#include "OSCBFix.h"
-#include "CoordSysMarker.h"
-#include "TrackerRendererTransform.h"
-#include "volumetrics/IsoSurface.h"
-#include "CallBinaryVolumeData.h"
-#include "CallVolumetricData.h"
-#include "ScreenSpaceEdgeRenderer.h"
-#include "vislib/Trace.h"
-#include "LinesRenderer.h"
+
+#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls/LinesDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -39,13 +27,12 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "mmstd_trisoup",
+                "geometry_calls", // TODO: Change this!
 
                 /* human-readable plugin description */
-                "Plugin for rendering TriSoup mesh data") {
+                "Describing geometry_calls (TODO: Change this!)") {
 
             // here we could perform addition initialization
-            vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
         };
         /** Dtor */
         virtual ~plugin_instance(void) {
@@ -55,22 +42,25 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::BlockVolumeMesh>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
-            this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TrackerRendererTransform>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ScreenSpaceEdgeRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::LinesRenderer>();
+
+            //
+            // TODO: Register your plugin's modules here
+            // like:
+            //   this->module_descriptions.RegisterAutoDescription<megamol::geometry_calls::MyModule1>();
+            //   this->module_descriptions.RegisterAutoDescription<megamol::geometry_calls::MyModule2>();
+            //   ...
+            //
 
             // register calls here:
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CallTriMeshData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
+            //
+            // TODO: Register your plugin's calls here
+            // like:
+            //   this->call_descriptions.RegisterAutoDescription<megamol::geometry_calls::MyCall1>();
+            //   this->call_descriptions.RegisterAutoDescription<megamol::geometry_calls::MyCall2>();
+            //   ...
+            //
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
@@ -81,7 +71,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-MMSTD_TRISOUP_API int mmplgPluginAPIVersion(void) {
+GEOMETRY_CALLS_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -89,7 +79,7 @@ MMSTD_TRISOUP_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-MMSTD_TRISOUP_API
+GEOMETRY_CALLS_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -131,7 +121,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-MMSTD_TRISOUP_API
+GEOMETRY_CALLS_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -142,7 +132,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-MMSTD_TRISOUP_API
+GEOMETRY_CALLS_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -153,7 +143,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-MMSTD_TRISOUP_API
+GEOMETRY_CALLS_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)

@@ -2,15 +2,15 @@
  * CallTriMeshData.h
  *
  * Copyright (C) 2010 by Sebastian Grottel
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED
-#define MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED
+#ifndef MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
+#define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
-#include "mmstd_trisoup/mmstd_trisoup.h"
+#include "geometry_calls/geometry_calls.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -21,18 +21,18 @@
 #define MAX_PARAMETER_NUMBER 100
 
 namespace megamol {
-namespace trisoup {
+namespace geocalls {
 
     /**
      * Call transporting tri soup mesh data
      */
-    class MMSTD_TRISOUP_API CallTriMeshData : public core::AbstractGetData3DCall {
+    class GEOMETRY_CALLS_API CallTriMeshData : public core::AbstractGetData3DCall {
     public:
 
         /**
          * Subclass storing material information
          */
-        class MMSTD_TRISOUP_API Material {
+        class GEOMETRY_CALLS_API Material {
         public:
 
             /** Possible values for the illumination modell */
@@ -395,7 +395,7 @@ namespace trisoup {
         /**
          * Subclass storing the pointers to the mesh data
          */
-        class MMSTD_TRISOUP_API Mesh {
+        class GEOMETRY_CALLS_API Mesh {
         public:
 
             /** Possible data types */
@@ -1455,9 +1455,9 @@ namespace trisoup {
     };
 
     /** Description class typedef */
-    typedef core::factories::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
+    typedef megamol::core::factories::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
 
-} /* end namespace trisoup */
+} /* end namespace geocalls */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED */
+#endif /* MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED */
