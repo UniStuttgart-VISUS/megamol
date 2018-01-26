@@ -116,15 +116,14 @@ namespace megamol {
             };
 
             clock_t                                 deltaAnimTime;
-            clock_t                                 deltaRipPrompt; // Rip = rendering in progress
 
             Keyframe                                shownKeyframe;
             bool                                    playAnim;
 
             int                                     cineWidth;
             int                                     cineHeight;
-            int                                     vpH;
-            int                                     vpW;
+            int                                     vpHLast;
+            int                                     vpWLast;
 
             CinematicView::SkyboxSides              sbSide;
 

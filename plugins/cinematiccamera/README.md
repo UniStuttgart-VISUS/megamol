@@ -73,6 +73,7 @@ The module `CinematicRenderer` exposes the following parameters:
 * `01_splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
 * `02_toggleManipulators` (Assigned key: `m`): Toggle between the position manipulators and the look-at and up manipulators of the selected keyframe.            
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
+* `04_manipOutsideModel` (Assigned key: `z`): Keep manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)

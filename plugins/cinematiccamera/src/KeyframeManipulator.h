@@ -57,13 +57,14 @@ namespace megamol {
             * @param vps   The current viewport size
             * @param mvpm  The current Model-View-Projection-Matrix
             * @param wcd   The lookat direction of the world camera
-            *
+            * @param mob   If true manipulators always lie outside of model bbox
+
             * @return True if data was updated successfully.
             *
             */
             bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
-                        vislib::math::Vector<float, 3> wcd);
+                        vislib::math::Vector<float, 3> wcd, bool mob);
 
             /** Update extents.
             *   Grows bounding box to manipulators.
@@ -111,8 +112,8 @@ namespace megamol {
             };
 
             // Some fixed values
-            const float                      circleRadiusFac = 0.0075f;    // Factor for lookat direction which is used as adaptive circle radius
-            const float                      axisLengthFac   = 0.05f;      // Factor for lookat direction which is used as adaptive axis length
+            const float                      circleRadiusFac = 0.0075f;    // Factor for world cam lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac   = 0.06f;      // Factor for world cam lookat direction which is used as adaptive axis length
             const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
             const float                      lineWidth       = 2.5;
             const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
@@ -136,6 +137,7 @@ namespace megamol {
             bool                             isDataSet;
             bool                             isDataDirty;
             vislib::math::Cuboid<float>      modelBbox;
+            bool                             manipOusideBbox;
 
             vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
 

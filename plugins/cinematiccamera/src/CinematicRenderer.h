@@ -154,6 +154,7 @@ namespace megamol {
 #endif
             unsigned int                     interpolSteps;
             bool                             toggleManipulator;
+            bool                             manipOutsideModel;
             bool                             showHelpText;
 
             KeyframeManipulator              manipulator;
@@ -182,6 +183,8 @@ namespace megamol {
             core::param::ParamSlot toggleManipulateParam;
             /**  */
             core::param::ParamSlot toggleHelpTextParam;
+            /**  */
+            core::param::ParamSlot toggleManipOusideBboxParam;
 
 		};
 
