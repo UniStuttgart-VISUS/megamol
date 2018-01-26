@@ -7,6 +7,10 @@
 #include "stdafx.h"
 #include "molecularmaps/molecularmaps.h"
 
+#include "MapGenerator.h"
+
+#include "PerAtomFloatCall.h"
+
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
@@ -26,7 +30,7 @@ namespace {
                 "molecularmaps", // TODO: Change this!
 
                 /* human-readable plugin description */
-                "Describing molecularmaps (TODO: Change this!)") {
+                "New version of the molecular maps creator") {
 
             // here we could perform addition initialization
         };
@@ -46,6 +50,7 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyModule2>();
             //   ...
             //
+            this->module_descriptions.RegisterAutoDescription<megamol::molecularmaps::MapGenerator>();
 
             // register calls here:
 
@@ -56,6 +61,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyCall2>();
             //   ...
             //
+            this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::PerAtomFloatCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

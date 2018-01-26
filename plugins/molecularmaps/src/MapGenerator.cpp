@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "MapGenerator.h"
 
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -21,7 +21,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::trisoup;
+using namespace megamol::geocalls;
 using namespace megamol::molecularmaps;
 using namespace megamol::protein_calls;
 
@@ -2011,6 +2011,7 @@ std::string MapGenerator::getNameOfPDB() {
 	std::string name = "";
 
 	// Dirty hack that uses the MegaMol object tree to find the PBDLoader.
+#if 0 // TODO turned off for now, the name has to be added to the MolecularDataCall
 	auto curr = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->Parent());
 	for (auto it = curr->ChildList_Begin(); it != curr->ChildList_End(); ++it) {
 		auto current = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(*it);
@@ -2025,6 +2026,7 @@ std::string MapGenerator::getNameOfPDB() {
 			}
 		}
 	}
+#endif
 
 	return name;
 }

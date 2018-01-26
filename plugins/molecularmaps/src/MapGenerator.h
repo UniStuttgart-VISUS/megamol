@@ -17,7 +17,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
@@ -28,7 +28,6 @@
 #include "Octree.h"
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
-#include "PDBLoader.h"
 
 namespace megamol {
 namespace molecularmaps {
@@ -105,7 +104,7 @@ namespace molecularmaps {
 		 *
 		 * @return false if an error occured, true otherwise.
 		 */
-		bool capColouring(megamol::trisoup::CallTriMeshData* p_cap_data_call,
+		bool capColouring(megamol::geocalls::CallTriMeshData* p_cap_data_call,
 			megamol::core::view::CallRender3D* p_cr3d,
 			protein_calls::BindingSiteCall* p_bs);
 
@@ -266,7 +265,7 @@ namespace molecularmaps {
 		 *	@param emsh The triangle mesh
 		 *	@return True on success. False otherwise.
 		 */
-		bool fillLocalMesh(const trisoup::CallTriMeshData::Mesh& mesh);
+		bool fillLocalMesh(const geocalls::CallTriMeshData::Mesh& mesh);
 
 		/**
 		 * Determine the boundary meridian of the protein. And set the types
