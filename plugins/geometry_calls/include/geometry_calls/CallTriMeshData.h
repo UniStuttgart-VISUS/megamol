@@ -948,6 +948,97 @@ namespace geocalls {
             }
 
             /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(uint8_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_BYTE;
+                this->vattVector[attribID].dataByte = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(double *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_DOUBLE;
+                this->vattVector[attribID].dataDouble = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(float *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_FLOAT;
+                this->vattVector[attribID].dataFloat = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(int16_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_INT16;
+                this->vattVector[attribID].dataInt16 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(int *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_INT32;
+                this->vattVector[attribID].dataInt32 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(uint16_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_UINT16;
+                this->vattVector[attribID].dataUInt16 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void SetVertexAttribData(unsigned int *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_UINT32;
+                this->vattVector[attribID].dataUInt32 = v;
+            }
+
+            /**
              * Assignment operator
              *
              * @param rhs The right hand side operand
@@ -1156,97 +1247,6 @@ namespace geocalls {
                 ASSERT(v == NULL);
                 this->texDT = DT_NONE;
                 this->tex.dataDouble = NULL;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(uint8_t *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_BYTE;
-                this->vattVector[attribID].dataByte = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(double *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_DOUBLE;
-                this->vattVector[attribID].dataDouble = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(float *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_FLOAT;
-                this->vattVector[attribID].dataFloat = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(int16_t *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_INT16;
-                this->vattVector[attribID].dataInt16 = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(int *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_INT32;
-                this->vattVector[attribID].dataInt32 = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(uint16_t *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_UINT16;
-                this->vattVector[attribID].dataUInt16 = v;
-            }
-
-            /**
-             * Sets the vertex attrib data pointer
-             * for a specific attribute.
-             * If the attribute is not present, nothing is changed...
-             *
-             * @param v The new pointer value
-             */
-            inline void setVertexAttribData(unsigned int *v, unsigned int attribID) {
-                if (attribID >= this->vattCount) return;
-                this->vattDTypes[attribID] = DT_UINT32;
-                this->vattVector[attribID].dataUInt32 = v;
             }
 
             /**
