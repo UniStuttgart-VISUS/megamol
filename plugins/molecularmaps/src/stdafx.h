@@ -32,4 +32,39 @@
 
 #include "vislib/types.h"
 
+// VISlib includes
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLTesselationShader.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/types.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/sys/Log.h"
+
+// C++ includes
+#include <array>
+#include <vector>
+#include <algorithm>
+#include <ctime>
+#include <mutex>
+#include <thread>
+#include <cfloat>
+#include <set>
+#include <iostream>
+#include <queue>
+#include <valarray>
+#include <queue> 
+#include <map>
+#include <ppl.h>
+
+// MolecularMpas inclues
+#include "Types.h"
+
+// MolecularMaps defines
+static clock_t begin, end;
+#define TIME_START begin = clock();
+#define TIME_END(name) end = clock(); \
+vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "%s took %f seconds.", name, double(end - begin) / CLOCKS_PER_SEC);
+
 #endif /* MOLECULARMAPS_STDAFX_H_INCLUDED */
