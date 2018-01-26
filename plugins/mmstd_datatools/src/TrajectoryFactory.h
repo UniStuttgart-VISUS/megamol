@@ -11,6 +11,10 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "PointcloudHelpers.h"
+
+#include "nanoflann.hpp"
+
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
@@ -91,16 +95,18 @@ private:
 
     bool assertData(megamol::core::Call& c);
 
-    void write(std::string const& filepath, unsigned int const pli,
+    void write(std::string const& filepath, unsigned int const pli, unsigned int const frameCount,
         std::unordered_map<uint64_t, trajectory_t<float>>& cur_data,
+        std::unordered_map<uint64_t, std::vector<char>>& cur_is_fluid_data,
         std::unordered_map<uint64_t, uint64_t>& cur_file_id_offsets,
         std::unordered_map<uint64_t, std::pair<unsigned int, unsigned int>>& cur_frame_id_assoc,
         std::vector<size_t>& max_offset, size_t const max_line_size,
         std::vector<char> const& zero_out_buf) const;
 
-    void writeParticle(FILE* file, size_t const base_offset,
+    void writeParticle(FILE* file, unsigned int const frameCount, size_t const base_offset,
         std::pair<unsigned int, unsigned int>& frame_start_end, uint64_t const id,
-        trajectory_t<float> const& toWrite, bool const new_par = false) const;
+        trajectory_t<float> const& toWrite, std::vector<char> const& is_fluid,
+        bool const new_par = false) const;
 
     megamol::core::CallerSlot inDataSlot;
 
@@ -108,7 +114,27 @@ private:
 
     megamol::core::param::ParamSlot maxFramesInMemSlot;
 
+    megamol::core::param::ParamSlot searchRadiusSlot;
+
+    megamol::core::param::ParamSlot minPtsSlot;
+
     size_t datahash;
+
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<float, simplePointcloud>,
+        simplePointcloud,
+        3 /* dim */
+    > my_kd_tree_t;
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<float, directionalPointcloud>,
+        directionalPointcloud,
+        3 /* dim */
+    > my_dir_kd_tree_t;
+
+    std::shared_ptr<my_kd_tree_t> particleTree;
+    std::shared_ptr<my_dir_kd_tree_t> dirParticleTree;
+    std::shared_ptr<simplePointcloud> myPts;
+    std::shared_ptr<directionalPointcloud> myDirPts;
 
     /** path to the file holding the trajectories */
     //std::string trajectory_file_path_;

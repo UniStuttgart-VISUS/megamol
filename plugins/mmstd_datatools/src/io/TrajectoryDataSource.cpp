@@ -115,7 +115,8 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::filenameChanged(me
     this->sorted_id_list.reserve(this->file_header_.particle_count);
 
     size_t file_offset = sizeof(uint64_t) + sizeof(unsigned int) + 6 * sizeof(float);
-    size_t offset_incr = sizeof(uint64_t) + 2 * sizeof(unsigned int) + 3 * sizeof(float)*this->file_header_.frame_count;
+    size_t offset_incr = sizeof(uint64_t) + 2 * sizeof(unsigned int) + 3 * sizeof(float)*this->file_header_.frame_count
+        + sizeof(char)*this->file_header_.frame_count;
 
     this->index_dummy.resize(this->file_header_.particle_count * 2);
 
@@ -153,8 +154,8 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::dataParamChanged(m
         this->maxFrameSlot.Param<megamol::core::param::IntParam>()->Value() : this->file_header_.frame_count - 1;
 
     this->id_begin_end_.first = this->minIDSlot.Param<megamol::core::param::IntParam>()->Value();
-    this->id_begin_end_.second = this->maxIDSlot.Param<megamol::core::param::IntParam>()->Value() < this->file_header_.particle_count - 1 ?
-        this->maxIDSlot.Param<megamol::core::param::IntParam>()->Value() : this->file_header_.particle_count - 1;
+    this->id_begin_end_.second = this->maxIDSlot.Param<megamol::core::param::IntParam>()->Value();// < this->file_header_.particle_count - 1 ?
+        //this->maxIDSlot.Param<megamol::core::param::IntParam>()->Value() : this->file_header_.particle_count - 1;
 
     return true;
 }
@@ -163,11 +164,21 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::dataParamChanged(m
 bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
     static size_t const frame_element_offset = 3 * sizeof(float);
 
+    float const half_x_dim = (this->file_header_.bbox[3] - this->file_header_.bbox[0]) / 2.0f;
+    float const half_y_dim = (this->file_header_.bbox[4] - this->file_header_.bbox[1]) / 2.0f;
+    float const half_z_dim = (this->file_header_.bbox[5] - this->file_header_.bbox[2]) / 2.0f;
+
     if (this->data_param_changed_) {
         this->data_param_changed_ = false;
 
         this->data.clear();
         this->data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
+
+        this->col_data.clear();
+        this->col_data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
+
+        this->is_fluid_data.clear();
+        this->is_fluid_data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
 
         this->lines_data.clear();
         this->lines_data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
@@ -197,12 +208,44 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                     static_cast<size_t>(p_fr_end + 1)*frame_element_offset : static_cast<size_t>(this->frame_begin_end_.second + 1)*frame_element_offset;
                 fseek(file, frame_begin_offset, SEEK_CUR);
                 std::vector<float> cur_data((frame_end_offset - frame_begin_offset) / sizeof(float));
+                std::vector<uint8_t> cur_col_data((frame_end_offset - frame_begin_offset) / (3*sizeof(float))*4, 255);
+                std::vector<char> cur_is_fluid_data((frame_end_offset - frame_begin_offset) / (3 * sizeof(float)));
                 fread(cur_data.data(), sizeof(char), frame_end_offset - frame_begin_offset, file);
+                fseek(file, id_offset + sizeof(uint64_t) + 2 * sizeof(unsigned int)
+                    + 3 * sizeof(float)*this->file_header_.frame_count + frame_begin_offset / (frame_element_offset), SEEK_SET);
+                fread(cur_is_fluid_data.data(), sizeof(char), cur_is_fluid_data.size(), file);
+                for (size_t i = 0; i < cur_data.size() / 3 - 1; ++i) {
+                    if (cur_is_fluid_data[i] == cur_is_fluid_data[i + 1] == 0) {
+                        // no transition, is gas
+                        cur_col_data[i * 4] = 255;
+                        cur_col_data[i * 4 + 1] = 0;
+                        cur_col_data[i * 4 + 2] = 0;
+                    } else if (cur_is_fluid_data[i] == cur_is_fluid_data[i + 1] == 1) {
+                        // no transition, is fluid
+                        cur_col_data[i * 4] = 0;
+                        cur_col_data[i * 4 + 1] = 0;
+                        cur_col_data[i * 4 + 2] = 255;
+                    } else if (cur_is_fluid_data[i] != cur_is_fluid_data[i + 1]) {
+                        // transition
+                        cur_col_data[i * 4] = 0;
+                        cur_col_data[i * 4 + 1] = 255;
+                        cur_col_data[i * 4 + 2] = 0;
+                    }
+
+                    if (std::abs(cur_data[(i + 1) * 3] - cur_data[i * 3]) > half_x_dim
+                        || std::abs(cur_data[(i + 1) * 3 + 1] - cur_data[i * 3 + 1]) > half_y_dim
+                        || std::abs(cur_data[(i + 1) * 3 + 2] - cur_data[i * 3 + 2]) > half_z_dim) {
+                        cur_col_data[i * 4 + 3] = 42;
+                        cur_col_data[(i + 1) * 4 + 3] = 42;
+                    }
+                }
                 this->data.push_back(cur_data);
+                this->col_data.push_back(cur_col_data);
                 // set the line
                 megamol::geocalls::LinesDataCall::Lines l;
                 l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
-                    vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
+                    this->col_data.back().data(), true);
+                    //vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
                 this->lines_data.push_back(l);
             }
         }

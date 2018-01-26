@@ -90,6 +90,10 @@ private:
 
     std::vector<std::vector<float>> data;
 
+    std::vector<std::vector<uint8_t>> col_data;
+
+    std::vector<std::vector<char>> is_fluid_data;
+
     std::vector<megamol::geocalls::LinesDataCall::Lines> lines_data;
 
     std::vector<unsigned int> index_dummy;
