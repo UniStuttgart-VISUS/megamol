@@ -9,8 +9,6 @@
 
 #include "MapGenerator.h"
 
-#include "PerAtomFloatCall.h"
-
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
@@ -61,7 +59,6 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyCall2>();
             //   ...
             //
-            this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::PerAtomFloatCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

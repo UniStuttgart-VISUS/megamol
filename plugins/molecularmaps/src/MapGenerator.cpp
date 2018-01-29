@@ -3476,7 +3476,10 @@ bool MapGenerator::Render(Call& call) {
 		this->lat_lon_lines_vbo = 0;
 
 		// Get the new name of the input PDB and set the screenshot path.
-		auto pdb_name = splitString(getNameOfPDB(), '\\').back();
+        auto pdb_name =  getNameOfPDB();
+        if (!pdb_name.empty()) {
+            pdb_name = splitString(getNameOfPDB(), '\\').back();
+        }
 		auto prev_file_path = this->store_png_path.Param<param::FilePathParam>()->Value();
 		prev_file_path.Append(A2T(pdb_name.c_str()));
 		prev_file_path.Append(_T(".png"));

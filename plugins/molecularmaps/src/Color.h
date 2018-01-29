@@ -13,7 +13,7 @@
 
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
-#include "PerAtomFloatCall.h"
+#include "protein_calls/PerAtomFloatCall.h"
 #include <string>
 
 namespace megamol {
@@ -87,7 +87,7 @@ namespace molecularmaps {
         * @return The coloring mode.
         */
         static Color::ColoringMode GetModeByIndex(const protein_calls::MolecularDataCall *mol,
-            const protein_calls::BindingSiteCall *bs, const PerAtomFloatCall *pa, unsigned int idx);
+            const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa, unsigned int idx);
 
         /**
          * Get the corresponding name of a given coloring mode.
@@ -127,7 +127,7 @@ namespace molecularmaps {
         *
         * @return The number of coloring modes.
         */
-        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs, const PerAtomFloatCall *pa) {
+        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa) {
             return 13;
         }
 
@@ -166,7 +166,7 @@ namespace molecularmaps {
             vislib::TString maxGradColor,
             bool forceRecompute = false,
             const protein_calls::BindingSiteCall *bs = 0,
-            const PerAtomFloatCall *pa = 0);
+            const protein_calls::PerAtomFloatCall *pa = 0);
 
 
         /**
@@ -197,7 +197,7 @@ namespace molecularmaps {
             vislib::TString maxGradColor,
             bool forceRecompute = false,
             const protein_calls::BindingSiteCall *bs = 0,
-            const PerAtomFloatCall *pa = 0);
+            const protein_calls::PerAtomFloatCall *pa = 0);
 
 		/**
          * Make color table for all atoms acoording to compare two different
@@ -230,7 +230,7 @@ namespace molecularmaps {
 			vislib::TString maxGradColor,
 			bool forceRecompute = false,
             const protein_calls::BindingSiteCall *bs = 0,
-            const PerAtomFloatCall *pa = 0);
+            const protein_calls::PerAtomFloatCall *pa = 0);
 
          /**
          * Creates a rainbow color table with 'num' entries.

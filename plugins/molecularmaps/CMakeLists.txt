@@ -25,27 +25,26 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(LIBS vislib core glad protein_calls geometry_calls)
   
   if(MSVC)
-	include_directories("include" "src" "src/helper_includes" "src/Eigen")
+    include_directories("include" "src" "src/helper_includes" "src/Eigen")
   else()
-	get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
-	include_directories("include" "src" "src/helper_includes" "src/Eigen" ${CUDA_BIN_DIR}/../include)
-	add_definitions(-D__CUDACC__)
+    get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
+    include_directories("include" "src" "src/helper_includes" "src/Eigen" ${CUDA_BIN_DIR}/../include)
+    add_definitions(-D__CUDACC__)
   endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h") # The GLOB here is necessary since it seems not possible to remove the Eigen headers otherwise
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE eigen_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/Eigen/*.h")
   # CUDA related files
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
-  file(GLOB_RECURSE cuda_helpers RELATIVE "{CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
+  file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
   
   set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
   set_source_files_properties(cuda_header_files PROPERTIES LANGUAGE CUDA)
   set_source_files_properties(cuda_helpers PROPERTIES LANGUAGE CUDA)
-  
-  list(REMOVE_ITEM header_files cuda_helpers)
   
   if(UNIX)
     list(REMOVE_ITEM source_files "src/dllmain.cpp")
