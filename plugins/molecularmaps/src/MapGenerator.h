@@ -346,7 +346,7 @@ namespace molecularmaps {
 		 *
 		 * @return the name of the loaded pdb file from the PDBLoader.
 		 */
-		std::string getNameOfPDB();
+		std::string getNameOfPDB(protein_calls::MolecularDataCall & mdc);
 
 		/**
 		 * Group the surfaces between two circles of faces.

@@ -2007,27 +2007,12 @@ bool MapGenerator::findPoles(const vislib::math::Vector<float, 3>& p_eye_dir,
 /*
  * MapGenerator::getNameOfPDB
  */
-std::string MapGenerator::getNameOfPDB() {
-	std::string name = "";
-
-	// Dirty hack that uses the MegaMol object tree to find the PBDLoader.
-#if 0 // TODO turned off for now, the name has to be added to the MolecularDataCall
-	auto curr = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->Parent());
-	for (auto it = curr->ChildList_Begin(); it != curr->ChildList_End(); ++it) {
-		auto current = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(*it);
-		auto pdbl = std::dynamic_pointer_cast<protein::PDBLoader>(current);
-		if (pdbl) {
-			auto slot = pdbl->FindSlot("pdbFilename");
-			if (slot) {
-				auto pdb_slot = dynamic_cast<core::param::AbstractParamSlot*>(slot);
-				name = T2A(pdb_slot->Param<core::param::FilePathParam>()->Value());
-				name = name.substr(0, name.length() - 4);
-				break;
-			}
-		}
-	}
-#endif
-
+std::string MapGenerator::getNameOfPDB(MolecularDataCall & mdc) {
+    auto str = mdc.GetPDBFilename();
+    std::string name = T2A(str);
+    if (name.length() > 4) {
+        name = name.substr(0, name.length() - 4);
+    }
 	return name;
 }
 
@@ -3476,14 +3461,18 @@ bool MapGenerator::Render(Call& call) {
 		this->lat_lon_lines_vbo = 0;
 
 		// Get the new name of the input PDB and set the screenshot path.
-        auto pdb_name =  getNameOfPDB();
+        auto pdb_name =  getNameOfPDB(*mdc);
         if (!pdb_name.empty()) {
-            pdb_name = splitString(getNameOfPDB(), '\\').back();
+            pdb_name = splitString(pdb_name, '\\').back();
         }
-		auto prev_file_path = this->store_png_path.Param<param::FilePathParam>()->Value();
+        vislib::TString prev_file_path;
+        if (this->store_png_path.IsDirty()) {
+            prev_file_path = this->store_png_path.Param<param::FilePathParam>()->Value();
+            this->store_png_path.ResetDirty();
+        }
 		prev_file_path.Append(A2T(pdb_name.c_str()));
 		prev_file_path.Append(_T(".png"));
-		this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path);
+		this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
 		// Get the colour tables.
 		Color::ReadColorTableFromFile(cut_colour_param.Param<param::FilePathParam>()->Value(),

@@ -844,9 +844,11 @@ bool PDBLoader::getData( core::Call& call) {
         this->pdbFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->pdbfilename = T2A(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     dc->SetDataHash( this->datahash);
+    dc->SetPDBFilename(this->pdbfilename);
 
     if( !xtcFileValid ) {
         // no XTC file set or loaded --> use number of loaded frames
@@ -998,7 +1000,10 @@ bool PDBLoader::getExtent( core::Call& call) {
         this->pdbFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->pdbfilename = this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value();
     }
+
+    dc->SetPDBFilename(this->pdbfilename);
 
     // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
     vislib::math::Cuboid<float> bBoxPlus3;

@@ -727,6 +727,9 @@ namespace protein {
 
         /** Per atom filter information to be used by MolecularDataCall */
         vislib::Array<int> atomVisibility;
+
+        /** Storage of the pdb filename */
+        vislib::TString pdbfilename;
     };
 
 
