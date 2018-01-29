@@ -21,6 +21,7 @@
 #include "vislib/StringSerialiser.h"
 #include "vislib/assert.h"
 
+#include <iostream>
 #include <fstream>
 #include <ctime>
 
@@ -38,25 +39,21 @@ using namespace megamol::core;
 */
 KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     cinematicCallSlot("scene3D", "holds keyframe data"),
-    addKeyframeParam(              "01_addKeyframe", "Adds new keyframe at the currently selected time."),
-    setTotalAnimTimeParam(         "02_maxAnimTime", "The total timespan of the animation."),
-    setKeyframesToSameSpeed(       "03_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
-    snapAnimFramesParam(           "04_snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames."),
-    snapSimFramesParam(            "05_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
-    simTangentParam(               "06_straightenSimTangent", "Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe."),
-    addFixedAnimTimeParam(         "07_addFixedPerCentAnimTime", "Adds fixed per cent of animation time to currently selected keyframe when new keyframe is added."),
-    addFixedSimTimeParam(          "08_addFixedPerCentSimTime", "Adds fixed per cent of simulation time to currently selected keyframe when new keyframe is added."),
-
-    deleteSelectedKeyframeParam(   "editSelected::01_deleteKeyframe", "Deletes the currently selected keyframe."),
-    changeKeyframeParam(           "editSelected::02_applyView", "Apply current view to selected keyframe."),
-    editCurrentAnimTimeParam(      "editSelected::03_animTime", "Edit animation time of the selected keyframe."),
-    editCurrentSimTimeParam(       "editSelected::04_simTime", "Edit simulation time of the selected keyframe."),
-    editCurrentPosParam(           "editSelected::05_position", "Edit  position vector of the selected keyframe."),
-    editCurrentLookAtParam(        "editSelected::06_lookat", "Edit LookAt vector of the selected keyframe."),
-    resetLookAtParam(              "editSelected::07_resetLookat", "Reset the LookAt vector of the selected keyframe."),
-    editCurrentUpParam(            "editSelected::08_up", "Edit Up vector of the selected keyframe."),
-    editCurrentApertureParam(      "editSelected::09_apertureAngle", "Edit apperture angle of the selected keyframe."),
-
+    applyKeyframeParam(            "01_applyKeyframe", "Apply current settings to selected/new keyframe."),
+    undoChangesParam(              "02_undoChanges", "Undo changes."),
+    deleteSelectedKeyframeParam(   "03_deleteKeyframe", "Deletes the currently selected keyframe."),
+    setTotalAnimTimeParam(         "04_maxAnimTime", "The total timespan of the animation."),
+    snapAnimFramesParam(           "05_snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames."),
+    snapSimFramesParam(            "06_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
+    simTangentParam(               "07_linearizeSimTime", "Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe."),
+    //UNUSED setKeyframesToSameSpeed("05_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
+    editCurrentAnimTimeParam(      "editSelected::01_animTime", "Edit animation time of the selected keyframe."),
+    editCurrentSimTimeParam(       "editSelected::02_simTime", "Edit simulation time of the selected keyframe."),
+    editCurrentPosParam(           "editSelected::03_position", "Edit  position vector of the selected keyframe."),
+    editCurrentLookAtParam(        "editSelected::04_lookat", "Edit LookAt vector of the selected keyframe."),
+    resetLookAtParam(              "editSelected::05_resetLookat", "Reset the LookAt vector of the selected keyframe."),
+    editCurrentUpParam(            "editSelected::06_up", "Edit Up vector of the selected keyframe."),
+    editCurrentApertureParam(      "editSelected::07_apertureAngle", "Edit apperture angle of the selected keyframe."),
     fileNameParam(                 "storage::01_filename", "The name of the file to load or save keyframes."),
     saveKeyframesParam(            "storage::02_save", "Save keyframes to file."),
     loadKeyframesParam(            "storage::03_autoLoad", "Load keyframes from file when filename changes."),
@@ -105,13 +102,14 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->camViewLookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->camViewApertureangle = 30.0f;
     this->simTangentStatus     = false;
+    this->undoQueue.Clear();
 
     // init parameters
-    this->addKeyframeParam.SetParameter(new param::ButtonParam('a'));
-    this->MakeSlotAvailable(&this->addKeyframeParam);
+    this->applyKeyframeParam.SetParameter(new param::ButtonParam('a'));
+    this->MakeSlotAvailable(&this->applyKeyframeParam);
 
-    this->changeKeyframeParam.SetParameter(new param::ButtonParam('c'));
-    this->MakeSlotAvailable(&this->changeKeyframeParam);
+    this->undoChangesParam.SetParameter(new param::ButtonParam('u'));
+    this->MakeSlotAvailable(&this->undoChangesParam);
 
     this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam('d'));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
@@ -122,8 +120,8 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentSimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getSimTime()*this->totalSimTime, 0.0f));
     this->MakeSlotAvailable(&this->editCurrentSimTimeParam);
 
-    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
-    this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
+    //UNUSED this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
+    //UNUSED this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition()));
     this->MakeSlotAvailable(&this->editCurrentPosParam);
@@ -161,12 +159,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
     this->simTangentParam.SetParameter(new param::ButtonParam('t'));
     this->MakeSlotAvailable(&this->simTangentParam);
-
-    this->addFixedAnimTimeParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->addFixedAnimTimeParam);
-
-    this->addFixedSimTimeParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->addFixedSimTimeParam);
 }
 
 
@@ -366,7 +358,10 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
     this->deleteKeyframe(this->selectedKeyframe);
 
     // Insert dragged keyframe at new position
-    this->dragDropKeyframe.setAnimTime(ccc->getDropAnimTime());
+    float t = ccc->getDropAnimTime();
+    t = (t < 0.0f) ? (0.0f) : (t);
+    t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
+    this->dragDropKeyframe.setAnimTime(t);
     this->dragDropKeyframe.setSimTime(ccc->getDropSimTime());
     if (!this->addKeyframe(this->dragDropKeyframe)) {
         this->changeKeyframe(this->dragDropKeyframe);
@@ -374,6 +369,31 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
     // Set new slected keyframe
     this->selectedKeyframe = this->dragDropKeyframe;
     this->updateEditParameters(this->selectedKeyframe, false);
+
+    return true;
+}
+
+
+/*
+* KeyframeKeeper::appendUndoAction
+*/
+bool KeyframeKeeper::appendUndoAction(KeyframeKeeper::undoActionEnum act, Keyframe kf) {
+
+
+
+
+    return true;
+}
+
+
+/*
+* KeyframeKeeper::removeUndoAction
+*/
+bool KeyframeKeeper::undoAction() {
+
+
+
+
 
     return true;
 }
@@ -390,45 +410,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
     // UPDATE PARAMETERS
 
-    // addKeyframeParam -------------------------------------------------------
-    if (this->addKeyframeParam.IsDirty()) {
-        this->addKeyframeParam.ResetDirty();
-
-        // Get current camera for selected keyframe
-        this->selectedKeyframe.setCameraUp(this->camViewUp);
-        this->selectedKeyframe.setCameraPosition(this->camViewPosition);
-        this->selectedKeyframe.setCameraLookAt(this->camViewLookat);
-        this->selectedKeyframe.setCameraApertureAngele(this->camViewApertureangle);
-
-        // Add keyframe to array
-        if (!this->addKeyframe(this->selectedKeyframe)) {
-            // Choose new time if the last keyframe was tried to be replaced
-            if (this->keyframes.Last().getAnimTime() < this->totalAnimTime) {
-
-                float t = this->selectedKeyframe.getAnimTime();
-                t += (this->totalAnimTime * this->addFixedAnimTimeParam.Param<param::FloatParam>()->Value());
-                t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
-                this->selectedKeyframe.setAnimTime(t);
-
-                float s = this->selectedKeyframe.getSimTime();
-                s += this->addFixedSimTimeParam.Param<param::FloatParam>()->Value();
-                s = (s > 1.0f) ? (1.0f) : (s);
-                this->selectedKeyframe.setSimTime(s);
-
-                this->selectedKeyframe.setAnimTime(t);
-                this->addKeyframe(this->selectedKeyframe);
-            }
-            else {
-                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Add Keyframe] Unable to add new keyframe. Keyframe already exists.");
-            }
-        }
-
-        this->updateEditParameters(this->selectedKeyframe, false);
-    }
-
-    // changeKeyframeParam -------------------------------------------------------
-    if (this->changeKeyframeParam.IsDirty()) {
-        this->changeKeyframeParam.ResetDirty();
+    // applyKeyframeParam -------------------------------------------------------
+    if (this->applyKeyframeParam.IsDirty()) {
+        this->applyKeyframeParam.ResetDirty();
 
         // Get current camera for selected keyframe
         Keyframe tmpKf = this->selectedKeyframe;
@@ -437,11 +421,19 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         tmpKf.setCameraLookAt(this->camViewLookat);
         tmpKf.setCameraApertureAngele(this->camViewApertureangle);
 
-        // change existing keyframe
-        if (this->changeKeyframe(tmpKf)) {
+        // Try adding keyframe to array
+        if (this->addKeyframe(tmpKf)) {
             this->selectedKeyframe = tmpKf;
-            this->updateEditParameters(this->selectedKeyframe, false);
         }
+        // Try change existing keyframe
+        else if (this->changeKeyframe(tmpKf)) {
+            this->selectedKeyframe = tmpKf;
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Add Keyframe] Unable to apply settings to new/selested keyframe.");
+        }
+
+        this->updateEditParameters(this->selectedKeyframe, false);
     }
 
     // deleteSelectedKeyframeParam --------------------------------------------
@@ -452,6 +444,15 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Update to new selected keyframe
         this->selectedKeyframe = this->interpolateKeyframe(this->selectedKeyframe.getAnimTime());
         this->updateEditParameters(this->selectedKeyframe, false);
+    }
+
+    // undoChangesParam --------------------------------------------
+    if (this->undoChangesParam.IsDirty()) {
+        this->undoChangesParam.ResetDirty();
+
+        if (!this->undoAction()) {
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Undo Changes Param] Failed to undo changes.");
+        }
     }
 
     // setTotalAnimTimeParam ------------------------------------------------------
@@ -469,12 +470,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->totalAnimTime = tt;
     }
 
+    /* UNUSED
     // setKeyframesToSameSpeed ------------------------------------------------
     if (this->setKeyframesToSameSpeed.IsDirty()) {
         this->setKeyframesToSameSpeed.ResetDirty();
 
         this->setSameSpeed();
     }
+    */
 
     // editCurrentAnimTimeParam ---------------------------------------------------
     if (this->editCurrentAnimTimeParam.IsDirty()) {
@@ -507,19 +510,19 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->editCurrentSimTimeParam.ResetDirty();
 
         // Clamp time value to allowed min max
-        float t = this->editCurrentSimTimeParam.Param<param::FloatParam>()->Value();
-        t = vislib::math::Clamp(t, 0.0f, this->totalSimTime);
+        float s = this->editCurrentSimTimeParam.Param<param::FloatParam>()->Value();
+        s = vislib::math::Clamp(s, 0.0f, this->totalSimTime);
 
         // Get index of existing keyframe
         int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
         if (selIndex >= 0) { // If existing keyframe is selected, delete keyframe an add at the right position
-            this->selectedKeyframe.setSimTime(t / this->totalSimTime);
+            this->selectedKeyframe.setSimTime(s / this->totalSimTime);
             if (!this->changeKeyframe(this->selectedKeyframe)) {
                 this->addKeyframe(this->selectedKeyframe);
             }
         }
         // Write back clamped total time to parameter
-        this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(t, false);
+        this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(s, false);
     }
 
     // editCurrentPosParam ----------------------------------------------------
@@ -690,18 +693,22 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 */
 void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe *kf) {
 
-    float snapAnimTime = kf->getAnimTime();
-
     if (this->fps == 0) {
         vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
         return;
     }
 
     float fpsFrac = 1.0f / (float)(this->fps);
-    // Round to 5th position after the comma
-    snapAnimTime = floorf(snapAnimTime / fpsFrac + 0.5f) * fpsFrac;
 
-    kf->setAnimTime(snapAnimTime);
+    float t = std::round(kf->getAnimTime() / fpsFrac) * fpsFrac;
+
+    if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
+        t = std::round(t);
+    }
+
+    t = (t < 0.0f) ? (0.0f) : (t);
+    t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
+    kf->setAnimTime(t);
 }
 
 
@@ -710,9 +717,9 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe *kf) {
 */
 void KeyframeKeeper::snapKeyframe2SimFrame(Keyframe *kf) {
 
-    float snapSimTime = kf->getSimTime();
-    snapSimTime = floorf(snapSimTime*this->totalSimTime + 0.5f) / this->totalSimTime;
-    kf->setSimTime(snapSimTime);
+    float s = std::round(kf->getSimTime() * this->totalSimTime) / this->totalSimTime;
+
+    kf->setSimTime(s);
 }
 
 
@@ -748,7 +755,10 @@ void KeyframeKeeper::setSameSpeed() {
                 kfTime = kfDist / totalVelocity;
 
                 unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
-                this->keyframes[index].setAnimTime(this->keyframes[index - 1].getAnimTime() + kfTime);
+                float t = this->keyframes[index - 1].getAnimTime() + kfTime;
+                t = (t < 0.0f) ? (0.0f) : (t);
+                t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
+                this->keyframes[index].setAnimTime(t);
 
                 kfDist = 0.0f;
             }
@@ -907,13 +917,8 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf) {
 Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
     float t = time;
-
-    if (t < 0.0f) {
-        t = 0.0f;
-    }
-    if (t > this->totalAnimTime) {
-        t = this->totalAnimTime;
-    }
+    t = (t < 0.0f) ? (0.0f) : (t);
+    t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
     // Check if there is an existing keyframe at requested time
     for (int i = 0; i < this->keyframes.Count(); i++) {

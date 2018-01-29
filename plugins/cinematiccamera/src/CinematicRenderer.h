@@ -156,6 +156,8 @@ namespace megamol {
             bool                             toggleManipulator;
             bool                             manipOutsideModel;
             bool                             showHelpText;
+            clock_t                          mouseManipTime;
+            vislib::math::Point<float, 3>    modelBboxCenter;
 
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;

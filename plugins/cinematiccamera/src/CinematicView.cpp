@@ -532,9 +532,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glEnable(GL_DEPTH_TEST);
 
     vislib::StringA leftLabel = " [ CINEMATIV VIEW ] ";
-    vislib::StringA midLabel  = "";
+    vislib::StringA midLabel  = "  ";
     if (this->rendering) {
-        midLabel = " ... rendering in progress ... ";
+        midLabel  =  " ... rendering in progress ... ";
     }
     vislib::StringA rightLabel = "";
 
@@ -689,6 +689,11 @@ bool CinematicView::rtf_set_time_and_camera() {
         // Increase to next time step
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
         this->pngdata.animTime += fpsFrac;
+
+        // Fit animTime to exact full seconds (removing rounding error)
+        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
+            this->pngdata.animTime = std::round(this->pngdata.animTime);
+        }
 
         // Finish rendering if max anim time is reached
         if (this->pngdata.animTime > ccc->getTotalAnimTime()) {

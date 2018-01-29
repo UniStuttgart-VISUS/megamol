@@ -31,7 +31,8 @@ KeyframeManipulator::KeyframeManipulator(void) :
     this->sKfInArray          = false;;
     this->modelViewProjMatrix = vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>();
     this->viewportSize        = vislib::math::Dimension<int, 2>();
-    this->worldCamDir         = vislib::math::Vector<float, 3>();
+    this->worldCamLaDir       = vislib::math::Vector<float, 3>();
+    this->worldCamModDir      = vislib::math::Vector<float, 3>();
     this->isDataDirty         = true;
     this->manipOusideBbox     = false;
     this->kfArray.Clear();
@@ -55,7 +56,7 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 * KeyframeManipulator::KeyframeManipulator
 */
 bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wcd, bool mob) {
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob) {
 
     if (kfa == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
@@ -68,12 +69,13 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
     // Update ModelViewPorjectionMatrix ---------------------------------------
     // and position of world camera 
     bool recalcKf = false;
-    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamDir != wcd)) {
+    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamLaDir != wclad) || (this->worldCamModDir != wcmd)) {
         this->calculateCircleVertices();
         recalcKf = true;
     }
     this->modelViewProjMatrix = mvpm;
-    this->worldCamDir         = wcd;
+    this->worldCamLaDir       = wclad;
+    this->worldCamModDir      = wcmd;
 
     // Update viewport --------------------------------------------------------
     this->viewportSize.SetHeight(static_cast<int>(vph));
@@ -163,7 +165,7 @@ bool KeyframeManipulator::updateManipulators() {
 
     // Adaptive axis length of manipulators
     float radius = this->circleVertices[1].Length();
-    float length = vislib::math::Max((this->worldCamDir.Length() * this->axisLengthFac), 0.1f);
+    float length = vislib::math::Max((this->worldCamModDir.Length() * this->axisLengthFac), 0.1f);
     vislib::math::Vector<float, 3> tmpV;
     float len;
 
@@ -379,7 +381,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
             lineDiff *= -1.0f;
         }
     }
-    lineDiff *= ((this->worldCamDir.Length() * this->axisLengthFac));
+    lineDiff *= ((this->worldCamModDir.Length() * this->axisLengthFac));
 
 
     vislib::math::Vector<float, 3> tmpVec;
@@ -397,7 +399,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     }
 
     if (this->activeType == manipType::SELECTED_KF_UP) {
-        bool cwRot = ((this->worldCamDir - skfLaV).Norm() > (this->worldCamDir - skfPosV).Norm());
+        bool cwRot = ((this->worldCamLaDir - skfLaV).Norm() > (this->worldCamLaDir - skfPosV).Norm());
         vislib::math::Vector<float, 3> tmpSsUp = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f); // up vector for screen space
         if (!cwRot) {
             tmpSsUp.SetZ(-1.0f);
@@ -412,7 +414,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
         if (tmpSsRight.Dot(tmpSsMani + tmpDeltaMouse) < 0.0f) {
             lineDiff *= -1.0f;
         }
-        lineDiff /= ((this->worldCamDir.Length() * this->axisLengthFac));
+        lineDiff /= ((this->worldCamModDir.Length() * this->axisLengthFac));
 
         // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula"
         vislib::math::Vector<float, 3> k = (skfPosV - skfLaV); // => rotation axis = camera lookat
@@ -475,7 +477,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     this->circleVertices.AssertCapacity(this->circleSubDiv);
 
     // Get normal for plane the cirlce lies on
-    vislib::math::Vector<float, 3> normal = this->worldCamDir;
+    vislib::math::Vector<float, 3> normal = this->worldCamLaDir;
     // Check if world camera direction is zero ...
     if (normal.IsNull()) {
         normal.SetZ(1.0f);
@@ -483,7 +485,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     }
     normal.Normalise();
     // Size of radius depends on the length of the lookat direction vector
-    float radius = vislib::math::Max((this->worldCamDir.Length() * this->circleRadiusFac), 0.04f);
+    float radius = vislib::math::Max((this->worldCamModDir.Length() * this->circleRadiusFac), 0.02f);
     // Get arbitary vector vertical to normal
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
     rot.ScaleToLength(radius);

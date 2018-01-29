@@ -46,23 +46,20 @@ Only the bounding box of the model which should be shown is drawn.
 The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `01_addKeyframe` (Assigned key: `a`): Adds new keyframe at the currently selected time.
-* `02_maxAnimTime` (`1.0`): The total timespan of the animation.
-* `03_setSameSpeed` (Assigned key: `v`): Move keyframes to get same speed between all keyframes.
-* `04_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
-* `05_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
-* `06_straightenSimTangent` (Assigned key: `t`): Straighten tangent of simulation time between currently selectd keyframe and the following selected keyframe.
-* `07_addFixedPerCentAnimTime` (`0.1`): Adds fixed per cent of animation time to currently selected keyframe when new keyframe is added.
-* `08_addFixedPerCentSimTime` (`0.0`): Adds fixed per cent of simulation time to currently selected keyframe when new keyframe is added.
-* `editSelected - 01_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
-* `editSelected - 02_applyView` (Assigned key: `c`): Apply current view to selected keyframe.
-* `editSelected - 03_animTime` (`1.0`): Edit animation time of the selected keyframe.
-* `editSelected - 04_simTime` (`1.0`): Edit simulation time of the selected keyframe.
-* `editSelected - 05_position`: Edit the position vector of the selected keyframe.
-* `editSelected - 06_lookat`: Edit the look-at vector of the selected keyframe.
-* `editSelected - 07_resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
-* `editSelected - 08_up`:  Edit the up vector of the selected keyframe.
-* `editSelected - 09_apertureAngle`: Edit aperture angle of the selected keyframe.
+* `01_applyKeyframe` (Assigned key: `a`): Apply current settings to selected/new keyframe.
+* `02_undoChanges` (Assigned key: `u`): Undo changes.
+* `03_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
+* `04_maxAnimTime` (`1.0`): The total timespan of the animation.
+* `05_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
+* `06_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
+* `07_linearizeSimTime` (Assigned key: `t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
+* `editSelected - 01_animTime` (`1.0`): Edit animation time of the selected keyframe.
+* `editSelected - 02_simTime` (`1.0`): Edit simulation time of the selected keyframe.
+* `editSelected - 03_position`: Edit the position vector of the selected keyframe.
+* `editSelected - 04_lookat`: Edit the look-at vector of the selected keyframe.
+* `editSelected - 05_resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
+* `editSelected - 06_up`:  Edit the up vector of the selected keyframe.
+* `editSelected - 07_apertureAngle`: Edit aperture angle of the selected keyframe.
 * `storage - 01_filename`:  The name of the file to load or save keyframes. 
 * `storage - 02_save` (Assigned key: `s`): Save keyframes to file.
 * `storage - 03_autoLoad` (`true`): Load keyframes from file when filename changes.
@@ -74,6 +71,7 @@ The module `CinematicRenderer` exposes the following parameters:
 * `02_toggleManipulators` (Assigned key: `m`): Toggle between the position manipulators and the look-at and up manipulators of the selected keyframe.            
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
 * `04_manipOutsideModel` (Assigned key: `z`): Keep manipulators always outside of model bounding box.
+(Key `tab`: Toggle between mouse manipulation of scene camera or keyframe manipulators.)
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
@@ -90,7 +88,8 @@ The module `TimeLineRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_fontSize` (`15.0`): The font size.
-
+* `02_rightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
+* `02_leftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
 
 The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)

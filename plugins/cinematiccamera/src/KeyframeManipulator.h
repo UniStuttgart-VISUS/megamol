@@ -56,7 +56,8 @@ namespace megamol {
             * @param skf   The currently selected keyframe
             * @param vps   The current viewport size
             * @param mvpm  The current Model-View-Projection-Matrix
-            * @param wcd   The lookat direction of the world camera
+            * @param wclad The lookat direction of the world camera
+            * @param wcmd  The  direction between the world camera position and the model center
             * @param mob   If true manipulators always lie outside of model bbox
 
             * @return True if data was updated successfully.
@@ -64,7 +65,7 @@ namespace megamol {
             */
             bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
-                        vislib::math::Vector<float, 3> wcd, bool mob);
+                        vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob);
 
             /** Update extents.
             *   Grows bounding box to manipulators.
@@ -133,7 +134,8 @@ namespace megamol {
 
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::math::Dimension<int, 2>  viewportSize;
-            vislib::math::Vector<float, 3>   worldCamDir;
+            vislib::math::Vector<float, 3>   worldCamLaDir;
+            vislib::math::Vector<float, 3>   worldCamModDir;
             bool                             isDataSet;
             bool                             isDataDirty;
             vislib::math::Cuboid<float>      modelBbox;

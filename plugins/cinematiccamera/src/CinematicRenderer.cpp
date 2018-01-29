@@ -67,6 +67,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleManipulator = false;
     this->showHelpText      = false;
     this->manipOutsideModel = false;
+    this->mouseManipTime    = std::clock();
 
     // init parameters
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -199,6 +200,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
 
     // Compute bounding box including spline (in world space) and object (in world space).
     vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
+    this->modelBboxCenter = bboxCR3D.CalcCenter();
 
     // Grow bounding box to manipulators and get information of bbox of model
     this->manipulator.updateExtents(&bboxCR3D);
@@ -446,7 +448,10 @@ bool CinematicRenderer::Render(Call& call) {
         // Update manipulator data
         this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
             cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
-            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(), this->manipOutsideModel);
+            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(),
+            cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
+            this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(), 
+            this->manipOutsideModel);
         // Draw manipulators
         this->manipulator.draw();
     }
@@ -491,13 +496,18 @@ bool CinematicRenderer::Render(Call& call) {
     float vpW = (float)(vpWidth);
 
     vislib::StringA leftLabel  = " [ TRACKING SHOT VIEW ] ";
-    vislib::StringA midLabel   = " Manipulation Mode: Camera ";
 
-    // parameter 'enableMouseSelection' in View3D
-    //std::cout << cr3d->PeekCallerSlot()->Parent()->Name() << std::endl;
-    if (false) {
+    vislib::StringA midLabel = "  "; // " Manipulation Mode: Camera ";
+    if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
         midLabel = " Manipulation Mode: Keyframe ";
     }
+    // parameter 'enableMouseSelection' in View3D
+    // View3D this->toggleMouseSelection
+    //std::cout << cr3d->PeekCallerSlot()->Parent()->Name() << std::endl;
+    //megamol::core::view::MouseFlags mf = cr3d->GetMouseFlags();
+    //std::cout << "X: " << cr3d->GetMouseX() << " - Y: " << cr3d->GetMouseY() << " - Flags: " << mf << std::endl;   
+    //megamol::core::view::View3D *v3d = dynamic_cast<megamol::core::view::View3D *>(cr3d->PeekCallerSlot()->Parent()->GetCoreInstance());
+
     vislib::StringA rightLabel = " [h] Show help text ";
     if (this->showHelpText) {
         rightLabel = " [h] Hide help text ";
@@ -543,12 +553,12 @@ bool CinematicRenderer::Render(Call& call) {
     if (this->showHelpText) {
         vislib::StringA helpText = "";
         helpText += "-----[ GLOBAL ]-----\n";
-        helpText += "[a] Add new keyframe.\n";
-        helpText += "[c] Apply cinematic view to selected keyframe.\n";
+        helpText += "[a] Apply current settings to selected/new keyframe.\n";
         helpText += "[d] Delete selected keyframe.\n";
         helpText += "[l] Reset Look-At of selected keyframe.\n";
         helpText += "[r] Start/Stop rendering complete animation.\n";
         helpText += "[s] Save keyframes to file.\n";
+        helpText += "[u] Undo changes.\n";
         helpText += "[space] Toggle animation preview.\n";
         helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
         helpText += "[m] Show different keyframe manipulators.\n";
@@ -561,20 +571,21 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[left mouse button] Select keyframe.\n";
         helpText += "[right mouse button] Drag & drop keyframe.\n";
         helpText += "[middle mouse button] Time axis scaling at mouse position.\n";
-        //helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
-        //helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
+        helpText += "[right/left] Move to right/left animation time frame.\n";
+        //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
+        //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
         float htFontSize  = vpW*0.025f; // max % of viewport width
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
-        float htNumOfRows = 19.0f; // Number of rows the help text has
+        float htNumOfRows = 20.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
             htFontSize -= 0.001f;
             htStrHeight = this->theFont.LineHeight(htFontSize);
         }
-        float htStrWidth = this->theFont.LineWidth(htFontSize, "--------------------------------------------------------------------"); // Length of longest help text line
+        float htStrWidth = this->theFont.LineWidth(htFontSize, "----------------------------------------------------------------------"); // Length of longest help text line
         htStrHeight      = this->theFont.LineHeight(htFontSize);
         htY              = htX + htStrHeight*htNumOfRows;
         // Draw background colored quad
@@ -619,6 +630,8 @@ bool CinematicRenderer::Render(Call& call) {
 *
 */
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+
+    this->mouseManipTime = std::clock();
 
     bool consume = false;
 

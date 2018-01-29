@@ -97,6 +97,29 @@ namespace megamol {
             bool                                 simTangentStatus;
             Keyframe                             simTangentKf;
 
+            enum undoActionEnum {
+                UNDO_ADD    = 0,
+                UNDO_DELETE = 1,
+                UNDO_MODIFY = 2
+            };
+
+            class undoAction {  
+                public:
+                    /** */
+                    inline bool operator==(undoAction const& rhs) {
+                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe));
+                    }
+                    /** */
+                    inline bool operator!=(undoAction const& rhs) {
+                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe));
+                    }
+
+                   undoActionEnum action;
+                   Keyframe       keyframe;
+            };
+
+            vislib::Array<undoAction> undoQueue;
+
             /**********************************************************************
             * functions
             ***********************************************************************/
@@ -136,6 +159,11 @@ namespace megamol {
             /** */
             void snapKeyframe2SimFrame(Keyframe *kf);
 
+            /**   */
+            bool appendUndoAction(KeyframeKeeper::undoActionEnum act, Keyframe kf);
+            /**   */
+            bool undoAction();
+
             /**********************************************************************
             * callback stuff
             **********************************************************************/
@@ -165,13 +193,13 @@ namespace megamol {
             **********************************************************************/
 
             /** */
-            core::param::ParamSlot addKeyframeParam;
+            core::param::ParamSlot applyKeyframeParam;
             /** */
-            core::param::ParamSlot changeKeyframeParam;
+            core::param::ParamSlot undoChangesParam;
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
-            core::param::ParamSlot setKeyframesToSameSpeed;
+            //UNUSED core::param::ParamSlot setKeyframesToSameSpeed;
 			/**param for current keyframe aniamtion time */
 			core::param::ParamSlot editCurrentAnimTimeParam;
             /**param for current keyframe simulation time */
@@ -200,11 +228,6 @@ namespace megamol {
             core::param::ParamSlot  snapSimFramesParam;
             /** */
             core::param::ParamSlot  simTangentParam;
-
-            /** */
-            core::param::ParamSlot  addFixedAnimTimeParam;
-            /** */
-            core::param::ParamSlot  addFixedSimTimeParam;
 		};
 
 		/** Description class typedef */

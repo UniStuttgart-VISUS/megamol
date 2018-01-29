@@ -44,6 +44,8 @@ using namespace megamol::cinematiccamera;
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
     rulerFontParam( "01_fontSize", "The font size."),
+    moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
+    moveLeftFrame( "03_leftFrame", "Move to left animation time frame."),
 
 #ifndef USE_SIMPLE_FONT
 	theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
@@ -97,6 +99,12 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     // init parameters
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
+
+    this->moveRightFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
+    this->MakeSlotAvailable(&this->moveRightFrame);
+
+    this->moveLeftFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
+    this->MakeSlotAvailable(&this->moveLeftFrame);
 }
 
 
@@ -228,6 +236,37 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
     }
+    if (this->moveRightFrame.IsDirty()) {
+        this->moveRightFrame.ResetDirty();
+        // Set selected animation time to right animation time frame
+        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float fpsFrac = 1.0f / (float)(this->fps);
+        float t = std::round(at / fpsFrac) * fpsFrac;
+        t += fpsFrac;
+        if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
+            t = std::round(t);
+        }
+        t = (t > this->animTotalTime) ? (this->animTotalTime) : (t);
+        ccc->setSelectedKeyframeTime(t);
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        std::cout << "right: " << t << std::endl;
+    }
+    if (this->moveLeftFrame.IsDirty()) {
+        this->moveLeftFrame.ResetDirty();
+        // Set selected animation time to left animation time frame
+        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float fpsFrac = 1.0f / (float)(this->fps);
+        float t = std::round(at / fpsFrac) * fpsFrac;
+        t -= fpsFrac;
+        if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
+            t = std::round(t);
+        }
+        t = (t < 0.0f) ? (0.0f) : (t);
+        ccc->setSelectedKeyframeTime(t);
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        std::cout << "left: " << t << std::endl;
+    }
+
 
     vislib::StringA tmpStr;
     float strWidth;
@@ -564,9 +603,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float vpW = cr->GetViewport().GetSize().GetWidth();
 
     vislib::StringA leftLabel = " [ TIME LINE VIEW ] ";
-    vislib::StringA midLabel = "";
+    vislib::StringA midLabel = "  ";
     midLabel.Format("Animation time: %.3f | Animation frame: %.3f | Simulation time: %.3f ", aT, aF, sT);
-    vislib::StringA rightLabel = "";
+    vislib::StringA rightLabel = "  ";
     
     float lbFontSize = (CC_MENU_HEIGHT);
     float leftLabelWidth = this->theFont.LineWidth(lbFontSize, leftLabel);
