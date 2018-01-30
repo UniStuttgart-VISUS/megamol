@@ -10,11 +10,11 @@ if(BUILD_OSPRAY_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
 
   find_package(ospray CONFIG REQUIRED)
 
-  set(LIBS vislib core glad mmstd_trisoup protein_calls ${OSPRAY_LIBRARIES})
+  set(LIBS vislib core glad geometry_calls protein_calls ${OSPRAY_LIBRARIES})
   include_directories("include" "src" ${OSPRAY_INCLUDE_DIRS})
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
