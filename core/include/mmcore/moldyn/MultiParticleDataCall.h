@@ -50,6 +50,13 @@ namespace moldyn {
             COLDATA_FLOAT_I //< single float value to be mapped by a transfer function
         };
 
+        /** possible values for the id data */
+        enum IDDataType {
+            IDDATA_NONE,
+            IDDATA_UINT32,
+            IDDATA_UINT64
+        };
+
         /**
          * Ctor
          */
@@ -179,6 +186,34 @@ namespace moldyn {
         }
 
         /**
+         * Answer the id data type
+         *
+         * @return The id data type
+         */
+        inline IDDataType GetIDDataType(void) const {
+            return this->idDataType;
+        }
+
+        /**
+         * Answer the id data pointer
+         *
+         * @return The id data pointer
+         */
+        inline const void * GetIDData(void) const {
+            return this->idPtr;
+        }
+
+        /**
+         * Answer the id data stride.
+         * It represents the distance to the succeeding id.
+         *
+         * @return The id data stride in byte.
+         */
+        inline unsigned int GetIDDataStride(void) const {
+            return this->idStride;
+        }
+
+        /**
          * Sets the colour data
          *
          * @param t The type of the colour data
@@ -267,6 +302,22 @@ namespace moldyn {
             this->vertDataType = t;
             this->vertPtr = p;
             this->vertStride = s;
+        }
+
+        /**
+         * Sets the ID data
+         *
+         * @param t The type of the ID data
+         * @param p The pointer to the ID data (must not be NULL if t
+         *          is not 'IDDATA_NONE'
+         * @param s The stride of the ID data
+         */
+        void SetIDData(IDDataType t, const void *p,
+            unsigned int s = 0) {
+            ASSERT(this->disabledNullChecks || (p != NULL) || (t == IDDATA_NONE));
+            this->idDataType = t;
+            this->idPtr = p;
+            this->idStride = s;
         }
 
         /**
@@ -419,6 +470,15 @@ namespace moldyn {
 
         /** local Cluster Infos*/
         ClusterInfos *clusterInfos;
+
+        /** The particle ID type */
+        IDDataType idDataType;
+
+        /** The particle ID pointer */
+        void const* idPtr;
+
+        /** The particle ID stride */
+        unsigned int idStride;
     };
 
 

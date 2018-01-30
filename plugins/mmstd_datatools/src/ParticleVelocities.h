@@ -90,6 +90,7 @@ namespace datatools {
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
         core::param::ParamSlot cyclZSlot;
+        core::param::ParamSlot dtSlot;
         size_t datahash;
         unsigned int time;
 

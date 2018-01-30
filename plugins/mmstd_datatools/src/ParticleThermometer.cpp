@@ -35,6 +35,7 @@ datatools::ParticleThermometer::ParticleThermometer(void)
         minTempSlot("minTemp", "the detected minimum temperature"),
         maxTempSlot("maxTemp", "the detected maximum temperature"),
         massSlot("mass", "the mass of the particles"),
+        freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         maxDist(0.0f),
@@ -69,6 +70,9 @@ datatools::ParticleThermometer::ParticleThermometer(void)
 
     this->massSlot.SetParameter(new core::param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->massSlot);
+
+    this->freedomSlot.SetParameter(new core::param::FloatParam(1.5f)); // works for single-center models. 3 degrees of freedom -> 3/2
+    this->MakeSlotAvailable(&this->freedomSlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermometer::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermometer::getExtentCallback);
@@ -125,6 +129,7 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
     theRadius = theRadius * theRadius;
     float theMass = this->massSlot.Param<core::param::FloatParam>()->Value();
+    float theFreedom = this->freedomSlot.Param<core::param::FloatParam>()->Value();
     int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
     auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     size_t allpartcnt = 0;
@@ -308,11 +313,17 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                     }
                     for (int c = 0; c < 3; ++c) {
                         float vd = sum[c] / num_matches;
+                        // this is ... I don't know.
                         theTemperature[c] = (theMass / 2) * (sqsum[c] - num_matches * vd * vd);
+                        // this would be local velocity compared to velocity of surrounding (vd)
+                        //theTemperature[c] = (theMass / 2) * (velocityBase[c] - vd) * (velocityBase[c] - vd);
                     }
 
                     // no square root, so actually kinetic energy
-                    float tempMag = theTemperature[0] * theTemperature[0] + theTemperature[1] * theTemperature[1] + theTemperature[2] * theTemperature[2];
+                    float tempMag = theTemperature[0] + theTemperature[1] + theTemperature[2];
+                    //tempMag /= (num_matches * num_matches * 4.0f) / 9.0f;
+                    tempMag /= num_matches * theFreedom;
+                    //tempMag /= theFreedom;
                     newColors[myIndex] = tempMag;
                     if (tempMag < minTemp[threadIdx]) minTemp[threadIdx] = tempMag;
                     if (tempMag > maxTemp[threadIdx]) maxTemp[threadIdx] = tempMag;
@@ -342,8 +353,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     }
 
     // now the colors are known, inject them
-    in->SetUnlocker(nullptr, false);
-    in->Unlock();
+    //in->SetUnlocker(nullptr, false);
+    //in->Unlock();
 
     //vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: found temperatures between %f and %f", minTemp, maxTemp);
 

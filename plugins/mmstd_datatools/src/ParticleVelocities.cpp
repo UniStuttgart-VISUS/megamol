@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "ParticleVelocities.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "nanoflann.hpp"
 #include "vislib/sys/Log.h"
 #include "vislib/math/ShallowVector.h"
@@ -71,6 +72,7 @@ datatools::ParticleVelocities::ParticleVelocities(void)
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction"),
         cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction"),
         cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction"),
+        dtSlot("dt", "time difference between two sequential time steps"),
         outDataSlot("outData", "Provides one frame less than the source, but with velocities"),
         inDataSlot("inData", "Takes the particle data, sorted, with constant particle numbers over all frames"),
         cachedVertexData(), cachedNumLists(0), cachedTime(-1), cachedDirData(),
@@ -84,6 +86,9 @@ datatools::ParticleVelocities::ParticleVelocities(void)
 
     this->cyclZSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclZSlot);
+
+    this->dtSlot.SetParameter(new core::param::FloatParam(0.1f, 0.0000001f, 100.0f));
+    this->MakeSlotAvailable(&this->dtSlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
@@ -112,7 +117,6 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
     megamol::core::AbstractGetData3DCall *out;
     if (outMPDC != nullptr) out = outMPDC;
     if (outDPDC != nullptr) out = outDPDC;
-
     unsigned int time = out->FrameID() + 1; // we do not give out the original frame 0 because it has no previous frame
 
     if (this->cachedTime != time - 1 || this->datahash != in->DataHash()) {
@@ -131,10 +135,12 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         //    vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
         //    return false;
         //}
-        if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
-            return false;
-        }
+        do {
+            if (!(*in)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
+                return false;
+            }
+        } while (in->FrameID() != time - 1); // did we get correct frame?
         cachedVertexData.resize(in->GetParticleListCount(), nullptr);
         cachedVertexDataType.resize(in->GetParticleListCount());
         cachedGlobalRadius.resize(in->GetParticleListCount(), 0.0f);
@@ -168,29 +174,35 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
+        //in->SetUnlocker(nullptr, false);
         in->Unlock();
         this->cachedTime = time - 1;
         this->cachedNumLists = in->GetParticleListCount();
 
         in->SetFrameID(time, true);
-        if (!(*in)(1)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
-            return false;
-        }
-        if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
-            return false;
-        }
+        do {
+            if (!(*in)(1)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+                return false;
+            }
+            if (!(*in)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
+                return false;
+            }
+        } while (in->FrameID() != time); // did we get correct frame?
         if (cachedNumLists != in->GetParticleListCount()) {
             vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
                 "between frames %u (%u) and %u (%u)", time - 1, cachedNumLists, time, in->GetParticleListCount());
             return false;
         }
-
+        this->dtSlot.ForceSetDirty();
+    }
+    if (this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
+            || this->dtSlot.IsDirty()) {
         bool cycleX = this->cyclXSlot.Param<core::param::BoolParam>()->Value();
         bool cycleY = this->cyclYSlot.Param<core::param::BoolParam>()->Value();
         bool cycleZ = this->cyclZSlot.Param<core::param::BoolParam>()->Value();
+        float theDt = this->dtSlot.Param<core::param::FloatParam>()->Value();
 
         float *cachedPtr, *currentPtr;
         vislib::math::Vector<float, 3> diff;
@@ -215,15 +227,15 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
                 currentPtr = reinterpret_cast<float*>(static_cast<char*>(const_cast<void*>(in->AccessParticles(i).GetVertexData()))
                     + p * this->cachedStride[i]);
                 diff = getDifference(cachedPtr, currentPtr, cycleX, cycleY, cycleZ, bbox.Width(), bbox.Height(), bbox.Depth());
-                this->cachedDirData[i][p * 3 + 0] = diff[0];
-                this->cachedDirData[i][p * 3 + 1] = diff[1];
-                this->cachedDirData[i][p * 3 + 2] = diff[2];
+                this->cachedDirData[i][p * 3 + 0] = diff[0] / theDt;
+                this->cachedDirData[i][p * 3 + 1] = diff[1] / theDt;
+                this->cachedDirData[i][p * 3 + 2] = diff[2] / theDt;
             }
 
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
-        in->Unlock();
+        //in->SetUnlocker(nullptr, false);
+        //in->Unlock();
     }
     if (outMPDC != nullptr) {
         outMPDC->SetParticleListCount(cachedNumLists);
