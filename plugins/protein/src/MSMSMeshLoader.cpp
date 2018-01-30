@@ -24,7 +24,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::trisoup;
+using namespace megamol::geocalls;
 using namespace megamol::protein_calls;
 using namespace megamol::protein;
 
@@ -669,7 +669,7 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
 		if (atCnt == 0 || !found) {
 			this->obj[frameID]->AddVertexAttribPointer(atomIndex);
 		} else {
-			this->obj[frameID]->setVertexAttribData(atomIndex, attIdx);
+			this->obj[frameID]->SetVertexAttribData(atomIndex, attIdx);
 		}
 
 

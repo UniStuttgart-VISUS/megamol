@@ -16,7 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
@@ -164,7 +164,7 @@ namespace protein {
 		/** the index of the vertex attribute */
 		unsigned int attIdx;
 
-        vislib::Array<trisoup::CallTriMeshData::Mesh*> obj;
+        vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
 
 		int prevTime;
     };

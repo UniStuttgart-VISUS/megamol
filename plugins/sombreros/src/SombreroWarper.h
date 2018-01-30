@@ -15,7 +15,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
 #include "CUDAKernels.cuh"
@@ -132,7 +132,7 @@ namespace sombreros {
 		 * @param ctmd The incoming call with the source data.
 		 * @return True on success, false otherwise.
 		 */
-		bool copyMeshData(megamol::trisoup::CallTriMeshData& ctmd);
+		bool copyMeshData(megamol::geocalls::CallTriMeshData& ctmd);
 
 		/**
 		 * Fills holes in the generated mesh that were detected beforehand by findSombreroBorder(void)
@@ -231,7 +231,7 @@ namespace sombreros {
 		core::param::ParamSlot maxAllowedLiftingDistance;
 
 		/** Vector containing the modified mesh data */
-		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
+		std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
 		/** The vertex positions of the mesh */
 		std::vector<std::vector<float>> vertices;

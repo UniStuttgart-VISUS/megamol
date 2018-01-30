@@ -17,7 +17,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
 
@@ -95,7 +95,7 @@ namespace sombreros {
 		 * @param bsCall The call containing the binding site data.
 		 * @return True on success, false otherwise.
 		 */
-		bool cutMesh(trisoup::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+		bool cutMesh(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
 		/** The lastly received data hash */
 		SIZE_T lastDataHash;
@@ -125,7 +125,7 @@ namespace sombreros {
 		core::CalleeSlot cutMeshOutSlot;
 
 		/** Vector containing the modified mesh data */
-		std::vector<trisoup::CallTriMeshData::Mesh> meshVector;
+		std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
 		/** Vector containing the information for each vertex whether to keep it or not */
 		std::vector<std::vector<bool>> vertexKeepFlags;

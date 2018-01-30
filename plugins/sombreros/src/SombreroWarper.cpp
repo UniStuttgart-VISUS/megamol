@@ -8,7 +8,7 @@
 
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
 #include "tesselator.h"
@@ -17,7 +17,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::trisoup;
+using namespace megamol::geocalls;
 using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
