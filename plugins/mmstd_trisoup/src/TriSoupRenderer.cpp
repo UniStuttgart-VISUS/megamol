@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "CallVolumetricData.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -48,7 +48,7 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         colorSlot("color", "The triangle color (if not colors are read from file)"),
         doScaleSlot("doScale", "Do Scaling of model data") {
 
-    this->getDataSlot.SetCompatibleCall<trisoup::CallTriMeshDataDescription>();
+    this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getVolDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<CallVolumetricData> >();
@@ -129,7 +129,7 @@ bool TriSoupRenderer::GetCapabilities(Call& call) {
 bool TriSoupRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
-    trisoup::CallTriMeshData *ctmd = this->getDataSlot.CallAs<trisoup::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
@@ -163,7 +163,7 @@ void TriSoupRenderer::release(void) {
 bool TriSoupRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
-    trisoup::CallTriMeshData *ctmd = this->getDataSlot.CallAs<trisoup::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
@@ -260,13 +260,13 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glColor3f(r, g, b);
 
     for (unsigned int i = 0; i < ctmd->Count(); i++) {
-        const trisoup::CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
+        const megamol::geocalls::CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
         switch (obj.GetVertexDataType()) {
-            case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
                 ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
                 break;
-            case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
                 ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
                 break;
             default: continue;
@@ -278,10 +278,10 @@ bool TriSoupRenderer::Render(Call& call) {
                 normals = true;
             }
             switch (obj.GetNormalDataType()) {
-                case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
                     ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
                     ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
                     break;
                 default: continue;
@@ -297,13 +297,13 @@ bool TriSoupRenderer::Render(Call& call) {
                 colors = true;
             }
             switch (obj.GetColourDataType()) {
-                case trisoup::CallTriMeshData::Mesh::DT_BYTE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
                     ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
                     ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
                     ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
                     break;
                 default: continue;
@@ -319,10 +319,10 @@ bool TriSoupRenderer::Render(Call& call) {
                 textures = true;
             }
             switch (obj.GetTextureCoordinateDataType()) {
-                case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
                     ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
                     ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
                     break;
                 default: continue;
@@ -333,7 +333,7 @@ bool TriSoupRenderer::Render(Call& call) {
         }
 
         if (obj.GetMaterial() != NULL) {
-            const trisoup::CallTriMeshData::Material &mat = *obj.GetMaterial();
+            const megamol::geocalls::CallTriMeshData::Material &mat = *obj.GetMaterial();
 
             if (doLighting) {
                 ::glDisable(GL_COLOR_MATERIAL);
@@ -378,13 +378,13 @@ bool TriSoupRenderer::Render(Call& call) {
 
         if (obj.HasTriIndexPointer() != NULL) {
             switch (obj.GetTriDataType()) {
-                case trisoup::CallTriMeshData::Mesh::DT_BYTE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
                     ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_UINT16:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
                     ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_UINT32:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
                     ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
                     break;
                 default: continue;
@@ -426,10 +426,10 @@ bool TriSoupRenderer::Render(Call& call) {
         ::glColor3f(1.0f, 0.0f, 0.0f);
         for (unsigned int i = 0; i < ctmd->Count(); i++) {
             switch (ctmd->Objects()[i].GetVertexDataType()) {
-                case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
                     ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
                     break;
-                case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
                     ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
                     break;
                 default: continue;

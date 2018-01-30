@@ -93,6 +93,14 @@ namespace gl {
             return showFpsInTitle;
         }
         void SetShowFPSinTitle(bool show);
+        inline bool ShowSamplesinTitle() const {
+            return showFragmentsInTitle;
+        }
+        void SetShowSamplesinTitle(bool show);
+        inline bool ShowPrimsinTitle() const {
+            return showPrimsInTitle;
+        }
+        void SetShowPrimsinTitle(bool show);
 
         inline bool IsAlive() const {
             return hWnd != nullptr;
@@ -138,7 +146,10 @@ namespace gl {
         bool showFpsInTitle;
         std::chrono::system_clock::time_point fpsSyncTime;
         bool topMost;
-
+        GLuint fragmentQuery;
+        GLuint primsQuery;
+        bool showFragmentsInTitle;
+        bool showPrimsInTitle;
     };
 
 } /* end namespace gl */

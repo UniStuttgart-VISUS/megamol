@@ -13,6 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "io/MMSPDFrameData.h"
 #include "io/MMSPDHeader.h"
 #include "vislib/sys/CriticalSection.h"
@@ -188,6 +189,14 @@ namespace io {
              */
             void SetData(core::moldyn::MultiParticleDataCall& call, const MMSPDHeader& header);
 
+            /**
+             * Sets the directional data into the call
+             *
+             * @param call The call to receive the data
+             * @param header The data set header
+             */
+            void SetDirData(core::moldyn::DirectionalParticleDataCall& call, const MMSPDHeader& header);
+
         private:
 
             /**
@@ -311,6 +320,15 @@ namespace io {
         bool getDataCallback(core::Call& caller);
 
         /**
+         * Gets the directional data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        bool getDirDataCallback(core::Call& caller);
+
+        /**
          * Gets the data from the source.
          *
          * @param caller The calling call.
@@ -324,6 +342,9 @@ namespace io {
 
         /** The slot for requesting data */
         core::CalleeSlot getData;
+
+        /** The slot for requesting directional data */
+        core::CalleeSlot getDirData;
 
         /** The data header */
         MMSPDHeader dataHeader;
