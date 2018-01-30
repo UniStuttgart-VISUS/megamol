@@ -174,7 +174,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
+        //in->SetUnlocker(nullptr, false);
         in->Unlock();
         this->cachedTime = time - 1;
         this->cachedNumLists = in->GetParticleListCount();
@@ -234,8 +234,8 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
 
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
-        in->Unlock();
+        //in->SetUnlocker(nullptr, false);
+        //in->Unlock();
     }
     if (outMPDC != nullptr) {
         outMPDC->SetParticleListCount(cachedNumLists);
