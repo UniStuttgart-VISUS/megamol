@@ -191,6 +191,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         imgSize.x = cr->GetCameraParameters()->TileRect().Width();
         imgSize.y = cr->GetCameraParameters()->TileRect().Height();
         framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+        db.resize(imgSize.x * imgSize.y);
         ospCommit(framebuffer);
     }
 
@@ -264,12 +265,15 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
 
 
-        db.resize(imgSize.x * imgSize.y);
+
 
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-        getOpenGLDepthFromOSPPerspective(*cr, db.data());
-        //db = (float*)ospMapFrameBuffer(framebuffer, OSP_FB_DEPTH);
+        if (this->useDB.Param<core::param::BoolParam>()->Value()) {
+            getOpenGLDepthFromOSPPerspective(*cr, db.data());
+        } else {
+            db.clear();
+        }
 
         // write a sequence of single pictures while the screenshooter is running
         // only for debugging
@@ -288,7 +292,6 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
         // clear stuff
         ospUnmapFrameBuffer(fb, framebuffer);
-        //ospUnmapFrameBuffer(db, framebuffer);
 
 
         this->releaseOSPRayStuff();
@@ -297,11 +300,9 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     } else {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-        //db = (float*)ospMapFrameBuffer(framebuffer, OSP_FB_DEPTH);
-        //db = getOpenGLDepthFromOSPPerspective(*cr);
+
         this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, *cr);
         ospUnmapFrameBuffer(fb, framebuffer);
-        //ospUnmapFrameBuffer(db, framebuffer);
     }
 
     osprayShader.Disable();

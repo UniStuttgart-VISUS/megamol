@@ -125,6 +125,7 @@ protected:
     core::param::ParamSlot rd_type;
     core::param::ParamSlot rd_ptBackground;
     core::param::ParamSlot shadows;
+    core::param::ParamSlot useDB;
 
 
 

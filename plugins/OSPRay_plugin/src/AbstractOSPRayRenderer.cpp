@@ -44,7 +44,10 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     // pathtracer renderer parameters
     rd_ptBackground("PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity"),
     // Call lights 
-    getLightSlot("getLight", "Connects to a light source") {
+    getLightSlot("getLight", "Connects to a light source"),
+    // Use depth buffer component
+    useDB("useDBcomponent", "activates depth composition with OpenGL content")
+    {
 
     // ospray lights
     lightsToRender = NULL;
@@ -86,6 +89,10 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     //PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
+
+    // Depth
+    this->useDB << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useDB);
 
 }
 
@@ -161,9 +168,6 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &s
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glEnable(GL_DEPTH_TEST);
-
-        //glUniform1f(shader.ParameterLocation("f"), static_cast<float>(cr.GetCameraParameters()->FarClip()));
-        //glUniform1f(shader.ParameterLocation("n"), static_cast<float>(cr.GetCameraParameters()->NearClip()));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->tex);
