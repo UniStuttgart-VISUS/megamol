@@ -31,13 +31,13 @@ using namespace cinematiccamera;
 * CinematicView::CinematicView
 */
 CinematicView::CinematicView(void) : View3D(),
-	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+    keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
 #ifndef USE_SIMPLE_FONT
     theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
-	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
+    selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
     resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
     resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
@@ -606,9 +606,16 @@ bool CinematicView::rtf_setup() {
     // Create new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
-    struct tm *now = new struct tm;
+    struct tm *now = nullptr;
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+    struct tm nowdata;
+    now = &nowdata;
     localtime_s(now, &t);
-    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
+#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+    now = localtime(&t);
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);

@@ -63,24 +63,24 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     selectedKeyframe(), dragDropKeyframe()
     {
 
-	// setting up callback
-	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
+    // setting up callback
+    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
 
-	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
+    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
 
-	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
+    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
 
-	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
+    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
 
     this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
         CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetSelectedKeyframeAtTime), &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
 
-	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
+    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
 
     this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
         CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetDragKeyframe), &KeyframeKeeper::CallForSetDragKeyframe);
@@ -88,7 +88,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
         CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetDropKeyframe), &KeyframeKeeper::CallForSetDropKeyframe);
 
-	this->MakeSlotAvailable(&this->cinematicCallSlot);
+    this->MakeSlotAvailable(&this->cinematicCallSlot);
 
     // init variables
     this->keyframes.Clear();
@@ -146,11 +146,11 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
     this->MakeSlotAvailable(&this->fileNameParam);
 
-	this->saveKeyframesParam.SetParameter(new param::ButtonParam('s'));
-	this->MakeSlotAvailable(&this->saveKeyframesParam);
+    this->saveKeyframesParam.SetParameter(new param::ButtonParam('s'));
+    this->MakeSlotAvailable(&this->saveKeyframesParam);
 
-	this->loadKeyframesParam.SetParameter(new param::BoolParam(true));
-	this->MakeSlotAvailable(&this->loadKeyframesParam);
+    this->loadKeyframesParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->loadKeyframesParam);
     this->loadKeyframesParam.ForceSetDirty(); 
 
     this->snapAnimFramesParam.SetParameter(new param::ButtonParam('f'));
@@ -175,7 +175,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 */
 KeyframeKeeper::~KeyframeKeeper(void) {
 
-	this->Release();
+    this->Release();
 }
 
 
@@ -184,7 +184,7 @@ KeyframeKeeper::~KeyframeKeeper(void) {
 */
 bool KeyframeKeeper::create(void) {
 
-	return true;
+    return true;
 }
 
 
@@ -193,7 +193,7 @@ bool KeyframeKeeper::create(void) {
 */
 void KeyframeKeeper::release(void) {
 
-	// intentionally empty
+    // intentionally empty
 }
 
 
@@ -202,8 +202,8 @@ void KeyframeKeeper::release(void) {
 */
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 
-	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-	if (ccc == NULL) return false;
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
     // Get bounding box center
     this->bboxCenter = ccc->getBboxCenter();
@@ -217,7 +217,7 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
     // Get Frames per Second
     this->fps = ccc->getFps();
 
-	return true;
+    return true;
 }
 
 
@@ -226,14 +226,14 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 
-	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-	if (ccc == NULL) return false;
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
     this->interpolSteps = ccc->getInterpolationSteps();
     this->refreshInterpolCamPos(this->interpolSteps);
     ccc->setInterpolCamPositions(&this->interpolCamPos);
 
-	return true;
+    return true;
 }
 
 
@@ -267,8 +267,8 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 
-	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-	if (ccc == NULL) return false;
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
     // Update selected keyframe
     this->selectedKeyframe = this->interpolateKeyframe(ccc->getSelectedKeyframe().getAnimTime());
@@ -310,7 +310,7 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
         }
     }
 
-	return true;
+    return true;
 }
 
 
@@ -319,15 +319,15 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 
-	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-	if (ccc == NULL) return false;
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
     this->camViewUp            = ccc->getCameraParameters()->Up();
     this->camViewPosition      = ccc->getCameraParameters()->Position();
     this->camViewLookat        = ccc->getCameraParameters()->LookAt();
     this->camViewApertureangle = ccc->getCameraParameters()->ApertureAngle();
 
-	return true;
+    return true;
 }
 
 
@@ -384,8 +384,8 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
-	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-	if (ccc == NULL) return false;
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
 
     // UPDATE PARAMETERS
@@ -1060,9 +1060,15 @@ void KeyframeKeeper::saveKeyframes() {
         vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [Save Keyframes] No filename given. Using default filename.");
 
         time_t t = std::time(0);  // get time now
-        struct tm *now = new struct tm;
+        struct tm *now = nullptr;
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+        struct tm nowdata;
+        now = &nowdata;
         localtime_s(now, &t);
-        this->filename.Format("keyframes_%i%i%i-%i%i%i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+        now = localtime(&t);
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+        this->filename.Format("keyframes_%i%02i%02i-%02i%02i%02i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
         this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
