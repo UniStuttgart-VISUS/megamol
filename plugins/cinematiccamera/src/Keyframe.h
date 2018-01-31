@@ -33,12 +33,12 @@ namespace megamol {
 
             /** */
             inline bool operator==(Keyframe const& rhs){
-				return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime));
+				return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime) && (this->simTime == rhs.simTime));
 			}
 
             /** */
             inline bool operator!=(Keyframe const& rhs) {
-                return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime));
+                return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime) || (this->simTime != rhs.simTime));
             }
 
             ///// GET /////

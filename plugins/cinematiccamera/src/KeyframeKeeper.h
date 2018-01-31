@@ -95,30 +95,45 @@ namespace megamol {
             // Variables only used in keyframe keeper
             vislib::StringA                      filename;
             bool                                 simTangentStatus;
-            Keyframe                             simTangentKf;
 
-            enum undoActionEnum {
-                UNDO_ADD    = 0,
-                UNDO_DELETE = 1,
-                UNDO_MODIFY = 2
+            // undo queue stuff -----------------------------------------------
+
+            enum UndoActionEnum {
+                UNDO_NONE   = 0,
+                UNDO_ADD    = 1,
+                UNDO_DELETE = 2,
+                UNDO_MODIFY = 3
             };
 
-            class undoAction {  
+            class UndoAction {  
                 public:
-                    /** */
-                    inline bool operator==(undoAction const& rhs) {
-                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe));
+                    /** functions **/
+                    UndoAction() {
+                        this->action       = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
+                        this->keyframe     = Keyframe();
+                        this->prevKeyframe = Keyframe();
                     }
-                    /** */
-                    inline bool operator!=(undoAction const& rhs) {
-                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe));
+                    UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf) {
+                        this->action       = act;
+                        this->keyframe     = kf;
+                        this->prevKeyframe = prevkf;
                     }
-
-                   undoActionEnum action;
+                    ~UndoAction() { }
+                    inline bool operator==(UndoAction const& rhs) {
+                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prevKeyframe == rhs.prevKeyframe));
+                    }
+                    inline bool operator!=(UndoAction const& rhs) {
+                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prevKeyframe != rhs.prevKeyframe));
+                    }
+                    /** variables **/
+                   UndoActionEnum action;
                    Keyframe       keyframe;
+                   Keyframe       prevKeyframe;
             };
 
-            vislib::Array<undoAction> undoQueue;
+            vislib::Array<UndoAction> undoQueue;
+
+            int undoQueueIndex;
 
             /**********************************************************************
             * functions
@@ -128,13 +143,13 @@ namespace megamol {
             Keyframe interpolateKeyframe(float time);
 
             /** Add new keyframe to keyframe array. */
-            bool addKeyframe(Keyframe kf);
+            bool addKeyframe(Keyframe kf, bool undo);
 
-            /** change existing keyframe in keyframe array.*/
-            bool changeKeyframe(Keyframe kf);
+            /** replace existing keyframe in keyframe array.*/
+            bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo);
 
             /** Delete keyframe from keyframe array.*/
-            bool deleteKeyframe(Keyframe kf);
+            bool deleteKeyframe(Keyframe kf, bool undo);
 
             /** Load keyframes from file.*/
             void loadKeyframes(void);
@@ -146,12 +161,15 @@ namespace megamol {
             void refreshInterpolCamPos(unsigned int s);
 
             /** Updating edit parameters without setting them dirty.*/
-            void updateEditParameters(Keyframe kf, bool setDirty);
+            void updateEditParameters(Keyframe kf);
 
             /** Set speed between all keyframes to same speed 
              *  Uses interpolSteps for approximation of path between keyframe positions 
              */
             void setSameSpeed(void);
+
+            /** */
+            void linearizeSimTangent(Keyframe stkf);
 
             /** */
             void snapKeyframe2AnimFrame(Keyframe *kf);
@@ -160,9 +178,13 @@ namespace megamol {
             void snapKeyframe2SimFrame(Keyframe *kf);
 
             /**   */
-            bool appendUndoAction(KeyframeKeeper::undoActionEnum act, Keyframe kf);
+            bool undo();
+
             /**   */
-            bool undoAction();
+            bool redo();
+
+            /**   */
+            bool addNewUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf);
 
             /**********************************************************************
             * callback stuff
@@ -196,6 +218,8 @@ namespace megamol {
             core::param::ParamSlot applyKeyframeParam;
             /** */
             core::param::ParamSlot undoChangesParam;
+            /** */
+            core::param::ParamSlot redoChangesParam;
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */

@@ -85,7 +85,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam('z'));
+    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam('w'));
     this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
 
     // Load spline interpolation keyframes at startup
@@ -499,18 +499,11 @@ bool CinematicRenderer::Render(Call& call) {
 
     vislib::StringA midLabel = "  "; // " Manipulation Mode: Camera ";
     if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
-        midLabel = " Manipulation Mode: Keyframe ";
+        midLabel = " keyframe manipulation Mode ";
     }
-    // parameter 'enableMouseSelection' in View3D
-    // View3D this->toggleMouseSelection
-    //std::cout << cr3d->PeekCallerSlot()->Parent()->Name() << std::endl;
-    //megamol::core::view::MouseFlags mf = cr3d->GetMouseFlags();
-    //std::cout << "X: " << cr3d->GetMouseX() << " - Y: " << cr3d->GetMouseY() << " - Flags: " << mf << std::endl;   
-    //megamol::core::view::View3D *v3d = dynamic_cast<megamol::core::view::View3D *>(cr3d->PeekCallerSlot()->Parent()->GetCoreInstance());
-
-    vislib::StringA rightLabel = " [h] Show help text ";
+    vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
-        rightLabel = " [h] Hide help text ";
+        rightLabel = " [h] hide help text ";
     }
 
     float lbFontSize        = (CC_MENU_HEIGHT); 
@@ -558,19 +551,20 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[l] Reset Look-At of selected keyframe.\n";
         helpText += "[r] Start/Stop rendering complete animation.\n";
         helpText += "[s] Save keyframes to file.\n";
-        helpText += "[u] Undo changes.\n";
+        helpText += "[u] Undo keyframe changes.\n";
+        helpText += "[z] Redo keyframe changes.\n";
         helpText += "[space] Toggle animation preview.\n";
         helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
         helpText += "[m] Show different keyframe manipulators.\n";
-        helpText += "[z] Keep manipulators always outside of model bounding box.\n";
+        helpText += "[w] Keep manipulators always outside of model bounding box.\n";
         helpText += "[tab] Toggle selection mode for manipulators.\n";
         helpText += "-----[ TIME LINE VIEW ]-----\n";
         helpText += "[f] Snap all keyframes to animation frames.\n";
         helpText += "[g] Snap all keyframes to simulation frames.\n";
-        helpText += "[t] Linearise simulation time between two keyframes.\n";
+        helpText += "[t] Linearize simulation time between two keyframes.\n";
         helpText += "[left mouse button] Select keyframe.\n";
-        helpText += "[right mouse button] Drag & drop keyframe.\n";
         helpText += "[middle mouse button] Time axis scaling at mouse position.\n";
+        helpText += "[right mouse button] Drag & drop keyframe.\n";
         helpText += "[right/left] Move to right/left animation time frame.\n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
@@ -579,7 +573,7 @@ bool CinematicRenderer::Render(Call& call) {
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
-        float htNumOfRows = 20.0f; // Number of rows the help text has
+        float htNumOfRows = 21.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
             htFontSize -= 0.001f;

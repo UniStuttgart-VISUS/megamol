@@ -281,6 +281,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         this->cam.Parameters()->SetView(skf.getCamPosition(), skf.getCamLookAt(), skf.getCamUp());
         this->cam.Parameters()->SetApertureAngle(skf.getCamApertureAngle());
+
         loadNewCamParams = true;
     }
 
@@ -535,6 +536,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::StringA midLabel  = "  ";
     if (this->rendering) {
         midLabel  =  " ... rendering in progress ... ";
+    }
+    else if (this->playAnim) {
+        midLabel = " playing animation ";
     }
     vislib::StringA rightLabel = "";
 
