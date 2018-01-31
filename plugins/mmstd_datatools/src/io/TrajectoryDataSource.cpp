@@ -3,6 +3,9 @@
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "geometry_calls/LinesDataCall.h"
 
@@ -15,6 +18,10 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
     , maxFrameSlot("frame::max", "maximal frame id to load")
     , minIDSlot("id::min", "minimal particle id to load")
     , maxIDSlot("id::max", "maximal particle id to load")
+    , transitionOnlySlot("trans::transitionOnly", "Show only transition trajectories")
+    , transitionAxisSlot("trans::axis", "Select axis perpendicular to transition planes")
+    , minTransitionPlaneSlot("trans::min", "Set position of first transition plane")
+    , maxTransitionPlaneSlot("trans::max", "Set position of second transition plane")
     , datahash(0)
     , data_param_changed_(true) {
     this->trajOutSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(),
@@ -44,6 +51,24 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
     this->maxIDSlot << new megamol::core::param::IntParam(std::numeric_limits<int>::max(), 0, std::numeric_limits<int>::max());
     this->maxIDSlot.SetUpdateCallback(&TrajectoryDataSource::dataParamChanged);
     this->MakeSlotAvailable(&this->maxIDSlot);
+
+    this->transitionOnlySlot << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->transitionOnlySlot);
+
+    auto ep = new megamol::core::param::EnumParam(0);
+    ep->SetTypePair(0, "x-axis");
+    ep->SetTypePair(1, "y-axis");
+    ep->SetTypePair(2, "z-axis");
+    this->transitionAxisSlot << ep;
+    this->MakeSlotAvailable(&this->transitionAxisSlot);
+
+    this->minTransitionPlaneSlot << new megamol::core::param::FloatParam(0.0f, std::numeric_limits<float>::lowest(),
+        std::numeric_limits<float>::max());
+    this->MakeSlotAvailable(&this->minTransitionPlaneSlot);
+
+    this->maxTransitionPlaneSlot << new megamol::core::param::FloatParam(0.0f, std::numeric_limits<float>::lowest(),
+        std::numeric_limits<float>::max());
+    this->MakeSlotAvailable(&this->maxTransitionPlaneSlot);
 }
 
 
@@ -183,6 +208,17 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
         this->lines_data.clear();
         this->lines_data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
 
+        bool const transitionOnly = this->transitionOnlySlot.Param<megamol::core::param::BoolParam>()->Value();
+
+        unsigned int const trans_axis = this->transitionAxisSlot.Param<megamol::core::param::EnumParam>()->Value();
+
+        float tmp_min_trans = this->minTransitionPlaneSlot.Param<megamol::core::param::FloatParam>()->Value();
+        float tmp_max_trans = this->maxTransitionPlaneSlot.Param<megamol::core::param::FloatParam>()->Value();
+        if (tmp_max_trans < tmp_min_trans) std::swap(tmp_min_trans, tmp_max_trans);
+
+        float const min_bor{tmp_min_trans};
+        float const max_bor{tmp_max_trans};
+
         FILE* file = fopen(this->filepath_.c_str(), "rb");
 
         auto start_it = std::find_if(this->sorted_id_list.cbegin(), this->sorted_id_list.cend(),
@@ -214,23 +250,25 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                 fseek(file, id_offset + sizeof(uint64_t) + 2 * sizeof(unsigned int)
                     + 3 * sizeof(float)*this->file_header_.frame_count + frame_begin_offset / (frame_element_offset), SEEK_SET);
                 fread(cur_is_fluid_data.data(), sizeof(char), cur_is_fluid_data.size(), file);
+                bool has_trans = false;
                 for (size_t i = 0; i < cur_data.size() / 3 - 1; ++i) {
-                    if (cur_is_fluid_data[i] == cur_is_fluid_data[i + 1] == 0) {
+                    if (cur_is_fluid_data[i] == 0 && cur_is_fluid_data[i + 1] == 0) {
                         // no transition, is gas
                         cur_col_data[i * 4] = 255;
                         cur_col_data[i * 4 + 1] = 0;
                         cur_col_data[i * 4 + 2] = 0;
-                    } else if (cur_is_fluid_data[i] == cur_is_fluid_data[i + 1] == 1) {
+                    } else if (cur_is_fluid_data[i] == 1 && cur_is_fluid_data[i + 1] == 1) {
                         // no transition, is fluid
                         cur_col_data[i * 4] = 0;
                         cur_col_data[i * 4 + 1] = 0;
                         cur_col_data[i * 4 + 2] = 255;
-                    } else if (cur_is_fluid_data[i] != cur_is_fluid_data[i + 1]) {
+                    } /*else if (cur_is_fluid_data[i] != cur_is_fluid_data[i + 1]) {
                         // transition
+                        //has_trans = true;
                         cur_col_data[i * 4] = 0;
                         cur_col_data[i * 4 + 1] = 255;
                         cur_col_data[i * 4 + 2] = 0;
-                    }
+                    }*/
 
                     if (std::abs(cur_data[(i + 1) * 3] - cur_data[i * 3]) > half_x_dim
                         || std::abs(cur_data[(i + 1) * 3 + 1] - cur_data[i * 3 + 1]) > half_y_dim
@@ -238,15 +276,58 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                         cur_col_data[i * 4 + 3] = 42;
                         cur_col_data[(i + 1) * 4 + 3] = 42;
                     }
+
+                    if (   (cur_data[i * 3 + trans_axis] < min_bor  && cur_data[(i + 1) * 3 + trans_axis]>= min_bor && cur_data[(i + 1) * 3 + trans_axis] < max_bor)
+                        || (cur_data[i * 3 + trans_axis] >= min_bor && cur_data[i * 3 + trans_axis] < max_bor       && cur_data[(i + 1) * 3 + trans_axis] < min_bor)
+                        || (cur_data[i * 3 + trans_axis] < max_bor  && cur_data[i * 3 + trans_axis] > min_bor       && cur_data[(i + 1) * 3 + trans_axis] >= max_bor)
+                        || (cur_data[i * 3 + trans_axis] >= max_bor && cur_data[(i + 1) * 3 + trans_axis] < max_bor && cur_data[(i + 1) * 3 + trans_axis] > min_bor)) {
+                        has_trans = true;
+                        cur_col_data[i * 4] = 0;
+                        cur_col_data[i * 4 + 1] = 255;
+                        cur_col_data[i * 4 + 2] = 0;
+                    }
                 }
-                this->data.push_back(cur_data);
-                this->col_data.push_back(cur_col_data);
-                // set the line
-                megamol::geocalls::LinesDataCall::Lines l;
-                l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
-                    this->col_data.back().data(), true);
+                unsigned int last_el = cur_data.size() / 3 - 1;
+                if (cur_is_fluid_data[last_el-1] == 0 && cur_is_fluid_data[last_el] == 0) {
+                    // no transition, is gas
+                    cur_col_data[last_el * 4] = 255;
+                    cur_col_data[last_el * 4 + 1] = 0;
+                    cur_col_data[last_el * 4 + 2] = 0;
+                } else if (cur_is_fluid_data[last_el-1] == 1 && cur_is_fluid_data[last_el] == 1) {
+                    // no transition, is fluid
+                    cur_col_data[last_el * 4] = 0;
+                    cur_col_data[last_el * 4 + 1] = 0;
+                    cur_col_data[last_el * 4 + 2] = 255;
+                }
+
+                if (std::abs(cur_data[last_el * 3] - cur_data[(last_el-1) * 3]) > half_x_dim
+                    || std::abs(cur_data[last_el * 3 + 1] - cur_data[(last_el-1) * 3 + 1]) > half_y_dim
+                    || std::abs(cur_data[last_el * 3 + 2] - cur_data[(last_el-1) * 3 + 2]) > half_z_dim) {
+                    cur_col_data[(last_el - 1) * 4 + 3] = 42;
+                    cur_col_data[last_el * 4 + 3] = 42;
+                }
+
+                if (   (cur_data[(last_el - 1) * 3 + trans_axis] < min_bor  && cur_data[last_el * 3 + trans_axis] >= min_bor      && cur_data[last_el * 3 + trans_axis] < max_bor)
+                    || (cur_data[(last_el - 1) * 3 + trans_axis] >= min_bor && cur_data[(last_el - 1) * 3 + trans_axis] < max_bor && cur_data[last_el * 3 + trans_axis] < min_bor)
+                    || (cur_data[(last_el - 1) * 3 + trans_axis] < max_bor  && cur_data[(last_el - 1) * 3 + trans_axis] > min_bor && cur_data[last_el * 3 + trans_axis] >= max_bor)
+                    || (cur_data[(last_el - 1) * 3 + trans_axis] >= max_bor && cur_data[last_el * 3 + trans_axis] < max_bor       && cur_data[last_el * 3 + trans_axis] > min_bor)) {
+                    has_trans = true;
+                    cur_col_data[last_el * 4] = 0;
+                    cur_col_data[last_el * 4 + 1] = 255;
+                    cur_col_data[last_el * 4 + 2] = 0;
+                }
+
+
+                if (!transitionOnly || has_trans) {
+                    this->data.push_back(cur_data);
+                    this->col_data.push_back(cur_col_data);
+                    // set the line
+                    megamol::geocalls::LinesDataCall::Lines l;
+                    l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
+                        this->col_data.back().data(), true);
                     //vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
-                this->lines_data.push_back(l);
+                    this->lines_data.push_back(l);
+                }
             }
         }
 

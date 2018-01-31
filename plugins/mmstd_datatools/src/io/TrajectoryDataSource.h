@@ -66,6 +66,14 @@ private:
 
     megamol::core::param::ParamSlot maxIDSlot;
 
+    megamol::core::param::ParamSlot transitionOnlySlot;
+
+    megamol::core::param::ParamSlot transitionAxisSlot;
+
+    megamol::core::param::ParamSlot minTransitionPlaneSlot;
+
+    megamol::core::param::ParamSlot maxTransitionPlaneSlot;
+
     size_t datahash;
 
     std::string filepath_;
