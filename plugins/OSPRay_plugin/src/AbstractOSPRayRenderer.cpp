@@ -394,6 +394,7 @@ bool AbstractOSPRayRenderer::AbstractIsDirty() {
         this->rd_spp.IsDirty() ||
         this->rd_maxRecursion.IsDirty() ||
         this->rd_ptBackground.IsDirty() ||
+        this->useDB.IsDirty() ||
         this->framebufferIsDirty) {
         return true;
     } else {
@@ -412,6 +413,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
     this->rd_ptBackground.ResetDirty();
+    this->useDB.ResetDirty();
     this->framebufferIsDirty = false;
 }
 
