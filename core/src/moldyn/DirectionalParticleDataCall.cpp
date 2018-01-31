@@ -22,7 +22,7 @@ unsigned int megamol::core::moldyn::DirectionalParticles::DirDataSize[] = {0, 12
  */
 moldyn::DirectionalParticles::DirectionalParticles(void)
         : SimpleSphericalParticles(), dirDataType(DIRDATA_NONE), dirPtr(NULL),
-        dirStride(0) {
+    dirStride(0), dirAccessor{new DirData_None{}} {
     // intentionally empty
 }
 
