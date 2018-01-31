@@ -322,14 +322,21 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
             for (auto const& el : ret_matches) {
                 const float *vptr;
+                const float *dptr;
                 if (inDpdc != nullptr) {
-                    vptr = myDirPts->get_position(thePart);
+                    vptr = myDirPts->get_position(el.first);
+                    dptr = myDirPts->get_velocity(el.first);
                 } else {
-                    vptr = myPts->get_position(thePart);
+                    vptr = myPts->get_position(el.first);
                 }
                 this->matchData.push_back(vptr[0]);
                 this->matchData.push_back(vptr[1]);
                 this->matchData.push_back(vptr[2]);
+                if (inDpdc != nullptr) {
+                    this->matchData.push_back(dptr[0]);
+                    this->matchData.push_back(dptr[1]);
+                    this->matchData.push_back(dptr[2]);
+                }
             }
         } else {
         // reset all colors
@@ -403,10 +410,11 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             outMpdc->AccessParticles(0).SetGlobalColour(255, 255, 255);
         } else if (outDpdc != nullptr) {
             outDpdc->SetParticleListCount(1);
-            outDpdc->AccessParticles(0).SetCount(this->matchData.size() / 3);
+            outDpdc->AccessParticles(0).SetCount(this->matchData.size() / 6);
             outDpdc->AccessParticles(0).SetVertexData(megamol::core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZ,
-                this->matchData.data());
-            outDpdc->AccessParticles(0).SetDirData(megamol::core::moldyn::DirectionalParticles::DIRDATA_NONE, nullptr);
+                this->matchData.data(), 6*sizeof(float));
+            outDpdc->AccessParticles(0).SetDirData(megamol::core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ,
+                this->matchData.data() + 3, 6 * sizeof(float));
             outDpdc->AccessParticles(0).SetGlobalColour(255, 255, 255);
         }
     }
