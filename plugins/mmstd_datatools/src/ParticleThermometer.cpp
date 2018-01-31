@@ -36,6 +36,8 @@ datatools::ParticleThermometer::ParticleThermometer(void)
         maxTempSlot("maxTemp", "the detected maximum temperature"),
         massSlot("mass", "the mass of the particles"),
         freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model"),
+        toggleNewColorSlot("newColor", "toggles between output of new color and default color"),
+        toggleNewVelocitySlot("newVelocities", "toggles between output of new and old velocities"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         maxDist(0.0f),
@@ -73,6 +75,12 @@ datatools::ParticleThermometer::ParticleThermometer(void)
 
     this->freedomSlot.SetParameter(new core::param::FloatParam(1.5f)); // works for single-center models. 3 degrees of freedom -> 3/2
     this->MakeSlotAvailable(&this->freedomSlot);
+
+    this->toggleNewColorSlot << new megamol::core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->toggleNewColorSlot);
+
+    this->toggleNewVelocitySlot << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->toggleNewVelocitySlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermometer::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermometer::getExtentCallback);
@@ -155,6 +163,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         } else {
             this->newColors.resize(totalParts);
         }
+
+        this->newVelocities.resize(totalParts * 3);
 
         allParts.clear();
         allParts.reserve(totalParts);
@@ -317,6 +327,7 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
                         theTemperature[c] = (theMass / 2) * (sqsum[c] - num_matches * vd * vd);
                         // this would be local velocity compared to velocity of surrounding (vd)
                         //theTemperature[c] = (theMass / 2) * (velocityBase[c] - vd) * (velocityBase[c] - vd);
+                        this->newVelocities[myIndex * 3 + c] = vd;
                     }
 
                     // no square root, so actually kinetic energy
@@ -369,10 +380,14 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
             }
             outMPDC->AccessParticles(i).SetCount(pl.GetCount());
             outMPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, 
-                this->newColors.data() + allpartcnt, 0);
-            outMPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
-                this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            if (this->toggleNewColorSlot.Param < megamol::core::param::BoolParam>()->Value()) {
+                outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    this->newColors.data() + allpartcnt, 0);
+                outMPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
+                    this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            } else {
+                outMPDC->AccessParticles(i).SetGlobalColour(255, 255, 255);
+            }
             allpartcnt += pl.GetCount();
         }
     } else if (outDPDC != nullptr) {
@@ -385,11 +400,20 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
             }
             outDPDC->AccessParticles(i).SetCount(pl.GetCount());
             outDPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outDPDC->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
-            outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
-            outDPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
-                this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            if (this->toggleNewColorSlot.Param < megamol::core::param::BoolParam>()->Value()) {
+                outDPDC->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    this->newColors.data() + allpartcnt, 0);
+                outDPDC->AccessParticles(i).SetColourMapIndexValues(this->minTempSlot.Param<core::param::FloatParam>()->Value(),
+                    this->maxTempSlot.Param<core::param::FloatParam>()->Value());
+            } else {
+                outDPDC->AccessParticles(i).SetGlobalColour(255, 255, 255);
+            }
+            if (this->toggleNewVelocitySlot.Param<megamol::core::param::BoolParam>()->Value()) {
+                outDPDC->AccessParticles(i).SetDirData(megamol::core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ,
+                    this->newVelocities.data() + allpartcnt * 3, 0);
+            } else {
+                outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
+            }
             allpartcnt += pl.GetCount();
         }
     }
