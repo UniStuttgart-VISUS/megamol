@@ -21,10 +21,10 @@
 namespace megamol {
 namespace sombreros {
 
-	class TunnelToBFactor : public megamol::core::Module {
-	public:
+    class TunnelToBFactor : public megamol::core::Module {
+    public:
 
-		/**
+        /**
          * Answer the name of this module.
          *
          * @return The name of this module.
@@ -51,54 +51,54 @@ namespace sombreros {
             return true;
         }
 
-		/** Ctor. */
-		TunnelToBFactor(void);
+        /** Ctor. */
+        TunnelToBFactor(void);
 
-		/** Dtor. */
-		virtual ~TunnelToBFactor(void);
+        /** Dtor. */
+        virtual ~TunnelToBFactor(void);
 
-	protected:
+    protected:
 
-		/**
+        /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
          */
-		virtual bool create(void);
+        virtual bool create(void);
 
-		/**
+        /**
          * Implementation of 'release'.
          */
-		virtual void release(void);
+        virtual void release(void);
 
-		/**
+        /**
          * Call for get data.
          */
-		bool getData(megamol::core::Call& call);
+        bool getData(megamol::core::Call& call);
 
-		/**
+        /**
          * Call for get extent.
          */
-		bool getExtent(megamol::core::Call& call);
-	private:
+        bool getExtent(megamol::core::Call& call);
+    private:
 
-		/**
-		 * Applies the B-Factor changes to the outgoing call
-		 */
-		void applyBFactor(protein_calls::MolecularDataCall * outCall, protein_calls::MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall);
+        /**
+         * Applies the B-Factor changes to the outgoing call
+         */
+        void applyBFactor(protein_calls::MolecularDataCall * outCall, protein_calls::MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall);
 
-		/** Slot for the MolecularDataCall output */
-		core::CalleeSlot dataOutSlot;
+        /** Slot for the MolecularDataCall output */
+        core::CalleeSlot dataOutSlot;
 
-		/** Slot for the molecule data input */
-		core::CallerSlot molInSlot;
+        /** Slot for the molecule data input */
+        core::CallerSlot molInSlot;
 
-		/** Slot for the tunnel input */
-		core::CallerSlot tunnelInSlot;
+        /** Slot for the tunnel input */
+        core::CallerSlot tunnelInSlot;
 
-		/** Storage for the new bFactors */
-		std::vector<float> bFactors;
-	};
+        /** Storage for the new bFactors */
+        std::vector<float> bFactors;
+    };
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

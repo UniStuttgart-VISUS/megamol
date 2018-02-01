@@ -24,10 +24,10 @@
 namespace megamol {
 namespace sombreros {
 
-	class TunnelCutter : public core::Module {
-	public:
+    class TunnelCutter : public core::Module {
+    public:
 
-		/**
+        /**
          * Answer the name of this module.
          *
          * @return The name of this module.
@@ -54,106 +54,106 @@ namespace sombreros {
             return true;
         }
 
-		/** Ctor. */
-		TunnelCutter(void);
+        /** Ctor. */
+        TunnelCutter(void);
 
-		/** Dtor. */
-		virtual ~TunnelCutter(void);
+        /** Dtor. */
+        virtual ~TunnelCutter(void);
 
-	protected:
+    protected:
 
-		/**
+        /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
          */
-		virtual bool create(void);
+        virtual bool create(void);
 
-		/**
+        /**
          * Implementation of 'release'.
          */
-		virtual void release(void);
+        virtual void release(void);
 
-		/**
+        /**
          * Call for get data.
          */
-		bool getData(megamol::core::Call& call);
+        bool getData(megamol::core::Call& call);
 
-		/**
+        /**
          * Call for get extent.
          */
-		bool getExtent(megamol::core::Call& call);
+        bool getExtent(megamol::core::Call& call);
 
-	private:
+    private:
 
-		/** 
-		 * Cuts away unnecessary parts from the mesh and writes the result into the meshVector
-		 *
-		 * @param meshCall The call containing the input mesh. 
-		 * @param tunnelCall The call containing the tunnel data the cut region is based on.
-		 * @param molCall The call containing the molecular data.
-		 * @param bsCall The call containing the binding site data.
-		 * @return True on success, false otherwise.
-		 */
-		bool cutMesh(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+        /** 
+         * Cuts away unnecessary parts from the mesh and writes the result into the meshVector
+         *
+         * @param meshCall The call containing the input mesh. 
+         * @param tunnelCall The call containing the tunnel data the cut region is based on.
+         * @param molCall The call containing the molecular data.
+         * @param bsCall The call containing the binding site data.
+         * @return True on success, false otherwise.
+         */
+        bool cutMesh(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
-		/** The lastly received data hash */
-		SIZE_T lastDataHash;
+        /** The lastly received data hash */
+        SIZE_T lastDataHash;
 
-		/** The offset to the lastly received hash */
-		SIZE_T hashOffset;
+        /** The offset to the lastly received hash */
+        SIZE_T hashOffset;
 
-		/** Size of the grown region */
-		core::param::ParamSlot growSizeParam;
+        /** Size of the grown region */
+        core::param::ParamSlot growSizeParam;
 
-		/** Activation slot for the cutting */
-		core::param::ParamSlot isActiveParam;
+        /** Activation slot for the cutting */
+        core::param::ParamSlot isActiveParam;
 
-		/** Slot for the mesh input. */
-		core::CallerSlot meshInSlot;
+        /** Slot for the mesh input. */
+        core::CallerSlot meshInSlot;
 
-		/** Slot for the tunnel input */
-		core::CallerSlot tunnelInSlot;
+        /** Slot for the tunnel input */
+        core::CallerSlot tunnelInSlot;
 
-		/** Slot for the input of the molecular data */
-		core::CallerSlot moleculeInSlot;
+        /** Slot for the input of the molecular data */
+        core::CallerSlot moleculeInSlot;
 
-		/** Slot for the input of the binding site */
-		core::CallerSlot bindingSiteInSlot;
+        /** Slot for the input of the binding site */
+        core::CallerSlot bindingSiteInSlot;
 
-		/** Slot for the ouput of the cut mesh */
-		core::CalleeSlot cutMeshOutSlot;
+        /** Slot for the ouput of the cut mesh */
+        core::CalleeSlot cutMeshOutSlot;
 
-		/** Vector containing the modified mesh data */
-		std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
+        /** Vector containing the modified mesh data */
+        std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
-		/** Vector containing the information for each vertex whether to keep it or not */
-		std::vector<std::vector<bool>> vertexKeepFlags;
+        /** Vector containing the information for each vertex whether to keep it or not */
+        std::vector<std::vector<bool>> vertexKeepFlags;
 
-		/** Container for the kept vertices */
-		std::vector<std::vector<float>> vertices;
+        /** Container for the kept vertices */
+        std::vector<std::vector<float>> vertices;
 
-		/** Container for the kept vertex normals */
-		std::vector<std::vector<float>> normals;
+        /** Container for the kept vertex normals */
+        std::vector<std::vector<float>> normals;
 
-		/** Container for the kept colors */
-		std::vector<std::vector<unsigned char>> colors;
+        /** Container for the kept colors */
+        std::vector<std::vector<unsigned char>> colors;
 
-		/** Container for the kept atom index vertex attributes */
-		std::vector<std::vector<unsigned int>> attributes;
+        /** Container for the kept atom index vertex attributes */
+        std::vector<std::vector<unsigned int>> attributes;
 
-		/** Container for the kept vertex level attributes */
-		std::vector<std::vector<unsigned int>> levelAttributes;
+        /** Container for the kept vertex level attributes */
+        std::vector<std::vector<unsigned int>> levelAttributes;
 
-		/** Container for the kept binding site distance attributes */
-		std::vector<std::vector<unsigned int>> bindingDistanceAttributes;
+        /** Container for the kept binding site distance attributes */
+        std::vector<std::vector<unsigned int>> bindingDistanceAttributes;
 
-		/** Container for the kept faces */
-		std::vector<std::vector<unsigned int>> faces;
+        /** Container for the kept faces */
+        std::vector<std::vector<unsigned int>> faces;
 
-		/** Dirty flag */
-		bool dirt;
-	};
+        /** Dirty flag */
+        bool dirt;
+    };
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

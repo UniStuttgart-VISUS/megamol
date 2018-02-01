@@ -20,5 +20,5 @@ TunnelResidueDataCall::TunnelResidueDataCall(void) : AbstractGetData3DCall(), tu
  * TunnelResidueDataCall::TunnelResidueDataCall
  */
 TunnelResidueDataCall::~TunnelResidueDataCall(void) {
-	// intentionally empty
+    // intentionally empty
 }

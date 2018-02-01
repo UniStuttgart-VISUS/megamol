@@ -23,13 +23,13 @@
 namespace megamol {
 namespace sombreros {
 
-	/**
-	 * Data source for the tunnel-parallel residue files from the Caver software
-	 */
-	class CaverTunnelResidueLoader : public core::Module {
-	public:
+    /**
+     * Data source for the tunnel-parallel residue files from the Caver software
+     */
+    class CaverTunnelResidueLoader : public core::Module {
+    public:
 
-		/**
+        /**
          * Answer the name of this module.
          *
          * @return The name of this module.
@@ -56,15 +56,15 @@ namespace sombreros {
             return true;
         }
 
-		/** Ctor. */
-		CaverTunnelResidueLoader(void);
+        /** Ctor. */
+        CaverTunnelResidueLoader(void);
 
-		/** Dtor. */
-		virtual ~CaverTunnelResidueLoader(void);
+        /** Dtor. */
+        virtual ~CaverTunnelResidueLoader(void);
 
-	protected:
+    protected:
 
-		/**
+        /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
@@ -76,9 +76,9 @@ namespace sombreros {
          */
         virtual void release(void);
 
-	private:
+    private:
 
-		/**
+        /**
          * Callback receiving the update of the file name parameter.
          *
          * @param slot The updated ParamSlot.
@@ -105,39 +105,39 @@ namespace sombreros {
          */
         bool getExtentCallback(core::Call& caller);
 
-		/**
-		 * Splits a line into different parts, seperated by a given char
-		 *
-		 * @param line The line to split
-		 * @param splitChar The char to split after. Default: whitespace
-		 * @return Vector containing all parts of the line. May be empty, when the line only contains the splitChar or was empty before.
-		 */
-		std::vector<vislib::StringA> splitLine(vislib::StringA line, char splitChar = ' ');
+        /**
+         * Splits a line into different parts, seperated by a given char
+         *
+         * @param line The line to split
+         * @param splitChar The char to split after. Default: whitespace
+         * @return Vector containing all parts of the line. May be empty, when the line only contains the splitChar or was empty before.
+         */
+        std::vector<vislib::StringA> splitLine(vislib::StringA line, char splitChar = ' ');
 
-		/** Slot for the filename */
-		core::param::ParamSlot filenameSlot;
+        /** Slot for the filename */
+        core::param::ParamSlot filenameSlot;
 
-		/** Slot for the filename containing the tunnel vertices */
-		core::param::ParamSlot tunnelFilenameSlot;
+        /** Slot for the filename containing the tunnel vertices */
+        core::param::ParamSlot tunnelFilenameSlot;
 
-		/** The data output callee slot */
-		core::CalleeSlot getData;
+        /** The data output callee slot */
+        core::CalleeSlot getData;
 
-		/** The file handle */
-		vislib::sys::File * file;
+        /** The file handle */
+        vislib::sys::File * file;
 
-		/** The tunnel file handle */
-		vislib::sys::File * tunnelFile;
+        /** The tunnel file handle */
+        vislib::sys::File * tunnelFile;
 
-		/** The data hash */
-		size_t data_hash;
+        /** The data hash */
+        size_t data_hash;
 
-		/** data storage for all read tunnels */
-		std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
+        /** data storage for all read tunnels */
+        std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
 
-		/** The bounding box of the tunnel voronoi vertices */
-		vislib::math::Cuboid<float> boundingBox;
-	};
+        /** The bounding box of the tunnel voronoi vertices */
+        vislib::math::Cuboid<float> boundingBox;
+    };
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

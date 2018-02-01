@@ -20,10 +20,10 @@
 namespace megamol {
 namespace sombreros {
 
-	class TunnelToParticles : public megamol::core::Module {
-	public:
+    class TunnelToParticles : public megamol::core::Module {
+    public:
 
-		/**
+        /**
          * Answer the name of this module.
          *
          * @return The name of this module.
@@ -50,44 +50,44 @@ namespace sombreros {
             return true;
         }
 
-		/** Ctor. */
-		TunnelToParticles(void);
+        /** Ctor. */
+        TunnelToParticles(void);
 
-		/** Dtor. */
-		virtual ~TunnelToParticles(void);
+        /** Dtor. */
+        virtual ~TunnelToParticles(void);
 
-	protected:
+    protected:
 
-		/**
+        /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
          */
-		virtual bool create(void);
+        virtual bool create(void);
 
-		/**
+        /**
          * Implementation of 'release'.
          */
-		virtual void release(void);
+        virtual void release(void);
 
-		/**
+        /**
          * Call for get data.
          */
-		bool getData(megamol::core::Call& call);
+        bool getData(megamol::core::Call& call);
 
-		/**
+        /**
          * Call for get extent.
          */
-		bool getExtent(megamol::core::Call& call);
+        bool getExtent(megamol::core::Call& call);
 
-	private:
+    private:
 
-		/** Slot for the particle data output */
-		core::CalleeSlot dataOutSlot;
+        /** Slot for the particle data output */
+        core::CalleeSlot dataOutSlot;
 
-		/** Slot for the tunnel data input */
-		core::CallerSlot tunnelInSlot;
-	};
+        /** Slot for the tunnel data input */
+        core::CallerSlot tunnelInSlot;
+    };
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

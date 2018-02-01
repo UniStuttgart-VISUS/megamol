@@ -1,6 +1,6 @@
 /*
  * TunnelResidueDataCall.h
- * Copyright (C) 2006-2017 by MegaMol Team
+ * Copyright (C) 2006-2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef MMSOMBREROSPLUGIN_TUNNELRESIDUEDATACALL_H_INCLUDED
@@ -15,31 +15,31 @@
 namespace megamol {
 namespace sombreros {
 
-	class TunnelResidueDataCall : public core::AbstractGetData3DCall {
-	public:
+    class TunnelResidueDataCall : public core::AbstractGetData3DCall {
+    public:
 
-		/** Struct representing a single tunnel */
-		struct Tunnel
-		{
-		public:
-			/** Ctor. */
-			Tunnel(void) {
-				//intentionally empty
-			}
-			/** array storing the voronoi vertex locations of the tunnel represented */
-			std::vector<float> coordinates;
+        /** Struct representing a single tunnel */
+        struct Tunnel
+        {
+        public:
+            /** Ctor. */
+            Tunnel(void) {
+                //intentionally empty
+            }
+            /** array storing the voronoi vertex locations of the tunnel represented */
+            std::vector<float> coordinates;
 
-			/** the numbers of stored atoms per voronoi vertex */
-			std::vector<int> atomNumbers;
+            /** the numbers of stored atoms per voronoi vertex */
+            std::vector<int> atomNumbers;
 
-			/** the indices of the first atoms belonging to each voronoi vertex */
-			std::vector<int> firstAtomIndices;
+            /** the indices of the first atoms belonging to each voronoi vertex */
+            std::vector<int> firstAtomIndices;
 
-			/** the identifiers for all atoms stored in the call. first: identifier, second: number of occurences */
-			std::vector<std::pair<int, int>> atomIdentifiers;
-		};
+            /** the identifiers for all atoms stored in the call. first: identifier, second: number of occurences */
+            std::vector<std::pair<int, int>> atomIdentifiers;
+        };
 
-		/**
+        /**
          * Answer the name of the objects of this description.
          *
          * @return The name of the objects of this description.
@@ -77,59 +77,59 @@ namespace sombreros {
             return AbstractGetData3DCall::FunctionName(idx);
         }
 
-		/** Ctor. */
-		TunnelResidueDataCall(void);
+        /** Ctor. */
+        TunnelResidueDataCall(void);
 
-		/** Dtor. */
-		virtual ~TunnelResidueDataCall(void);
+        /** Dtor. */
+        virtual ~TunnelResidueDataCall(void);
 
-		/**
-		 * Returns the number of tunnels stored in this call
-		 *
-		 * @return The number of tunnels.
-		 */
-		int getTunnelNumber(void) const {
-			return this->numTunnels;
-		}
+        /**
+         * Returns the number of tunnels stored in this call
+         *
+         * @return The number of tunnels.
+         */
+        int getTunnelNumber(void) const {
+            return this->numTunnels;
+        }
 
-		/**
-		 * Sets the number of tunnels
-		 *
-		 * @param numTunnels The new number of tunnels
-		 */
-		void setTunnelNumber(const int numTunnels) {
-			this->numTunnels = numTunnels;
-		}
+        /**
+         * Sets the number of tunnels
+         *
+         * @param numTunnels The new number of tunnels
+         */
+        void setTunnelNumber(const int numTunnels) {
+            this->numTunnels = numTunnels;
+        }
 
-		/**
-		 * Returns the tunnel descriptions
-		 *
-		 * @param return The tunnel descriptions
-		 */
-		const Tunnel * getTunnelDescriptions(void) const {
-			return this->tunnels;
-		}
+        /**
+         * Returns the tunnel descriptions
+         *
+         * @param return The tunnel descriptions
+         */
+        const Tunnel * getTunnelDescriptions(void) const {
+            return this->tunnels;
+        }
 
-		/**
-		 * Sets the new tunnel description pointer
-		 *
-		 * @param tunnels The pointer to the tunnel descriptions
-		 */
-		void setTunnelDescriptions(Tunnel * tunnels) {
-			this->tunnels = tunnels;
-		}
+        /**
+         * Sets the new tunnel description pointer
+         *
+         * @param tunnels The pointer to the tunnel descriptions
+         */
+        void setTunnelDescriptions(Tunnel * tunnels) {
+            this->tunnels = tunnels;
+        }
 
-	private:
+    private:
 
-		/** array containing all tunnels */
-		Tunnel * tunnels;
+        /** array containing all tunnels */
+        Tunnel * tunnels;
 
-		/** the number of tunnels stored in this call */
-		int numTunnels;
-	};
+        /** the number of tunnels stored in this call */
+        int numTunnels;
+    };
 
-	/** Description class typedef */
-	typedef megamol::core::factories::CallAutoDescription<TunnelResidueDataCall> TunnelResidueDataCallDescription;
+    /** Description class typedef */
+    typedef megamol::core::factories::CallAutoDescription<TunnelResidueDataCall> TunnelResidueDataCallDescription;
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

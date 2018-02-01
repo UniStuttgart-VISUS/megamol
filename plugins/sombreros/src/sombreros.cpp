@@ -54,11 +54,11 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::sombreros::MyModule2>();
             //   ...
             //
-			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::CaverTunnelResidueLoader>();
-			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToBFactor>();
-			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToParticles>();
-			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelCutter>();
-			this->module_descriptions.RegisterAutoDescription<megamol::sombreros::SombreroWarper>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::CaverTunnelResidueLoader>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToBFactor>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelToParticles>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelCutter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::SombreroWarper>();
 
             // register calls here:
 
@@ -69,7 +69,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::sombreros::MyCall2>();
             //   ...
             //
-			this->call_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelResidueDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelResidueDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
