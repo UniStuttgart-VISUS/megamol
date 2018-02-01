@@ -47,13 +47,14 @@ The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_applyKeyframe` (Assigned key: `a`): Apply current settings to selected/new keyframe.
-* `02_undoChanges` (Assigned key: `u`): Undo keyframe changes.
-* `03_redoChanges` (Assigned key: `z`): Redo keyframe changes.
+* `02_undoChanges` (Assigned key: CTRL+`z`): Undo keyframe changes.
+* `03_redoChanges` (Assigned key: CTRL+`y`): Redo keyframe changes.
 * `04_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `05_maxAnimTime` (`1.0`): The total timespan of the animation.
 * `06_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
 * `07_snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
 * `08_linearizeSimTime` (Assigned key: `t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
+* `09_interpolTangent` (`0.5`): Length of keyframe tangets affecting curvature of interpolation spline.
 * `editSelected - 01_animTime` (`1.0`): Edit animation time of the selected keyframe.
 * `editSelected - 02_simTime` (`1.0`): Edit simulation time of the selected keyframe.
 * `editSelected - 03_position`: Edit the position vector of the selected keyframe.
@@ -69,11 +70,13 @@ The module `CinematicRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
-* `02_toggleManipulators` (Assigned key: `m`): Toggle between the position manipulators and the look-at and up manipulators of the selected keyframe.            
+* `02_toggleManipulators` (Assigned key: `m`): Toggle different manipulators for the selected keyframe.            
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
-* `04_manipOutsideModel` (Assigned key: `z`): Keep manipulators always outside of model bounding box.
-Parameter from View3D-Module: 
-* `enableMouseSelection` (Assigned Key `tab`): Toggle mouse interaction between scene camera manipulation or keyframe manipulation.
+* `04_manipOutsideModel` (Assigned key: `w`): Keep manipulators always outside of model bounding box.
+
+    Parameter from View3D-Module: 
+
+    * `enableMouseSelection` (Assigned Key `tab`): Toggle mouse interaction between scene camera manipulation or keyframe manipulation.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)

@@ -167,8 +167,8 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
         tmpStr.Format("%.5f ", this->animTotalTime);
     }
 
-    float vpW = cr->GetViewport().GetSize().GetWidth();
-    float vpH = cr->GetViewport().GetSize().GetHeight();
+    float vpW = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
+    float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
 
     float strHeight = this->theFont.LineHeight(this->fontSize);
     float strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
@@ -599,8 +599,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         sT = this->dragDropKeyframe.getSimTime()*this->simTotalTime;
     }
 
-    float vpH = cr->GetViewport().GetSize().GetHeight();
-    float vpW = cr->GetViewport().GetSize().GetWidth();
+    float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
+    float vpW = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
 
     vislib::StringA leftLabel = " [ TIME LINE VIEW ] ";
     vislib::StringA midLabel = "  ";

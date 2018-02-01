@@ -55,7 +55,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
-    toggleManipulateParam(     "02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
+    toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
     toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
     textureShader(),
@@ -64,7 +64,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
 
     // init variables
     this->interpolSteps     = 20;
-    this->toggleManipulator = false;
+    this->toggleManipulator = 0;
     this->showHelpText      = false;
     this->manipOutsideModel = false;
     this->mouseManipTime    = std::clock();
@@ -253,7 +253,7 @@ bool CinematicRenderer::Render(Call& call) {
         this->stepsParam.ResetDirty();
     }
     if (this->toggleManipulateParam.IsDirty()) {
-        this->toggleManipulator = !this->toggleManipulator;
+        this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
         this->toggleManipulateParam.ResetDirty();
     }
     if (this->toggleHelpTextParam.IsDirty()) {
@@ -433,17 +433,24 @@ bool CinematicRenderer::Render(Call& call) {
         vislib::Array<KeyframeManipulator::manipType> availManip;
         availManip.Clear();
         availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
-        if (this->toggleManipulator) {
+        if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
         }
-        else {
+        else if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
+        }
+        else if (this->toggleManipulator == 2) { // Unused ...
+
+
         }
         // Update manipulator data
         this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
@@ -451,7 +458,7 @@ bool CinematicRenderer::Render(Call& call) {
             cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(),
             cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
             this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(), 
-            this->manipOutsideModel);
+            this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
         // Draw manipulators
         this->manipulator.draw();
     }
@@ -555,7 +562,7 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[z] Redo keyframe changes.\n";
         helpText += "[space] Toggle animation preview.\n";
         helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
-        helpText += "[m] Show different keyframe manipulators.\n";
+        helpText += "[m] Toggle different manipulators for the selected keyframe.\n";
         helpText += "[w] Keep manipulators always outside of model bounding box.\n";
         helpText += "[tab] Toggle selection mode for manipulators.\n";
         helpText += "-----[ TIME LINE VIEW ]-----\n";
@@ -651,23 +658,31 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         
         // Check if manipulator is selected
         if (this->manipulator.checkManipHit(x, y)) {
-            ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
-            if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
-        }
-        
+        }        
     }
     else if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
         
         // Apply changes on selected manipulator
         if (this->manipulator.processManipHit(x, y)) {
+
             ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+
+            ccc->setControlPointPosition(this->manipulator.getFirstControlPointPosition(), this->manipulator.getLastControlPointPosition());
+            if (!(*ccc)(CallCinematicCamera::CallForSetCtrlPoints)) return false;
+
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
         }
     }
+    /* Is not recognised ... so manipulated keyframes have to be updated each small step ... ;-(
+    else if (!(flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
+        
+        consume = true;
+    }
+    */
     
     return consume;
 }

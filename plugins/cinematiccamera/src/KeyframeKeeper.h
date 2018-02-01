@@ -81,6 +81,8 @@ namespace megamol {
             vislib::math::Cuboid<float>          boundingBox;
             Keyframe                             selectedKeyframe;
             Keyframe                             dragDropKeyframe;
+            vislib::math::Vector<float, 3>       firstCtrllPos;
+            vislib::math::Vector<float, 3>       lastCtrllPos;
             float                                totalAnimTime;
             float                                totalSimTime;
             unsigned int                         interpolSteps;
@@ -95,6 +97,7 @@ namespace megamol {
             // Variables only used in keyframe keeper
             vislib::StringA                      filename;
             bool                                 simTangentStatus;
+            float                                tl; // Global interpolation spline tangent length of keyframes
 
             // undo queue stuff -----------------------------------------------
 
@@ -186,6 +189,10 @@ namespace megamol {
             /**   */
             bool addNewUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf);
 
+            /** */
+            vislib::math::Vector<float, 3> interpolation(float u, vislib::math::Vector<float, 3> v0, vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3);
+            float interpolation(float u, float f0, float f1, float f2, float f3);
+
             /**********************************************************************
             * callback stuff
             **********************************************************************/
@@ -208,7 +215,8 @@ namespace megamol {
             bool CallForSetDragKeyframe(core::Call& c); 
             /** Callback for dropping selected keyframe */
             bool CallForSetDropKeyframe(core::Call& c);
-
+            /** Callback for getting new control point positions */
+            bool CallForSetCtrlPoints(core::Call& c);
 
             /**********************************************************************
             * parameters
@@ -252,6 +260,8 @@ namespace megamol {
             core::param::ParamSlot  snapSimFramesParam;
             /** */
             core::param::ParamSlot  simTangentParam;
+            /** */
+            core::param::ParamSlot  interpolTangentParam;
 		};
 
 		/** Description class typedef */

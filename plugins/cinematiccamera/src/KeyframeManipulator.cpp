@@ -33,6 +33,10 @@ KeyframeManipulator::KeyframeManipulator(void) :
     this->viewportSize        = vislib::math::Dimension<int, 2>();
     this->worldCamLaDir       = vislib::math::Vector<float, 3>();
     this->worldCamModDir      = vislib::math::Vector<float, 3>();
+    this->firstCtrllPos       = vislib::math::Vector<float, 3>();
+    this->lastCtrllPos        = vislib::math::Vector<float, 3>();
+    this->selectedIsFirst     = false;
+    this->selectedIsLast      = false;
     this->isDataDirty         = true;
     this->manipOusideBbox     = false;
     this->kfArray.Clear();
@@ -56,7 +60,8 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 * KeyframeManipulator::KeyframeManipulator
 */
 bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob) {
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob,
+    vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp) {
 
     if (kfa == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
@@ -93,6 +98,11 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
             this->sKfInArray = true;
         }
 
+        this->selectedIsFirst = (this->selectedKf == kfa->First())?(true):(false);
+        this->selectedIsLast  = (this->selectedKf == kfa->Last())?(true):(false);
+        this->firstCtrllPos   = fcp;
+        this->lastCtrllPos    = lcp;
+
         this->updateManipulators();
     }
 
@@ -122,7 +132,6 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
 
     // Reset and update available manipulators
     if (this->kfArray.Count() > 0) {
-        this->kfArray[0].available = false;
         this->kfArray[0].available = am.Contains(manipType::KEYFRAME_POS);
     }
     for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
@@ -171,6 +180,42 @@ bool KeyframeManipulator::updateManipulators() {
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         switch (static_cast<manipType>(i)) {
+            case (manipType::CTRL_POINT_POS_X):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(length*0.5f, 0.0f, 0.0f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right() + radius);
+                }
+             break;
+            case (manipType::CTRL_POINT_POS_Y):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, length*0.5f, 0.0f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top() + radius);
+                }
+                break;
+            case (manipType::CTRL_POINT_POS_Z):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length*0.5f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front() + radius);
+                }
+                break;
             case (manipType::SELECTED_KF_POS_X):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); 
                 if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
@@ -367,6 +412,17 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
         (this->activeType == manipType::SELECTED_KF_LOOKAT_Z)) {
         ssVec = this->manipArray[index].ssPos - this->sKfSsLookAt;
     }
+    if ((this->activeType == manipType::CTRL_POINT_POS_X) ||
+        (this->activeType == manipType::CTRL_POINT_POS_Y) ||
+        (this->activeType == manipType::CTRL_POINT_POS_Z)) {
+
+        if (this->selectedIsFirst) {
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->firstCtrllPos);
+        }
+        else if (this->selectedIsLast) {
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->lastCtrllPos);
+        }
+    }
 
     // Select manipulator axis with greatest contribution
     if (vislib::math::Abs(ssVec.X()) > vislib::math::Abs(ssVec.Y())) {
@@ -386,6 +442,30 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
 
     vislib::math::Vector<float, 3> tmpVec;
     switch (this->activeType) {
+        case (manipType::CTRL_POINT_POS_X):                  
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetX(this->firstCtrllPos.X() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+               this->lastCtrllPos.SetX(this->lastCtrllPos.X() + lineDiff);
+            }
+            break;
+        case (manipType::CTRL_POINT_POS_Y):      
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetY(this->firstCtrllPos.Y() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+                this->lastCtrllPos.SetY(this->lastCtrllPos.Y() + lineDiff);
+            }
+            break;
+        case (manipType::CTRL_POINT_POS_Z):      
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetZ(this->firstCtrllPos.Z() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+                this->lastCtrllPos.SetZ(this->lastCtrllPos.Z() + lineDiff);
+            }
+            break;
         case (manipType::SELECTED_KF_POS_X):      skfPosV.SetX(skfPosV.X() + lineDiff); break;
         case (manipType::SELECTED_KF_POS_Y):      skfPosV.SetY(skfPosV.Y() + lineDiff); break;
         case (manipType::SELECTED_KF_POS_Z):      skfPosV.SetZ(skfPosV.Z() + lineDiff); break;
@@ -443,6 +523,24 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
 Keyframe KeyframeManipulator::getManipulatedKeyframe(void) {
 
     return this->selectedKf;
+}
+
+
+/*
+* KeyframeManipulator::getFirstControlPointPosition
+*/
+vislib::math::Vector<float, 3> KeyframeManipulator::getFirstControlPointPosition() {
+
+    return this->firstCtrllPos;
+}
+
+
+/*
+* KeyframeManipulator::getLastControlPointPosition
+*/
+vislib::math::Vector<float, 3> KeyframeManipulator::getLastControlPointPosition() {
+
+    return this->lastCtrllPos;
 }
 
 
@@ -565,11 +663,43 @@ bool KeyframeManipulator::draw(void) {
         }
     }
 
+    vislib::math::Vector<float, 3> tmpCtrlPos;
+    if (this->selectedIsFirst) {
+        tmpCtrlPos = this->firstCtrllPos;
+    }
+    else if (this->selectedIsLast) {
+        tmpCtrlPos = this->lastCtrllPos;
+    }
+
     // Draw manipulators
     if (this->sKfInArray) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
             if (this->manipArray[i].available) {
                 switch (static_cast<manipType>(i)) {
+                case (manipType::CTRL_POINT_POS_X):  
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                        // Draw additional line only once
+                        glBegin(GL_LINES);
+                        glColor4fv(mlaColor);
+                            glVertex3fv(skfPosV.PeekComponents());
+                            glVertex3fv(tmpCtrlPos.PeekComponents());
+                        glEnd();
+                    }
+                    break;
+                case (manipType::CTRL_POINT_POS_Y):    
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                    }
+                    break;
+                case (manipType::CTRL_POINT_POS_Z):     
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                    }
+                    break;
                 case (manipType::SELECTED_KF_POS_X):      glColor4fv(mxColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_POS_Y):      glColor4fv(myColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_POS_Z):      glColor4fv(mzColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;

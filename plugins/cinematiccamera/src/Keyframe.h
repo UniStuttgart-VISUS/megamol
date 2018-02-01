@@ -132,7 +132,6 @@ namespace megamol {
 			float                    animTime;
             Keyframe::Camera         camera;
 
-
 		};
 
 	} /* end namespace cinematiccamera */

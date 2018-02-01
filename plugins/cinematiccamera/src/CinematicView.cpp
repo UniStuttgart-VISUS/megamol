@@ -532,7 +532,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
 
-    vislib::StringA leftLabel = " [ CINEMATIV VIEW ] ";
+    vislib::StringA leftLabel = " [ CINEMATIC VIEW ] ";
     vislib::StringA midLabel  = "  ";
     if (this->rendering) {
         midLabel  =  " ... rendering in progress ... ";

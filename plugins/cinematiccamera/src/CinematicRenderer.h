@@ -153,7 +153,7 @@ namespace megamol {
             vislib::graphics::gl::OutlineFont theFont;
 #endif
             unsigned int                     interpolSteps;
-            bool                             toggleManipulator;
+            unsigned int                     toggleManipulator;
             bool                             manipOutsideModel;
             bool                             showHelpText;
             clock_t                          mouseManipTime;
