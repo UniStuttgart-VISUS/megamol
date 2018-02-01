@@ -74,7 +74,7 @@ The module `CinematicRenderer` exposes the following parameters:
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
 * `04_manipOutsideModel` (Assigned key: `w`): Keep manipulators always outside of model bounding box.
 
-Parameter from View3D-Module: 
+Necessary parameter from `View3D`-Module: 
 
  * `enableMouseSelection` (Assigned Key `tab`): Toggle mouse interaction between scene camera manipulation or keyframe manipulation.
 
