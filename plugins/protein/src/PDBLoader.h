@@ -378,7 +378,7 @@ namespace protein {
              *
              * @return The atom b-factor array.
              */
-            const float* AtomBFactor() { return this->bfactor.PeekElements(); }
+            float* AtomBFactor() { return &this->bfactor[0]; }
 
             /**
              * Get a reference to the array of atom charges.
@@ -528,6 +528,13 @@ namespace protein {
          */
         void loadFile( const vislib::TString& filename);
 
+		/**
+		 * Loads a file containing information about the cap(s).
+		 *
+		 * @param filename The path to the file to load.
+		 */
+		void loadFileCap(const vislib::TString& filename);
+
         /**
          * Parse one atom entry.
          *
@@ -627,6 +634,8 @@ namespace protein {
         core::param::ParamSlot pdbFilenameSlot;
         /** The xtc file name slot */
         core::param::ParamSlot xtcFilenameSlot;
+		/** The cap file name slot */
+		core::param::ParamSlot capFilenameSlot;
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
         /** caller slot */
@@ -642,6 +651,8 @@ namespace protein {
         core::param::ParamSlot calcBBoxPerFrameSlot;
         /** Determine whether to use the PDB bbox */
         core::param::ParamSlot calcBondsSlot;
+		/** Determine whether to recompute STRIDE each frame */
+		core::param::ParamSlot recomputeStridePerFrameSlot;
 
         /** The data */
         vislib::Array<Frame*> data;
@@ -676,6 +687,9 @@ namespace protein {
 
         /** The array of chains */
 		vislib::Array<megamol::protein_calls::MolecularDataCall::Chain> chain;
+
+		/** The array stores the begining end ending of a cap. */
+		vislib::Array<std::pair<int, int>> cap_chain;
 
         /**
          * Stores the connectivity information (i.e. subsequent pairs of atom

@@ -1,20 +1,21 @@
+# processor word size detection
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(BITS 64)
+else()
+  set(BITS 32)
+endif()
 
 # compiler options
 if(WIN32)
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -W3 -DNOMINMAX")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0 -W3 -DNOMINMAX")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -W3 -pedantic -std=c99")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Gm -DNOMINMAX -W3 -openmp")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -Ox -g0")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ox -Gm -fPIC -W3 -pedantic -std=c99 -openmp")
 elseif(UNIX)
-  # processor word size detection
-  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(BITS 64)
-  else()
-    set(BITS 32)
-  endif()
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -ggdb")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0 -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -ggdb -ldl")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0 -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -ldl")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99 -ldl")
 endif()
 
 
