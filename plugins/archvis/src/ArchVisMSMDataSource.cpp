@@ -10,9 +10,6 @@
 #include <string>
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/math/Vector.h"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -87,6 +84,29 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 	render_batches_call->setRenderBatches(&m_render_batches);
 
 	return true;
+}
+
+ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(Node src, Node tgt)
+{
+	// compute element rotation
+	Mat4x4 object_rotation;
+	Vec3 diag_vector = Vec3(std::get<0>(tgt) - std::get<0>(src),
+							std::get<1>(tgt) - std::get<1>(src),
+							std::get<2>(tgt) - std::get<2>(src));
+	diag_vector.Normalise();
+	Vec3 up_vector(0.0f, 1.0f, 0.0f);
+	Vec3 rot_vector = up_vector.Cross(diag_vector);
+	rot_vector.Normalise();
+	Quat rotation(std::acos(up_vector.Dot(diag_vector)), rot_vector);
+	object_rotation = rotation;
+
+	// compute element offset
+	Mat4x4 object_translation;
+	object_translation.SetAt(0, 3, std::get<0>(src));
+	object_translation.SetAt(1, 3, std::get<1>(src));
+	object_translation.SetAt(2, 3, std::get<2>(src));
+
+	return (object_translation * object_rotation);
 }
 
 std::vector<std::string> ArchVisMSMDataSource::parsePartsList(std::string const& filename)
@@ -390,6 +410,12 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
 
+	// compute element offset
+	Mat4x4 tower_model_matrix;
+	tower_model_matrix.SetAt(0, 3, 0.0f);
+	tower_model_matrix.SetAt(1, 3, -1.0f);
+	tower_model_matrix.SetAt(2, 3, 0.0f);
+
 	int counter = 0;
 	for (auto& element : floor_elements)
 	{
@@ -423,16 +449,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		draw_command_data.data[counter].base_vertex = base_vertices[0];
 		draw_command_data.data[counter].base_instance = 0;
 
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
-		GLfloat scale = distr(generator);
-		scale = 1.0f;
-		object_transform.SetAt(0, 0, scale);
-		object_transform.SetAt(1, 1, scale);
-		object_transform.SetAt(2, 2, scale);
-
-		object_transform.SetAt(0, 3, std::get<0>(nodes[std::get<0>(element)]));
-		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]) - 1.0f);
-		object_transform.SetAt(2, 3, std::get<2>(nodes[std::get<0>(element)]));
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(nodes[std::get<0>(element)], nodes[std::get<1>(element)]);
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 
@@ -447,27 +464,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		draw_command_data.data[counter].base_vertex = base_vertices[1];
 		draw_command_data.data[counter].base_instance = 0;
 
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
-
-		// compute element rotation
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_rotation;
-		vislib::math::Vector<float, 3> diag_vector = vislib::math::Vector<float, 3>(std::get<0>(nodes[std::get<1>(element)]) - std::get<0>(nodes[std::get<0>(element)]),
-			std::get<1>(nodes[std::get<1>(element)]) - std::get<1>(nodes[std::get<0>(element)]),
-			std::get<2>(nodes[std::get<1>(element)]) - std::get<2>(nodes[std::get<0>(element)]));
-		diag_vector.Normalise();
-		vislib::math::Vector<float, 3> up_vector(0.0f, 1.0f, 0.0f);
-		vislib::math::Vector<float, 3> rot_vector = up_vector.Cross(diag_vector);
-		rot_vector.Normalise();
-		vislib::math::Quaternion<float> rotation( std::acos(up_vector.Dot(diag_vector)), rot_vector);
-		object_rotation = rotation;
-
-		// compute element offset
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_translation;
-		object_translation.SetAt(0, 3, std::get<0>(nodes[std::get<0>(element)]));
-		object_translation.SetAt(1, 3, std::get<1>(nodes[std::get<0>(element)]) - 1.0f);
-		object_translation.SetAt(2, 3, std::get<2>(nodes[std::get<0>(element)]));
-
-		object_transform = object_translation * object_rotation;
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(nodes[std::get<0>(element)], nodes[std::get<1>(element)]);
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 

@@ -11,6 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Vector.h"
+
 #include "vislib/net/Socket.h"
 
 #include "mmcore/param/ParamSlot.h"
@@ -79,8 +83,11 @@ namespace archvis {
 		typedef std::tuple<int, int> BeamElement;
 		typedef std::tuple<int, int> DiagonalElement;
 
+		typedef vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> Mat4x4;
+		typedef vislib::math::Vector<float, 3> Vec3;
+		typedef vislib::math::Quaternion<float> Quat;
 
-		std::vector<std::string> parsePartsList(std::string const& filename);
+		Mat4x4 computeElementTransform(Node src, Node tgt);
 
 		void parseNodeElementTable(
 			std::string const& filename,
@@ -88,6 +95,8 @@ namespace archvis {
 			std::vector<FloorElement>& floor_elements,
 			std::vector<BeamElement>& beam_elements,
 			std::vector<DiagonalElement>& diagonal_elements);
+
+		std::vector<std::string> parsePartsList(std::string const& filename);
 
 
 		/** The shader file name */
