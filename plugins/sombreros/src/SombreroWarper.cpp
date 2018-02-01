@@ -13,7 +13,9 @@
 #include "TunnelResidueDataCall.h"
 #include "tesselator.h"
 #include <climits>
+#include <limits>
 #include <iostream>
+#include "vislib/math/ShallowPoint.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -101,6 +103,36 @@ bool SombreroWarper::getData(Call& call) {
     inCall->SetFrameID(outCall->FrameID());
     tunnelCall->SetFrameID(outCall->FrameID());
 
+    outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
+
+    return true;
+}
+
+/*
+ * SombreroWarper::getExtent
+ */
+bool SombreroWarper::getExtent(Call& call) {
+    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    if (outCall == nullptr) return false;
+
+    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    if (inCall == nullptr) return false;
+
+    TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    if (tunnelCall == nullptr) return false;
+
+    this->checkParameters();
+    
+    if (dirtyFlag) {
+        this->hashOffset++;
+    }
+
+    inCall->SetFrameID(outCall->FrameID());
+    tunnelCall->SetFrameID(outCall->FrameID());
+
+    if (!(*inCall)(1)) return false;
+    if (!(*tunnelCall)(1)) return false;
+
     if (!(*inCall)(0)) return false;
     if (!(*tunnelCall)(0)) return false;
 
@@ -137,39 +169,12 @@ bool SombreroWarper::getData(Call& call) {
         }
     }
 
-    outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
-
-    return true;
-}
-
-/*
- * SombreroWarper::getExtent
- */
-bool SombreroWarper::getExtent(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
-
-    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
-    if (inCall == nullptr) return false;
-
-    TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (tunnelCall == nullptr) return false;
-
-    this->checkParameters();
-    
-    if (dirtyFlag) {
-        this->hashOffset++;
-    }
-
-    inCall->SetFrameID(outCall->FrameID());
-    tunnelCall->SetFrameID(outCall->FrameID());
-
-    if (!(*inCall)(1)) return false;
-    if (!(*tunnelCall)(1)) return false;
-
     outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
     outCall->SetFrameCount(inCall->FrameCount());
     outCall->SetExtent(inCall->FrameCount(), inCall->AccessBoundingBoxes());
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
+    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
 }
@@ -794,6 +799,21 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 
         bool xzResult = this->computeXZCoordinatePerVertex();
         if (!xzResult) return false;
+    }
+
+    /**
+     * step 4: compute bounding box
+     */
+    this->boundingBox = vislib::math::Cuboid<float>();
+    if (this->vertices.size() > 0 && this->vertices[0].size() > 0) {
+        this->boundingBox.Set(this->vertices[0][0], this->vertices[0][1], this->vertices[0][2], this->vertices[0][0], this->vertices[0][1], this->vertices[0][2]);
+
+        for (size_t i = 0; i < this->vertices.size(); i++) {
+            for (size_t j = 0; j < this->vertices[i].size(); j += 3) {
+                vislib::math::ShallowPoint<float, 3> vert(&this->vertices[i][j]);
+                this->boundingBox.GrowToPoint(vert);
+            }
+        }
     }
 
     return true;

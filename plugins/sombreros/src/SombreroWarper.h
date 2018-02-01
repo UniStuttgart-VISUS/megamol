@@ -293,6 +293,9 @@ namespace sombreros {
         /** The inner radius of the sombrero ellipsoid */
         std::vector<float> sombreroRadius;
 
+        /** The bounding box of the sombrero */
+        vislib::math::Cuboid<float> boundingBox;
+
         /** Flag set when a parameter is dirty */
         bool dirtyFlag;
     };
