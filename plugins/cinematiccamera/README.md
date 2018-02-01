@@ -47,8 +47,8 @@ The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `01_applyKeyframe` (Assigned key: `a`): Apply current settings to selected/new keyframe.
-* `02_undoChanges` (Assigned key: CTRL+`z`): Undo keyframe changes.
-* `03_redoChanges` (Assigned key: CTRL+`y`): Redo keyframe changes.
+* `02_undoChanges` (Assigned key: `CTRL+z`): Undo keyframe changes.
+* `03_redoChanges` (Assigned key: `CTRL+y`): Redo keyframe changes.
 * `04_deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
 * `05_maxAnimTime` (`1.0`): The total timespan of the animation.
 * `06_snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
@@ -74,9 +74,9 @@ The module `CinematicRenderer` exposes the following parameters:
 * `03_toggleHelpText` (Assigned key: `h`): Show/hide help text for key assignments.
 * `04_manipOutsideModel` (Assigned key: `w`): Keep manipulators always outside of model bounding box.
 
-    Parameter from View3D-Module: 
+Parameter from View3D-Module: 
 
-    * `enableMouseSelection` (Assigned Key `tab`): Toggle mouse interaction between scene camera manipulation or keyframe manipulation.
+ * `enableMouseSelection` (Assigned Key `tab`): Toggle mouse interaction between scene camera manipulation or keyframe manipulation.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
