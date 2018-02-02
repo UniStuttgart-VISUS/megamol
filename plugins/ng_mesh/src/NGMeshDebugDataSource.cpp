@@ -66,8 +66,6 @@ bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
 
 bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string const& geometry_filename)
 {
-	std::cout << "loading data" << std::endl;
-
 	ShaderPrgmDataAccessor				shader_prgm_data;
 	MeshDataAccessor					mesh_data;
 	DrawCommandDataAccessor				draw_command_data;

@@ -79,6 +79,8 @@ namespace ngmesh {
 		VertexData			vertex_data;
 		IndexData			index_data;
 		VertexLayoutData	vertex_descriptor;
+		GLenum				usage;
+		GLenum				primitive_type;
 	};
 
 	struct DrawCommandDataAccessor
@@ -380,6 +382,9 @@ namespace ngmesh {
 					offset += m_head.shader_prgms[idx].char_cnt + 1;
 					//std::memcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string, shader_prgm.char_cnt);
 					std::strcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string);
+
+					m_head.meshes[idx].usage = mesh_data.usage;
+					m_head.meshes[idx].primitive_type = mesh_data.primitive_type;
 
 					m_head.meshes[idx].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
 					m_head.meshes[idx].vertex_data.byte_size = mesh_data.vertex_data.byte_size;

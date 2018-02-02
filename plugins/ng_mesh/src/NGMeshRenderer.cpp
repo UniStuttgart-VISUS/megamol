@@ -197,7 +197,9 @@ void NGMeshRenderer::addRenderBatch(
 			mesh_data.index_data.raw_data,
 			mesh_data.index_data.byte_size,
 			layout,
-			mesh_data.index_data.index_type
+			mesh_data.index_data.index_type,
+			mesh_data.usage,
+			mesh_data.primitive_type
 			);
 			
 	}
@@ -211,7 +213,9 @@ void NGMeshRenderer::addRenderBatch(
 			mesh_data.index_data.raw_data,
 			mesh_data.index_data.byte_size,
 			layout,
-			mesh_data.index_data.index_type
+			mesh_data.index_data.index_type,
+			mesh_data.usage,
+			mesh_data.primitive_type
 			);
 	}
 
@@ -254,9 +258,20 @@ void NGMeshRenderer::updateRenderBatch(
 	MaterialShaderParamsDataAccessor const&	mtl_shader_params,
 	uint32_t								update_flags)
 {
-	if (idx >= m_render_batches.size())
+	if (idx > m_render_batches.size())
 	{
 		vislib::sys::Log::DefaultLog.WriteError("Invalid batch index for render batch update.");
+		return;
+	}
+	else if (idx == m_render_batches.size())
+	{
+		vislib::sys::Log::DefaultLog.WriteInfo("Creating new GPU render batch.");
+		addRenderBatch(shader_prgm_data,
+			mesh_data,
+			draw_command_data,
+			obj_shader_params,
+			mtl_shader_params);
+
 		return;
 	}
 
@@ -276,7 +291,6 @@ void NGMeshRenderer::updateRenderBatch(
 
 	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESH_BIT) > 0)
 	{
-		std::cout << "Update Mesh!" << std::endl;
 		m_render_batches[idx].mesh.reset();
 
 		Mesh::VertexLayout layout;
@@ -410,38 +424,23 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	if (!(*render_batch_call)(0))
 		return false;
 
-	// loop render batches data, create/update if necessary
+	// loop through render batches data, update GPU render batches if necessary
 	auto render_batches = render_batch_call->getRenderBatches();
-	for (size_t i = 0; i < render_batches->getBatchCount(); ++i)
+	for (size_t batch_idx = 0; batch_idx < render_batches->getBatchCount(); ++batch_idx)
 	{
-		if (i >= m_render_batches.size()) // new batch
+		if (render_batches->getUpdateFlags(batch_idx) > 0) // check if at least a single flag is set to 1
 		{
-			addRenderBatch(
-				render_batches->getShaderProgramData(i),
-				render_batches->getMeshData(i),
-				render_batches->getDrawCommandData(i),
-				render_batches->getObjectShaderParams(i),
-				render_batches->getMaterialShaderParams(i)
+			updateRenderBatch(
+				batch_idx,
+				render_batches->getShaderProgramData(batch_idx),
+				render_batches->getMeshData(batch_idx),
+				render_batches->getDrawCommandData(batch_idx),
+				render_batches->getObjectShaderParams(batch_idx),
+				render_batches->getMaterialShaderParams(batch_idx),
+				render_batches->getUpdateFlags(batch_idx)
 			);
 
-			render_batches->resetUpdateFlags(i);
-		}
-		else
-		{
-			if (render_batches->getUpdateFlags(i) > 0) // check if at least a single flag is set to 1
-			{
-				updateRenderBatch(
-					i,
-					render_batches->getShaderProgramData(i),
-					render_batches->getMeshData(i),
-					render_batches->getDrawCommandData(i),
-					render_batches->getObjectShaderParams(i),
-					render_batches->getMaterialShaderParams(i),
-					render_batches->getUpdateFlags(i)
-				);
-
-				render_batches->resetUpdateFlags(i);
-			}
+			render_batches->resetUpdateFlags(batch_idx);
 		}
 	}
 

@@ -217,7 +217,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	std::string const& partsList_filename,
 	std::string const& nodesElement_filename)
 {
-	std::cout << "loading data" << std::endl;
+	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
 
 	/** Nodes of the MSM */
 	std::vector<Node> nodes;
@@ -259,13 +259,17 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 
 		bool ret = loader.LoadASCIIFromFile(&models.back(), &err, path);
 		if (!err.empty()) {
-			printf("Err: %s\n", err.c_str());
+			vislib::sys::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
 		}
 
 		if (!ret) {
-			printf("Failed to parse glTF\n");
+			vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
 		}
 	}
+
+	// set mesh usage and primtive type
+	mesh_data.usage = GL_STATIC_DRAW;
+	mesh_data.primitive_type = GL_TRIANGLES;
 
 	// set vertex attribute layout
 	std::vector<std::string> attribute_names;
@@ -275,15 +279,15 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	size_t attribute_counter = 0;
 	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
 	{
-		std::cout << "Attribute " << attribute.first << std::endl;
+		//std::cout << "Attribute " << attribute.first << std::endl;
 
 		attribute_names.push_back(attribute.first);
 
-		std::cout << models.front().accessors[attribute.second].type << std::endl;
-		std::cout << models.front().accessors[attribute.second].componentType << std::endl;
-		std::cout << models.front().accessors[attribute.second].count << std::endl;
-		std::cout << models.front().accessors[attribute.second].byteOffset << std::endl;
-		std::cout << models.front().accessors[attribute.second].normalized << std::endl;
+		//std::cout << models.front().accessors[attribute.second].type << std::endl;
+		//std::cout << models.front().accessors[attribute.second].componentType << std::endl;
+		//std::cout << models.front().accessors[attribute.second].count << std::endl;
+		//std::cout << models.front().accessors[attribute.second].byteOffset << std::endl;
+		//std::cout << models.front().accessors[attribute.second].normalized << std::endl;
 
 		//auto& bufferView = models.front().bufferViews[models.front().accessors[attribute.second].bufferView];
 
@@ -381,23 +385,6 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 
 	assert(bytes_copied == mesh_data.index_data.byte_size);
 
-	//std::cout << "==========================" << std::endl;
-	//float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data + 16);
-	//for (int i = 0; i < base_vertices.back() * 8; ++i)
-	//{
-	//	std::cout << float_view[i] << std::endl;
-	//}
-	//std::cout << "==========================" << std::endl;
-	//
-	//std::cout << "==========================" << std::endl;
-	//uint16_t* uint_view = reinterpret_cast<uint16_t*>(mesh_data.index_data.raw_data);
-	//for (int i = 0; i < first_indices.back(); ++i)
-	//{
-	//	std::cout << uint_view[i] << std::endl;
-	//}
-	//std::cout << "==========================" << std::endl;
-
-
 	// TODO Build initial transform matrices from node/element data
 
 	std::mt19937 generator(4215);
@@ -471,31 +458,6 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		counter++;
 	}
 
-	/*
-	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
-	{
-		draw_command_data.data[i].cnt = index_buffer_accessor.count;
-		draw_command_data.data[i].instance_cnt = 1;
-		draw_command_data.data[i].first_idx = 0;
-		draw_command_data.data[i].base_vertex = 0;
-		draw_command_data.data[i].base_instance = 0;
-
-
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
-		GLfloat scale = distr(generator);
-		scale = 0.1f;
-		object_transform.SetAt(0, 0, scale);
-		object_transform.SetAt(1, 1, scale);
-		object_transform.SetAt(2, 2, scale);
-
-		object_transform.SetAt(0, 3, loc_distr(generator));
-		object_transform.SetAt(1, 3, loc_distr(generator));
-		object_transform.SetAt(2, 3, loc_distr(generator));
-
-		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
-	}
-	*/
-
 	mtl_shader_params.elements_cnt = 0;
 	
 	m_render_batches.addBatch(
@@ -504,95 +466,6 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
-
-	/*
-	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
-	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
-	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data);
-	float_view[0] = -0.5f;
-	float_view[1] = 0.0f;
-	float_view[2] = 0.0f;
-	float_view[3] = 0.0f;
-	float_view[4] = 0.0f;
-	float_view[5] = 1.0f;
-
-	float_view[6] = 0.5f;
-	float_view[7] = 0.0f;
-	float_view[8] = 0.0f;
-	float_view[9] = 0.0f;
-	float_view[10] = 0.0f;
-	float_view[11] = 1.0f;
-
-	float_view[12] = 0.0f;
-	float_view[13] = 1.0f;
-	float_view[14] = 0.0f;
-	float_view[15] = 0.0f;
-	float_view[16] = 0.0f;
-	float_view[17] = 1.0f;
-
-	mesh_data.index_data.index_type = GL_UNSIGNED_INT;
-	mesh_data.index_data.byte_size = 3 * 4;
-	mesh_data.index_data.raw_data = new uint8_t[3 * 4];
-	uint32_t* uint_view = reinterpret_cast<uint32_t*>(mesh_data.index_data.raw_data);
-	uint_view[0] = 0;
-	uint_view[1] = 1;
-	uint_view[2] = 2;
-
-	mesh_data.vertex_descriptor.stride = 24;
-	mesh_data.vertex_descriptor.attribute_cnt = 2;
-	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
-	mesh_data.vertex_descriptor.attributes[0].type = GL_FLOAT;
-	mesh_data.vertex_descriptor.attributes[0].size = 3;
-	mesh_data.vertex_descriptor.attributes[0].normalized = GL_FALSE;
-	mesh_data.vertex_descriptor.attributes[0].offset = 0;
-	mesh_data.vertex_descriptor.attributes[1].type = GL_FLOAT;
-	mesh_data.vertex_descriptor.attributes[1].size = 3;
-	mesh_data.vertex_descriptor.attributes[1].normalized = GL_FALSE;
-	mesh_data.vertex_descriptor.attributes[1].offset = 12;
-	
-
-	std::mt19937 generator(4215);
-	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
-	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
-
-	draw_command_data.draw_cnt = 1000000;
-	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
-
-	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
-	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
-
-	for (int i = 0; i < draw_command_data.draw_cnt; ++i)
-	{
-		draw_command_data.data[i].cnt = 3;
-		draw_command_data.data[i].instance_cnt = 1;
-		draw_command_data.data[i].first_idx = 0;
-		draw_command_data.data[i].base_vertex = 0;
-		draw_command_data.data[i].base_instance = 0;
-
-
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
-		GLfloat scale = distr(generator);
-		object_transform.SetAt(0, 0, scale);
-		object_transform.SetAt(1, 1, scale);
-		object_transform.SetAt(2, 2, scale);
-
-		object_transform.SetAt(0, 3, loc_distr(generator));
-		object_transform.SetAt(1, 3, loc_distr(generator));
-		object_transform.SetAt(2, 3, loc_distr(generator));
-
-		std::memcpy(mesh_shader_params.raw_data + i*(16 * 4), object_transform.PeekComponents(), 16 * 4);
-	}
-
-	mtl_shader_params.elements_cnt = 0;
-
-	m_render_batches.addBatch(
-		shader_prgm_data,
-		mesh_data,
-		draw_command_data,
-		mesh_shader_params,
-		mtl_shader_params);
-	*/
-
 	
 	return true;
 }

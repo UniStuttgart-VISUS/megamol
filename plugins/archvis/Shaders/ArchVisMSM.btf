@@ -59,10 +59,10 @@ out layout(location = 0) vec4 frag_colour;
 void main(void) {
 
     vec3 light_direction = normalize(vec3(5.0,5.0,5.0)*0.1 - world_pos);
-    float lambert = dot(light_direction, normal);
+    float lambert = max(0.0,dot(light_direction, normal));
 
-    frag_colour = vec4( vec3(1.0, 0.75, 0.2)*lambert, 1.0);
-    frag_colour = vec4( vec3(lambert), 1.0);
+    //frag_colour = vec4( vec3(1.0, 0.75, 0.2)*lambert, 1.0);
+    frag_colour = vec4( vec3(lambert) + vec3(0.2), 1.0);
 }
 -->
 </snippet>

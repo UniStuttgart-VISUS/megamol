@@ -9,7 +9,7 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build ng_mesh" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(ng_mesh)
 
-  set(LIBS vislib core glload)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
   # Build MegaMol Plugin
@@ -23,7 +23,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_dependencies(${PROJECT_NAME} vislib core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
