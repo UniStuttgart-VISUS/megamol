@@ -19,15 +19,12 @@
 #include <functional>
 
 #include "ospray/ospray.h"
+#include "ospcommon/vec.h"
 
 #include <stdint.h>
 #include <sstream>
 
 using namespace megamol::ospray;
-
-
-
-
 
 /*
 ospray::OSPRayRenderer::OSPRaySphereRenderer
@@ -50,12 +47,6 @@ OSPRayRenderer::OSPRayRenderer(void) :
     renderer = NULL;
     camera = NULL;
     world = NULL;
-
-
-    //tmp variable
-    number = 0;
-
-
 }
 
 
@@ -200,6 +191,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         imgSize.x = cr->GetCameraParameters()->TileRect().Width();
         imgSize.y = cr->GetCameraParameters()->TileRect().Height();
         framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+        db.resize(imgSize.x * imgSize.y);
         ospCommit(framebuffer);
     }
 
@@ -246,6 +238,12 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         time = cr->Time();
         renderer_has_changed = false;
 
+        /*
+        if (this->maxDepthTexture) {
+            ospRelease(this->maxDepthTexture);
+        }
+        this->maxDepthTexture = getOSPDepthTextureFromOpenGLPerspective(*cr);
+        */
         RendererSettings(renderer);
 
 
@@ -267,8 +265,15 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
 
 
+
+
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+        if (this->useDB.Param<core::param::BoolParam>()->Value()) {
+            getOpenGLDepthFromOSPPerspective(*cr, db.data());
+        } else {
+            db.clear();
+        }
 
         // write a sequence of single pictures while the screenshooter is running
         // only for debugging
@@ -283,10 +288,11 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         //    writePPM(fname, isize, fb);
         //    this->number++;
         //}
-        this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
+        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, *cr);
 
         // clear stuff
         ospUnmapFrameBuffer(fb, framebuffer);
+
 
         this->releaseOSPRayStuff();
 
@@ -294,7 +300,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     } else {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-        this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
+
+        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, *cr);
         ospUnmapFrameBuffer(fb, framebuffer);
     }
 
@@ -414,3 +421,141 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
     return true;
 }
 
+OSPTexture2D OSPRayRenderer::getOSPDepthTextureFromOpenGLPerspective(megamol::core::Call& call) {
+
+    megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
+    if (cr == NULL) return NULL;
+
+    const double fovy = cr->GetCameraParameters()->ApertureAngle();
+    const double aspect = static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+        const double zNear = cr->GetCameraParameters()->NearClip();
+    const double zFar = cr->GetCameraParameters()->FarClip();
+
+
+    float up_x = cr->GetCameraParameters()->Up().GetX();
+    float up_y = cr->GetCameraParameters()->Up().GetY();
+    float up_z = cr->GetCameraParameters()->Up().GetZ();
+
+    float* dir = cr->GetCameraParameters()->EyeDirection().PeekComponents();
+
+    const ospcommon::vec3f  cameraUp(up_x, up_y, up_z );
+    const ospcommon::vec3f cameraDir(dir[0], dir[1], dir[2]);
+
+
+    // read OpenGL depth buffer
+    auto fbo = cr->FrameBufferObject();
+    if (fbo != NULL) {
+        if (fbo->IsValid()) {
+            if ((fbo->GetWidth() != imgSize.x) || (fbo->GetHeight() != imgSize.y)) {
+                fbo->Release();
+            }
+        }
+        if (!fbo->IsValid()) {
+            fbo->Create(static_cast<const UINT>(imgSize.x), static_cast<const UINT>(imgSize.y), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+        }
+        if (fbo->IsValid()) {
+            fbo->Enable();
+        }
+        float *glDepthBuffer = new float[this->imgSize.x * this->imgSize.y];
+        fbo->GetDepthTexture(glDepthBuffer, GL_DEPTH_COMPONENT, GL_FLOAT);
+        //glReadPixels(0, 0, this->imgSize.x, this->imgSize.y, GL_DEPTH_COMPONENT, GL_FLOAT, (GLvoid *)glDepthBuffer);
+
+    // get an OSPRay depth texture from the OpenGL depth buffer
+    float *ospDepth = new float[this->imgSize.x * this->imgSize.y];
+
+    // transform OpenGL depth to linear depth
+    for (size_t i = 0; i<this->imgSize.x * this->imgSize.y; i++) {
+        const double z_n = 2.0 * glDepthBuffer[i] - 1.0;
+        ospDepth[i] = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+    }
+
+    // transform from orthogonal Z depth to ray distance t
+    ospcommon::vec3f dir_du = ospcommon::normalize(ospcommon::cross(cameraDir, cameraUp));
+    ospcommon::vec3f dir_dv = ospcommon::normalize(ospcommon::cross(dir_du, cameraDir));
+
+    const float imagePlaneSizeY = 2.f * tanf(fovy / 2.f * M_PI / 180.f);
+    const float imagePlaneSizeX = imagePlaneSizeY * aspect;
+
+    dir_du *= imagePlaneSizeX;
+    dir_dv *= imagePlaneSizeY;
+
+    const ospcommon::vec3f dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
+
+    for (size_t j = 0; j < this->imgSize.y; j++) {
+        for (size_t i = 0; i < this->imgSize.x; i++) {
+            const ospcommon::vec3f dir_ij = ospcommon::normalize(dir_00 + float(i) / float(this->imgSize.x - 1) * dir_du + float(j) / float(this->imgSize.y - 1) * dir_dv);
+
+            const float t = ospDepth[j*this->imgSize.x + i] / ospcommon::dot(cameraDir, dir_ij);
+            ospDepth[j*this->imgSize.y + i] = t;
+        }
+    }
+
+    // nearest texture filtering required for depth textures -- we don't want interpolation of depth values...
+    OSPTexture2D depthTexture = ospNewTexture2D(this->imgSize, OSP_TEXTURE_R32F, ospDepth, OSP_TEXTURE_FILTER_NEAREST);
+
+    // free allocated depth buffer
+    delete[] glDepthBuffer;
+
+    // return OSPRay depth texture
+    return depthTexture;
+    } else {
+        return NULL;
+    }
+}
+
+void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db) {
+
+    megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
+    if (cr == NULL) return;
+
+    const double fovy = cr->GetCameraParameters()->ApertureAngle();
+    const double aspect = static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+    const double zNear = cr->GetCameraParameters()->NearClip();
+    const double zFar = cr->GetCameraParameters()->FarClip();
+
+    float up_x = cr->GetCameraParameters()->Up().GetX();
+    float up_y = cr->GetCameraParameters()->Up().GetY();
+    float up_z = cr->GetCameraParameters()->Up().GetZ();
+
+    float* dir = cr->GetCameraParameters()->EyeDirection().PeekComponents();
+
+    const ospcommon::vec3f  cameraUp(up_x, up_y, up_z);
+    const ospcommon::vec3f cameraDir(dir[0], dir[1], dir[2]);
+
+    // map OSPRay depth buffer from provided frame buffer
+    const float *ospDepthBuffer = (const float *)ospMapFrameBuffer(this->framebuffer, OSP_FB_DEPTH);
+
+
+    const size_t ospDepthBufferWidth = (size_t)this->imgSize.x;
+    const size_t ospDepthBufferHeight = (size_t)this->imgSize.y;
+
+    // transform from ray distance t to orthogonal Z depth
+    ospcommon::vec3f dir_du = normalize(cross(cameraDir, cameraUp));
+    ospcommon::vec3f dir_dv = normalize(cross(dir_du, cameraDir));
+
+    const float imagePlaneSizeY = 2.f * tanf(fovy / 2.f * M_PI / 180.f);
+    const float imagePlaneSizeX = imagePlaneSizeY * aspect;
+
+    dir_du *= imagePlaneSizeX;
+    dir_dv *= imagePlaneSizeY;
+
+    const ospcommon::vec3f dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
+
+    const double A = -(zFar + zNear) / (zFar - zNear);
+    const double B = -2. * zFar*zNear / (zFar - zNear);
+
+    int j,i;
+#pragma omp parallel for private(i)
+    for (j = 0; j<ospDepthBufferHeight; j++)
+        for (i = 0; i<ospDepthBufferWidth; i++) {
+            const ospcommon::vec3f dir_ij = normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du + float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
+
+            float tmp = ospDepthBuffer[j*ospDepthBufferWidth + i] * dot(cameraDir, dir_ij);
+            db[j*ospDepthBufferWidth + i] = 0.5*(-A*tmp + B) / tmp + 0.5;
+        }
+
+    // unmap OSPRay depth buffer
+    ospUnmapFrameBuffer(ospDepthBuffer, this->framebuffer);
+}

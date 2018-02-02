@@ -117,7 +117,6 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
     megamol::core::AbstractGetData3DCall *out;
     if (outMPDC != nullptr) out = outMPDC;
     if (outDPDC != nullptr) out = outDPDC;
-
     unsigned int time = out->FrameID() + 1; // we do not give out the original frame 0 because it has no previous frame
 
     if (this->cachedTime != time - 1 || this->datahash != in->DataHash()) {
@@ -136,10 +135,12 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         //    vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame extents (%u)", time - 1);
         //    return false;
         //}
-        if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
-            return false;
-        }
+        do {
+            if (!(*in)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get previous frame (%u)", time - 1);
+                return false;
+            }
+        } while (in->FrameID() != time - 1); // did we get correct frame?
         cachedVertexData.resize(in->GetParticleListCount(), nullptr);
         cachedVertexDataType.resize(in->GetParticleListCount());
         cachedGlobalRadius.resize(in->GetParticleListCount(), 0.0f);
@@ -173,20 +174,22 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             memcpy(this->cachedVertexData[i], in->AccessParticles(i).GetVertexData(), thesize);
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
+        //in->SetUnlocker(nullptr, false);
         in->Unlock();
         this->cachedTime = time - 1;
         this->cachedNumLists = in->GetParticleListCount();
 
         in->SetFrameID(time, true);
-        if (!(*in)(1)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
-            return false;
-        }
-        if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
-            return false;
-        }
+        do {
+            if (!(*in)(1)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame extents (%u)", time - 1);
+                return false;
+            }
+            if (!(*in)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: could not get current frame (%u)", time - 1);
+                return false;
+            }
+        } while (in->FrameID() != time); // did we get correct frame?
         if (cachedNumLists != in->GetParticleListCount()) {
             vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: inconsistent number of lists"
                 "between frames %u (%u) and %u (%u)", time - 1, cachedNumLists, time, in->GetParticleListCount());
@@ -231,8 +234,8 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
 
         }
         // TODO: what am I actually doing here
-        in->SetUnlocker(nullptr, false);
-        in->Unlock();
+        //in->SetUnlocker(nullptr, false);
+        //in->Unlock();
     }
     if (outMPDC != nullptr) {
         outMPDC->SetParticleListCount(cachedNumLists);
