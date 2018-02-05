@@ -394,7 +394,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 }
 
 bool VoluMetricJob::getLineDataCallback(core::Call &caller) {
-    trisoup::LinesDataCall *ldc = dynamic_cast<trisoup::LinesDataCall*>(&caller);
+    megamol::geocalls::LinesDataCall *ldc = dynamic_cast<megamol::geocalls::LinesDataCall*>(&caller);
     if (ldc == NULL) return false;
 
     if (this->hash == 0) {
@@ -414,7 +414,7 @@ bool VoluMetricJob::getLineDataCallback(core::Call &caller) {
 }
 
 bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
-    trisoup::CallTriMeshData *mdc = dynamic_cast<trisoup::CallTriMeshData*>(&caller);
+    megamol::geocalls::CallTriMeshData *mdc = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
     if (mdc == NULL) return false;
 
     if (this->hash == 0) {

@@ -1,15 +1,15 @@
 /*
  * LinesDataCall.h
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_TRISOUP_LINESDATACALL_H_INCLUDED
-#define MEGAMOL_TRISOUP_LINESDATACALL_H_INCLUDED
+#ifndef MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
+#define MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmstd_trisoup/mmstd_trisoup.h"
+#include "geometry_calls/geometry_calls.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -18,13 +18,13 @@
 
 
 namespace megamol {
-namespace trisoup {
+namespace geocalls {
 
 
     /**
      * Call for lines data
      */
-    class MMSTD_TRISOUP_API LinesDataCall : public core::AbstractGetData3DCall {
+    class GEOMETRY_CALLS_API LinesDataCall : public core::AbstractGetData3DCall {
     public:
 
         /**
@@ -36,7 +36,7 @@ namespace trisoup {
          * must be multiplied. You can use the index array to reduce the
          * memory overhead in the colour and vertex array.
          */
-        class MMSTD_TRISOUP_API Lines {
+        class GEOMETRY_CALLS_API Lines {
         public:
 
             /** The possible colour data types */
@@ -702,10 +702,10 @@ namespace trisoup {
     };
 
     /** Description class typedef */
-    typedef core::factories::CallAutoDescription<LinesDataCall> LinesDataCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<LinesDataCall> LinesDataCallDescription;
 
 
-} /* end namespace trisoup */
+} /* end namespace geocalls */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_TRISOUP_LINESDATACALL_H_INCLUDED */
+#endif /* MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED */

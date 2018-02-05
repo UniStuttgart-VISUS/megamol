@@ -19,6 +19,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 
@@ -43,7 +44,10 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     // pathtracer renderer parameters
     rd_ptBackground("PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity"),
     // Call lights 
-    getLightSlot("getLight", "Connects to a light source") {
+    getLightSlot("getLight", "Connects to a light source"),
+    // Use depth buffer component
+    useDB("useDBcomponent", "activates depth composition with OpenGL content")
+    {
 
     // ospray lights
     lightsToRender = NULL;
@@ -52,7 +56,7 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     // ospray device and framebuffer
     device = NULL;
     framebufferIsDirty = true;
-
+    maxDepthTexture = NULL;
 
     core::param::EnumParam *rdt = new core::param::EnumParam(SCIVIS);
     rdt->SetTypePair(SCIVIS, "SciVis");
@@ -86,38 +90,106 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
 
+    // Depth
+    this->useDB << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useDB);
+
 }
 
-void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height) {
+void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader,
+    const uint32_t * fb, const float * db, int &width, int &height, megamol::core::view::CallRender3D& cr) {
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+    auto fbo = cr.FrameBufferObject();
+    if (fbo != NULL) {
 
-    glUniform1i(shader.ParameterLocation("tex"), 0);
-    glBindVertexArray(this->vaScreen);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        if (fbo->IsValid()) {
+            if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
+                fbo->Release();
+            }
+        }
+        if (!fbo->IsValid()) {
+            fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+        }
+        if (fbo->IsValid() && !fbo->IsEnabled()) {
+            fbo->Enable();
+        }
+
+        fbo->BindColourTexture();
+        glClear(GL_COLOR_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        fbo->BindDepthTexture();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        if (fbo->IsValid()) {
+            fbo->Disable();
+            //fbo->DrawColourTexture();
+            //fbo->DrawDepthTexture();
+        }
+    } else {
+        /*
+        if (this->new_fbo.IsValid()) {
+            if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
+                this->new_fbo.Release();
+            }
+        }
+        if (!this->new_fbo.IsValid()) {
+            this->new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+        }
+        if (this->new_fbo.IsValid() && !this->new_fbo.IsEnabled()) {
+            this->new_fbo.Enable();
+        }
+
+        this->new_fbo.BindColourTexture();
+        glClear(GL_COLOR_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        this->new_fbo.BindDepthTexture();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+
+        glBlitNamedFramebuffer(this->new_fbo.GetID(), 0, 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+        this->new_fbo.Disable();
+        */
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glEnable(GL_DEPTH_TEST);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glUniform1i(shader.ParameterLocation("tex"), 0);
+
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glUniform1i(shader.ParameterLocation("depth"), 1);
+
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glDisable(GL_DEPTH_TEST);
+
+    }
 }
+
 
 void AbstractOSPRayRenderer::setupTextureScreen() {
-
-    // setup vertexarray
-    float screenVertices[] = { 0.0f,0.0f, 1.0f,0.0f, 0.0f,1.0f, 1.0f,1.0f };
-
-    glGenVertexArrays(1, &this->vaScreen);
-    glGenBuffers(1, &this->vbo);
-
-    glBindVertexArray(this->vaScreen);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    glEnableVertexAttribArray(0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // setup texture
+    // setup color texture
     glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
@@ -125,15 +197,22 @@ void AbstractOSPRayRenderer::setupTextureScreen() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    //// setup depth texture
+    glGenTextures(1, &this->depth);
+    glBindTexture(GL_TEXTURE_2D, this->depth);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
 
 void AbstractOSPRayRenderer::releaseTextureScreen() {
     glDeleteTextures(1, &this->tex);
-    glDeleteBuffers(1, &this->vbo);
-    glDeleteVertexArrays(1, &vaScreen);
+    glDeleteTextures(1, &this->depth);
 }
 
 void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
@@ -315,6 +394,7 @@ bool AbstractOSPRayRenderer::AbstractIsDirty() {
         this->rd_spp.IsDirty() ||
         this->rd_maxRecursion.IsDirty() ||
         this->rd_ptBackground.IsDirty() ||
+        this->useDB.IsDirty() ||
         this->framebufferIsDirty) {
         return true;
     } else {
@@ -333,6 +413,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
     this->rd_ptBackground.ResetDirty();
+    this->useDB.ResetDirty();
     this->framebufferIsDirty = false;
 }
 
@@ -407,6 +488,7 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
     ospSet1f(renderer, "epsilon", this->rd_epsilon.Param<core::param::FloatParam>()->Value());
     ospSet1i(renderer, "spp", this->rd_spp.Param<core::param::IntParam>()->Value());
     ospSet1i(renderer, "maxDepth", this->rd_maxRecursion.Param<core::param::IntParam>()->Value());
+    ospSetObject(renderer, "maxDepthTexture", this->maxDepthTexture);
 
     switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
     case SCIVIS:
@@ -415,18 +497,20 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
         ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
         ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
         ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
+        ospSet1i(renderer, "backgroundEnabled", 0);
+        /* Not implemented
         GLfloat bgcolor[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
         ospSet3fv(renderer, "bgColor", bgcolor);
-        /* Not implemented
         ospSet1i(renderer, "oneSidedLighting", 0);
-        ospSet1i(renderer, "backgroundEnabled", 0);
         */
         break;
     case PATHTRACER:
         if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
             OSPTexture2D bkgnd_tex = this->TextureFromFile(this->rd_ptBackground.Param<core::param::FilePathParam>()->Value());
             ospSetObject(renderer, "backplate", bkgnd_tex);
+        } else {
+            ospSet1i(renderer, "backgroundEnabled", 0);
         }
         break;
     }
@@ -440,14 +524,14 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / 
+    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / 
+    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
-    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) / 
+    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) / 
+    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
     // setup camera
@@ -678,13 +762,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
         }
 
         OSPData vertexData = NULL;
-        OSPData colorData  = NULL;
+        OSPData colorData = NULL;
         OSPData normalData = NULL;
-        OSPData texData    = NULL;
-        OSPData indexData  = NULL;
-        OSPData voxels     = NULL;
-        OSPData isovalues  = NULL;
-        OSPData planes     = NULL;
+        OSPData texData = NULL;
+        OSPData indexData = NULL;
+        OSPData voxels = NULL;
+        OSPData isovalues = NULL;
+        OSPData planes = NULL;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
@@ -748,7 +832,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
                 } else {
                     vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float)+ element.colorLength * sizeof(float));
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
                     ospSet1f(geo.back(), "radius", element.globalRadius);
                     //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
                     //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
