@@ -19,12 +19,15 @@ using System.Reflection;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
+using System.Collections;
 
 namespace MegaMolConf {
     public partial class Form1 : Form     {
         private List<Data.PluginFile> plugins = null;
-        private Dictionary<TabPage, List<GraphicalModule>> tabModules = new Dictionary<TabPage, List<GraphicalModule>>();
-        private Dictionary<TabPage, List<GraphicalConnection>> tabConnections = new Dictionary<TabPage, List<GraphicalConnection>>();
+        //private Dictionary<TabPage, ObservableCollection<GraphicalModule>> tabModules = new Dictionary<TabPage, ObservableCollection<GraphicalModule>>();
+        private ObservingDict<GraphicalModule> tabModules = new ObservingDict<GraphicalModule>();
+        //private Dictionary<TabPage, ObservableCollection<GraphicalConnection>> tabConnections = new Dictionary<TabPage, ObservableCollection<GraphicalConnection>>();
+        private ObservingDict<GraphicalConnection> tabConnections = new ObservingDict<GraphicalConnection>();
         private Dictionary<TabPage, GraphicalModule> tabMainViews = new Dictionary<TabPage, GraphicalModule>();
         private Dictionary<TabPage, object> tabSelectedObjects = new Dictionary<TabPage, object>();
         private Dictionary<TabPage, string> tabStartParameters = new Dictionary<TabPage, string>();
@@ -139,9 +142,61 @@ namespace MegaMolConf {
             //this.splitContainer1.SplitterDistance = 290;
             listBoxLog = new Util.ListBoxLog(listBox1);
 
+            tabModules.OnChangedItems += TabModules_OnChangedItems;
+
+            tabConnections.OnChangedItems += TabConnections_OnChangedItems;
+
             this.ScanPorts();
         }
 
+        private void TabConnections_OnChangedItems(IList addedList, IList deletedList) {
+            if (tabViews.SelectedTab != null) {
+                MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+                if (mmii != null && mmii.Connection != null && mmii.Connection.Valid) {
+                    if (addedList != null) {
+                        foreach (object o in addedList) {
+                            GraphicalConnection gc = o as GraphicalConnection;
+                            if (gc != null) {
+                                mmii.QueueConnectionCreation(gc);
+                            }
+                        }
+                    }
+                    if (deletedList != null) {
+                        foreach (object o in deletedList) {
+                            GraphicalConnection gc = o as GraphicalConnection;
+                            if (gc != null) {
+                                mmii.QueueConnectionDeletion(gc);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void TabModules_OnChangedItems(IList addedList, IList deletedList) {
+            if (tabViews.SelectedTab != null) {
+                MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+                if (mmii != null && mmii.Connection != null && mmii.Connection.Valid) {
+                    if (addedList != null) {
+                        foreach (object o in addedList) {
+                            GraphicalModule gm = o as GraphicalModule;
+                            if (gm != null) {
+                                mmii.QueueModuleCreation(gm);
+                            }
+                        }
+                    }
+                    if (deletedList != null) {
+                        foreach (object o in deletedList) {
+                            GraphicalModule gm = o as GraphicalModule;
+                            if (gm != null) {
+                                mmii.QueueModuleDeletion(gm);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         internal void ScanPorts() {
             occupiedPorts.Initialize();
 
@@ -929,8 +984,8 @@ namespace MegaMolConf {
             tabViews.TabPages.Add(name);
             TabPage tp = tabViews.TabPages[tabViews.TabCount - 1];
             tp.ImageIndex = 1;
-            tabModules[tp] = new List<GraphicalModule>();
-            tabConnections[tp] = new List<GraphicalConnection>();
+            tabModules[tp] = new ObservableCollection<GraphicalModule>();
+            tabConnections[tp] = new ObservableCollection<GraphicalConnection>();
             tabMainViews[tp] = null;
             tabFileNames[tp] = null;
             tabStartParameters[tp] = null;
@@ -1113,7 +1168,14 @@ namespace MegaMolConf {
         private void btnSaveProject_Click(object sender, EventArgs e) {
             TabPage tp = tabViews.SelectedTab;
             if (tp == null) return;
-            
+
+            if (tabViews.SelectedTab.Tag != null) {
+                MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+                if (mmii.Connection != null && mmii.Connection.Valid) {
+                    mmii.UpdateModules(tabModules[tabViews.SelectedTab]);
+                }
+            }
+
             try {
                 if (String.IsNullOrEmpty(this.tabFileNames[tp])) {
                     saveShortcut = false;
@@ -2061,7 +2123,8 @@ in PowerShell:
 
                 ImportParamfileForm ipff = new ImportParamfileForm();
                 ipff.ProjectName = tp.Text;
-                ipff.Modules = tabModules[tp];
+                // todo: is this a problem?
+                ipff.Modules = tabModules[tp].ToList<GraphicalModule>();
                 ipff.ParamFile = paramFile;
                 if (ipff.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
                     object oo = propertyGrid1.SelectedObject;

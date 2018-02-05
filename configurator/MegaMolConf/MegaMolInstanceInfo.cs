@@ -20,6 +20,35 @@ namespace MegaMolConf {
         private Object myLock = new Object();
         private string connectionString = "";
 
+        private List<GraphicalModule> moduleCreations = new List<GraphicalModule>();
+        private List<GraphicalModule> moduleDeletions = new List<GraphicalModule>();
+        private List<GraphicalConnection> connectionCreations = new List<GraphicalConnection>();
+        private List<GraphicalConnection> connectionDeletions = new List<GraphicalConnection>();
+
+        public void QueueModuleCreation(GraphicalModule gm) {
+            lock (moduleCreations) {
+                moduleCreations.Add(gm);
+            }
+        }
+
+        public void QueueModuleDeletion(GraphicalModule gm) {
+            lock (moduleDeletions) {
+                moduleDeletions.Add(gm);
+            }
+        }
+
+        public void QueueConnectionCreation(GraphicalConnection gc) {
+            lock (connectionCreations) {
+                connectionCreations.Add(gc);
+            }
+        }
+
+        public void QueueConnectionDeletion(GraphicalConnection gc) {
+            lock (connectionDeletions) {
+                connectionDeletions.Add(gc);
+            }
+        }
+
         public enum MegaMolProcessState {
             MMPS_NONE = 1,
             MMPS_CONNECTION_GOOD = 2,
@@ -119,43 +148,70 @@ namespace MegaMolConf {
                 GraphicalModule gm = Form1.selectedModule;
                 // check current tab (is the correct instance controlled)
                 TabPage tp = Form1.selectedTab;
-                if (gm != null && tp == this.TabPage) {
-#if true
-                    if (stopQueued) break;
-                    res = this.Request("return mmGetModuleParams(\"" + "inst::" + gm.Name +"\")", ref ans);
-                    if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
-                        string[] stuff = ((string)ans).Split(new char[] { '\u0001' }, StringSplitOptions.None);
-                        int len = stuff.Count();
-                        // don't forget the trailing element since we conclude with one last separator!
-                        if (len > 1 && (len - 1) % 4 == 1) {
-                            string module = stuff[0];
-                            for (int x = 1; x < len - 1; x += 4) {
-                                string slotname = stuff[x];
-                                // +1 description
-                                // +2 typedescription
-                                //MegaMol.SimpleParamRemote.ParameterTypeDescription ptd = new MegaMol.SimpleParamRemote.ParameterTypeDescription();
-                                //ptd.SetFromHexStringDescription(stuff[x + 2]);
-                                string slotvalue = stuff[x + 3];
-                                var keys = gm.ParameterValues.Keys.ToList();
-                                foreach (Data.ParamSlot p in keys) {
-                                    if (p.Name.Equals(slotname)) {
-                                        if (!p.Type.ValuesEqual(gm.ParameterValues[p], slotvalue)) {
-                                            gm.ParameterValues[p] = slotvalue;
-                                            this.ParentForm.ParamChangeDetected();
-                                        }
-                                        //if (ptd.Type == MegaMol.SimpleParamRemote.ParameterType.FlexEnumParam) {
-                                        if (p.Type.TypeName == "MMFENU") {
-                                            //int numVals = ptd.ExtraSettings.Keys.Count() / 2;
-                                            p.Type = p.TypeFromTypeInfo(StringToByteArray(stuff[x + 2]));
-                                        }
-                                    }
-                                }
+                if (tp == this.TabPage) {
+
+                    lock (moduleCreations) {
+                        foreach (GraphicalModule gmc in moduleCreations) {
+                            string command = @"mmCreateModule(""" + gmc.Module.Name + @""", ""::inst::" + gmc.Name + @""")";
+                            res = this.Request("return " + command, ref ans);
+                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                                // huh.
+                            } else {
+                                ParentForm.listBoxLog.Log(Util.Level.Error, @"Error on " + command + ": " + res);
                             }
-                        } else {
-                            ParentForm.listBoxLog.Log(Util.Level.Error, "invalid response to mmcGetModuleParams(\"inst::" + gm.Name + "\")");
                         }
-                    } else {
-                        ParentForm.listBoxLog.Log(Util.Level.Error, "Error in mmcGetModuleParams(\"inst::" + gm.Name + "\"): " + res);
+                        moduleCreations.Clear();
+                    }
+
+                    lock (moduleDeletions) {
+                        foreach (GraphicalModule gmc in moduleDeletions) {
+                            string command = @"mmDeleteModule(""::inst::" + gmc.Name + @""")";
+                            res = this.Request("return " + command, ref ans);
+                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                                // huh.
+                            } else {
+                                ParentForm.listBoxLog.Log(Util.Level.Error, @"Error on " + command + ": " + res);
+                            }
+                        }
+                        moduleDeletions.Clear();
+                    }
+
+                    // TODO: connections. beware that connections will probably be cleaned if the modules go away, so failure is okayish? :/
+
+                    lock (connectionCreations) {
+                        foreach (GraphicalConnection gcc in connectionCreations) {
+                            string command = @"mmCreateCall(""" + gcc.Call.Name + @""",""::inst::" + gcc.src.Name + "::"
+                                + gcc.srcSlot.Name + @""", ""::inst::" + gcc.dest.Name + "::" + gcc.destSlot.Name + @""")";
+                            res = this.Request("return " + command, ref ans);
+                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                                // huh.
+                            } else {
+                                ParentForm.listBoxLog.Log(Util.Level.Error, @"Error on " + command + ": " + res);
+                            }
+                        }
+                        connectionCreations.Clear();
+                    }
+
+                    lock (connectionDeletions) {
+                        foreach (GraphicalConnection gcc in connectionDeletions) {
+                            string command = @"mmDeleteCall(""::inst::" + gcc.src.Name + "::" 
+                                + gcc.srcSlot.Name + @""", ""::inst::" + gcc.dest.Name + "::" + gcc.destSlot.Name + @""")";
+                            res = this.Request("return " + command, ref ans);
+                            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                                // huh.
+                            } else {
+                                ParentForm.listBoxLog.Log(Util.Level.Error, @"Error on " + command + ": " + res);
+                            }
+                        }
+                        connectionDeletions.Clear();
+                    }
+
+                    if (gm != null) {
+#if true
+                        if (stopQueued)
+                            break;
+
+                        res = UpdateModuleParams(gm);
                     }
 #else
                     string prefix = "inst::" + gm.Name + "::";
@@ -177,6 +233,53 @@ namespace MegaMolConf {
                 Connection.Close();
             }
             ParentForm.FreePort(Port);
+        }
+
+        public void UpdateModules(IEnumerable<GraphicalModule> modules) {
+            foreach (GraphicalModule gm in modules) {
+                UpdateModuleParams(gm);
+            }
+        }
+
+        private string UpdateModuleParams(GraphicalModule gm) {
+            object ans = null;
+            string res = this.Request("return mmGetModuleParams(\"" + "inst::" + gm.Name + "\")", ref ans);
+            if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
+                string[] stuff = ((string)ans).Split(new char[] { '\u0001' }, StringSplitOptions.None);
+                int len = stuff.Count();
+                // don't forget the trailing element since we conclude with one last separator!
+                if (len > 1 && (len - 1) % 4 == 1) {
+                    string module = stuff[0];
+                    for (int x = 1; x < len - 1; x += 4) {
+                        string slotname = stuff[x];
+                        // +1 description
+                        // +2 typedescription
+                        //MegaMol.SimpleParamRemote.ParameterTypeDescription ptd = new MegaMol.SimpleParamRemote.ParameterTypeDescription();
+                        //ptd.SetFromHexStringDescription(stuff[x + 2]);
+                        string slotvalue = stuff[x + 3];
+                        var keys = gm.ParameterValues.Keys.ToList();
+                        foreach (Data.ParamSlot p in keys) {
+                            if (p.Name.Equals(slotname)) {
+                                if (!p.Type.ValuesEqual(gm.ParameterValues[p], slotvalue)) {
+                                    gm.ParameterValues[p] = slotvalue;
+                                    this.ParentForm.ParamChangeDetected();
+                                }
+                                //if (ptd.Type == MegaMol.SimpleParamRemote.ParameterType.FlexEnumParam) {
+                                if (p.Type.TypeName == "MMFENU") {
+                                    //int numVals = ptd.ExtraSettings.Keys.Count() / 2;
+                                    p.Type = p.TypeFromTypeInfo(StringToByteArray(stuff[x + 2]));
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    ParentForm.listBoxLog.Log(Util.Level.Error, "invalid response to mmcGetModuleParams(\"inst::" + gm.Name + "\")");
+                }
+            } else {
+                ParentForm.listBoxLog.Log(Util.Level.Error, "Error in mmcGetModuleParams(\"inst::" + gm.Name + "\"): " + res);
+            }
+
+            return res;
         }
 
         private void TryConnecting(string conn) {

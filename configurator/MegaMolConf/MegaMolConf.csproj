@@ -81,6 +81,7 @@
     </Compile>
     <Compile Include="Io\Paramfile.cs" />
     <Compile Include="MegaMolInstanceInfo.cs" />
+    <Compile Include="ObservingDict.cs" />
     <Compile Include="Util\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
