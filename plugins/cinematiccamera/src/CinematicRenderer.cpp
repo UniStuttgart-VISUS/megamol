@@ -200,7 +200,8 @@ bool CinematicRenderer::GetExtents(Call& call) {
 
     // Compute bounding box including spline (in world space) and object (in world space).
     vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
-    this->modelBboxCenter = bboxCR3D.CalcCenter();
+    // Set bounding box center of model
+    ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
     // Grow bounding box to manipulators and get information of bbox of model
     this->manipulator.updateExtents(&bboxCR3D);
@@ -454,10 +455,10 @@ bool CinematicRenderer::Render(Call& call) {
         }
         // Update manipulator data
         this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
-            cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
-            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(),
-            cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
-            this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(), 
+            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
             this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
         // Draw manipulators
         this->manipulator.draw();
@@ -558,8 +559,8 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[l] Reset Look-At of selected keyframe.\n";
         helpText += "[r] Start/Stop rendering complete animation.\n";
         helpText += "[s] Save keyframes to file.\n";
-        helpText += "[u] Undo keyframe changes.\n";
-        helpText += "[z] Redo keyframe changes.\n";
+        helpText += "[ctrl+z] Undo keyframe changes.\n";
+        helpText += "[ctrl+y] Redo keyframe changes.\n";
         helpText += "[space] Toggle animation preview.\n";
         helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
         helpText += "[m] Toggle different manipulators for the selected keyframe.\n";

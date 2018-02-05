@@ -174,7 +174,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
-    // Set new bounding box center
+    // Set bounding box center of model
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
     // Set total simulation time of call
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));

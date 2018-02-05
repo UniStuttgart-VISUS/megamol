@@ -86,7 +86,7 @@ namespace megamol {
             float                                totalAnimTime;
             float                                totalSimTime;
             unsigned int                         interpolSteps;
-            vislib::math::Point<float, 3>        bboxCenter;
+            vislib::math::Point<float, 3>        modelBboxCenter;
             unsigned int                         fps;
 
             vislib::math::Vector<float, 3>       camViewUp;

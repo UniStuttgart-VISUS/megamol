@@ -100,13 +100,13 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->interpolSteps        = 10;
     this->fps                  = 24;
     this->totalSimTime         = 1.0f;
-    this->bboxCenter           = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f); 
+    this->modelBboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f); 
     this->filename             = "keyframes.kf";
     this->camViewUp            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
     this->camViewPosition      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
     this->camViewLookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->firstCtrllPos = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->lastCtrllPos  = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
+    this->firstCtrllPos        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
+    this->lastCtrllPos         = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->camViewApertureangle = 30.0f;
     this->simTangentStatus     = false;
     this->undoQueueIndex       = 0;
@@ -132,7 +132,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentSimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getSimTime()*this->totalSimTime, 0.0f));
     this->MakeSlotAvailable(&this->editCurrentSimTimeParam);
 
-    this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition()));
+    this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition() - this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()));
     this->MakeSlotAvailable(&this->editCurrentPosParam);
 
     this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamLookAt()));
@@ -213,7 +213,7 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
     if (ccc == NULL) return false;
 
     // Get bounding box center
-    this->bboxCenter = ccc->getBboxCenter();
+    this->modelBboxCenter = ccc->getBboxCenter();
 
     // Get total simulation time
     if (ccc->getTotalSimTime() != this->totalSimTime) {
@@ -505,7 +505,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentPosParam.IsDirty()) {
         this->editCurrentPosParam.ResetDirty();
 
-        vislib::math::Vector<float, 3> posV = this->editCurrentPosParam.Param<param::Vector3fParam>()->Value();
+        vislib::math::Vector<float, 3> posV = this->editCurrentPosParam.Param<param::Vector3fParam>()->Value() + this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
         vislib::math::Point<float, 3>  pos = vislib::math::Point<float, 3>(posV.X(), posV.Y(), posV.Z());
 
         // Get index of existing keyframe
@@ -545,12 +545,12 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->resetLookAtParam.IsDirty()) {
         this->resetLookAtParam.ResetDirty();
 
-        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(this->bboxCenter);
+        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(this->modelBboxCenter);
         // Get index of existing keyframe
         int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
         if (selIndex >= 0) {
             Keyframe tmpKf = this->selectedKeyframe;
-            this->selectedKeyframe.setCameraLookAt(this->bboxCenter);
+            this->selectedKeyframe.setCameraLookAt(this->modelBboxCenter);
             this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }
         else {
@@ -1166,14 +1166,35 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         kf.setCameraApertureAngele(this->camViewApertureangle);
         return kf;
     }
-    else if (t <= this->keyframes.First().getAnimTime()) {
+    else if (t < this->keyframes.First().getAnimTime()) {
+        /**/
         Keyframe kf = this->keyframes.First();
         kf.setAnimTime(t);
+        /**/
+        /*
+        Keyframe kf = Keyframe();
+        kf.setAnimTime(t);
+        kf.setSimTime(this->keyframes.First().getSimTime());
+        kf.setCameraUp(this->camViewUp);
+        kf.setCameraPosition(this->camViewPosition);
+        kf.setCameraLookAt(this->camViewLookat);
+        kf.setCameraApertureAngele(this->camViewApertureangle);
+        */
         return kf;
+
     }
-    else if (t >= this->keyframes.Last().getAnimTime()) {
+    else if (t > this->keyframes.Last().getAnimTime()) {
+        /*
         Keyframe kf = this->keyframes.Last();
         kf.setAnimTime(t);
+        */
+        Keyframe kf = Keyframe();
+        kf.setAnimTime(t);
+        kf.setSimTime(this->keyframes.Last().getSimTime());
+        kf.setCameraUp(this->camViewUp);
+        kf.setCameraPosition(this->camViewPosition);
+        kf.setCameraLookAt(this->camViewLookat);
+        kf.setCameraApertureAngele(this->camViewApertureangle);
         return kf;
     }
     else { // if ((t > this->keyframes.First().getAnimTime()) && (t < this->keyframes.Last().getAnimTime())) {
@@ -1466,7 +1487,7 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     vislib::math::Point<float, 3>  pos = vislib::math::Point<float, 3>(posV.X(), posV.Y(), posV.Z());
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.getAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.getSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(pos, false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(pos - this->modelBboxCenter.operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>(), false);
     this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(lookat, false);
     this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(kf.getCamUp(), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(kf.getCamApertureAngle(), false);
