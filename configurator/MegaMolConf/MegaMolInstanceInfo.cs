@@ -147,7 +147,7 @@ namespace MegaMolConf {
                 System.Threading.Thread.Sleep(1000);
                 GraphicalModule gm = Form1.selectedModule;
                 // check current tab (is the correct instance controlled)
-                TabPage tp = Form1.selectedTab;
+                TabPage tp = ParentForm.selectedTab;
                 if (tp == this.TabPage) {
 
                     lock (moduleCreations) {

@@ -56,7 +56,19 @@ namespace MegaMolConf {
         internal static GraphicalModule copiedModule { get; private set; }
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
-        internal static TabPage selectedTab { get; private set; }
+        internal TabPage selectedTab {
+            get {
+                if (InvokeRequired) {
+                    return (TabPage)this.Invoke(new Func<TabPage>(() => {
+                        return this.tabViews.SelectedTab;
+                    }));
+                } else {
+                    return this.tabViews.SelectedTab;
+                }
+            }
+        }
+        //private set {
+        //}
 
         private static void SelectItem(GraphicalModule m, Data.CalleeSlot s) {
             selectedCallee = s;
@@ -2211,8 +2223,5 @@ in PowerShell:
             }
         }
 
-        private void tabViews_Selected(object sender, TabControlEventArgs e) {
-            Form1.selectedTab = this.tabViews.SelectedTab;
-        }
     }
 }

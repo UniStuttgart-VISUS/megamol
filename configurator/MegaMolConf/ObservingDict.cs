@@ -26,7 +26,7 @@ namespace MegaMolConf {
 
         public int Count => theDict.Count;
 
-        public bool IsReadOnly => throw new NotImplementedException();
+        public bool IsReadOnly => false;
 
         public ObservableCollection<T> this[TabPage key] { get {
                 return theDict[key];
