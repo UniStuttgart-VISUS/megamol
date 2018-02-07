@@ -61,6 +61,8 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
 	this->cudaImage = NULL;
 	this->cudaDepthImage = NULL;
 
+    this->cuda_kernel = std::unique_ptr<CUDAVolumeRaycaster_kernel>(new CUDAVolumeRaycaster_kernel());
+
 #ifdef DEBUG_LUT
 	const int lutSize = 256;
 	float divisor = 255.0f;
@@ -97,7 +99,7 @@ bool CUDAVolumeRaycaster::create(void) {
  *	CUDAVolumeRaycaster::release
  */
 void CUDAVolumeRaycaster::release(void) {
-	freeCudaBuffers();
+	cuda_kernel->freeCudaBuffers();
 }
 
 /*
@@ -295,7 +297,7 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 		auto volPtr = loadVolume(vdc);
 
 		if (volPtr != nullptr) {
-			transferNewVolume(volPtr, volumeExtent);
+            cuda_kernel->transferNewVolume(volPtr, volumeExtent);
 			checkCudaErrors(cudaDeviceSynchronize());
 		}
 		else {
@@ -305,7 +307,7 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	}
 
 	if (loadLut()) {
-		copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
+        cuda_kernel->copyTransferFunction(this->lut.data(), static_cast<int>(this->lut.size()));
 	}
 
 	vdc->Unlock();
@@ -322,7 +324,7 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	}
 
 	// render the stuff
-	render_kernel(gridSize, blockSize, this->cudaImage, this->cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
+    cuda_kernel->render_kernel(gridSize, blockSize, this->cudaImage, this->cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
 		transferOffset, transferScale, bbMin, bbMax, this->volumeExtent);
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());

@@ -26,7 +26,7 @@ namespace volume_cuda {
      * @param tfar OUT: Pointer to the distance of the furthest intersection point.
      * @return Value greater 0 if a intersection happened, 0 otherwise.
      */
-    __device__ int intersectBox(Ray r, float3 boxmin, float3 boxmax, float *tnear, float *tfar) {
+    static __device__ int intersectBox(Ray r, float3 boxmin, float3 boxmax, float *tnear, float *tfar) {
         // compute intersection of ray with all six bbox planes
         float3 invR = make_float3(1.0f) / r.d;
         float3 tbot = invR * (boxmin - r.o);

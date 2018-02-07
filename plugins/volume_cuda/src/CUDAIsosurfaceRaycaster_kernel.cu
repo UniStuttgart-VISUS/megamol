@@ -173,16 +173,15 @@ void CUDAIsosurfaceRaycaster_kernel::render_kernel(dim3 gridSize, dim3 blockSize
  * CUDAIsosurfaceRaycaster_kernel::copyTransferFunction
  */
 void CUDAIsosurfaceRaycaster_kernel::copyTransferFunction(float4 * transferFunction, int functionSize) {
-    if (d_customTransferFuncArray) {
+    if (this->d_customTransferFuncArray) {
         checkCudaErrors(cudaDestroyTextureObject(this->customTransferTexObj));
-        checkCudaErrors(cudaFreeArray(d_customTransferFuncArray));
-        d_customTransferFuncArray = 0;
+        checkCudaErrors(cudaFreeArray(this->d_customTransferFuncArray));
+        this->d_customTransferFuncArray = 0;
     }
 
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();
-	cudaArray * d_customTransferFuncArray;
-	checkCudaErrors(cudaMallocArray(&d_customTransferFuncArray, &channelDesc, functionSize, 1));
-	checkCudaErrors(cudaMemcpyToArray(d_customTransferFuncArray, 0, 0, transferFunction, sizeof(float4)*functionSize, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMallocArray(&this->d_customTransferFuncArray, &channelDesc, functionSize, 1));
+	checkCudaErrors(cudaMemcpyToArray(this->d_customTransferFuncArray, 0, 0, transferFunction, sizeof(float4)*functionSize, cudaMemcpyHostToDevice));
 
     cudaResourceDesc texRes;
     memset(&texRes, 0, sizeof(cudaResourceDesc));
@@ -194,6 +193,8 @@ void CUDAIsosurfaceRaycaster_kernel::copyTransferFunction(float4 * transferFunct
     texDescr.normalizedCoords = true;
     texDescr.filterMode = cudaFilterModeLinear;
     texDescr.addressMode[0] = cudaAddressModeClamp;
+    texDescr.addressMode[1] = cudaAddressModeClamp;
+    texDescr.addressMode[2] = cudaAddressModeClamp;
     texDescr.readMode = cudaReadModeElementType;
 
     checkCudaErrors(cudaCreateTextureObject(&this->customTransferTexObj, &texRes, &texDescr, NULL));
@@ -205,12 +206,12 @@ void CUDAIsosurfaceRaycaster_kernel::copyTransferFunction(float4 * transferFunct
 void CUDAIsosurfaceRaycaster_kernel::transferNewVolume(void * h_volume, cudaExtent volumeSize) {
 	if (d_volumeArray) {
         checkCudaErrors(cudaDestroyTextureObject(this->texObj));
-		checkCudaErrors(cudaFreeArray(d_volumeArray));
+		checkCudaErrors(cudaFreeArray(this->d_volumeArray));
 		d_volumeArray = 0;
 	}
 
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-	checkCudaErrors(cudaMalloc3DArray(&d_volumeArray, &channelDesc, volumeSize));
+	checkCudaErrors(cudaMalloc3DArray(&this->d_volumeArray, &channelDesc, volumeSize));
 
 	// compute min and max values of the volume
 	float * volptr = static_cast<float*>(h_volume);
@@ -221,7 +222,7 @@ void CUDAIsosurfaceRaycaster_kernel::transferNewVolume(void * h_volume, cudaExte
 	// copy the data
 	cudaMemcpy3DParms copyParams = { 0 };
 	copyParams.srcPtr = make_cudaPitchedPtr(h_volume, volumeSize.width * sizeof(float), volumeSize.width, volumeSize.height);
-	copyParams.dstArray = d_volumeArray;
+	copyParams.dstArray = this->d_volumeArray;
 	copyParams.extent = volumeSize;
 	copyParams.kind = cudaMemcpyHostToDevice;
 	checkCudaErrors(cudaMemcpy3D(&copyParams));
@@ -256,7 +257,10 @@ void CUDAIsosurfaceRaycaster_kernel::initCudaDevice(void * h_volume, cudaExtent 
  * CUDAIsosurfaceRaycaster_kernel::CUDAIsosurfaceRaycaster_kernel
  */
 CUDAIsosurfaceRaycaster_kernel::CUDAIsosurfaceRaycaster_kernel(void) {
-    // intentionally empty
+    this->d_volumeArray = 0;
+    this->d_customTransferFuncArray = 0;
+    this->texObj = 0;
+    this->customTransferTexObj = 0;
 }
 
 /**

@@ -11,6 +11,7 @@
 #include "mmcore/versioninfo.h"
 
 #include "CUDAVolumeRaycaster.h"
+#include "CUDAIsosurfaceRaycaster.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
@@ -50,6 +51,7 @@ namespace {
             //   ...
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::volume_cuda::CUDAVolumeRaycaster>();
+            this->module_descriptions.RegisterAutoDescription<megamol::volume_cuda::CUDAIsosurfaceRaycaster>();
 
             // register calls here:
 
