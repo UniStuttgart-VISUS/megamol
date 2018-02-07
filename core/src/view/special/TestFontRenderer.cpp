@@ -36,7 +36,7 @@ using namespace megamol::core::view::special;
 TestFontRenderer::TestFontRenderer(void) : Renderer2DModule(),
     filledFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
     outlineFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE),
-    sdfFont(megamol::core::view::special::FontInfo_Verdana, megamol::core::view::special::SDFFont::RENDERTYPE_FILL)
+    sdfFont(SDFFont::BitmapFont::BMFONT_EVOLVENTA, SDFFont::RENDERTYPE_FILL)
     {
 
 
@@ -200,7 +200,6 @@ bool TestFontRenderer::Render(megamol::core::view::CallRender2D& call) {
 
 
     // SIMPLE FONT ------------------------------------------------------------
-
     float simpleWidth = this->simpleFont.LineWidth(fontSize, simpleString);
     this->simpleFont.DrawString(0.0f, vpH, simpleWidth, 1.0f, fontSize, true, simpleString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
@@ -227,10 +226,10 @@ bool TestFontRenderer::Render(megamol::core::view::CallRender2D& call) {
     glDisable(GL_POLYGON_SMOOTH);
 
     // SDF FONT
-
+    /*
     float sdfWidth = this->sdfFont.LineWidth(fontSize, sdfString);
     this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-
+    */
 
 
     // ------------------------------------------------------------------------

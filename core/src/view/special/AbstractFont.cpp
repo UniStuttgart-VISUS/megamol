@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
  /*
- * This is a copy of vislib/graphics/AbstractFont.h
+ * This is a copy of "vislib/graphics/AbstractFont.h"
  */
 
 #include "mmcore/view/special/AbstractFont.h"
