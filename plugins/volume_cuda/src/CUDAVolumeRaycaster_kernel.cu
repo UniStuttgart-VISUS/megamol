@@ -7,6 +7,11 @@
 #include <thrust/extrema.h>
 #include <thrust/device_ptr.h>
 
+#include "CUDAAdditionalTypedefs.cuh"
+
+using namespace megamol;
+using namespace megamol::volume_cuda;
+
 cudaArray * d_volumeArray = 0;
 cudaArray * d_customTransferFuncArray = 0;
 
@@ -15,17 +20,6 @@ typedef float VolumeType;
 texture<VolumeType, 3, cudaReadModeElementType> tex;
 texture<float4, 1, cudaReadModeElementType> customTransferTex;
 float minVal, maxVal;
-
-typedef struct {
-	float4 m[3];
-} float3x4;
-
-__constant__ float3x4 c_invViewMatrix;  // inverse view matrix
-
-struct Ray {
-	float3 o;   // origin
-	float3 d;   // direction
-};
 
 /** 
  *	Intersect ray with a box
@@ -56,51 +50,6 @@ __device__ int intersectBox(Ray r, float3 boxmin, float3 boxmax, float *tnear, f
 	*tfar = smallest_tmax;
 
 	return smallest_tmax > largest_tmin;
-}
-
-/**
- *	Transform vector by matrix (no translation)
- *
- *	@param M The 3x4 matrix
- *	@param v The vector to be transformed
- *	@return The transformed vector.
- */
-__device__ float3 mul(const float3x4 &M, const float3 &v) {
-	float3 r;
-	r.x = dot(v, make_float3(M.m[0]));
-	r.y = dot(v, make_float3(M.m[1]));
-	r.z = dot(v, make_float3(M.m[2]));
-	return r;
-}
-
-/**
- *	Transform vector by matrix (with translation)
- *
- *	@param M The 3x4 matrix
- *	@param v The vector to be transformed
- *	@return The transformed vector.
- */
-__device__ float4 mul(const float3x4 &M, const float4 &v) {
-	float4 r;
-	r.x = dot(v, M.m[0]);
-	r.y = dot(v, M.m[1]);
-	r.z = dot(v, M.m[2]);
-	r.w = 1.0f;
-	return r;
-}
-
-/**
- *	Converts a rgba color to a colour represented by an unsigned int
- *
- *	@param rgba The rgba colour.
- *	@return The colour as an unsigned int
- */
-__device__ uint rgbaFloatToInt(float4 rgba) {
-	rgba.x = __saturatef(rgba.x);   // clamp to [0.0, 1.0]
-	rgba.y = __saturatef(rgba.y);
-	rgba.z = __saturatef(rgba.z);
-	rgba.w = __saturatef(rgba.w);
-	return (uint(rgba.w * 255) << 24) | (uint(rgba.z * 255) << 16) | (uint(rgba.y * 255) << 8) | uint(rgba.x * 255);
 }
 
 /**
