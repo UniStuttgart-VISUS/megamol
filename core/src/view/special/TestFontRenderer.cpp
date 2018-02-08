@@ -121,8 +121,12 @@ bool TestFontRenderer::Render(megamol::core::view::CallRender2D& call) {
         return false;
     }
 
+
+    this->sdfFont.draw();
+
     // Opengl setup -----------------------------------------------------------
 
+    /*/
     // Get the foreground color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -226,10 +230,8 @@ bool TestFontRenderer::Render(megamol::core::view::CallRender2D& call) {
     glDisable(GL_POLYGON_SMOOTH);
 
     // SDF FONT
-    /*
-    float sdfWidth = this->sdfFont.LineWidth(fontSize, sdfString);
-    this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-    */
+    //float sdfWidth = this->sdfFont.LineWidth(fontSize, sdfString);
+    //this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
 
     // ------------------------------------------------------------------------
@@ -244,6 +246,8 @@ bool TestFontRenderer::Render(megamol::core::view::CallRender2D& call) {
     glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
+    */
+
 
     return true;
 }

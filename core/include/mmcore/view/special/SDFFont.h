@@ -20,6 +20,7 @@
 #include "mmcore/view/special/AbstractFont.h"
 
 #include "vislib/Array.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 
@@ -275,6 +276,11 @@ namespace megamol {
             this->renderType = t;
         }
 
+        /**
+        * TEST
+        */
+        void draw() ;
+
     protected:
 
         /**
@@ -301,9 +307,9 @@ namespace megamol {
 
         class SDFFontInfo {
         public:
-            inline bool operator==(SDFFontInfo const& rhs) {
-                return ((this->charId == rhs.charId) && (this->texX == rhs.texX) && (this->texY == rhs.texY) && (this->width == rhs.width) && (this->height == rhs.height));
-            }
+            //inline bool operator==(SDFFontInfo const& rhs) {
+           //     return ((this->charId == rhs.charId) && (this->texX == rhs.texX) && (this->texY == rhs.texY) && (this->width == rhs.width) && (this->height == rhs.height));
+            //}
 
             int charId;     // ascii character id
             int texX;       // x position on texture
@@ -333,7 +339,7 @@ namespace megamol {
         RenderType renderType;
 
         /** Font information */
-        vislib::Array<SDFFontInfo> fontInfo;
+        vislib::Array<vislib::SmartPtr<SDFFontInfo> > fontInfo;
 
         /**********************************************************************
         * functions
@@ -349,7 +355,11 @@ namespace megamol {
         bool loadFontTexture(vislib::StringA filename);
 
         /** Load shaders */
-        bool loadShader();
+        bool loadShader(vislib::StringA vert, vislib::StringA frag);
+
+        /** Load file */
+        SIZE_T loadFile(vislib::StringA filename, void **outData);
+
 
         /** Number of lines in the text */
         unsigned int SDFFont::lineCount(vislib::StringA txt) const;
@@ -366,7 +376,7 @@ namespace megamol {
          * @param flipY The flag controlling the direction of the y-axis
          * @param align The alignment
          */
-        void draw(vislib::StringA *txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
 
     };
             } /* end namespace special */
