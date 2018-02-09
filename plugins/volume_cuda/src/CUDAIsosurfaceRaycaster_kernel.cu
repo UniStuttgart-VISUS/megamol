@@ -14,6 +14,7 @@ using namespace megamol::volume_cuda;
  * CUDAIsosurfaceRaycaster_kernel::d_render
  */
 __global__ void d_renderIso(uint * d_output, float * d_depth, cudaTextureObject_t tex, cudaTextureObject_t transferTex,
+    float * d_isovalues, int numisovalues,
     uint imageW, uint imageH, float fovx, float fovy,
     float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float zFar,
     float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
@@ -88,6 +89,38 @@ __global__ void d_renderIso(uint * d_output, float * d_depth, cudaTextureObject_
 	float3 step = eyeRay.d * tstep;
 	float3 diff = boxMax - boxMin;
 
+    if (numisovalues < 1) {
+        d_output[y*imageW + x] = rgbaFloatToInt(make_float4(0.0f));
+        return;
+    }
+
+    float3 sP;
+    sP.x = (pos.x - boxMin.x) / diff.x;
+    sP.y = (pos.y - boxMin.y) / diff.y;
+    sP.z = (pos.z - boxMin.z) / diff.z;
+    float val = (tex3D<float>(tex, sP.x, sP.y, sP.z) - minVal / (maxVal - minVal));
+
+    //float isoDiff = 0;
+    //float isoDiffOld = val - d_isovalues[0];
+
+    float * isoDiffs = new float[numisovalues];
+    float * isoDiffsOld = new float[numisovalues];
+
+    for (int i = 0; i < numisovalues; i++) {
+        isoDiffs[i] = 0.0f;
+        isoDiffsOld[i] = val - d_isovalues[i];
+    }
+
+    float3 voxelSize = make_float3(1.0f / (float)volSize.width, 1.0f / (float)volSize.height, 1.0f / (float)volSize.depth);
+
+    //float alpha = 1.0f / (float)numisovalues;
+
+    float4 colors = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
+    // TODO make colors changeable
+
+    //bool firstHit = true;
+    //float3 firstHitPos;
+
 	float projA = -(zFar + zNear) / (zFar - zNear);
 	float projB = -2.0f * zNear * zFar / (zFar - zNear);
 
@@ -103,6 +136,54 @@ __global__ void d_renderIso(uint * d_output, float * d_depth, cudaTextureObject_
 		
 		// normalize the sample
 		sample = (sample - minVal) / (maxVal - minVal);
+
+        for (int isoIndex = 0; isoIndex < numisovalues; isoIndex++) {
+            isoDiffs[isoIndex] = sample - d_isovalues[isoIndex];
+
+            if ((isoDiffs[isoIndex] * isoDiffsOld[isoIndex] <= 0.0f)) {
+                // interpolated exact position of the isosurface
+                float3 isoPos = lerp(pos - step, pos, isoDiffsOld[isoIndex] / (isoDiffsOld[isoIndex] - isoDiffs[isoIndex]));
+                
+                //if (firstHit) {
+                //    firstHitPos = isoPos;
+                //    firstHit = false;
+                //}
+
+                float3 isoSamplePos;
+                isoSamplePos.x = (isoPos.x - boxMin.x) / diff.x;
+                isoSamplePos.y = (isoPos.y - boxMin.y) / diff.y;
+                isoSamplePos.z = (isoPos.z - boxMin.z) / diff.z;
+
+                float3 gradient = make_float3(1, 0, 0);
+                gradient.x = ((tex3D<float>(tex, isoSamplePos.x + voxelSize.x, isoSamplePos.y, isoSamplePos.z) - minVal) / (maxVal - minVal))
+                    - ((tex3D<float>(tex, isoSamplePos.x - voxelSize.x, isoSamplePos.y, isoSamplePos.z) - minVal) / (maxVal - minVal));
+                gradient.y = ((tex3D<float>(tex, isoSamplePos.x, isoSamplePos.y + voxelSize.y, isoSamplePos.z) - minVal) / (maxVal - minVal))
+                    - ((tex3D<float>(tex, isoSamplePos.x, isoSamplePos.y - voxelSize.y, isoSamplePos.z) - minVal) / (maxVal - minVal));
+                gradient.z = ((tex3D<float>(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z + voxelSize.z) - minVal) / (maxVal - minVal))
+                    - ((tex3D<float>(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z - voxelSize.z) - minVal) / (maxVal - minVal));
+                gradient = normalize(gradient);
+
+                float4 col = make_float4(0.0);
+
+                col = colors;
+
+                // TODO make this adjustable
+                float3 lightDir = make_float3(0.0f, 0.0f, 1.0f);
+                float4 lightParams = make_float4(0.1f, 0.3f, 0.2f, 10.0f);
+                float4 mycol = CUDAIsosurfaceRaycaster_kernel::performLighting(gradient, -eyeRay.d, lightDir, col, lightParams);
+
+                mycol *= mycol.w;
+                mycol.w = col.w;
+
+                sum = sum + (mycol * (1.0f - sum.w));
+
+                // exit early if opaque
+                if (sum.w > opacityThreshold) {
+                    break;
+                }
+            }
+            isoDiffsOld[isoIndex] = isoDiffs[isoIndex];
+        }
 
 		float sampleCamDist = length(eyeRay.o - pos);
 
@@ -123,22 +204,25 @@ __global__ void d_renderIso(uint * d_output, float * d_depth, cudaTextureObject_
 		// "over" operator for front-to-back blending
 		sum = sum + col * (1.0f - sum.w);
 
-		// exit early if opaque
-		if (sum.w > opacityThreshold) {
-			break;
-		}
-
 		t += tstep;
-
 		if (t > tfar) break;
-
 		pos += step;
 	}
-
+    
 	sum *= brightness;
 
 	// write output color
 	d_output[y * imageW + x] = rgbaFloatToInt(sum);
+
+    free(isoDiffs);
+    free(isoDiffsOld);
+}
+
+/**
+ * CUDAIsosurfaceRaycaster_kernel::performLighting
+ */
+__device__ float4 CUDAIsosurfaceRaycaster_kernel::performLighting(float3 normal, float3 camDirection, float3 lightDirection, float4 surfaceColor, float4 lightParams) {
+    return make_float4(1.0f, 0.0f, 0.0f, 1.0f);
 }
  
 /**
@@ -164,15 +248,18 @@ void CUDAIsosurfaceRaycaster_kernel::render_kernel(dim3 gridSize, dim3 blockSize
 	float3 camUp, float3 camRight, float zNear, float zFar, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin, const float3 boxMax, cudaExtent volSize) {
 
-	d_renderIso <<<gridSize, blockSize >>>(d_output, d_depth, this->texObj, this->customTransferTexObj, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
+    int numIsovalues = static_cast<int>(this->isovalues.size());
+    float * isovalptr = thrust::raw_pointer_cast(this->isovalues.data());
+
+	d_renderIso <<<gridSize, blockSize >>>(d_output, d_depth, this->texObj, this->customTransferTexObj, isovalptr, numIsovalues, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, zFar, density, brightness,
 		transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
 }
 
 
 /**
- * CUDAIsosurfaceRaycaster_kernel::copyTransferFunction
+ * CUDAIsosurfaceRaycaster_kernel::copyColorValues
  */
-void CUDAIsosurfaceRaycaster_kernel::copyTransferFunction(float4 * transferFunction, int functionSize) {
+void CUDAIsosurfaceRaycaster_kernel::copyColorValues(float4 * cvals, int functionSize) {
     if (this->d_customTransferFuncArray) {
         checkCudaErrors(cudaDestroyTextureObject(this->customTransferTexObj));
         checkCudaErrors(cudaFreeArray(this->d_customTransferFuncArray));
@@ -181,7 +268,7 @@ void CUDAIsosurfaceRaycaster_kernel::copyTransferFunction(float4 * transferFunct
 
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();
 	checkCudaErrors(cudaMallocArray(&this->d_customTransferFuncArray, &channelDesc, functionSize, 1));
-	checkCudaErrors(cudaMemcpyToArray(this->d_customTransferFuncArray, 0, 0, transferFunction, sizeof(float4)*functionSize, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToArray(this->d_customTransferFuncArray, 0, 0, cvals, sizeof(float4)*functionSize, cudaMemcpyHostToDevice));
 
     cudaResourceDesc texRes;
     memset(&texRes, 0, sizeof(cudaResourceDesc));
@@ -250,7 +337,14 @@ void CUDAIsosurfaceRaycaster_kernel::transferNewVolume(void * h_volume, cudaExte
  */
 void CUDAIsosurfaceRaycaster_kernel::initCudaDevice(void * h_volume, cudaExtent volumeSize, float4 * transferFunction, int functionSize) {
 	transferNewVolume(h_volume, volumeSize);
-	copyTransferFunction(transferFunction, functionSize);
+	//copyTransferFunction(transferFunction, functionSize);
+}
+
+/**
+ * CUDAIsosurfaceRaycaster_kernel::initCudaDevice
+ */
+void CUDAIsosurfaceRaycaster_kernel::setIsoValues(const std::vector<float>& h_isovalues, int h_numisovalues) {
+    this->isovalues = h_isovalues;
 }
 
 /**

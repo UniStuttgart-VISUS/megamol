@@ -14,6 +14,7 @@
 #include "helper_includes/helper_math.h"
 
 #include "CUDAAdditionalTypedefs.cuh"
+#include <thrust/device_vector.h>
 
 #include "stdafx.h"
 
@@ -33,12 +34,12 @@ namespace volume_cuda {
         virtual ~CUDAIsosurfaceRaycaster_kernel(void);
 
         /**
-         * Transfers a new transfer function to the GPU.
+         * Transfers the new color values to the GPU.
          * 
          * @param transferFunction Pointer to the transfer function values.
          * @param functionSize number of transfer function values.
          */
-        void copyTransferFunction(float4 * transferFunction, int functionSize = 256);
+        void copyColorValues(float4 * transferFunction, int functionSize = 256);
 
         /**
          * Initializes the CUDA device
@@ -84,12 +85,28 @@ namespace volume_cuda {
             const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1));
 
         /**
+         * Sets the isovalues used for the plane raycasting
+         */
+        void setIsoValues(const std::vector<float>& h_isovalues, int h_numisovalues);
+
+        /**
          * Transfers a new volume to the GPU
          * 
          * @param h_volume Pointer to the float volume data.
          * @param volumeSize The extents of the volume.
          */
         void transferNewVolume(void * h_volume, cudaExtent volumeSize);
+
+        /**
+         * Performs blinn-phong lighting on a surface.
+         *
+         * @param normal The surface normal
+         * @param camDirection The normalized direction to the camera
+         * @param lightDirection The normalized direction to the light
+         * @param surfaceColor The color of the surface
+         * @param lightParams The light parameters: (ambient, diffuse, specular, exponent)
+         */
+        static __device__ float4 performLighting(float3 normal, float3 camDirection, float3 lightDirection, float4 surfaceColor, float4 lightParams);
 
     private:
 
@@ -114,6 +131,9 @@ namespace volume_cuda {
 
         /** The maximum volume value */
         float maxVal;
+
+        /** Storage for the isovalues */
+        thrust::device_vector<float> isovalues;
     };
 
 } /* end namespace volume_cuda */
