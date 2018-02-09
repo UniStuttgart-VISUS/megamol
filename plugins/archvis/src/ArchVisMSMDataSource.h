@@ -87,7 +87,25 @@ namespace archvis {
 		typedef vislib::math::Vector<float, 3> Vec3;
 		typedef vislib::math::Quaternion<float> Quat;
 
-		Mat4x4 computeElementTransform(Node src, Node tgt);
+		/**
+		* Given two nodes and their displacement vectors,
+		* compute the transform of an element connected to these nodes.
+		*/
+		Mat4x4 computeElementTransform(
+			Node src,
+			Node tgt,
+			Vec3 src_displacement,
+			Vec3 tgt_displacement);
+
+		Mat4x4 computeElementTransform(
+			Node orgin,
+			Node corner_x,
+			Node corner_z,
+			Node corner_xz,
+			Vec3 origin_displacement,
+			Vec3 corner_x_displacement, 
+			Vec3 corner_z_displacement,
+			Vec3 corner_xz_displacement);
 
 		void parseNodeElementTable(
 			std::string const& filename,
@@ -97,6 +115,23 @@ namespace archvis {
 			std::vector<DiagonalElement>& diagonal_elements);
 
 		std::vector<std::string> parsePartsList(std::string const& filename);
+
+		void updateMSMTransform();
+
+
+		/** Nodes of the MSM */
+		std::vector<Node>            m_nodes;
+
+		/** Floor elements of the MSM */
+		std::vector<FloorElement>    m_floor_elements;
+
+		/** Beam elements of the MSM */
+		std::vector<BeamElement>     m_beam_elements;
+
+		/** Diagonal elements of the MSM */
+		std::vector<DiagonalElement> m_diagonal_elements;
+
+		std::vector<float>           m_node_displacements;
 
 
 		/** The shader file name */
@@ -108,11 +143,18 @@ namespace archvis {
 		/** The node/element list file name */
 		megamol::core::param::ParamSlot m_nodeElement_table_slot;
 
-		/** The IP Adress for sensor data transfer */
-		megamol::core::param::ParamSlot m_IPAdress_slot;
+		/** The IP Adress for receiving sensor or simulation data */
+		megamol::core::param::ParamSlot m_rcv_IPAddr_slot;
 
-		/** The socket that receives the sensor data */
-		vislib::net::Socket m_sensor_data_socket;
+		/** The IP Adress for sending sensor or simulation data (to Unity) */
+		megamol::core::param::ParamSlot m_snd_IPAddr_slot;
+
+		/** The socket that receives the sensor or simulation data */
+		vislib::net::Socket m_rcv_socket;
+		bool m_rcv_socket_connected;
+
+		/** The socket that sends the sensor or simulation data */
+		vislib::net::Socket m_snd_socket;
 	};
 }
 }

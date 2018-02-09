@@ -9,6 +9,10 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build ng_mesh" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(ng_mesh)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   set(LIBS vislib core glad)
   include_directories("include" "src")
 

@@ -10,6 +10,7 @@
 #include <string>
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/net/SocketException.h"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -19,7 +20,7 @@
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-#include "external/tiny_gltf.h"
+#include "tiny_gltf.h"
 
 using namespace megamol::archvis;
 using namespace megamol::ngmesh;
@@ -28,7 +29,9 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_shaderFilename_slot("Shader", "The name of to the shader file to load"),
 	m_partsList_slot("Parts list", "The path to the parts list file to load"),
 	m_nodeElement_table_slot("Node/Element table", "The path to the node/element table to load"),
-	m_IPAdress_slot("Ip adress", "The ip adress of the sensor data transfer")
+	m_rcv_IPAddr_slot("Receive IP adress", "The ip adress for receiving data"),
+	m_snd_IPAddr_slot("Send IP adress", "The ip adress for sending data"),
+	m_rcv_socket_connected(false)
 {
 	this->m_shaderFilename_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
@@ -39,12 +42,29 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_nodeElement_table_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_nodeElement_table_slot);
 	
-	m_IPAdress_slot << new core::param::IntParam(0);
-	this->MakeSlotAvailable(&this->m_IPAdress_slot);
+	m_rcv_IPAddr_slot << new core::param::IntParam(0);
+	this->MakeSlotAvailable(&this->m_rcv_IPAddr_slot);
+
+	m_snd_IPAddr_slot << new core::param::IntParam(0);
+	this->MakeSlotAvailable(&this->m_snd_IPAddr_slot);
+
+	try {
+		// try to start up socket
+		vislib::net::Socket::Startup();
+		// create socket
+		this->m_rcv_socket.Create(vislib::net::Socket::ProtocolFamily::FAMILY_INET, vislib::net::Socket::Type::TYPE_DGRAM, vislib::net::Socket::Protocol::PROTOCOL_UDP);
+	}
+	catch (vislib::net::SocketException e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA());
+	}
+	
+	
+	//std::cout << "Socket Endpoint: " << endpoint.ToStringA() << std::endl;
 }
 
 ArchVisMSMDataSource::~ArchVisMSMDataSource()
 {
+	vislib::net::Socket::Cleanup();
 }
 
 bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
@@ -52,6 +72,7 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
 	if (render_batches_call == NULL)
 		return false;
+
 	if (this->m_partsList_slot.IsDirty() ||
 		this->m_shaderFilename_slot.IsDirty() ||
 		this->m_nodeElement_table_slot.IsDirty() )
@@ -79,20 +100,49 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		load(shdr_filename, partsList_filename, nodesElement_filename);
 	}
 
-	// TODO handle IP slot is dirty
+	if (this->m_rcv_IPAddr_slot.IsDirty())
+	{
+		this->m_rcv_IPAddr_slot.ResetDirty();
+
+		try {
+			vislib::net::IPAddress server_addr;
+			server_addr = server_addr.Create();
+			this->m_rcv_socket.Connect(vislib::net::IPEndPoint(server_addr, 9050));
+			this->m_rcv_socket_connected = true;
+
+			std::string greeting("Hello, my name is MegaMol");
+			this->m_rcv_socket.Send(greeting.c_str(), greeting.length());
+		}
+		catch (vislib::net::SocketException e) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during connection: %s", e.GetMsgA());
+		}
+	}
 
 	render_batches_call->setRenderBatches(&m_render_batches);
 
+	if(this->m_rcv_socket_connected)
+		this->m_rcv_socket.Receive(m_node_displacements.data(), m_node_displacements.size() * 4);
+
+	updateMSMTransform();
+	
 	return true;
 }
 
-ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(Node src, Node tgt)
+ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(Node src, Node tgt, Vec3 src_displacement, Vec3 tgt_displacement)
 {
+	Node src_displaced = { src_displacement.X() + std::get<0>(src),
+							src_displacement.Y() + std::get<1>(src),
+							src_displacement.Z() + std::get<2>(src) };
+
+	Node tgt_displaced = { tgt_displacement.X() + std::get<0>(tgt),
+							tgt_displacement.Y() + std::get<1>(tgt),
+							tgt_displacement.Z() + std::get<2>(tgt) };
+
 	// compute element rotation
 	Mat4x4 object_rotation;
-	Vec3 diag_vector = Vec3(std::get<0>(tgt) - std::get<0>(src),
-							std::get<1>(tgt) - std::get<1>(src),
-							std::get<2>(tgt) - std::get<2>(src));
+	Vec3 diag_vector = Vec3(std::get<0>(tgt_displaced) - std::get<0>(src_displaced),
+							std::get<1>(tgt_displaced) - std::get<1>(src_displaced),
+							std::get<2>(tgt_displaced) - std::get<2>(src_displaced));
 	diag_vector.Normalise();
 	Vec3 up_vector(0.0f, 1.0f, 0.0f);
 	Vec3 rot_vector = up_vector.Cross(diag_vector);
@@ -100,13 +150,76 @@ ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(Node 
 	Quat rotation(std::acos(up_vector.Dot(diag_vector)), rot_vector);
 	object_rotation = rotation;
 
+	// compute element scale
+	Mat4x4 object_scale;
+	float base_distance = Vec3(std::get<0>(tgt) - std::get<0>(src),
+		std::get<1>(tgt) - std::get<1>(src),
+		std::get<2>(tgt) - std::get<2>(src)).Length();
+
+	float displaced_distance = Vec3(std::get<0>(tgt_displaced) - std::get<0>(src_displaced),
+		std::get<1>(tgt_displaced) - std::get<1>(src_displaced),
+		std::get<2>(tgt_displaced) - std::get<2>(src_displaced)).Length();
+
+	object_scale.SetAt(1, 1, displaced_distance/base_distance);
+
 	// compute element offset
 	Mat4x4 object_translation;
-	object_translation.SetAt(0, 3, std::get<0>(src));
-	object_translation.SetAt(1, 3, std::get<1>(src));
-	object_translation.SetAt(2, 3, std::get<2>(src));
+	object_translation.SetAt(0, 3, std::get<0>(src_displaced));
+	object_translation.SetAt(1, 3, std::get<1>(src_displaced));
+	object_translation.SetAt(2, 3, std::get<2>(src_displaced));
 
-	return (object_translation * object_rotation);
+	return (object_translation * object_rotation * object_scale);
+}
+
+ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(
+	Node orgin,
+	Node corner_x,
+	Node corner_z,
+	Node corner_xz,
+	Vec3 origin_displacement,
+	Vec3 corner_x_displacement,
+	Vec3 corner_z_displacement,
+	Vec3 corner_xz_displacement)
+{
+	Node origin_displaced = { origin_displacement.X() + std::get<0>(orgin),
+		origin_displacement.Y() + std::get<1>(orgin),
+		origin_displacement.Z() + std::get<2>(orgin) };
+
+	Node corner_x_displaced = { corner_x_displacement.X() + std::get<0>(corner_x),
+		corner_x_displacement.Y() + std::get<1>(corner_x),
+		corner_x_displacement.Z() + std::get<2>(corner_x) };
+
+	Node corner_z_displaced = { corner_z_displacement.X() + std::get<0>(corner_z),
+		corner_z_displacement.Y() + std::get<1>(corner_z),
+		corner_z_displacement.Z() + std::get<2>(corner_z) };
+
+	Node corner_xz_displaced = { corner_xz_displacement.X() + std::get<0>(corner_xz),
+		corner_xz_displacement.Y() + std::get<1>(corner_xz),
+		corner_xz_displacement.Z() + std::get<2>(corner_xz) };
+
+
+	// compute element rotation around z
+	Mat4x4 object_rotation_z;
+	Vec3 diag_vector = Vec3(std::get<0>(corner_x_displaced) - std::get<0>(origin_displaced),
+		std::get<1>(corner_x_displaced) - std::get<1>(origin_displaced),
+		std::get<2>(corner_x_displaced) - std::get<2>(origin_displaced));
+	diag_vector.Normalise();
+	Vec3 up_vector(1.0f, 0.0f, 0.0f);
+	Vec3 rot_vector = up_vector.Cross(diag_vector);
+	rot_vector.Normalise();
+	Quat rotation(std::acos(up_vector.Dot(diag_vector)), rot_vector);
+	object_rotation_z = rotation;
+
+	// compute element scale
+	Mat4x4 object_scale;
+
+	// compute element offset
+	Mat4x4 object_translation;
+	object_translation.SetAt(0, 3, std::get<0>(origin_displaced));
+	object_translation.SetAt(1, 3, std::get<1>(origin_displaced));
+	object_translation.SetAt(2, 3, std::get<2>(origin_displaced));
+
+	return (object_translation * object_rotation_z);
 }
 
 std::vector<std::string> ArchVisMSMDataSource::parsePartsList(std::string const& filename)
@@ -213,26 +326,86 @@ void ArchVisMSMDataSource::parseNodeElementTable(
 	}
 }
 
+void ArchVisMSMDataSource::updateMSMTransform()
+{
+	ObjectShaderParamsDataAccessor mesh_shader_params;
+
+	mesh_shader_params.byte_size = 16 * 4 * m_render_batches.getDrawCommandData(0).draw_cnt;
+	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
+
+	// compute element offset
+	Mat4x4 tower_model_matrix;
+	tower_model_matrix.SetAt(0, 3, 0.0f);
+	tower_model_matrix.SetAt(1, 3, -1.0f);
+	tower_model_matrix.SetAt(2, 3, 0.0f);
+
+	int counter = 0;
+	for (auto& element : m_floor_elements)
+	{
+		int origin_node_idx = std::get<3>(element);
+		int x_node_idx = std::get<0>(element);
+		int z_node_idx = std::get<1>(element);
+		int xz_node_idx = std::get<2>(element);
+
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(
+			m_nodes[origin_node_idx], 
+			m_nodes[x_node_idx],
+			m_nodes[z_node_idx],
+			m_nodes[xz_node_idx],
+			Vec3(m_node_displacements[origin_node_idx * 3], m_node_displacements[origin_node_idx * 3 + 1], m_node_displacements[origin_node_idx * 3 + 2]),
+			Vec3(m_node_displacements[x_node_idx * 3], m_node_displacements[x_node_idx * 3 + 1], m_node_displacements[x_node_idx * 3 + 2]),
+			Vec3(m_node_displacements[z_node_idx * 3], m_node_displacements[z_node_idx * 3 + 1], m_node_displacements[z_node_idx * 3 + 2]),
+			Vec3(m_node_displacements[xz_node_idx * 3], m_node_displacements[xz_node_idx * 3 + 1], m_node_displacements[xz_node_idx * 3 + 2]) );
+
+		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
+
+		counter++;
+	}
+
+	for (auto& element : m_beam_elements)
+	{
+		int src_node_idx = std::get<0>(element);
+		int tgt_node_idx = std::get<1>(element);
+
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[src_node_idx], m_nodes[tgt_node_idx],
+			Vec3(m_node_displacements[src_node_idx * 3], m_node_displacements[src_node_idx * 3 + 1], m_node_displacements[src_node_idx * 3 + 2]),
+			Vec3(m_node_displacements[tgt_node_idx * 3], m_node_displacements[tgt_node_idx * 3 + 1], m_node_displacements[tgt_node_idx * 3 + 2]));
+
+		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
+
+		counter++;
+	}
+
+	for (auto& element : m_diagonal_elements)
+	{
+		int src_node_idx = std::get<0>(element);
+		int tgt_node_idx = std::get<1>(element);
+
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[src_node_idx], m_nodes[tgt_node_idx],
+			Vec3(m_node_displacements[src_node_idx * 3], m_node_displacements[src_node_idx * 3 + 1], m_node_displacements[src_node_idx * 3 + 2]),
+			Vec3(m_node_displacements[tgt_node_idx * 3], m_node_displacements[tgt_node_idx * 3 + 1], m_node_displacements[tgt_node_idx * 3 + 2]));
+
+		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
+
+		counter++;
+	}
+
+	m_render_batches.updateObjectShaderParams(0, mesh_shader_params);
+
+	delete[] mesh_shader_params.raw_data;
+}
+
 bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	std::string const& partsList_filename,
 	std::string const& nodesElement_filename)
 {
 	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
 
-	/** Nodes of the MSM */
-	std::vector<Node> nodes;
-
-	/** Floor elements of the MSM */
-	std::vector<FloorElement> floor_elements;
-
-	/** Beam elements of the MSM */
-	std::vector<BeamElement> beam_elements;
-
-	/** Diagonal elements of the MSM */
-	std::vector<DiagonalElement> diagonal_elements;
-
+	
 	// Load node and element data
-	parseNodeElementTable(nodesElement_filename, nodes, floor_elements, beam_elements, diagonal_elements);
+	parseNodeElementTable(nodesElement_filename, m_nodes, m_floor_elements, m_beam_elements, m_diagonal_elements);
+
+	m_node_displacements.resize(m_nodes.size() * 3);
 
 
 	ShaderPrgmDataAccessor				shader_prgm_data;
@@ -391,7 +564,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
-	draw_command_data.draw_cnt = floor_elements.size() + beam_elements.size() + diagonal_elements.size();
+	draw_command_data.draw_cnt = m_floor_elements.size() + m_beam_elements.size() + m_diagonal_elements.size();
 	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
@@ -404,7 +577,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	tower_model_matrix.SetAt(2, 3, 0.0f);
 
 	int counter = 0;
-	for (auto& element : floor_elements)
+	for (auto& element : m_floor_elements)
 	{
 		draw_command_data.data[counter].cnt = indices_cnt[2];
 		draw_command_data.data[counter].instance_cnt = 1;
@@ -419,16 +592,16 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		object_transform.SetAt(1, 1, scale);
 		object_transform.SetAt(2, 2, scale);
 
-		object_transform.SetAt(0, 3, std::get<0>(nodes[std::get<3>(element)]));
-		object_transform.SetAt(1, 3, std::get<1>(nodes[std::get<3>(element)]) -1.0f);
-		object_transform.SetAt(2, 3, std::get<2>(nodes[std::get<3>(element)]));
+		object_transform.SetAt(0, 3, std::get<0>(m_nodes[std::get<3>(element)]));
+		object_transform.SetAt(1, 3, std::get<1>(m_nodes[std::get<3>(element)]) -1.0f);
+		object_transform.SetAt(2, 3, std::get<2>(m_nodes[std::get<3>(element)]));
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 
 		counter++;
 	}
 
-	for (auto& element : beam_elements)
+	for (auto& element : m_beam_elements)
 	{
 		draw_command_data.data[counter].cnt = indices_cnt[0];
 		draw_command_data.data[counter].instance_cnt = 1;
@@ -436,14 +609,14 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		draw_command_data.data[counter].base_vertex = base_vertices[0];
 		draw_command_data.data[counter].base_instance = 0;
 
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(nodes[std::get<0>(element)], nodes[std::get<1>(element)]);
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[std::get<0>(element)], m_nodes[std::get<1>(element)], Vec3(), Vec3());
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 
 		counter++;
 	}
 
-	for (auto& element : diagonal_elements)
+	for (auto& element : m_diagonal_elements)
 	{
 		draw_command_data.data[counter].cnt = indices_cnt[1];
 		draw_command_data.data[counter].instance_cnt = 1;
@@ -451,7 +624,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 		draw_command_data.data[counter].base_vertex = base_vertices[1];
 		draw_command_data.data[counter].base_instance = 0;
 
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(nodes[std::get<0>(element)], nodes[std::get<1>(element)]);
+		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[std::get<0>(element)], m_nodes[std::get<1>(element)], Vec3(), Vec3());
 
 		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
 

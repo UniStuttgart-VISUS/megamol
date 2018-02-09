@@ -423,6 +423,16 @@ namespace ngmesh {
 					m_head.update_flags[idx] = SHADER_BIT | MESH_BIT | DRAWCOMMANDS_BIT | MESHPARAMS_BIT | MATERIAL_BIT;
 				}
 
+				void updateObjectShaderParams(unsigned int idx, ObjectShaderParamsDataAccessor obj_shader_params)
+				{
+					if(obj_shader_params.byte_size == m_head.obj_shader_params[idx].byte_size)
+					{
+						std::memcpy(m_head.obj_shader_params[idx].raw_data, obj_shader_params.raw_data, obj_shader_params.byte_size);
+
+						m_head.update_flags[idx] = m_head.update_flags[idx] | MESHPARAMS_BIT;
+					}
+				}
+
 				void resetUpdateFlags(size_t batch_idx) { m_head.update_flags[batch_idx] = 0; }
 
 				size_t getBatchCount() const { return m_head.used_batch_cnt; }

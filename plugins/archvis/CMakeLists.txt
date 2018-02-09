@@ -9,8 +9,12 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build archvis" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(archvis)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_NG_MESH_PLUGIN" CACHE INTERNAL "")
+
   set(LIBS vislib core ng_mesh glad)
-  include_directories("include" "src")
+  include_directories("include" "src" "external")
 
   # Build MegaMol Plugin
   # public header files for installation
