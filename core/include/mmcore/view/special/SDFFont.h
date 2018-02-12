@@ -279,7 +279,7 @@ namespace megamol {
         /**
         * TEST
         */
-        void draw() ;
+        void draw() const;
 
     protected:
 
@@ -368,7 +368,6 @@ namespace megamol {
 
         /** Load file */
         SIZE_T loadFile(vislib::StringA filename, void **outData);
-
 
         /** Number of lines in the text */
         unsigned int SDFFont::lineCount(vislib::StringA txt) const;

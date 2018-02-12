@@ -566,12 +566,7 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
 /*
 * SDFFont::draw
 */
-void SDFFont::draw() {
-
-    if (!this->texture.IsValid()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
-        return;
-    }
+void SDFFont::draw() const {
 
     // Get current matrices 
     GLfloat modelViewMatrix_column[16];
@@ -602,9 +597,20 @@ void SDFFont::draw() {
     glBindVertexArray(this->vaoHandle);
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
-    this->texture.Bind();
-    this->shader.Enable();
 
+    if (!this->texture.IsValid()) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
+        return;
+    }
+    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
+    
+    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
+        return;
+    }
+    glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
+
+    // Set shader variables
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
@@ -613,9 +619,9 @@ void SDFFont::draw() {
     glDrawArrays(GL_QUADS, 0, 4);
 
     // Disable buffers, texture and shader
-    this->shader.Disable();
-    glDisable(GL_TEXTURE_2D);
+    glUseProgram(0); // =  this->shader.Disable(); => can't be used because draw function has to be CONST
     glBindVertexArray(0);
+    glDisable(GL_TEXTURE_2D);
 
     // Reset opengl states
     if (!depthEnabled) {
@@ -750,10 +756,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
-
-            //this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
-            this->texture.SetFilter(GL_NEAREST, GL_NEAREST);
-
+            this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
             this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
             ARY_SAFE_DELETE(buf);
         }
@@ -789,7 +792,7 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
         ARY_SAFE_DELETE(vertBuf);
         return false;
     }
-    // Terminating buffer with '\0' is mandatory for compiling shader
+    // Terminating buffer with '\0' is mandatory for being able to compile shader
     ((char *)vertBuf)[size-1] = '\0';
 
     void *fragBuf = NULL;
@@ -798,12 +801,12 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
         ARY_SAFE_DELETE(fragBuf);
         return false;
     }
-    // Terminating buffer with '\0' is mandatory for compiling shader
+    // Terminating buffer with '\0' is mandatory for being able to compile shader
     ((char *)fragBuf)[size-1] = '\0';
 
     try {
 
-        // Compiling
+        // Compiling shaders
         if (!this->shader.Compile((const char **)(&vertBuf), (SIZE_T)1, (const char **)(&fragBuf), (SIZE_T)1)) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\": Unknown error\n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
@@ -817,7 +820,7 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
         // Fragment shader attributes
         glBindFragDataLocation(this->shader.ProgramHandle(), 0, "outFragColor");
 
-        // Linking
+        // Linking shaders
         if (!this->shader.Link()) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\": Unknown error\n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
