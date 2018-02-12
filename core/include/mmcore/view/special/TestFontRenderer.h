@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmcore/view/special/SDFFont.h"
@@ -32,7 +32,7 @@ namespace megamol {
         /**
         * Test renderer for fonts.
         */
-        class TestFontRenderer : public megamol::core::view::Renderer2DModule {
+        class TestFontRenderer : public megamol::core::view::Renderer3DModule {
         public:
 
             /**
@@ -83,6 +83,16 @@ namespace megamol {
             virtual void release(void);
 
             /**
+            * The get capabilities callback. The module should set the members
+            * of 'call' to tell the caller its capabilities.
+            *
+            * @param call The calling call.
+            *
+            * @return The return value of the function.
+            */
+            virtual bool GetCapabilities(core::Call& call);
+
+            /**
             * The get extents callback. The module should set the members of
             * 'call' to tell the caller the extents of its data (bounding boxes
             * and times).
@@ -91,7 +101,7 @@ namespace megamol {
             *
             * @return The return value of the function.
             */
-            virtual bool GetExtents(megamol::core::view::CallRender2D& call);
+            virtual bool GetExtents(core::Call& call);
 
             /**
             * The render callback.
@@ -100,7 +110,7 @@ namespace megamol {
             *
             * @return The return value of the function.
             */
-            virtual bool Render(megamol::core::view::CallRender2D& call);
+            virtual bool Render(core::Call& call);
 
         private:
 
@@ -111,11 +121,10 @@ namespace megamol {
             // font rendering
             vislib::graphics::gl::SimpleFont      simpleFont;
             vislib::graphics::gl::OutlineFont     outlineFont;
-            vislib::graphics::gl::OutlineFont     filledFont;
             megamol::core::view::special::SDFFont sdfFont;
 
 
-
+            unsigned int renderMode;
 
             /**********************************************************************
             * functions
@@ -129,9 +138,14 @@ namespace megamol {
             * parameters
             **********************************************************************/
 
-
-
-
+            /**  */
+            core::param::ParamSlot paramRenderMode1;
+            /**  */
+            core::param::ParamSlot paramRenderMode2;
+            /**  */
+            core::param::ParamSlot paramRenderMode3;
+            /**  */
+            core::param::ParamSlot paramRenderMode4;
 
         };
 

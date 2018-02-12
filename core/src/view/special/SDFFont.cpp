@@ -18,7 +18,8 @@
 #include "vislib/CharTraits.h"
 #include "vislib/memutils.h"
 #include "vislib/UTF8Encoder.h"
-
+#include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Matrix.h"
 
 using namespace vislib;
 
@@ -480,11 +481,23 @@ bool SDFFont::initialise(void) {
  */
 void SDFFont::deinitialise(void) {
 
+    // Texture
     if (this->texture.IsValid()) {
         this->texture.Release();
     }
-
+    // Shader
     this->shader.Release();
+    // VAO
+    if (glIsVertexArray(this->vaoHandle)) {
+        glDeleteVertexArrays(1, &this->vaoHandle);
+    }
+    // VBOs
+    if (glIsBuffer(this->vboHandles[0])) {
+        glDeleteBuffers(1, &this->vboHandles[0]);
+    }
+    if (glIsBuffer(this->vboHandles[1])) {
+        glDeleteBuffers(1, &this->vboHandles[1]);
+    }
 }
 
 
@@ -555,70 +568,62 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
 */
 void SDFFont::draw() {
 
-    // Get current viewport
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0];
-    int   vpHeight = vp[3] - vp[1];
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Set matrices
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    this->shader.Enable();
-
-
-    // Draw texture
-    if (this->texture.IsValid()) {
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_2D);
-        this->texture.Bind();
-
-
-        glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
-        glUniform1f(this->shader.ParameterLocation("vpW"), (float)(vpWidth));
-        glUniform1f(this->shader.ParameterLocation("vpH"), (float)(vpHeight));
-
-        glColor4f(1.0f, 1.0, 1.0f, 1.0f);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, 1.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, 1.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, -1.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, -1.0f);
-        glEnd();
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
+    if (!this->texture.IsValid()) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
+        return;
     }
 
+    // Get current matrices 
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    // Compute modelviewprojection matrix
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
-    // Reset matrices
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
+    // Get current color
+    GLfloat color[4];
+    glGetFloatv(GL_CURRENT_COLOR, color);
+    
+    // Store opengl states
+    bool depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+    if (!depthEnabled) {
+        glEnable(GL_DEPTH_TEST);
+    }    
+    bool blendEnabled = glIsEnabled(GL_BLEND);
+    if (!blendEnabled) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
-    // Reset OpenGl states
-    glDisable(GL_BLEND);
+    // Enable buffers, texture and shader
+    glBindVertexArray(this->vaoHandle);
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
+    this->texture.Bind();
+    this->shader.Enable();
 
+    glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
+    glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
+
+    // Draw ...
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    // Disable buffers, texture and shader
     this->shader.Disable();
+    glDisable(GL_TEXTURE_2D);
+    glBindVertexArray(0);
 
-
+    // Reset opengl states
+    if (!depthEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    if (!blendEnabled) {
+        glDisable(GL_BLEND);
+    }
 
 }
 
@@ -628,47 +633,70 @@ void SDFFont::draw() {
 */
 bool SDFFont::loadFont(BitmapFont bmf) {
 
+    // Generall OpenGL information
+    /*
+    const GLubyte *renderer = glGetString(GL_RENDERER);
+    const GLubyte *vendor = glGetString(GL_VENDOR);
+    const GLubyte *version = glGetString(GL_VERSION);
+    const GLubyte *glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
+    GLint major, minor;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    GLint nExtensions;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &nExtensions);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Vendor : %s\n", vendor);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Renderer : %s\n", renderer);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (string) : %s\n", version);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (integer) : %d.%d\n", major, minor);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GLSL Version : %s\n", glslVersion);
+    // Available Extensions
+    //for (int i = 0; i < nExtensions; i++) {
+    //    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] %s\n", glGetStringi(GL_EXTENSIONS, i));
+    //}
+    */
+
     // Convert BitmapFont to string
     vislib::StringA fontName = "";
     switch (bmf) {
         case  (BitmapFont::BMFONT_EVOLVENTA): fontName = "evolventa"; break;
         default: break;
     }
-
+    // Folder holding font data
     vislib::StringA folder = ".\\fonts\\";
 
+    // 1) Load font information
     vislib::StringA infoFile = folder;
     infoFile.Append(fontName);
     infoFile.Append(".fnt");
-
-    vislib::StringA textureFile = folder;
-    textureFile.Append(fontName);
-    textureFile.Append(".png");
-
-    vislib::StringA vertShaderFile = folder;
-    vertShaderFile.Append("vertex.shader");
-
-    vislib::StringA fragShaderFile = folder;
-    fragShaderFile.Append("fragment.shader");
-
     if (!this->loadFontInfo(infoFile)) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load font info file. \n");
         return false;
     }
-    else {
-        if (!this->loadFontTexture(textureFile)) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to loda font texture. \n");
-            return false;
-        }
-        else {
-            if (!this->loadShader(vertShaderFile, fragShaderFile)) {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load font shaders. \n");
-                return false;
-            }
-        }
+
+    // 2) Load texture
+    vislib::StringA textureFile = folder;
+    textureFile.Append(fontName);
+    textureFile.Append(".png");
+    if (!this->loadFontTexture(textureFile)) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to loda font texture. \n");
+        return false;
     }
 
+    // 3) Load shaders
+    vislib::StringA vertShaderFile = folder;
+    vertShaderFile.Append("vertex.shader");
+    vislib::StringA fragShaderFile = folder;
+    fragShaderFile.Append("fragment.shader");
+    if (!this->loadShader(vertShaderFile, fragShaderFile)) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load font shaders. \n");
+        return false;
+    }  
 
+    // 4) Load buffers
+    if (!this->loadBuffers()) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load buffers. \n");
+        return false;
+    }
 
     return true;
 }
@@ -716,13 +744,16 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
 
     if ((size = this->loadFile(filename, &buf)) > 0) {
         if (pbc.Load(buf, size)) {
-            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-            if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+            img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); // Using template with minimum channels containing alpha
+            if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { // Red channel is Gray value - Green channel is alpha value from png
                 vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
-            this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
+
+            //this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
+            this->texture.SetFilter(GL_NEAREST, GL_NEAREST);
+
             this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
             ARY_SAFE_DELETE(buf);
         }
@@ -744,6 +775,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
 * SDFFont::loadShader
 */
 bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
+
     // Reset shader
     this->shader.Release();
 
@@ -770,12 +802,22 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
     ((char *)fragBuf)[size-1] = '\0';
 
     try {
+
+        // Compiling
         if (!this->shader.Compile((const char **)(&vertBuf), (SIZE_T)1, (const char **)(&fragBuf), (SIZE_T)1)) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\": Unknown error\n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
             return false;
         }
+
+        // Vertex shader attributes
+        glBindAttribLocation(this->shader.ProgramHandle(), 0, "inVertPos");
+        glBindAttribLocation(this->shader.ProgramHandle(), 1, "inVertTexCoord");
+        // Fragment shader attributes
+        glBindFragDataLocation(this->shader.ProgramHandle(), 0, "outFragColor");
+
+        // Linking
         if (!this->shader.Link()) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\": Unknown error\n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
@@ -799,6 +841,56 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
 
     ARY_SAFE_DELETE(vertBuf);
     ARY_SAFE_DELETE(fragBuf);
+
+    return true;
+}
+
+
+/*
+* SDFFont::loadBuffers
+*/
+bool SDFFont::loadBuffers() {
+
+    float positionData[] = {
+        1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f  };
+
+    float texData[] = {
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f };
+
+    // Create Vertex Array Object 
+    glGenVertexArrays(1, &this->vaoHandle);
+    glBindVertexArray(this->vaoHandle);
+
+    // Create the Vertex Buffer Objects
+    glGenBuffers(2, this->vboHandles);
+
+    // Populate the position buffer
+    GLuint positionBufferHandle = vboHandles[0];
+    glBindBuffer(GL_ARRAY_BUFFER, positionBufferHandle);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), positionData, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0); // Vertex position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL);
+
+    // Populate the tex coord buffer
+    GLuint textureBufferHandle = vboHandles[1];
+    glBindBuffer(GL_ARRAY_BUFFER, textureBufferHandle);
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), texData, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1); // Vertex color
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL);
+
+    glBindVertexArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(1);
 
     return true;
 }

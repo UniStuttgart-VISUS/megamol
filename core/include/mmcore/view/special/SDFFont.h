@@ -341,6 +341,12 @@ namespace megamol {
         /** Font information */
         vislib::Array<vislib::SmartPtr<SDFFontInfo> > fontInfo;
 
+        /** Vertex Array Object handle */
+        GLuint vaoHandle;
+
+        /** Vertex Buffer Objects */
+        GLuint vboHandles[2];
+
         /**********************************************************************
         * functions
         **********************************************************************/
@@ -356,6 +362,9 @@ namespace megamol {
 
         /** Load shaders */
         bool loadShader(vislib::StringA vert, vislib::StringA frag);
+
+        /** Load buffers */
+        bool loadBuffers();
 
         /** Load file */
         SIZE_T loadFile(vislib::StringA filename, void **outData);
