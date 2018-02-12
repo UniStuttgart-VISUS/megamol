@@ -1052,6 +1052,7 @@ bool SombreroWarper::fillMeshHoles(void) {
             this->atomIndexAttachment[i].push_back(0);
             this->bsDistanceAttachment[i].push_back(UINT_MAX);
             this->vertexLevelAttachment[i].push_back(0);
+            this->brimFlags[i].push_back(false);
 
             // vertex was added, now add all triangles
             uint siz = static_cast<uint>(sortedCuts[j].size());
