@@ -20,6 +20,8 @@
 #include "vislib/UTF8Encoder.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
+
 
 using namespace vislib;
 
@@ -36,7 +38,7 @@ using namespace megamol::core::view::special;
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->loadFont(bmf);
 }
@@ -46,7 +48,7 @@ SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->loadFont(bmf);
 }
@@ -56,7 +58,7 @@ SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
 
@@ -68,7 +70,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetFlipY(flipY);
 
@@ -80,7 +82,7 @@ SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetFlipY(flipY);
 
@@ -92,7 +94,7 @@ SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -105,7 +107,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
 
@@ -117,7 +119,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(bmf), renderType(render), texture(), shader(), fontInfo() {
+        font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -130,7 +132,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, b
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -143,7 +145,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font), renderType(render), texture(), shader(), fontInfo() {
+    font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -156,7 +158,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -169,7 +171,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -182,7 +184,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo() {
+        font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -195,7 +197,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(), 
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -208,7 +210,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font),  renderType(render), texture(), shader(), fontInfo() {
+    font(src.font),  renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -221,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo() {
+        font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -498,6 +500,17 @@ unsigned int SDFFont::lineCount(float maxWidth, float size, vislib::StringA txt)
 */
 void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
+    // Check texture
+    if (!this->texture.IsValid()) {
+        //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
+        return;
+    }
+    // Check shader
+    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
+        //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
+        return;
+    }
+
     // Get current matrices 
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
@@ -528,19 +541,11 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
 
-    if (!this->texture.IsValid()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
-        return;
-    }
     glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
 
-    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
-        return;
-    }
     glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
 
-                                                // Set shader variables
+    // Set shader variables
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
@@ -627,7 +632,8 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     // Folder holding font data
     vislib::StringA folder = ".\\fonts\\";
 
-    // 1) Load font information
+
+    // 1) Load font information -----------------------------------------------
     vislib::StringA infoFile = folder;
     infoFile.Append(fontName);
     infoFile.Append(".fnt");
@@ -636,7 +642,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 2) Load texture
+    // 2) Load texture --------------------------------------------------------
     vislib::StringA textureFile = folder;
     textureFile.Append(fontName);
     textureFile.Append(".png");
@@ -645,7 +651,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 3) Load shaders
+    // 3) Load shaders --------------------------------------------------------
     vislib::StringA vertShaderFile = folder;
     vertShaderFile.Append("vertex.shader");
     vislib::StringA fragShaderFile = folder;
@@ -655,14 +661,14 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }  
 
-    // 4) Load buffers
+    // 4) Load buffers --------------------------------------------------------
     if (!this->loadBuffers()) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load buffers. \n");
         return false;
     }
 
 
-    // Print generall OpenGL information
+    //DEBUG Print generall OpenGL information ---------------------------------
     /*
     const GLubyte *renderer    = glGetString(GL_RENDERER);
     const GLubyte *vendor      = glGetString(GL_VENDOR);
@@ -690,24 +696,78 @@ bool SDFFont::loadFont(BitmapFont bmf) {
 
 /*
 * SDFFont::loadFontInfo
+*
+* Bitmap Font file format: http://www.angelcode.com/products/bmfont/doc/file_format.html
+*
 */
 bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     // Reset font info
-    this->fontInfo.Clear();
+    this->fontCharacters.clear();
+    this->fontKernings.clear();
 
+    // Check file
+    void   *buf = NULL;
+    SIZE_T  size = 0;
+    if ((size = this->loadFile(filename, &buf)) <= 0) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not find font information: \"%s\". \n", filename.PeekBuffer());
+        ARY_SAFE_DELETE(buf);
+        return false;
+    }
+    ARY_SAFE_DELETE(buf);
 
+    // Load file
+    vislib::sys::ASCIIFileBuffer file;
+    if (!file.LoadFile(filename)) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
+        return false;
+    }
 
+    SIZE_T lineCnt = 0;
+    vislib::StringA line;
+    // Read info file line by line
+    while (lineCnt < file.Count()) {
+        line = static_cast<vislib::StringA>(file.Line(lineCnt));
 
-
-
-
-    //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] ... \n");
-    //return false;
-
+         if (line.StartsWith("char ")) {
+            SDFFontCharacter newChar;
+            int idx = line.Find("id=", 0);
+            newChar.charId   = (int)std::atoi(line.Substring(idx+3, 6)); // first parameter of substring is start (beginning with 0), second parameter is range
+            idx = line.Find("x=", 0);
+            newChar.texX     = (int)std::atoi(line.Substring(idx+2, 4));
+            idx = line.Find("y=", 0);
+            newChar.texY     = (int)std::atoi(line.Substring(idx+2, 4));
+            idx = line.Find("width=", 0);
+            newChar.width    = (int)std::atoi(line.Substring(idx+6, 4));
+            idx = line.Find("height=", 0);
+            newChar.height   = (int)std::atoi(line.Substring(idx+7, 4));
+            idx = line.Find("xoffset=", 0);
+            newChar.xoffset  = (int)std::atoi(line.Substring(idx+8, 4));
+            idx = line.Find("yoffset=", 0);
+            newChar.yoffset  = (int)std::atoi(line.Substring(idx+8, 4));
+            idx = line.Find("xadvance=", 0);
+            newChar.xadvance = (int)std::atoi(line.Substring(idx+9, 4));
+            this->fontCharacters.push_back(newChar);
+            //DEBUG std::cout << newChar.charId << " | " << newChar.texX << " | " << newChar.texY << " | " << newChar.width << " | " << newChar.height << " | " << newChar.xoffset << " | " << newChar.yoffset << " | " << newChar.xadvance << " | " << std::endl;
+        }
+        else if (line.StartsWith("kerning ")) {
+            SDFFontKerning newKern;
+            int idx = line.Find("first=", 0); 
+            newKern.first = (int)std::atoi(line.Substring(idx+6, 4));
+            idx = line.Find("second=", 0);
+            newKern.second = (int)std::atoi(line.Substring(idx+7, 4));
+            idx = line.Find("amount=", 0);
+            newKern.amount = (int)std::atoi(line.Substring(idx+7, 4));
+            this->fontKernings.push_back(newKern);
+            //DEBUG std::cout << newKern.first << " | " << newKern.second << " | " << newKern.amount << " | " << std::endl;
+        }
+        // Proceed with next line ...
+        lineCnt++;
+    }
+    //Clear ascii file buffer
+    file.Clear();
 
     return true;
-
 }
 
 
@@ -728,25 +788,26 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
     void   *buf  = NULL;
     SIZE_T  size = 0;
 
-    if ((size = this->loadFile(filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
-            img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); // Using template with minimum channels containing alpha
-            if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { // Red channel is Gray value - Green channel is alpha value from png
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
-                return false;
-            }
-            this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
-            this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    if ((size = this->loadFile(filename, &buf)) <= 0) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not find texture: \"%s\". \n", filename.PeekBuffer());
+        ARY_SAFE_DELETE(buf);
+        return false;
+    }
+
+    if (pbc.Load(buf, size)) {
+        img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); // Using template with minimum channels containing alpha
+        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { // Red channel is Gray value - Green channel is alpha value from png
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
             return false;
         }
+        this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
+        this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        ARY_SAFE_DELETE(buf);
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not read texture: \"%s\". \n", filename.PeekBuffer());
+        ARY_SAFE_DELETE(buf);
         return false;
     }
 
@@ -767,7 +828,7 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
 
     void *vertBuf = NULL;
     if ((size = this->loadFile(vert, &vertBuf)) <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find shader \"%s\".", vert.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find vertex shader: \"%s\". \n", vert.PeekBuffer());
         ARY_SAFE_DELETE(vertBuf);
         return false;
     }
@@ -776,7 +837,7 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
 
     void *fragBuf = NULL;
     if ((size = this->loadFile(frag, &fragBuf)) <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find shader \"%s\".", frag.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find fragment shader: \"%s\". \n", frag.PeekBuffer());
         ARY_SAFE_DELETE(fragBuf);
         return false;
     }
@@ -784,10 +845,9 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
     ((char *)fragBuf)[size-1] = '\0';
 
     try {
-
         // Compiling shaders
         if (!this->shader.Compile((const char **)(&vertBuf), (SIZE_T)1, (const char **)(&fragBuf), (SIZE_T)1)) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\": Unknown error\n", shaderName);
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
             return false;
@@ -801,28 +861,28 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
 
         // Linking shaders
         if (!this->shader.Link()) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\": Unknown error\n", shaderName);
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderName);
             ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
             return false;
         }
+
+        ARY_SAFE_DELETE(vertBuf);
+        ARY_SAFE_DELETE(fragBuf);
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\" (@%s): %s. \n", shaderName,
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderName,
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
     }
     catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\" shader: %s. \n", shaderName, e.GetMsgA());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderName, e.GetMsgA());
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\" shader: Unknown exception\n", shaderName);
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderName);
         return false;
     }
-
-    ARY_SAFE_DELETE(vertBuf);
-    ARY_SAFE_DELETE(fragBuf);
 
     return true;
 }
@@ -889,30 +949,30 @@ SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
 
     vislib::StringW name = static_cast<vislib::StringW>(filename);
     if (name.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file: No name given.\n");
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file: No name given. \n");
         return false;
     }
     if (!vislib::sys::File::Exists(name)) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file \"%s\": Not existing.\n", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load not existing file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(name));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file \"%s\": File is empty.\n", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load empty file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file \"%s\": Cannot open file.\n", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to open file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     *outData = new BYTE[size];
     SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file \"%s\": Cannot read whole file.\n", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to read whole file: \"%s\". \n", filename.PeekBuffer());
         ARY_SAFE_DELETE(*outData);
         return false;
     }

@@ -19,9 +19,10 @@
 
 #include "mmcore/view/special/AbstractFont.h"
 
-#include "vislib/Array.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+
+#include <vector>
 
 
 namespace megamol {
@@ -299,28 +300,25 @@ namespace megamol {
         * variables
         **********************************************************************/
 
-        /** The SDF font info class holding the information of the bitmap font file. */
-        class SDFFontInfo {
-        public:
-
-            inline bool operator==(SDFFontInfo const& rhs) {
-               return (this->charId == rhs.charId);
-            }
-
+        /** The SDF font info struct holding the character information of the bitmap font. */
+        struct SDFFontCharacter {
             int charId;     // ascii character id
             int texX;       // x position on texture
             int texY;       // y position on texture
             int width;      // width on texture
             int height;     // height on texture
-
             int xoffset;    // x offset
             int yoffset;    // y offset
             int xadvance;   // x advance
-
-            int krnFirst;   // kerning first character
-            int krnSec;     // kerning secong character
-            int krnAmount;  // kerning amount
         };
+
+        /** The SDF font kerning struct holding the kerninng information of the bitmap font. */
+        struct SDFFontKerning {
+            int first;    // first character
+            int second;   // second character
+            int amount;   // amount of kerning between the two characters
+        };
+
 
         /** The sdf font. */
         BitmapFont font;
@@ -334,14 +332,11 @@ namespace megamol {
         /** The render type used. */
         RenderType renderType;
 
-        /** Font information. */
-        vislib::Array<SDFFontInfo> fontInfo;
+        /** Font characters. */
+        std::vector<SDFFontCharacter> fontCharacters;
 
-        /** Vertex Array Object handle. */
-        GLuint vaoHandle;
-
-        /** Vertex Buffer Objects. */
-        GLuint vboHandles[2];
+        /** Font kerning. */
+        std::vector<SDFFontKerning> fontKernings;
 
         /**********************************************************************
         * functions
@@ -358,9 +353,6 @@ namespace megamol {
 
         /** Load shaders from files. */
         bool loadShader(vislib::StringA vert, vislib::StringA frag);
-
-        /** Load buffers. */
-        bool loadBuffers();
 
         /** Load file into outData buffer and return size. */
         SIZE_T loadFile(vislib::StringA filename, void **outData);
@@ -380,6 +372,18 @@ namespace megamol {
          * @param align The alignment
          */
         void draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
+
+
+        // TEMP ---------------------------------------------------------------
+
+        /** Vertex Array Object handle. */
+        GLuint vaoHandle;
+
+        /** Vertex Buffer Objects. */
+        GLuint vboHandles[2];
+
+        /** Load buffers. */
+        bool loadBuffers();
 
     };
 
