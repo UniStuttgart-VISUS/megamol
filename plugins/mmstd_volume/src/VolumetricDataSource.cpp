@@ -34,9 +34,9 @@
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::VolumetricDataSource
+ * megamol::stdplugin::volume::VolumetricDataSource::VolumetricDataSource
  */
-megamol::datraw_plugin::VolumetricDataSource::VolumetricDataSource(void)
+megamol::stdplugin::volume::VolumetricDataSource::VolumetricDataSource(void)
         : Base(), dataHash(0), fileInfo(nullptr),
         loaderThread(VolumetricDataSource::loadAsync),
         paramAsyncSleep("AsyncSleep", "The time in milliseconds that the loader sleeps between two frames."),
@@ -114,27 +114,27 @@ megamol::datraw_plugin::VolumetricDataSource::VolumetricDataSource(void)
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::~VolumetricDataSource
+ * megamol::stdplugin::volume::VolumetricDataSource::~VolumetricDataSource
  */
-megamol::datraw_plugin::VolumetricDataSource::~VolumetricDataSource(void) {
+megamol::stdplugin::volume::VolumetricDataSource::~VolumetricDataSource(void) {
     this->Release();
     ASSERT(this->fileInfo == nullptr);
 }
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::calcFrameSize
+ * megamol::stdplugin::volume::VolumetricDataSource::calcFrameSize
  */
-size_t megamol::datraw_plugin::VolumetricDataSource::calcFrameSize(void) const {
+size_t megamol::stdplugin::volume::VolumetricDataSource::calcFrameSize(void) const {
     ASSERT(this->fileInfo != nullptr);
     return ::datRaw_getBufferSize(this->fileInfo, this->getOutputDataFormat());
 }
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::create
+ * megamol::stdplugin::volume::VolumetricDataSource::create
  */
-bool megamol::datraw_plugin::VolumetricDataSource::create(void) {
+bool megamol::stdplugin::volume::VolumetricDataSource::create(void) {
     if (!this->paramFileName.Param<core::param::FilePathParam>()->Value(
             ).IsEmpty()) {
         this->onFileNameChanged(this->paramFileName);
@@ -144,9 +144,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::create(void) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::getOutputDataFormat
+ * megamol::stdplugin::volume::VolumetricDataSource::getOutputDataFormat
  */
-DatRawDataFormat megamol::datraw_plugin::VolumetricDataSource::getOutputDataFormat(
+DatRawDataFormat megamol::stdplugin::volume::VolumetricDataSource::getOutputDataFormat(
         void) const {
     using vislib::sys::Log;
     using core::misc::VolumetricDataCall;
@@ -222,9 +222,9 @@ DatRawDataFormat megamol::datraw_plugin::VolumetricDataSource::getOutputDataForm
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onFileNameChanged
+ * megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onFileNameChanged(
+bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(
         core::param::ParamSlot& slot) {
     using core::misc::VolumetricDataCall;
     using vislib::sys::Log;
@@ -448,9 +448,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::onFileNameChanged(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onGetData
+ * megamol::stdplugin::volume::VolumetricDataSource::onGetData
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onGetData(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& call) {
     using core::misc::VolumetricDataCall;
     using core::param::BoolParam;
     using core::param::IntParam;
@@ -723,9 +723,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::onGetData(core::Call& call) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onGetExtents
+ * megamol::stdplugin::volume::VolumetricDataSource::onGetExtents
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onGetExtents(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
     using core::misc::VolumetricDataCall;
     using vislib::sys::Log;
 
@@ -769,9 +769,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::onGetExtents(core::Call& call
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onGetMetadata
+ * megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onGetMetadata(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call& call) {
     using core::misc::VolumetricDataCall;
     using vislib::sys::Log;
 
@@ -805,9 +805,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::onGetMetadata(core::Call& cal
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onTryGetData
+ * megamol::stdplugin::volume::VolumetricDataSource::onTryGetData
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onTryGetData(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onTryGetData(core::Call& call) {
     using core::misc::VolumetricDataCall;
     using vislib::sys::Log;
 
@@ -881,75 +881,75 @@ bool megamol::datraw_plugin::VolumetricDataSource::onTryGetData(core::Call& call
 }
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_DELETING
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_DELETING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_DELETING = 5;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_DELETING = 5;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_LOADING
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_LOADING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_LOADING = 2;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_LOADING = 2;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_PENDING
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_PENDING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_PENDING = 1;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_PENDING = 1;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_READY
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_READY
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_READY = 3;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_READY = 3;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_UNUSED
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_UNUSED
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_UNUSED = 0;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_UNUSED = 0;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_USED
+ * megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_USED
  */
-const int megamol::datraw_plugin::VolumetricDataSource::BUFFER_STATUS_USED = 4;
+const int megamol::stdplugin::volume::VolumetricDataSource::BUFFER_STATUS_USED = 4;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_PAUSED
+ * megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_PAUSED
  */
-const int megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_PAUSED = 2;
+const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_PAUSED = 2;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_PAUSING
+ * megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_PAUSING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_PAUSING = 1;
+const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_PAUSING = 1;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_RUNNING
+ * megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_RUNNING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_RUNNING = 0;
+const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_RUNNING = 0;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_STOPPED
+ * megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_STOPPED
  */
-const int megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_STOPPED = 4;
+const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_STOPPED = 4;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_STOPPING
+ * megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_STOPPING
  */
-const int megamol::datraw_plugin::VolumetricDataSource::LOADER_STATUS_STOPPING = 3;
+const int megamol::stdplugin::volume::VolumetricDataSource::LOADER_STATUS_STOPPING = 3;
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onLoadAsyncChanged
+ * megamol::stdplugin::volume::VolumetricDataSource::onLoadAsyncChanged
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onLoadAsyncChanged(
+bool megamol::stdplugin::volume::VolumetricDataSource::onLoadAsyncChanged(
         core::param::ParamSlot& slot) {
     //VLAUTOSTACKTRACE;
     //using vislib::sys::Log;
@@ -979,9 +979,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::onLoadAsyncChanged(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onMemorySaturationChanged
+ * megamol::stdplugin::volume::VolumetricDataSource::onMemorySaturationChanged
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onMemorySaturationChanged(
+bool megamol::stdplugin::volume::VolumetricDataSource::onMemorySaturationChanged(
         core::param::ParamSlot& slot) {
     // TODO: Free memory if allowed staturation was shrinked.
     return false;
@@ -989,27 +989,27 @@ bool megamol::datraw_plugin::VolumetricDataSource::onMemorySaturationChanged(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onStartAsync
+ * megamol::stdplugin::volume::VolumetricDataSource::onStartAsync
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onStartAsync(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onStartAsync(core::Call& call) {
     this->paramLoadAsync.Param<core::param::BoolParam>()->SetValue(true);
     return true;
 }
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::onStopAsync
+ * megamol::stdplugin::volume::VolumetricDataSource::onStopAsync
  */
-bool megamol::datraw_plugin::VolumetricDataSource::onStopAsync(core::Call& call) {
+bool megamol::stdplugin::volume::VolumetricDataSource::onStopAsync(core::Call& call) {
     this->paramLoadAsync.Param<core::param::BoolParam>()->SetValue(false);
     return true;
 }
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::release
+ * megamol::stdplugin::volume::VolumetricDataSource::release
  */
-void megamol::datraw_plugin::VolumetricDataSource::release(void) {
+void megamol::stdplugin::volume::VolumetricDataSource::release(void) {
     using vislib::sys::Log;
 
     try {
@@ -1034,9 +1034,9 @@ void megamol::datraw_plugin::VolumetricDataSource::release(void) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::resumeAsyncLoad
+ * megamol::stdplugin::volume::VolumetricDataSource::resumeAsyncLoad
  */
-bool megamol::datraw_plugin::VolumetricDataSource::resumeAsyncLoad(void) {
+bool megamol::stdplugin::volume::VolumetricDataSource::resumeAsyncLoad(void) {
     using vislib::sys::Log;
     Log::DefaultLog.WriteInfo(_T("Resuming volume loader thread..."));
     int expected[] = { LOADER_STATUS_PAUSING, LOADER_STATUS_PAUSED };
@@ -1048,9 +1048,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::resumeAsyncLoad(void) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::startAsyncLoad
+ * megamol::stdplugin::volume::VolumetricDataSource::startAsyncLoad
  */
-bool megamol::datraw_plugin::VolumetricDataSource::startAsyncLoad(void) {
+bool megamol::stdplugin::volume::VolumetricDataSource::startAsyncLoad(void) {
     using vislib::sys::Log;
     try {
         Log::DefaultLog.WriteInfo(_T("Starting volume loader thread..."));
@@ -1068,9 +1068,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::startAsyncLoad(void) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::stopAsyncLoad
+ * megamol::stdplugin::volume::VolumetricDataSource::stopAsyncLoad
  */
-void megamol::datraw_plugin::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
+void megamol::stdplugin::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
     using vislib::sys::Log;
     try {
         Log::DefaultLog.WriteInfo(_T("Stopping volume loader thread..."));
@@ -1087,9 +1087,9 @@ void megamol::datraw_plugin::VolumetricDataSource::stopAsyncLoad(const bool isWa
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::suspendAsyncLoad
+ * megamol::stdplugin::volume::VolumetricDataSource::suspendAsyncLoad
  */
-bool megamol::datraw_plugin::VolumetricDataSource::suspendAsyncLoad(
+bool megamol::stdplugin::volume::VolumetricDataSource::suspendAsyncLoad(
         const bool isWait) {
     using vislib::sys::Log;
     using vislib::sys::Thread;
@@ -1116,18 +1116,18 @@ bool megamol::datraw_plugin::VolumetricDataSource::suspendAsyncLoad(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker
+ * megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker
  */
-megamol::datraw_plugin::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(
+megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(
         void) {
     this->Unlock();
 }
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::BufferSlotUnlocker::Unlock
+ * megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock
  */
-void megamol::datraw_plugin::VolumetricDataSource::BufferSlotUnlocker::Unlock(void) {
+void megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock(void) {
     for (size_t i = 0; i < this->buffers.Count(); ++i) {
         ASSERT(this->buffers[i]->Status == BUFFER_STATUS_USED);
         this->buffers[i]->Status.store(BUFFER_STATUS_READY);
@@ -1137,9 +1137,9 @@ void megamol::datraw_plugin::VolumetricDataSource::BufferSlotUnlocker::Unlock(vo
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::loadAsync
+ * megamol::stdplugin::volume::VolumetricDataSource::loadAsync
  */
-DWORD megamol::datraw_plugin::VolumetricDataSource::loadAsync(void *userData) {
+DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void *userData) {
     using core::misc::VolumetricDataCall;
     using core::param::IntParam;
     using vislib::sys::Log;
@@ -1236,9 +1236,9 @@ DWORD megamol::datraw_plugin::VolumetricDataSource::loadAsync(void *userData) {
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::setUnlocker
+ * megamol::stdplugin::volume::VolumetricDataSource::setUnlocker
  */
-void megamol::datraw_plugin::VolumetricDataSource::setUnlocker(
+void megamol::stdplugin::volume::VolumetricDataSource::setUnlocker(
         core::misc::VolumetricDataCall& call, BufferSlot *buffer) {
     ASSERT(buffer != nullptr);
     auto ul = dynamic_cast<BufferSlotUnlocker *>(call.GetUnlocker());
@@ -1251,9 +1251,9 @@ void megamol::datraw_plugin::VolumetricDataSource::setUnlocker(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::spinExchange
+ * megamol::stdplugin::volume::VolumetricDataSource::spinExchange
  */
-bool megamol::datraw_plugin::VolumetricDataSource::spinExchange(std::atomic_int& dst,
+bool megamol::stdplugin::volume::VolumetricDataSource::spinExchange(std::atomic_int& dst,
         const int value, const int *expected, const size_t cntExpected,
         const bool canFail) {
     ASSERT(expected != nullptr);
@@ -1284,9 +1284,9 @@ bool megamol::datraw_plugin::VolumetricDataSource::spinExchange(std::atomic_int&
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::assertBuffersUnsafe
+ * megamol::stdplugin::volume::VolumetricDataSource::assertBuffersUnsafe
  */
-size_t megamol::datraw_plugin::VolumetricDataSource::assertBuffersUnsafe(
+size_t megamol::stdplugin::volume::VolumetricDataSource::assertBuffersUnsafe(
         size_t cntFrames, bool doNotFree) {
     using core::param::IntParam;
     using vislib::sys::Log;
@@ -1338,9 +1338,9 @@ size_t megamol::datraw_plugin::VolumetricDataSource::assertBuffersUnsafe(
 
 
 /*
- * megamol::datraw_plugin::VolumetricDataSource::bufferForFrameIDUnsafe
+ * megamol::stdplugin::volume::VolumetricDataSource::bufferForFrameIDUnsafe
  */
-int megamol::datraw_plugin::VolumetricDataSource::bufferForFrameIDUnsafe(
+int megamol::stdplugin::volume::VolumetricDataSource::bufferForFrameIDUnsafe(
         const unsigned int frameID) const {
     for (size_t i = 0; i < this->buffers.Count(); ++i) {
         if (this->buffers[i]->FrameID == frameID) {

@@ -12,12 +12,12 @@
 /*
  * megamol::datraw::AsyncResult::AsyncResult
  */
-megamol::datraw_plugin::AsyncResult::AsyncResult(void) {
+megamol::stdplugin::volume::AsyncResult::AsyncResult(void) {
 }
 
 
 /*
  * megamol::datraw::AsyncResult::~AsyncResult
  */
-megamol::datraw_plugin::AsyncResult::~AsyncResult(void) {
+megamol::stdplugin::volume::AsyncResult::~AsyncResult(void) {
 }

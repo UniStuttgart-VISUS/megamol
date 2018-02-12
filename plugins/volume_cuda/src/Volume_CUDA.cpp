@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "Volume_CUDA/Volume_CUDA.h"
+#include "volume_cuda/Volume_CUDA.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/versioninfo.h"

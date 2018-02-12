@@ -215,7 +215,7 @@ void CUDAVolumeRaycaster_kernel::transferNewVolume(void * h_volume, cudaExtent v
 
     // compute min and max values of the volume
     float * volptr = static_cast<float*>(h_volume);
-    auto res = thrust::minmax_element(volptr, volptr + (volumeSize.width * volumeSize.depth * volumeSize.height));
+    thrust::pair<float*, float*> res = thrust::minmax_element(volptr, volptr + (volumeSize.width * volumeSize.depth * volumeSize.height));
     this->minVal = (float)*res.first;
     this->maxVal = (float)*res.second;
 

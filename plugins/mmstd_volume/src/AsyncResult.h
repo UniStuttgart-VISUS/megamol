@@ -5,15 +5,16 @@
  * Alle rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATRAW_ASYNCRESULT_H_INCLUDED
-#define MEGAMOL_DATRAW_ASYNCRESULT_H_INCLUDED
+#ifndef MEGAMOL_MMSTD_VOLUME_ASYNCRESULT_H_INCLUDED
+#define MEGAMOL_MMSTD_VOLUME_ASYNCRESULT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 namespace megamol {
-namespace datraw_plugin {
+namespace stdplugin {
+namespace volume {
 
     /**
      * Provides means for tracking the progress of asynchronous loading
@@ -28,7 +29,8 @@ namespace datraw_plugin {
         ~AsyncResult(void);
     };
 
-} /* end namespace datraw */
+} /* end namespace volume */
+} /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_DATRAW_ASYNCRESULT_H_INCLUDED */
+#endif /* MEGAMOL_MMSTD_VOLUME_ASYNCRESULT_H_INCLUDED */
