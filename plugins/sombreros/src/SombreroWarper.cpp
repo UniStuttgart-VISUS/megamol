@@ -841,6 +841,8 @@ void libtessFree(void * userData, void * ptr) {
  * SombreroWarper::fillMeshHoles
  */
 bool SombreroWarper::fillMeshHoles(void) {
+    unsigned int minBrim = this->minBrimLevelParam.Param<param::IntParam>()->Value();
+    unsigned int maxBrim = this->maxBrimLevelParam.Param<param::IntParam>()->Value();
     // for each mesh
     for (uint i = 0; i < this->meshVector.size(); i++) {
         // for each hole in the mesh
@@ -1026,8 +1028,10 @@ bool SombreroWarper::fillMeshHoles(void) {
             vislib::math::Vector<float, 3> avgPos(0.0f, 0.0f, 0.0f);
             vislib::math::Vector<float, 3> avgNormal(0.0f, 0.0f, 0.0f);
             vislib::math::Vector<float, 3> avgColor(0.0f, 0.0f, 0.0f);
+            bool belongsToBrim = false;
 
             for (auto v : this->cutVertices[i][j]) {
+                belongsToBrim |= this->brimFlags[i][v];
                 vislib::math::Vector<float, 3> pos(&this->vertices[i][v * 3]);
                 vislib::math::Vector<float, 3> normal(&this->normals[i][v * 3]);
                 vislib::math::Vector<float, 3> color(static_cast<float>(this->colors[i][v * 3]),
@@ -1052,7 +1056,7 @@ bool SombreroWarper::fillMeshHoles(void) {
             this->atomIndexAttachment[i].push_back(0);
             this->bsDistanceAttachment[i].push_back(UINT_MAX);
             this->vertexLevelAttachment[i].push_back(0);
-            this->brimFlags[i].push_back(false);
+            this->brimFlags[i].push_back(belongsToBrim);
 
             // vertex was added, now add all triangles
             uint siz = static_cast<uint>(sortedCuts[j].size());
