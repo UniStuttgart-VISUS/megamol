@@ -290,6 +290,16 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
         this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
         this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
 
+#if 0 // color by index
+        vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
+        for (size_t v = 0; v < this->vertices[i].size() / 3; v++) {
+            float factor = (float)v / (float)this->vertices[i].size();
+            this->colors[i][3 * v + 0] = static_cast<unsigned char>(factor * red[0]);
+            this->colors[i][3 * v + 1] = static_cast<unsigned char>(factor * red[1]);
+            this->colors[i][3 * v + 2] = static_cast<unsigned char>(factor * red[2]);
+        }
+#endif
+
         // copy the edges
         this->edgesForward[i].clear();
         this->edgesReverse[i].clear();
@@ -796,7 +806,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
          */
         bool yResult = this->computeHeightPerVertex(bsVertex);
         if (!yResult) return false;
-
+        
         bool xzResult = this->computeXZCoordinatePerVertex();
         if (!xzResult) return false;
     }
@@ -1286,7 +1296,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 return false;
             }
         }
-#if 0
+#if 0 // switch for the colouring of the brim vertices by angle
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
         float factor = 1.0f / static_cast<float>(sortedBrim.size());
         int f = 0;
@@ -1640,6 +1650,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         this->vertexLevelAttachment[i].pop_back();
         this->atomIndexAttachment[i].pop_back();
         this->bsDistanceAttachment[i].pop_back();
+        this->rahiAngles[i].pop_back();
         uint addedFaceValues = static_cast<uint>(sortedBrim.size() * 3);
         this->faces[i].erase(this->faces[i].end() - addedFaceValues, this->faces[i].end());
         uint oldIndex = static_cast<uint>(this->vertexLevelAttachment[i].size());
