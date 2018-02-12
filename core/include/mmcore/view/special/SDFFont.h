@@ -300,25 +300,26 @@ namespace megamol {
         * variables
         **********************************************************************/
 
-        /** The SDF font info struct holding the character information of the bitmap font. */
-        struct SDFFontCharacter {
-            int charId;     // ascii character id
-            int texX;       // x position on texture
-            int texY;       // y position on texture
-            int width;      // width on texture
-            int height;     // height on texture
-            int xoffset;    // x offset
-            int yoffset;    // y offset
-            int xadvance;   // x advance
-        };
-
         /** The SDF font kerning struct holding the kerninng information of the bitmap font. */
         struct SDFFontKerning {
-            int first;    // first character
-            int second;   // second character
-            int amount;   // amount of kerning between the two characters
+            int previous;   // The previous character id
+            int amount;     // How much the x position should be adjusted when drawing this character immediately following the previous one
         };
 
+        /** The SDF font info struct holding the character information of the bitmap font. */
+        struct SDFFontCharacter {
+            int id;         // The character id
+            int texX;       // The left position of the character image in the texture
+            int texY;       // The top position of the character image in the texture
+            int width;      // The width of the character image in the texture
+            int height;     // The height of the character image in the texture
+            int xoffset;    // How much the current position should be offset when copying the image from the texture to the screen
+            int yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
+            int xadvance;   // How much the current position should be advanced after drawing the character
+
+            // Kerning
+            std::vector<SDFFontKerning> kernings;
+        };
 
         /** The sdf font. */
         BitmapFont font;
@@ -333,10 +334,7 @@ namespace megamol {
         RenderType renderType;
 
         /** Font characters. */
-        std::vector<SDFFontCharacter> fontCharacters;
-
-        /** Font kerning. */
-        std::vector<SDFFontKerning> fontKernings;
+        std::vector<SDFFontCharacter> fontInfo;
 
         /**********************************************************************
         * functions

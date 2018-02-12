@@ -38,7 +38,7 @@ using namespace megamol::core::view::special;
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
+    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
 
     this->loadFont(bmf);
 }
@@ -48,7 +48,7 @@ SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo() {
 
     this->loadFont(bmf);
 }
@@ -58,7 +58,7 @@ SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
 
@@ -70,7 +70,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
 
     this->SetFlipY(flipY);
 
@@ -82,7 +82,7 @@ SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetFlipY(flipY);
 
@@ -94,7 +94,7 @@ SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -107,7 +107,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
 
@@ -119,7 +119,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(bmf), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+        font(bmf), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -132,7 +132,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, b
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -145,7 +145,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+    font(src.font), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -158,7 +158,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -171,7 +171,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -184,7 +184,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+        font(src.font), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -197,7 +197,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(), 
-    font(src.font), renderType(src.renderType), texture(), shader(), fontCharacters(), fontKernings() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -210,7 +210,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font),  renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+    font(src.font),  renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -223,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontCharacters(), fontKernings() {
+        font(src.font), renderType(render), texture(), shader(), fontInfo() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -533,14 +533,17 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     bool blendEnabled = glIsEnabled(GL_BLEND);
     if (!blendEnabled) {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
+    GLint blendSrc;
+    GLint blendDst;
+    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
+    glGetIntegerv(GL_BLEND_DST, &blendDst);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Enable buffers, texture and shader
     glBindVertexArray(this->vaoHandle);
+
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
-
     glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
 
     glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
@@ -553,7 +556,6 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     // Draw ...
     glDrawArrays(GL_QUADS, 0, 4);
 
-    // Disable buffers, texture and shader
     glUseProgram(0); // =  this->shader.Disable(); => can't be used because draw function has to be CONST
     glBindVertexArray(0);
     glDisable(GL_TEXTURE_2D);
@@ -565,6 +567,8 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     if (!blendEnabled) {
         glDisable(GL_BLEND);
     }
+    glBlendFunc(blendSrc, blendDst);
+
 
     // TODO (with SSBO)
 
@@ -703,8 +707,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
 bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     // Reset font info
-    this->fontCharacters.clear();
-    this->fontKernings.clear();
+    this->fontInfo.clear();
 
     // Check file
     void   *buf = NULL;
@@ -731,34 +734,45 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
          if (line.StartsWith("char ")) {
             SDFFontCharacter newChar;
+
             int idx = line.Find("id=", 0);
-            newChar.charId   = (int)std::atoi(line.Substring(idx+3, 6)); // first parameter of substring is start (beginning with 0), second parameter is range
+            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); // first parameter of substring is start (beginning with 0), second parameter is range
             idx = line.Find("x=", 0);
-            newChar.texX     = (int)std::atoi(line.Substring(idx+2, 4));
+            newChar.texX = (int)std::atoi(line.Substring(idx+2, 4));
             idx = line.Find("y=", 0);
-            newChar.texY     = (int)std::atoi(line.Substring(idx+2, 4));
+            newChar.texY = (int)std::atoi(line.Substring(idx+2, 4));
             idx = line.Find("width=", 0);
-            newChar.width    = (int)std::atoi(line.Substring(idx+6, 4));
+            newChar.width = (int)std::atoi(line.Substring(idx+6, 4));
             idx = line.Find("height=", 0);
-            newChar.height   = (int)std::atoi(line.Substring(idx+7, 4));
+            newChar.height = (int)std::atoi(line.Substring(idx+7, 4));
             idx = line.Find("xoffset=", 0);
-            newChar.xoffset  = (int)std::atoi(line.Substring(idx+8, 4));
+            newChar.xoffset = (int)std::atoi(line.Substring(idx+8, 4));
             idx = line.Find("yoffset=", 0);
             newChar.yoffset  = (int)std::atoi(line.Substring(idx+8, 4));
             idx = line.Find("xadvance=", 0);
             newChar.xadvance = (int)std::atoi(line.Substring(idx+9, 4));
-            this->fontCharacters.push_back(newChar);
+            newChar.kernings.clear();
+
+            this->fontInfo.push_back(newChar);
             //DEBUG std::cout << newChar.charId << " | " << newChar.texX << " | " << newChar.texY << " | " << newChar.width << " | " << newChar.height << " | " << newChar.xoffset << " | " << newChar.yoffset << " | " << newChar.xadvance << " | " << std::endl;
         }
         else if (line.StartsWith("kerning ")) {
+
+            int idx = line.Find("second=", 0);
+            int second = (int)std::atoi(line.Substring(idx+7, 4));
+
             SDFFontKerning newKern;
-            int idx = line.Find("first=", 0); 
-            newKern.first = (int)std::atoi(line.Substring(idx+6, 4));
-            idx = line.Find("second=", 0);
-            newKern.second = (int)std::atoi(line.Substring(idx+7, 4));
+
+            idx = line.Find("first=", 0);
+            newKern.previous = (int)std::atoi(line.Substring(idx+6, 4));
             idx = line.Find("amount=", 0);
             newKern.amount = (int)std::atoi(line.Substring(idx+7, 4));
-            this->fontKernings.push_back(newKern);
+
+            for (unsigned int i = 0; i < this->fontInfo.size(); i++) {
+                if (this->fontInfo[i].id == second) {
+                    this->fontInfo[i].kernings.push_back(newKern);
+                }
+            }
             //DEBUG std::cout << newKern.first << " | " << newKern.second << " | " << newKern.amount << " | " << std::endl;
         }
         // Proceed with next line ...
@@ -897,13 +911,32 @@ bool SDFFont::loadBuffers() {
         1.0f,  1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f,
         -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f  };
+        1.0f, -1.0f, 0.0f };
+    
+/**/
 
-    float texData[] = {
+    float texData[] = { 
         1.0f, 0.0f,
         0.0f, 0.0f,
         0.0f, 1.0f,
         1.0f, 1.0f };
+/**/
+
+/*
+
+    float texSize = 512.0;
+    float x = 240.0 / texSize;
+    float y = 401.0 / texSize;
+    float w = 29.0  / texSize;
+    float h = 32.0  / texSize;
+
+    float texData[] = {
+        x+w,   y,
+        x,     y,
+        x,   y+h,
+        x+w, y+h };
+
+*/
 
     // Create Vertex Array Object 
     glGenVertexArrays(1, &this->vaoHandle);
