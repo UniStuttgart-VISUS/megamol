@@ -165,7 +165,7 @@ bool TestFontRenderer::Render(core::Call& call) {
         // Get current color for shader
         glColor4f(0.0f, 0.5f, 0.0f, 1.0f);
 
-        this->sdfFont.draw();
+        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, true, "...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
     }
     // ------------------------------------------------------------------------

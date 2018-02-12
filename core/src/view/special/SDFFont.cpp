@@ -29,6 +29,9 @@ using namespace megamol::core::view;
 using namespace megamol::core::view::special;
 
 
+/* PUBLIC ********************************************************************/
+
+
 /*
  * SDFFont::SDFFont
  */
@@ -241,7 +244,7 @@ SDFFont::~SDFFont(void) {
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
 
-    return this->lineCount(vislib::StringA(txt));
+    return this->lineCount(maxWidth, size, vislib::StringA(txt));
 }
 
 
@@ -250,7 +253,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt) const {
 
-    return this->lineCount(vislib::StringW(txt));
+    return this->lineCount(maxWidth, size, static_cast<vislib::StringA>(vislib::StringW(txt)));
 }
 
 
@@ -259,10 +262,10 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
  */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
+    //TEMP
+    this->draw(vislib::StringA(txt), x, y, 0.0f, size, flipY, align);
 
-
-
-
+    // TODO
 
     /*
     int *run = this->buildGlyphRun(txt, FLT_MAX);
@@ -291,7 +294,7 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *t
 */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
-
+    this->DrawString(x, y, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
 }
 
 
@@ -300,9 +303,10 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
+    //TEMP
+    this->draw(vislib::StringA(txt), x, y, 0.0f, size, flipY, align);
 
-
-
+    // TODO
 
     /*
     int *run = this->buildGlyphRun(txt, w / size);
@@ -367,8 +371,7 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size, bool fl
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
-
-
+    this->DrawString(x, y, w, h, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
 }
 
 
@@ -377,8 +380,10 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool f
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
+    //TEMP
+    this->draw(vislib::StringA(txt), x, y, z, size, flipY, align);
 
-
+    // TODO
 
     /*
     int *run = this->buildGlyphRun(txt, FLT_MAX);
@@ -407,7 +412,7 @@ void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, cons
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
 
-
+    this->DrawString(x, y, z, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
 }
 
 
@@ -418,7 +423,7 @@ float SDFFont::LineWidth(float size, const char *txt) const {
 
     float w = 0.0f;
 
-
+    // TODO
 
     return w;
 }
@@ -429,41 +434,12 @@ float SDFFont::LineWidth(float size, const char *txt) const {
  */
 float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 
-    float w = 0.0f;
-
-
-
-    return w;
+    return this->LineWidth(size, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer());
 }
 
 
-/*
- * SDFFont::lineCount
- */
-unsigned int SDFFont::lineCount(vislib::StringA txt) const {
+/* PRIVATE ********************************************************************/
 
-    unsigned int i = 0;
-
-    
-
-
-    return i;
-   
-}
-
-/*
-* SDFFont::lineCount
-*/
-unsigned int SDFFont::lineCount(vislib::StringW txt) const {
-
-    unsigned int i = 0;
-
-
-
-
-    return i;
-
-}
 
 /*
  * SDFFont::initialise
@@ -485,12 +461,15 @@ void SDFFont::deinitialise(void) {
     if (this->texture.IsValid()) {
         this->texture.Release();
     }
+
     // Shader
     this->shader.Release();
+
     // VAO
     if (glIsVertexArray(this->vaoHandle)) {
         glDeleteVertexArrays(1, &this->vaoHandle);
     }
+
     // VBOs
     if (glIsBuffer(this->vboHandles[0])) {
         glDeleteBuffers(1, &this->vboHandles[0]);
@@ -502,16 +481,87 @@ void SDFFont::deinitialise(void) {
 
 
 /*
+* SDFFont::lineCount
+*/
+unsigned int SDFFont::lineCount(float maxWidth, float size, vislib::StringA txt) const {
+
+    unsigned int i = 0;
+
+    // TODO
+
+    return i;
+}
+
+
+/*
 * SDFFont::draw
 */
 void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
+    // Get current matrices 
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    // Compute modelviewprojection matrix
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
+    // Get current color
+    GLfloat color[4];
+    glGetFloatv(GL_CURRENT_COLOR, color);
 
+    // Store opengl states
+    bool depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+    if (!depthEnabled) {
+        glEnable(GL_DEPTH_TEST);
+    }
+    bool blendEnabled = glIsEnabled(GL_BLEND);
+    if (!blendEnabled) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
+    // Enable buffers, texture and shader
+    glBindVertexArray(this->vaoHandle);
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
 
+    if (!this->texture.IsValid()) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
+        return;
+    }
+    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
 
-    // SSBO
+    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
+        return;
+    }
+    glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
+
+                                                // Set shader variables
+    glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
+    glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
+
+    // Draw ...
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    // Disable buffers, texture and shader
+    glUseProgram(0); // =  this->shader.Disable(); => can't be used because draw function has to be CONST
+    glBindVertexArray(0);
+    glDisable(GL_TEXTURE_2D);
+
+    // Reset opengl states
+    if (!depthEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    if (!blendEnabled) {
+        glDisable(GL_BLEND);
+    }
+
+    // TODO (with SSBO)
 
     /*
     float gx = x;
@@ -564,102 +614,9 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
 
 
 /*
-* SDFFont::draw
-*/
-void SDFFont::draw() const {
-
-    // Get current matrices 
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    // Compute modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
-
-    // Get current color
-    GLfloat color[4];
-    glGetFloatv(GL_CURRENT_COLOR, color);
-    
-    // Store opengl states
-    bool depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-    if (!depthEnabled) {
-        glEnable(GL_DEPTH_TEST);
-    }    
-    bool blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
-
-    // Enable buffers, texture and shader
-    glBindVertexArray(this->vaoHandle);
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
-
-    if (!this->texture.IsValid()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
-        return;
-    }
-    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
-    
-    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
-        return;
-    }
-    glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
-
-    // Set shader variables
-    glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-    glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
-    glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
-
-    // Draw ...
-    glDrawArrays(GL_QUADS, 0, 4);
-
-    // Disable buffers, texture and shader
-    glUseProgram(0); // =  this->shader.Disable(); => can't be used because draw function has to be CONST
-    glBindVertexArray(0);
-    glDisable(GL_TEXTURE_2D);
-
-    // Reset opengl states
-    if (!depthEnabled) {
-        glDisable(GL_DEPTH_TEST);
-    }
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
-
-}
-
-
-/*
 * SDFFont::loadFont
 */
 bool SDFFont::loadFont(BitmapFont bmf) {
-
-    // Generall OpenGL information
-    /*
-    const GLubyte *renderer = glGetString(GL_RENDERER);
-    const GLubyte *vendor = glGetString(GL_VENDOR);
-    const GLubyte *version = glGetString(GL_VERSION);
-    const GLubyte *glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
-    GLint major, minor;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-    GLint nExtensions;
-    glGetIntegerv(GL_NUM_EXTENSIONS, &nExtensions);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Vendor : %s\n", vendor);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Renderer : %s\n", renderer);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (string) : %s\n", version);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (integer) : %d.%d\n", major, minor);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GLSL Version : %s\n", glslVersion);
-    // Available Extensions
-    //for (int i = 0; i < nExtensions; i++) {
-    //    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] %s\n", glGetStringi(GL_EXTENSIONS, i));
-    //}
-    */
 
     // Convert BitmapFont to string
     vislib::StringA fontName = "";
@@ -704,6 +661,29 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
+
+    // Print generall OpenGL information
+    /*
+    const GLubyte *renderer    = glGetString(GL_RENDERER);
+    const GLubyte *vendor      = glGetString(GL_VENDOR);
+    const GLubyte *version     = glGetString(GL_VERSION);
+    const GLubyte *glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
+    GLint major, minor;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    GLint nExtensions;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &nExtensions);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Vendor : %s\n", vendor);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Renderer : %s\n", renderer);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (string) : %s\n", version);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (integer) : %d.%d\n", major, minor);
+    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GLSL Version : %s\n", glslVersion);
+    // Available Extensions
+    //for (int i = 0; i < nExtensions; i++) {
+    //    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] %s\n", glGetStringi(GL_EXTENSIONS, i));
+    //}
+    */
+
     return true;
 }
 
@@ -745,8 +725,8 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
     static sg::graphics::PngBitmapCodec  pbc;
     pbc.Image() = &img;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void *buf = NULL;
-    SIZE_T size = 0;
+    void   *buf  = NULL;
+    SIZE_T  size = 0;
 
     if ((size = this->loadFile(filename, &buf)) > 0) {
         if (pbc.Load(buf, size)) {
@@ -783,7 +763,6 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
     this->shader.Release();
 
     const char *shaderName = "SDFFont";
-
     SIZE_T size = 0;
 
     void *vertBuf = NULL;
@@ -904,9 +883,10 @@ bool SDFFont::loadBuffers() {
 */
 SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
 
+    // Reset out data
     *outData = NULL;
 
-    // Loading file
+
     vislib::StringW name = static_cast<vislib::StringW>(filename);
     if (name.IsEmpty()) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file: No name given.\n");
@@ -939,5 +919,4 @@ SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
 
     return num;
 }
-
 
