@@ -336,12 +336,31 @@ namespace megamol {
         /** Font characters. */
         std::vector<SDFFontCharacter> fontInfo;
 
+        /** Vertex array object. */
+        GLuint vaoHandle;
+
+        /** Vertex buffer object. */
+        enum VBOAttrib {
+            POSITION = 0,
+            TEXTURE  = 1
+        };
+        struct SDFVBO {
+            GLuint                 handle;  // buffer handle
+            vislib::StringA        name;    // varaible name of attribute in shader
+            GLuint                 index;   // index of attribute location
+            unsigned int           dim;     // dimension of data
+        };
+        std::vector<SDFVBO> vbos;
+
         /**********************************************************************
         * functions
         **********************************************************************/
 
         /** Loading font. */
         bool loadFont(BitmapFont bmf);
+
+        /** Load buffers. */
+        bool loadFontBuffers();
 
         /** Load font info from file. */
         bool loadFontInfo(vislib::StringA filename);
@@ -350,7 +369,7 @@ namespace megamol {
         bool loadFontTexture(vislib::StringA filename);
 
         /** Load shaders from files. */
-        bool loadShader(vislib::StringA vert, vislib::StringA frag);
+        bool loadFontShader(vislib::StringA vert, vislib::StringA frag);
 
         /** Load file into outData buffer and return size. */
         SIZE_T loadFile(vislib::StringA filename, void **outData);
@@ -370,18 +389,6 @@ namespace megamol {
          * @param align The alignment
          */
         void draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
-
-
-        // TEMP ---------------------------------------------------------------
-
-        /** Vertex Array Object handle. */
-        GLuint vaoHandle;
-
-        /** Vertex Buffer Objects. */
-        GLuint vboHandles[2];
-
-        /** Load buffers. */
-        bool loadBuffers();
 
     };
 

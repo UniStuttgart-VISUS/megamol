@@ -38,7 +38,7 @@ using namespace megamol::core::view::special;
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -48,7 +48,7 @@ SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -58,7 +58,7 @@ SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
 
@@ -70,7 +70,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -82,7 +82,7 @@ SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -94,7 +94,7 @@ SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -107,7 +107,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo() {
+    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
 
@@ -119,7 +119,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(bmf), renderType(render), texture(), shader(), fontInfo() {
+        font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -132,7 +132,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, b
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -145,7 +145,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font), renderType(render), texture(), shader(), fontInfo() {
+    font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -158,7 +158,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -171,7 +171,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -184,7 +184,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo() {
+        font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -197,7 +197,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(), 
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo() {
+    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -210,7 +210,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font),  renderType(render), texture(), shader(), fontInfo() {
+    font(src.font),  renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -223,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo() {
+        font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -460,25 +460,16 @@ bool SDFFont::initialise(void) {
 void SDFFont::deinitialise(void) {
 
     // Texture
-    if (this->texture.IsValid()) {
-        this->texture.Release();
-    }
-
+    this->texture.Release();
     // Shader
     this->shader.Release();
-
     // VAO
-    if (glIsVertexArray(this->vaoHandle)) {
-        glDeleteVertexArrays(1, &this->vaoHandle);
-    }
-
+    glDeleteVertexArrays(1, &this->vaoHandle);
     // VBOs
-    if (glIsBuffer(this->vboHandles[0])) {
-        glDeleteBuffers(1, &this->vboHandles[0]);
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glDeleteBuffers(1, &this->vbos[i].handle);
     }
-    if (glIsBuffer(this->vboHandles[1])) {
-        glDeleteBuffers(1, &this->vboHandles[1]);
-    }
+    this->vbos.clear();
 }
 
 
@@ -510,6 +501,38 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
         //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
         return;
     }
+
+    // ------------------------------------------------------------------------
+    // Generate data on CPU
+
+    vislib::Array<float> pos;
+    vislib::Array<float> tex;
+
+    pos.Add(1.0f); pos.Add(1.0f); pos.Add(0.0f);
+    pos.Add(-1.0f); pos.Add(1.0f); pos.Add(0.0f);
+    pos.Add(-1.0f); pos.Add(-1.0f); pos.Add(0.0f);
+    pos.Add(1.0f); pos.Add(-1.0f); pos.Add(0.0f);
+
+    tex.Add(1.0f); tex.Add(0.0f);
+    tex.Add(0.0f); tex.Add(0.0f);
+    tex.Add(0.0f); tex.Add(1.0f);
+    tex.Add(1.0f); tex.Add(1.0f);
+
+    // Bind data to vertex data buffers
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
+        if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)pos.Count() * sizeof(float), pos.PeekElements(), GL_STATIC_DRAW);
+        }
+        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)tex.Count() * sizeof(float), tex.PeekElements(), GL_STATIC_DRAW);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Draw
 
     // Get current matrices 
     GLfloat modelViewMatrix_column[16];
@@ -544,9 +567,9 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
 
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // = this->texture.Bind(); => can't be used because draw function has to be CONST
+    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because function is CONST
 
-    glUseProgram(this->shader.ProgramHandle()); // = this->shader.Enable(); => can't be used because draw function has to be CONST
+    glUseProgram(this->shader.ProgramHandle()); // instead of this->shader.Enable() => because function is CONST
 
     // Set shader variables
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
@@ -556,7 +579,7 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     // Draw ...
     glDrawArrays(GL_QUADS, 0, 4);
 
-    glUseProgram(0); // =  this->shader.Disable(); => can't be used because draw function has to be CONST
+    glUseProgram(0); // instead of this->shader.Disable() => because function is CONST
     glBindVertexArray(0);
     glDisable(GL_TEXTURE_2D);
 
@@ -633,11 +656,17 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         case  (BitmapFont::BMFONT_EVOLVENTA): fontName = "evolventa"; break;
         default: break;
     }
+
     // Folder holding font data
     vislib::StringA folder = ".\\fonts\\";
 
+    // 1) Load buffers --------------------------------------------------------
+    if (!this->loadFontBuffers()) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load buffers. \n");
+        return false;
+    }
 
-    // 1) Load font information -----------------------------------------------
+    // 2) Load font information -----------------------------------------------
     vislib::StringA infoFile = folder;
     infoFile.Append(fontName);
     infoFile.Append(".fnt");
@@ -646,7 +675,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 2) Load texture --------------------------------------------------------
+    // 3) Load texture --------------------------------------------------------
     vislib::StringA textureFile = folder;
     textureFile.Append(fontName);
     textureFile.Append(".png");
@@ -655,44 +684,71 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 3) Load shaders --------------------------------------------------------
+    // 4) Load shaders --------------------------------------------------------
     vislib::StringA vertShaderFile = folder;
     vertShaderFile.Append("vertex.shader");
     vislib::StringA fragShaderFile = folder;
     fragShaderFile.Append("fragment.shader");
-    if (!this->loadShader(vertShaderFile, fragShaderFile)) {
+    if (!this->loadFontShader(vertShaderFile, fragShaderFile)) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
     }  
 
-    // 4) Load buffers --------------------------------------------------------
-    if (!this->loadBuffers()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load buffers. \n");
-        return false;
+    return true;
+}
+
+
+/*
+* SDFFont::loadFontBuffers
+*/
+bool SDFFont::loadFontBuffers() {
+
+    // Reset 
+    if (glIsVertexArray(this->vaoHandle)) {
+        glDeleteVertexArrays(1, &this->vaoHandle);
     }
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glDeleteBuffers(1, &this->vbos[i].handle);
+    }
+    this->vbos.clear();
 
+    // Create Vertex Array Object 
+    glGenVertexArrays(1, &this->vaoHandle);
+    glBindVertexArray(this->vaoHandle);
 
-    //DEBUG Print generall OpenGL information ---------------------------------
-    /*
-    const GLubyte *renderer    = glGetString(GL_RENDERER);
-    const GLubyte *vendor      = glGetString(GL_VENDOR);
-    const GLubyte *version     = glGetString(GL_VERSION);
-    const GLubyte *glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
-    GLint major, minor;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-    GLint nExtensions;
-    glGetIntegerv(GL_NUM_EXTENSIONS, &nExtensions);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Vendor : %s\n", vendor);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Renderer : %s\n", renderer);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (string) : %s\n", version);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GL Version (integer) : %d.%d\n", major, minor);
-    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] GLSL Version : %s\n", glslVersion);
-    // Available Extensions
-    //for (int i = 0; i < nExtensions; i++) {
-    //    vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [OpenGL Info] %s\n", glGetStringi(GL_EXTENSIONS, i));
-    //}
-    */
+    // Init vbos
+    SDFVBO newVBO;
+
+    // VBO for position data
+    newVBO.handle = 0;
+    newVBO.name   = "inVertPos";
+    newVBO.index  = (GLuint)VBOAttrib::POSITION;
+    newVBO.dim    = 3;
+    this->vbos.push_back(newVBO);
+
+    // VBO for texture data
+    newVBO.handle = 0;
+    newVBO.name   = "inVertTexCoord";
+    newVBO.index  = (GLuint)VBOAttrib::TEXTURE;
+    newVBO.dim    = 2;
+    this->vbos.push_back(newVBO);
+
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glGenBuffers(1, &this->vbos[i].handle);
+        glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
+        // Create empty buffer
+        glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+        // Bind buffer to vertex attribute
+        glEnableVertexAttribArray(this->vbos[i].index); 
+        glVertexAttribPointer(this->vbos[i].index, this->vbos[i].dim, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL);
+    }
+   
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glDisableVertexAttribArray(this->vbos[i].index);
+    }
 
     return true;
 }
@@ -710,6 +766,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     this->fontInfo.clear();
 
     // Check file
+    /*
     void   *buf = NULL;
     SIZE_T  size = 0;
     if ((size = this->loadFile(filename, &buf)) <= 0) {
@@ -718,6 +775,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
         return false;
     }
     ARY_SAFE_DELETE(buf);
+    */
 
     // Load file
     vislib::sys::ASCIIFileBuffer file;
@@ -731,12 +789,11 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     // Read info file line by line
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
-
          if (line.StartsWith("char ")) {
             SDFFontCharacter newChar;
 
             int idx = line.Find("id=", 0);
-            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); // first parameter of substring is start (beginning with 0), second parameter is range
+            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); // substring(start, range)
             idx = line.Find("x=", 0);
             newChar.texX = (int)std::atoi(line.Substring(idx+2, 4));
             idx = line.Find("y=", 0);
@@ -754,10 +811,8 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             newChar.kernings.clear();
 
             this->fontInfo.push_back(newChar);
-            //DEBUG std::cout << newChar.charId << " | " << newChar.texX << " | " << newChar.texY << " | " << newChar.width << " | " << newChar.height << " | " << newChar.xoffset << " | " << newChar.yoffset << " | " << newChar.xadvance << " | " << std::endl;
         }
         else if (line.StartsWith("kerning ")) {
-
             int idx = line.Find("second=", 0);
             int second = (int)std::atoi(line.Substring(idx+7, 4));
 
@@ -773,7 +828,6 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
                     this->fontInfo[i].kernings.push_back(newKern);
                 }
             }
-            //DEBUG std::cout << newKern.first << " | " << newKern.second << " | " << newKern.amount << " | " << std::endl;
         }
         // Proceed with next line ...
         lineCnt++;
@@ -791,9 +845,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
 bool SDFFont::loadFontTexture(vislib::StringA filename) {
 
     // Reset font texture
-    if (this->texture.IsValid()) {
-        this->texture.Release();
-    }
+    this->texture.Release();
 
     static vislib::graphics::BitmapImage img;
     static sg::graphics::PngBitmapCodec  pbc;
@@ -809,8 +861,10 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
     }
 
     if (pbc.Load(buf, size)) {
-        img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); // Using template with minimum channels containing alpha
-        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { // Red channel is Gray value - Green channel is alpha value from png
+        // (Using template with minimum channels containing alpha)
+        img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); 
+        // (Red channel is Gray value - Green channel is alpha value from png)
+        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { 
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
             return false;
@@ -830,9 +884,9 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
 
 
 /*
-* SDFFont::loadShader
+* SDFFont::loadFontShader
 */
-bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
+bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
 
     // Reset shader
     this->shader.Release();
@@ -867,11 +921,10 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
             return false;
         }
 
-        // Vertex shader attributes
-        glBindAttribLocation(this->shader.ProgramHandle(), 0, "inVertPos");
-        glBindAttribLocation(this->shader.ProgramHandle(), 1, "inVertTexCoord");
-        // Fragment shader attributes
-        glBindFragDataLocation(this->shader.ProgramHandle(), 0, "outFragColor");
+        // Bind vertex shader attributes (before linking shaders!)
+        for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+            glBindAttribLocation(this->shader.ProgramHandle(), this->vbos[i].index, this->vbos[i].name.PeekBuffer());
+        }
 
         // Linking shaders
         if (!this->shader.Link()) {
@@ -897,75 +950,6 @@ bool SDFFont::loadShader(vislib::StringA vert, vislib::StringA frag) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderName);
         return false;
     }
-
-    return true;
-}
-
-
-/*
-* SDFFont::loadBuffers
-*/
-bool SDFFont::loadBuffers() {
-
-    float positionData[] = {
-        1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f };
-    
-/**/
-
-    float texData[] = { 
-        1.0f, 0.0f,
-        0.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, 1.0f };
-/**/
-
-/*
-
-    float texSize = 512.0;
-    float x = 240.0 / texSize;
-    float y = 401.0 / texSize;
-    float w = 29.0  / texSize;
-    float h = 32.0  / texSize;
-
-    float texData[] = {
-        x+w,   y,
-        x,     y,
-        x,   y+h,
-        x+w, y+h };
-
-*/
-
-    // Create Vertex Array Object 
-    glGenVertexArrays(1, &this->vaoHandle);
-    glBindVertexArray(this->vaoHandle);
-
-    // Create the Vertex Buffer Objects
-    glGenBuffers(2, this->vboHandles);
-
-    // Populate the position buffer
-    GLuint positionBufferHandle = vboHandles[0];
-    glBindBuffer(GL_ARRAY_BUFFER, positionBufferHandle);
-    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), positionData, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0); // Vertex position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL);
-
-    // Populate the tex coord buffer
-    GLuint textureBufferHandle = vboHandles[1];
-    glBindBuffer(GL_ARRAY_BUFFER, textureBufferHandle);
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), texData, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1); // Vertex color
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *)NULL);
-
-    glBindVertexArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(1);
 
     return true;
 }
