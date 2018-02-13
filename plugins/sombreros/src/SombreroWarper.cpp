@@ -1976,6 +1976,17 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         auto s_length = this->sombreroLength[i];
         auto vert_cnt = this->vertices[i].size() / 3;
 
+        // detect the vertices marking the transition between hat and brim
+        std::set<uint> innerBorderSet;
+        // go through all forward edges, if one vertex is on the brim and one is not, take the second one
+        for (auto e : this->edgesForward[i]) {
+            if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
+                innerBorderSet.insert(e.second);
+            } else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
+                innerBorderSet.insert(e.first);
+            }
+        }
+
         vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> scale;
         scale.SetAt(0, 0, s_radius);
         scale.SetAt(1, 1, s_length);
@@ -1989,7 +2000,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         scaleInvTrans.Transpose();
 
         for (size_t j = 0; j < vert_cnt; j++) {
-            if (this->brimFlags[i][j]) {
+            if (this->brimFlags[i][j] || innerBorderSet.count(j) > 0) {
                 this->normals[i][j * 3 + 0] = 0.0f;
                 this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;
