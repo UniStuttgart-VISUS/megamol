@@ -24,6 +24,8 @@ using namespace megamol::geocalls;
 using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
+//#define NO_DEFORMATION
+
 /*
  * SombreroWarper::SombreroWarper
  */
@@ -798,11 +800,13 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         /**
          * step 3: mesh deformation
          */
+    #ifndef NO_DEFORMATION
         bool yResult = this->computeHeightPerVertex(bsVertex);
         if (!yResult) return false;
         
         bool xzResult = this->computeXZCoordinatePerVertex();
         if (!xzResult) return false;
+    #endif    
     }
 
     /**
@@ -1971,6 +1975,9 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
  * SombreroWarper::recomputeVertexNormals
  */
 bool SombreroWarper::recomputeVertexNormals(void) {
+#ifdef NO_DEFORMATION // exit early if we want no new normals
+    return true;
+#endif
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
         auto s_length = this->sombreroLength[i];
@@ -2000,7 +2007,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         scaleInvTrans.Transpose();
 
         for (size_t j = 0; j < vert_cnt; j++) {
-            if (this->brimFlags[i][j] || innerBorderSet.count(j) > 0) {
+            if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j)) > 0) {
                 this->normals[i][j * 3 + 0] = 0.0f;
                 this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;
