@@ -1991,7 +1991,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         for (size_t j = 0; j < vert_cnt; j++) {
             if (this->brimFlags[i][j]) {
                 this->normals[i][j * 3 + 0] = 0.0f;
-                this->normals[i][j * 3 + 1] = 1.0f;
+                this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;
             } else {
                 vislib::math::Vector<float, 3> pos(&this->vertices[i][j * 3]);
@@ -2003,13 +2003,13 @@ bool SombreroWarper::recomputeVertexNormals(void) {
                 auto n = scaleInvTrans * spherePos;
                 vislib::math::Vector<float, 3> normal(n.PeekComponents());
                 normal.Normalise();
-                this->normals[i][j * 3 + 0] = -normal[0];
-                this->normals[i][j * 3 + 1] = -normal[1];
-                this->normals[i][j * 3 + 2] = -normal[2];
+                this->normals[i][j * 3 + 0] = normal[0];
+                this->normals[i][j * 3 + 1] = normal[1];
+                this->normals[i][j * 3 + 2] = normal[2];
             }
         }
 
-    #if 1 // normal as color
+    #if 0 // normal as color
         for (size_t j = 0; j < vert_cnt; j++) {
             this->colors[i][j * 3 + 0] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 0]));
             this->colors[i][j * 3 + 1] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 1]));
