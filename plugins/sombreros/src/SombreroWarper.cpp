@@ -16,6 +16,7 @@
 #include <limits>
 #include <iostream>
 #include "vislib/math/ShallowPoint.h"
+#include "vislib/math/Matrix.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -158,6 +159,9 @@ bool SombreroWarper::getExtent(Call& call) {
         // warp the mesh in the correct position
         if (!this->warpMesh(*tunnelCall)) return false;
 
+        // set the surface normals to correct values
+        if (!this->recomputeVertexNormals()) return false;
+
         // reset the mesh vector
         for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
             this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
@@ -289,16 +293,6 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
         this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
         this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
         this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
-
-#if 0 // color by index
-        vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
-        for (size_t v = 0; v < this->vertices[i].size() / 3; v++) {
-            float factor = (float)v / (float)this->vertices[i].size();
-            this->colors[i][3 * v + 0] = static_cast<unsigned char>(factor * red[0]);
-            this->colors[i][3 * v + 1] = static_cast<unsigned char>(factor * red[1]);
-            this->colors[i][3 * v + 2] = static_cast<unsigned char>(factor * red[2]);
-        }
-#endif
 
         // copy the edges
         this->edgesForward[i].clear();
@@ -1968,6 +1962,60 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
                 this->vertices[i][3 * v + 2] = zCoord;
             }
         }
+    }
+
+    return true;
+}
+
+/*
+ * SombreroWarper::recomputeVertexNormals
+ */
+bool SombreroWarper::recomputeVertexNormals(void) {
+    for (size_t i = 0; i < this->meshVector.size(); i++) {
+        auto s_radius = this->sombreroRadius[i];
+        auto s_length = this->sombreroLength[i];
+        auto vert_cnt = this->vertices[i].size() / 3;
+
+        vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> scale;
+        scale.SetAt(0, 0, s_radius);
+        scale.SetAt(1, 1, s_length);
+        scale.SetAt(2, 2, s_radius);
+        scale.SetAt(3, 3, 1.0f);
+
+        auto scaleInv = scale;
+        scaleInv.Invert();
+        
+        auto scaleInvTrans = scaleInv;
+        scaleInvTrans.Transpose();
+
+        for (size_t j = 0; j < vert_cnt; j++) {
+            if (this->brimFlags[i][j]) {
+                this->normals[i][j * 3 + 0] = 0.0f;
+                this->normals[i][j * 3 + 1] = 1.0f;
+                this->normals[i][j * 3 + 2] = 0.0f;
+            } else {
+                vislib::math::Vector<float, 3> pos(&this->vertices[i][j * 3]);
+                vislib::math::Vector<float, 4> posA(pos[0], pos[1], pos[2], 1.0f);
+                // normalize the position so that the sombrero exit is at 0,0,0 and all vertices below it
+                pos[1] -= s_length / 2.0f;
+                auto spherePos = scaleInv * posA;
+                spherePos[3] = 0.0f;
+                auto n = scaleInvTrans * spherePos;
+                vislib::math::Vector<float, 3> normal(n.PeekComponents());
+                normal.Normalise();
+                this->normals[i][j * 3 + 0] = normal[0];
+                this->normals[i][j * 3 + 1] = normal[1];
+                this->normals[i][j * 3 + 2] = normal[2];
+            }
+        }
+
+    #if 0 // normal as color
+        for (size_t j = 0; j < vert_cnt; j++) {
+            this->colors[i][j * 3 + 0] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 0]));
+            this->colors[i][j * 3 + 1] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 1]));
+            this->colors[i][j * 3 + 2] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 2]));
+        }
+    #endif
     }
 
     return true;

@@ -171,6 +171,13 @@ namespace sombreros {
         bool recomputeVertexDistances(void);
 
         /**
+         * Recomputes the normals of the vertices.
+         *
+         * @return True on success, false otherwise
+         */
+        bool recomputeVertexNormals(void);
+
+        /**
          * Computes the angles for each vertex using an adapted method by rahi and sharp
          *
          * @param The call containing the tunnel data.
