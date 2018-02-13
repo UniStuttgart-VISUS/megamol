@@ -125,6 +125,7 @@ namespace megamol {
 
 
             unsigned int renderMode;
+            vislib::StringA testtext;
 
             /**********************************************************************
             * functions

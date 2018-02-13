@@ -24,6 +24,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/File.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -58,7 +59,8 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     this->MakeSlotAvailable(&this->paramRenderMode4);
 
 
-    this->renderMode = 1;
+    this->renderMode = 2;
+    this->testtext.Clear();
 }
 
 
@@ -99,6 +101,23 @@ bool TestFontRenderer::create(void) {
         vislib::sys::Log::DefaultLog.WriteError("[TestFontRenderer] [create] Couldn't initialize the sdf font.");
         return false;
     }
+
+    // Load file with test text -----------------------------------------------
+    vislib::StringA filename = ".\\fonts\\testtext.txt";
+    vislib::sys::ASCIIFileBuffer file;
+    if (!file.LoadFile(filename)) {
+        vislib::sys::Log::DefaultLog.WriteError("[TestFontRenderer] [create] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
+        return false;
+    }
+    SIZE_T lineCnt = 0;
+    // Read info file line by line
+    this->testtext.Clear();
+    while (lineCnt < file.Count()) {
+        this->testtext += static_cast<vislib::StringA>(file.Line(lineCnt));
+        lineCnt++;
+    }
+    file.Clear();
+    this->testtext.Append('\0');
 
     return true;
 }
@@ -159,27 +178,35 @@ bool TestFontRenderer::Render(core::Call& call) {
         this->paramRenderMode4.ResetDirty();
     }
 
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 3; i++) {
+        fgColor[i] -= bgColor[i];
+    }
+    glColor4fv(fgColor);
+
+    // OpenGl setup -----------------------------------------------------------
+
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_DEPTH_TEST);
+
     // ------------------------------------------------------------------------
     if (this->renderMode == 1) {
-
-        // Get current color for shader
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, true, "...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-
-    }
-    // ------------------------------------------------------------------------
-    else if (this->renderMode == 2) {
-
-        // Opengl setup 
-
-        // Get the foreground color (inverse background color)
-        float bgColor[4];
-        float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-        for (unsigned int i = 0; i < 3; i++) {
-            fgColor[i] -= bgColor[i];
-        }
 
         // Get current viewport
         int vp[4];
@@ -188,27 +215,6 @@ bool TestFontRenderer::Render(core::Call& call) {
         int   vpHeight = vp[3] - vp[1];
         float vpH      = static_cast<float>(vpHeight);
         float vpW      = static_cast<float>(vpWidth);
-
-        GLfloat tmpLw;
-        glGetFloatv(GL_LINE_WIDTH, &tmpLw);
-
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_COLOR_ARRAY);
-
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_TEXTURE_1D);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_BLEND);
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -219,9 +225,6 @@ bool TestFontRenderer::Render(core::Call& call) {
         glPushMatrix();
         glLoadIdentity();
  
-
-        // ------------------------------------------------------------------------
-
         float fontSize = vpH*0.5f; // 50% of viewport height
         float nol      = 6.0f; // number of lines
 
@@ -229,8 +232,6 @@ bool TestFontRenderer::Render(core::Call& call) {
         vislib::StringA filledString  = "The Filled Font. ";
         vislib::StringA outlineString = "The Outline Font. ";
         vislib::StringA sdfString     = "The SDF Font. ";
-
-        glColor4fv(fgColor);
 
         // Adapt font size
         vislib::StringA tmpString = "--------------------------";
@@ -258,26 +259,28 @@ bool TestFontRenderer::Render(core::Call& call) {
         // OUTLINE FONT 
         this->outlineFont.SetRenderType(vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
         float outlineWidth = this->outlineFont.LineWidth(fontSize, outlineString);
+        glDisable(GL_LINE_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*1.0f), outlineWidth, 1.0f, fontSize, true, outlineString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
-        glEnable(GL_LINE_SMOOTH);
+        
         outlineString += "AA ";
         outlineWidth = this->outlineFont.LineWidth(fontSize, outlineString);
+        glEnable(GL_LINE_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*2.0f), outlineWidth, 1.0f, fontSize, true, outlineString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-        glDisable(GL_LINE_SMOOTH);
 
 
         // FILLED FONT 
         this->outlineFont.SetRenderType(vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL);
         outlineWidth = this->outlineFont.LineWidth(fontSize, outlineString);
+        glDisable(GL_POLYGON_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*3.0f), outlineWidth, 1.0f, fontSize, true, outlineString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
-        glEnable(GL_POLYGON_SMOOTH);
+        
         filledString += "AA ";
         outlineWidth = this->outlineFont.LineWidth(fontSize, filledString);
+        glEnable(GL_POLYGON_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*4.0f), outlineWidth, 1.0f, fontSize, true, filledString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-        glDisable(GL_POLYGON_SMOOTH);
-
+        
         // SDF FONT
         //float sdfWidth = this->sdfFont.LineWidth(fontSize, sdfString);
         //this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
@@ -287,29 +290,45 @@ bool TestFontRenderer::Render(core::Call& call) {
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
 
-        // Reset opengl 
-        glLineWidth(tmpLw);
-        glDisable(GL_BLEND);
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_POLYGON_SMOOTH);
+    }
+    // ------------------------------------------------------------------------
+    else if (this->renderMode == 2) {
+
+        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, true, "...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 3) {
 
+        float fontSize         = 0.1f;
+        float lineWidth        = 8.0f;
+        unsigned int lineCount = this->simpleFont.BlockLines(lineWidth, fontSize, testtext);
 
-
+        this->simpleFont.DrawString(-(lineWidth/2.0f), ((lineCount*fontSize)/2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 4) {
 
+        float fontSize         = 0.1f;
+        float lineWidth        = 8.0f;
+        unsigned int lineCount = this->outlineFont.BlockLines(lineWidth, fontSize, testtext);
 
-
+        //glEnable(GL_POLYGON_SMOOTH);
+        //glDisable(GL_POLYGON_SMOOTH);
+        this->outlineFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+        
     }
     // ------------------------------------------------------------------------
     else {
+
         vislib::sys::Log::DefaultLog.WriteWarn("[TestFontRenderer] [render] Unknown render mode ...");
     }
 
+
+    // Reset opengl -----------------------------------------------------------
+    glDisable(GL_BLEND);
+    glDisable(GL_POLYGON_SMOOTH);
+    glDisable(GL_LINE_SMOOTH);
 
     return true;
 }
