@@ -28,13 +28,15 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS
+    CYLINDERS,
+    OSPRAY_API_GEOMETRY
 };
 
 enum volumeTypeEnum {
     STRUCTUREDVOLUME,
     BLOCKBRICKEDVOLUME,
-    GHOSTBLOCKBRICKEDVOLUME
+    GHOSTBLOCKBRICKEDVOLUME,
+    OSPRAY_API_VOLUME
 };
 
 enum volumeRepresentationType {
@@ -68,6 +70,7 @@ public:
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
     std::shared_ptr<const void*> raw;
+    std::shared_ptr<void*> ospstructure;
 
 
     unsigned int voxelCount = voxelCount;
