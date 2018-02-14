@@ -41,16 +41,6 @@ namespace megamol {
 
 		public:
 
-			enum SkyboxSides {
-				SKYBOX_NONE  = 0,
-				SKYBOX_FRONT = 1,
-				SKYBOX_BACK  = 2,
-				SKYBOX_LEFT  = 4,
-				SKYBOX_RIGHT = 8, 
-				SKYBOX_UP    = 16,
-				SKYBOX_DOWN  = 32
-			};
-
 			typedef core::view::View3D Base;
 
 			/**
@@ -115,16 +105,25 @@ namespace megamol {
             vislib::graphics::gl::OutlineFont theFont;
 #endif
 
+            enum SkyboxSides {
+                SKYBOX_NONE = 0,
+                SKYBOX_FRONT = 1,
+                SKYBOX_BACK = 2,
+                SKYBOX_LEFT = 4,
+                SKYBOX_RIGHT = 8,
+                SKYBOX_UP = 16,
+                SKYBOX_DOWN = 32
+            };
+
             clock_t                                 deltaAnimTime;
-            clock_t                                 deltaRipPrompt; // Rip = rendering in progress
 
             Keyframe                                shownKeyframe;
             bool                                    playAnim;
 
             int                                     cineWidth;
             int                                     cineHeight;
-            int                                     vpH;
-            int                                     vpW;
+            int                                     vpHLast;
+            int                                     vpWLast;
 
             CinematicView::SkyboxSides              sbSide;
 

@@ -27,10 +27,15 @@
 #include "TimeLineRenderer.h"
 #include "CallCinematicCamera.h"
 
-//#define _USE_MATH_DEFINES
 
 using namespace megamol::core;
 using namespace megamol::cinematiccamera;
+
+
+// DEFINES
+#ifndef CC_MENU_HEIGHT
+    #define CC_MENU_HEIGHT (20.0f)
+#endif
 
 
 /*
@@ -39,6 +44,8 @@ using namespace megamol::cinematiccamera;
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
     rulerFontParam( "01_fontSize", "The font size."),
+    moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
+    moveLeftFrame( "03_leftFrame", "Move to left animation time frame."),
 
 #ifndef USE_SIMPLE_FONT
 	theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
@@ -92,6 +99,12 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     // init parameters
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
+
+    this->moveRightFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
+    this->MakeSlotAvailable(&this->moveRightFrame);
+
+    this->moveLeftFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
+    this->MakeSlotAvailable(&this->moveLeftFrame);
 }
 
 
@@ -153,21 +166,26 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     else {
         tmpStr.Format("%.5f ", this->animTotalTime);
     }
+
+    float vpW = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
+    float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
+
     float strHeight = this->theFont.LineHeight(this->fontSize);
     float strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->rulerMarkSize = strHeight / 2.0f;
     this->keyfMarkSize = strHeight*1.5f;
 
-    this->axisStartPos   = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f,                         strHeight*2.5f);
-    this->animAxisEndPos = vislib::math::Vector<float, 2>(cr->GetViewport().GetSize().GetWidth() - strWidth, strHeight*2.5f);
-    this->simAxisEndPos  = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f,                         cr->GetViewport().GetSize().GetHeight() - this->keyfMarkSize - strHeight);
+    this->axisStartPos   = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f, strHeight*2.5f);
+    this->animAxisEndPos = vislib::math::Vector<float, 2>(vpW - strWidth,            strHeight*2.5f);
+    this->simAxisEndPos  = vislib::math::Vector<float, 2>(strWidth + strHeight*1.5f, vpH - this->keyfMarkSize - CC_MENU_HEIGHT); 
 
-    float tmpLength = this->animAxisLen;
+    float tmpAnimLen = this->animAxisLen;
     this->animAxisLen = (this->animAxisEndPos - this->axisStartPos).Norm();
+    float tmpSimLen = this->simAxisLen;
     this->simAxisLen = (this->simAxisEndPos - this->axisStartPos).Norm();
 
-    // Do adaptation only if there are changes in the time line length
-    if (tmpLength != this->animAxisLen) {
+    // Do adaptation only if there are changes in the axes lengths
+    if ((tmpAnimLen != this->animAxisLen) || (tmpSimLen != this->simAxisLen)) {
         this->animScaleFac = 1.0f; // Reset scaling factor
         this->simScaleFac  = 1.0f; // Reset scaling factor
         this->redoAdaptation = true;
@@ -218,6 +236,37 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
     }
+    if (this->moveRightFrame.IsDirty()) {
+        this->moveRightFrame.ResetDirty();
+        // Set selected animation time to right animation time frame
+        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float fpsFrac = 1.0f / (float)(this->fps);
+        float t = std::round(at / fpsFrac) * fpsFrac;
+        t += fpsFrac;
+        if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
+            t = std::round(t);
+        }
+        t = (t > this->animTotalTime) ? (this->animTotalTime) : (t);
+        ccc->setSelectedKeyframeTime(t);
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        std::cout << "right: " << t << std::endl;
+    }
+    if (this->moveLeftFrame.IsDirty()) {
+        this->moveLeftFrame.ResetDirty();
+        // Set selected animation time to left animation time frame
+        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float fpsFrac = 1.0f / (float)(this->fps);
+        float t = std::round(at / fpsFrac) * fpsFrac;
+        t -= fpsFrac;
+        if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
+            t = std::round(t);
+        }
+        t = (t < 0.0f) ? (0.0f) : (t);
+        ccc->setSelectedKeyframeTime(t);
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        std::cout << "left: " << t << std::endl;
+    }
+
 
     vislib::StringA tmpStr;
     float strWidth;
@@ -337,7 +386,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
     }
     // COLORS
@@ -384,7 +433,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    // Draw frame markers
+    // Draw frame markers -----------------------------------------------------
     float frameFrac = this->animAxisLen / ((float)(this->fps) * (this->animTotalTime)) * this->animScaleFac;
     glLineWidth(1.0f);
     glColor4fv(fColor);
@@ -396,7 +445,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             }
         }
     glEnd();
-    // Draw rulers
+    // Draw rulers ------------------------------------------------------------
     glLineWidth(2.5f);
     glColor4fv(fgColor);
     glBegin(GL_LINES);
@@ -429,7 +478,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float x, y;
     Keyframe skf = ccc->getSelectedKeyframe();
 
-    // Draw line strip between keyframes
+    // Draw line strip between keyframes --------------------------------------
     if (keyframes->Count() > 0) {
         glColor4fv(sColor);
         glBegin(GL_LINE_STRIP);
@@ -449,7 +498,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glEnd();
     }
 
-    // Draw markers for existing keyframes in array
+    // Draw markers for existing keyframes in array ---------------------------
     glDisable(GL_POLYGON_SMOOTH);
     for (unsigned int i = 0; i < keyframes->Count(); i++) {
         x = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
@@ -465,7 +514,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     }
 
-    // Draw interpolated selected keyframe marker
+    // Draw interpolated selected keyframe marker -----------------------------
     x = this->animScaleOffset + skf.getAnimTime() * this->animLenTimeFrac;
     y = this->simScaleOffset + skf.getSimTime()  * this->simLenTimeFrac;
     if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
@@ -483,7 +532,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glEnd();
     }
 
-    // Draw dragged keyframe
+    // Draw dragged keyframe --------------------------------------------------
     if (this->dragDropActive) {
         x = this->animScaleOffset + this->dragDropKeyframe.getAnimTime() * this->animLenTimeFrac;
         y = this->simScaleOffset + this->dragDropKeyframe.getSimTime()  * this->simLenTimeFrac;
@@ -493,7 +542,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     }
 
-    // Draw ruler captions
+    // Draw ruler captions ----------------------------------------------------
     glEnable(GL_POLYGON_SMOOTH);
     glColor4fv(fgColor);
     strHeight = this->theFont.LineHeight(this->fontSize);
@@ -524,6 +573,21 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
         timeStep += this->simSegmValue;
     }
+
+    // axis captions
+    tmpStr = "animation time / frames ";
+    strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
+    this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,
+        strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+    glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
+    tmpStr = "simulation time ";
+    strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
+    this->theFont.DrawString(this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + strHeight / 2.0f,
+        strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+    glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+
+    // DRAW MENU --------------------------------------------------------------
+
     // selected keyframe info
     glColor4fv(fgColor);
     float aT = skf.getAnimTime();
@@ -534,32 +598,61 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         aF = this->dragDropKeyframe.getAnimTime() * (float)(this->fps);
         sT = this->dragDropKeyframe.getSimTime()*this->simTotalTime;
     }
-    tmpStr.Format("animation time: %.3f | animation frame: %.3f | simulation time: %.3f ", aT, aF, sT);
-    strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->simAxisEndPos.Y() + this->keyfMarkSize,
-                             strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
-    // axis captions
-    tmpStr = "animation time / frames ";
-    strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen/2.0f - strWidth/2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,
-                             strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
-    glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
-    tmpStr = "simulation time ";
-    strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    this->theFont.DrawString(this->axisStartPos.Y() + this->simAxisLen/2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + strHeight/2.0f,
-                             strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
 
-    //this->theFont.Deinitialise();
+    float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
+    float vpW = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
 
-    // Reset opengl 
-    glLineWidth(tmpLw);
+    vislib::StringA leftLabel = " [ TIME LINE VIEW ] ";
+    vislib::StringA midLabel = "  ";
+    midLabel.Format("animation time: %.3f | animation frame: %.3f | simulation time: %.3f ", aT, aF, sT);
+    vislib::StringA rightLabel = "  ";
+    
+    float lbFontSize = (CC_MENU_HEIGHT);
+    float leftLabelWidth = this->theFont.LineWidth(lbFontSize, leftLabel);
+    float midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
+    float rightLabelWidth = this->theFont.LineWidth(lbFontSize, rightLabel);
 
+    // Adapt font size if height of menu text is greater than menu height
+    float vpWhalf = vpW / 2.0f;
+    while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
+        lbFontSize -= 0.5f;
+        leftLabelWidth = this->theFont.LineWidth(lbFontSize, leftLabel);
+        midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
+        rightLabelWidth = this->theFont.LineWidth(lbFontSize, rightLabel);
+    }
+
+    // Draw menu background
     glDisable(GL_BLEND);
-    glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
+    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(0.0f, vpH);
+        glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
+        glVertex2f(vpW,  vpH - (CC_MENU_HEIGHT));
+        glVertex2f(vpW,  vpH);
+    glEnd();
+
+    // Draw menu labels
+    float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    glEnable(GL_BLEND);
+    glEnable(GL_POLYGON_SMOOTH);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    // ------------------------------------------------------------------------
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+
+    // Reset opengl 
+    glLineWidth(tmpLw);
+    glDisable(GL_BLEND);
+    glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_POLYGON_SMOOTH);
 
 	return true;
 }
