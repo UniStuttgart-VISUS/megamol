@@ -16,8 +16,6 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "helper_math.h"
 #include "CUDAIsosurfaceRaycaster_kernel.cuh"
 
-#define DEBUG_LUT
-
 namespace megamol {
 namespace volume_cuda {
 	
@@ -214,8 +212,7 @@ namespace volume_cuda {
 		/** parameter for the file path to the file containing the lookup table */
 		megamol::core::param::ParamSlot lutFileParam;
 
-		/** parameter for the number of components of the discretized lookup table */
-		megamol::core::param::ParamSlot lutSizeParam;
+		//megamol::core::param::ParamSlot 
 
 		/** the viewport dimensions of the last frame */
 		vislib::math::Dimension<int, 2U> lastViewport;
@@ -262,10 +259,8 @@ namespace volume_cuda {
         /** Unique pointer to the object holding the CUDA kernels */
         std::unique_ptr<CUDAIsosurfaceRaycaster_kernel> cuda_kernels;
 
-#ifdef DEBUG_LUT
 		/** the lookup table */
-		std::vector<float4> lut;
-#endif // DEBUG_LUT
+		std::vector<std::pair<float, float4>> lut;
 	};
 
 } /* namespace volume_cuda */
