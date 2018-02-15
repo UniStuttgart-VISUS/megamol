@@ -42,7 +42,7 @@ public:
     * @return The number of functions used for this call.
     */
     static unsigned int FunctionCount(void) {
-        return 1;
+        return 2;
     }
 
     /**
