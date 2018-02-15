@@ -38,7 +38,7 @@ using namespace megamol::core::view::special;
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
+    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -48,7 +48,7 @@ SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -58,7 +58,7 @@ SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
 
@@ -70,7 +70,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -82,7 +82,7 @@ SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -94,7 +94,7 @@ SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -107,7 +107,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
 
@@ -119,7 +119,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(bmf), renderType(render), texture(), shader(), fontInfo(), vbos() {
+        font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -132,7 +132,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, b
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
+    font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -145,7 +145,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
+    font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -158,7 +158,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
+        font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -171,7 +171,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
+        font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -184,7 +184,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
+        font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -197,7 +197,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(), 
-    font(src.font), renderType(src.renderType), texture(), shader(), fontInfo(), vbos() {
+    font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -210,7 +210,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font),  renderType(render), texture(), shader(), fontInfo(), vbos() {
+    font(src.font),  renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -223,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), fontInfo(), vbos() {
+        font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -246,7 +246,7 @@ SDFFont::~SDFFont(void) {
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
 
-    return this->lineCount(maxWidth, size, vislib::StringA(txt));
+    return this->lineCount(maxWidth, size, txt);
 }
 
 
@@ -255,7 +255,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt) const {
 
-    return this->lineCount(maxWidth, size, static_cast<vislib::StringA>(vislib::StringW(txt)));
+    return this->lineCount(maxWidth, size, txt);
 }
 
 
@@ -265,7 +265,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     //TEMP
-    this->draw(vislib::StringA(txt), x, y, 0.0f, size, flipY, align);
+    this->draw(txt, x, y, 0.0f, size, flipY, align);
 
     // TODO
 
@@ -296,7 +296,7 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *t
 */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
-    this->DrawString(x, y, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
+
 }
 
 
@@ -306,7 +306,7 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t
 void SDFFont::DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     //TEMP
-    this->draw(vislib::StringA(txt), x, y, 0.0f, size, flipY, align);
+    this->draw(txt, x, y, 0.0f, size, flipY, align);
 
     // TODO
 
@@ -373,7 +373,7 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size, bool fl
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
-    this->DrawString(x, y, w, h, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
+
 }
 
 
@@ -383,7 +383,7 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool f
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
     //TEMP
-    this->draw(vislib::StringA(txt), x, y, z, size, flipY, align);
+    this->draw(txt, x, y, z, size, flipY, align);
 
     // TODO
 
@@ -414,7 +414,7 @@ void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, cons
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
 
-    this->DrawString(x, y, z, size, flipY, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer(), align);
+
 }
 
 
@@ -436,7 +436,11 @@ float SDFFont::LineWidth(float size, const char *txt) const {
  */
 float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 
-    return this->LineWidth(size, (static_cast<vislib::StringA>(vislib::StringW(txt))).PeekBuffer());
+    float w = 0.0f;
+
+    // TODO
+
+    return w;
 }
 
 
@@ -476,7 +480,20 @@ void SDFFont::deinitialise(void) {
 /*
 * SDFFont::lineCount
 */
-unsigned int SDFFont::lineCount(float maxWidth, float size, vislib::StringA txt) const {
+unsigned int SDFFont::lineCount(float maxWidth, float size, const char *txt) const {
+
+    unsigned int i = 0;
+
+    // TODO
+
+    return i;
+}
+
+
+/*
+* SDFFont::lineCount
+*/
+unsigned int SDFFont::lineCount(float maxWidth, float size, const wchar_t *txt) const {
 
     unsigned int i = 0;
 
@@ -489,7 +506,7 @@ unsigned int SDFFont::lineCount(float maxWidth, float size, vislib::StringA txt)
 /*
 * SDFFont::draw
 */
-void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
+void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
@@ -503,33 +520,109 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     }
 
     // ------------------------------------------------------------------------
-    // Generate data on CPU
 
-    vislib::Array<float> pos;
-    vislib::Array<float> tex;
+    // Loop over all characters in the string
+    SDFFontCharacter * charInfo = NULL;
+    unsigned int       charCnt = (unsigned int)this->indices.size();
+    unsigned int       charIdx = 0;
 
-    pos.Add(1.0f); pos.Add(1.0f); pos.Add(0.0f);
-    pos.Add(-1.0f); pos.Add(1.0f); pos.Add(0.0f);
-    pos.Add(-1.0f); pos.Add(-1.0f); pos.Add(0.0f);
-    pos.Add(1.0f); pos.Add(-1.0f); pos.Add(0.0f);
+    unsigned int textCnt = 0;
+    const char *text = txt;
+    while (*text != '\0') {
+        text++;
+        textCnt++;
+    }
 
-    tex.Add(1.0f); tex.Add(0.0f);
-    tex.Add(0.0f); tex.Add(0.0f);
-    tex.Add(0.0f); tex.Add(1.0f);
-    tex.Add(1.0f); tex.Add(1.0f);
+    GLfloat *posData   = new GLfloat[textCnt * 12];
+    GLfloat *texData   = new GLfloat[textCnt * 8];
+    GLfloat *transData = new GLfloat[textCnt * 16];
 
-    // Bind data to vertex data buffers
+    // Assumption: String MUST be '\0' terminated!
+    text = txt;
+    textCnt = 0;
+    while (*text != '\0') {
+        charIdx = (unsigned int)(*text);
+
+        // (TEMP: Replace newline wiwth space)
+        if ((*text) == '\n') {
+            charIdx = (unsigned int)(' ');
+        }
+
+        charInfo = NULL;
+        if (charIdx < charCnt) {
+            charInfo = this->indices[charIdx];
+        }
+        if (charInfo != NULL) {
+
+            // Positions
+            posData[textCnt * 12 + 0] = charInfo->posData[0];
+            posData[textCnt * 12 + 1] = charInfo->posData[1];
+            posData[textCnt * 12 + 2] = charInfo->posData[2];
+
+            posData[textCnt * 12 + 3] = charInfo->posData[3];
+            posData[textCnt * 12 + 4] = charInfo->posData[4];
+            posData[textCnt * 12 + 5] = charInfo->posData[5];
+
+            posData[textCnt * 12 + 6] = charInfo->posData[6];
+            posData[textCnt * 12 + 7] = charInfo->posData[7];
+            posData[textCnt * 12 + 8] = charInfo->posData[8];
+
+            posData[textCnt * 12 + 9] = charInfo->posData[9];
+            posData[textCnt * 12 + 10] = charInfo->posData[10];
+            posData[textCnt * 12 + 11] = charInfo->posData[11];
+
+            // Texture  
+            texData[textCnt * 8 + 0] = charInfo->texData[0];
+            texData[textCnt * 8 + 1] = charInfo->texData[1];
+
+            texData[textCnt * 8 + 2] = charInfo->texData[2];
+            texData[textCnt * 8 + 3] = charInfo->texData[3];
+
+            texData[textCnt * 8 + 4] = charInfo->texData[4];
+            texData[textCnt * 8 + 5] = charInfo->texData[5];
+
+            texData[textCnt * 8 + 6] = charInfo->texData[6];
+            texData[textCnt * 8 + 7] = charInfo->texData[7];
+
+            // Transformation
+            transData[textCnt * 16 + 0] = (float)textCnt * size;
+            transData[textCnt * 16 + 1] = 0.0f;
+            transData[textCnt * 16 + 2] = 0.0f;
+            transData[textCnt * 16 + 3] = size;
+
+            transData[textCnt * 16 + 4] = (float)textCnt * size;
+            transData[textCnt * 16 + 5] = 0.0f;
+            transData[textCnt * 16 + 6] = 0.0f;
+            transData[textCnt * 16 + 7] = size;
+
+            transData[textCnt * 16 + 8] = (float)textCnt * size;
+            transData[textCnt * 16 + 9] = 0.0f;
+            transData[textCnt * 16 + 10] = 0.0f;
+            transData[textCnt * 16 + 11] = size;
+
+            transData[textCnt * 16 + 12] = (float)textCnt * size;
+            transData[textCnt * 16 + 13] = 0.0f;
+            transData[textCnt * 16 + 14] = 0.0f;
+            transData[textCnt * 16 + 15] = size;
+
+            textCnt++;
+        }
+        text++;
+    }
+
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)pos.Count() * sizeof(float), pos.PeekElements(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
         }
         else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)tex.Count() * sizeof(float), tex.PeekElements(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+        }
+        else if (this->vbos[i].index == (GLuint)VBOAttrib::TRANSFORM) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 16 * sizeof(GLfloat), transData, GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
-
 
     // ------------------------------------------------------------------------
     // Draw
@@ -576,8 +669,7 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
 
-    // Draw ...
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_QUADS, 0, (GLsizei)textCnt * 4);
 
     glUseProgram(0); // instead of this->shader.Disable() => because function is CONST
     glBindVertexArray(0);
@@ -591,6 +683,11 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
         glDisable(GL_BLEND);
     }
     glBlendFunc(blendSrc, blendDst);
+
+    delete[] posData;
+    delete[] texData;
+    delete[] transData;
+
 
 
     // TODO (with SSBO)
@@ -642,6 +739,16 @@ void SDFFont::draw(vislib::StringA txt, float x, float y, float z, float size, b
 
     glDisableClientState(GL_VERTEX_ARRAY);
     */
+}
+
+
+/*
+* SDFFont::draw
+*/
+void SDFFont::draw(const wchar_t *txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
+
+    // TODO
+
 }
 
 
@@ -720,18 +827,25 @@ bool SDFFont::loadFontBuffers() {
     SDFVBO newVBO;
 
     // VBO for position data
-    newVBO.handle = 0;
     newVBO.name   = "inVertPos";
     newVBO.index  = (GLuint)VBOAttrib::POSITION;
     newVBO.dim    = 3;
     this->vbos.push_back(newVBO);
+    newVBO.handle = 0;
 
     // VBO for texture data
-    newVBO.handle = 0;
     newVBO.name   = "inVertTexCoord";
     newVBO.index  = (GLuint)VBOAttrib::TEXTURE;
     newVBO.dim    = 2;
     this->vbos.push_back(newVBO);
+    newVBO.handle = 0;
+
+    // VBO for transformation data
+    newVBO.name   = "inVertOffset";
+    newVBO.index  = (GLuint)VBOAttrib::TRANSFORM;
+    newVBO.dim    = 4;
+    this->vbos.push_back(newVBO);
+    newVBO.handle = 0;
 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glGenBuffers(1, &this->vbos[i].handle);
@@ -763,19 +877,7 @@ bool SDFFont::loadFontBuffers() {
 bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     // Reset font info
-    this->fontInfo.clear();
-
-    // Check file
-    /*
-    void   *buf = NULL;
-    SIZE_T  size = 0;
-    if ((size = this->loadFile(filename, &buf)) <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not find font information: \"%s\". \n", filename.PeekBuffer());
-        ARY_SAFE_DELETE(buf);
-        return false;
-    }
-    ARY_SAFE_DELETE(buf);
-    */
+    this->characters.clear();
 
     // Load file
     vislib::sys::ASCIIFileBuffer file;
@@ -784,16 +886,32 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
         return false;
     }
 
+    float texWidth  = 0.0f;
+    float texHeight = 0.0f;
+    float fontSize  = 0.0f;
+    
+    // Read info file line by line
+    int idx = 0;
+    int second = 0;
     SIZE_T lineCnt = 0;
     vislib::StringA line;
-    // Read info file line by line
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
-         if (line.StartsWith("char ")) {
+        if (line.StartsWith("info ")) { // Parse info line
+            idx = line.Find("size=", 0);
+            fontSize = (float)std::atof(line.Substring(idx + 5, 4));
+        }
+        else if (line.StartsWith("common ")) { // Parse common info line
+            idx = line.Find("scaleW=", 0);
+            texWidth = (float)std::atof(line.Substring(idx + 7, 4));
+            idx = line.Find("scaleH=", 0);
+            texHeight = (float)std::atof(line.Substring(idx + 7, 4));
+        }
+        else if (line.StartsWith("char ")) { // Parse character info
             SDFFontCharacter newChar;
 
-            int idx = line.Find("id=", 0);
-            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); // substring(start, range)
+            idx = line.Find("id=", 0);
+            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); 
             idx = line.Find("x=", 0);
             newChar.texX = (int)std::atoi(line.Substring(idx+2, 4));
             idx = line.Find("y=", 0);
@@ -809,12 +927,15 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             idx = line.Find("xadvance=", 0);
             newChar.xadvance = (int)std::atoi(line.Substring(idx+9, 4));
             newChar.kernings.clear();
+            newChar.posData.Clear();
+            newChar.texData.Clear();
 
-            this->fontInfo.push_back(newChar);
+            this->characters.push_back(newChar);
         }
-        else if (line.StartsWith("kerning ")) {
-            int idx = line.Find("second=", 0);
-            int second = (int)std::atoi(line.Substring(idx+7, 4));
+        else if (line.StartsWith("kerning ")) { // Parse kerning info
+
+            idx = line.Find("second=", 0);
+            second = (int)std::atoi(line.Substring(idx+7, 4));
 
             SDFFontKerning newKern;
 
@@ -823,9 +944,10 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             idx = line.Find("amount=", 0);
             newKern.amount = (int)std::atoi(line.Substring(idx+7, 4));
 
-            for (unsigned int i = 0; i < this->fontInfo.size(); i++) {
-                if (this->fontInfo[i].id == second) {
-                    this->fontInfo[i].kernings.push_back(newKern);
+            // Assumption: Character data is already read
+            for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
+                if (this->characters[i].id == second) {
+                    this->characters[i].kernings.push_back(newKern);
                 }
             }
         }
@@ -834,6 +956,60 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     }
     //Clear ascii file buffer
     file.Clear();
+
+    // Building character index array -----------------------------------------
+    this->indices.clear();
+    // Get largest character id
+    int maxCharId = 0;
+    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
+        if (this->characters[i].id > maxCharId) {
+            maxCharId = this->characters[i].id;
+        }
+    }
+    maxCharId++; // [0,maxCharId], otherwise indices are in [0,maxCharId-1]
+    // Init font info indices
+    for (int i = 0; i < maxCharId; i++) {
+        this->indices.push_back(NULL);
+    }
+    // Set pointer to font info for available characters
+    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
+        this->indices[this->characters[i].id] = &this->characters[i];
+    }
+
+    // Generating position and texture data -----------------------------------
+    GLfloat tx0, tx1, ty0, ty1;
+    vislib::math::Vector<GLfloat, 3> p0, p1, p2, p3;
+    float width, height;
+    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
+        this->characters[i].posData.Clear();
+        this->characters[i].texData.Clear();
+
+        width  = (float)this->characters[i].width;
+        height = (float)this->characters[i].height;
+
+        // Position data
+        p0 = vislib::math::Vector<GLfloat, 3>(0.0f, 0.0f, 0.0f);
+        p1 = p0;
+        p1.SetX(p1.X() + (width / fontSize));
+        p2 = p1;
+        p2.SetY(p2.Y() + (height / fontSize));
+        p3 = p0;
+        p3.SetY(p3.Y() + (height / fontSize));
+        this->characters[i].posData.Add(p0.X()); this->characters[i].posData.Add(p0.Y()); this->characters[i].posData.Add(p0.Z());
+        this->characters[i].posData.Add(p1.X()); this->characters[i].posData.Add(p1.Y()); this->characters[i].posData.Add(p1.Z());
+        this->characters[i].posData.Add(p2.X()); this->characters[i].posData.Add(p2.Y()); this->characters[i].posData.Add(p2.Z());
+        this->characters[i].posData.Add(p3.X()); this->characters[i].posData.Add(p3.Y()); this->characters[i].posData.Add(p3.Z());
+
+        // Texture data
+        tx0 = (GLfloat)this->characters[i].texX / texWidth;
+        ty0 = (GLfloat)this->characters[i].texY / texHeight;
+        tx1 = tx0 + (GLfloat)width / texWidth;
+        ty1 = ty0 + (GLfloat)height / texHeight;
+        this->characters[i].texData.Add(tx0); this->characters[i].texData.Add(ty1);
+        this->characters[i].texData.Add(tx1); this->characters[i].texData.Add(ty1);
+        this->characters[i].texData.Add(tx1); this->characters[i].texData.Add(ty0);
+        this->characters[i].texData.Add(tx0); this->characters[i].texData.Add(ty0);
+    }
 
     return true;
 }

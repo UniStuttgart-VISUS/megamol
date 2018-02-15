@@ -21,6 +21,7 @@
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/math/Vector.h"
 
 #include <vector>
 
@@ -316,9 +317,11 @@ namespace megamol {
             int xoffset;    // How much the current position should be offset when copying the image from the texture to the screen
             int yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
             int xadvance;   // How much the current position should be advanced after drawing the character
-
             // Kerning
             std::vector<SDFFontKerning> kernings;
+            // POsition and texture data
+            vislib::Array<GLfloat> posData;
+            vislib::Array<GLfloat> texData;
         };
 
         /** The sdf font. */
@@ -334,15 +337,18 @@ namespace megamol {
         RenderType renderType;
 
         /** Font characters. */
-        std::vector<SDFFontCharacter> fontInfo;
+        std::vector<SDFFontCharacter> characters;
+        /** Font indices for characters. */
+        std::vector<SDFFontCharacter *> indices;
 
         /** Vertex array object. */
         GLuint vaoHandle;
 
         /** Vertex buffer object. */
         enum VBOAttrib {
-            POSITION = 0,
-            TEXTURE  = 1
+            POSITION  = 0,
+            TEXTURE   = 1,
+            TRANSFORM = 2
         };
         struct SDFVBO {
             GLuint                 handle;  // buffer handle
@@ -375,12 +381,13 @@ namespace megamol {
         SIZE_T loadFile(vislib::StringA filename, void **outData);
 
         /** Number of lines with maxWidth and font size in the text. */
-        unsigned int lineCount(float maxWidth, float size, vislib::StringA txt) const;
+        unsigned int lineCount(float maxWidth, float size, const char *txt) const;
+        unsigned int lineCount(float maxWidth, float size, const wchar_t *txt) const;
 
         /**
          * Draw font glyphs.
          *
-         * @param txt   The text string
+         * @param txt   The pointer to the text string
          * @param x     The reference x coordinate
          * @param y     The reference y coordinate
          * @param z     The reference z coordinate
@@ -388,7 +395,8 @@ namespace megamol {
          * @param flipY The flag controlling the direction of the y-axis
          * @param align The alignment
          */
-        void draw(vislib::StringA txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void draw(const char *txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void draw(const wchar_t *txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
 
     };
 

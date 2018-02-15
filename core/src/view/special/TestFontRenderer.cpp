@@ -42,9 +42,13 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     paramRenderMode1("01_RenderMode-01", "... ."),
     paramRenderMode2("02_RenderMode-02", "... ."),
     paramRenderMode3("03_RenderMode-03", "... ."),
-    paramRenderMode4("04_RenderMode-04", "... .")
+    paramRenderMode4("04_RenderMode-04", "... ."),
+    paramRenderMode5("05_RenderMode-05", "... ."),
+    paramRenderMode6("06_RenderMode-06", "... ."),
+    paramRenderMode7("07_RenderMode-07", "... ."),
+    paramRenderMode8("08_RenderMode-08", "... ."),
+    paramRenderMode9("09_RenderMode-09", "... .")
     {
-
 
     this->paramRenderMode1.SetParameter(new param::ButtonParam('1'));
     this->MakeSlotAvailable(&this->paramRenderMode1);
@@ -58,6 +62,20 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     this->paramRenderMode4.SetParameter(new param::ButtonParam('4'));
     this->MakeSlotAvailable(&this->paramRenderMode4);
 
+    this->paramRenderMode5.SetParameter(new param::ButtonParam('5'));
+    this->MakeSlotAvailable(&this->paramRenderMode5);
+
+    this->paramRenderMode6.SetParameter(new param::ButtonParam('6'));
+    this->MakeSlotAvailable(&this->paramRenderMode6);
+
+    this->paramRenderMode7.SetParameter(new param::ButtonParam('7'));
+    this->MakeSlotAvailable(&this->paramRenderMode7);
+
+    this->paramRenderMode8.SetParameter(new param::ButtonParam('8'));
+    this->MakeSlotAvailable(&this->paramRenderMode8);
+
+    this->paramRenderMode9.SetParameter(new param::ButtonParam('9'));
+    this->MakeSlotAvailable(&this->paramRenderMode9);
 
     this->renderMode = 2;
     this->testtext.Clear();
@@ -177,6 +195,26 @@ bool TestFontRenderer::Render(core::Call& call) {
         this->renderMode = 4;
         this->paramRenderMode4.ResetDirty();
     }
+    if (this->paramRenderMode5.IsDirty()) {
+        this->renderMode = 5;
+        this->paramRenderMode5.ResetDirty();
+    }
+    if (this->paramRenderMode6.IsDirty()) {
+        this->renderMode = 6;
+        this->paramRenderMode6.ResetDirty();
+    }
+    if (this->paramRenderMode7.IsDirty()) {
+        this->renderMode = 7;
+        this->paramRenderMode7.ResetDirty();
+    }
+    if (this->paramRenderMode8.IsDirty()) {
+        this->renderMode = 8;
+        this->paramRenderMode8.ResetDirty();
+    }
+    if (this->paramRenderMode9.IsDirty()) {
+        this->renderMode = 9;
+        this->paramRenderMode9.ResetDirty();
+    }
 
     // Get the foreground color (inverse background color)
     float bgColor[4];
@@ -199,6 +237,9 @@ bool TestFontRenderer::Render(core::Call& call) {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_1D);
+
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -294,7 +335,9 @@ bool TestFontRenderer::Render(core::Call& call) {
     // ------------------------------------------------------------------------
     else if (this->renderMode == 2) {
 
-        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, true, "...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        float fontSize = 0.1f;
+
+        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, "...Hallo...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
     }
     // ------------------------------------------------------------------------
@@ -319,8 +362,29 @@ bool TestFontRenderer::Render(core::Call& call) {
         
     }
     // ------------------------------------------------------------------------
+    else if (this->renderMode == 5) {
+        
+        float fontSize  = 0.1f;
+        float lineWidth = 8.0f;
+        //unsigned int lineCount = this->sdfFont.BlockLines(lineWidth, fontSize, testtext);
+        
+        //this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+    }
+    // ------------------------------------------------------------------------
+    else if (this->renderMode == 6) {
+    }
+    // ------------------------------------------------------------------------
+    else if (this->renderMode == 7) {
+    }
+    // ------------------------------------------------------------------------
+    else if (this->renderMode == 8) {
+    }
+    // ------------------------------------------------------------------------
+    else if (this->renderMode == 9) {
+    }
+    // ------------------------------------------------------------------------
     else {
-
         vislib::sys::Log::DefaultLog.WriteWarn("[TestFontRenderer] [render] Unknown render mode ...");
     }
 

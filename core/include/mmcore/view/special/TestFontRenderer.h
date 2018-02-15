@@ -132,9 +132,6 @@ namespace megamol {
             **********************************************************************/
 
 
-
-
-
             /**********************************************************************
             * parameters
             **********************************************************************/
@@ -147,7 +144,16 @@ namespace megamol {
             core::param::ParamSlot paramRenderMode3;
             /**  */
             core::param::ParamSlot paramRenderMode4;
-
+            /**  */
+            core::param::ParamSlot paramRenderMode5;
+            /**  */
+            core::param::ParamSlot paramRenderMode6;
+            /**  */
+            core::param::ParamSlot paramRenderMode7;
+            /**  */
+            core::param::ParamSlot paramRenderMode8;
+            /**  */
+            core::param::ParamSlot paramRenderMode9;
         };
 
             } /* end namespace special */
