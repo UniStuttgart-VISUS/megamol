@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "FloatTableJoin.h"
-
+#include <limits>
 
 std::string megamol::stdplugin::datatools::floattable::FloatTableJoin::ModuleName
     = std::string("FloatTableJoin");
@@ -22,7 +22,7 @@ megamol::stdplugin::datatools::floattable::FloatTableJoin::FloatTableJoin(void) 
     secondFloatTableInSlot("secondFloatTableIn", "Second input"),
     dataOutSlot("dataOut", "Output"),
     frameID(-1),
-    firstDataHash(MAXULONG_PTR), secondDataHash(MAXULONG_PTR) {
+    firstDataHash(std::numeric_limits<unsigned long>::max()), secondDataHash(std::numeric_limits<unsigned long>::max()) {
     this->firstFloatTableInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->firstFloatTableInSlot);
 

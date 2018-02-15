@@ -191,6 +191,10 @@ namespace megamol {
 
             /**  */
             megamol::core::param::ParamSlot rulerFontParam;
+            /**  */
+            megamol::core::param::ParamSlot moveRightFrame;
+            /**  */
+            megamol::core::param::ParamSlot moveLeftFrame;
 		};
 
 	} /* end namespace cinematiccamera */

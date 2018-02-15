@@ -6,20 +6,20 @@
 
 Use this command line arguments to start MegaMol™
 in Cmd:
-  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
+  -p "D:\03_megamol\cinematiccamera\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
 in PowerShell:
-  -p "D:\04_megamol_github\megamol-git\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
+  -p "D:\03_megamol\cinematiccamera\bin\cinematiccam_simplemol.mmprj" -i cinematiccamera_simplemol inst
 
 -->
 
 	<view name="cinematiccamera_simplemol" viewmod="SplitView1">
 		<module class="SplitView" name="SplitView1" confpos="{X=20,Y=352}">
 			<param name="split.orientation" value="1" />
-			<param name="split.pos" value="0.6" />
+			<param name="split.pos" value="0.65" />
 			<param name="split.colour" value="gray" />
 		</module>
 		<module class="SplitView" name="SplitView2" confpos="{X=162,Y=247}">
-			<param name="split.pos" value="0.4" />
+			<param name="split.pos" value="0.55" />
 			<param name="split.colour" value="gray" />
 		</module>
 		<module class="CinematicView" name="CinematicView1" confpos="{X=383,Y=282}">
@@ -30,8 +30,8 @@ in PowerShell:
 			<param name="04_cinematicWidth" value="640" />
 			<param name="06_fps" value="10" />
 		</module>
-		<module class="KeyframeKeeper" name="KeyframeKeeper1" confpos="{X=761,Y=441}" />
-		<module class="View2D" name="View2D1" confpos="{X=145,Y=445}">
+		<module class="KeyframeKeeper" name="KeyframeKeeper1" confpos="{X=775,Y=441}" />
+		<module class="View2D" name="View2D1" confpos="{X=142,Y=452}">
 			<param name="backCol" value="black" />
 			<param name="showBBox" value="False" />
 			<param name="resetViewOnBBoxChange" value="True" />
@@ -40,20 +40,22 @@ in PowerShell:
 			<param name="backCol" value="black" />
 			<param name="bboxCol" value="gray" />
 		</module>
-		<module class="SimpleMoleculeRenderer" name="SimpleMoleculeRenderer1" confpos="{X=1026,Y=160}">
+		<module class="SimpleMoleculeRenderer" name="SimpleMoleculeRenderer1" confpos="{X=1031,Y=158}">
 			<param name="color::coloringMode0" value="0" />
 			<param name="renderMode" value="2" />
 		</module>
-		<module class="PDBLoader" name="PDBLoader1" confpos="{X=1250,Y=268}">
+		<module class="PDBLoader" name="PDBLoader1" confpos="{X=1260,Y=271}">
 			<param name="pdbFilename" value="data\2veo03.pdb" />
 			<param name="xtcFilename" value="data\2veo03.xtc" />
 		</module>
-		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=369,Y=440}" />
+		<module class="TimeLineRenderer" name="TimeLineRenderer1" confpos="{X=369,Y=440}">
+			<param name="01_fontSize" value="17" />
+		</module>
 		<module class="CinematicRenderer" name="CinematicRenderer1" confpos="{X=485,Y=117}" />
-		<module class="ReplacementRenderer" name="ReplacementRenderer1" confpos="{X=745,Y=118}">
+		<module class="ReplacementRenderer" name="ReplacementRenderer1" confpos="{X=746,Y=68}">
 			<param name="03_replacmentKeyAssign" value="6" />
 		</module>
-		<module class="ReplacementRenderer" name="ReplacementRenderer2" confpos="{X=720,Y=214}">
+		<module class="ReplacementRenderer" name="ReplacementRenderer2" confpos="{X=731,Y=210}">
 			<param name="03_replacmentKeyAssign" value="5" />
 		</module>
 		<call class="CallRenderView" from="SplitView1::render1" to="SplitView2::render" />
@@ -63,12 +65,12 @@ in PowerShell:
 		<call class="CallRenderView" from="SplitView2::render2" to="CinematicView1::render" />
 		<call class="MolecularDataCall" from="SimpleMoleculeRenderer1::getData" to="PDBLoader1::dataout" />
 		<call class="CallCinematicCamera" from="TimeLineRenderer1::getkeyframes" to="KeyframeKeeper1::scene3D" />
-		<call class="CallRender2D" from="View2D1::rendering" to="TimeLineRenderer1::rendering" />
 		<call class="CallRender3D" from="View3D1::rendering" to="CinematicRenderer1::rendering" />
 		<call class="CallCinematicCamera" from="CinematicRenderer1::keyframeKeeper" to="KeyframeKeeper1::scene3D" />
 		<call class="CallRender3D" from="CinematicRenderer1::renderer" to="ReplacementRenderer1::rendering" />
 		<call class="CallRender3D" from="CinematicView1::rendering" to="ReplacementRenderer2::rendering" />
 		<call class="CallRender3D" from="ReplacementRenderer2::renderer" to="SimpleMoleculeRenderer1::rendering" />
 		<call class="CallRender3D" from="ReplacementRenderer1::renderer" to="SimpleMoleculeRenderer1::rendering" />
+		<call class="CallRender2D" from="View2D1::rendering" to="TimeLineRenderer1::rendering" />
 	</view>
 </MegaMol>
