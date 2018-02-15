@@ -153,6 +153,8 @@ namespace view {
         /** Button for storing the TF in the pathSlot file */
         param::ParamSlot storeTFSlot;
 
+        param::ParamSlot testSlot;
+
         /** The OpenGL texture object id */
         unsigned int texID;
 

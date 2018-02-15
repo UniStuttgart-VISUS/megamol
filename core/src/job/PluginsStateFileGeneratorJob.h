@@ -1,7 +1,7 @@
 /*
  * PluginsStateFileGeneratorJob.h
  *
- * Copyright (C) 2016 by MegaMol Team; TU Drewsden.
+ * Copyright (C) 2016 by MegaMol Team; TU Dresden.
  * Alle Rechte vorbehalten.
  */
 
@@ -22,6 +22,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/TransferFunc1DParam.h"
 
 
 namespace megamol {
@@ -126,14 +127,15 @@ namespace job {
             const factories::CallDescription* desc) const;
 
         /** Writes info of one parameter type */
-        void WriteParamInfo(std::ofstream& file, const param::AbstractParam* param) const;
-        void WriteParamInfo(std::ofstream& file, const param::BoolParam    * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::ButtonParam  * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::EnumParam    * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FlexEnumParam* param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FloatParam   * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::IntParam     * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FilePathParam* param) const;
+        void WriteParamInfo(std::ofstream& file, const param::AbstractParam      * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::BoolParam          * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::ButtonParam        * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::EnumParam          * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FlexEnumParam      * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FloatParam         * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::IntParam           * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FilePathParam      * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::TransferFunc1DParam* param) const;
 
         /** The file name to store the data in */
         param::ParamSlot fileNameSlot;
