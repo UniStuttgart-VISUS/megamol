@@ -85,13 +85,13 @@ public:
     virtual ~CallOSPRayAPIObject(void);
 
     void setAPIObject(void* api_obj);
-    std::shared_ptr<void*> getAPIObject();
+    void* getAPIObject();
 
     void setStructureType(structureTypeEnum strtype);
     structureTypeEnum getStructureType();
 
 private:
-    std::shared_ptr<void*> api_obj;
+    void* api_obj;
     float timeStamp;
     structureTypeEnum type;
 

@@ -70,7 +70,7 @@ public:
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
     std::shared_ptr<const void*> raw;
-    std::shared_ptr<void*> ospstructure;
+    void* ospstructure;
 
 
     unsigned int voxelCount = voxelCount;

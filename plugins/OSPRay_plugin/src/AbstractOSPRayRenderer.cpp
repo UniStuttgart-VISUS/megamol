@@ -781,7 +781,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
-                geo.push_back(static_cast<OSPGeometry>(*element.ospstructure));
+                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
                 break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
@@ -964,7 +964,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
-                vol.push_back(static_cast<OSPVolume>(*element.ospstructure));
+                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
                 break;
             } else {
 
