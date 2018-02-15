@@ -111,6 +111,27 @@ public:
         return nullptr;
     }
 
+    inline const void get(size_t global_index, megamol::core::moldyn::SimpleSphericalParticles& par_list, size_t& local_index) const {
+        using megamol::core::moldyn::SimpleSphericalParticles;
+
+        unsigned int plc = dat->GetParticleListCount();
+        for (unsigned int pli = 0; pli < plc; pli++) {
+            auto& pl = dat->AccessParticles(pli);
+            if ((pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
+                && (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
+                continue;
+            }
+
+            if (global_index < pl.GetCount()) {
+                local_index = global_index;
+                par_list = pl;
+                return;
+            }
+
+            global_index -= static_cast<size_t>(pl.GetCount());
+        }
+    }
+
 };
 
 /**
@@ -232,6 +253,27 @@ public:
         }
 
         return nullptr;
+    }
+
+    inline const void get(size_t global_index, megamol::core::moldyn::DirectionalParticles& par_list, size_t& local_index) const {
+        using megamol::core::moldyn::DirectionalParticles;
+
+        unsigned int plc = dat->GetParticleListCount();
+        for (unsigned int pli = 0; pli < plc; pli++) {
+            auto& pl = dat->AccessParticles(pli);
+            if ((pl.GetVertexDataType() != DirectionalParticles::VERTDATA_FLOAT_XYZ)
+                && (pl.GetVertexDataType() != DirectionalParticles::VERTDATA_FLOAT_XYZR)) {
+                continue;
+            }
+
+            if (global_index < pl.GetCount()) {
+                local_index = global_index;
+                par_list = pl;
+                return;
+            }
+
+            global_index -= static_cast<size_t>(pl.GetCount());
+        }
     }
 
 };

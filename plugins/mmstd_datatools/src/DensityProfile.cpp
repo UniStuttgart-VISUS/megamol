@@ -137,6 +137,8 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
         float const slice_size = lng_edge / std::ceilf(lng_edge / tmp_slice_size);
         unsigned int const bucket_count = static_cast<unsigned int>(std::ceilf(lng_edge / slice_size));
 
+        printf("HURZ: %f", slice_size);
+
         std::vector<uint64_t> slices(bucket_count, 0);
 
         vislib::sys::ConsoleProgressBar cpb;

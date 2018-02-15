@@ -92,6 +92,7 @@ namespace datatools {
         core::param::ParamSlot searchTypeSlot;
         core::param::ParamSlot particleNumberSlot;
         core::param::ParamSlot toggleNeighborOutputSlot;
+        core::param::ParamSlot toggleDriftMagOutputSlot;
 
         size_t datahash;
         int lastTime;

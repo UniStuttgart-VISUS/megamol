@@ -31,6 +31,7 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
         searchTypeSlot("searchType", "num of neighbors or radius"),
         particleNumberSlot("idx", "the particle to track"),
         toggleNeighborOutputSlot("neighborhoodOutput", "Toogle output of neighborhood only"),
+        toggleDriftMagOutputSlot("driftMagOutput", "Toogle output of drift mag as intensity (defaults to distance)"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         datahash(0), lastTime(-1), newColors(), maxDist(0),
@@ -53,6 +54,9 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
 
     this->toggleNeighborOutputSlot.SetParameter(new megamol::core::param::BoolParam("true"));
     this->MakeSlotAvailable(&this->toggleNeighborOutputSlot);
+
+    this->toggleDriftMagOutputSlot.SetParameter(new megamol::core::param::BoolParam("true"));
+    this->MakeSlotAvailable(&this->toggleDriftMagOutputSlot);
 
     core::param::EnumParam *st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
     st->SetTypePair(searchTypeEnum::RADIUS, "Radius");
@@ -214,7 +218,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
     if (this->radiusSlot.IsDirty() || this->particleNumberSlot.IsDirty()
         || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
-        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()) {
+        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()
+        || this->toggleNeighborOutputSlot.IsDirty() || this->toggleDriftMagOutputSlot.IsDirty()) {
 
         if (thePart >= 0) {
 
@@ -316,11 +321,41 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             }
             std::fill(newColors.begin(), newColors.end(), maxDist);
 
-            for (size_t i = 0; i < num_matches; ++i) {
-                this->newColors[ret_matches[i].first] = ret_matches[i].second;
+            if (this->toggleDriftMagOutputSlot.Param<megamol::core::param::BoolParam>()->Value() && inDpdc != nullptr) {
+                maxDist = 0.0f;
             }
 
-            for (auto const& el : ret_matches) {
+            for (size_t i = 0; i < num_matches; ++i) {
+                float col_i{ret_matches[i].second};
+
+                const float *vptr;
+                const float *dptr;
+
+                if (inDpdc != nullptr) {
+                    vptr = myDirPts->get_position(ret_matches[i].first);
+                    dptr = myDirPts->get_velocity(ret_matches[i].first);
+                    if (this->toggleDriftMagOutputSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+                        col_i = std::sqrtf(dptr[0] * dptr[0] + dptr[1] * dptr[1] + dptr[2] * dptr[2]);
+                        if (maxDist < col_i) maxDist = col_i;
+                    }
+                } else {
+                    vptr = myPts->get_position(ret_matches[i].first);
+                }
+                this->matchData.push_back(vptr[0]);
+                this->matchData.push_back(vptr[1]);
+                this->matchData.push_back(vptr[2]);
+                this->matchData.push_back(col_i);
+                if (inDpdc != nullptr) {
+                    this->matchData.push_back(dptr[0]);
+                    this->matchData.push_back(dptr[1]);
+                    this->matchData.push_back(dptr[2]);
+                }
+                this->newColors[ret_matches[i].first] = col_i;
+            }
+
+            //maxDist = *std::max_element(this->newColors.begin(), this->newColors.end());
+
+            /*for (size_t i = 0; i < num_matches; ++i) {
                 const float *vptr;
                 const float *dptr;
                 if (inDpdc != nullptr) {
@@ -337,7 +372,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                     this->matchData.push_back(dptr[1]);
                     this->matchData.push_back(dptr[2]);
                 }
-            }
+            }*/
         } else {
         // reset all colors
             std::fill(newColors.begin(), newColors.end(), 0.0f);
@@ -349,6 +384,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         this->cyclZSlot.ResetDirty();
         this->numNeighborSlot.ResetDirty();
         this->searchTypeSlot.ResetDirty();
+        this->toggleNeighborOutputSlot.ResetDirty();
+        this->toggleDriftMagOutputSlot.ResetDirty();
     }
     in->SetUnlocker(nullptr, false);
     in->Unlock();
@@ -404,18 +441,22 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
     } else {
         if (outMpdc != nullptr) {
             outMpdc->SetParticleListCount(1);
-            outMpdc->AccessParticles(0).SetCount(this->matchData.size() / 3);
+            outMpdc->AccessParticles(0).SetCount(this->matchData.size() / 4);
             outMpdc->AccessParticles(0).SetVertexData(megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ,
-                this->matchData.data());
-            outMpdc->AccessParticles(0).SetGlobalColour(255, 255, 255);
+                this->matchData.data(), 4*sizeof(float));
+            outMpdc->AccessParticles(0).SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
+                this->matchData.data()+3, 4 * sizeof(float));
+            outMpdc->AccessParticles(0).SetColourMapIndexValues(0.0f, maxDist);
         } else if (outDpdc != nullptr) {
             outDpdc->SetParticleListCount(1);
-            outDpdc->AccessParticles(0).SetCount(this->matchData.size() / 6);
+            outDpdc->AccessParticles(0).SetCount(this->matchData.size() / 7);
             outDpdc->AccessParticles(0).SetVertexData(megamol::core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZ,
-                this->matchData.data(), 6*sizeof(float));
+                this->matchData.data(), 7*sizeof(float));
+            outDpdc->AccessParticles(0).SetColourData(megamol::core::moldyn::DirectionalParticles::COLDATA_FLOAT_I,
+                this->matchData.data() + 3, 7 * sizeof(float));
             outDpdc->AccessParticles(0).SetDirData(megamol::core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ,
-                this->matchData.data() + 3, 6 * sizeof(float));
-            outDpdc->AccessParticles(0).SetGlobalColour(255, 255, 255);
+                this->matchData.data() + 4, 7 * sizeof(float));
+            outDpdc->AccessParticles(0).SetColourMapIndexValues(0.0f, maxDist);
         }
     }
     out->SetUnlocker(in->GetUnlocker());
