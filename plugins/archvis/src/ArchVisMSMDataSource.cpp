@@ -86,7 +86,7 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		CallNGMeshRenderBatches::RenderBatchesData empty_render_batches;
 		m_render_batches = empty_render_batches;
 
-		m_bbox.Set(-10.0f, -10.0f, -10.0f, 10.0f, 10.0f, 10.0f);
+		m_bbox.Set(-10.0f, -10.0f, -10.0f, 10.0f, 10.0f, 10.0f); //?
 
 		auto vislib_shader_filename = m_shaderFilename_slot.Param<megamol::core::param::FilePathParam>()->Value();
 		std::string shdr_filename(vislib_shader_filename.PeekBuffer());
@@ -115,6 +115,7 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		}
 		catch (vislib::net::SocketException e) {
 			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during connection: %s", e.GetMsgA());
+			return false;
 		}
 	}
 

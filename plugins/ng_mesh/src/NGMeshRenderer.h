@@ -500,13 +500,14 @@ namespace ngmesh {
 		 */
 		struct RenderBatch
 		{
-			GLsizei							draw_cnt;
+			GLsizei							draw_cnt;          //< draw count, i.e. numer of objects in batch
 
-			std::unique_ptr<GLSLShader>		shader_prgm;
-			std::unique_ptr<Mesh>			mesh;
-			std::unique_ptr<BufferObject>	draw_commands;
-			std::unique_ptr<BufferObject>	obj_shader_params;
-			std::unique_ptr<BufferObject>	mtl_shader_params;
+			std::unique_ptr<GLSLShader>		shader_prgm;       //< shader program used for drawing objects in batch
+			std::unique_ptr<Mesh>			mesh;              //< mesh object that stores geometriy of objects in batch
+			std::unique_ptr<BufferObject>	draw_commands;     //< GPU buffer object that stores individual draw commands
+			std::unique_ptr<BufferObject>	frm_shader_params; //< GPU buffer object that stores per frame data, i.e. camera parameters
+			std::unique_ptr<BufferObject>	obj_shader_params; //< GPU buffer object that stores per object data, i.e. objects transform
+			std::unique_ptr<BufferObject>	mtl_shader_params; //< GPU buffer object that stores per material data, i.e. texture handles
 		};
 
 		/** List of render batches ready for dispatching */
