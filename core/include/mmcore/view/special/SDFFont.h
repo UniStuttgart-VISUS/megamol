@@ -347,8 +347,7 @@ namespace megamol {
         /** Vertex buffer object. */
         enum VBOAttrib {
             POSITION  = 0,
-            TEXTURE   = 1,
-            TRANSFORM = 2
+            TEXTURE   = 1
         };
         struct SDFVBO {
             GLuint                 handle;  // buffer handle

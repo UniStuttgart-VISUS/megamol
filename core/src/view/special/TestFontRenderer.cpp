@@ -77,7 +77,7 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     this->paramRenderMode9.SetParameter(new param::ButtonParam('9'));
     this->MakeSlotAvailable(&this->paramRenderMode9);
 
-    this->renderMode = 2;
+    this->renderMode = 1;
     this->testtext.Clear();
 }
 
@@ -246,6 +246,10 @@ bool TestFontRenderer::Render(core::Call& call) {
 
     glEnable(GL_DEPTH_TEST);
 
+
+    vislib::StringA hallo = "... Hallo Welt ...";
+
+
     // ------------------------------------------------------------------------
     if (this->renderMode == 1) {
 
@@ -332,16 +336,9 @@ bool TestFontRenderer::Render(core::Call& call) {
         glMatrixMode(GL_MODELVIEW);
 
     }
+
     // ------------------------------------------------------------------------
     else if (this->renderMode == 2) {
-
-        float fontSize = 0.1f;
-
-        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, "...Hallo...", megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-
-    }
-    // ------------------------------------------------------------------------
-    else if (this->renderMode == 3) {
 
         float fontSize         = 0.1f;
         float lineWidth        = 8.0f;
@@ -350,7 +347,7 @@ bool TestFontRenderer::Render(core::Call& call) {
         this->simpleFont.DrawString(-(lineWidth/2.0f), ((lineCount*fontSize)/2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
-    else if (this->renderMode == 4) {
+    else if (this->renderMode == 3) {
 
         float fontSize         = 0.1f;
         float lineWidth        = 8.0f;
@@ -362,7 +359,7 @@ bool TestFontRenderer::Render(core::Call& call) {
         
     }
     // ------------------------------------------------------------------------
-    else if (this->renderMode == 5) {
+    else if (this->renderMode == 4) {
         
         float fontSize  = 0.1f;
         float lineWidth = 8.0f;
@@ -372,10 +369,33 @@ bool TestFontRenderer::Render(core::Call& call) {
         this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
+    else if (this->renderMode == 5) {
+
+
+        float fontSize = 0.1f;
+        float lineWidth = 8.0f;
+
+        this->simpleFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    }
+    // ------------------------------------------------------------------------
     else if (this->renderMode == 6) {
+
+        float fontSize = 0.1f;
+        float lineWidth = 8.0f;
+
+        //glEnable(GL_POLYGON_SMOOTH);
+        //glDisable(GL_POLYGON_SMOOTH);
+        this->outlineFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 7) {
+
+        float fontSize = 0.1f;
+
+        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 8) {

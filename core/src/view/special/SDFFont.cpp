@@ -535,7 +535,6 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     GLfloat *posData   = new GLfloat[textCnt * 12];
     GLfloat *texData   = new GLfloat[textCnt * 8];
-    GLfloat *transData = new GLfloat[textCnt * 16];
 
     // Assumption: String MUST be '\0' terminated!
     text = txt;
@@ -555,21 +554,21 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
         if (charInfo != NULL) {
 
             // Positions
-            posData[textCnt * 12 + 0] = charInfo->posData[0];
-            posData[textCnt * 12 + 1] = charInfo->posData[1];
-            posData[textCnt * 12 + 2] = charInfo->posData[2];
+            posData[textCnt * 12 + 0] = size * charInfo->posData[0] + (float)textCnt * size;
+            posData[textCnt * 12 + 1] = size * charInfo->posData[1];
+            posData[textCnt * 12 + 2] = size * charInfo->posData[2];
 
-            posData[textCnt * 12 + 3] = charInfo->posData[3];
-            posData[textCnt * 12 + 4] = charInfo->posData[4];
-            posData[textCnt * 12 + 5] = charInfo->posData[5];
+            posData[textCnt * 12 + 3] = size * charInfo->posData[3] + (float)textCnt * size;
+            posData[textCnt * 12 + 4] = size * charInfo->posData[4];
+            posData[textCnt * 12 + 5] = size * charInfo->posData[5];
 
-            posData[textCnt * 12 + 6] = charInfo->posData[6];
-            posData[textCnt * 12 + 7] = charInfo->posData[7];
-            posData[textCnt * 12 + 8] = charInfo->posData[8];
+            posData[textCnt * 12 + 6] = size * charInfo->posData[6] + (float)textCnt * size;
+            posData[textCnt * 12 + 7] = size * charInfo->posData[7];
+            posData[textCnt * 12 + 8] = size * charInfo->posData[8];
 
-            posData[textCnt * 12 + 9] = charInfo->posData[9];
-            posData[textCnt * 12 + 10] = charInfo->posData[10];
-            posData[textCnt * 12 + 11] = charInfo->posData[11];
+            posData[textCnt * 12 + 9] = size * charInfo->posData[9] + (float)textCnt * size;
+            posData[textCnt * 12 + 10] = size * charInfo->posData[10];
+            posData[textCnt * 12 + 11] = size * charInfo->posData[11];
 
             // Texture  
             texData[textCnt * 8 + 0] = charInfo->texData[0];
@@ -584,27 +583,6 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
             texData[textCnt * 8 + 6] = charInfo->texData[6];
             texData[textCnt * 8 + 7] = charInfo->texData[7];
 
-            // Transformation
-            transData[textCnt * 16 + 0] = (float)textCnt * size;
-            transData[textCnt * 16 + 1] = 0.0f;
-            transData[textCnt * 16 + 2] = 0.0f;
-            transData[textCnt * 16 + 3] = size;
-
-            transData[textCnt * 16 + 4] = (float)textCnt * size;
-            transData[textCnt * 16 + 5] = 0.0f;
-            transData[textCnt * 16 + 6] = 0.0f;
-            transData[textCnt * 16 + 7] = size;
-
-            transData[textCnt * 16 + 8] = (float)textCnt * size;
-            transData[textCnt * 16 + 9] = 0.0f;
-            transData[textCnt * 16 + 10] = 0.0f;
-            transData[textCnt * 16 + 11] = size;
-
-            transData[textCnt * 16 + 12] = (float)textCnt * size;
-            transData[textCnt * 16 + 13] = 0.0f;
-            transData[textCnt * 16 + 14] = 0.0f;
-            transData[textCnt * 16 + 15] = size;
-
             textCnt++;
         }
         text++;
@@ -618,11 +596,11 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
         else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
             glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
         }
-        else if (this->vbos[i].index == (GLuint)VBOAttrib::TRANSFORM) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 16 * sizeof(GLfloat), transData, GL_STATIC_DRAW);
-        }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
+
+    delete[] posData;
+    delete[] texData;
 
     // ------------------------------------------------------------------------
     // Draw
@@ -664,8 +642,10 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     glUseProgram(this->shader.ProgramHandle()); // instead of this->shader.Enable() => because function is CONST
 
-    // Set shader variables
+    // Vertex shader
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniform1f(this->shader.ParameterLocation("fontSize"), size);
+    // Fragment shader
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
 
@@ -683,10 +663,6 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
         glDisable(GL_BLEND);
     }
     glBlendFunc(blendSrc, blendDst);
-
-    delete[] posData;
-    delete[] texData;
-    delete[] transData;
 
 
 
@@ -837,13 +813,6 @@ bool SDFFont::loadFontBuffers() {
     newVBO.name   = "inVertTexCoord";
     newVBO.index  = (GLuint)VBOAttrib::TEXTURE;
     newVBO.dim    = 2;
-    this->vbos.push_back(newVBO);
-    newVBO.handle = 0;
-
-    // VBO for transformation data
-    newVBO.name   = "inVertOffset";
-    newVBO.index  = (GLuint)VBOAttrib::TRANSFORM;
-    newVBO.dim    = 4;
     this->vbos.push_back(newVBO);
     newVBO.handle = 0;
 
