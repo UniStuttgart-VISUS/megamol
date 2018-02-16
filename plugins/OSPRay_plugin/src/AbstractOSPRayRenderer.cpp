@@ -978,11 +978,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
             }
 
             OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-            std::vector<float> rgb = { 0.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f };
-            std::vector<float> opa = { 0.01f, 0.05f };
-            OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, rgb.data());
-            OSPData tf_opa = ospNewData(2, OSP_FLOAT, opa.data());
+
+            OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
             ospSetData(tf, "colors", tf_rgb);
             ospSetData(tf, "opacities", tf_opa);
 

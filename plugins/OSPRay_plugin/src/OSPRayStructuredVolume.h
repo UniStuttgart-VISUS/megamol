@@ -62,6 +62,9 @@ protected:
     /** The call for data */
     core::CallerSlot getDataSlot;
 
+    /** The call for Transfer function */
+    core::CallerSlot getTFSlot;
+
     megamol::core::param::ParamSlot clippingBoxLower;
     megamol::core::param::ParamSlot clippingBoxUpper;
     megamol::core::param::ParamSlot clippingBoxActive;
