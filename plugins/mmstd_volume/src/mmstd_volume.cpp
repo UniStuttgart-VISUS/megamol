@@ -18,6 +18,7 @@
 #include "DirPartVolume.h"
 #include "VolumeCache.h"
 #include "RenderVolumeSlice.h"
+#include "VolumetricDataSource.h"
 
 
 /*
@@ -61,7 +62,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 7;
+    return 8;
 }
 
 
@@ -77,6 +78,7 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
     case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
     case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
+	case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
     }
     return NULL;
 }

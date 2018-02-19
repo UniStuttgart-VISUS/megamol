@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER volume_cuda EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build volume_cuda" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build volume_cuda" OFF)
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
