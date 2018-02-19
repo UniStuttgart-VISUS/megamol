@@ -482,9 +482,14 @@ void SDFFont::deinitialise(void) {
 */
 unsigned int SDFFont::lineCount(float maxWidth, float size, const char *txt) const {
 
-    unsigned int i = 0;
+    unsigned int i = 1;
 
-    // TODO
+    unsigned int textCnt = 0;
+    const char *text = txt;
+    while (*text != '\0') {
+        text++;
+        textCnt++;
+    }
 
     return i;
 }
@@ -495,9 +500,14 @@ unsigned int SDFFont::lineCount(float maxWidth, float size, const char *txt) con
 */
 unsigned int SDFFont::lineCount(float maxWidth, float size, const wchar_t *txt) const {
 
-    unsigned int i = 0;
+    unsigned int i = 1;
 
-    // TODO
+    unsigned int textCnt = 0;
+    const wchar_t *text = txt;
+    while (*text != '\0') {
+        text++;
+        textCnt++;
+    }
 
     return i;
 }
@@ -521,28 +531,34 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     // ------------------------------------------------------------------------
 
-    // Loop over all characters in the string
-    SDFFontCharacter * charInfo = NULL;
-    unsigned int       charCnt = (unsigned int)this->indices.size();
-    unsigned int       charIdx = 0;
-
+    // Determine length of string for buffers
     unsigned int textCnt = 0;
-    const char *text = txt;
+    const char *text     = txt;
     while (*text != '\0') {
         text++;
         textCnt++;
     }
+    // Data buffers
+    GLfloat *posData = new GLfloat[textCnt * 12];
+    GLfloat *texData = new GLfloat[textCnt * 8];
 
-    GLfloat *posData   = new GLfloat[textCnt * 12];
-    GLfloat *texData   = new GLfloat[textCnt * 8];
-
-    // Assumption: String MUST be '\0' terminated!
-    text = txt;
-    textCnt = 0;
+    text                        = txt;
+    textCnt                     = 0;
+    SDFFontCharacter * charInfo = NULL;
+    unsigned int       charCnt  = (unsigned int)this->indices.size();
+    unsigned int       charIdx  = 0;
+    float scale   = size;
+    float xTrans  = x;
+    float yTrans  = y;
+    float zTrans  = z;
+    float xOff, yOff, width, height;
+    float yFlip = (flipY) ? (-1.0) : (1.0);
+    // Loop over all characters in the string
+    // -> Assumption: String MUST be '\0' terminated!
     while (*text != '\0') {
         charIdx = (unsigned int)(*text);
 
-        // (TEMP: Replace newline wiwth space)
+        // (TEMP: Replace newline with space)
         if ((*text) == '\n') {
             charIdx = (unsigned int)(' ');
         }
@@ -553,37 +569,45 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
         }
         if (charInfo != NULL) {
 
+            // ...
+            width   = charInfo->width;
+            height  = charInfo->height;
+            xOff    = charInfo->xoffset;
+            yOff    = yFlip * charInfo->yoffset;
+
             // Positions
-            posData[textCnt * 12 + 0] = size * charInfo->posData[0] + (float)textCnt * size;
-            posData[textCnt * 12 + 1] = size * charInfo->posData[1];
-            posData[textCnt * 12 + 2] = size * charInfo->posData[2];
+            posData[textCnt * 12 + 0]  = scale * (xOff          + xTrans); // X0
+            posData[textCnt * 12 + 1]  = scale * (yOff          + yTrans); // Y0
+            posData[textCnt * 12 + 2]  = scale * (0.0f          + zTrans); // Z0
 
-            posData[textCnt * 12 + 3] = size * charInfo->posData[3] + (float)textCnt * size;
-            posData[textCnt * 12 + 4] = size * charInfo->posData[4];
-            posData[textCnt * 12 + 5] = size * charInfo->posData[5];
+            posData[textCnt * 12 + 3]  = scale * (xOff + width  + xTrans); // X1
+            posData[textCnt * 12 + 4]  = scale * (yOff          + yTrans); // Y1
+            posData[textCnt * 12 + 5]  = scale * (0.0f          + zTrans); // Z1
 
-            posData[textCnt * 12 + 6] = size * charInfo->posData[6] + (float)textCnt * size;
-            posData[textCnt * 12 + 7] = size * charInfo->posData[7];
-            posData[textCnt * 12 + 8] = size * charInfo->posData[8];
+            posData[textCnt * 12 + 6]  = scale * (xOff + width  + xTrans); // X2
+            posData[textCnt * 12 + 7]  = scale * (yOff + height + yTrans); // Y2
+            posData[textCnt * 12 + 8]  = scale * (0.0f          + zTrans); // Z2
 
-            posData[textCnt * 12 + 9] = size * charInfo->posData[9] + (float)textCnt * size;
-            posData[textCnt * 12 + 10] = size * charInfo->posData[10];
-            posData[textCnt * 12 + 11] = size * charInfo->posData[11];
+            posData[textCnt * 12 + 9]  = scale * (xOff          + xTrans); // X3
+            posData[textCnt * 12 + 10] = scale * (yOff + height + yTrans); // Y3
+            posData[textCnt * 12 + 11] = scale * (0.0f          + zTrans); // Z3
 
             // Texture  
-            texData[textCnt * 8 + 0] = charInfo->texData[0];
-            texData[textCnt * 8 + 1] = charInfo->texData[1];
+            texData[textCnt * 8 + 0] = charInfo->texX0; // X0
+            texData[textCnt * 8 + 1] = charInfo->texY1; // Y0
 
-            texData[textCnt * 8 + 2] = charInfo->texData[2];
-            texData[textCnt * 8 + 3] = charInfo->texData[3];
+            texData[textCnt * 8 + 2] = charInfo->texX1; // X1
+            texData[textCnt * 8 + 3] = charInfo->texY1; // Y1
 
-            texData[textCnt * 8 + 4] = charInfo->texData[4];
-            texData[textCnt * 8 + 5] = charInfo->texData[5];
+            texData[textCnt * 8 + 4] = charInfo->texX1; // X2
+            texData[textCnt * 8 + 5] = charInfo->texY0; // Y2
 
-            texData[textCnt * 8 + 6] = charInfo->texData[6];
-            texData[textCnt * 8 + 7] = charInfo->texData[7];
+            texData[textCnt * 8 + 6] = charInfo->texX0; // X3
+            texData[textCnt * 8 + 7] = charInfo->texY0; // Y3
 
+            // ...
             textCnt++;
+            xTrans += width + xOff;
         }
         text++;
     }
@@ -638,9 +662,9 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because function is CONST
+    glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because draw() is CONST
 
-    glUseProgram(this->shader.ProgramHandle()); // instead of this->shader.Enable() => because function is CONST
+    glUseProgram(this->shader.ProgramHandle()); // instead of this->shader.Enable() => because draw() is CONST
 
     // Vertex shader
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
@@ -651,7 +675,7 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     glDrawArrays(GL_QUADS, 0, (GLsizei)textCnt * 4);
 
-    glUseProgram(0); // instead of this->shader.Disable() => because function is CONST
+    glUseProgram(0); // instead of this->shader.Disable() => because draw() is CONST
     glBindVertexArray(0);
     glDisable(GL_TEXTURE_2D);
 
@@ -664,57 +688,6 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     }
     glBlendFunc(blendSrc, blendDst);
 
-
-
-    // TODO (with SSBO)
-
-    /*
-    float gx = x;
-    float gy = y;
-    float sy = flipY ? -size : size;
-
-    if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
-        gx -= this->lineWidth(run, false) * size * 0.5f;
-    }
-    else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
-        gx -= this->lineWidth(run, false) * size;
-    }
-
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glDisable(GL_CULL_FACE);
-
-    while (*run != 0) {
-        const SDFGlyphInfo &glyph = this->data.glyph[
-            (*run < 0) ? (-1 - *run) : (*run - 1)];
-
-        if (*run < 0) {
-            gx = x;
-
-            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
-                gx -= this->lineWidth(run, false) * size * 0.5f;
-            }
-            else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
-                gx -= this->lineWidth(run, false) * size;
-            }
-
-            gy += sy;
-        }
-
-        glPushMatrix();
-        glTranslatef(gx, gy, z);
-        glScalef(size, sy, 1.0f);
-        glVertexPointer(2, GL_FLOAT, 0, glyph.points);
-        glDrawElements(GL_TRIANGLES, glyph.triCount, GL_UNSIGNED_SHORT, glyph.tris);
-        glPopMatrix();
-
-        gx += glyph.width * size;
-
-        run++;
-    }
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    */
 }
 
 
@@ -864,6 +837,8 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     int second = 0;
     SIZE_T lineCnt = 0;
     vislib::StringA line;
+    float width;
+    float height;
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
         if (line.StartsWith("info ")) { // Parse info line
@@ -882,22 +857,33 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             idx = line.Find("id=", 0);
             newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); 
             idx = line.Find("x=", 0);
-            newChar.texX = (int)std::atoi(line.Substring(idx+2, 4));
+            newChar.texX0 = (float)std::atof(line.Substring(idx+2, 4)) / texWidth;
+
             idx = line.Find("y=", 0);
-            newChar.texY = (int)std::atoi(line.Substring(idx+2, 4));
+            newChar.texY0 = (float)std::atof(line.Substring(idx+2, 4)) / texHeight;
+
             idx = line.Find("width=", 0);
-            newChar.width = (int)std::atoi(line.Substring(idx+6, 4));
+            width = (float)std::atof(line.Substring(idx+6, 4));
+
             idx = line.Find("height=", 0);
-            newChar.height = (int)std::atoi(line.Substring(idx+7, 4));
+            height = (float)std::atof(line.Substring(idx+7, 4));
+
+            newChar.width  = width / fontSize;
+            newChar.height = height / fontSize;
+
             idx = line.Find("xoffset=", 0);
-            newChar.xoffset = (int)std::atoi(line.Substring(idx+8, 4));
+            newChar.xoffset = (float)std::atof(line.Substring(idx+8, 4)) / fontSize;
+
             idx = line.Find("yoffset=", 0);
-            newChar.yoffset  = (int)std::atoi(line.Substring(idx+8, 4));
+            newChar.yoffset  = (float)std::atof(line.Substring(idx+8, 4)) / fontSize;
+
             idx = line.Find("xadvance=", 0);
-            newChar.xadvance = (int)std::atoi(line.Substring(idx+9, 4));
+            newChar.xadvance = (float)std::atof(line.Substring(idx+9, 4)) / fontSize;
+
             newChar.kernings.clear();
-            newChar.posData.Clear();
-            newChar.texData.Clear();
+
+            newChar.texX1 = newChar.texX0 + width / texWidth;
+            newChar.texY1 = newChar.texY0 + height / texHeight;
 
             this->characters.push_back(newChar);
         }
@@ -943,41 +929,6 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     // Set pointer to font info for available characters
     for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
         this->indices[this->characters[i].id] = &this->characters[i];
-    }
-
-    // Generating position and texture data -----------------------------------
-    GLfloat tx0, tx1, ty0, ty1;
-    vislib::math::Vector<GLfloat, 3> p0, p1, p2, p3;
-    float width, height;
-    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
-        this->characters[i].posData.Clear();
-        this->characters[i].texData.Clear();
-
-        width  = (float)this->characters[i].width;
-        height = (float)this->characters[i].height;
-
-        // Position data
-        p0 = vislib::math::Vector<GLfloat, 3>(0.0f, 0.0f, 0.0f);
-        p1 = p0;
-        p1.SetX(p1.X() + (width / fontSize));
-        p2 = p1;
-        p2.SetY(p2.Y() + (height / fontSize));
-        p3 = p0;
-        p3.SetY(p3.Y() + (height / fontSize));
-        this->characters[i].posData.Add(p0.X()); this->characters[i].posData.Add(p0.Y()); this->characters[i].posData.Add(p0.Z());
-        this->characters[i].posData.Add(p1.X()); this->characters[i].posData.Add(p1.Y()); this->characters[i].posData.Add(p1.Z());
-        this->characters[i].posData.Add(p2.X()); this->characters[i].posData.Add(p2.Y()); this->characters[i].posData.Add(p2.Z());
-        this->characters[i].posData.Add(p3.X()); this->characters[i].posData.Add(p3.Y()); this->characters[i].posData.Add(p3.Z());
-
-        // Texture data
-        tx0 = (GLfloat)this->characters[i].texX / texWidth;
-        ty0 = (GLfloat)this->characters[i].texY / texHeight;
-        tx1 = tx0 + (GLfloat)width / texWidth;
-        ty1 = ty0 + (GLfloat)height / texHeight;
-        this->characters[i].texData.Add(tx0); this->characters[i].texData.Add(ty1);
-        this->characters[i].texData.Add(tx1); this->characters[i].texData.Add(ty1);
-        this->characters[i].texData.Add(tx1); this->characters[i].texData.Add(ty0);
-        this->characters[i].texData.Add(tx0); this->characters[i].texData.Add(ty0);
     }
 
     return true;

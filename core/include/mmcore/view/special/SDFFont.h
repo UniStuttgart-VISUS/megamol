@@ -309,19 +309,18 @@ namespace megamol {
 
         /** The SDF font info struct holding the character information of the bitmap font. */
         struct SDFFontCharacter {
-            int id;         // The character id
-            int texX;       // The left position of the character image in the texture
-            int texY;       // The top position of the character image in the texture
-            int width;      // The width of the character image in the texture
-            int height;     // The height of the character image in the texture
-            int xoffset;    // How much the current position should be offset when copying the image from the texture to the screen
-            int yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
-            int xadvance;   // How much the current position should be advanced after drawing the character
+            int id;           // The character id
+            float texX0;      // The left position of the character image in the texture
+            float texY0;      // The top position of the character image in the texture
+            float texX1;      // The right position of the character image in the texture
+            float texY1;      // The bottom position of the character image in the texture
+            float width;      // The width of the character 
+            float height;     // The height of the character 
+            float xoffset;    // How much the current position should be offset when copying the image from the texture to the screen
+            float yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
+            float xadvance;   // How much the current position should be advanced after drawing the character
             // Kerning
             std::vector<SDFFontKerning> kernings;
-            // POsition and texture data
-            vislib::Array<GLfloat> posData;
-            vislib::Array<GLfloat> texData;
         };
 
         /** The sdf font. */

@@ -393,8 +393,9 @@ bool TestFontRenderer::Render(core::Call& call) {
     else if (this->renderMode == 7) {
 
         float fontSize = 0.1f;
+        float lineWidth = 8.0f;
 
-        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        this->sdfFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
     }
     // ------------------------------------------------------------------------
