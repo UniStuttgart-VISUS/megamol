@@ -77,7 +77,7 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     this->paramRenderMode9.SetParameter(new param::ButtonParam('9'));
     this->MakeSlotAvailable(&this->paramRenderMode9);
 
-    this->renderMode = 1;
+    this->renderMode = 4;
     this->testtext.Clear();
 }
 
@@ -136,6 +136,10 @@ bool TestFontRenderer::create(void) {
     }
     file.Clear();
     this->testtext.Append('\0');
+
+    this->testtext[27] = '\n';
+    this->testtext[99] = '\n';
+
 
     return true;
 }
@@ -247,7 +251,7 @@ bool TestFontRenderer::Render(core::Call& call) {
     glEnable(GL_DEPTH_TEST);
 
 
-    vislib::StringA hallo = "... Hallo Welt ...";
+    vislib::StringA hallo = "... Hallo \n Welt ...";
 
 
     // ------------------------------------------------------------------------
@@ -366,7 +370,7 @@ bool TestFontRenderer::Render(core::Call& call) {
         //unsigned int lineCount = this->sdfFont.BlockLines(lineWidth, fontSize, testtext);
         
         //this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-        this->sdfFont.DrawString(0.0f, 0.0f, 0.0f, 0.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        this->sdfFont.DrawString(-1.0f, 0.0f, 0.0f, 0.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 5) {
@@ -395,7 +399,7 @@ bool TestFontRenderer::Render(core::Call& call) {
         float fontSize = 0.1f;
         float lineWidth = 8.0f;
 
-        this->sdfFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        this->sdfFont.DrawString(-1.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
     }
     // ------------------------------------------------------------------------

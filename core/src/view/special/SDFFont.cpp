@@ -534,6 +534,7 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     // Determine length of string for buffers
     unsigned int textCnt = 0;
     const char *text     = txt;
+    // -> Assumption: String MUST be '\0' terminated!
     while (*text != '\0') {
         text++;
         textCnt++;
@@ -547,67 +548,73 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     SDFFontCharacter * charInfo = NULL;
     unsigned int       charCnt  = (unsigned int)this->indices.size();
     unsigned int       charIdx  = 0;
+
     float scale   = size;
     float xTrans  = x;
     float yTrans  = y;
     float zTrans  = z;
-    float xOff, yOff, width, height;
     float yFlip = (flipY) ? (-1.0) : (1.0);
+
     // Loop over all characters in the string
     // -> Assumption: String MUST be '\0' terminated!
-    while (*text != '\0') {
-        charIdx = (unsigned int)(*text);
+    while ((*text) != '\0') {
 
-        // (TEMP: Replace newline with space)
         if ((*text) == '\n') {
-            charIdx = (unsigned int)(' ');
+            xTrans  = x;
+            yTrans += yFlip * scale;
         }
+        else {
+            charIdx  = (unsigned int)(*text);
+            charInfo = NULL;
+            if (charIdx < charCnt) {
+                charInfo = this->indices[charIdx];
+            }
+            if (charInfo != NULL) {
 
-        charInfo = NULL;
-        if (charIdx < charCnt) {
-            charInfo = this->indices[charIdx];
-        }
-        if (charInfo != NULL) {
+                if (charInfo->id == ' ') { // For SPACE only info of xadvance is needed
+                    xTrans += scale * charInfo->xadvance;
+                }
+                else { // All other characters ...
 
-            // ...
-            width   = charInfo->width;
-            height  = charInfo->height;
-            xOff    = charInfo->xoffset;
-            yOff    = yFlip * charInfo->yoffset;
+                    // Kerning
 
-            // Positions
-            posData[textCnt * 12 + 0]  = scale * (xOff          + xTrans); // X0
-            posData[textCnt * 12 + 1]  = scale * (yOff          + yTrans); // Y0
-            posData[textCnt * 12 + 2]  = scale * (0.0f          + zTrans); // Z0
 
-            posData[textCnt * 12 + 3]  = scale * (xOff + width  + xTrans); // X1
-            posData[textCnt * 12 + 4]  = scale * (yOff          + yTrans); // Y1
-            posData[textCnt * 12 + 5]  = scale * (0.0f          + zTrans); // Z1
 
-            posData[textCnt * 12 + 6]  = scale * (xOff + width  + xTrans); // X2
-            posData[textCnt * 12 + 7]  = scale * (yOff + height + yTrans); // Y2
-            posData[textCnt * 12 + 8]  = scale * (0.0f          + zTrans); // Z2
+                    // Positions
+                    posData[textCnt * 12 + 0]  =         scale * (charInfo->xoffset)                    + xTrans; // X0
+                    posData[textCnt * 12 + 1]  = yFlip * scale * (charInfo->yoffset)                    + yTrans; // Y0
+                    posData[textCnt * 12 + 2]  =         scale * (0.0f)                                 + zTrans; // Z0
 
-            posData[textCnt * 12 + 9]  = scale * (xOff          + xTrans); // X3
-            posData[textCnt * 12 + 10] = scale * (yOff + height + yTrans); // Y3
-            posData[textCnt * 12 + 11] = scale * (0.0f          + zTrans); // Z3
+                    posData[textCnt * 12 + 3]  =         scale * (charInfo->xoffset + charInfo->width)  + xTrans; // X1
+                    posData[textCnt * 12 + 4]  = yFlip * scale * (charInfo->yoffset)                    + yTrans; // Y1
+                    posData[textCnt * 12 + 5]  =         scale * (0.0f)                                 + zTrans; // Z1
 
-            // Texture  
-            texData[textCnt * 8 + 0] = charInfo->texX0; // X0
-            texData[textCnt * 8 + 1] = charInfo->texY1; // Y0
+                    posData[textCnt * 12 + 6]  =         scale * (charInfo->xoffset + charInfo->width)  + xTrans; // X2
+                    posData[textCnt * 12 + 7]  = yFlip * scale * (charInfo->yoffset + charInfo->height) + yTrans; // Y2
+                    posData[textCnt * 12 + 8]  =         scale * (0.0f)                                 + zTrans; // Z2
 
-            texData[textCnt * 8 + 2] = charInfo->texX1; // X1
-            texData[textCnt * 8 + 3] = charInfo->texY1; // Y1
+                    posData[textCnt * 12 + 9]  =         scale * (charInfo->xoffset)                    + xTrans; // X3
+                    posData[textCnt * 12 + 10] = yFlip * scale * (charInfo->yoffset + charInfo->height) + yTrans; // Y3
+                    posData[textCnt * 12 + 11] =         scale * (0.0f)                                 + zTrans; // Z3
 
-            texData[textCnt * 8 + 4] = charInfo->texX1; // X2
-            texData[textCnt * 8 + 5] = charInfo->texY0; // Y2
+                    // Texture  
+                    texData[textCnt * 8 + 0] = charInfo->texX0; // X0
+                    texData[textCnt * 8 + 1] = charInfo->texY0; // Y0
 
-            texData[textCnt * 8 + 6] = charInfo->texX0; // X3
-            texData[textCnt * 8 + 7] = charInfo->texY0; // Y3
+                    texData[textCnt * 8 + 2] = charInfo->texX1; // X1
+                    texData[textCnt * 8 + 3] = charInfo->texY0; // Y1
 
-            // ...
-            textCnt++;
-            xTrans += width + xOff;
+                    texData[textCnt * 8 + 4] = charInfo->texX1; // X2
+                    texData[textCnt * 8 + 5] = charInfo->texY1; // Y2
+
+                    texData[textCnt * 8 + 6] = charInfo->texX0; // X3
+                    texData[textCnt * 8 + 7] = charInfo->texY1; // Y3
+
+                    // ...
+                    textCnt++;
+                    xTrans += scale * charInfo->xadvance;
+                }
+            }
         }
         text++;
     }
