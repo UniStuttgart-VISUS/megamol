@@ -405,9 +405,6 @@ gl::ATParamBar::FlexEnumParam::FlexEnumParam(std::shared_ptr<Param> src, TwBar* 
         reinterpret_cast<TwSetVarCallback>(&ValueParam::twSetCallback),
         reinterpret_cast<TwGetVarCallback>(&ValueParam::twGetCallback),
         this, def.str().c_str());
-    if (this->enumStrings.size() > 0) {
-        ::mmcSetParameterValueA(this->Handle(), *this->enumStrings[0]);
-    }
 }
 
 void gl::ATParamBar::FlexEnumParam::Set(const void *value) {
