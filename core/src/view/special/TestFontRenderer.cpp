@@ -137,8 +137,8 @@ bool TestFontRenderer::create(void) {
     file.Clear();
     this->testtext.Append('\0');
 
-    this->testtext[27] = '\n';
-    this->testtext[99] = '\n';
+    this->testtext[27]  = '\n';
+    this->testtext[104] = '\n';
 
 
     return true;
@@ -247,11 +247,12 @@ bool TestFontRenderer::Render(core::Call& call) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glDisable(GL_BLEND);
 
     glEnable(GL_DEPTH_TEST);
 
 
-    vislib::StringA hallo = "... Hallo \n Welt ...";
+    vislib::StringA hallo = "... Hallo Welt ...\n1234567890\nQualle";
 
 
     // ------------------------------------------------------------------------

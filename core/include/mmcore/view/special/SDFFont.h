@@ -303,13 +303,13 @@ namespace megamol {
 
         /** The SDF font kerning struct holding the kerninng information of the bitmap font. */
         struct SDFFontKerning {
-            int previous;   // The previous character id
-            int amount;     // How much the x position should be adjusted when drawing this character immediately following the previous one
+            unsigned int previous;  // The previous character id
+            int amount;             // How much the x position should be adjusted when drawing this character immediately following the previous one
         };
 
         /** The SDF font info struct holding the character information of the bitmap font. */
         struct SDFFontCharacter {
-            int id;           // The character id
+            unsigned int id;  // The characters
             float texX0;      // The left position of the character image in the texture
             float texY0;      // The top position of the character image in the texture
             float texX1;      // The right position of the character image in the texture

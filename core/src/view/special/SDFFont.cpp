@@ -484,11 +484,11 @@ unsigned int SDFFont::lineCount(float maxWidth, float size, const char *txt) con
 
     unsigned int i = 1;
 
-    unsigned int textCnt = 0;
+    unsigned int dataCnt = 0;
     const char *text = txt;
     while (*text != '\0') {
         text++;
-        textCnt++;
+        dataCnt++;
     }
 
     return i;
@@ -502,11 +502,11 @@ unsigned int SDFFont::lineCount(float maxWidth, float size, const wchar_t *txt) 
 
     unsigned int i = 1;
 
-    unsigned int textCnt = 0;
+    unsigned int dataCnt = 0;
     const wchar_t *text = txt;
     while (*text != '\0') {
         text++;
-        textCnt++;
+        dataCnt++;
     }
 
     return i;
@@ -520,40 +520,41 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
     // Check texture
     if (!this->texture.IsValid()) {
-        //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Texture is not valid. \n");
         return;
     }
     // Check shader
     if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
-        //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [draw] Shader handle is not valid. \n");
         return;
     }
 
     // ------------------------------------------------------------------------
+    // Generate data buffers
 
     // Determine length of string for buffers
-    unsigned int textCnt = 0;
+    unsigned int dataCnt = 0;
     const char *text     = txt;
     // -> Assumption: String MUST be '\0' terminated!
     while (*text != '\0') {
         text++;
-        textCnt++;
+        dataCnt++;
     }
     // Data buffers
-    GLfloat *posData = new GLfloat[textCnt * 12];
-    GLfloat *texData = new GLfloat[textCnt * 8];
+    GLfloat *posData = new GLfloat[dataCnt * 12];
+    GLfloat *texData = new GLfloat[dataCnt * 8];
 
-    text                        = txt;
-    textCnt                     = 0;
+
     SDFFontCharacter * charInfo = NULL;
     unsigned int       charCnt  = (unsigned int)this->indices.size();
-    unsigned int       charIdx  = 0;
+    text                        = txt;
+    dataCnt                     = 0;
+    unsigned char charIdx;
 
-    float scale   = size;
     float xTrans  = x;
     float yTrans  = y;
     float zTrans  = z;
-    float yFlip = (flipY) ? (-1.0) : (1.0);
+    float yFlip   = (flipY) ? (-1.0f) : (1.0f);
 
     // Loop over all characters in the string
     // -> Assumption: String MUST be '\0' terminated!
@@ -561,59 +562,44 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
         if ((*text) == '\n') {
             xTrans  = x;
-            yTrans += yFlip * scale;
+            yTrans += yFlip * size;
         }
         else {
-            charIdx  = (unsigned int)(*text);
-            charInfo = NULL;
-            if (charIdx < charCnt) {
-                charInfo = this->indices[charIdx];
-            }
+            charIdx  = (unsigned char)(*text); // in 0...255
+            charInfo = this->indices[(unsigned int)charIdx];
             if (charInfo != NULL) {
 
-                if (charInfo->id == ' ') { // For SPACE only info of xadvance is needed
-                    xTrans += scale * charInfo->xadvance;
-                }
-                else { // All other characters ...
-
-                    // Kerning
+                // Kerning
 
 
 
-                    // Positions
-                    posData[textCnt * 12 + 0]  =         scale * (charInfo->xoffset)                    + xTrans; // X0
-                    posData[textCnt * 12 + 1]  = yFlip * scale * (charInfo->yoffset)                    + yTrans; // Y0
-                    posData[textCnt * 12 + 2]  =         scale * (0.0f)                                 + zTrans; // Z0
+                // Position
+                posData[dataCnt * 12 + 0]  =         size * (charInfo->xoffset)                    + xTrans; // X0
+                posData[dataCnt * 12 + 1]  = yFlip * size * (charInfo->yoffset)                    + yTrans; // Y0
+                posData[dataCnt * 12 + 2]  =         size * (0.0f)                                 + zTrans; // Z0
+                posData[dataCnt * 12 + 3]  =         size * (charInfo->xoffset + charInfo->width)  + xTrans; // X1
+                posData[dataCnt * 12 + 4]  = yFlip * size * (charInfo->yoffset)                    + yTrans; // Y1
+                posData[dataCnt * 12 + 5]  =         size * (0.0f)                                 + zTrans; // Z1
+                posData[dataCnt * 12 + 6]  =         size * (charInfo->xoffset + charInfo->width)  + xTrans; // X2
+                posData[dataCnt * 12 + 7]  = yFlip * size * (charInfo->yoffset + charInfo->height) + yTrans; // Y2
+                posData[dataCnt * 12 + 8]  =         size * (0.0f)                                 + zTrans; // Z2
+                posData[dataCnt * 12 + 9]  =         size * (charInfo->xoffset)                    + xTrans; // X3
+                posData[dataCnt * 12 + 10] = yFlip * size * (charInfo->yoffset + charInfo->height) + yTrans; // Y3
+                posData[dataCnt * 12 + 11] =         size * (0.0f)                                 + zTrans; // Z3
 
-                    posData[textCnt * 12 + 3]  =         scale * (charInfo->xoffset + charInfo->width)  + xTrans; // X1
-                    posData[textCnt * 12 + 4]  = yFlip * scale * (charInfo->yoffset)                    + yTrans; // Y1
-                    posData[textCnt * 12 + 5]  =         scale * (0.0f)                                 + zTrans; // Z1
+                // Texture  
+                texData[dataCnt * 8 + 0] = charInfo->texX0; // X0
+                texData[dataCnt * 8 + 1] = charInfo->texY0; // Y0
+                texData[dataCnt * 8 + 2] = charInfo->texX1; // X1
+                texData[dataCnt * 8 + 3] = charInfo->texY0; // Y1
+                texData[dataCnt * 8 + 4] = charInfo->texX1; // X2
+                texData[dataCnt * 8 + 5] = charInfo->texY1; // Y2
+                texData[dataCnt * 8 + 6] = charInfo->texX0; // X3
+                texData[dataCnt * 8 + 7] = charInfo->texY1; // Y3
 
-                    posData[textCnt * 12 + 6]  =         scale * (charInfo->xoffset + charInfo->width)  + xTrans; // X2
-                    posData[textCnt * 12 + 7]  = yFlip * scale * (charInfo->yoffset + charInfo->height) + yTrans; // Y2
-                    posData[textCnt * 12 + 8]  =         scale * (0.0f)                                 + zTrans; // Z2
-
-                    posData[textCnt * 12 + 9]  =         scale * (charInfo->xoffset)                    + xTrans; // X3
-                    posData[textCnt * 12 + 10] = yFlip * scale * (charInfo->yoffset + charInfo->height) + yTrans; // Y3
-                    posData[textCnt * 12 + 11] =         scale * (0.0f)                                 + zTrans; // Z3
-
-                    // Texture  
-                    texData[textCnt * 8 + 0] = charInfo->texX0; // X0
-                    texData[textCnt * 8 + 1] = charInfo->texY0; // Y0
-
-                    texData[textCnt * 8 + 2] = charInfo->texX1; // X1
-                    texData[textCnt * 8 + 3] = charInfo->texY0; // Y1
-
-                    texData[textCnt * 8 + 4] = charInfo->texX1; // X2
-                    texData[textCnt * 8 + 5] = charInfo->texY1; // Y2
-
-                    texData[textCnt * 8 + 6] = charInfo->texX0; // X3
-                    texData[textCnt * 8 + 7] = charInfo->texY1; // Y3
-
-                    // ...
-                    textCnt++;
-                    xTrans += scale * charInfo->xadvance;
-                }
+                // ...
+                dataCnt++;
+                xTrans += (size * charInfo->xadvance);
             }
         }
         text++;
@@ -622,10 +608,10 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)dataCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
         }
         else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)textCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)dataCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -634,7 +620,7 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     delete[] texData;
 
     // ------------------------------------------------------------------------
-    // Draw
+    // Draw data buffers
 
     // Get current matrices 
     GLfloat modelViewMatrix_column[16];
@@ -650,19 +636,15 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     GLfloat color[4];
     glGetFloatv(GL_CURRENT_COLOR, color);
 
-    // Store opengl states
-    bool depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-    if (!depthEnabled) {
-        glEnable(GL_DEPTH_TEST);
-    }
-    bool blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
+    // Store/Set blending
     GLint blendSrc;
     GLint blendDst;
     glGetIntegerv(GL_BLEND_SRC, &blendSrc);
     glGetIntegerv(GL_BLEND_DST, &blendDst);
+    bool blendEnabled = glIsEnabled(GL_BLEND);
+    if (!blendEnabled) {
+        glEnable(GL_BLEND);
+    }
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glBindVertexArray(this->vaoHandle);
@@ -680,16 +662,13 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
 
-    glDrawArrays(GL_QUADS, 0, (GLsizei)textCnt * 4);
+    glDrawArrays(GL_QUADS, 0, (GLsizei)dataCnt * 4);
 
     glUseProgram(0); // instead of this->shader.Disable() => because draw() is CONST
     glBindVertexArray(0);
     glDisable(GL_TEXTURE_2D);
 
-    // Reset opengl states
-    if (!depthEnabled) {
-        glDisable(GL_DEPTH_TEST);
-    }
+    // Reset blending
     if (!blendEnabled) {
         glDisable(GL_BLEND);
     }
@@ -723,13 +702,13 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     // Folder holding font data
     vislib::StringA folder = ".\\fonts\\";
 
-    // 1) Load buffers --------------------------------------------------------
+    // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load buffers. \n");
         return false;
     }
-
-    // 2) Load font information -----------------------------------------------
+    
+    // (2) Load font information -----------------------------------------------
     vislib::StringA infoFile = folder;
     infoFile.Append(fontName);
     infoFile.Append(".fnt");
@@ -738,7 +717,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 3) Load texture --------------------------------------------------------
+    // (3) Load texture --------------------------------------------------------
     vislib::StringA textureFile = folder;
     textureFile.Append(fontName);
     textureFile.Append(".png");
@@ -747,7 +726,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         return false;
     }
 
-    // 4) Load shaders --------------------------------------------------------
+    // (4) Load shaders --------------------------------------------------------
     vislib::StringA vertShaderFile = folder;
     vertShaderFile.Append("vertex.shader");
     vislib::StringA fragShaderFile = folder;
@@ -766,6 +745,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
 */
 bool SDFFont::loadFontBuffers() {
 
+
     // Reset 
     if (glIsVertexArray(this->vaoHandle)) {
         glDeleteVertexArrays(1, &this->vaoHandle);
@@ -775,26 +755,31 @@ bool SDFFont::loadFontBuffers() {
     }
     this->vbos.clear();
 
-    // Create Vertex Array Object 
-    glGenVertexArrays(1, &this->vaoHandle);
-    glBindVertexArray(this->vaoHandle);
+    // Declare data buffers ---------------------------------------------------
 
     // Init vbos
     SDFVBO newVBO;
 
     // VBO for position data
-    newVBO.name   = "inVertPos";
-    newVBO.index  = (GLuint)VBOAttrib::POSITION;
-    newVBO.dim    = 3;
+    newVBO.name = "inVertPos";
+    newVBO.index = (GLuint)VBOAttrib::POSITION;
+    newVBO.dim = 3;
+    newVBO.handle = 0; // Default init
     this->vbos.push_back(newVBO);
-    newVBO.handle = 0;
+
 
     // VBO for texture data
-    newVBO.name   = "inVertTexCoord";
-    newVBO.index  = (GLuint)VBOAttrib::TEXTURE;
-    newVBO.dim    = 2;
+    newVBO.name = "inVertTexCoord";
+    newVBO.index = (GLuint)VBOAttrib::TEXTURE;
+    newVBO.dim = 2;
+    newVBO.handle = 0; // Default init
     this->vbos.push_back(newVBO);
-    newVBO.handle = 0;
+
+    // ------------------------------------------------------------------------
+
+    // Create Vertex Array Object 
+    glGenVertexArrays(1, &this->vaoHandle);
+    glBindVertexArray(this->vaoHandle);
 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glGenBuffers(1, &this->vbos[i].handle);
@@ -840,29 +825,37 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     float fontSize  = 0.0f;
     
     // Read info file line by line
-    int idx = 0;
-    int second = 0;
-    SIZE_T lineCnt = 0;
+    int idx;
+    unsigned int second;
     vislib::StringA line;
     float width;
     float height;
+
+    SIZE_T lineCnt = 0;
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
-        if (line.StartsWith("info ")) { // Parse info line
+        // (1) Parse info line
+        if (line.StartsWith("info ")) { 
+
             idx = line.Find("size=", 0);
             fontSize = (float)std::atof(line.Substring(idx + 5, 4));
         }
-        else if (line.StartsWith("common ")) { // Parse common info line
+        // (2) Parse common info line
+        else if (line.StartsWith("common ")) { 
+
             idx = line.Find("scaleW=", 0);
             texWidth = (float)std::atof(line.Substring(idx + 7, 4));
+
             idx = line.Find("scaleH=", 0);
             texHeight = (float)std::atof(line.Substring(idx + 7, 4));
         }
-        else if (line.StartsWith("char ")) { // Parse character info
+        // (3) Parse character info
+        else if (line.StartsWith("char ")) { 
             SDFFontCharacter newChar;
 
             idx = line.Find("id=", 0);
-            newChar.id = (int)std::atoi(line.Substring(idx+3, 4)); 
+            newChar.id = (unsigned int)std::atoi(line.Substring(idx+3, 4)); 
+
             idx = line.Find("x=", 0);
             newChar.texX0 = (float)std::atof(line.Substring(idx+2, 4)) / texWidth;
 
@@ -894,15 +887,16 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
             this->characters.push_back(newChar);
         }
-        else if (line.StartsWith("kerning ")) { // Parse kerning info
+        // (4) Parse kerning info
+        else if (line.StartsWith("kerning ")) { 
 
             idx = line.Find("second=", 0);
-            second = (int)std::atoi(line.Substring(idx+7, 4));
+            second = (unsigned int)std::atoi(line.Substring(idx+7, 4));
 
             SDFFontKerning newKern;
 
             idx = line.Find("first=", 0);
-            newKern.previous = (int)std::atoi(line.Substring(idx+6, 4));
+            newKern.previous = (unsigned int)std::atoi(line.Substring(idx+6, 4));
             idx = line.Find("amount=", 0);
             newKern.amount = (int)std::atoi(line.Substring(idx+7, 4));
 
@@ -920,22 +914,21 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     file.Clear();
 
     // Building character index array -----------------------------------------
+    unsigned int maxCharCnt = 256;
+
     this->indices.clear();
-    // Get largest character id
-    int maxCharId = 0;
-    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
-        if (this->characters[i].id > maxCharId) {
-            maxCharId = this->characters[i].id;
-        }
-    }
-    maxCharId++; // [0,maxCharId], otherwise indices are in [0,maxCharId-1]
-    // Init font info indices
-    for (int i = 0; i < maxCharId; i++) {
+    // Init font info indices for max 256 characters
+    for (unsigned int i = 0; i < maxCharCnt; i++) {
         this->indices.push_back(NULL);
     }
-    // Set pointer to font info for available characters
+    // Set pointer to character info for available characters
     for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
-        this->indices[this->characters[i].id] = &this->characters[i];
+        unsigned int index = this->characters[i].id;
+        if (index >= maxCharCnt) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", index);
+            return false;
+        }
+        this->indices[index] = &this->characters[i];
     }
 
     return true;
@@ -997,29 +990,30 @@ bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
     const char *shaderName = "SDFFont";
     SIZE_T size = 0;
 
+    // Load shaders from file
+    
     void *vertBuf = NULL;
     if ((size = this->loadFile(vert, &vertBuf)) <= 0) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find vertex shader: \"%s\". \n", vert.PeekBuffer());
         ARY_SAFE_DELETE(vertBuf);
         return false;
     }
-    // Terminating buffer with '\0' is mandatory for being able to compile shader
-    ((char *)vertBuf)[size-1] = '\0';
-
+    ((char *)vertBuf)[size-1] = '\0'; // Terminating buffer with '\0' is mandatory for being able to compile shader
+    
     void *fragBuf = NULL;
     if ((size = this->loadFile(frag, &fragBuf)) <= 0) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Could not find fragment shader: \"%s\". \n", frag.PeekBuffer());
         ARY_SAFE_DELETE(fragBuf);
         return false;
     }
-    // Terminating buffer with '\0' is mandatory for being able to compile shader
-    ((char *)fragBuf)[size-1] = '\0';
+    ((char *)fragBuf)[size-1] = '\0'; // Terminating buffer with '\0' is mandatory for being able to compile shader
+    
 
     try {
         // Compiling shaders
         if (!this->shader.Compile((const char **)(&vertBuf), (SIZE_T)1, (const char **)(&fragBuf), (SIZE_T)1)) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderName);
-            ARY_SAFE_DELETE(vertBuf);
+            //ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
             return false;
         }
@@ -1032,12 +1026,12 @@ bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
         // Linking shaders
         if (!this->shader.Link()) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderName);
-            ARY_SAFE_DELETE(vertBuf);
+            //ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
             return false;
         }
 
-        ARY_SAFE_DELETE(vertBuf);
+        //ARY_SAFE_DELETE(vertBuf);
         ARY_SAFE_DELETE(fragBuf);
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
