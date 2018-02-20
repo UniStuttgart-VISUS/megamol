@@ -50,7 +50,7 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::Volume_CUDA::MyModule2>();
             //   ...
             //
-			this->module_descriptions.RegisterAutoDescription<megamol::volume_cuda::CUDAVolumeRaycaster>();
+            this->module_descriptions.RegisterAutoDescription<megamol::volume_cuda::CUDAVolumeRaycaster>();
             this->module_descriptions.RegisterAutoDescription<megamol::volume_cuda::CUDAIsosurfaceRaycaster>();
 
             // register calls here:
