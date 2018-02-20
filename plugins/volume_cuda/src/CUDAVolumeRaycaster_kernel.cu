@@ -40,16 +40,10 @@ __global__ void d_render(uint * d_output, float * d_depth, cudaTextureObject_t t
     if ((x >= imageW) || (y >= imageH)) return;
 
     // read the depth value and transform it to world coordinates
-    float dv = 1.0f;
+    float dv = zFar;
     if (d_depth != NULL) {
         dv = d_depth[y * imageW + x];
     }
-
-    // TODO correct depth value
-    //float depthVal = (2.0f * zNear) / (zFar + zNear - dv * (zFar - zNear));
-    //depthVal = zNear + depthVal * (zFar - zNear);
-
-    //printf("%f %f\n", dv, depthVal);
 
     // texture coordinates
     float u = (x / static_cast<float>(imageW)) * 2.0f - 1.0f;
@@ -81,7 +75,7 @@ __global__ void d_render(uint * d_output, float * d_depth, cudaTextureObject_t t
 
     if (tnear < 0.0f) tnear = 0.0f; // clamp to near plane
 
-                                    // march along ray from front to back, accumulating colour
+    // march along ray from front to back, accumulating colour
     float4 sum = make_float4(0.0f);
     float t = tnear;
     float3 pos = eyeRay.o + eyeRay.d * tnear;

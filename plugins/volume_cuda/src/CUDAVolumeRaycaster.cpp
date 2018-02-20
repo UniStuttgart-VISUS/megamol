@@ -214,9 +214,9 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 	// get all relevant parameters
 	auto viewport = cr3d->GetViewport().GetSize();
 
-	this->renderCallToFBO(incCrd, cr3d, viewport);
+	bool renderResult = this->renderCallToFBO(incCrd, cr3d, viewport);
 
-	if (incCrd == nullptr) {
+	if (incCrd == nullptr || !renderResult) {
 		glPushMatrix();
 		glScalef(scale, scale, scale);
 	}
@@ -319,7 +319,7 @@ bool CUDAVolumeRaycaster::Render(megamol::core::Call & call) {
 		this->copyFBO.GetDepthTexture(this->cudaDepthImage, GL_DEPTH_COMPONENT, GL_FLOAT);
 	} else {
 		for (size_t i = 0; i < viewport.GetHeight() * viewport.GetWidth(); i++) {
-			this->cudaDepthImage[i] = 1.0f;
+			this->cudaDepthImage[i] = zFar;
 		}
 	}
 
