@@ -66,6 +66,8 @@ namespace MegaMolConf.Data {
                 ((Data.ParamType.Int)ptb).MaxValue = BitConverter.ToInt32(typeInfo, 10);
             } else if (typeName == "MMFILW" || typeName == "MMFILA") {
                 ptb = new Data.ParamType.FilePath();
+            } else if (typeName == "MMTF1W" || typeName == "MMTF1A") {
+                ptb = new Data.ParamType.TransferFunc1D();
             } else {
                 ptb = new Data.ParamType.String();
             }
