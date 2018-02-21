@@ -30,41 +30,41 @@ namespace volume_cuda {
     };
 
     /**
-     *	Transform vector by matrix (no translation)
+     *    Transform vector by matrix (no translation)
      *
-     *	@param M The 3x4 matrix
-     *	@param v The vector to be transformed
-     *	@return The transformed vector.
+     *    @param M The 3x4 matrix
+     *    @param v The vector to be transformed
+     *    @return The transformed vector.
      */
     inline __device__ float3 mul(const float3x4 &M, const float3 &v) {
-    	float3 r;
-    	r.x = dot(v, make_float3(M.m[0]));
-    	r.y = dot(v, make_float3(M.m[1]));
-    	r.z = dot(v, make_float3(M.m[2]));
-    	return r;
+        float3 r;
+        r.x = dot(v, make_float3(M.m[0]));
+        r.y = dot(v, make_float3(M.m[1]));
+        r.z = dot(v, make_float3(M.m[2]));
+        return r;
     }
 
     /**
-     *	Transform vector by matrix (with translation)
+     *    Transform vector by matrix (with translation)
      *
-     *	@param M The 3x4 matrix
-     *	@param v The vector to be transformed
-     *	@return The transformed vector.
+     *    @param M The 3x4 matrix
+     *    @param v The vector to be transformed
+     *    @return The transformed vector.
      */
     inline __device__ float4 mul(const float3x4 &M, const float4 &v) {
-    	float4 r;
-    	r.x = dot(v, M.m[0]);
-    	r.y = dot(v, M.m[1]);
-    	r.z = dot(v, M.m[2]);
-    	r.w = 1.0f;
-    	return r;
+        float4 r;
+        r.x = dot(v, M.m[0]);
+        r.y = dot(v, M.m[1]);
+        r.z = dot(v, M.m[2]);
+        r.w = 1.0f;
+        return r;
     }
 
     /**
-     *	Converts a rgba color to a colour represented by an unsigned int
+     *    Converts a rgba color to a colour represented by an unsigned int
      *
-     *	@param rgba The rgba colour.
-     *	@return The colour as an unsigned int
+     *    @param rgba The rgba colour.
+     *    @return The colour as an unsigned int
      */
     inline __device__ uint rgbaFloatToInt(float4 rgba) {
         rgba.x = rgba.x < 0.0f ? 0.0f : rgba.x;
@@ -75,7 +75,7 @@ namespace volume_cuda {
         rgba.z = rgba.z > 1.0f ? 1.0f : rgba.z;
         rgba.w = rgba.w < 0.0f ? 0.0f : rgba.w;
         rgba.w = rgba.w > 1.0f ? 1.0f : rgba.w;
-    	return (uint(rgba.w * 255) << 24) | (uint(rgba.z * 255) << 16) | (uint(rgba.y * 255) << 8) | uint(rgba.x * 255);
+        return (uint(rgba.w * 255) << 24) | (uint(rgba.z * 255) << 16) | (uint(rgba.y * 255) << 8) | uint(rgba.x * 255);
     }
 }
 }

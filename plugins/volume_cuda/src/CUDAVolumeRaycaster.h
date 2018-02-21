@@ -6,6 +6,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/misc/VolumetricDataCall.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -172,7 +173,7 @@ namespace volume_cuda {
          *
          * @return True, if a new lookup table is available, false otherwise
          */
-        bool loadLut(void);
+        bool loadLut(megamol::core::view::CallGetTransferFunction* cgtf);
 
         /**
          * Splits a given string by a character and returns the parts in a vector.
@@ -204,6 +205,9 @@ namespace volume_cuda {
 
         /** caller slot for the input image */
         megamol::core::CallerSlot inputImageSlot;
+
+		/** caller slot for the incoming transfer function */
+		megamol::core::CallerSlot transferFunctionSlot;
 
         /** parameter steering the brightness of the image */
         megamol::core::param::ParamSlot brightnessParam;
