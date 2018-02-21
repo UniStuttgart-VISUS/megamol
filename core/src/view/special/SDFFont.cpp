@@ -38,7 +38,7 @@ using namespace megamol::core::view::special;
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
+    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -48,7 +48,7 @@ SDFFont::SDFFont(const BitmapFont bmf) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->loadFont(bmf);
 }
@@ -58,7 +58,7 @@ SDFFont::SDFFont(const BitmapFont bmf,  SDFFont::RenderType render) : AbstractFo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
 
@@ -70,7 +70,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -82,7 +82,7 @@ SDFFont::SDFFont(const BitmapFont bmf, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetFlipY(flipY);
 
@@ -94,7 +94,7 @@ SDFFont::SDFFont(const BitmapFont bmf, SDFFont::RenderType render, bool flipY) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(), 
-    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -107,7 +107,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) : AbstractFont(), 
-    font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
+    font(bmf), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
 
@@ -119,7 +119,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render) :
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(bmf), renderType(render), texture(), shader(), characters(), vbos() {
+        font(bmf), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -132,7 +132,7 @@ SDFFont::SDFFont(const BitmapFont bmf, float size, SDFFont::RenderType render, b
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
+    font(src.font), renderType(src.renderType), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -145,7 +145,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
+    font(src.font), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -158,7 +158,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
+        font(src.font), renderType(src.renderType), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -171,7 +171,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-        font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
+        font(src.font), renderType(src.renderType), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -184,7 +184,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
+        font(src.font), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -197,7 +197,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(), 
-    font(src.font), renderType(src.renderType), texture(), shader(), characters(), vbos() {
+    font(src.font), renderType(src.renderType), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -210,7 +210,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(), 
-    font(src.font),  renderType(render), texture(), shader(), characters(), vbos() {
+    font(src.font),  renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -223,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        font(src.font), renderType(render), texture(), shader(), characters(), vbos() {
+        font(src.font), renderType(render), texture(), shader(), glyphs(), vbos() {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -246,7 +246,7 @@ SDFFont::~SDFFont(void) {
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
 
-    return this->lineCount(maxWidth, size, txt);
+    return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
 
@@ -255,7 +255,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
  */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt) const {
 
-    return this->lineCount(maxWidth, size, txt);
+    return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
 
@@ -264,12 +264,6 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
  */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
-    //TEMP
-    this->draw(txt, x, y, 0.0f, size, flipY, align);
-
-    // TODO
-
-    /*
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
@@ -279,15 +273,9 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *t
         y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
     }
 
-    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
-    }
-    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
-    }
+    this->draw(run, x, y, 0.0f, size, flipY, align);
 
     delete[] run;
-    */
 }
 
 
@@ -296,7 +284,19 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *t
 */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
+    int *run = this->buildGlyphRun(txt, FLT_MAX);
 
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
+
+    }
+    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+    }
+    
+    this->draw(run, x, y, 0.0f, size, flipY, align);
+
+    delete[] run;
 }
 
 
@@ -305,66 +305,46 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
-    //TEMP
-    this->draw(txt, x, y, 0.0f, size, flipY, align);
-
-    // TODO
-
-    /*
     int *run = this->buildGlyphRun(txt, w / size);
 
     if (flipY) y += h;
 
     switch (align) {
-        case ALIGN_CENTER_BOTTOM:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_CENTER_MIDDLE:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_CENTER_TOP:
-            x += w * 0.5f;
-            break;
-        case ALIGN_LEFT_BOTTOM:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_LEFT_MIDDLE:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_BOTTOM:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_RIGHT_MIDDLE:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_TOP:
-            x += w;
-            break;
-#ifndef _WIN32
-        default:
-            break;
-#endif // !_WIN32
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
+    default:
+        break;
     }
 
-    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
-    }
-    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
-    }
+    this->draw(run, x, y, 0.0f, size, flipY, align);
 
     delete[] run;
-    */
 }
 
 
@@ -373,7 +353,46 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size, bool fl
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
+    int *run = this->buildGlyphRun(txt, w / size);
 
+    if (flipY) y += h;
+
+    switch (align) {
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
+    default:
+        break;
+    }
+
+    this->draw(run, x, y, 0.0f, size, flipY, align);
+
+    delete[] run;
 }
 
 
@@ -382,12 +401,6 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool f
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
-    //TEMP
-    this->draw(txt, x, y, z, size, flipY, align);
-
-    // TODO
-
-    /*
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
@@ -397,15 +410,9 @@ void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, cons
         y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
     }
 
-    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, z, size, flipY, align);
-    }
-    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, z, size, flipY, align);
-    }
+    this->draw(run, x, y, 0.0f, size, flipY, align);
 
     delete[] run;
-    */
 }
 
 
@@ -414,33 +421,56 @@ void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, cons
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
 
+    int *run = this->buildGlyphRun(txt, FLT_MAX);
 
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  * (flipY ? 1.0f : -1.0f);
+    }
+    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+    }
+
+    this->draw(run, x, y, 0.0f, size, flipY, align);
+
+    delete[] run;
 }
 
 
 /*
- * SDFFont::LineWidth
- */
+* SDFFont::LineWidth
+*/
 float SDFFont::LineWidth(float size, const char *txt) const {
-
-    float w = 0.0f;
-
-    // TODO
-
-    return w;
+    int *run = this->buildGlyphRun(txt, FLT_MAX);
+    int *i = run;
+    float len = 0.0f;
+    float comlen = 0.0f;
+    while (*i != 0) {
+        comlen = this->lineWidth(i, true);
+        if (comlen > len) {
+            len = comlen;
+        }
+    }
+    delete[] run;
+    return len * size;
 }
 
 
 /*
- * SDFFont::LineWidth
- */
+* SDFFont::LineWidth
+*/
 float SDFFont::LineWidth(float size, const wchar_t *txt) const {
-
-    float w = 0.0f;
-
-    // TODO
-
-    return w;
+    int *run = this->buildGlyphRun(txt, FLT_MAX);
+    int *i = run;
+    float len = 0.0f;
+    float comlen = 0.0f;
+    while (*i != 0) {
+        comlen = this->lineWidth(i, true);
+        if (comlen > len) {
+            len = comlen;
+        }
+    }
+    delete[] run;
+    return len * size;
 }
 
 
@@ -467,56 +497,188 @@ void SDFFont::deinitialise(void) {
     this->texture.Release();
     // Shader
     this->shader.Release();
-    // VAO
-    glDeleteVertexArrays(1, &this->vaoHandle);
     // VBOs
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glDeleteBuffers(1, &this->vbos[i].handle);
     }
     this->vbos.clear();
+    // VAO
+    glDeleteVertexArrays(1, &this->vaoHandle);
 }
 
 
 /*
 * SDFFont::lineCount
 */
-unsigned int SDFFont::lineCount(float maxWidth, float size, const char *txt) const {
-
-    unsigned int i = 1;
-
-    unsigned int dataCnt = 0;
-    const char *text = txt;
-    while (*text != '\0') {
-        text++;
-        dataCnt++;
+int SDFFont::lineCount(int *run, bool deleterun) const {
+    if ((run == NULL) || (run[0] == 0)) return 0;
+    int i = 1;
+    for (int j = 0; run[j] != 0; j++) {
+        if (run[j] < 0) i++;
     }
-
+    if (deleterun) delete[] run;
     return i;
 }
 
 
 /*
-* SDFFont::lineCount
+* SDFFont::lineWidth
 */
-unsigned int SDFFont::lineCount(float maxWidth, float size, const wchar_t *txt) const {
+float SDFFont::lineWidth(int *&run, bool iterate) const {
+    int *i = run;
+    float len = 0.0f;
+    while (*i != 0) {
+        len += this->glyphIdxLinks[*(i)]->xadvance;
+        i++;
+        if (*i < 0) break;
+    }
+    if (iterate) run = i;
+    return len;
+}
 
-    unsigned int i = 1;
 
-    unsigned int dataCnt = 0;
-    const wchar_t *text = txt;
-    while (*text != '\0') {
-        text++;
-        dataCnt++;
+/*
+* SDFFont::buildGlyphRun
+*/
+int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
+    vislib::StringA txtutf8;
+    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
+        // encoding failed ... how?
+        char *t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
+        for (; *txt != 0; txt++) {
+            if ((*txt & 0x80) == 0) {
+                *t = *txt;
+                t++;
+            }
+        }
+        *t = 0;
+    }
+    return this->buildUpGlyphRun(txtutf8, maxWidth);
+}
+
+
+/*
+* SDFFont::buildGlyphRun
+*/
+int *SDFFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
+    vislib::StringA txtutf8;
+    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
+        // encoding failed ... how?
+        char *t = txtutf8.AllocateBuffer(vislib::CharTraitsW::SafeStringLength(txt));
+        for (; *txt != 0; txt++) {
+            if ((*txt & 0x80) == 0) {
+                *t = static_cast<char>(*txt);
+                t++;
+            }
+        }
+        *t = 0;
+    }
+    return this->buildUpGlyphRun(txtutf8, maxWidth);
+}
+
+
+/*
+* SDFFont::buildUpGlyphRun
+*/
+int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
+
+    SIZE_T txtlen = static_cast<SIZE_T>(CharTraitsA::SafeStringLength(txtutf8));
+    SIZE_T pos = 0;
+    int *glyphrun = new int[txtlen + 1];
+    bool knowLastWhite = false;
+    bool blackspace = true;
+    SIZE_T lastWhiteGlyph = 0;
+    SIZE_T lastWhiteSpace = 0;
+    float lineLength = 0.0f;
+    bool nextAsNewLine = false;
+    unsigned int idx;
+    ::memset(glyphrun, 0, sizeof(int) * (txtlen + 1));
+    // > 0 1+index of the glyph to use
+    // < 0 -(1+index) of the glyph and new line
+    // = 0 end
+
+    // build glyph run
+    idx = 0;
+    for (SIZE_T i = 0; i < txtlen; i++) {
+        if (txtutf8[i] == '\n') { // special handle new lines
+            nextAsNewLine = true;
+            continue;
+        }
+
+        // select glyph
+        idx = static_cast<unsigned int>((unsigned char)txtutf8[i]);
+        // Skip glyphs for which no information is available
+        if (this->glyphIdxLinks[idx] == NULL) {
+            // glyph not found
+            continue;
+        }
+
+        /*
+        if (idx == 0) continue; // glyph not found
+        if (idx > 0) {
+            // second part of byte
+            idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] / 0x10)];
+            if (idx == 0) continue; // glyph not found
+            if (idx > 0) continue; // glyph key not complete
+        }
+        idx = -idx; // glyph found
+        */
+
+        // add glyph to run
+        if (txtutf8[i] == ' ') { // the only special white-space
+            glyphrun[pos++] = 1 + idx;
+            lineLength += this->glyphIdxLinks[idx]->xadvance;
+            // no test for soft break here!
+            if (!knowLastWhite || blackspace) {
+                knowLastWhite = true;
+                blackspace = false;
+                lastWhiteGlyph = pos - 1;
+            }
+            lastWhiteSpace = i;
+
+        }
+        else if (nextAsNewLine) {
+            nextAsNewLine = false;
+            glyphrun[pos++] = -static_cast<int>(1 + idx);
+            knowLastWhite = false;
+            blackspace = true;
+            lineLength = this->glyphIdxLinks[idx]->xadvance;
+
+        }
+        else {
+            blackspace = true;
+            glyphrun[pos++] = 1 + idx;
+            lineLength += this->glyphIdxLinks[idx]->xadvance;
+            // test for soft break
+            if (lineLength > maxWidth) {
+                // soft break
+                if (knowLastWhite) {
+                    i = lastWhiteSpace;
+                    pos = lastWhiteGlyph + 1;
+                    lineLength = 0.0f;
+                    knowLastWhite = false;
+                    nextAsNewLine = true;
+
+                }
+                else {
+                    // last word to long
+                    glyphrun[pos - 1] = -glyphrun[pos - 1];
+                    lineLength = this->glyphIdxLinks[idx]->xadvance;
+                }
+            }
+        }
+
+        idx = 0; // start with new glyph search
     }
 
-    return i;
+    return glyphrun;
 }
 
 
 /*
 * SDFFont::draw
 */
-void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
+void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
@@ -532,86 +694,81 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     // ------------------------------------------------------------------------
     // Generate data buffers
 
-    // Determine length of string for buffers
-    unsigned int dataCnt = 0;
-    const char *text     = txt;
-    // -> Assumption: String MUST be '\0' terminated!
-    while (*text != '\0') {
-        text++;
-        dataCnt++;
-    }
     // Data buffers
-    GLfloat *posData = new GLfloat[dataCnt * 12];
-    GLfloat *texData = new GLfloat[dataCnt * 8];
+    unsigned cnt = 0;
+    int *tmpRun = run;
+    while ((*tmpRun) != 0) {
+        tmpRun++;
+        cnt++;
+    }
+    GLfloat *posData = new GLfloat[cnt * 12];
+    GLfloat *texData = new GLfloat[cnt * 8];
 
+    float gx = x;
+    float gy = y;
+    float sy = (flipY)?(-size):(size);
+    unsigned int charCnt = 0;
 
-    SDFFontCharacter * charInfo = NULL;
-    unsigned int       charCnt  = (unsigned int)this->indices.size();
-    text                        = txt;
-    dataCnt                     = 0;
-    unsigned char charIdx;
+    while ((*run) != 0) {
 
-    float xTrans  = x;
-    float yTrans  = y;
-    float zTrans  = z;
-    float yFlip   = (flipY) ? (-1.0f) : (1.0f);
+        SDFGlyphInfo *glyph = this->glyphIdxLinks[((*run) < 0) ? (-1 - (*run)) : ((*run) - 1)];
 
-    // Loop over all characters in the string
-    // -> Assumption: String MUST be '\0' terminated!
-    while ((*text) != '\0') {
+        if ((*run) < 0) {
+            gx = x;
 
-        if ((*text) == '\n') {
-            xTrans  = x;
-            yTrans += yFlip * size;
-        }
-        else {
-            charIdx  = (unsigned char)(*text); // in 0...255
-            charInfo = this->indices[(unsigned int)charIdx];
-            if (charInfo != NULL) {
-
-                // Kerning
-
-
-
-                // Position
-                posData[dataCnt * 12 + 0]  =         size * (charInfo->xoffset)                    + xTrans; // X0
-                posData[dataCnt * 12 + 1]  = yFlip * size * (charInfo->yoffset)                    + yTrans; // Y0
-                posData[dataCnt * 12 + 2]  =         size * (0.0f)                                 + zTrans; // Z0
-                posData[dataCnt * 12 + 3]  =         size * (charInfo->xoffset + charInfo->width)  + xTrans; // X1
-                posData[dataCnt * 12 + 4]  = yFlip * size * (charInfo->yoffset)                    + yTrans; // Y1
-                posData[dataCnt * 12 + 5]  =         size * (0.0f)                                 + zTrans; // Z1
-                posData[dataCnt * 12 + 6]  =         size * (charInfo->xoffset + charInfo->width)  + xTrans; // X2
-                posData[dataCnt * 12 + 7]  = yFlip * size * (charInfo->yoffset + charInfo->height) + yTrans; // Y2
-                posData[dataCnt * 12 + 8]  =         size * (0.0f)                                 + zTrans; // Z2
-                posData[dataCnt * 12 + 9]  =         size * (charInfo->xoffset)                    + xTrans; // X3
-                posData[dataCnt * 12 + 10] = yFlip * size * (charInfo->yoffset + charInfo->height) + yTrans; // Y3
-                posData[dataCnt * 12 + 11] =         size * (0.0f)                                 + zTrans; // Z3
-
-                // Texture  
-                texData[dataCnt * 8 + 0] = charInfo->texX0; // X0
-                texData[dataCnt * 8 + 1] = charInfo->texY0; // Y0
-                texData[dataCnt * 8 + 2] = charInfo->texX1; // X1
-                texData[dataCnt * 8 + 3] = charInfo->texY0; // Y1
-                texData[dataCnt * 8 + 4] = charInfo->texX1; // X2
-                texData[dataCnt * 8 + 5] = charInfo->texY1; // Y2
-                texData[dataCnt * 8 + 6] = charInfo->texX0; // X3
-                texData[dataCnt * 8 + 7] = charInfo->texY1; // Y3
-
-                // ...
-                dataCnt++;
-                xTrans += (size * charInfo->xadvance);
+            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
+                gx -= this->lineWidth(run, false) * size * 0.5f;
             }
+            else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
+                gx -= this->lineWidth(run, false) * size;
+            }
+
+            gy += (sy);
         }
-        text++;
+
+        // Kerning
+
+        // TODO ...
+
+
+        // Position
+        posData[charCnt * 12 + 0]  = size * (glyph->xoffset)                 + gx; // X0
+        posData[charCnt * 12 + 1]  = sy   * (glyph->yoffset)                 + gy; // Y0
+        posData[charCnt * 12 + 2]  =                                            z; // Z0
+        posData[charCnt * 12 + 3]  = size * (glyph->xoffset + glyph->width)  + gx; // X1
+        posData[charCnt * 12 + 4]  = sy   * (glyph->yoffset)                 + gy; // Y1
+        posData[charCnt * 12 + 5]  =                                            z; // Z1
+        posData[charCnt * 12 + 6]  = size * (glyph->xoffset + glyph->width)  + gx; // X2
+        posData[charCnt * 12 + 7]  = sy   * (glyph->yoffset + glyph->height) + gy; // Y2
+        posData[charCnt * 12 + 8]  =                                            z; // Z2
+        posData[charCnt * 12 + 9]  = size * (glyph->xoffset)                 + gx; // X3
+        posData[charCnt * 12 + 10] = sy   * (glyph->yoffset + glyph->height) + gy; // Y3
+        posData[charCnt * 12 + 11] =                                            z; // Z3
+
+        // Texture  
+        texData[charCnt * 8 + 0] = glyph->texX0; // X0
+        texData[charCnt * 8 + 1] = glyph->texY0; // Y0
+        texData[charCnt * 8 + 2] = glyph->texX1; // X1
+        texData[charCnt * 8 + 3] = glyph->texY0; // Y1
+        texData[charCnt * 8 + 4] = glyph->texX1; // X2
+        texData[charCnt * 8 + 5] = glyph->texY1; // Y2
+        texData[charCnt * 8 + 6] = glyph->texX0; // X3
+        texData[charCnt * 8 + 7] = glyph->texY1; // Y3
+
+        // ...
+        charCnt++;
+        gx += (glyph->xadvance * size);
+
+        run++;
     }
 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)dataCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
         }
         else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)dataCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -662,7 +819,7 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
 
-    glDrawArrays(GL_QUADS, 0, (GLsizei)dataCnt * 4);
+    glDrawArrays(GL_QUADS, 0, (GLsizei)charCnt * 4);
 
     glUseProgram(0); // instead of this->shader.Disable() => because draw() is CONST
     glBindVertexArray(0);
@@ -678,16 +835,6 @@ void SDFFont::draw(const char *txt, float x, float y, float z, float size, bool 
 
 
 /*
-* SDFFont::draw
-*/
-void SDFFont::draw(const wchar_t *txt, float x, float y, float z, float size, bool flipY, Alignment align) const {
-
-    // TODO
-
-}
-
-
-/*
 * SDFFont::loadFont
 */
 bool SDFFont::loadFont(BitmapFont bmf) {
@@ -695,7 +842,8 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     // Convert BitmapFont to string
     vislib::StringA fontName = "";
     switch (bmf) {
-        case  (BitmapFont::BMFONT_EVOLVENTA): fontName = "evolventa"; break;
+        case  (BitmapFont::EVOLVENTA): fontName = "evolventa"; break;
+        case  (BitmapFont::VERDANA): fontName = "verdana"; break;
         default: break;
     }
 
@@ -811,7 +959,7 @@ bool SDFFont::loadFontBuffers() {
 bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     // Reset font info
-    this->characters.clear();
+    this->glyphs.clear();
 
     // Load file
     vislib::sys::ASCIIFileBuffer file;
@@ -822,7 +970,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     float texWidth  = 0.0f;
     float texHeight = 0.0f;
-    float fontSize  = 0.0f;
+    float lineHeight  = 0.0f;
     
     // Read info file line by line
     int idx;
@@ -831,69 +979,66 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     float width;
     float height;
 
-    SIZE_T lineCnt = 0;
+    size_t lineCnt = 0;
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
-        // (1) Parse info line
-        if (line.StartsWith("info ")) { 
-
-            idx = line.Find("size=", 0);
-            fontSize = (float)std::atof(line.Substring(idx + 5, 4));
-        }
-        // (2) Parse common info line
-        else if (line.StartsWith("common ")) { 
+        // (1) Parse common info line
+        if (line.StartsWith("common ")) { 
 
             idx = line.Find("scaleW=", 0);
             texWidth = (float)std::atof(line.Substring(idx + 7, 4));
 
             idx = line.Find("scaleH=", 0);
             texHeight = (float)std::atof(line.Substring(idx + 7, 4));
+
+            idx = line.Find("lineHeight=", 0);
+            lineHeight = (float)std::atof(line.Substring(idx + 11, 4));
         }
-        // (3) Parse character info
+        // (2) Parse character info
         else if (line.StartsWith("char ")) { 
-            SDFFontCharacter newChar;
+            SDFGlyphInfo newChar;
 
             idx = line.Find("id=", 0);
-            newChar.id = (unsigned int)std::atoi(line.Substring(idx+3, 4)); 
+            newChar.id = (unsigned int)std::atoi(line.Substring(idx + 3, 4)); 
 
             idx = line.Find("x=", 0);
-            newChar.texX0 = (float)std::atof(line.Substring(idx+2, 4)) / texWidth;
+            newChar.texX0 = (float)std::atof(line.Substring(idx + 2, 4)) / texWidth;
 
             idx = line.Find("y=", 0);
-            newChar.texY0 = (float)std::atof(line.Substring(idx+2, 4)) / texHeight;
+            newChar.texY0 = (float)std::atof(line.Substring(idx + 2, 4)) / texHeight;
 
             idx = line.Find("width=", 0);
-            width = (float)std::atof(line.Substring(idx+6, 4));
+            width = (float)std::atof(line.Substring(idx + 6, 4));
 
             idx = line.Find("height=", 0);
-            height = (float)std::atof(line.Substring(idx+7, 4));
+            height = (float)std::atof(line.Substring(idx + 7, 4));
 
-            newChar.width  = width / fontSize;
-            newChar.height = height / fontSize;
+            newChar.width  = width / lineHeight;
+            newChar.height = height / lineHeight;
 
             idx = line.Find("xoffset=", 0);
-            newChar.xoffset = (float)std::atof(line.Substring(idx+8, 4)) / fontSize;
+            newChar.xoffset = (float)std::atof(line.Substring(idx + 8, 4)) / lineHeight;
 
             idx = line.Find("yoffset=", 0);
-            newChar.yoffset  = (float)std::atof(line.Substring(idx+8, 4)) / fontSize;
+            newChar.yoffset  = (float)std::atof(line.Substring(idx + 8, 4)) / lineHeight;
 
             idx = line.Find("xadvance=", 0);
-            newChar.xadvance = (float)std::atof(line.Substring(idx+9, 4)) / fontSize;
+            newChar.xadvance = (float)std::atof(line.Substring(idx + 9, 4)) / lineHeight;
 
             newChar.kernings.clear();
 
             newChar.texX1 = newChar.texX0 + width / texWidth;
             newChar.texY1 = newChar.texY0 + height / texHeight;
 
-            this->characters.push_back(newChar);
+            this->glyphs.push_back(newChar);
         }
-        // (4) Parse kerning info
+        // (3) Parse kerning info
         else if (line.StartsWith("kerning ")) { 
 
             idx = line.Find("second=", 0);
             second = (unsigned int)std::atoi(line.Substring(idx+7, 4));
 
-            SDFFontKerning newKern;
+            SDFGlyphKerning newKern;
 
             idx = line.Find("first=", 0);
             newKern.previous = (unsigned int)std::atoi(line.Substring(idx+6, 4));
@@ -901,9 +1046,9 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             newKern.amount = (int)std::atoi(line.Substring(idx+7, 4));
 
             // Assumption: Character data is already read
-            for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
-                if (this->characters[i].id == second) {
-                    this->characters[i].kernings.push_back(newKern);
+            for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
+                if (this->glyphs[i].id == second) {
+                    this->glyphs[i].kernings.push_back(newKern);
                 }
             }
         }
@@ -916,19 +1061,20 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     // Building character index array -----------------------------------------
     unsigned int maxCharCnt = 256;
 
-    this->indices.clear();
-    // Init font info indices for max 256 characters
+    this->glyphIdxLinks.clear();
+    // Init font info indices for maxCharCnt characters
     for (unsigned int i = 0; i < maxCharCnt; i++) {
-        this->indices.push_back(NULL);
+        this->glyphIdxLinks.push_back(NULL);
     }
     // Set pointer to character info for available characters
-    for (unsigned int i = 0; i < (unsigned int)this->characters.size(); i++) {
-        unsigned int index = this->characters[i].id;
-        if (index >= maxCharCnt) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", index);
+    unsigned int charIdx;
+    for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
+        charIdx = this->glyphs[i].id;
+        if (charIdx >= maxCharCnt) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", charIdx);
             return false;
         }
-        this->indices[index] = &this->characters[i];
+        this->glyphIdxLinks[charIdx] = &this->glyphs[i];
     }
 
     return true;
@@ -948,7 +1094,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
     pbc.Image() = &img;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     void   *buf  = NULL;
-    SIZE_T  size = 0;
+    size_t  size = 0;
 
     if ((size = this->loadFile(filename, &buf)) <= 0) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not find texture: \"%s\". \n", filename.PeekBuffer());
@@ -988,7 +1134,7 @@ bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
     this->shader.Release();
 
     const char *shaderName = "SDFFont";
-    SIZE_T size = 0;
+    size_t size = 0;
 
     // Load shaders from file
     
@@ -1011,7 +1157,7 @@ bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
 
     try {
         // Compiling shaders
-        if (!this->shader.Compile((const char **)(&vertBuf), (SIZE_T)1, (const char **)(&fragBuf), (SIZE_T)1)) {
+        if (!this->shader.Compile((const char **)(&vertBuf), (size_t)1, (const char **)(&fragBuf), (size_t)1)) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderName);
             //ARY_SAFE_DELETE(vertBuf);
             ARY_SAFE_DELETE(fragBuf);
@@ -1055,7 +1201,7 @@ bool SDFFont::loadFontShader(vislib::StringA vert, vislib::StringA frag) {
 /*
 * SDFFont::loadFile
 */
-SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
+size_t SDFFont::loadFile(vislib::StringA filename, void **outData) {
 
     // Reset out data
     *outData = NULL;
@@ -1071,7 +1217,7 @@ SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
         return false;
     }
 
-    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(name));
+    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(name));
     if (size < 1) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load empty file: \"%s\". \n", filename.PeekBuffer());
         return false;
@@ -1084,7 +1230,7 @@ SIZE_T SDFFont::loadFile(vislib::StringA filename, void **outData) {
     }
 
     *outData = new BYTE[size];
-    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
+    size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to read whole file: \"%s\". \n", filename.PeekBuffer());
         ARY_SAFE_DELETE(*outData);

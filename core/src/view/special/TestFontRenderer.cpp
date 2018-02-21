@@ -38,7 +38,8 @@ using namespace megamol::core::view::special;
 TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     simpleFont(),
     outlineFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-    sdfFont(SDFFont::BitmapFont::BMFONT_EVOLVENTA, SDFFont::RENDERTYPE_FILL),
+    sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
+    //sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
     paramRenderMode1("01_RenderMode-01", "... ."),
     paramRenderMode2("02_RenderMode-02", "... ."),
     paramRenderMode3("03_RenderMode-03", "... ."),
@@ -137,8 +138,8 @@ bool TestFontRenderer::create(void) {
     file.Clear();
     this->testtext.Append('\0');
 
-    this->testtext[27]  = '\n';
-    this->testtext[104] = '\n';
+    //this->testtext[27]  = '\n';
+    //this->testtext[106] = '\n';
 
 
     return true;
@@ -249,11 +250,13 @@ bool TestFontRenderer::Render(core::Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glDisable(GL_BLEND);
 
-    glEnable(GL_DEPTH_TEST);
-
+    //glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
 
     vislib::StringA hallo = "... Hallo Welt ...\n1234567890\nQualle";
-
+    float fontSize = 0.1f;
+    float lineWidth = 8.0f;
+    unsigned int lineCount = 0;
 
     // ------------------------------------------------------------------------
     if (this->renderMode == 1) {
@@ -279,9 +282,9 @@ bool TestFontRenderer::Render(core::Call& call) {
         float nol      = 6.0f; // number of lines
 
         vislib::StringA simpleString  = "The Simple Font. ";
-        vislib::StringA filledString  = "The Filled Font. ";
         vislib::StringA outlineString = "The Outline Font. ";
-        vislib::StringA sdfString     = "The SDF Font. ";
+        vislib::StringA filledString  = "The Filled Font. ";
+        vislib::StringA sdfString     = "The Filled Font. ";  // "The SDF Font. ";
 
         // Adapt font size
         vislib::StringA tmpString = "--------------------------";
@@ -317,48 +320,42 @@ bool TestFontRenderer::Render(core::Call& call) {
         outlineWidth = this->outlineFont.LineWidth(fontSize, outlineString);
         glEnable(GL_LINE_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*2.0f), outlineWidth, 1.0f, fontSize, true, outlineString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
+        glDisable(GL_LINE_SMOOTH);
 
         // FILLED FONT 
         this->outlineFont.SetRenderType(vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL);
         outlineWidth = this->outlineFont.LineWidth(fontSize, outlineString);
         glDisable(GL_POLYGON_SMOOTH);
-        this->outlineFont.DrawString(0.0f, vpH - (fontSize*3.0f), outlineWidth, 1.0f, fontSize, true, outlineString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
+        this->outlineFont.DrawString(0.0f, vpH - (fontSize*3.0f), outlineWidth, 1.0f, fontSize, true, filledString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
         
         filledString += "AA ";
         outlineWidth = this->outlineFont.LineWidth(fontSize, filledString);
         glEnable(GL_POLYGON_SMOOTH);
         this->outlineFont.DrawString(0.0f, vpH - (fontSize*4.0f), outlineWidth, 1.0f, fontSize, true, filledString, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-        
+        glDisable(GL_POLYGON_SMOOTH);
+
         // SDF FONT
-        //float sdfWidth = this->sdfFont.LineWidth(fontSize, sdfString);
-        //this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        float sdfWidth = vpW; // this->sdfFont.LineWidth(fontSize, sdfString);
+        this->sdfFont.DrawString(0.0f, vpH - (fontSize*5.0f), sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
 
         glPopMatrix();
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-
     }
-
     // ------------------------------------------------------------------------
     else if (this->renderMode == 2) {
 
-        float fontSize         = 0.1f;
-        float lineWidth        = 8.0f;
-        unsigned int lineCount = this->simpleFont.BlockLines(lineWidth, fontSize, testtext);
+        lineCount = this->simpleFont.BlockLines(lineWidth, fontSize, testtext);
 
         this->simpleFont.DrawString(-(lineWidth/2.0f), ((lineCount*fontSize)/2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 3) {
 
-        float fontSize         = 0.1f;
-        float lineWidth        = 8.0f;
-        unsigned int lineCount = this->outlineFont.BlockLines(lineWidth, fontSize, testtext);
+        lineCount = this->outlineFont.BlockLines(lineWidth, fontSize, testtext);
 
-        //glEnable(GL_POLYGON_SMOOTH);
+        glEnable(GL_POLYGON_SMOOTH);
         //glDisable(GL_POLYGON_SMOOTH);
         this->outlineFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
         
@@ -366,42 +363,26 @@ bool TestFontRenderer::Render(core::Call& call) {
     // ------------------------------------------------------------------------
     else if (this->renderMode == 4) {
         
-        float fontSize  = 0.1f;
-        float lineWidth = 8.0f;
-        //unsigned int lineCount = this->sdfFont.BlockLines(lineWidth, fontSize, testtext);
-        
-        //this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-        this->sdfFont.DrawString(-1.0f, 0.0f, 0.0f, 0.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        lineCount = this->sdfFont.BlockLines(lineWidth, fontSize, testtext);
+
+        this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 5) {
 
-
-        float fontSize = 0.1f;
-        float lineWidth = 8.0f;
-
-        this->simpleFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
+       this->simpleFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 6) {
 
-        float fontSize = 0.1f;
-        float lineWidth = 8.0f;
-
-        //glEnable(GL_POLYGON_SMOOTH);
+        glEnable(GL_POLYGON_SMOOTH);
         //glDisable(GL_POLYGON_SMOOTH);
         this->outlineFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 7) {
 
-        float fontSize = 0.1f;
-        float lineWidth = 8.0f;
-
-        this->sdfFont.DrawString(-1.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
-
+        this->sdfFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 8) {

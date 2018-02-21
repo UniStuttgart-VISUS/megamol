@@ -41,7 +41,8 @@ namespace megamol {
 
         /** Available predefined open source bitmap fonts. */
         enum BitmapFont {
-            BMFONT_EVOLVENTA
+            EVOLVENTA,
+            VERDANA
         };
 
         /** Possible render types for the font. */
@@ -192,20 +193,6 @@ namespace megamol {
         virtual ~SDFFont(void);
 
         /**
-         * Calculates the height of a text block in number of lines, when
-         * drawn with the rectangle-based versions of 'DrawString' with the
-         * specified maximum width and font size.
-         *
-         * @param maxWidth The maximum width.
-         * @param size     The font size to use.
-         * @param txt      The text to measure.
-         *
-         * @return The height of the text block in number of lines.
-         */
-        virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
-        virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
-
-        /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
@@ -260,6 +247,20 @@ namespace megamol {
         virtual float LineWidth(float size, const wchar_t *txt) const;
 
         /**
+        * Calculates the height of a text block in number of lines, when
+        * drawn with the rectangle-based versions of 'DrawString' with the
+        * specified maximum width and font size.
+        *
+        * @param maxWidth The maximum width.
+        * @param size     The font size to use.
+        * @param txt      The text to measure.
+        *
+        * @return The height of the text block in number of lines.
+        */
+        virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
+        virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
+
+        /**
          * Answers the render type of the font
          *
          * @return The render type of the font
@@ -301,15 +302,29 @@ namespace megamol {
         * variables
         **********************************************************************/
 
-        /** The SDF font kerning struct holding the kerninng information of the bitmap font. */
-        struct SDFFontKerning {
+        /** Vertex buffer object attributes. */
+        enum VBOAttrib {
+            POSITION = 0,
+            TEXTURE = 1
+        };
+
+        /** Vertex buffer object info. */
+        struct SDFVBO {
+            GLuint                 handle;  // buffer handle
+            vislib::StringA        name;    // varaible name of attribute in shader
+            GLuint                 index;   // index of attribute location
+            unsigned int           dim;     // dimension of data
+        };
+
+        /** The glyph kernings. */
+        struct SDFGlyphKerning {
             unsigned int previous;  // The previous character id
             int amount;             // How much the x position should be adjusted when drawing this character immediately following the previous one
         };
 
-        /** The SDF font info struct holding the character information of the bitmap font. */
-        struct SDFFontCharacter {
-            unsigned int id;  // The characters
+        /** The SDF glyph info. */
+        struct SDFGlyphInfo {
+            unsigned int id;  // The character id
             float texX0;      // The left position of the character image in the texture
             float texY0;      // The top position of the character image in the texture
             float texX1;      // The right position of the character image in the texture
@@ -320,8 +335,9 @@ namespace megamol {
             float yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
             float xadvance;   // How much the current position should be advanced after drawing the character
             // Kerning
-            std::vector<SDFFontKerning> kernings;
+            std::vector<SDFGlyphKerning> kernings;
         };
+
 
         /** The sdf font. */
         BitmapFont font;
@@ -335,25 +351,16 @@ namespace megamol {
         /** The render type used. */
         RenderType renderType;
 
-        /** Font characters. */
-        std::vector<SDFFontCharacter> characters;
-        /** Font indices for characters. */
-        std::vector<SDFFontCharacter *> indices;
+        /** The glyphs. */
+        std::vector<SDFGlyphInfo> glyphs;
+
+        /** The glyphs sorted by index. */
+        std::vector<SDFGlyphInfo *> glyphIdxLinks;
 
         /** Vertex array object. */
         GLuint vaoHandle;
 
-        /** Vertex buffer object. */
-        enum VBOAttrib {
-            POSITION  = 0,
-            TEXTURE   = 1
-        };
-        struct SDFVBO {
-            GLuint                 handle;  // buffer handle
-            vislib::StringA        name;    // varaible name of attribute in shader
-            GLuint                 index;   // index of attribute location
-            unsigned int           dim;     // dimension of data
-        };
+        /** Vertex buffer objects. */
         std::vector<SDFVBO> vbos;
 
         /**********************************************************************
@@ -378,23 +385,61 @@ namespace megamol {
         /** Load file into outData buffer and return size. */
         SIZE_T loadFile(vislib::StringA filename, void **outData);
 
-        /** Number of lines with maxWidth and font size in the text. */
-        unsigned int lineCount(float maxWidth, float size, const char *txt) const;
-        unsigned int lineCount(float maxWidth, float size, const wchar_t *txt) const;
+        /**
+        * Answer the number of lines in the glyph run
+        *
+        * @param run The glyph run
+        * @param deleterun Deletes the glyph run after use
+        *
+        * @return the number of lines.
+        */
+        int lineCount(int *run, bool deleterun) const;
 
         /**
-         * Draw font glyphs.
-         *
-         * @param txt   The pointer to the text string
-         * @param x     The reference x coordinate
-         * @param y     The reference y coordinate
-         * @param z     The reference z coordinate
-         * @param size  The size
-         * @param flipY The flag controlling the direction of the y-axis
-         * @param align The alignment
-         */
-        void draw(const char *txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
-        void draw(const wchar_t *txt, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        * Answer the width of the line 'run' starts.
+        *
+        * @param run The glyph run
+        * @param iterate If 'true' 'run' will be set to point to the first
+        *                glyph of the next line. If 'false' the value of
+        *                'run' will not be changed
+        *
+        * @return The width of the line
+        */
+        float lineWidth(int *&run, bool iterate) const;
+
+        /**
+        * Generates the glyph runs for the text 'txt'
+        *
+        * @param txt The input text
+        * @param maxWidth The maximum width (normalized logical units)
+        *
+        * @return The resulting glyph run
+        */
+        int *buildGlyphRun(const char *txt,  float maxWidth) const;
+        int *buildGlyphRun(const wchar_t *txt, float maxWidth) const;
+
+        /**
+        * Generates the glyph runs for the text 'txt'
+        *
+        * @param txtutf8 The input text in utf8 encoding
+        * @param maxWidth The maximum width (normalized logical units)
+        *
+        * @return The resulting glyph run
+        */
+        int *buildUpGlyphRun(const char *txtutf8, float maxWidth) const;
+
+        /**
+        * Draw font glyphs.
+        *
+        * @param run   The glyph run
+        * @param x     The reference x coordinate
+        * @param y     The reference y coordinate
+        * @param z     The reference z coordinate
+        * @param size  The size
+        * @param flipY The flag controlling the direction of the y-axis
+        * @param align The alignment
+        */
+        void draw(int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
 
     };
 
