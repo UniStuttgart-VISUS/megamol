@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -12,7 +9,7 @@ namespace MegaMolConf.Util {
         public AboutBox() {
             InitializeComponent();
             Font = SystemFonts.DefaultFont;
-            this.Text = String.Format("About {0}", AssemblyTitle);
+            Text = String.Format("About {0}", AssemblyTitle);
             StringBuilder about = new StringBuilder();
             about.AppendLine(AssemblyTitle);
             about.AppendLine("Version " + AssemblyVersion);
@@ -23,7 +20,7 @@ namespace MegaMolConf.Util {
             about.AppendLine(AssemblyCompany);
             about.AppendLine();
             about.AppendLine(AssemblyDescription);
-            this.textBoxDescription.Text = about.ToString();
+            textBoxDescription.Text = about.ToString();
         }
 
         #region Assembly Attribute Accessors

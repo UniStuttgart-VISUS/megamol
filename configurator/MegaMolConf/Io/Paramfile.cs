@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace MegaMolConf.Io {
 
@@ -39,7 +38,7 @@ namespace MegaMolConf.Io {
             parSetPairs = paramsettings;
         }
 
-        private List<KeyValuePair<string[], string>> parSetPairs = null;
+        private List<KeyValuePair<string[], string>> parSetPairs;
 
         public bool Empty {
             get {

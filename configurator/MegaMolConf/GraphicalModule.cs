@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 
 namespace MegaMolConf {
     class GraphicalModule : INotifyPropertyChanged {
@@ -46,14 +45,14 @@ namespace MegaMolConf {
             return p;
         }
 
-        private Data.CalleeSlot selectedCallee = null;
-        private Data.CallerSlot selectedCaller = null;
+        private Data.CalleeSlot selectedCallee;
+        private Data.CallerSlot selectedCaller;
 
         private string name = string.Empty;
         public String Name {
-            get { return this.name; }
+            get { return name; }
             set {
-                this.name = value;
+                name = value;
                 boundsCalculated = false;
             }
         }
@@ -65,10 +64,10 @@ namespace MegaMolConf {
             bool found = true;
             while (found) {
                 num++;
-                this.Name = string.Format("{0}{1}", myModule.Name, num);
+                Name = string.Format("{0}{1}", myModule.Name, num);
                 found = false;
                 foreach (GraphicalModule mm in mods) {
-                    if (mm.Name.Equals(this.Name)) {
+                    if (mm.Name.Equals(Name)) {
                         found = true;
                         break;
                     }
@@ -78,9 +77,9 @@ namespace MegaMolConf {
             if (m.ParamSlots != null) {
                 foreach (Data.ParamSlot p in m.ParamSlots) {
                     if (p.Type is Data.ParamTypeValueBase) {
-                        this.paramValues[p] = ((Data.ParamTypeValueBase)p.Type).DefaultValueString();
+                        paramValues[p] = ((Data.ParamTypeValueBase)p.Type).DefaultValueString();
                     }
-                    this.paramCmdLineNess[p] = false;
+                    paramCmdLineNess[p] = false;
                 }
             }
         }
@@ -94,14 +93,14 @@ namespace MegaMolConf {
         private Dictionary<Data.ParamSlot, string> paramValues = new Dictionary<Data.ParamSlot, string>();
         public Dictionary<Data.ParamSlot, string> ParameterValues {
             get {
-                return this.paramValues;
+                return paramValues;
             }
         }
 
         private Dictionary<Data.ParamSlot, bool> paramCmdLineNess = new Dictionary<Data.ParamSlot, bool>();
         public Dictionary<Data.ParamSlot, bool> ParameterCmdLineness {
             get {
-                return this.paramCmdLineNess;
+                return paramCmdLineNess;
             }
         }
 
@@ -115,29 +114,29 @@ namespace MegaMolConf {
 
         private Point position;
         public Point Position {
-            get { return this.position; }
+            get { return position; }
             set {
-                this.position = value;
-                this.Pos.X = value.X;
-                this.Pos.Y = value.Y;
+                position = value;
+                Pos.X = value.X;
+                Pos.Y = value.Y;
             }
         }
 
         public Rectangle DrawBounds {
             get {
-                Rectangle r = new Rectangle(this.position, this.bounds);
+                Rectangle r = new Rectangle(position, bounds);
                 r.Inflate(slotWidth, 0);
                 return r;
             }
         }
 
         public void Repos() {
-            this.position.X = (int)this.Pos.X;
-            this.position.Y = (int)this.Pos.Y;
+            position.X = (int)Pos.X;
+            position.Y = (int)Pos.Y;
         }
 
         public void Draw(Graphics g) {
-            string name = myModule.Name + "\n" + this.Name;
+            string name = myModule.Name + "\n" + Name;
 
             if (!boundsCalculated) {
                 textBounds = g.MeasureString(name, moduleNameFont);
@@ -156,7 +155,7 @@ namespace MegaMolConf {
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             g.DrawString(myModule.Name, moduleClassFont, moduleNameBrush, textRect, moduleClassFormat);
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SystemDefault;
-            g.DrawString(this.Name, moduleNameFont, moduleNameBrush, textRect, moduleNameFormat);
+            g.DrawString(Name, moduleNameFont, moduleNameBrush, textRect, moduleNameFormat);
 
             if (Form1.isMainView(this)) {
                 g.DrawRectangle(Pens.Black, Position.X + moduleBorder / 2, Position.Y + moduleBorder / 2, Bounds.Width - moduleBorder, Bounds.Height - moduleBorder);
@@ -187,7 +186,7 @@ namespace MegaMolConf {
                     //    new Point(bounds.Width + Position.X - (int)(slotWidth * slotScale),
                     //        Position.Y + moduleBorder + x * slotSpacing + slotBorder + (int)(slotScale * slotHeight / 2))
                     //};
-                    if (Form1.selectedCaller == cr && Form1.selectedModule != null  && this.Name == Form1.selectedModule.Name) {
+                    if (Form1.selectedCaller == cr && Form1.selectedModule != null  && Name == Form1.selectedModule.Name) {
                         g.FillPolygon(selectedSlotBrush, ps);
                     } else if (Form1.selectedCallee != null && Form1.selectedCallee.CompatibleCalls.Intersect(cr.CompatibleCalls).Count() > 0) {
                         g.FillPolygon(callerBrush, ps);
@@ -206,7 +205,7 @@ namespace MegaMolConf {
                         new Point(Position.X + slotWidth, Position.Y + moduleBorder + x * slotSpacing + slotBorder + slotHeight / 2),
                         new Point(Position.X - slotWidth, Position.Y + moduleBorder + x * slotSpacing + slotBorder + slotHeight)
                     };
-                    if (Form1.selectedCallee == ce && Form1.selectedModule != null && this.Name == Form1.selectedModule.Name) {
+                    if (Form1.selectedCallee == ce && Form1.selectedModule != null && Name == Form1.selectedModule.Name) {
                         g.FillPolygon(selectedSlotBrush, ps);
                     } else if (Form1.selectedCaller != null && Form1.selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).Count() > 0) {
                         g.FillPolygon(calleeBrush, ps);
@@ -218,11 +217,11 @@ namespace MegaMolConf {
             }
         }
 
-        private Data.Module myModule = null;
-        private bool boundsCalculated = false;
+        private Data.Module myModule;
+        private bool boundsCalculated;
 
         internal bool IsHit(Point point) {
-            Rectangle r = new Rectangle(this.Position, this.Bounds);
+            Rectangle r = new Rectangle(Position, Bounds);
             if (r.Contains(point)) {
                 return true;
             }
@@ -317,8 +316,8 @@ namespace MegaMolConf {
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void FirePropertyChanged(string name) {
-            if (this.PropertyChanged != null) {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(name));
+            if (PropertyChanged != null) {
+                PropertyChanged(this, new PropertyChangedEventArgs(name));
             }
         }
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -12,18 +11,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Xml.Serialization;
-using MegaMolConf.Communication;
 using System.Threading;
 using System.Reflection;
 using System.Net;
-using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Collections;
 
 namespace MegaMolConf {
     public partial class Form1 : Form     {
-        private List<Data.PluginFile> plugins = null;
+        private List<Data.PluginFile> plugins;
         //private Dictionary<TabPage, ObservableCollection<GraphicalModule>> tabModules = new Dictionary<TabPage, ObservableCollection<GraphicalModule>>();
         private ObservingDict<GraphicalModule> tabModules = new ObservingDict<GraphicalModule>();
         //private Dictionary<TabPage, ObservableCollection<GraphicalConnection>> tabConnections = new Dictionary<TabPage, ObservableCollection<GraphicalConnection>>();
@@ -31,19 +27,19 @@ namespace MegaMolConf {
         private Dictionary<TabPage, GraphicalModule> tabMainViews = new Dictionary<TabPage, GraphicalModule>();
         private Dictionary<TabPage, object> tabSelectedObjects = new Dictionary<TabPage, object>();
         private Dictionary<TabPage, string> tabStartParameters = new Dictionary<TabPage, string>();
-        private int tabCount = 0;
-        private GraphicalModule movedModule = null;
+        private int tabCount;
+        private GraphicalModule movedModule;
         private Point lastMousePos;
         private Point mouseDownPos;
-        private Point connectingTip = new Point();
-        private bool drawConnection = false;
-        private Rectangle drawArea = new Rectangle();
-        private bool saveShortcut = false;
+        private Point connectingTip;
+        private bool drawConnection;
+        private Rectangle drawArea;
+        private bool saveShortcut;
 
         private static int minPort = 30000;
         private static int maxPort = 31000;
         private bool[] occupiedPorts = new bool[maxPort - minPort + 1];
-        bool isEyedropping = false;
+        bool isEyedropping;
         private Cursor eyeDropperCursor;
         internal Util.ListBoxLog listBoxLog;
         
@@ -59,11 +55,11 @@ namespace MegaMolConf {
         internal TabPage selectedTab {
             get {
                 if (InvokeRequired) {
-                    return (TabPage)this.Invoke(new Func<TabPage>(() => {
-                        return this.tabViews.SelectedTab;
+                    return (TabPage)Invoke(new Func<TabPage>(() => {
+                        return tabViews.SelectedTab;
                     }));
                 } else {
-                    return this.tabViews.SelectedTab;
+                    return tabViews.SelectedTab;
                 }
             }
         }
@@ -137,12 +133,12 @@ namespace MegaMolConf {
         public Form1() {
             InitializeComponent();
             Font = SystemFonts.DefaultFont;
-            this.toolStripStatusLabel1.Text = string.Empty;
-            this.Icon = Properties.Resources.MegaMol_Ctrl;
-            this.setStateInfo();
-            this.btnLoad_Click(null, null);
-            this.btnNewProject_Click(null, null);
-            this.saveStateToolStripMenuItem.Enabled = (this.plugins != null);
+            toolStripStatusLabel1.Text = string.Empty;
+            Icon = Properties.Resources.MegaMol_Ctrl;
+            setStateInfo();
+            btnLoad_Click(null, null);
+            btnNewProject_Click(null, null);
+            saveStateToolStripMenuItem.Enabled = (plugins != null);
 
             //eyeDropperCursor = CreateCursor(new Bitmap(Properties.Resources.eyedropper), 1, 1);
 
@@ -158,7 +154,7 @@ namespace MegaMolConf {
 
             tabConnections.OnChangedItems += TabConnections_OnChangedItems;
 
-            this.ScanPorts();
+            ScanPorts();
         }
 
         private void TabConnections_OnChangedItems(IList addedList, IList deletedList) {
@@ -249,19 +245,19 @@ namespace MegaMolConf {
         }
 
         internal void ParamChangeDetected() {
-            if (this.InvokeRequired) {
-                this.Invoke(new Action(() => {
-                    this.ParamChangeDetected();
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    ParamChangeDetected();
                 }));
             } else {
-                this.propertyGrid1.Refresh();
+                propertyGrid1.Refresh();
             }
         }
 
         internal void SetTabPageIcon(TabPage tp, int iconIdx) {
-            if (this.InvokeRequired) {
-                this.Invoke(new Action(() => {
-                    this.SetTabPageIcon(tp, iconIdx);
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    SetTabPageIcon(tp, iconIdx);
                 }));
             } else {
                 if (tp.ImageIndex != iconIdx) {
@@ -271,9 +267,9 @@ namespace MegaMolConf {
         }
 
         internal void SetTabPageTag(TabPage tp, object tag) {
-            if (this.InvokeRequired) {
-                this.Invoke(new Action(() => {
-                    this.SetTabPageTag(tp, tag);
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    SetTabPageTag(tp, tag);
                 }));
             } else {
                 if (tp.Tag != tag) {
@@ -297,20 +293,20 @@ namespace MegaMolConf {
                     btnLoadProject.PerformClick();
                     break;
                 case (Keys.Control | Keys.D):
-                    m = this.duplicateSelectedModule();
+                    m = duplicateSelectedModule();
                     selectedModule = m;
-                    this.propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
-                    this.refreshCurrent();
+                    propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
+                    refreshCurrent();
                     resizePanel();
                     break;
                 case (Keys.Control | Keys.C):
-                    this.btnCopy.PerformClick();
+                    btnCopy.PerformClick();
                     break;
                 case (Keys.Control | Keys.V):
-                    this.btnPaste.PerformClick();
+                    btnPaste.PerformClick();
                     break;
                 case (Keys.Control | Keys.P):
-                    this.btnEyeDrop.PerformClick();
+                    btnEyeDrop.PerformClick();
                     break;
                 case (Keys.Escape):
                     if (isEyedropping) {
@@ -400,16 +396,16 @@ namespace MegaMolConf {
         }
 
         public List<Data.PluginFile> Plugins {
-            get { return this.plugins; }
+            get { return plugins; }
         }
 
         public void SetPlugins(List<Data.PluginFile> plugs, bool save) {
-            this.plugins = plugs;
-            this.setStateInfo();
+            plugins = plugs;
+            setStateInfo();
             if (save) {
                 btnSave_Click(null, null);
             }
-            this.saveStateToolStripMenuItem.Enabled = (this.plugins != null);
+            saveStateToolStripMenuItem.Enabled = (plugins != null);
             updateFiltered();
         }
 
@@ -425,7 +421,7 @@ namespace MegaMolConf {
             ad.MegaMolPath = EnsureMegaMolFrontendApplication(ad.MegaMolPath);
             ad.WorkingDirectory = Properties.Settings.Default.WorkingDirectory;
 
-            if (ad.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+            if (ad.ShowDialog() == DialogResult.OK) {
 
                 Properties.Settings.Default.MegaMolBin = ad.MegaMolPath;
                 Properties.Settings.Default.Save();
@@ -443,7 +439,7 @@ namespace MegaMolConf {
             SaveFileDialog sfd = new SaveFileDialog();
 
             string defFileName = "MegaMolConf.state";
-            foreach (Data.PluginFile p in this.plugins) {
+            foreach (Data.PluginFile p in plugins) {
                 if (p.IsCore) {
                     string name = Path.GetFileNameWithoutExtension(p.Filename);
                     if (name.StartsWith("MegaMol")) name = name.Substring(7);
@@ -481,7 +477,7 @@ namespace MegaMolConf {
             sfd.Filter = "MegaMolConf State Files|*.state|All Files|*.*";
             sfd.CheckPathExists = true;
 
-            if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+            if (sfd.ShowDialog() == DialogResult.OK) {
                 Io.PluginsStateFile stateFile = new Io.PluginsStateFile();
                 stateFile.Version = Io.PluginsStateFile.MaxVersion;
                 stateFile.Plugins = plugins.ToArray();
@@ -514,7 +510,7 @@ namespace MegaMolConf {
                 ofd.Filter = "MegaMolConf State Files|*.state|All Files|*.*";
                 ofd.CheckFileExists = true;
                 ofd.CheckPathExists = true;
-                if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                if (ofd.ShowDialog() == DialogResult.OK) {
                     filename = ofd.FileName;
                 }
             }
@@ -530,9 +526,9 @@ namespace MegaMolConf {
                 plugins = (stateFile.Plugins != null) ? new List<Data.PluginFile>(stateFile.Plugins) : null;
                 Properties.Settings.Default.MegaMolStateFile = filename;
                 Properties.Settings.Default.Save();
-                this.setStateInfo();
-                saveStateToolStripMenuItem.Enabled = (this.plugins != null);
-            } catch (System.IO.FileNotFoundException) {
+                setStateInfo();
+                saveStateToolStripMenuItem.Enabled = (plugins != null);
+            } catch (FileNotFoundException) {
                 // intentionally empty
             } finally {
             }
@@ -544,26 +540,26 @@ namespace MegaMolConf {
         /// Updates GUI with further information about the state
         /// </summary>
         private void setStateInfo() {
-            if ((this.plugins == null) || (this.plugins.Count <= 0)) {
-                this.MenuItem_StateInfo.Text = "No MegaMolConf State loaded";
-                this.MenuItem_StateInfo.Enabled = false;
+            if ((plugins == null) || (plugins.Count <= 0)) {
+                MenuItem_StateInfo.Text = "No MegaMolConf State loaded";
+                MenuItem_StateInfo.Enabled = false;
             } else {
                 Data.PluginFile core = null;
                 int mc = 0;
                 int cc = 0;
-                foreach (Data.PluginFile p in this.plugins) {
+                foreach (Data.PluginFile p in plugins) {
                     if (p.IsCore) core = p;
                     mc += p.Modules.Length;
                     cc += p.Calls.Length;
                 }
                 if (core != null) {
-                    this.MenuItem_StateInfo.Text = String.Format("{0} and {1} Plugins: {2} Modules; {3} Calls",
-                        new object[] { core.Filename, this.plugins.Count - 1, mc, cc });
+                    MenuItem_StateInfo.Text = String.Format("{0} and {1} Plugins: {2} Modules; {3} Calls",
+                        new object[] { core.Filename, plugins.Count - 1, mc, cc });
                 } else {
-                    this.MenuItem_StateInfo.Text = String.Format("{0} Plugins: {1} Modules; {2} Calls",
-                        new object[] { this.plugins.Count, mc, cc });
+                    MenuItem_StateInfo.Text = String.Format("{0} Plugins: {1} Modules; {2} Calls",
+                        new object[] { plugins.Count, mc, cc });
                 }
-                this.MenuItem_StateInfo.Enabled = true;
+                MenuItem_StateInfo.Enabled = true;
             }
         }
 
@@ -637,9 +633,9 @@ namespace MegaMolConf {
                             if (compatibles.Count() > 1) {
                                 using (CallSelector cs = new CallSelector(compatibles)) {
                                     cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = this.PointToScreen(tabModules[tp].Last().Position);
+                                    Point p = PointToScreen(tabModules[tp].Last().Position);
                                     cs.Location = p;
-                                    if (cs.ShowDialog(this) == System.Windows.Forms.DialogResult.Cancel) {
+                                    if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                         SelectItem((GraphicalConnection)null);
                                         refreshCurrent();
                                         return;
@@ -671,9 +667,9 @@ namespace MegaMolConf {
                             if (compatibles.Count() > 1) {
                                 using (CallSelector cs = new CallSelector(compatibles)) {
                                     cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = this.PointToScreen(tabModules[tp].Last().Position);
+                                    Point p = PointToScreen(tabModules[tp].Last().Position);
                                     cs.Location = p;
-                                    if (cs.ShowDialog(this) == System.Windows.Forms.DialogResult.Cancel) {
+                                    if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                         SelectItem((GraphicalConnection)null);
                                         refreshCurrent();
                                         return;
@@ -688,7 +684,7 @@ namespace MegaMolConf {
                     }
 
                     SelectItem(tabModules[tp].Last());
-                    this.propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(selectedModule);
+                    propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(selectedModule);
                 }
             }
             resizePanel();
@@ -730,7 +726,7 @@ namespace MegaMolConf {
                         GraphicalModule gm = tabModules[tp][i];
                         if (gm.IsHit(e.Location)) {
                             eyedropParameters(eyedropperTarget, gm);
-                            this.ParamChangeDetected();
+                            ParamChangeDetected();
                             break;
                         }
                     }
@@ -822,14 +818,14 @@ namespace MegaMolConf {
                 if (minY < 0)
                     maxY -= minY;
                 //this.drawArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-                this.drawArea = new Rectangle(0, 0, maxX, maxY);
+                drawArea = new Rectangle(0, 0, maxX, maxY);
                 Panel p = tp.Controls[0] as Panel;
                 if (allowShrinking) {
-                    p.Controls[0].Width = Math.Max(p.HorizontalScroll.Value + p.Width, this.drawArea.Width);
-                    p.Controls[0].Height = Math.Max(p.VerticalScroll.Value + p.Height, this.drawArea.Height);
+                    p.Controls[0].Width = Math.Max(p.HorizontalScroll.Value + p.Width, drawArea.Width);
+                    p.Controls[0].Height = Math.Max(p.VerticalScroll.Value + p.Height, drawArea.Height);
                 } else {
-                    p.Controls[0].Width = Math.Max(p.Controls[0].Width, this.drawArea.Width);
-                    p.Controls[0].Height = Math.Max(p.Controls[0].Height, this.drawArea.Height);
+                    p.Controls[0].Width = Math.Max(p.Controls[0].Width, drawArea.Width);
+                    p.Controls[0].Height = Math.Max(p.Controls[0].Height, drawArea.Height);
                 }
             }
         }
@@ -850,7 +846,7 @@ namespace MegaMolConf {
                 x *= x;
                 int y = Math.Abs(tmp.Y);
                 y *= y;
-                if (Math.Sqrt(x + y) > 4 && e.Button == System.Windows.Forms.MouseButtons.Left) {
+                if (Math.Sqrt(x + y) > 4 && e.Button == MouseButtons.Left) {
                     drawConnection = true;
                     if (tabViews.SelectedTab != null) {
                         doTheScrollingShit(e.Location);
@@ -910,9 +906,9 @@ namespace MegaMolConf {
                                         //MessageBox.Show("DEBUG-Info: multiple compatible calls found");
                                         using (CallSelector cs = new CallSelector(compatibles)) {
                                             cs.StartPosition = FormStartPosition.Manual;
-                                            Point p = this.PointToScreen(e.Location);
+                                            Point p = PointToScreen(e.Location);
                                             cs.Location = p;
-                                            if (cs.ShowDialog(this) == System.Windows.Forms.DialogResult.Cancel) {
+                                            if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                                 SelectItem((GraphicalConnection)null);
                                                 refreshCurrent();
                                                 return;
@@ -984,7 +980,7 @@ namespace MegaMolConf {
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void btnNewProject_Click(object sender, EventArgs e) {
-            this.newTabPage("Project " + ++tabCount);
+            newTabPage("Project " + ++tabCount);
         }
 
         /// <summary>
@@ -1041,7 +1037,7 @@ namespace MegaMolConf {
         /// <param name="e">not used</param>
         private void btnCloseProject_Click(object sender, EventArgs e) {
             TabPage tp = tabViews.SelectedTab;
-            this.CloseProjectTab(tp);
+            CloseProjectTab(tp);
         }
 
         /// <summary>
@@ -1063,7 +1059,7 @@ namespace MegaMolConf {
                 tp.Dispose();
             }
             if (tabViews.TabPages.Count <= 0) {
-                this.btnNewProject_Click(null, null);
+                btnNewProject_Click(null, null);
             }
         }
 
@@ -1079,7 +1075,7 @@ namespace MegaMolConf {
             if (selectedModule != null) {
                 GraphicalModule gm = selectedModule;
                 SelectItem((GraphicalModule)null);
-                this.propertyGrid1.SelectedObject = null;
+                propertyGrid1.SelectedObject = null;
                 List<GraphicalConnection> rgc = new List<GraphicalConnection>();
                 foreach (GraphicalConnection gc in tabConnections[tp]) {
                     if ((gc.dest == gm) || (gc.src == gm)) {
@@ -1155,9 +1151,9 @@ namespace MegaMolConf {
                     cmdLine.Append(" ");
                     if (m.ParameterValues.ContainsKey(p.Key)) {
                         if (forPS) {
-                            cmdLine.Append(this.safePSLineString(m.ParameterValues[p.Key]));
+                            cmdLine.Append(safePSLineString(m.ParameterValues[p.Key]));
                         } else {
-                            cmdLine.Append(this.safeCmdLineString(m.ParameterValues[p.Key]));
+                            cmdLine.Append(safeCmdLineString(m.ParameterValues[p.Key]));
                         }
                     } else {
                         cmdLine.Append("Click");
@@ -1189,46 +1185,46 @@ namespace MegaMolConf {
             }
 
             try {
-                if (String.IsNullOrEmpty(this.tabFileNames[tp])) {
+                if (String.IsNullOrEmpty(tabFileNames[tp])) {
                     saveShortcut = false;
                 }
-                this.saveFileDialog1.FileName = this.tabFileNames[tp];
-                this.saveFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(this.saveFileDialog1.FileName);
+                saveFileDialog1.FileName = tabFileNames[tp];
+                saveFileDialog1.InitialDirectory = Path.GetDirectoryName(saveFileDialog1.FileName);
             } catch {
             }
 
-            if (saveShortcut || this.saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
-                if (String.IsNullOrEmpty(System.IO.Path.GetExtension(this.saveFileDialog1.FileName))) {
-                    this.saveFileDialog1.FileName = System.IO.Path.ChangeExtension(this.saveFileDialog1.FileName, this.saveFileDialog1.DefaultExt);
+            if (saveShortcut || saveFileDialog1.ShowDialog() == DialogResult.OK) {
+                if (String.IsNullOrEmpty(Path.GetExtension(saveFileDialog1.FileName))) {
+                    saveFileDialog1.FileName = Path.ChangeExtension(saveFileDialog1.FileName, saveFileDialog1.DefaultExt);
                 }
                 saveShortcut = false;
 
                 Io.ProjectFile1 mmprj = new Io.ProjectFile1();
-                mmprj.GeneratorComment = "generated by MegaMol™ Configurator " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                mmprj.GeneratorComment = "generated by MegaMol™ Configurator " + Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 mmprj.StartComment = @"
 
 Use this command line arguments to start MegaMol™
 in Cmd:
-  " + this.makeCmdLine(tp, this.saveFileDialog1.FileName, false) + @"
+  " + makeCmdLine(tp, saveFileDialog1.FileName, false) + @"
 in PowerShell:
-  " + this.makeCmdLine(tp, this.saveFileDialog1.FileName, true) + @"
+  " + makeCmdLine(tp, saveFileDialog1.FileName, true) + @"
 
 ";
-                Io.ProjectFile1.View view = new Io.ProjectFile1.View();
-                mmprj.Views = new Io.ProjectFile1.View[1] { view };
+                Io.ProjectFile.View view = new Io.ProjectFile.View();
+                mmprj.Views = new Io.ProjectFile.View[1] { view };
                 view.Name = safeName(tp.Text);
-                List<Io.ProjectFile1.Module> mods = new List<Io.ProjectFile1.Module>();
+                List<Io.ProjectFile.Module> mods = new List<Io.ProjectFile.Module>();
                 foreach (GraphicalModule m in tabModules[tp]) {
-                    Io.ProjectFile1.Module mod = new Io.ProjectFile1.Module();
+                    Io.ProjectFile.Module mod = new Io.ProjectFile.Module();
                     mods.Add(mod);
                     mod.Class = m.Module.Name;
                     mod.Name = safeName(m.Name);
                     mod.ConfPos = m.Position;
                     if (m == tabMainViews[tp]) view.ViewModule = mod;
-                    List<Io.ProjectFile1.Param> param = new List<Io.ProjectFile1.Param>();
+                    List<Io.ProjectFile.Param> param = new List<Io.ProjectFile.Param>();
                     foreach (KeyValuePair<Data.ParamSlot, string> p in m.ParameterValues) {
                         if (m.ParameterCmdLineness[p.Key] || (p.Value == ((Data.ParamTypeValueBase)p.Key.Type).DefaultValueString())) continue;
-                        Io.ProjectFile1.Param pm = new Io.ProjectFile1.Param();
+                        Io.ProjectFile.Param pm = new Io.ProjectFile.Param();
                         pm.Name = p.Key.Name;
                         pm.Value = p.Value;
                         param.Add(pm);
@@ -1236,24 +1232,24 @@ in PowerShell:
                     mod.Params = (param.Count == 0) ? null : param.ToArray();
                 }
                 view.Modules = (mods.Count == 0) ? null : mods.ToArray();
-                List<Io.ProjectFile1.Call> calls = new List<Io.ProjectFile1.Call>();
+                List<Io.ProjectFile.Call> calls = new List<Io.ProjectFile.Call>();
                 foreach (GraphicalConnection c in tabConnections[tp]) {
-                    Io.ProjectFile1.Call call = new Io.ProjectFile1.Call();
+                    Io.ProjectFile.Call call = new Io.ProjectFile.Call();
                     calls.Add(call);
                     call.Class = c.Call.Name;
                     call.FromSlot = c.srcSlot.Name;
                     call.ToSlot = c.destSlot.Name;
-                    foreach (Io.ProjectFile1.Module mod in view.Modules) {
+                    foreach (Io.ProjectFile.Module mod in view.Modules) {
                         if (mod.Name == c.src.Name) call.FromModule = mod;
                         if (mod.Name == c.dest.Name) call.ToModule = mod;
                     }
                 }
                 view.Calls = (calls.Count == 0) ? null : calls.ToArray();
 
-                mmprj.Save(this.saveFileDialog1.FileName);
+                mmprj.Save(saveFileDialog1.FileName);
 
-                this.tabFileNames[tp] = this.saveFileDialog1.FileName;
-                tp.ToolTipText = this.saveFileDialog1.FileName;
+                tabFileNames[tp] = saveFileDialog1.FileName;
+                tp.ToolTipText = saveFileDialog1.FileName;
             }
 
         }
@@ -1264,7 +1260,7 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void websiteToolStripMenuItem_Click(object sender, EventArgs e) {
-            System.Diagnostics.Process.Start("http://megamol.org/");
+            Process.Start("http://megamol.org/");
         }
 
         /// <summary>
@@ -1286,18 +1282,18 @@ in PowerShell:
             try {
                 TabPage tp = tabViews.SelectedTab;
                 if (tp != null) {
-                    this.openFileDialog1.FileName = this.tabFileNames[tp];
+                    openFileDialog1.FileName = tabFileNames[tp];
                 }
-                this.openFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(this.openFileDialog1.FileName);
+                openFileDialog1.InitialDirectory = Path.GetDirectoryName(openFileDialog1.FileName);
             } catch {
             }
 
-            if (this.openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK) {
                 try {
-                    Io.ProjectFile project = Io.ProjectFile.Load(this.openFileDialog1.FileName);
-                    LoadProjectFile(project, this.openFileDialog1.FileName);
-                    this.saveFileDialog1.FileName = this.openFileDialog1.FileName;
-                    this.saveFileDialog1.InitialDirectory = this.openFileDialog1.InitialDirectory;
+                    Io.ProjectFile project = Io.ProjectFile.Load(openFileDialog1.FileName);
+                    LoadProjectFile(project, openFileDialog1.FileName);
+                    saveFileDialog1.FileName = openFileDialog1.FileName;
+                    saveFileDialog1.InitialDirectory = openFileDialog1.InitialDirectory;
                     //TabPage tp = tabViews.SelectedTab;
                     //if (tp != null) {
                     //    this.tabFileNames[tp] = this.openFileDialog1.FileName;
@@ -1318,10 +1314,10 @@ in PowerShell:
             } catch { }
 
             foreach (Io.ProjectFile.View view in project.Views) {
-                TabPage tp = this.loadMMPrjView(view);
+                TabPage tp = loadMMPrjView(view);
 
                 tp.ToolTipText = filename;
-                this.tabFileNames[tp] = filename;
+                tabFileNames[tp] = filename;
             }
 
         }
@@ -1340,7 +1336,7 @@ in PowerShell:
 
             if (view.Modules != null) {
                 foreach (Io.ProjectFile.Module m in view.Modules) {
-                    Data.Module mod = this.FindModuleByName(m.Class);
+                    Data.Module mod = FindModuleByName(m.Class);
                     if (mod == null) throw new Exception("Unknown Module \"" + m.Class + "\" encountered");
 
                     Tuple<string, Data.Module, List<Tuple<Data.ParamSlot, string>>> mt = new Tuple<string, Data.Module, List<Tuple<Data.ParamSlot, string>>>(
@@ -1365,12 +1361,12 @@ in PowerShell:
                             } else if (ps.Type is Data.ParamType.Float) {
                                 float f;
                                 if (float.TryParse(prm.Value,
-                                        System.Globalization.NumberStyles.Float,
-                                        System.Globalization.CultureInfo.InvariantCulture,
+                                        NumberStyles.Float,
+                                        CultureInfo.InvariantCulture,
                                         out f)) {
-                                    prm.Value = f.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                    prm.Value = f.ToString(CultureInfo.InvariantCulture);
                                 } else if (float.TryParse(prm.Value, out f)) {
-                                    prm.Value = f.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                    prm.Value = f.ToString(CultureInfo.InvariantCulture);
                                 }
                             }
 
@@ -1381,7 +1377,7 @@ in PowerShell:
             }
             if (view.Calls != null) {
                 foreach (Io.ProjectFile.Call c in view.Calls) {
-                    Data.Call call = this.FindCallByName(c.Class);
+                    Data.Call call = FindCallByName(c.Class);
                     if (call == null) throw new Exception("Unknown call encountered");
                     callWishes.Add(new Tuple<Data.Call, string, string>(call, c.FromModule.Name + "::" + c.FromSlot, c.ToModule.Name + "::" + c.ToSlot));
                 }
@@ -1459,7 +1455,7 @@ in PowerShell:
             }
 
             // now instantiate the data
-            TabPage tp = this.newTabPage(viewname);
+            TabPage tp = newTabPage(viewname);
             bool modPosMissing = false;
 
             foreach (Tuple<string, Data.Module, List<Tuple<Data.ParamSlot, string>>> miw in modules) {
@@ -1509,7 +1505,7 @@ in PowerShell:
             if (modPosMissing) ForceDirectedLayout(tp);
             updateFiltered();
             refreshCurrent();
-            this.resizePanel();
+            resizePanel();
 
             return tp;
         }
@@ -1524,9 +1520,9 @@ in PowerShell:
                 gm.Position = new Point(rnd.Next(2500), rnd.Next(1000));
             }
             if (tabMainViews[tp] != null) {
-                tabMainViews[tp].Position = new Point(20, this.Height / 3);
+                tabMainViews[tp].Position = new Point(20, Height / 3);
             } else if (tabModules[tp].Count > 0) {
-                tabModules[tp][0].Position = new Point(20, this.Height / 3);
+                tabModules[tp][0].Position = new Point(20, Height / 3);
             }
 
             foreach (GraphicalModule gm in tabModules[tp]) {
@@ -1631,8 +1627,8 @@ in PowerShell:
         /// <param name="s">not used</param>
         /// <param name="e">not used</param>
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e) {
-            this.refreshCurrent();
-            MegaMolInstanceInfo mmii = this.tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+            refreshCurrent();
+            MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
             if (mmii != null) {
                 mmii.SendUpdate(e.ChangedItem.Label, e.ChangedItem.Value.ToString());
             }
@@ -1644,14 +1640,14 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void propertyGridContextMenuStrip_Opening(object sender, CancelEventArgs e) {
-            GridItem item = this.propertyGrid1.SelectedGridItem;
+            GridItem item = propertyGrid1.SelectedGridItem;
             if (item.PropertyDescriptor == null) item = null;
-            this.resetValueToolStripMenuItem.Enabled = (item != null) && (item.PropertyDescriptor.CanResetValue(((GraphicalModuleDescriptor)this.propertyGrid1.SelectedObject).Module));
+            resetValueToolStripMenuItem.Enabled = (item != null) && (item.PropertyDescriptor.CanResetValue(((GraphicalModuleDescriptor)propertyGrid1.SelectedObject).Module));
             GraphicalModuleParameterDescriptor gmpd = (item != null) ? item.PropertyDescriptor as GraphicalModuleParameterDescriptor : null;
-            this.storeInProjectFileToolStripMenuItem.Enabled = (gmpd != null);
-            this.storeInProjectFileToolStripMenuItem.Checked = (gmpd != null) && !((GraphicalModuleDescriptor)this.propertyGrid1.SelectedObject).Module.ParameterCmdLineness[gmpd.Parameter];
-            this.specifyInCommandLineToolStripMenuItem.Enabled = (gmpd != null);
-            this.specifyInCommandLineToolStripMenuItem.Checked = !this.storeInProjectFileToolStripMenuItem.Checked;
+            storeInProjectFileToolStripMenuItem.Enabled = (gmpd != null);
+            storeInProjectFileToolStripMenuItem.Checked = (gmpd != null) && !((GraphicalModuleDescriptor)propertyGrid1.SelectedObject).Module.ParameterCmdLineness[gmpd.Parameter];
+            specifyInCommandLineToolStripMenuItem.Enabled = (gmpd != null);
+            specifyInCommandLineToolStripMenuItem.Checked = !storeInProjectFileToolStripMenuItem.Checked;
         }
 
         /// <summary>
@@ -1660,7 +1656,7 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void resetValueToolStripMenuItem_Click(object sender, EventArgs e) {
-            this.propertyGrid1.ResetSelectedProperty();
+            propertyGrid1.ResetSelectedProperty();
         }
 
         /// <summary>
@@ -1669,10 +1665,10 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void storeInProjectFileToolStripMenuItem_Click(object sender, EventArgs e) {
-            GridItem item = this.propertyGrid1.SelectedGridItem;
+            GridItem item = propertyGrid1.SelectedGridItem;
             if ((item == null) || (item.PropertyDescriptor == null) || !(item.PropertyDescriptor is GraphicalModuleParameterDescriptor)) return;
-            if ((this.propertyGrid1.SelectedObject == null) || !(this.propertyGrid1.SelectedObject is GraphicalModuleDescriptor)) return;
-            ((GraphicalModuleDescriptor)this.propertyGrid1.SelectedObject).Module.ParameterCmdLineness[((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).Parameter] = false;
+            if ((propertyGrid1.SelectedObject == null) || !(propertyGrid1.SelectedObject is GraphicalModuleDescriptor)) return;
+            ((GraphicalModuleDescriptor)propertyGrid1.SelectedObject).Module.ParameterCmdLineness[((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).Parameter] = false;
             ((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).UseInCmdLine = false;
             item.Select();
         }
@@ -1683,10 +1679,10 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void specifyInCommandLineToolStripMenuItem_Click(object sender, EventArgs e) {
-            GridItem item = this.propertyGrid1.SelectedGridItem;
+            GridItem item = propertyGrid1.SelectedGridItem;
             if ((item == null) || (item.PropertyDescriptor == null) || !(item.PropertyDescriptor is GraphicalModuleParameterDescriptor)) return;
-            if ((this.propertyGrid1.SelectedObject == null) || !(this.propertyGrid1.SelectedObject is GraphicalModuleDescriptor)) return;
-            ((GraphicalModuleDescriptor)this.propertyGrid1.SelectedObject).Module.ParameterCmdLineness[((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).Parameter] = true;
+            if ((propertyGrid1.SelectedObject == null) || !(propertyGrid1.SelectedObject is GraphicalModuleDescriptor)) return;
+            ((GraphicalModuleDescriptor)propertyGrid1.SelectedObject).Module.ParameterCmdLineness[((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).Parameter] = true;
             ((GraphicalModuleParameterDescriptor)item.PropertyDescriptor).UseInCmdLine = true;
             item.Select();
         }
@@ -1697,13 +1693,13 @@ in PowerShell:
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void propertyGrid1_SelectedGridItemChanged(object sender, SelectedGridItemChangedEventArgs e) {
-            GridItem i = this.propertyGrid1.SelectedGridItem;
+            GridItem i = propertyGrid1.SelectedGridItem;
             while (i.Parent != null) i = i.Parent;
             foreach (GridItem j in i.GridItems) {
                 if (j.GridItemType != GridItemType.Category) continue;
                 if (j.Label == "Button Parameters") {
                     j.Expanded = false;
-                    this.propertyGrid1.SelectedGridItemChanged -= propertyGrid1_SelectedGridItemChanged;
+                    propertyGrid1.SelectedGridItemChanged -= propertyGrid1_SelectedGridItemChanged;
                     break;
                 }
             }
@@ -1713,13 +1709,13 @@ in PowerShell:
             TabPage tp = tabViews.SelectedTab;
             if (tp != null) {
                 if (tabSelectedObjects.ContainsKey(tp)) {
-                    this.propertyGrid1.SelectedObject = tabSelectedObjects[tp];
+                    propertyGrid1.SelectedObject = tabSelectedObjects[tp];
                     GraphicalModuleDescriptor gmd = tabSelectedObjects[tp] as GraphicalModuleDescriptor;
                     if (gmd != null) {
                         SelectItem(gmd.Module);
                     }
                 } else {
-                    this.propertyGrid1.SelectedObject = null;
+                    propertyGrid1.SelectedObject = null;
                 }
                 resizePanel();
                 refreshCurrent();
@@ -1747,7 +1743,7 @@ in PowerShell:
         private void forCmdToolStripMenuItem_Click(object sender, EventArgs e) {
             TabPage tp = tabViews.SelectedTab;
             if (tp == null) return;
-            Clipboard.SetText(this.makeCmdLine(tp, string.IsNullOrWhiteSpace(this.tabFileNames[tp]) ? "<filename.mmprj>" : this.tabFileNames[tp], false));
+            Clipboard.SetText(makeCmdLine(tp, string.IsNullOrWhiteSpace(tabFileNames[tp]) ? "<filename.mmprj>" : tabFileNames[tp], false));
         }
 
         /// <summary>
@@ -1758,7 +1754,7 @@ in PowerShell:
         private void forPowershellToolStripMenuItem_Click(object sender, EventArgs e) {
             TabPage tp = tabViews.SelectedTab;
             if (tp == null) return;
-            Clipboard.SetText(this.makeCmdLine(tp, string.IsNullOrWhiteSpace(this.tabFileNames[tp]) ? "<filename.mmprj>" : this.tabFileNames[tp], true));
+            Clipboard.SetText(makeCmdLine(tp, string.IsNullOrWhiteSpace(tabFileNames[tp]) ? "<filename.mmprj>" : tabFileNames[tp], true));
         }
 
         /// <summary>
@@ -1772,7 +1768,7 @@ in PowerShell:
             ForceDirectedLayout(tp);
             updateFiltered();
             refreshCurrent();
-            this.resizePanel();
+            resizePanel();
         }
 
         /// <summary>
@@ -1781,12 +1777,12 @@ in PowerShell:
         /// <param name="sender">not used</param>
         /// <param name="e">The mouse event args identifying the clicking mouse button</param>
         private void tabViews_MouseClick(object sender, MouseEventArgs e) {
-            if (e.Button == System.Windows.Forms.MouseButtons.Middle) {
-                for (int i = 0; i < this.tabViews.TabCount; i++) {
-                    Rectangle tabRect = this.tabViews.GetTabRect(i);
+            if (e.Button == MouseButtons.Middle) {
+                for (int i = 0; i < tabViews.TabCount; i++) {
+                    Rectangle tabRect = tabViews.GetTabRect(i);
                     if (tabRect.Contains(e.Location)) {
                         // this tab hit
-                        this.CloseProjectTab(this.tabViews.TabPages[i]);
+                        CloseProjectTab(tabViews.TabPages[i]);
                         return;
                     }
                 }
@@ -1800,12 +1796,12 @@ in PowerShell:
         /// <param name="e">not used</param>
         private void MenuItem_StateInfo_Click(object sender, EventArgs e) {
             StringBuilder sb = new StringBuilder();
-            if ((this.plugins == null) || (this.plugins.Count <= 0)) {
+            if ((plugins == null) || (plugins.Count <= 0)) {
                 sb.Append("No MegaMolConf State loaded");
             } else {
                 int mc = 0;
                 int cc = 0;
-                foreach (Data.PluginFile p in this.plugins) {
+                foreach (Data.PluginFile p in plugins) {
                     sb.Append(p.Filename);
                     sb.Append("\n");
                     sb.AppendFormat("\t{0} Modules, {1} Calls\n", p.Modules.Length, p.Calls.Length);
@@ -1826,7 +1822,7 @@ in PowerShell:
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e) {
             Util.SettingsDialog d = new Util.SettingsDialog();
             d.Settings = new Properties.Settings();
-            if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+            if (d.ShowDialog() == DialogResult.OK) {
                 d.Settings.Save();
                 Properties.Settings.Default.Reload();
             }
@@ -1841,13 +1837,13 @@ in PowerShell:
             bool enable = false;
             TabPage tp = tabViews.SelectedTab;
             if (tp != null) {
-                enable = File.Exists(this.tabFileNames[tp]);
+                enable = File.Exists(tabFileNames[tp]);
             }
 
-            this.startMegaMolToolStripMenuItem.Enabled = enable;
-            this.megaMolStartArgumentsToolStripMenuItem.Enabled = enable;
-            this.forCmdToolStripMenuItem.Enabled = enable;
-            this.forPowershellToolStripMenuItem.Enabled = enable;
+            startMegaMolToolStripMenuItem.Enabled = enable;
+            megaMolStartArgumentsToolStripMenuItem.Enabled = enable;
+            forCmdToolStripMenuItem.Enabled = enable;
+            forPowershellToolStripMenuItem.Enabled = enable;
             registerProjectToViewFileTypesToolStripMenuItem.Enabled = (Environment.OSVersion.Platform == PlatformID.Win32NT) && enable;
         }
 
@@ -1864,22 +1860,22 @@ in PowerShell:
             dlg.ShellType = (StartParamDialog.StartShellType)Properties.Settings.Default.StartShellType;
             dlg.KeepShellOpen = Properties.Settings.Default.StartShellKeepOpen;
             dlg.LiveConnection = Properties.Settings.Default.LiveConnection;
-            dlg.StdCmdArgs = this.makeCmdLine(tp, this.tabFileNames[tp], false);
-            dlg.StdPSArgs = this.makeCmdLine(tp, this.tabFileNames[tp], true);
+            dlg.StdCmdArgs = makeCmdLine(tp, tabFileNames[tp], false);
+            dlg.StdPSArgs = makeCmdLine(tp, tabFileNames[tp], true);
             dlg.ArgsHistory = Properties.Settings.Default.StartParamHistory;
-            dlg.StartArgs = this.EnsureCmdLineArguments(this.tabStartParameters[tp], dlg.StdCmdArgs, dlg.StdPSArgs, dlg.ShellType);
+            dlg.StartArgs = EnsureCmdLineArguments(tabStartParameters[tp], dlg.StdCmdArgs, dlg.StdPSArgs, dlg.ShellType);
             dlg.Application = Properties.Settings.Default.MegaMolBin;
-            dlg.Application = this.EnsureMegaMolFrontendApplication(dlg.Application);
+            dlg.Application = EnsureMegaMolFrontendApplication(dlg.Application);
             dlg.WorkingDir = Properties.Settings.Default.WorkingDirectory;
             dlg.UseApplicationWorkingDir = Properties.Settings.Default.UseApplicationDirectoryAsWorkingDirectory;
 
             DialogResult dr = dlg.ShowDialog();
 
-            if ((dr == System.Windows.Forms.DialogResult.OK) || (dr == System.Windows.Forms.DialogResult.Yes)) {
+            if ((dr == DialogResult.OK) || (dr == DialogResult.Yes)) {
                 Properties.Settings.Default.StartShellType = (int)dlg.ShellType;
                 Properties.Settings.Default.StartShellKeepOpen = dlg.KeepShellOpen;
                 Properties.Settings.Default.LiveConnection = dlg.LiveConnection;
-                this.tabStartParameters[tp] = dlg.StartArgs;
+                tabStartParameters[tp] = dlg.StartArgs;
                 if (Properties.Settings.Default.StartParamHistory == null) Properties.Settings.Default.StartParamHistory = new System.Collections.Specialized.StringCollection();
                 if (!string.IsNullOrWhiteSpace(dlg.StartArgs)) {
                     Properties.Settings.Default.StartParamHistory.Remove(dlg.StartArgs);
@@ -1895,8 +1891,8 @@ in PowerShell:
                 Properties.Settings.Default.Save();
             }
 
-            if (dr == System.Windows.Forms.DialogResult.Yes) {
-                this.startMegaMolToolStripMenuItem_Click(null, null);
+            if (dr == DialogResult.Yes) {
+                startMegaMolToolStripMenuItem_Click(null, null);
             }
         }
 
@@ -1910,7 +1906,7 @@ in PowerShell:
             if (string.IsNullOrWhiteSpace(p) && plugins != null) {
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
                     // file not specified, so assume console based on the core
-                    foreach (Data.PluginFile pf in this.plugins) {
+                    foreach (Data.PluginFile pf in plugins) {
                         if (!pf.IsCore) continue;
                         Match m = Regex.Match(pf.Filename, @"^(.*)MegaMolCore([^\.]*)\.dll$");
                         if (m.Success) {
@@ -1920,7 +1916,7 @@ in PowerShell:
                     }
                 } else {
                     // file not specified, so assume console based on the core
-                    foreach (Data.PluginFile pf in this.plugins) {
+                    foreach (Data.PluginFile pf in plugins) {
                         if (!pf.IsCore) continue;
                         Match m = Regex.Match(pf.Filename, @"^(.*)/[^/]+/MegaMolCore([^\.]*)\.so$");
                         if (m.Success) {
@@ -1963,7 +1959,7 @@ in PowerShell:
             try {
 
                 ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = this.EnsureMegaMolFrontendApplication(Properties.Settings.Default.MegaMolBin);
+                psi.FileName = EnsureMegaMolFrontendApplication(Properties.Settings.Default.MegaMolBin);
                 psi.WorkingDirectory = Properties.Settings.Default.UseApplicationDirectoryAsWorkingDirectory
                     ? Path.GetDirectoryName(psi.FileName)
                     : Properties.Settings.Default.WorkingDirectory;
@@ -1972,9 +1968,9 @@ in PowerShell:
                 StartParamDialog.StartShellType shell = (StartParamDialog.StartShellType)Properties.Settings.Default.StartShellType;
                 bool keepOpen = Properties.Settings.Default.StartShellKeepOpen;
                 bool live = Properties.Settings.Default.LiveConnection;
-                string cmdLine = this.EnsureCmdLineArguments(this.tabStartParameters[tp],
-                    this.makeCmdLine(tp, this.tabFileNames[tp], false),
-                    this.makeCmdLine(tp, this.tabFileNames[tp], true),
+                string cmdLine = EnsureCmdLineArguments(tabStartParameters[tp],
+                    makeCmdLine(tp, tabFileNames[tp], false),
+                    makeCmdLine(tp, tabFileNames[tp], true),
                     shell);
 
                 MegaMolInstanceInfo mmii = new MegaMolInstanceInfo();
@@ -2029,15 +2025,15 @@ in PowerShell:
         private void printGraphToolStripMenuItem_Click(object sender, EventArgs e) {
             try {
                 Rectangle bounds = Rectangle.Empty;
-                foreach (GraphicalModule gm in this.tabModules[this.tabViews.SelectedTab]) {
+                foreach (GraphicalModule gm in tabModules[tabViews.SelectedTab]) {
                     Rectangle gmb = new Rectangle(gm.Position, gm.Bounds);
                     bounds = bounds.IsEmpty ? gmb : Rectangle.Union(bounds, gmb);
                 }
                 if (bounds.IsEmpty) throw new Exception("Graph is empty.");
 
-                this.printDialog1.Document = this.printDocument1;
-                if (this.printDialog1.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-                this.printDocument1.Print();
+                printDialog1.Document = printDocument1;
+                if (printDialog1.ShowDialog() != DialogResult.OK) return;
+                printDocument1.Print();
 
             } catch (Exception ex) {
                 MessageBox.Show("Failed: " + ex);
@@ -2052,7 +2048,7 @@ in PowerShell:
         /// <param name="e">The print page arguments</param>
         private void printDocument1_PrintPage(object sender, System.Drawing.Printing.PrintPageEventArgs e) {
             Rectangle bounds = Rectangle.Empty;
-            foreach (GraphicalModule gm in this.tabModules[this.tabViews.SelectedTab]) {
+            foreach (GraphicalModule gm in tabModules[tabViews.SelectedTab]) {
                 Rectangle gmb = gm.DrawBounds;
                 bounds = bounds.IsEmpty ? gmb : Rectangle.Union(bounds, gmb);
             }
@@ -2065,15 +2061,15 @@ in PowerShell:
             e.Graphics.ScaleTransform(scale, scale);
             e.Graphics.TranslateTransform(-bounds.Left, -bounds.Top);
 
-            object sel = this.tabSelectedObjects[this.tabViews.SelectedTab];
-            this.tabSelectedObjects[this.tabViews.SelectedTab] = null;
-            foreach (GraphicalModule gm in this.tabModules[this.tabViews.SelectedTab]) {
+            object sel = tabSelectedObjects[tabViews.SelectedTab];
+            tabSelectedObjects[tabViews.SelectedTab] = null;
+            foreach (GraphicalModule gm in tabModules[tabViews.SelectedTab]) {
                 gm.Draw(e.Graphics);
             }
-            foreach (GraphicalConnection gc in this.tabConnections[this.tabViews.SelectedTab]) {
+            foreach (GraphicalConnection gc in tabConnections[tabViews.SelectedTab]) {
                 gc.Draw(e.Graphics);
             }
-            this.tabSelectedObjects[this.tabViews.SelectedTab] = sel;
+            tabSelectedObjects[tabViews.SelectedTab] = sel;
         }
 
         private void moduleFilterBox_TextChanged(object sender, EventArgs e) {
@@ -2082,13 +2078,13 @@ in PowerShell:
             } else {
                 cmdResetFilter.Hide();
             }
-            this.updateFiltered();
+            updateFiltered();
         }
 
         private void lbModules_SelectedIndexChanged(object sender, EventArgs e) {
             Data.Module m = (lbModules.SelectedItem as Data.Module);
             if (m != null) {
-                moduleText.Text = m.Description + System.Environment.NewLine + "[" + m.PluginName + "]";
+                moduleText.Text = m.Description + Environment.NewLine + "[" + m.PluginName + "]";
             }
         }
 
@@ -2100,7 +2096,7 @@ in PowerShell:
         private void Form1_Shown(object sender, EventArgs e) {
             updateFiltered();
             refreshCurrent();
-            this.resizePanel();
+            resizePanel();
 
             if (Properties.Settings.Default.StartupChecks) {
                 Util.StartupCheckForm scform = new Util.StartupCheckForm();
@@ -2119,11 +2115,11 @@ in PowerShell:
             if (String.IsNullOrWhiteSpace(openParamfileDialog.InitialDirectory)) {
                 try {
                     openParamfileDialog.InitialDirectory = Properties.Settings.Default.UseApplicationDirectoryAsWorkingDirectory
-                        ? System.IO.Path.GetDirectoryName(Properties.Settings.Default.MegaMolBin)
+                        ? Path.GetDirectoryName(Properties.Settings.Default.MegaMolBin)
                         : Properties.Settings.Default.WorkingDirectory;
                 } catch { }
             }
-            if (openParamfileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+            if (openParamfileDialog.ShowDialog() == DialogResult.OK) {
                 Io.Paramfile paramFile = new Io.Paramfile();
                 try {
                     paramFile.Load(openParamfileDialog.FileName);
@@ -2138,7 +2134,7 @@ in PowerShell:
                 // todo: is this a problem?
                 ipff.Modules = tabModules[tp].ToList<GraphicalModule>();
                 ipff.ParamFile = paramFile;
-                if (ipff.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                if (ipff.ShowDialog() == DialogResult.OK) {
                     object oo = propertyGrid1.SelectedObject;
                     propertyGrid1.SelectedObject = null;
                     propertyGrid1.SelectedObject = oo;
@@ -2157,23 +2153,23 @@ in PowerShell:
             if (tp == null) return;
 
             string app = Properties.Settings.Default.MegaMolBin;
-            app = this.EnsureMegaMolFrontendApplication(app);
+            app = EnsureMegaMolFrontendApplication(app);
             if (!File.Exists(app)) app = null;
 
-            string core = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(app), "MegaMolCore.dll");
+            string core = Path.Combine(Path.GetDirectoryName(app), "MegaMolCore.dll");
             if (!File.Exists(core)) core = null;
 
             string workDir = Properties.Settings.Default.WorkingDirectory;
             if (Properties.Settings.Default.UseApplicationDirectoryAsWorkingDirectory) {
-                workDir = System.IO.Path.GetDirectoryName(app);
+                workDir = Path.GetDirectoryName(app);
             }
 
-            string args = this.makeCmdLine(tp, this.tabFileNames[tp], false);
+            string args = makeCmdLine(tp, tabFileNames[tp], false);
 
             string ext = ".mmpld";
             string name = "MegaMol™ Particle List Data";
-            string defaultIcon = this.safeCmdLineString(core) + ",-1001";
-            string openCommand = this.safeCmdLineString(app) + " " + args.Replace("::filename \"\"", "::filename \"%1\"");
+            string defaultIcon = safeCmdLineString(core) + ",-1001";
+            string openCommand = safeCmdLineString(app) + " " + args.Replace("::filename \"\"", "::filename \"%1\"");
 
             Util.RegisterDataFileTypeDialog regDlg = new Util.RegisterDataFileTypeDialog();
 
@@ -2187,7 +2183,7 @@ in PowerShell:
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
-            foreach (TabPage tp in this.tabViews.TabPages) {
+            foreach (TabPage tp in tabViews.TabPages) {
                 MegaMolInstanceInfo mmii = tp.Tag as MegaMolInstanceInfo;
                 if (mmii != null && mmii.Process != null) {
                     mmii.StopObserving();
@@ -2210,8 +2206,8 @@ in PowerShell:
         private void toolStripPaste_Click(object sender, EventArgs e) {
             GraphicalModule m = pasteModule(tabViews.SelectedTab, copiedModule);
             selectedModule = m;
-            this.propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
-            this.refreshCurrent();
+            propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
+            refreshCurrent();
             resizePanel();
         }
 

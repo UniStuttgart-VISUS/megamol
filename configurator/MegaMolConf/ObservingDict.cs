@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
     class ObservingDict<T> : IDictionary<TabPage, ObservableCollection<T>> {
 
-        public delegate void ChangedItemsCallback(System.Collections.IList addedList, System.Collections.IList deletedList);
+        public delegate void ChangedItemsCallback(IList addedList, IList deletedList);
 
         public event ChangedItemsCallback OnChangedItems;
 
