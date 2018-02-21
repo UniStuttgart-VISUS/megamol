@@ -84,7 +84,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMDELETEVIEW "mmDeleteView"
 #define MMC_LUA_MMCREATEJOB "mmCreateJob"
 #define MMC_LUA_MMDELETEJOB "mmDeleteJob"
-#define MMC_LUA_MMQUERYMODULES "mmQueryModules"
+#define MMC_LUA_MMQUERYMODULEGRAPH "mmQueryModuleGraph"
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
 
@@ -116,7 +116,7 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"(string name)\n\tDelete the module called <name>." },
     { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
     { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>." },
-    { MMC_LUA_MMQUERYMODULES, MMC_LUA_MMQUERYMODULES"()\n\tShow the instantiated modules and their children." },
+    { MMC_LUA_MMQUERYMODULEGRAPH, MMC_LUA_MMQUERYMODULEGRAPH"()\n\tShow the instantiated modules and their children." },
     { MMC_LUA_MMHELP, MMC_LUA_MMHELP"()\n\tShow this help." },
     { MMC_LUA_MMCREATEVIEW, MMC_LUA_MMCREATEVIEW"(string viewName, string viewModuleClass, string viewModuleName)"
     "\n\tCreate a new window/view and the according namespace <viewName> alongside it."
@@ -158,7 +158,7 @@ MMC_LUA_MMCREATEMODULE "=" MMC_LUA_MMCREATEMODULE ","
 MMC_LUA_MMDELETEMODULE "=" MMC_LUA_MMDELETEMODULE ","
 MMC_LUA_MMCREATECALL "=" MMC_LUA_MMCREATECALL ","
 MMC_LUA_MMDELETECALL "=" MMC_LUA_MMDELETECALL ","
-MMC_LUA_MMQUERYMODULES "=" MMC_LUA_MMQUERYMODULES ","
+MMC_LUA_MMQUERYMODULEGRAPH "=" MMC_LUA_MMQUERYMODULEGRAPH ","
 MMC_LUA_MMHELP "=" MMC_LUA_MMHELP ","
 MMC_LUA_MMCREATEVIEW "=" MMC_LUA_MMCREATEVIEW ","
 MMC_LUA_MMDELETEVIEW "=" MMC_LUA_MMDELETEVIEW ","
@@ -345,7 +345,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMCREATEJOB, &dispatch<&LuaState::CreateJob>);
         lua_register(L, MMC_LUA_MMDELETEJOB, &dispatch<&LuaState::DeleteJob>);
 
-        lua_register(L, MMC_LUA_MMQUERYMODULES, &dispatch<&LuaState::QueryModules>);
+        lua_register(L, MMC_LUA_MMQUERYMODULEGRAPH, &dispatch<&LuaState::QueryModuleGraph>);
 
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
@@ -1206,14 +1206,14 @@ int megamol::core::LuaState::DeleteView(lua_State *L) {
 }
 
 
-int megamol::core::LuaState::QueryModules(lua_State *L) {
-    if (this->checkRunning(MMC_LUA_MMQUERYMODULES)) {
+int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMQUERYMODULEGRAPH)) {
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
         if (!anoc) {
-            lua_pushstring(L, MMC_LUA_MMQUERYMODULES": no root");
+            lua_pushstring(L, MMC_LUA_MMQUERYMODULEGRAPH": no root");
             lua_error(L);
             return 0;
         }
