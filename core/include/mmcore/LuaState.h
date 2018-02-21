@@ -216,6 +216,8 @@ namespace utility {
         int DeleteView(lua_State *L);
 
         int QueryModuleGraph(lua_State *L);
+        int ListCalls(lua_State *L);
+        int ListModules(lua_State *L);
 
         int Help(lua_State *L);
 

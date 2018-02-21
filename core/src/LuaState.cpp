@@ -85,6 +85,8 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMCREATEJOB "mmCreateJob"
 #define MMC_LUA_MMDELETEJOB "mmDeleteJob"
 #define MMC_LUA_MMQUERYMODULEGRAPH "mmQueryModuleGraph"
+#define MMC_LUA_MMLISTMODULES "mmListModules"
+#define MMC_LUA_MMLISTCALLS "mmListCalls"
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
 
@@ -126,7 +128,9 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     "\n\tCreate a new background job and the according namespace <jobName> alongside it."
     "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window." },
     {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB"TODO" },
-    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE"(string name)\n\tReturn the value of env variable <name>." }
+    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE"(string name)\n\tReturn the value of env variable <name>." },
+    {MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
+    {MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."}
 };
 
 // clang-format off
@@ -165,6 +169,8 @@ MMC_LUA_MMDELETEVIEW "=" MMC_LUA_MMDELETEVIEW ","
 MMC_LUA_MMCREATEJOB "=" MMC_LUA_MMCREATEJOB ","
 MMC_LUA_MMDELETEJOB "=" MMC_LUA_MMDELETEJOB ","
 MMC_LUA_MMGETENVVALUE "=" MMC_LUA_MMGETENVVALUE ","
+MMC_LUA_MMLISTCALLS "=" MMC_LUA_MMLISTCALLS ","
+MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -348,6 +354,8 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMQUERYMODULEGRAPH, &dispatch<&LuaState::QueryModuleGraph>);
 
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
+        lua_register(L, MMC_LUA_MMLISTCALLS, &dispatch<&LuaState::ListCalls>);
+        lua_register(L, MMC_LUA_MMLISTMODULES, &dispatch<&LuaState::ListModules>);
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
 
@@ -1223,18 +1231,24 @@ int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
         //queryModules(answer, anoc);
         std::vector<AbstractNamedObjectContainer::const_ptr_type> anoStack;
         anoStack.push_back(anoc);
-        while (anoStack.size() > 0) {
+        while (!anoStack.empty()) {
             anoc = anoStack.back();
             anoStack.pop_back();
             
             if (anoc) {
-                answer << "Module:   " << anoc.get()->FullName() << std::endl;
+                const auto m = Module::dynamic_pointer_cast(anoc);
+                answer << (m != nullptr ? "Module:    " : "Container: ") << anoc.get()->FullName() << std::endl;
                 if (anoc.get()->Parent() != nullptr) {
-                    answer << "Parent:   " << anoc.get()->Parent()->FullName() << std::endl;
+                    answer << "Parent:    " << anoc.get()->Parent()->FullName() << std::endl;
                 } else {
-                    answer << "Parent:   none" << std::endl;
+                    answer << "Parent:    none" << std::endl;
                 }
-                answer << "Children: ";
+                const char *cn = nullptr;
+                if (m != nullptr) {
+                    cn = m->ClassName();
+                }
+                answer << "Class:     " << ((cn != nullptr) ? cn : "unknown") << std::endl;
+                answer << "Children:  ";
                 auto it_end = anoc->ChildList_End();
                 int numChildren = 0;
                 for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
@@ -1267,6 +1281,90 @@ int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
     return 0;
 }
 
+int megamol::core::LuaState::ListCalls(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+        AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (!ano) {
+            lua_pushstring(L, MMC_LUA_MMQUERYMODULEGRAPH": no root");
+            lua_error(L);
+            return 0;
+        }
+
+        std::stringstream answer;
+
+        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
+        anoStack.push_back(anor);
+        while (!anoStack.empty()) {
+            AbstractNamedObject::const_ptr_type ano = anoStack.back();
+            anoStack.pop_back();
+
+            AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+            const CallerSlot *caller = dynamic_cast<const CallerSlot *>(ano.get());
+
+            if (caller) {
+                // TODO there must be a better way
+                const Call *c = const_cast<CallerSlot *>(caller)->CallAs<Call>();
+                if (c != nullptr) {
+                    answer << c->ClassName() << ";" << c->PeekCallerSlot()->FullName() << "," << c->PeekCalleeSlot()->FullName() << std::endl;
+                }
+            }
+
+            if (anoc) {
+                const auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    anoStack.push_back(*it);
+                }
+            }
+        }
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::ListModules(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+        AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+        if (!ano) {
+            lua_pushstring(L, MMC_LUA_MMQUERYMODULEGRAPH": no root");
+            lua_error(L);
+            return 0;
+        }
+
+        std::stringstream answer;
+
+        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
+        anoStack.push_back(anor);
+        while (!anoStack.empty()) {
+            AbstractNamedObject::const_ptr_type ano = anoStack.back();
+            anoStack.pop_back();
+
+            AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+            const Module *mod = dynamic_cast<const Module *>(ano.get());
+
+            if (mod) {
+                answer << mod->ClassName() << ";" << mod->FullName() << std::endl;
+            }
+
+            if (anoc) {
+                const auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    anoStack.push_back(*it);
+                }
+            }
+        }
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
 
 int megamol::core::LuaState::Help(lua_State *L) {
     std::stringstream out;
