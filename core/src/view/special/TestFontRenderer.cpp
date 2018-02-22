@@ -38,8 +38,8 @@ using namespace megamol::core::view::special;
 TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     simpleFont(),
     outlineFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-    //sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
-    sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
+    sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
+    //sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
     paramRenderMode1("01_RenderMode-01", "... ."),
     paramRenderMode2("02_RenderMode-02", "... ."),
     paramRenderMode3("03_RenderMode-03", "... ."),
@@ -122,7 +122,7 @@ bool TestFontRenderer::create(void) {
     }
 
     // Load file with test text -----------------------------------------------
-    vislib::StringA filename = ".\\fonts\\testtext.txt";
+    vislib::StringA filename = ".\\fonts\\TESTTEXT";
     vislib::sys::ASCIIFileBuffer file;
     if (!file.LoadFile(filename)) {
         vislib::sys::Log::DefaultLog.WriteError("[TestFontRenderer] [create] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
@@ -253,7 +253,7 @@ bool TestFontRenderer::Render(core::Call& call) {
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
 
-    vislib::StringA hallo = "äÄöÖüÜß\n... Hallo Welt ...\n1234567890\n   Qualle  \n| ° ^ € ™ |\näÄöÖüÜß";
+    vislib::StringA hallo = "AV Wa WA \näÄöÖüÜß\n... Hallo Welt ...\n1234567890\n   Qualle  \n| ° ^ € ™ |\näÄöÖüÜß";
     float fontSize = 0.1f;
     float lineWidth = 8.0f;
     unsigned int lineCount = 0;
@@ -370,19 +370,19 @@ bool TestFontRenderer::Render(core::Call& call) {
     // ------------------------------------------------------------------------
     else if (this->renderMode == 5) {
 
-       this->simpleFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+       this->simpleFont.DrawString(-0.5f, -0.5f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 6) {
 
         glEnable(GL_POLYGON_SMOOTH);
         //glDisable(GL_POLYGON_SMOOTH);
-        this->outlineFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+        this->outlineFont.DrawString(-0.5f, -0.5f, lineWidth, 1.0f, fontSize, true, hallo, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 7) {
 
-        this->sdfFont.DrawString(0.0f, 0.0f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        this->sdfFont.DrawString(-0.5f, -0.5f, lineWidth, 1.0f, fontSize, true, hallo, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 8) {

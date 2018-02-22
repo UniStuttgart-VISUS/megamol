@@ -302,42 +302,28 @@ namespace megamol {
         * variables
         **********************************************************************/
 
-        /** Vertex buffer object attributes. */
-        enum VBOAttrib {
-            POSITION = 0,
-            TEXTURE = 1
-        };
-
-        /** Vertex buffer object info. */
-        struct SDFVBO {
-            GLuint                 handle;  // buffer handle
-            vislib::StringA        name;    // varaible name of attribute in shader
-            GLuint                 index;   // index of attribute location
-            unsigned int           dim;     // dimension of data
-        };
-
         /** The glyph kernings. */
         struct SDFGlyphKerning {
             unsigned int previous;  // The previous character id
-            int amount;             // How much the x position should be adjusted when drawing this character immediately following the previous one
+            unsigned int current;   // The current character id
+            float xamount;          // How much the x position should be adjusted when drawing this character immediately following the previous one
         };
 
         /** The SDF glyph info. */
         struct SDFGlyphInfo {
-            unsigned int id;  // The character id
-            float texX0;      // The left position of the character image in the texture
-            float texY0;      // The top position of the character image in the texture
-            float texX1;      // The right position of the character image in the texture
-            float texY1;      // The bottom position of the character image in the texture
-            float width;      // The width of the character 
-            float height;     // The height of the character 
-            float xoffset;    // How much the current position should be offset when copying the image from the texture to the screen
-            float yoffset;    // How much the current position should be offset when copying the image from the texture to the screen
-            float xadvance;   // How much the current position should be advanced after drawing the character
-            // Kerning
-            std::vector<SDFGlyphKerning> kernings;
+            unsigned int id;          // The character id
+            float texX0;              // The left position of the character image in the texture
+            float texY0;              // The top position of the character image in the texture
+            float texX1;              // The right position of the character image in the texture
+            float texY1;              // The bottom position of the character image in the texture
+            float width;              // The width of the character 
+            float height;             // The height of the character 
+            float xoffset;            // How much the current position should be offset when copying the image from the texture to the screen
+            float yoffset;            // How much the current position should be offset when copying the image from the texture to the screen
+            float xadvance;           // How much the current position should be advanced after drawing the character
+            unsigned int kernCnt;     // Number of kernings in array
+            SDFGlyphKerning  *kerns;  // Array of kernings
         };
-
 
         /** The sdf font. */
         BitmapFont font;
@@ -355,8 +341,26 @@ namespace megamol {
         std::vector<SDFGlyphInfo> glyphs;
 
         /** The glyphs sorted by index. */
-        SDFGlyphInfo** glyphIdx;
-        unsigned int   maxIdx;
+        SDFGlyphInfo **glyphIdx;
+        /** Numbner of indices in index array. */
+        unsigned int   idxCnt;
+
+        /** The glyph kernings. */
+        std::vector<SDFGlyphKerning> kernings;
+
+        /** Vertex buffer object attributes. */
+        enum VBOAttrib {
+            POSITION = 0,
+            TEXTURE = 1
+        };
+
+        /** Vertex buffer object info. */
+        struct SDFVBO {
+            GLuint                 handle;  // buffer handle
+            vislib::StringA        name;    // varaible name of attribute in shader
+            GLuint                 index;   // index of attribute location
+            unsigned int           dim;     // dimension of data
+        };
 
         /** Vertex array object. */
         GLuint vaoHandle;
