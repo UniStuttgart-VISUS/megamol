@@ -614,9 +614,10 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
     // < 0 -(1+index) of the glyph and new line
     // = 0 end
 
-    if (sizeof(idx) < 4) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UNSIGNED INT int must have 4 bytes, but has %i. \n", sizeof(idx));
-    }
+    // 'Unsigned int' needs to have at least 3 bytes for encoding utf8 in decimal
+    //if (sizeof(idx) < 3) {
+    //    vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UNSIGNED INT int must have at least 3 bytes for utf8 encoding, but has only %i. \n", sizeof(idx));
+    //}
 
     // build glyph run
     for (SIZE_T i = 0; i < txtlen; i++) {
@@ -629,8 +630,9 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
         // --------------------------------------------------------------------
         // UTF8-Bytes to Decimal
 
-        // ! Following variables must be used "unisgned" so that always zeros are shifted and not ones ...
-        // !so far: NO CHECK FOR INVALID UTF8 byte sequences ...
+        // (Following variables are "unisgned" so that always zeros are shifted and not ones ...)
+        // ! so far: THERE IS NO COMPLETE CHECK FOR INVALID UTF8 BYTE SEQUENCES ... (only slowing down performance)
+        // ASSUMING well formed utf8 encoding ...
 
         unsigned char byte = txtutf8[i];
         // If byte >= 0 -> ASCII-Byte: 0XXXXXXX = 0...127
@@ -641,18 +643,30 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
         else { 
             // Supporting UTF8 for up to 3 bytes:
             if (byte >= (unsigned char)(0b11100000)) { //>224 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
+                //if (folBytes > 0) { // Basic validation check ...
+                //   vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 3-Byte - ERROR ...\n");
+                //    continue;
+                //}
                 folBytes = 2;
                 idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // consider only last 4 bits
                 idx = (idx << 12); // 2*6 Bits are following
                 continue;
             }
             else if (byte >= (unsigned char)(0b11000000)) { //>192 110XXXXX -> start 2-Byte UTF8, 1 byte is following
+                //if (folBytes > 0) { // Basic validation check ...
+                //    vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 2-Byte - ERROR ...\n");
+                //    continue;
+                //}
                 folBytes = 1;
                 idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // consider only last 5 bits
                 idx = (idx << 6); // 1*6 Bits are following
                 continue;
             }
             else if (byte >= (unsigned char)(0b10000000)) { //> 128 10XXXXXX -> "following" 1-2 bytes
+                //if (folBytes == 0) { // Basic validation check ...
+                //    vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 1-Byte - ERROR ...\n");
+                //    continue;
+                //}
                 folBytes--;
                 tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // consider only last 6 bits
                 idx    = (idx | (tmpIdx << (folBytes*6))); // shift tmpIdx depending on following byte and 'merge' (|) with idx
@@ -661,18 +675,18 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
                 }
             }
             else {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] BUG ...\n");
+                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF error ... BUG?\n");
+                continue;
             }
         }
 
+        // Check if glyph info is available
         if (idx > this->maxIdx) {
-            // Glyph not available ....
-            //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] Glyph not available ...\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > maxIdx = \"%i\".\n", idx, this->maxIdx);
             continue;
         }
         if (this->glyphIdx[idx] == NULL) {
-            // Glyph not available ....
-            //vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] Glyph not available ...\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph info not available for: \"%i\".\n", idx);
             continue;
         }
 
