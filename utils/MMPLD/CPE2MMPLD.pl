@@ -29,6 +29,38 @@ print "lastChunkNum: $lastChunkNum\n";
 
 my $currPoint = 0;
 my $oldperc = 0;
+my ($minx, $miny, $minz, $maxx, $maxy, $maxz);
+
+my @files = ();
+
+sub adjustBounds {
+    my ($x, $y, $z) = @_;
+    
+    if ($currPoint == 0) {
+        $minx = $maxx = $x;
+        $miny = $maxy = $y;
+        $minz = $maxz = $z;
+    } else {
+        if ($x < $minx) {
+            $minx = $x;
+        }
+        if ($y < $miny) {
+            $miny = $y;
+        }
+        if ($z < $minz) {
+            $minz = $z;
+        }
+        if ($maxx < $x) {
+            $maxx = $x;
+        }
+        if ($maxy < $y) {
+            $maxy = $y;
+        }
+        if ($maxz < $z) {
+            $maxz = $z;
+        }
+    }
+}
 
 for (my $chunkIdx = 0; $chunkIdx < $numChunks; $chunkIdx++) {
     my $parts = $numPerChunk;
@@ -39,6 +71,7 @@ for (my $chunkIdx = 0; $chunkIdx < $numChunks; $chunkIdx++) {
     my $fileName = "$outfile.$chunkIdx.mmpld";
     print "writing particle $currPoint to " . ($currPoint + $parts - 1) . " into $fileName\n";
     my $m = MMPLD->new({filename=>$fileName, numframes=>1});
+    push @files, $m;
     $m->StartFrame({frametime=>1.23, numlists=>1});
 
     $m->StartList({
@@ -58,6 +91,7 @@ for (my $chunkIdx = 0; $chunkIdx < $numChunks; $chunkIdx++) {
         $m->AddParticle({
             x=>$vals[0], y=>$vals[1], z=>$vals[2], r=>$vals[4] / 255.0, g=>$vals[5] / 255.0, b=>$vals[6] / 255.0
         });
+        adjustBounds($vals[0], $vals[1], $vals[2]);
         
         $currPoint++;
         my $newperc = int(($currPoint * 100) / $numPoints);
@@ -70,3 +104,8 @@ for (my $chunkIdx = 0; $chunkIdx < $numChunks; $chunkIdx++) {
 }
 
 print "got $currPoint points, should be $numPoints: " . (($currPoint==$numPoints)?'Ok':'Problem') . ".\n";
+print "rewriting bounding boxes...\n";
+
+foreach my $f (@files) {
+    $f->OverrideBBox($minx,$miny,$minz,$maxx,$maxy,$maxz);
+}
