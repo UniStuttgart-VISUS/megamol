@@ -825,24 +825,34 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
 
                 geo.push_back(ospNewGeometry("spheres"));
+                {
+                    float floatWidth = element.colorLength;
+                    if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_UINT8_RGBA) {
+                        floatWidth = 1;
+                    }
 
-                if (element.vertexLength > 3) {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                } else {
-                    vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
-                    //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
-                    //ospSet1i(geo, "color_stride", element.vertexLength + element.colorLength);
+                    vertexData = ospNewData(element.partCount * (element.vertexLength + floatWidth), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + floatWidth * sizeof(float));
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "spheres", vertexData);
+                    ospSetData(geo.back(), "color", NULL);
 
                 }
-                ospCommit(vertexData);
-                //ospCommit(colorData);
-                ospSetData(geo.back(), "spheres", vertexData);
-                ospSetData(geo.back(), "colorData", NULL);
+
+                if (element.vertexLength > 3) {
+                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                } else {
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
+                if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                    element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+                    colorData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+
+                    ospCommit(colorData);
+                    ospSet1i(geo.back(), "color_offset", element.vertexLength*sizeof(float));
+                    ospSet1i(geo.back(), "color_stride", element.colorLength*sizeof(float) + element.vertexLength * sizeof(float));
+                    ospSetData(geo.back(), "color", colorData);
+                }
 
                 break;
             case geometryTypeEnum::TRIANGLES:

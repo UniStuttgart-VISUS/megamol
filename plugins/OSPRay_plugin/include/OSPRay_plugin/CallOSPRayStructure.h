@@ -7,6 +7,7 @@
 
 #pragma once
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/BoundingBoxes.h"
 #include <map>
@@ -70,14 +71,15 @@ public:
     std::shared_ptr<const void*> raw;
 
 
-    unsigned int voxelCount = voxelCount;
-    unsigned int maxDim = maxDim;
+    unsigned int voxelCount;
+    unsigned int maxDim;
     unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
     unsigned int colorLength;
     unsigned int partCount;
     float globalRadius;
+    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
 
     bool clippingBoxActive;
     bool dataChanged;
