@@ -90,10 +90,15 @@ public:
     void setStructureType(structureTypeEnum strtype);
     structureTypeEnum getStructureType();
 
+    void resetDirty();
+    void setDirty();
+    bool isDirty();
+
 private:
     void* api_obj;
     float timeStamp;
     structureTypeEnum type;
+    bool dirtyFlag;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayAPIObject> CallOSPRayAPIObjectDescription;

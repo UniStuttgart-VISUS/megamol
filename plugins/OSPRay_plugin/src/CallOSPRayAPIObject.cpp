@@ -42,3 +42,15 @@ void megamol::ospray::CallOSPRayAPIObject::setStructureType(structureTypeEnum st
 structureTypeEnum megamol::ospray::CallOSPRayAPIObject::getStructureType() {
     return this->type;
 }
+
+void megamol::ospray::CallOSPRayAPIObject::resetDirty() {
+    this->dirtyFlag = false;
+}
+
+void megamol::ospray::CallOSPRayAPIObject::setDirty() {
+    this->dirtyFlag = true;
+}
+
+bool megamol::ospray::CallOSPRayAPIObject::isDirty() {
+    return this->dirtyFlag;
+}

@@ -95,13 +95,13 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     // Color data type check
     if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-        colorLength = 4 * sizeof(float);
+        colorLength = 4;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-        colorLength = 1 * sizeof(float);
+        colorLength = 1;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-        colorLength = 3 * sizeof(float);
+        colorLength = 3;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-        colorLength = 4 * sizeof(uint8_t);
+        colorLength = 4;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
         colorLength = 0;
     }
@@ -115,6 +115,7 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.colorLength = colorLength;
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
+    this->structureContainer.mmpldColor = parts.GetColourDataType();
 
     return true;
 }

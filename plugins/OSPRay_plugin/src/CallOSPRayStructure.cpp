@@ -31,6 +31,7 @@ OSPRayStructureContainer::OSPRayStructureContainer() :
  clipPlaneColor(NULL),
 raw(NULL),
 ospstructure(NULL),
+mmpldColor(core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE),
 type(structureTypeEnum::UNINITIALIZED) { }
 
 OSPRayStructureContainer::~OSPRayStructureContainer() {
