@@ -762,20 +762,19 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
         // Run contains only available character indices (=> glyph != NULL)
         SDFGlyphInfo *glyph = this->glyphIdx[((*run) < 0) ? (-1 - (*run)) : ((*run) - 1)];
 
+        // Adjust positions if character indicates a new line
         if ((*run) < 0) {
             gx = x;
-
             if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
             }
             else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
                 gx -= this->lineWidth(run, false) * size;
             }
-
             gy += (sy);
         }
 
-        // Kerning data
+        // Get kerning
         kern = 0.0f;
         for (unsigned int i = 0; i < glyph->kernCnt; i++) {
             if (lastGlyphId == glyph->kerns[i].previous) {
@@ -784,7 +783,7 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
             }
         }
         
-        // Position data
+        // Set position data
         posData[charCnt * 12 + 0]  = size * (glyph->xoffset                 + kern)  + gx; // X0
         posData[charCnt * 12 + 1]  = sy   * (glyph->yoffset)                         + gy; // Y0
         posData[charCnt * 12 + 2]  =                                                    z; // Z0
@@ -798,7 +797,7 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
         posData[charCnt * 12 + 10] = sy   * (glyph->yoffset + glyph->height)         + gy; // Y3
         posData[charCnt * 12 + 11] =                                                    z; // Z3
 
-        // Texture data
+        // Set texture data
         texData[charCnt * 8 + 0] = glyph->texX0; // X0
         texData[charCnt * 8 + 1] = glyph->texY0; // Y0
         texData[charCnt * 8 + 2] = glyph->texX1; // X1
@@ -808,7 +807,7 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
         texData[charCnt * 8 + 6] = glyph->texX0; // X3
         texData[charCnt * 8 + 7] = glyph->texY1; // Y3
 
-        // ...
+        // Update info for next character
         charCnt++;
         gx += ((glyph->xadvance + kern) * size);
         lastGlyphId = glyph->id;
@@ -1038,17 +1037,17 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     float texHeight   = 0.0f;
     float lineHeight  = 0.0f;
     
-    // Read info file line by line
-    int idx;
-    vislib::StringA line;
-    float width;
-    float height;
-    unsigned int maxId = 0;;
+    int    idx;
+    float  width;
+    float  height;
 
+    unsigned int maxId = 0;;
     std::vector<SDFGlyphKerning> tmpKerns;
     tmpKerns.clear();
 
+    // Read info file line by line
     size_t lineCnt = 0;
+    vislib::StringA line;
     while (lineCnt < file.Count()) {
         line = static_cast<vislib::StringA>(file.Line(lineCnt));
         // (1) Parse common info line
@@ -1158,10 +1157,6 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
             }
         }
     }
-
-
-
-
 
     return true;
 }
