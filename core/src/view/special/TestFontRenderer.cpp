@@ -38,8 +38,8 @@ using namespace megamol::core::view::special;
 TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     simpleFont(),
     outlineFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-    sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
-    //sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
+    //sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
+    sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
     paramRenderMode1("01_RenderMode-01", "... ."),
     paramRenderMode2("02_RenderMode-02", "... ."),
     paramRenderMode3("03_RenderMode-03", "... ."),
@@ -253,7 +253,7 @@ bool TestFontRenderer::Render(core::Call& call) {
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
 
-    vislib::StringA hallo = "... Hallo Welt ...\n1234567890\nQualle";
+    vislib::StringA hallo = "... Hallo Welt ...\n1234567890\n   Qualle  \n° ^ € ™ ";
     float fontSize = 0.1f;
     float lineWidth = 8.0f;
     unsigned int lineCount = 0;

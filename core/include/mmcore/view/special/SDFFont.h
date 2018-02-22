@@ -355,7 +355,8 @@ namespace megamol {
         std::vector<SDFGlyphInfo> glyphs;
 
         /** The glyphs sorted by index. */
-        std::vector<SDFGlyphInfo *> glyphIdxLinks;
+        SDFGlyphInfo** glyphIdx;
+        unsigned int   maxIdx;
 
         /** Vertex array object. */
         GLuint vaoHandle;
@@ -398,7 +399,7 @@ namespace megamol {
         /**
         * Answer the width of the line 'run' starts.
         *
-        * @param run The glyph run
+        * @param run     The glyph run
         * @param iterate If 'true' 'run' will be set to point to the first
         *                glyph of the next line. If 'false' the value of
         *                'run' will not be changed
@@ -410,7 +411,7 @@ namespace megamol {
         /**
         * Generates the glyph runs for the text 'txt'
         *
-        * @param txt The input text
+        * @param txt      The input text
         * @param maxWidth The maximum width (normalized logical units)
         *
         * @return The resulting glyph run
@@ -421,7 +422,7 @@ namespace megamol {
         /**
         * Generates the glyph runs for the text 'txt'
         *
-        * @param txtutf8 The input text in utf8 encoding
+        * @param txtutf8  The input text in utf8 encoding
         * @param maxWidth The maximum width (normalized logical units)
         *
         * @return The resulting glyph run
