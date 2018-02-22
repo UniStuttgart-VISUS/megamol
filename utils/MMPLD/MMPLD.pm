@@ -15,6 +15,7 @@ Readonly my $CANADDFRAME => 1;
 Readonly my $CANADDLIST => 2;
 Readonly my $CANADDPARTICLE => 3;
 Readonly my $ALLDONE => 4;
+Readonly my $CLOSED => 5;
 
 Readonly our $VERTEX_XYZ_FLOAT => 0;
 Readonly our $VERTEX_XYZR_FLOAT => 1;
@@ -83,21 +84,35 @@ sub _initialize {
     $self->_state($CANADDFRAME);
 }
 
+sub DESTROY {
+    #print "called destructor\n";
+    my $self = shift;
+    $self->Close();
+}
+
 sub _finishup {
     my $self = shift;
-    $self->_state($ALLDONE);
     my $end = $self->_doTell();
+    $self->_state() == $ALLDONE or die "you cannot finalize a file when in state: " . $self->_stringState();
     #print "end = $end\n";
     # set bounding boxes
     $self->_doSeek($self->{bboxposition});
-    $self->AppendFloats(($self->{minx}, $self->{miny}, $self->{minz}, $self->{maxx}, $self->{maxy}, $self->{maxz}));
-    $self->AppendFloats(($self->{minx} - $self->{maxradius}, $self->{miny} - $self->{maxradius}, $self->{minz} - $self->{maxradius},
-                         $self->{maxx} + $self->{maxradius}, $self->{maxy} + $self->{maxradius}, $self->{maxz} + $self->{maxradius}));
+
+    if (defined $self->{doOverrideBBox} && $self->{doOverrideBBox} == 1) {
+        $self->AppendFloats(($self->{forceMinX}, $self->{forceMinY}, $self->{forceMinZ}, $self->{forceMaxX}, $self->{forceMaxY}, $self->{forceMaxZ}));
+        $self->AppendFloats(($self->{forceMinX} - $self->{maxradius}, $self->{forceMinY} - $self->{maxradius}, $self->{forceMinZ} - $self->{maxradius},
+                             $self->{forceMaxX} + $self->{maxradius}, $self->{forceMaxY} + $self->{maxradius}, $self->{forceMaxZ} + $self->{maxradius}));
+    } else {
+        $self->AppendFloats(($self->{minx}, $self->{miny}, $self->{minz}, $self->{maxx}, $self->{maxy}, $self->{maxz}));
+        $self->AppendFloats(($self->{minx} - $self->{maxradius}, $self->{miny} - $self->{maxradius}, $self->{minz} - $self->{maxradius},
+                             $self->{maxx} + $self->{maxradius}, $self->{maxy} + $self->{maxradius}, $self->{maxz} + $self->{maxradius}));
+    }
     
     # append end pointer
     $self->_doSeek($self->{seektable} + ($self->{currframe}) * 8);
     $self->AppendUInt64s($end);
     close($self->{filehandle});
+    $self->_state($CLOSED);
 }
 
 sub StartFrame {
@@ -266,7 +281,8 @@ sub AddParticle {
         if ($self->{currlist} == $self->{numlists}) {
             if ($self->{currframe} == $self->{numframes}) {
                 # done
-                $self->_finishup();
+                #$self->_finishup();
+                $self->_state($ALLDONE);
             } else {
                 $self->_state($CANADDFRAME);
             }
@@ -274,6 +290,25 @@ sub AddParticle {
             $self->_state($CANADDLIST);
         }
     }
+}
+
+sub Close {
+    my $self = shift;
+    $self->_state() == $ALLDONE or die "you cannot close the MMPLD when in state: " . $self->_stringState();
+    $self->_finishup();
+}
+
+sub OverrideBBox {
+    my $self = shift;
+    my ($minx, $miny, $minz, $maxx, $maxy, $maxz) = @_;
+    $self->{forceMinX} = $minx;
+    $self->{forceMinY} = $miny;
+    $self->{forceMinZ} = $minz;
+    $self->{forceMaxX} = $maxx;
+    $self->{forceMaxY} = $maxy;
+    $self->{forceMaxZ} = $maxz;
+    $self->{doOverrideBBox} = 1;
+    #print "overriding bounding box\n";
 }
 
 sub _doTell {
@@ -306,7 +341,8 @@ sub _state {
             or $val == $CANADDFRAME
             or $val == $CANADDLIST
             or $val == $CANADDPARTICLE
-            or $val == $ALLDONE) {
+            or $val == $ALLDONE
+            or $val == $CLOSED) {
             $self->{state} = $val;
         } else {
             die "trying to set illegal state $val";
@@ -332,6 +368,9 @@ sub _stringState {
     }
     if ($self == $ALLDONE) {
         return "all done";
+    }
+    if ($self == $CLOSED) {
+        return "closed"
     }
     return "illegal";
 }
