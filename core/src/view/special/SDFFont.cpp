@@ -643,19 +643,19 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
         }
         else { // ... else if byte >= 128 => UTF8-Byte: 1XXXXXXX 
             // Supporting UTF8 for up to 3 bytes:
-            if (byte >= (unsigned char)(0b11100000)) { //>224 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
+            if (byte >= (unsigned char)(0b11100000)) { // >224 - 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
                 folBytes = 2;
                 idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // consider only last 4 bits
                 idx = (idx << 12); // 2*6 Bits are following
                 continue;
             }
-            else if (byte >= (unsigned char)(0b11000000)) { //>192 110XXXXX -> start 2-Byte UTF8, 1 byte is following
+            else if (byte >= (unsigned char)(0b11000000)) { // >192 - 110XXXXX -> start 2-Byte UTF8, 1 byte is following
                 folBytes = 1;
                 idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // consider only last 5 bits
                 idx = (idx << 6); // 1*6 Bits are following
                 continue;
             }
-            else if (byte >= (unsigned char)(0b10000000)) { //> 128 10XXXXXX -> "following" 1-2 bytes
+            else if (byte >= (unsigned char)(0b10000000)) { // >128 - 10XXXXXX -> "following" 1-2 bytes
                 folBytes--;
                 tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // consider only last 6 bits
                 idx    = (idx | (tmpIdx << (folBytes*6))); // shift tmpIdx depending on following byte and 'merge' (|) with idx
@@ -665,7 +665,7 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
         // Check if glyph info is available
         if (idx > this->idxCnt) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > idxCnt = \"%i\".\n", idx, this->idxCnt);
+            vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
             continue;
         }
         if (this->glyphIdx[idx] == NULL) {
@@ -899,8 +899,9 @@ bool SDFFont::loadFont(BitmapFont bmf) {
         default: break;
     }
 
-    // Folder holding font data
-    vislib::StringA folder = ".\\fonts\\";
+    // Folder for shared files
+    vislib::StringA fontFolder = "../share/resources/";
+    vislib::StringA shaderFolder = "../share/shaders/";
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
@@ -909,7 +910,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     }
     
     // (2) Load font information -----------------------------------------------
-    vislib::StringA infoFile = folder;
+    vislib::StringA infoFile = fontFolder;
     infoFile.Append(fontName);
     infoFile.Append(".fnt");
     if (!this->loadFontInfo(infoFile)) {
@@ -918,7 +919,7 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     }
 
     // (3) Load texture --------------------------------------------------------
-    vislib::StringA textureFile = folder;
+    vislib::StringA textureFile = fontFolder;
     textureFile.Append(fontName);
     textureFile.Append(".png");
     if (!this->loadFontTexture(textureFile)) {
@@ -927,10 +928,10 @@ bool SDFFont::loadFont(BitmapFont bmf) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    vislib::StringA vertShaderFile = folder;
-    vertShaderFile.Append("vertex.shader");
-    vislib::StringA fragShaderFile = folder;
-    fragShaderFile.Append("fragment.shader");
+    vislib::StringA vertShaderFile = shaderFolder;
+    vertShaderFile.Append("sdffont.glvs");
+    vislib::StringA fragShaderFile = shaderFolder;
+    fragShaderFile.Append("sdffont.glfs");
     if (!this->loadFontShader(vertShaderFile, fragShaderFile)) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;

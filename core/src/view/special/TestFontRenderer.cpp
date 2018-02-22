@@ -122,7 +122,7 @@ bool TestFontRenderer::create(void) {
     }
 
     // Load file with test text -----------------------------------------------
-    vislib::StringA filename = ".\\fonts\\TESTTEXT";
+    vislib::StringA filename = "sdffont_TESTTEXT";
     vislib::sys::ASCIIFileBuffer file;
     if (!file.LoadFile(filename)) {
         vislib::sys::Log::DefaultLog.WriteError("[TestFontRenderer] [create] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
@@ -137,10 +137,6 @@ bool TestFontRenderer::create(void) {
     }
     file.Clear();
     this->testtext.Append('\0');
-
-    //this->testtext[27]  = '\n';
-    //this->testtext[106] = '\n';
-
 
     return true;
 }
