@@ -78,7 +78,7 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     this->paramRenderMode9.SetParameter(new param::ButtonParam('9'));
     this->MakeSlotAvailable(&this->paramRenderMode9);
 
-    this->renderMode = 4;
+    this->renderMode = 7;
     this->testtext.Clear();
 }
 
@@ -253,7 +253,7 @@ bool TestFontRenderer::Render(core::Call& call) {
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
 
-    vislib::StringA hallo = "... Hallo Welt ...\n1234567890\n   Qualle  \n° ^ € ™ ";
+    vislib::StringA hallo = "äÄöÖüÜß\n... Hallo Welt ...\n1234567890\n   Qualle  \n| ° ^ € ™ |\näÄöÖüÜß";
     float fontSize = 0.1f;
     float lineWidth = 8.0f;
     unsigned int lineCount = 0;

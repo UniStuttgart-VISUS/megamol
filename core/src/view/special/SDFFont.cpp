@@ -607,7 +607,7 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
     unsigned int folBytes = 0; // following bytes
-    unsigned int idx;
+    unsigned int idx, tmpIdx;
     ::memset(glyphrun, 0, sizeof(int) * (txtlen + 1));
 
     // > 0 1+index of the glyph to use
@@ -627,33 +627,35 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
         }
 
         // --------------------------------------------------------------------
-        // TODO: Byte to UTF8
+        // UTF8-Bytes to Decimal
 
-        // Byte to UTF8
+        // ! Following variables must be used "unisgned" so that always zeros are shifted and not ones ...
+        // !so far: NO CHECK FOR INVALID UTF8 byte sequences ...
+
         unsigned char byte = txtutf8[i];
         // If byte >= 0 -> ASCII-Byte: 0XXXXXXX = 0...127
         if (byte < 128) { 
             idx = static_cast<unsigned int>(txtutf8[i]);
         }
-        // ... if byte if < 0 => UTF8-Byte: 1XXXXXXX 
+        // ... if byte >= 128 => UTF8-Byte: 1XXXXXXX 
         else { 
             // Supporting UTF8 for up to 3 bytes:
-            if (byte >= (unsigned char)(0b11100000)) { // 1110XXXX -> 3-Byte UTF8, 2 bytes are following
+            if (byte >= (unsigned char)(0b11100000)) { //>224 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
                 folBytes = 2;
-                idx = (unsigned int)(byte & (unsigned char)(0b00001111));
-                idx = (idx << 12);
+                idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // consider only last 4 bits
+                idx = (idx << 12); // 2*6 Bits are following
                 continue;
             }
-            else if (byte >= (unsigned char)(0b11000000)) { // 110XXXXX -> 2-Byte UTF8, 1 byte is following
+            else if (byte >= (unsigned char)(0b11000000)) { //>192 110XXXXX -> start 2-Byte UTF8, 1 byte is following
                 folBytes = 1;
-                idx = (unsigned int)(byte & (unsigned char)(0b00011111));
-                idx += (idx << 6);
+                idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // consider only last 5 bits
+                idx = (idx << 6); // 1*6 Bits are following
                 continue;
             }
-            else if (byte >= (unsigned char)(0b10000000)) { // 10XXXXXX -> "following" bytes
+            else if (byte >= (unsigned char)(0b10000000)) { //> 128 10XXXXXX -> "following" 1-2 bytes
                 folBytes--;
-                int tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111));
-                idx = (idx | (tmpIdx << (folBytes*6)));
+                tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // consider only last 6 bits
+                idx    = (idx | (tmpIdx << (folBytes*6))); // shift tmpIdx depending on following byte and 'merge' (|) with idx
                 if (folBytes > 0) {
                     continue;
                 }
