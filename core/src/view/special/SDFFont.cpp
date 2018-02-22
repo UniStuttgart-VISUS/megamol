@@ -508,11 +508,14 @@ void SDFFont::deinitialise(void) {
     glDeleteVertexArrays(1, &this->vaoHandle);
     // Delete allocated memory
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {
-        if (this->glyphs[i].kerns != NULL) {
-            delete[] this->glyphs[i].kerns;
+        if (this->glyphs[i].kernCnt != NULL) {
+            delete [] this->glyphs[i].kerns;
         }
     }
     if (this->glyphIdx != NULL) {
+        for (unsigned int i = 0; i < this->idxCnt; i++) {
+            this->glyphIdx[i] = NULL;
+        }
         delete[] (*this->glyphIdx);
     }
 }
@@ -627,55 +630,36 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
         // --------------------------------------------------------------------
         // UTF8-Bytes to Decimal
-
-        // 'Unsigned int' needs to have at least 3 bytes for encoding utf8 in decimal
-        // (Following variables are "unisgned" so that always zeros are shifted and not ones ...)
-        // ! so far: THERE IS NO COMPLETE CHECK FOR INVALID UTF8 BYTE SEQUENCES ... (only slowing down performance)
-        // ASSUMING well formed utf8 encoding ...
+        // NB:
+        // -'Unsigned int' needs to have at least 3 bytes for encoding utf8 in decimal
+        // -(Following variables are "unisgned" so that always zeros are shifted and not ones ...)
+        // -! so far: THERE IS NO COMPLETE CHECK FOR INVALID UTF8 BYTE SEQUENCES ... (only slowing down performance)
+        // - Therefore ASSUMING well formed utf8 encoding ...
 
         unsigned char byte = txtutf8[i];
         // If byte >= 0 -> ASCII-Byte: 0XXXXXXX = 0...127
         if (byte < 128) { 
             idx = static_cast<unsigned int>(txtutf8[i]);
         }
-        // ... if byte >= 128 => UTF8-Byte: 1XXXXXXX 
-        else { 
+        else { // ... else if byte >= 128 => UTF8-Byte: 1XXXXXXX 
             // Supporting UTF8 for up to 3 bytes:
             if (byte >= (unsigned char)(0b11100000)) { //>224 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
-                //if (folBytes > 0) { // Basic validation check ...
-                //   vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 3-Byte - ERROR ...\n");
-                //    continue;
-                //}
                 folBytes = 2;
                 idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // consider only last 4 bits
                 idx = (idx << 12); // 2*6 Bits are following
                 continue;
             }
             else if (byte >= (unsigned char)(0b11000000)) { //>192 110XXXXX -> start 2-Byte UTF8, 1 byte is following
-                //if (folBytes > 0) { // Basic validation check ...
-                //    vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 2-Byte - ERROR ...\n");
-                //    continue;
-                //}
                 folBytes = 1;
                 idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // consider only last 5 bits
                 idx = (idx << 6); // 1*6 Bits are following
                 continue;
             }
             else if (byte >= (unsigned char)(0b10000000)) { //> 128 10XXXXXX -> "following" 1-2 bytes
-                //if (folBytes == 0) { // Basic validation check ...
-                //    vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF8 1-Byte - ERROR ...\n");
-                //    continue;
-                //}
                 folBytes--;
                 tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // consider only last 6 bits
                 idx    = (idx | (tmpIdx << (folBytes*6))); // shift tmpIdx depending on following byte and 'merge' (|) with idx
-                if (folBytes > 0) {
-                    continue;
-                }
-            }
-            else {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [buildUpGlyphRun] UTF error ... BUG?\n");
-                continue;
+                if (folBytes > 0)  continue; // else idx is complete
             }
         }
 
@@ -1029,11 +1013,14 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
 
     // Reset font info
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {
-        if (this->glyphs[i].kerns != NULL) {
+        if (this->glyphs[i].kernCnt != NULL) {
             delete[] this->glyphs[i].kerns;
         }
     }
     if (this->glyphIdx != NULL) {
+        for (unsigned int i = 0; i < this->idxCnt; i++) {
+            this->glyphIdx[i] = NULL;
+        }
         delete[] (*this->glyphIdx);
     }
     this->glyphs.clear();
