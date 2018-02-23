@@ -89,6 +89,7 @@
       <DependentUpon>TransferFunc1DDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="TransferFunc1DEditor.cs" />
+    <Compile Include="ObservingDict.cs" />
     <Compile Include="Util\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>

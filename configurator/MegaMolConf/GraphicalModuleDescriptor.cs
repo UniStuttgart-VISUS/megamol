@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 
 namespace MegaMolConf {
 
@@ -15,7 +13,7 @@ namespace MegaMolConf {
         }
 
         public GraphicalModule Module {
-            get { return this.gm; }
+            get { return gm; }
         }
 
         public AttributeCollection GetAttributes() {
@@ -47,7 +45,7 @@ namespace MegaMolConf {
         }
 
         public EventDescriptorCollection GetEvents(Attribute[] attributes) {
-            return this.GetEvents();
+            return GetEvents();
         }
 
         public EventDescriptorCollection GetEvents() {
@@ -55,22 +53,22 @@ namespace MegaMolConf {
         }
 
         public PropertyDescriptorCollection GetProperties(Attribute[] attributes) {
-            return this.GetProperties();
+            return GetProperties();
         }
 
         public PropertyDescriptorCollection GetProperties() {
             List<PropertyDescriptor> pds = new List<PropertyDescriptor>();
 
             pds.Add(new GraphicalModuleNameDescriptor());
-            if (this.gm.Module.IsViewModule) {
+            if (gm.Module.IsViewModule) {
                 pds.Add(new GraphicalModuleMainViewDescriptor());
             }
 
-            foreach (KeyValuePair<Data.ParamSlot, string> p in this.gm.ParameterValues) {
-                pds.Add(new GraphicalModuleParameterDescriptor(p.Key, this.gm.ParameterCmdLineness[p.Key]));
+            foreach (KeyValuePair<Data.ParamSlot, string> p in gm.ParameterValues) {
+                pds.Add(new GraphicalModuleParameterDescriptor(p.Key, gm.ParameterCmdLineness[p.Key]));
             }
-            foreach (KeyValuePair<Data.ParamSlot, bool> p in this.gm.ParameterCmdLineness) {
-                if (this.gm.ParameterValues.ContainsKey(p.Key)) continue;
+            foreach (KeyValuePair<Data.ParamSlot, bool> p in gm.ParameterCmdLineness) {
+                if (gm.ParameterValues.ContainsKey(p.Key)) continue;
                 pds.Add(new GraphicalModuleButtonParameterDescriptor(p.Key, p.Value));
             }
 

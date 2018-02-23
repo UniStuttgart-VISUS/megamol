@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipes;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MegaMolConf.Util {
 
@@ -13,7 +9,7 @@ namespace MegaMolConf.Util {
     /// Back-Ported to DotNet v4
     /// </summary>
     internal class IPCNamedPipe {
-        private NamedPipeServerStream pipe = null;
+        private NamedPipeServerStream pipe;
         private byte[] buffer;
         private int bytesReceived;
         private int bytesExpected;
