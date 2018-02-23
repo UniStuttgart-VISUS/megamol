@@ -156,7 +156,7 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
         bool MegaMolCore_compatibility_checked = false;
         bool vislib_compatibility_checked = false;
         vislib::VersionNumber mmcoreVer(MEGAMOL_CORE_VERSION);
-        vislib::VersionNumber vislibVer(VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION);
+        vislib::VersionNumber vislibVer(vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR, vislib::VISLIB_VERSION_REVISION);
 
         for (unsigned int li = 0; li < comp_info->libs_cnt; li++) {
             LibraryVersionInfo &lvi = comp_info->libs[li];
