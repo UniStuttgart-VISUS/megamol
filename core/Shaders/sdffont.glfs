@@ -7,7 +7,6 @@
 #define RENDERTYPE_OUTLINE 2
 
 in      vec2      texCoord;
-in      float     smoothing;
 
 uniform vec4      color;
 uniform sampler2D fontTex;
@@ -17,50 +16,41 @@ layout(location = 0) out vec4 outFragColor;
 
 
 /*
-* Function Smoothstep
-*
-* Source: https://en.wikipedia.org/wiki/Smoothstep
-*/
-void Smoothstep(in float edge0, in float edge1, inout float x) {
-    float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    // smoothstep:
-    //x = (t * t * (3.0 - 2.0 * t));
-    // smootherstep:
-    x = (t * t * t * (t * (t * 6.0 - 15.0) + 10.0));
-    // smootheststep:
-    //x = (t * t * t * t * (t * (t * (70.0 - t * 20.0 ) - 84.0) + 35.0));
-}
-
-
-/*
 * MAIN
 */
-void main(void)
-{
-    float outline  = 0.02; // The oultine width
-    float border   = 0.5;  // Should not be changed
+void main(void) {
 
-    float distance = texture2D(fontTex, texCoord).g; // Distance value is stored in green channel, see SDFFont::loadFontTexture()
+    float outlineWidth = 0.025; 
+    float sdfBorder    = 0.5; 
+     
+    float distance = texture2D(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
+
+    if (distance == 0.0) { 
+        discard;
+    }
+
+    float smootingEdge = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
 
     if (renderType == RENDERTYPE_FILL) { 
-        Smoothstep((border - smoothing), (border + smoothing), distance);
+
+        distance = smoothstep((sdfBorder - smootingEdge), (sdfBorder + smootingEdge), distance);
     }
-    else { // == RENDERTYPE_OUTLINE
-        if (distance < border) {
-            Smoothstep((border - smoothing - outline), (border + smoothing - outline), distance);
+    else if  (renderType == RENDERTYPE_OUTLINE) {
+
+        if (distance > (sdfBorder + smootingEdge + outlineWidth)) {
+            discard;
+        }
+
+        if (distance < sdfBorder) {
+            distance = smoothstep((sdfBorder - smootingEdge - outlineWidth), (sdfBorder + smootingEdge - outlineWidth), distance);
         }
         else {
-            Smoothstep((border + smoothing + outline), (border - smoothing + outline), distance);
+            distance = smoothstep((sdfBorder + smootingEdge + outlineWidth), (sdfBorder - smootingEdge + outlineWidth), distance);
         }
     }
 
-    float alpha = clamp(distance, 0.0, 1.0);
-    if (alpha == 0.0) {
-        discard; // Prevent Z-fighting
-    }
-    else {
-        outFragColor = vec4(color.rgb, alpha);
-    }
+    float alpha  = clamp(distance, 0.0, 1.0);
+    outFragColor = vec4(color.rgb, alpha);
 }
 
  // DO NOT DELETE THIS LINE (last character will be set to '\0') 

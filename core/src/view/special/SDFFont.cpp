@@ -871,6 +871,9 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
     }
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // dFdx()/dFdx() in fragment shader:
+    glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
+
     glBindVertexArray(this->vaoHandle);
 
     glEnable(GL_TEXTURE_2D);
@@ -881,7 +884,7 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
 
     // Vertex shader
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-    glUniform1f(this->shader.ParameterLocation("fontSize"), size);
+
     // Fragment shader
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);

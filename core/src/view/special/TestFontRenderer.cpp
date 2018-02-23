@@ -38,8 +38,8 @@ using namespace megamol::core::view::special;
 TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     simpleFont(),
     outlineFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-    sdfFont(SDFFont::BitmapFont::VERDANA, SDFFont::RENDERTYPE_FILL),
-    //sdfFont(SDFFont::BitmapFont::EVOLVENTA, SDFFont::RENDERTYPE_FILL),
+    sdfFont(SDFFont::BitmapFont::VERDANA),
+    //sdfFont(SDFFont::BitmapFont::EVOLVENTA),
     paramRenderMode1("01_RenderMode-01", "... ."),
     paramRenderMode2("02_RenderMode-02", "... ."),
     paramRenderMode3("03_RenderMode-03", "... ."),
@@ -51,8 +51,8 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     paramRenderMode9("09_RenderMode-09", "... .")
     {
 
-    this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_OUTLINE);
-    //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_FILL);
+    //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_OUTLINE);
+    this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_FILL);
     //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_NONE);
 
     this->paramRenderMode1.SetParameter(new param::ButtonParam('1'));
@@ -365,7 +365,16 @@ bool TestFontRenderer::Render(core::Call& call) {
         
         lineCount = this->sdfFont.BlockLines(lineWidth, fontSize, testtext);
 
+        //glColor4fv(fgColor);
+        //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_FILL);
+
         this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+
+        /*
+        glColor4f(0.0f, 0.0f, 1.0f, 1.0f); 
+        this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_OUTLINE);
+        this->sdfFont.DrawString(-(lineWidth / 2.0f), ((lineCount*fontSize) / 2.0f) - 1.0f, lineWidth, 1.0f, fontSize, true, testtext, megamol::core::view::special::AbstractFont::ALIGN_LEFT_TOP);
+        */
     }
     // ------------------------------------------------------------------------
     else if (this->renderMode == 5) {
