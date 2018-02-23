@@ -47,13 +47,13 @@ bool megamol::core::view::TransferFunction1D::getTFCallback(megamol::core::Call&
         glGenTextures(1, &this->texID);
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, this->texID);
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->tf.size(), 0, GL_RGBA, GL_FLOAT, this->tf.data());
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->tf.size() / 4, 0, GL_RGBA, GL_FLOAT, this->tf.data());
         glBindTexture(GL_TEXTURE_1D, otid);
 
         tfChanged = false;
     }
 
-    outCall->SetTexture(this->texID, this->tf.size(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
+    outCall->SetTexture(this->texID, this->tf.size() / 4, CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
 
     return true;
 }
