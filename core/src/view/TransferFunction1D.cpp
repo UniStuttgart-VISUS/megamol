@@ -71,19 +71,40 @@ bool megamol::core::view::TransferFunction1D::tfUpdated(megamol::core::param::Pa
 
 
 int megamol::core::view::TransferFunction1D::parseTF(lua_State* L) {
-    int n = lua_gettop(L);
+    //int n = lua_gettop(L);
+
+    std::vector<std::string> tokens;
+
+    if (lua_isstring(L, 1)) {
+        size_t len = 0;
+        auto const args = lua_tolstring(L, 1, &len);
+        std::string s;
+        for (size_t i = 0; i < len; ++i) {
+            if (args[i] == ',' || args[i] == '\0') {
+                tokens.push_back(s);
+                s.clear();
+                continue;
+            }
+
+            if (args[i] == ' ') continue;
+
+            s.push_back(args[i]);
+        }
+        tokens.push_back(s);
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("TransferFunction1D ERROR: mmliParseTF expected string as argument\n");
+    }
+
+    size_t n = tokens.size();
+
     if (!(n % 4) && n > 0) {
         // valid input
         std::vector<float> tmp;
         tmp.reserve(n);
 
-        for (int i = 1; i <= n; i++) {
-            if (lua_isnumber(L, i)) {
-                tmp.push_back(lua_tonumber(L, i));
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("TransferFunction1D ERROR: Argument %d is not a number\n", i - 1);
-                return 0;
-            }
+        for (auto const& tok : tokens) {
+            auto const val = atof(tok.c_str());
+            tmp.push_back(val);
         }
 
         this->tf = tmp;
@@ -91,6 +112,26 @@ int megamol::core::view::TransferFunction1D::parseTF(lua_State* L) {
     } else {
         vislib::sys::Log::DefaultLog.WriteError("TransferFunction1D ERROR: Number of arguments must be multiple of four\n");
     }
+
+    //if (!(n % 4) && n > 0) {
+    //    // valid input
+    //    std::vector<float> tmp;
+    //    tmp.reserve(n);
+
+    //    for (int i = 1; i <= n; i++) {
+    //        if (lua_isnumber(L, i)) {
+    //            tmp.push_back(lua_tonumber(L, i));
+    //        } else {
+    //            vislib::sys::Log::DefaultLog.WriteError("TransferFunction1D ERROR: Argument %d is not a number\n", i - 1);
+    //            return 0;
+    //        }
+    //    }
+
+    //    this->tf = tmp;
+    //    this->tfChanged = true;
+    //} else {
+    //    vislib::sys::Log::DefaultLog.WriteError("TransferFunction1D ERROR: Number of arguments must be multiple of four\n");
+    //}
 
 
     return 0;
