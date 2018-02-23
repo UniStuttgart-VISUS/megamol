@@ -42,11 +42,14 @@ namespace megamol {
                 SELECTED_KF_LOOKAT_Y   = 5,
                 SELECTED_KF_LOOKAT_Z   = 6,
                 SELECTED_KF_UP         = 7,
-                NUM_OF_SELECTED_MANIP  = 8,
-                KEYFRAME_POS           = 9,
-                NONE                   = 10
+                CTRL_POINT_POS_X       = 8,
+                CTRL_POINT_POS_Y       = 9,
+                CTRL_POINT_POS_Z       = 10,
+                NUM_OF_SELECTED_MANIP  = 11,
+                KEYFRAME_POS           = 12,
+                NONE                   = 13
             }; // DON'T CHANGE ORDER OR NUMBERING
-               // Add new manipulator type before NONE ...
+               // Add new manipulator type before NUM_OF_SELECTED_MANIP ...
 
 
             /** Update rednering data of manipulators.
@@ -56,14 +59,19 @@ namespace megamol {
             * @param skf   The currently selected keyframe
             * @param vps   The current viewport size
             * @param mvpm  The current Model-View-Projection-Matrix
-            * @param wcd   The lookat direction of the world camera
-            *
+            * @param wclad The lookat direction of the world camera
+            * @param wcmd  The  direction between the world camera position and the model center
+            * @param mob   If true manipulators always lie outside of model bbox
+            * @param fcp   First control point for interpolation curve 
+            * @param lcp   Last control point for interpolation curve 
+
             * @return True if data was updated successfully.
             *
             */
             bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
-                        vislib::math::Vector<float, 3> wcd);
+                        vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob, 
+                        vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp);
 
             /** Update extents.
             *   Grows bounding box to manipulators.
@@ -88,6 +96,11 @@ namespace megamol {
             /** */
             Keyframe getManipulatedKeyframe(void);
 
+            /** */
+            vislib::math::Vector<float, 3> getFirstControlPointPosition();
+            /** */
+            vislib::math::Vector<float, 3> getLastControlPointPosition();
+
         private:
 
             /**********************************************************************
@@ -111,8 +124,8 @@ namespace megamol {
             };
 
             // Some fixed values
-            const float                      circleRadiusFac = 0.0075f;    // Factor for lookat direction which is used as adaptive circle radius
-            const float                      axisLengthFac   = 0.05f;      // Factor for lookat direction which is used as adaptive axis length
+            const float                      circleRadiusFac = 0.0075f;    // Factor for world cam lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac   = 0.06f;      // Factor for world cam lookat direction which is used as adaptive axis length
             const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
             const float                      lineWidth       = 2.5;
             const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
@@ -132,10 +145,17 @@ namespace megamol {
 
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::math::Dimension<int, 2>  viewportSize;
-            vislib::math::Vector<float, 3>   worldCamDir;
+            vislib::math::Vector<float, 3>   worldCamLaDir;
+            vislib::math::Vector<float, 3>   worldCamModDir;
             bool                             isDataSet;
             bool                             isDataDirty;
             vislib::math::Cuboid<float>      modelBbox;
+            bool                             manipOusideBbox;
+
+            vislib::math::Vector<float, 3>   firstCtrllPos;
+            vislib::math::Vector<float, 3>   lastCtrllPos;
+            bool                             selectedIsFirst;
+            bool                             selectedIsLast;
 
             vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
 
