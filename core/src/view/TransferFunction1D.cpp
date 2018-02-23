@@ -48,6 +48,9 @@ bool megamol::core::view::TransferFunction1D::getTFCallback(megamol::core::Call&
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, this->texID);
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->tf.size() / 4, 0, GL_RGBA, GL_FLOAT, this->tf.data());
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glBindTexture(GL_TEXTURE_1D, otid);
 
         tfChanged = false;
