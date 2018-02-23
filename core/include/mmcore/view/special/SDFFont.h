@@ -33,8 +33,7 @@ namespace megamol {
 
 
     /**
-     * Implementation of simple font using outline glyph information to render
-     * the font
+     * Implementation of sdf font using signed distance filed glyph information stired as bitmap font to render the font.
      */
     class SDFFont : public AbstractFont {
     public:
@@ -47,10 +46,9 @@ namespace megamol {
 
         /** Possible render types for the font. */
         enum RenderType {
-            RENDERTYPE_NONE,              // Do not render anything
-            RENDERTYPE_OUTLINE,           // Render the outline 
-            RENDERTYPE_FILL,              // Render the filled glyphs */
-            RENDERTYPE_FILL_AND_OUTLINE   // Render the filled glyphs with and the outline 
+            RENDERTYPE_NONE    = 0,     // Do not render anything
+            RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
+            RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
 
         /**
@@ -275,7 +273,7 @@ namespace megamol {
          * @param t The render type for the font
          */
         inline void SetRenderType(RenderType t) {
-            this->renderType = t;
+            this->renderType = t;           
         }
 
     protected:

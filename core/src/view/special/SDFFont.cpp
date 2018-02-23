@@ -264,6 +264,8 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
  */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
+
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
@@ -283,6 +285,8 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const char *t
 * SDFFont::DrawString
 */
 void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -304,6 +308,8 @@ void SDFFont::DrawString(float x, float y, float size, bool flipY, const wchar_t
  * SDFFont::DrawString
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
 
     int *run = this->buildGlyphRun(txt, w / size);
 
@@ -353,6 +359,8 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size, bool fl
  */
 void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
+
     int *run = this->buildGlyphRun(txt, w / size);
 
     if (flipY) y += h;
@@ -401,6 +409,8 @@ void SDFFont::DrawString(float x, float y, float w, float h, float size,  bool f
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
+
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
@@ -420,6 +430,8 @@ void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, cons
 * SDFFont::DrawString
 */
 void SDFFont::DrawString(float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
+
+    if (this->renderType == RenderType::RENDERTYPE_NONE) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -873,6 +885,7 @@ void SDFFont::draw(int *run, float x, float y, float z, float size, bool flipY, 
     // Fragment shader
     glUniform4fv(this->shader.ParameterLocation("color"), 1, color);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
+    glUniform1i(this->shader.ParameterLocation("renderType"), (int)(this->renderType));
 
     glDrawArrays(GL_QUADS, 0, (GLsizei)charCnt * 4);
 

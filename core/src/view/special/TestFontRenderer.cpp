@@ -51,6 +51,10 @@ TestFontRenderer::TestFontRenderer(void) : Renderer3DModule(),
     paramRenderMode9("09_RenderMode-09", "... .")
     {
 
+    this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_OUTLINE);
+    //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_FILL);
+    //this->sdfFont.SetRenderType(SDFFont::RenderType::RENDERTYPE_NONE);
+
     this->paramRenderMode1.SetParameter(new param::ButtonParam('1'));
     this->MakeSlotAvailable(&this->paramRenderMode1);
 

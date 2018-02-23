@@ -3,12 +3,15 @@
 */
 #version 400
 
+#define RENDERTYPE_FILL    1
+#define RENDERTYPE_OUTLINE 2
 
 in      vec2      texCoord;
 in      float     smoothing;
 
 uniform vec4      color;
 uniform sampler2D fontTex;
+uniform int       renderType = 1;
 
 layout(location = 0) out vec4 outFragColor;
 
@@ -34,11 +37,24 @@ void Smoothstep(in float edge0, in float edge1, inout float x) {
 */
 void main(void)
 {
-    float distance  = texture2D(fontTex, texCoord).g; // Distance value is stored in green channel, see SDFFont::loadFontTexture()
-    float border    = 0.5;
-    Smoothstep((border - smoothing), (border + smoothing), distance);
-    float alpha     = clamp(distance, 0.0, 1.0);
+    float outline  = 0.02; // The oultine width
+    float border   = 0.5;  // Should not be changed
 
+    float distance = texture2D(fontTex, texCoord).g; // Distance value is stored in green channel, see SDFFont::loadFontTexture()
+
+    if (renderType == RENDERTYPE_FILL) { 
+        Smoothstep((border - smoothing), (border + smoothing), distance);
+    }
+    else { // == RENDERTYPE_OUTLINE
+        if (distance < border) {
+            Smoothstep((border - smoothing - outline), (border + smoothing - outline), distance);
+        }
+        else {
+            Smoothstep((border + smoothing + outline), (border - smoothing + outline), distance);
+        }
+    }
+
+    float alpha = clamp(distance, 0.0, 1.0);
     if (alpha == 0.0) {
         discard; // Prevent Z-fighting
     }

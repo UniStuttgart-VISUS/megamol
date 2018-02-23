@@ -20,15 +20,13 @@ out     float smoothing;
 void main()
 {
     // Adaptive smoothing depending on screen space size of font
+    float fac      = 200.0; // EMPIRICAL VALUE - higher: sharper - lower: more blurred
     vec4 ssPos     = mvpMat * vec4(0.0, fontSize, 0.0, 1.0);
     ssPos         /= ssPos.w;
     float ssSize   = length(ssPos.xy);
-    float fac      = 200.0; // EMPIRICAL VALUE - higher: sharper - lower: more blurred
     smoothing      = 1.0 / (ssSize * fac); 
 
     texCoord       = inVertTexCoord;
-    //vec3 scaledPos = inVertPos * inVertOffset.w;
-    //vec3 transPos = scaledPos; // inVertOffset.xyz + scaledPos;
     gl_Position    = mvpMat * vec4(inVertPos, 1.0);
 
 }
