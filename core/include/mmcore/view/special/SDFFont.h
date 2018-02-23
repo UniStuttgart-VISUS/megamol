@@ -300,6 +300,40 @@ namespace megamol {
         * variables
         **********************************************************************/
 
+        /** The sdf font. */
+        BitmapFont font;
+
+        /** The render type used. */
+        RenderType renderType;
+
+        /** Inidcating if font could be loaded successfully. */
+        bool loadSuccess;
+
+        /** The shader of the font. */
+        vislib::graphics::gl::GLSLShader shader;
+
+        /** The texture of the font. */
+        vislib::graphics::gl::OpenGLTexture2D texture;
+
+        /** Vertex buffer object attributes. */
+        enum VBOAttrib {
+            POSITION = 0,
+            TEXTURE = 1
+        };
+
+        /** Vertex buffer object info. */
+        struct SDFVBO {
+            GLuint                 handle;  // buffer handle
+            vislib::StringA        name;    // varaible name of attribute in shader
+            GLuint                 index;   // index of attribute location
+            unsigned int           dim;     // dimension of data
+        };
+        /** Vertex array object. */
+        GLuint vaoHandle;
+        /** Vertex buffer objects. */
+        std::vector<SDFVBO> vbos;
+
+
         /** The glyph kernings. */
         struct SDFGlyphKerning {
             unsigned int previous;  // The previous character id
@@ -323,48 +357,47 @@ namespace megamol {
             SDFGlyphKerning  *kerns;  // Array of kernings
         };
 
-        /** The sdf font. */
-        BitmapFont font;
 
-        /** The texture of the font. */
-        vislib::graphics::gl::OpenGLTexture2D texture;
-
-        /** The shader of the font. */
-        vislib::graphics::gl::GLSLShader shader;
-
-        /** The render type used. */
-        RenderType renderType;
-
+        // Regular font -------------------------------------------------------
         /** The glyphs. */
         std::vector<SDFGlyphInfo> glyphs;
-
         /** The glyphs sorted by index. */
         SDFGlyphInfo **glyphIdx;
         /** Numbner of indices in index array. */
         unsigned int   idxCnt;
-
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> kernings;
 
-        /** Vertex buffer object attributes. */
-        enum VBOAttrib {
-            POSITION = 0,
-            TEXTURE = 1
-        };
+        // Bold font ----------------------------------------------------------
+        /** The glyphs. */
+        std::vector<SDFGlyphInfo> glyphsBold;
+        /** The glyphs sorted by index. */
+        SDFGlyphInfo **glyphIdxBold;
+        /** Numbner of indices in index array. */
+        unsigned int   idxCntBold;
+        /** The glyph kernings. */
+        std::vector<SDFGlyphKerning> kerningsBold;
 
-        /** Vertex buffer object info. */
-        struct SDFVBO {
-            GLuint                 handle;  // buffer handle
-            vislib::StringA        name;    // varaible name of attribute in shader
-            GLuint                 index;   // index of attribute location
-            unsigned int           dim;     // dimension of data
-        };
+        // Oblique font -------------------------------------------------------
+        /** The glyphs. */
+        std::vector<SDFGlyphInfo> glyphsOblique;
+        /** The glyphs sorted by index. */
+        SDFGlyphInfo **glyphIdxOblique;
+        /** Numbner of indices in index array. */
+        unsigned int   idxCntOblique;
+        /** The glyph kernings. */
+        std::vector<SDFGlyphKerning> kerningsOblique;
 
-        /** Vertex array object. */
-        GLuint vaoHandle;
+        // Bold and Oblique font ----------------------------------------------
+        /** The glyphs. */
+        std::vector<SDFGlyphInfo> glyphsBoldOblique;
+        /** The glyphs sorted by index. */
+        SDFGlyphInfo **glyphIdxBoldOblique;
+        /** Numbner of indices in index array. */
+        unsigned int   idxCntBoldOblique;
+        /** The glyph kernings. */
+        std::vector<SDFGlyphKerning> kerningsBoldOblique;
 
-        /** Vertex buffer objects. */
-        std::vector<SDFVBO> vbos;
 
         /**********************************************************************
         * functions
