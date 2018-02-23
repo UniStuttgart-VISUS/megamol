@@ -31,7 +31,19 @@ namespace MegaMolConf {
         }
 
         public string GetSerializedTransferFunction() {
-            return "blubb";
+            StringBuilder sb = new StringBuilder();
+            sb.Append("mmliParseTF(");
+
+            for (uint i = 0; i < this.res; ++i) {
+                sb.AppendFormat("{0}, {1}, {2}, {3}", r_histo[i], g_histo[i], b_histo[i], a_histo[i]);
+                if (i < (res - 1)) {
+                    sb.Append(", ");
+                }
+            }
+
+            sb.Append(")");
+
+            return sb.ToString();
         }
 
         private uint res;
