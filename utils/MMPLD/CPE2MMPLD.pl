@@ -82,14 +82,14 @@ for (my $chunkIdx = 0; $chunkIdx < $numChunks; $chunkIdx++) {
     for (my $i = 0; $i < $parts; $i++) {
         $_ = <>;
         my @vals = split /\s/;
-        if ($#vals != 6) {
+        if ($#vals != 6 && $#vals != 10) {
             print "skipping line with $#vals values: $_\n";
             next;
         }
     
         #print "found particle: " . (join ",", @vals) . "\n";
         $m->AddParticle({
-            x=>$vals[0], y=>$vals[1], z=>$vals[2], r=>$vals[4] / 255.0, g=>$vals[5] / 255.0, b=>$vals[6] / 255.0
+            x=>$vals[0], y=>$vals[1], z=>$vals[2], r=>($vals[4] / 255.0), g=>($vals[5] / 255.0), b=>($vals[6] / 255.0)
         });
         adjustBounds($vals[0], $vals[1], $vals[2]);
         
