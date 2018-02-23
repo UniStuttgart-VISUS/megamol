@@ -9,8 +9,10 @@ namespace MegaMolConf {
         public Communication.Connection Connection { get; set; }
         public TabPage TabPage { get; set; }
         public int Port { get; set; }
+        public string Host { get; set; }
         public System.Threading.Thread Thread { get; set; }
         public Form1 ParentForm { get; set; }
+        public bool ReadGraphFromInstance { get; set; }
 
         private bool stopQueued;
         //private string[] knownParams;
@@ -22,6 +24,11 @@ namespace MegaMolConf {
         private List<GraphicalModule> moduleDeletions = new List<GraphicalModule>();
         private List<GraphicalConnection> connectionCreations = new List<GraphicalConnection>();
         private List<GraphicalConnection> connectionDeletions = new List<GraphicalConnection>();
+
+        public MegaMolInstanceInfo() {
+            Host = "localhost";
+            ReadGraphFromInstance = false;
+        }
 
         public void QueueModuleCreation(GraphicalModule gm) {
             lock (moduleCreations) {
@@ -81,13 +88,13 @@ namespace MegaMolConf {
 
         public void Observe() {
             Connection = null;
-            Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
-                SetProcessState(MegaMolProcessState.MMPS_NONE);
-                StopObserving();
-                ParentForm.SetTabPageTag(TabPage, null);
-                ParentForm.listBoxLog.Log(Util.Level.Info, string.Format("Tab '{0}' disconnected", TabPage.Text));
-            });
-            connectionString = "tcp://localhost:" + Port;
+            //Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
+            //    SetProcessState(MegaMolProcessState.MMPS_NONE);
+            //    StopObserving();
+            //    ParentForm.SetTabPageTag(TabPage, null);
+            //    ParentForm.listBoxLog.Log(Util.Level.Info, string.Format("Tab '{0}' disconnected", TabPage.Text));
+            //});
+            connectionString = "tcp://" + Host + ":" + Port;
 
             TryConnecting(connectionString);
             object ans = null;
@@ -107,12 +114,35 @@ namespace MegaMolConf {
                             } catch {
                                 id = 0;
                             }
-                            if (id == Process.Id) {
+
+                            foreach (var proc in System.Diagnostics.Process.GetProcesses()) {
+                                if (proc.Id == id) {
+                                    Process = proc;
+                                    break;
+                                }
+                            }
+                            if (Process != null) {
+                                Process.EnableRaisingEvents = true;
+                                Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
+                                    SetProcessState(MegaMolProcessState.MMPS_NONE);
+                                    StopObserving();
+                                    ParentForm.SetTabPageTag(TabPage, null);
+                                    ParentForm.listBoxLog.Log(Util.Level.Info, string.Format("Tab '{0}' disconnected", TabPage.Text));
+                                    ParentForm.SetTabPageIcon(TabPage, 1);
+                                    ParentForm.listBoxLog.Log(Util.Level.Info, $"Tab '{TabPage.Text}' exited");
+                                    Process = null;
+                                });
                                 SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD);
                             } else {
                                 SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // wrong instance
                                 Connection = null;
                             }
+                            //if (id == Process.Id) {
+                            //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD);
+                            //} else {
+                            //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // wrong instance
+                            //    Connection = null;
+                            //}
                         } else {
                             SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
                             Connection = null;
@@ -132,11 +162,50 @@ namespace MegaMolConf {
             }
 
             if (Connection != null && Connection.Valid) {
-                //res = this.Request(new MegaMol.SimpleParamRemote.MMSPR1.QUERYPARAMS(), ref ans);
-                //if (String.IsNullOrWhiteSpace(res)) {
-                //    knownParams = (string[])ans;
-                //    Array.Sort(knownParams);
-                //}
+                res = Request("return mmListInstantiations()", ref ans);
+                if (String.IsNullOrWhiteSpace(res)) {
+                    var insts = ((string)ans).Split(new char[] { '\n' }, StringSplitOptions.None);
+                    List<string> i2 = new List<string>();
+                    foreach (var i in insts) {
+                        if (!String.IsNullOrEmpty(i)) {
+                            i2.Add(i);
+                        }
+                    }
+                    if (i2.Count == 0) {
+                        ParentForm.SetTabInstantiation(TabPage, "");
+                    } else if (i2.Count == 1) {
+                        ParentForm.SetTabInstantiation(TabPage, i2[0]);
+                    } else {
+                        ParentForm.chooseInstantiation(TabPage, i2.ToArray());
+                    }
+                }
+
+                if (ReadGraphFromInstance) {
+                    res = Request("return mmListModules()", ref ans);
+                    if (String.IsNullOrWhiteSpace(res)) {
+                        var modules = ((string)ans).Split(new char[] { '\n' }, StringSplitOptions.None);
+                        foreach (var mod in modules) {
+                            var stuff = mod.Split(new char[] {';'}, StringSplitOptions.None);
+                            if (stuff.Length == 2) {
+                                ParentForm.AddModule(TabPage, stuff[0], stuff[1]);
+                            }
+                        }
+                    }
+
+                    res = Request("return mmListCalls()", ref ans);
+                    if (String.IsNullOrWhiteSpace(res)) {
+                        var calls = ((string)ans).Split(new char[] { '\n' }, StringSplitOptions.None);
+                        foreach (var c in calls) {
+                            var stuff = c.Split(new char[] { ';' }, StringSplitOptions.None);
+                            if (stuff.Length == 2) {
+                                var fromTo = stuff[1].Split(new char[] { ',' }, StringSplitOptions.None);
+                                if (fromTo.Length == 2) {
+                                    //ParentForm.AddConnection(TabPage, stuff[0], fromTo[0], fromTo[1]);
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 ParentForm.FreePort(Port);
                 return;
@@ -150,7 +219,7 @@ namespace MegaMolConf {
 
                     lock (moduleCreations) {
                         foreach (GraphicalModule gmc in moduleCreations) {
-                            string command = @"mmCreateModule(""" + gmc.Module.Name + @""", ""::inst::" + gmc.Name + @""")";
+                            string command = @"mmCreateModule(""" + gmc.Module.Name + @""", """ + ParentForm.TabInstantiation(TabPage) + @"""" + gmc.Name + @")"")";
                             res = Request("return " + command, ref ans);
                             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                                 // huh.
@@ -241,7 +310,8 @@ namespace MegaMolConf {
 
         private string UpdateModuleParams(GraphicalModule gm) {
             object ans = null;
-            string res = Request("return mmGetModuleParams(\"" + "inst::" + gm.Name + "\")", ref ans);
+            string command = "mmGetModuleParams(\"" + ParentForm.TabInstantiation(TabPage) + gm.Name + "\")";
+            string res = Request("return " + command, ref ans);
             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                 string[] stuff = ((string)ans).Split(new char[] { '\u0001' }, StringSplitOptions.None);
                 int len = stuff.Count();
@@ -271,10 +341,10 @@ namespace MegaMolConf {
                         }
                     }
                 } else {
-                    ParentForm.listBoxLog.Log(Util.Level.Error, "invalid response to mmcGetModuleParams(\"inst::" + gm.Name + "\")");
+                    ParentForm.listBoxLog.Log(Util.Level.Error, "invalid response to " + command);
                 }
             } else {
-                ParentForm.listBoxLog.Log(Util.Level.Error, "Error in mmcGetModuleParams(\"inst::" + gm.Name + "\"): " + res);
+                ParentForm.listBoxLog.Log(Util.Level.Error, "Error in " + command + ": " + res);
             }
 
             return res;

@@ -1,5 +1,5 @@
 ﻿namespace MegaMolConf {
-    partial class CallSelector {
+    partial class StringSelector {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -63,7 +63,7 @@
             this.listBox1.TabIndex = 2;
             this.listBox1.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
             // 
-            // CallSelector
+            // InstanceSelector
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -74,10 +74,10 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.Name = "CallSelector";
+            this.Name = "InstanceSelector";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "Select the Call you want to use";
+            this.Text = "Select the Instance you want to use";
             this.ResumeLayout(false);
 
         }

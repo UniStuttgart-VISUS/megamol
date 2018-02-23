@@ -16,7 +16,10 @@ namespace MegaMolConf {
         public ObservingDict() {
             theDict = new Dictionary<TabPage, ObservableCollection<T>>();
             reverseDict = new Dictionary<ObservableCollection<T>, TabPage>();
+            SuspendObservation = false;
         }
+
+        public bool SuspendObservation { get; set; }
 
         public ICollection<TabPage> Keys => theDict.Keys;
 
@@ -47,14 +50,17 @@ namespace MegaMolConf {
         }
 
         private void Value_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
-            Debug.WriteLine("got new items: " + e.NewItems);
-            Debug.WriteLine("got removed items: " + e.OldItems);
+            if (!SuspendObservation) {
 
-            ChangedItemsCallback c = OnChangedItems;
-            if ((e.NewItems != null || e.OldItems != null) && c != null) {
-                c(e.NewItems, e.OldItems);
+                Debug.WriteLine("got new items: " + e.NewItems);
+                Debug.WriteLine("got removed items: " + e.OldItems);
+
+                ChangedItemsCallback c = OnChangedItems;
+                if ((e.NewItems != null || e.OldItems != null) && c != null) {
+                    c(e.NewItems, e.OldItems);
+                }
+                //Debug.WriteLine("for tabpage:" + reverseDict[sender])
             }
-            //Debug.WriteLine("for tabpage:" + reverseDict[sender])
         }
 
         public bool Remove(TabPage key) {

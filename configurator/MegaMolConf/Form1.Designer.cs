@@ -96,6 +96,10 @@
             this.printDialog1 = new System.Windows.Forms.PrintDialog();
             this.printDocument1 = new System.Drawing.Printing.PrintDocument();
             this.openParamfileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripDropDownButton5 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.attachToMegaMolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hostToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.portToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -143,6 +147,7 @@
             this.btnLoadProject,
             this.btnSaveProject,
             this.toolStripDropDownButton4,
+            this.toolStripDropDownButton5,
             this.toolStripSeparator2,
             this.toolStripDropDownButton3,
             this.toolStripSeparator5,
@@ -740,6 +745,38 @@
             this.openParamfileDialog.FilterIndex = 3;
             this.openParamfileDialog.Title = "Import Paramfile...";
             // 
+            // toolStripDropDownButton5
+            // 
+            this.toolStripDropDownButton5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.attachToMegaMolToolStripMenuItem,
+            this.hostToolStripTextBox,
+            this.portToolStripTextBox});
+            this.toolStripDropDownButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton5.Image")));
+            this.toolStripDropDownButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton5.Name = "toolStripDropDownButton5";
+            this.toolStripDropDownButton5.Size = new System.Drawing.Size(71, 22);
+            this.toolStripDropDownButton5.Text = "Attach";
+            // 
+            // attachToMegaMolToolStripMenuItem
+            // 
+            this.attachToMegaMolToolStripMenuItem.Name = "attachToMegaMolToolStripMenuItem";
+            this.attachToMegaMolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
+            this.attachToMegaMolToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
+            this.attachToMegaMolToolStripMenuItem.Text = "Attach to MegaMol";
+            this.attachToMegaMolToolStripMenuItem.Click += new System.EventHandler(this.attachToMegaMolToolStripMenuItem_Click);
+            // 
+            // hostToolStripTextBox
+            // 
+            this.hostToolStripTextBox.Name = "hostToolStripTextBox";
+            this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
+            this.hostToolStripTextBox.Text = "localhost";
+            // 
+            // portToolStripTextBox
+            // 
+            this.portToolStripTextBox.Name = "portToolStripTextBox";
+            this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
+            this.portToolStripTextBox.Text = "33333";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -850,6 +887,10 @@
         private System.Windows.Forms.ToolStripButton btnEyeDrop;
         private System.Windows.Forms.SplitContainer splitContainer4;
         private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton5;
+        private System.Windows.Forms.ToolStripMenuItem attachToMegaMolToolStripMenuItem;
+        private System.Windows.Forms.ToolStripTextBox hostToolStripTextBox;
+        private System.Windows.Forms.ToolStripTextBox portToolStripTextBox;
     }
 }
 

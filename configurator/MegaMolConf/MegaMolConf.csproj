@@ -62,6 +62,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StringSelector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StringSelector.Designer.cs">
+      <DependentUpon>StringSelector.cs</DependentUpon>
+    </Compile>
     <Compile Include="Connection\Connection.cs" />
     <Compile Include="Connection\GenericRequest.cs" />
     <Compile Include="Connection\ParameterType.cs" />
@@ -93,12 +99,6 @@
     </Compile>
     <Compile Include="Analyze\AnalyzerDialog.Designer.cs">
       <DependentUpon>AnalyzerDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CallSelector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CallSelector.Designer.cs">
-      <DependentUpon>CallSelector.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\Call.cs" />
     <Compile Include="Data\CalleeSlot.cs" />
@@ -172,6 +172,9 @@
     <Compile Include="Util\StartupCheckForm.Designer.cs">
       <DependentUpon>StartupCheckForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="StringSelector.resx">
+      <DependentUpon>StringSelector.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ImportParamfileForm.resx">
       <DependentUpon>ImportParamfileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -181,9 +184,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Analyze\AnalyzerDialog.resx">
       <DependentUpon>AnalyzerDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CallSelector.resx">
-      <DependentUpon>CallSelector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
