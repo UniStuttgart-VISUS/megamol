@@ -20,8 +20,7 @@
 
 namespace megamol {
     namespace core {
-        namespace view {
-            namespace special {
+        namespace utility {
 
     /**
      * Abstract base class for graphics fonts.
@@ -924,8 +923,7 @@ namespace megamol {
 
     };
 
-            } /* end namespace special */
-        } /* end namespace view */
+        } /* end namespace utility */
      } /* end namespace core */
 } /* end namespace megamol */
 

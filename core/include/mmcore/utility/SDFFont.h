@@ -17,7 +17,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/view/special/AbstractFont.h"
+#include "mmcore/utility/AbstractFont.h"
+#include "mmcore/utility/Configuration.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
@@ -28,8 +29,7 @@
 
 namespace megamol {
     namespace core {
-        namespace view {
-            namespace special {
+        namespace utility {
 
 
     /**
@@ -56,7 +56,7 @@ namespace megamol {
          *
          * @param ofi The outline font info of the font
          */
-        SDFFont(const BitmapFont bmf);
+        SDFFont(const BitmapFont bmf, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -64,7 +64,7 @@ namespace megamol {
          * @param ofi    The outline font info of the font
          * @param render The render type to be used
          */
-        SDFFont(const BitmapFont bmf, RenderType render);
+        SDFFont(const BitmapFont bmf, RenderType render, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -72,7 +72,7 @@ namespace megamol {
          * @param ofi  The outline font info of the font
          * @param size The size of the font in logical units
          */
-        SDFFont(const BitmapFont bmf, float size);
+        SDFFont(const BitmapFont bmf, float size, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -80,7 +80,7 @@ namespace megamol {
          * @param ofi   The outline font info of the font
          * @param flipY The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, bool flipY);
+        SDFFont(const BitmapFont bmf, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -89,7 +89,7 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, RenderType render, bool flipY);
+        SDFFont(const BitmapFont bmf, RenderType render, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -98,7 +98,7 @@ namespace megamol {
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, float size, bool flipY);
+        SDFFont(const BitmapFont bmf, float size, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -107,7 +107,7 @@ namespace megamol {
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const BitmapFont bmf, float size, RenderType render);
+        SDFFont(const BitmapFont bmf, float size, RenderType render, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -117,14 +117,14 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, float size, RenderType render, bool flipY);
+        SDFFont(const BitmapFont bmf, float size, RenderType render, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
          *
          * @param src The source object to clone from
          */
-        SDFFont(const SDFFont& src);
+        SDFFont(const SDFFont& src, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -132,7 +132,7 @@ namespace megamol {
          * @param src    The source object to clone from
          * @param render The render type to be used
          */
-        SDFFont(const SDFFont& src, RenderType render);
+        SDFFont(const SDFFont& src, RenderType render, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -140,7 +140,7 @@ namespace megamol {
          * @param src  The source object to clone from
          * @param size The size of the font in logical units
          */
-        SDFFont(const SDFFont& src, float size);
+        SDFFont(const SDFFont& src, float size, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -148,7 +148,7 @@ namespace megamol {
          * @param src   The source object to clone from
          * @param flipY The vertical flip flag
          */
-        SDFFont(const SDFFont& src, bool flipY);
+        SDFFont(const SDFFont& src, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -157,7 +157,7 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const SDFFont& src, RenderType render, bool flipY);
+        SDFFont(const SDFFont& src, RenderType render, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -166,7 +166,7 @@ namespace megamol {
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const SDFFont& src, float size, bool flipY);
+        SDFFont(const SDFFont& src, float size, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -175,7 +175,7 @@ namespace megamol {
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const SDFFont& src, float size, RenderType render);
+        SDFFont(const SDFFont& src, float size, RenderType render, const megamol::core::utility::Configuration *conf);
 
         /**
          * Ctor.
@@ -185,7 +185,7 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const SDFFont& src, float size, RenderType render, bool flipY);
+        SDFFont(const SDFFont& src, float size, RenderType render, bool flipY, const megamol::core::utility::Configuration *conf);
 
         /** Dtor. */
         virtual ~SDFFont(void);
@@ -404,7 +404,7 @@ namespace megamol {
         **********************************************************************/
 
         /** Loading font. */
-        bool loadFont(BitmapFont bmf);
+        bool loadFont(const megamol::core::utility::Configuration *conf);
 
         /** Load buffers. */
         bool loadFontBuffers();
@@ -479,8 +479,7 @@ namespace megamol {
 
     };
 
-            } /* end namespace special */
-        } /* end namespace view */
+        } /* end namespace utility */
     } /* end namespace core */
 } /* end namespace megamol */
 
