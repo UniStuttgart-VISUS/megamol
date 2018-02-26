@@ -19,9 +19,11 @@ if(BUILD_VISLIB)
   include_directories("include" "src" "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
   
   # Build vislib
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
- 
+  set(version_files ${CMAKE_BINARY_DIR}/version/VISlibVersionInfo.cpp)
+
   list(REMOVE_ITEM source_files
     "src/sys/DynamicFunctionPointer.cpp"
     "src/sys/PAMException.cpp"
@@ -42,15 +44,16 @@ if(BUILD_VISLIB)
     )
   
   # Target definition
-  add_library(vislib STATIC ${header_files} ${source_files})
+  add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files} ${version_files})
   target_link_libraries(vislib PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
   
   # Grouping in Visual Studio
   set_target_properties(vislib PROPERTIES FOLDER base)
-  source_group("Public Header Files" FILES ${header_files})
-  source_group("Header Files" FILES "src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
+  source_group("Public Header Files" FILES ${public_header_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+  source_group("Version" FILES ${version_files})
 
   # build tests if variable VISLIB_BUILD_TESTS is defined
   option(BUILD_VISLIB_TESTS "Build vislib tests" OFF)

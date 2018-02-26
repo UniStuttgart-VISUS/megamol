@@ -124,7 +124,8 @@ if(BUILD_CORE)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
-  
+  set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
+
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -140,7 +141,7 @@ if(BUILD_CORE)
     )    
 
   # Target definition
-  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   add_dependencies(core vislib glad extlibzmq extlibcppzmq)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
@@ -159,6 +160,7 @@ if(BUILD_CORE)
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
   source_group("Resources" FILES ${resource_files})
+  source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
