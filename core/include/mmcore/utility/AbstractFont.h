@@ -10,7 +10,6 @@
 
 #ifndef MEGAMOL_ABSTRACTFONT_H_INCLUDED
 #define MEGAMOL_ABSTRACTFONT_H_INCLUDED
-
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -62,7 +61,7 @@ namespace megamol {
      * on both axis (regardless 'flipY' flag) and the size (w, h) should always
      * be positive.
      */
-    class AbstractFont {
+    class MEGAMOLCORE_API AbstractFont {
     public:
 
         /** Possible values for the text alignment */

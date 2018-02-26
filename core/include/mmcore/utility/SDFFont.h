@@ -7,7 +7,6 @@
 
 #ifndef MEGAMOL_SDFFONT_H_INCLUDED
 #define MEGAMOL_SDFFONT_H_INCLUDED
-
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,9 +25,9 @@ namespace megamol {
         namespace utility {
 
     /**
-     * Implementation of font rendering using signed distance field and glyph information stored as bitmap font.
-     *
-     * -----
+     * -----------------------------------------------------------------------------------------------------------------
+     * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
+     * -----------------------------------------------------------------------------------------------------------------
      *
      * USAGE EXAMPLE:
      *
@@ -39,7 +38,7 @@ namespace megamol {
      *     DRAW:        this->sdfFont.DrawString(x, y, sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
      *
      */
-    class SDFFont : public AbstractFont {
+    class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
         /** Available predefined open source bitmap fonts. */
@@ -329,10 +328,10 @@ namespace megamol {
 
         /** Vertex buffer object info. */
         struct SDFVBO {
-            GLuint                 handle;  // buffer handle
-            vislib::StringA        name;    // varaible name of attribute in shader
-            GLuint                 index;   // index of attribute location
-            unsigned int           dim;     // dimension of data
+            GLuint           handle;  // buffer handle
+            vislib::StringA  name;    // varaible name of attribute in shader
+            GLuint           index;   // index of attribute location
+            unsigned int     dim;     // dimension of data
         };
         /** Vertex array object. */
         GLuint vaoHandle;
@@ -344,25 +343,24 @@ namespace megamol {
         struct SDFGlyphKerning {
             unsigned int previous;  // The previous character id
             unsigned int current;   // The current character id
-            float xamount;          // How much the x position should be adjusted when drawing this character immediately following the previous one
+            float        xamount;   // How much the x position should be adjusted when drawing this character immediately following the previous one
         };
 
         /** The SDF glyph info. */
         struct SDFGlyphInfo {
-            unsigned int id;          // The character id
-            float texX0;              // The left position of the character image in the texture
-            float texY0;              // The top position of the character image in the texture
-            float texX1;              // The right position of the character image in the texture
-            float texY1;              // The bottom position of the character image in the texture
-            float width;              // The width of the character 
-            float height;             // The height of the character 
-            float xoffset;            // How much the current position should be offset when copying the image from the texture to the screen
-            float yoffset;            // How much the current position should be offset when copying the image from the texture to the screen
-            float xadvance;           // How much the current position should be advanced after drawing the character
-            unsigned int kernCnt;     // Number of kernings in array
-            SDFGlyphKerning  *kerns;  // Array of kernings
+            unsigned int id;             // The character id
+            float             texX0;     // The left position of the character image in the texture
+            float             texY0;     // The top position of the character image in the texture
+            float             texX1;     // The right position of the character image in the texture
+            float             texY1;     // The bottom position of the character image in the texture
+            float             width;     // The width of the character 
+            float             height;    // The height of the character 
+            float             xoffset;   // How much the current position should be offset when copying the image from the texture to the screen
+            float             yoffset;   // How much the current position should be offset when copying the image from the texture to the screen
+            float             xadvance;  // How much the current position should be advanced after drawing the character
+            unsigned int      kernCnt;   // Number of kernings in array
+            SDFGlyphKerning  *kerns;     // Array of kernings
         };
-
 
         // Regular font -------------------------------------------------------
         /** The glyphs. */
