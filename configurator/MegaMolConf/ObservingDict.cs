@@ -64,9 +64,10 @@ namespace MegaMolConf {
         }
 
         public bool Remove(TabPage key) {
-            // todo?
-            reverseDict.Remove(theDict[key]);
-            return theDict.Remove(key);
+            // TODO?
+            //reverseDict.Remove(theDict[key]);
+            //return theDict.Remove(key);
+            return true;
         }
 
         public bool TryGetValue(TabPage key, out ObservableCollection<T> value) {

@@ -304,6 +304,7 @@
     <Content Include="Resources\eyedropper.cur" />
     <Content Include="Resources\eyedropper.png" />
     <Content Include="Resources\Paste_6520.png" />
+    <Content Include="Resources\Process_16x.png" />
     <None Include="Resources\StatusAnnotations_Required_32xLG_color.png" />
     <None Include="Resources\StatusAnnotations_Complete_and_ok_32xLG_color.png" />
     <None Include="Resources\mmconfig.rc">

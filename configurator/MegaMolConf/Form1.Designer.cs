@@ -44,6 +44,10 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
             this.forCmdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forPowershellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripDropDownButton5 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.attachToMegaMolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hostToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.portToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripDropDownButton3 = new System.Windows.Forms.ToolStripDropDownButton();
             this.importParamfileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -96,10 +100,6 @@
             this.printDialog1 = new System.Windows.Forms.PrintDialog();
             this.printDocument1 = new System.Drawing.Printing.PrintDocument();
             this.openParamfileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.toolStripDropDownButton5 = new System.Windows.Forms.ToolStripDropDownButton();
-            this.attachToMegaMolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.hostToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
-            this.portToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -256,6 +256,38 @@
             this.forPowershellToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
             this.forPowershellToolStripMenuItem.Text = "Copy Command Line for Powershell";
             this.forPowershellToolStripMenuItem.Click += new System.EventHandler(this.forPowershellToolStripMenuItem_Click);
+            // 
+            // toolStripDropDownButton5
+            // 
+            this.toolStripDropDownButton5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.attachToMegaMolToolStripMenuItem,
+            this.hostToolStripTextBox,
+            this.portToolStripTextBox});
+            this.toolStripDropDownButton5.Image = global::MegaMolConf.Properties.Resources.Process_16x;
+            this.toolStripDropDownButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton5.Name = "toolStripDropDownButton5";
+            this.toolStripDropDownButton5.Size = new System.Drawing.Size(71, 22);
+            this.toolStripDropDownButton5.Text = "Attach";
+            // 
+            // attachToMegaMolToolStripMenuItem
+            // 
+            this.attachToMegaMolToolStripMenuItem.Name = "attachToMegaMolToolStripMenuItem";
+            this.attachToMegaMolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
+            this.attachToMegaMolToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
+            this.attachToMegaMolToolStripMenuItem.Text = "Attach to MegaMol";
+            this.attachToMegaMolToolStripMenuItem.Click += new System.EventHandler(this.attachToMegaMolToolStripMenuItem_Click);
+            // 
+            // hostToolStripTextBox
+            // 
+            this.hostToolStripTextBox.Name = "hostToolStripTextBox";
+            this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
+            this.hostToolStripTextBox.Text = "localhost";
+            // 
+            // portToolStripTextBox
+            // 
+            this.portToolStripTextBox.Name = "portToolStripTextBox";
+            this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
+            this.portToolStripTextBox.Text = "33333";
             // 
             // toolStripSeparator2
             // 
@@ -744,38 +776,6 @@
             this.openParamfileDialog.Filter = "Text Files|*.txt|Param Files|*.param|All Files|*.*";
             this.openParamfileDialog.FilterIndex = 3;
             this.openParamfileDialog.Title = "Import Paramfile...";
-            // 
-            // toolStripDropDownButton5
-            // 
-            this.toolStripDropDownButton5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.attachToMegaMolToolStripMenuItem,
-            this.hostToolStripTextBox,
-            this.portToolStripTextBox});
-            this.toolStripDropDownButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton5.Image")));
-            this.toolStripDropDownButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButton5.Name = "toolStripDropDownButton5";
-            this.toolStripDropDownButton5.Size = new System.Drawing.Size(71, 22);
-            this.toolStripDropDownButton5.Text = "Attach";
-            // 
-            // attachToMegaMolToolStripMenuItem
-            // 
-            this.attachToMegaMolToolStripMenuItem.Name = "attachToMegaMolToolStripMenuItem";
-            this.attachToMegaMolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
-            this.attachToMegaMolToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.attachToMegaMolToolStripMenuItem.Text = "Attach to MegaMol";
-            this.attachToMegaMolToolStripMenuItem.Click += new System.EventHandler(this.attachToMegaMolToolStripMenuItem_Click);
-            // 
-            // hostToolStripTextBox
-            // 
-            this.hostToolStripTextBox.Name = "hostToolStripTextBox";
-            this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
-            this.hostToolStripTextBox.Text = "localhost";
-            // 
-            // portToolStripTextBox
-            // 
-            this.portToolStripTextBox.Name = "portToolStripTextBox";
-            this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
-            this.portToolStripTextBox.Text = "33333";
             // 
             // Form1
             // 
