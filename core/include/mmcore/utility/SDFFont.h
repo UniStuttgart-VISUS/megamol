@@ -1,7 +1,7 @@
 /*
  * SDFFont.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  */
 
@@ -32,7 +32,18 @@ namespace megamol {
 
 
     /**
-     * Implementation of sdf font using signed distance filed glyph information stired as bitmap font to render the font.
+     * Implementation of font rendering using signed distance field and glyph information stored as bitmap font.
+     *
+     * -----
+     *
+     * USAGE EXAMPLE:
+     *
+     *     DECLARE:     megamol::core::utility::SDFFont sdfFont;
+     *     CTOR:        this->sdfFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA)
+     *     INITIALISE:  this->sdfFont.Initialise(this->GetCoreInstance())
+     *     RENDERTYPE:  this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
+     *     DRAW:        this->sdfFont.DrawString(x, y, sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     *
      */
     class SDFFont : public AbstractFont {
     public:

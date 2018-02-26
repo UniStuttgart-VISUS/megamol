@@ -26,6 +26,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace cinematiccamera;
 
 
@@ -40,9 +41,7 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-#ifndef USE_SIMPLE_FONT
-    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-#endif // USE_SIMPLE_FONT
+    theFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA),
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
     selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
@@ -568,15 +567,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glEnd();
 
     // Draw menu labels
-    float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
-    glEnable(GL_BLEND);
-    glEnable(GL_POLYGON_SMOOTH);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    if (this->theFont.Initialise(this->GetCoreInstance())) {
+
+        float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+        glEnable(GL_BLEND);
+        glEnable(GL_POLYGON_SMOOTH);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+        this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+
+    }
 
     // ------------------------------------------------------------------------
 

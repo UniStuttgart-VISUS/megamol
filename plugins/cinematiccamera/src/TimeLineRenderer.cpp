@@ -28,7 +28,9 @@
 #include "CallCinematicCamera.h"
 
 
+using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::cinematiccamera;
 
 
@@ -46,10 +48,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     rulerFontParam( "01_fontSize", "The font size."),
     moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
     moveLeftFrame( "03_leftFrame", "Move to left animation time frame."),
-
-#ifndef USE_SIMPLE_FONT
-	theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-#endif // USE_SIMPLE_FONT
+    theFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA),
 	dragDropKeyframe()
 	{
 
@@ -124,7 +123,7 @@ TimeLineRenderer::~TimeLineRenderer(void) {
 bool TimeLineRenderer::create(void) {
 	
     // Initialise font
-    if (!this->theFont.Initialise()) {
+    if (!this->theFont.Initialise(this->GetCoreInstance())) {
         vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
@@ -555,7 +554,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             tmpStr.Format(this->animFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
             this->theFont.DrawString(this->axisStartPos.X() + f - strWidth / 2.0f, this->axisStartPos.Y() - this->rulerMarkSize - strHeight,
-                                     strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                                     strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
         }
         timeStep += this->animSegmValue;
     }
@@ -569,7 +568,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             tmpStr.Format(this->simFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
             this->theFont.DrawString(this->axisStartPos.X() - this->rulerMarkSize - strWidth, this->axisStartPos.Y() - strHeight / 2.0f + f,
-                                     strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                                     strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
         }
         timeStep += this->simSegmValue;
     }
@@ -578,12 +577,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     tmpStr = "animation time / frames ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,
-        strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+        strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
     tmpStr = "simulation time ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + strHeight / 2.0f,
-        strWidth, strHeight, this->fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+        strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
     // DRAW MENU --------------------------------------------------------------
@@ -637,11 +636,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glEnable(GL_BLEND);
     glEnable(GL_POLYGON_SMOOTH);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // ------------------------------------------------------------------------
 
