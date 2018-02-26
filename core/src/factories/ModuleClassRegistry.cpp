@@ -72,7 +72,6 @@
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
-#include "mmcore/utility/TestFontRenderer.h"
 
 using namespace megamol::core;
 
@@ -149,5 +148,4 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
-    instance.RegisterAutoDescription<core::utility::TestFontRenderer>();
 }

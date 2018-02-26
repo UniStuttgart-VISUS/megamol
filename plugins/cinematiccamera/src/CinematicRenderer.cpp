@@ -35,7 +35,6 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
-using namespace megamol::core::utility;
 using namespace megamol::cinematiccamera;
 using namespace vislib;
 
@@ -52,7 +51,9 @@ using namespace vislib;
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     slaveRendererSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    theFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA),
+#ifndef USE_SIMPLE_FONT
+    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
+#endif // USE_SIMPLE_FONT
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
@@ -139,7 +140,7 @@ bool CinematicRenderer::create(void) {
     }
 
     // initialise font
-    if (!this->theFont.Initialise(this->GetCoreInstance())) {
+    if (!this->theFont.Initialise()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
@@ -543,11 +544,11 @@ bool CinematicRenderer::Render(Call& call) {
     glEnable(GL_BLEND);
     glEnable(GL_POLYGON_SMOOTH);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 
     // Draw help text 
     if (this->showHelpText) {
@@ -603,7 +604,7 @@ bool CinematicRenderer::Render(Call& call) {
         glEnable(GL_BLEND);
         glEnable(GL_POLYGON_SMOOTH);
         glColor4fv(fgColor);
-        this->theFont.DrawString(htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        this->theFont.DrawString(htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
 
     glPopMatrix();

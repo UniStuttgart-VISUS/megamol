@@ -1,7 +1,7 @@
 /*
  * SDFFont.cpp
  *
- * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
