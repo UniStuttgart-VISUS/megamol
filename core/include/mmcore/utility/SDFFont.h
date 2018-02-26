@@ -1,7 +1,7 @@
 /*
  * SDFFont.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  */
 
@@ -12,16 +12,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
-
 
 #include "mmcore/utility/AbstractFont.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/math/Vector.h"
 
 #include <vector>
 
@@ -30,9 +25,19 @@ namespace megamol {
     namespace core {
         namespace utility {
 
-
     /**
-     * Implementation of sdf font using signed distance filed glyph information stired as bitmap font to render the font.
+     * Implementation of font rendering using signed distance field and glyph information stored as bitmap font.
+     *
+     * -----
+     *
+     * USAGE EXAMPLE:
+     *
+     *     DECLARE:     megamol::core::utility::SDFFont sdfFont;
+     *     CTOR:        this->sdfFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA)
+     *     INITIALISE:  this->sdfFont.Initialise(this->GetCoreInstance())
+     *     RENDERTYPE:  this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
+     *     DRAW:        this->sdfFont.DrawString(x, y, sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     *
      */
     class SDFFont : public AbstractFont {
     public:
@@ -371,33 +376,33 @@ namespace megamol {
 
         // Bold font ----------------------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphsBold;
+        //std::vector<SDFGlyphInfo> glyphsBold;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdxBold;
+        //SDFGlyphInfo **glyphIdxBold;
         /** Numbner of indices in index array. */
-        unsigned int   idxCntBold;
+        //unsigned int   idxCntBold;
         /** The glyph kernings. */
-        std::vector<SDFGlyphKerning> kerningsBold;
+        //std::vector<SDFGlyphKerning> kerningsBold;
 
         // Oblique font -------------------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphsOblique;
+        //std::vector<SDFGlyphInfo> glyphsOblique;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdxOblique;
+        //SDFGlyphInfo **glyphIdxOblique;
         /** Numbner of indices in index array. */
-        unsigned int   idxCntOblique;
+        //unsigned int   idxCntOblique;
         /** The glyph kernings. */
-        std::vector<SDFGlyphKerning> kerningsOblique;
+        //std::vector<SDFGlyphKerning> kerningsOblique;
 
         // Bold and Oblique font ----------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphsBoldOblique;
+        //std::vector<SDFGlyphInfo> glyphsBoldOblique;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdxBoldOblique;
+        //SDFGlyphInfo **glyphIdxBoldOblique;
         /** Numbner of indices in index array. */
-        unsigned int   idxCntBoldOblique;
+        //unsigned int   idxCntBoldOblique;
         /** The glyph kernings. */
-        std::vector<SDFGlyphKerning> kerningsBoldOblique;
+        //std::vector<SDFGlyphKerning> kerningsBoldOblique;
 
 
         /**********************************************************************
@@ -483,10 +488,6 @@ namespace megamol {
         } /* end namespace utility */
     } /* end namespace core */
 } /* end namespace megamol */
-
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #endif /* MEGAMOL_SDFFONT_H_INCLUDED */
 

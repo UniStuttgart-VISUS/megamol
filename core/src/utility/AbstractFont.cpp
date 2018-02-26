@@ -1,7 +1,7 @@
 /*
  * AbstractFont.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2018 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
  /*
@@ -78,7 +78,6 @@ void megamol::core::utility::AbstractFont::SetSize(float size) {
 /*
  * megamol::core::utility::AbstractFont::AbstractFont
  */
-megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false),
-        size(1.0f), flipY(false) {
+megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
     // intentionally empty
 }

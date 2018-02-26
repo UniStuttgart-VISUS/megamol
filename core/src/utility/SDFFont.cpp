@@ -1,7 +1,7 @@
 /*
  * SDFFont.cpp
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
+ * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -25,9 +25,6 @@
 
 
 using namespace vislib;
-
-using namespace megamol;
-using namespace megamol::core;
 using namespace megamol::core::utility;
 
 
