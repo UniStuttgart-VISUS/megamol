@@ -13,11 +13,21 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/productversion.h"
 
+namespace megamol {
+namespace core {
+MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MAJOR;
+MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MINOR;
+MEGAMOLCORE_API extern char const* MEGAMOL_GIT_HASH;
+} /* end namespace core */
+} /* end namespace megamol */
 
-#define MEGAMOL_CORE_MAJOR_VER MEGAMOL_VERSION_MAJOR
-#define MEGAMOL_CORE_MINOR_VER MEGAMOL_VERSION_MINOR
+
+#define MEGAMOL_CORE_MAJOR_VER (megamol::core::MEGAMOL_VERSION_MAJOR)
+#define MEGAMOL_CORE_MINOR_VER (megamol::core::MEGAMOL_VERSION_MINOR)
+#define MEGAMOL_CORE_COMP_REV  (megamol::core::MEGAMOL_GIT_HASH)
 #define MEGAMOL_CORE_MAJOR_REV ""
 #define MEGAMOL_CORE_MINOR_REV ""
 
@@ -37,23 +47,25 @@
     "Alle Rechte vorbehalten.\n" \
     "All rights reserved.\n" MEGAMOL_CORE_DIRTYTEXT
 
-#if (MEGAMOL_CORE_MAJOR_VER == 1)
-#if (MEGAMOL_CORE_MINOR_VER == 1) // v1.1
-#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Post-Orphan)"
-#elif (MEGAMOL_CORE_MINOR_VER == 2) // v1.2
-#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Evolution Chamber)"
-#endif
+#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core"
 
-#elif (MEGAMOL_CORE_MAJOR_VER == 0)
-#if (MEGAMOL_CORE_MINOR_VER == 4) // v0.4
-#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Skynet)"
-#elif (MEGAMOL_CORE_MINOR_VER == 3) // v0.3
-#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Redesign 03)"
-#elif (MEGAMOL_CORE_MINOR_VER == 1) // v0.1
-#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Prototype)"
-#endif
-
-#endif
+//#if (MEGAMOL_CORE_MAJOR_VER == 1)
+//#if (MEGAMOL_CORE_MINOR_VER == 1) // v1.1
+//#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Post-Orphan)"
+//#elif (MEGAMOL_CORE_MINOR_VER == 2) // v1.2
+//#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Evolution Chamber)"
+//#endif
+//
+//#elif (MEGAMOL_CORE_MAJOR_VER == 0)
+//#if (MEGAMOL_CORE_MINOR_VER == 4) // v0.4
+//#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Skynet)"
+//#elif (MEGAMOL_CORE_MINOR_VER == 3) // v0.3
+//#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Redesign 03)"
+//#elif (MEGAMOL_CORE_MINOR_VER == 1) // v0.1
+//#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Prototype)"
+//#endif
+//
+//#endif
 
 #ifndef MEGAMOL_CORE_NAME
 #define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core"

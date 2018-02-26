@@ -73,6 +73,14 @@ namespace core {
             return this->caller;
         }
 
+        inline void SetClassName(const char *name) {
+            this->className = name;
+        }
+
+        inline const char * ClassName() const {
+            return this->className;
+        }
+
     private:
 
         /** The callee connected by this call */
@@ -80,6 +88,8 @@ namespace core {
 
         /** The caller connected by this call */
         CallerSlot *caller;
+
+        const char *className;
 
         /** The function id mapping */
         unsigned int *funcMap;

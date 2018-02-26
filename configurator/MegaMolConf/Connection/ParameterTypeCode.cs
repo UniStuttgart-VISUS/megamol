@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MegaMolConf.Communication {
+﻿namespace MegaMolConf.Communication {
 
     /// <summary>
     /// Known parameter types in MegaMol
@@ -65,7 +59,15 @@ namespace MegaMolConf.Communication {
         /// <summary>
         /// FlexEnumParam
         /// </summary>
-        MMFENU = 93794658045261
+        MMFENU = 93794658045261,
+        /// <summary>
+        /// TransferFunc1DParam
+        /// </summary>
+        MMTF1W = 95869144943949,
+        /// <summary>
+        /// TransferFunc1DParam
+        /// </summary>
+        MMTF1A = 71679889132877
     }
 
 }

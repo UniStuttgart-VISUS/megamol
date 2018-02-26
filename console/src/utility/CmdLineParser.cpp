@@ -45,7 +45,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     logEchoLevel(0, _T("logecholevel"), _T("Specifies the log echo level."), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::INT_OR_STRING_VALUE, _T("level"), _T("The log level to use (Positive number or 'all')."))),
     forceViewer(0, _T("viewer"), _T("Forces the loading and starting of the viewer module"), ParserOption::FLAG_UNIQUE),
-    instJobView(_T('i'), _T("instantiate"), _T("Instantiates a \"job\" or \"view\" from the loaded project"), ParserOption::FLAG_NULL,
+    instJobView(_T('i'), _T("instantiate"), _T("Instantiates a \"job\" or \"view\" from the loaded project (only works for legacy XML projects!)"), ParserOption::FLAG_NULL,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), _T("The name of the \"job\" or \"view\" to be instantiated"))
         ->Add(ParserOption::STRING_VALUE, _T("id"), _T("The identifier name to be set for the instance"))),
     cmdLineFile(0, _T("cmdlinefile"), _T("Reads the first text line form a file and uses this line as command line"), ParserOption::FLAG_EXCLUSIVE,

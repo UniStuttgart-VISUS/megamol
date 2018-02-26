@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MegaMolConf
@@ -19,7 +17,7 @@ namespace MegaMolConf
         /// <summary>
         /// The application's main form
         /// </summary>
-        private static Form1 mainForm = null;
+        private static Form1 mainForm;
 
         /// <summary>
         /// Access to the application's main form
@@ -175,7 +173,7 @@ namespace MegaMolConf
                 return (string)mainForm.Invoke(new Func<string, string>(TryLoadRunFile), new object[] { path });
             }
 
-            if (System.IO.File.Exists(path)) {
+            if (File.Exists(path)) {
                 try {
                     Io.ProjectFile pf = Io.ProjectFile.Load(path);
                     mainForm.LoadProjectFile(pf, path);

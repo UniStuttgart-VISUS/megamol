@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MegaMolConf.Communication {
+﻿namespace MegaMolConf.Communication {
 
     /// <summary>
     /// Possible MegaMol parameter Types
@@ -22,7 +16,8 @@ namespace MegaMolConf.Communication {
         Vector2fParam,
         Vector3fParam,
         Vector4fParam,
-        FlexEnumParam
+        FlexEnumParam,
+        TransferFunc1DParam
     }
 
 }

@@ -691,7 +691,6 @@
             this.tabViews.Size = new System.Drawing.Size(800, 506);
             this.tabViews.TabIndex = 0;
             this.tabViews.SelectedIndexChanged += new System.EventHandler(this.tabViews_SelectedIndexChanged);
-            this.tabViews.Selected += new System.Windows.Forms.TabControlEventHandler(this.tabViews_Selected);
             this.tabViews.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabViews_MouseClick);
             // 
             // imageList1
