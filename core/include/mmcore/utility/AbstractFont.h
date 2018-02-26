@@ -16,6 +16,7 @@
 
 
 #include "vislib/String.h"
+#include "mmcore/CoreInstance.h"
 
 
 namespace megamol {
@@ -103,8 +104,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        inline unsigned int BlockLines(float maxWidth,
-                const ::vislib::StringA& txt) const {
+        inline unsigned int BlockLines(float maxWidth, const ::vislib::StringA& txt) const {
             return this->BlockLines(maxWidth, this->size, txt.PeekBuffer());
         }
 
@@ -119,8 +119,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        inline unsigned int BlockLines(float maxWidth, float size,
-                const::vislib::StringA& txt) const {
+        inline unsigned int BlockLines(float maxWidth, float size, const::vislib::StringA& txt) const {
             return this->BlockLines(maxWidth, size, txt.PeekBuffer());
         }
 
@@ -134,8 +133,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        inline unsigned int BlockLines(float maxWidth, const wchar_t *txt)
-                const {
+        inline unsigned int BlockLines(float maxWidth, const wchar_t *txt) const {
             return this->BlockLines(maxWidth, this->size, txt);
         }
 
@@ -149,8 +147,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        inline unsigned int BlockLines(float maxWidth,
-                const::vislib::StringW& txt) const {
+        inline unsigned int BlockLines(float maxWidth, const::vislib::StringW& txt) const {
             return this->BlockLines(maxWidth, this->size, txt.PeekBuffer());
         }
 
@@ -165,8 +162,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        inline unsigned int BlockLines(float maxWidth, float size,
-                const::vislib::StringW& txt) const {
+        inline unsigned int BlockLines(float maxWidth, float size, const::vislib::StringW& txt) const {
             return this->BlockLines(maxWidth, size, txt.PeekBuffer());
         }
 
@@ -181,8 +177,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        virtual unsigned int BlockLines(float maxWidth, float size,
-            const char *txt) const = 0;
+        virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const = 0;
 
         /**
          * Calculates the height of a text block in number of lines, when
@@ -195,8 +190,7 @@ namespace megamol {
          *
          * @return The height of the text block in number of lines.
          */
-        virtual unsigned int BlockLines(float maxWidth, float size,
-            const wchar_t *txt) const = 0;
+        virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const = 0;
 
         /**
          * Deinitialises the object if required. Derived classes must call
@@ -212,8 +206,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const char *txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, this->flipY, txt, align);
         }
 
@@ -225,8 +218,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const::vislib::StringA& txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
                 align);
         }
@@ -242,8 +234,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h,
-                const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
         }
 
@@ -258,9 +249,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h,
-                const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float w, float h, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, this->flipY,
                 txt.PeekBuffer(), align);
         }
@@ -274,9 +263,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size,
-                const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float size, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
@@ -289,8 +276,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, const char *txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, this->flipY, txt, align);
         }
 
@@ -306,9 +292,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float w, float h, float size, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
@@ -325,8 +309,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, this->flipY, txt, align);
         }
 
@@ -339,8 +322,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY, const char *txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, flipY, txt, align);
         }
 
@@ -353,9 +335,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY,
-                const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -371,8 +351,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
 
@@ -388,9 +367,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float w, float h, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
 
@@ -404,9 +381,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, bool flipY,
-                const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float size, bool flipY, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -420,8 +395,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY,
-            const char *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        virtual void DrawString(float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
         /**
          * Draws a text into a specified rectangular area, and performs
@@ -436,9 +410,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                bool flipY, const::vislib::StringA& txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, float size, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -455,8 +427,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size,
-            bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
+        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
             const = 0;
 
         /**
@@ -467,8 +438,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const wchar_t *txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, this->flipY, txt, align);
         }
 
@@ -480,10 +450,8 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const::vislib::StringW& txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
-                align);
+        inline void DrawString(float x, float y, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -497,8 +465,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h,
-                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
         }
 
@@ -513,11 +480,8 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h,
-                const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
-            this->DrawString(x, y, w, h, this->size, this->flipY,
-                txt.PeekBuffer(), align);
+        inline void DrawString(float x, float y, float w, float h, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, this->size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -529,9 +493,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size,
-                const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float size, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
@@ -544,8 +506,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size,
-                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, this->flipY, txt, align);
         }
 
@@ -561,9 +522,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float w, float h, float size, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
@@ -580,8 +539,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, this->flipY, txt, align);
         }
 
@@ -594,8 +552,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY,
-                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, flipY, txt, align);
         }
 
@@ -608,9 +565,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY,
-                const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -626,8 +581,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
 
@@ -643,9 +597,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float w, float h, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
 
@@ -659,9 +611,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, bool flipY,
-                const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
-                const {
+        inline void DrawString(float x, float y, float size, bool flipY, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -675,8 +625,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY,
-            const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        virtual void DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
         /**
          * Draws a text into a specified rectangular area, and performs
@@ -691,9 +640,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size,
-                bool flipY, const::vislib::StringW& txt,
-                Alignment align = ALIGN_LEFT_TOP) const {
+        inline void DrawString(float x, float y, float w, float h, float size, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
@@ -710,9 +657,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size,
-            bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP)
-            const = 0;
+        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
 
         /**
@@ -729,9 +674,11 @@ namespace megamol {
          * Initialises the object if required. You must call 'Initialise'
          * before the object can be used.
          *
+         * @param conf The megamol core isntance, neeeded for being able to load shader/resource files.
+         *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialise(void);
+        bool Initialise(megamol::core::CoreInstance *core);
 
         /**
          * Answer the flag 'flipY'. If 'flipY' is true, the direction of the
@@ -899,9 +846,11 @@ namespace megamol {
          * Instead call 'Initialise'. You must call 'Initialise' before the
          * object can be used.
          *
+         * @param conf The megamol core isntance, neeeded for being able to load shader/resource files.
+         *
          * @return 'true' on success, 'false' on failure.
          */
-        virtual bool initialise(void) = 0;
+        virtual bool initialise(megamol::core::CoreInstance *core) = 0;
 
         /**
          * Deinitialises the object. You must not call this method directly.

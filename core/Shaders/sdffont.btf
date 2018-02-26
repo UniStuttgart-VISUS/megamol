@@ -1,8 +1,42 @@
-/*
-* Fragment shader for SDFFont
-*/
-#version 400
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sdffont">
+    <include file="common"/>
 
+    <shader name="vertex">
+        <snippet type="version">400</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="main" type="string">
+            <![CDATA[
+
+in      vec3  inVertPos;
+in      vec2  inVertTexCoord;
+
+uniform mat4  mvpMat;         // ModelViewProjection-Matrix
+uniform float fontSize;
+
+out     vec2  texCoord;
+
+
+/*
+* MAIN
+*/
+void main() {
+
+    texCoord    = inVertTexCoord;
+    gl_Position = mvpMat * vec4(inVertPos, 1.0);
+
+}
+
+]]>
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">400</snippet>
+        <snippet name="common::defines"/>        
+        <snippet name="main" type="string">
+            <![CDATA[
+         
 #define RENDERTYPE_FILL    1
 #define RENDERTYPE_OUTLINE 2
 
@@ -53,4 +87,8 @@ void main(void) {
     outFragColor = vec4(color.rgb, alpha);
 }
 
- // DO NOT DELETE THIS LINE (last character will be set to '\0') 
+]]>
+        </snippet>
+    </shader>
+
+</btf>
