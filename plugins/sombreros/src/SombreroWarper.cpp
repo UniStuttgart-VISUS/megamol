@@ -8,6 +8,7 @@
 
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "TunnelResidueDataCall.h"
@@ -36,7 +37,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
         minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
         maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level"),
         liftingTargetDistance("meshDeformation::liftingTargetDistance", "The distance that is applied to a vertex during the lifting process."),
-        maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.") {
+        maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed."),
+        flatteningParam("flat", "Flat representation of the result") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -62,6 +64,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->maxAllowedLiftingDistance.SetParameter(new param::IntParam(2, 2, 10));
     this->MakeSlotAvailable(&this->maxAllowedLiftingDistance);
+
+    this->flatteningParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->flatteningParam);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -203,6 +208,10 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->liftingTargetDistance.IsDirty()) {
         this->liftingTargetDistance.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->flatteningParam.IsDirty()) {
+        this->flatteningParam.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -823,6 +832,15 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
             }
         }
     }
+
+    const float bbmargin = 0.1f;
+
+    if (this->flatteningParam.Param<param::BoolParam>()->Value()) {
+        this->boundingBox.SetBottom(this->boundingBox.Bottom() - bbmargin);
+        this->boundingBox.SetTop(this->boundingBox.Top() + bbmargin);
+    }
+
+    printf("%f %f %f %f %f %f\n", this->boundingBox.Left(), this->boundingBox.Bottom(), this->boundingBox.Back(), this->boundingBox.Right(), this->boundingBox.Top(), this->boundingBox.Front());
 
     return true;
 }
@@ -1742,17 +1760,23 @@ bool SombreroWarper::liftVertices(void) {
  */
 bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 
+    bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
+
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
         float maxHeight = this->sombreroLength[i] / 2.0f;
         float minHeight = 0.0f - maxHeight;
-#if 1
+
         // all brim vertices have a y-position of + tunnellength / 2
+        // if the flat mode is turned on, all vertices get this y-position assigned
         for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
-            if (this->brimFlags[i][j]) {
+            if (this->brimFlags[i][j] || flatmode) {
                 this->vertices[i][3 * j + 1] = maxHeight;
             }
         }
-#endif
+
+        // if we went the flat version, we already know the height of all vertices and should return
+        if (flatmode) return true;
+
         // for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
         // first step: identify these vertices
         std::set<uint> borderSet;
@@ -1855,6 +1879,8 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
  * SombreroWarper::computeXZCoordinatePerVertex
  */
 bool SombreroWarper::computeXZCoordinatePerVertex(void) {
+
+    bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
 
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
         float minRad = this->sombreroRadius[i];

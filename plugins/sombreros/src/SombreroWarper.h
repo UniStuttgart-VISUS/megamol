@@ -237,6 +237,9 @@ namespace sombreros {
         /** Parameter for the maximum allowed distance before lifting*/
         core::param::ParamSlot maxAllowedLiftingDistance;
 
+        /** Parameter enabling the flattening of the sombrero */
+        core::param::ParamSlot flatteningParam;
+
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
