@@ -58,7 +58,9 @@ namespace factories {
          * @return The newly created call object.
          */
         virtual Call * CreateCall(void) const {
-            return this->describeCall(new T());
+            T *thing = new T();
+            thing->SetClassName(this->ClassName());
+            return this->describeCall(thing);
         }
 
         /**

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MegaMolConf.Util {
@@ -38,34 +33,34 @@ namespace MegaMolConf.Util {
         /// Gets or sets the settings to be edited
         /// </summary>
         internal Properties.Settings Settings {
-            get { return this.propertyGrid1.SelectedObject as Properties.Settings; }
-            set { this.propertyGrid1.SelectedObject = value; }
+            get { return propertyGrid1.SelectedObject as Properties.Settings; }
+            set { propertyGrid1.SelectedObject = value; }
         }
 
         private void button3_Click(object sender, EventArgs e) {
             if (SG.Utilities.Forms.Elevation.IsElevationRequired && !SG.Utilities.Forms.Elevation.IsElevated) {
-                if (SG.Utilities.Forms.Elevation.RestartElevated("?#REG " + Application.ExecutablePath + " " + this.Handle.ToString()) == int.MinValue) {
+                if (SG.Utilities.Forms.Elevation.RestartElevated("?#REG " + Application.ExecutablePath + " " + Handle.ToString()) == int.MinValue) {
                     MessageBox.Show("Failed to start elevated Process. Most likely a security conflict.",
                         Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             } else {
-                Util.FileTypeRegistration.Register(this, Application.ExecutablePath);
+                FileTypeRegistration.Register(this, Application.ExecutablePath);
             }
         }
 
         private void button4_Click(object sender, EventArgs e) {
             if (SG.Utilities.Forms.Elevation.IsElevationRequired && !SG.Utilities.Forms.Elevation.IsElevated) {
-                if (SG.Utilities.Forms.Elevation.RestartElevated("?#UNREG " + Application.ExecutablePath + " " + this.Handle.ToString()) == int.MinValue) {
+                if (SG.Utilities.Forms.Elevation.RestartElevated("?#UNREG " + Application.ExecutablePath + " " + Handle.ToString()) == int.MinValue) {
                     MessageBox.Show("Failed to start elevated Process. Most likely a security conflict.",
                         Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             } else {
-                Util.FileTypeRegistration.Unregister(this, Application.ExecutablePath);
+                FileTypeRegistration.Unregister(this, Application.ExecutablePath);
             }
         }
 
         private void button1_Click(object sender, EventArgs e) {
-            Util.StartupCheckForm scform = new Util.StartupCheckForm();
+            StartupCheckForm scform = new StartupCheckForm();
             scform.KeepOpen = true;
             scform.ShowDialog(this);
         }
