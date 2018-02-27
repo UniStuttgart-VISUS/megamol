@@ -527,7 +527,7 @@ float SDFFont::lineWidth(int *&run, bool iterate) const {
     int *i = run;
     float len = 0.0f;
     while (*i != 0) {
-        len += this->glyphIdx[(*i)]->xadvance; // No check -> requires valid run!
+        len += this->glyphIdx[((*i) < 0) ? (-1 - (*i)) : ((*i) - 1)]->xadvance; // No check -> requires valid run!
         i++;
         if (*i < 0) break;
     }

@@ -57,7 +57,7 @@ namespace megamol {
      *     - Bold,Italic:                       false
      *     - Rendering:                         java
      *     - Glyph Cache Page - Width,Height:   1024
-     *     - Glyph set:                         ASCII + ™
+     *     - Glyph set:                         ASCII + ™ + €
      *     - Distance Field - Spread:           10 
      *     - Distance Field - Scale:           ~50 (set in the end, operation is expensive)
      * -----------------------------------------------------------------------------------------------------------------
