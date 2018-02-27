@@ -3,10 +3,14 @@
  *
  * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
+ *
+ * This implementation is based on "vislib/graphics/OutlinetFont.h"
  */
+
 
 #ifndef MEGAMOL_SDFFONT_H_INCLUDED
 #define MEGAMOL_SDFFONT_H_INCLUDED
+
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,8 +21,6 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 
-#include <vector>
-
 
 namespace megamol {
     namespace core {
@@ -26,26 +28,42 @@ namespace megamol {
 
     /**
      * -----------------------------------------------------------------------------------------------------------------
+     *
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     *
-     * USAGE EXAMPLE:
-     *
-     *     DECLARE:     megamol::core::utility::SDFFont sdfFont;
-     *     CTOR:        this->sdfFont(megamol::core::utility::SDFFont::BitmapFont::VERDANA)
-     *     INITIALISE:  this->sdfFont.Initialise(this->GetCoreInstance())
-     *     RENDERTYPE:  this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
-     *     DRAW:        this->sdfFont.DrawString(x, y, sdfWidth, 1.0f, fontSize, true, sdfString, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
-     *
+     * >>> Available predefined fonts: (Available: Regular - TODO: Bold,Oblique,Bold-Oblique)
+     *     - "Evolventa-SansSerif"
+     *     - "Roboto-SansSerif"
+     *     - "Ubuntu-Mono"
+     *     - "Vollkorn-Serif"
+     * -----------------------------------------------------------------------------------------------------------------
+     * >>> Usage example:
+     *     - Declare:            megamol::core::utility::SDFFont sdfFont;
+     *     - Ctor:               this->sdfFont("Roboto-SansSerif")
+     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
+     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
+     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     * -----------------------------------------------------------------------------------------------------------------
+     * >>> Path the fonts are looked for: <megamol>/share/resource/<fontname>(.fnt/.png)
+     * -----------------------------------------------------------------------------------------------------------------
+     * >>> Source of fonts free for (commercial) use: https://www.fontsquirrel.com/
+     * -----------------------------------------------------------------------------------------------------------------
+     * >>> SDF generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
+     *     Optimal Settings:   
+     *     - Padding - Top,Right,Bottom,Left:   10
+     *     - Padding - X,Y:                    -20
+     *     - Size:                             ~90 (Glyphs must fit on one page!)
+     *     - Bold,Italic:                       false
+     *     - Rendering:                         java
+     *     - Glyph Cache Page - Width,Height:   1024
+     *     - Glyph set:                         ASCII + ™
+     *     - Distance Field - Spread:           10 
+     *     - Distance Field - Scale:           ~50 (set in the end, operation is expensive)
+     * -----------------------------------------------------------------------------------------------------------------
      */
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
-
-        /** Available predefined open source bitmap fonts. */
-        enum BitmapFont {
-            EVOLVENTA,
-            VERDANA
-        };
 
         /** Possible render types for the font. */
         enum RenderType {
@@ -59,7 +77,7 @@ namespace megamol {
          *
          * @param ofi The outline font info of the font
          */
-        SDFFont(const BitmapFont bmf);
+        SDFFont(const vislib::StringA bmf);
 
         /**
          * Ctor.
@@ -67,7 +85,7 @@ namespace megamol {
          * @param ofi    The outline font info of the font
          * @param render The render type to be used
          */
-        SDFFont(const BitmapFont bmf, RenderType render);
+        SDFFont(const vislib::StringA bmf, RenderType render);
 
         /**
          * Ctor.
@@ -75,7 +93,7 @@ namespace megamol {
          * @param ofi  The outline font info of the font
          * @param size The size of the font in logical units
          */
-        SDFFont(const BitmapFont bmf, float size);
+        SDFFont(const vislib::StringA bmf, float size);
 
         /**
          * Ctor.
@@ -83,7 +101,7 @@ namespace megamol {
          * @param ofi   The outline font info of the font
          * @param flipY The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, bool flipY);
+        SDFFont(const vislib::StringA bmf, bool flipY);
 
         /**
          * Ctor.
@@ -92,7 +110,7 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, RenderType render, bool flipY);
+        SDFFont(const vislib::StringA bmf, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -101,7 +119,7 @@ namespace megamol {
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, float size, bool flipY);
+        SDFFont(const vislib::StringA bmf, float size, bool flipY);
 
         /**
          * Ctor.
@@ -110,7 +128,7 @@ namespace megamol {
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const BitmapFont bmf, float size, RenderType render);
+        SDFFont(const vislib::StringA bmf, float size, RenderType render);
 
         /**
          * Ctor.
@@ -120,7 +138,7 @@ namespace megamol {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const BitmapFont bmf, float size, RenderType render, bool flipY);
+        SDFFont(const vislib::StringA bmf, float size, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -305,8 +323,13 @@ namespace megamol {
         * variables
         **********************************************************************/
 
+/** Disable dll export warning for not exported classes in ::vislib and ::std */
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
         /** The sdf font. */
-        BitmapFont font;
+        vislib::StringA fontName;
 
         /** The render type used. */
         RenderType renderType;
@@ -402,6 +425,9 @@ namespace megamol {
         /** The glyph kernings. */
         //std::vector<SDFGlyphKerning> kerningsBoldOblique;
 
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /**********************************************************************
         * functions

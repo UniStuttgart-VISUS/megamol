@@ -3,9 +3,8 @@
  *
  * Copyright (C) 2006 - 2018 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
- */
- /*
- * This is a copy of "vislib/graphics/AbstractFont.h"
+ *
+ * This implementation is based on "vislib/graphics/AbstractFont.h"
  */
 
 #include "mmcore/utility/AbstractFont.h"

@@ -3,13 +3,13 @@
  *
  * Copyright (C) 2006 - 2018 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ *
+ * This is a copy of "vislib/graphics/AbstractFont.h"
  */
-/*
-* This is a copy of "vislib/graphics/AbstractFont.h"
-*/
 
 #ifndef MEGAMOL_ABSTRACTFONT_H_INCLUDED
 #define MEGAMOL_ABSTRACTFONT_H_INCLUDED
+
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
