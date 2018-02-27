@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
         if (parseRes.count("open")) host = parseRes["open"].as<std::string>();
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
-        if (parseRes.count("exec")) script = options["exec"].as<std::string>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
 
 
