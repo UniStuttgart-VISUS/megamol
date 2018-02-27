@@ -10,37 +10,56 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(tracking)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
   
-  # Get the external vrpn from GitHub.
+  # Stop if the user tries to build this plugin with Linux.
+  if(UNIX)
+    MESSAGE(FATAL_ERROR "The tracking Plugin only works with Windows!")
+  endif()
+  
+  # Get the external vrpn project from GitHub.
   include(ExternalProject)
   
+  # Set the install location and the version for the vrpn project.
   set(VRPN_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
   set(VRPN_VER "v07.34")
   
-  set(VRPN_INSTALL_COPY debug "-E copy ${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/quat/Debug/quatd.lib ${VRPN_INSTALL_LOCATION}/lib" optimized "-E copy ${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/quat/Release/quat.lib ${VRPN_INSTALL_LOCATION}/lib")
+  # Set the paths for the needed libraries and include files from the vrpn
+  # project.
+  set(VRPN_INCLUDE_COPY "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Assert.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_BaseClass.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Button.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Configure.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Connection.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_EndpointContainer.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Serial.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Shared.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Thread.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Tracker.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_Types.h" "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn/vrpn_WindowsH.h")
+  
+  # Add the vrpn project as an external project and set the cmake commands
+  # for configuring and building it.
   ExternalProject_Add(
 	vrpn
     GIT_REPOSITORY https://github.com/vrpn/vrpn.git
     GIT_TAG ${VRPN_VER} # the only version the software was tested with
 	GIT_SUBMODULES
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND ${CMAKE_COMMAND} -DVRPN_BUILD_CLIENTS:BOOL=OFF -DVRPN_BUILD_SERVERS:BOOL=OFF ${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn COMMAND ${CMAKE_COMMAND} --build "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build"
-	INSTALL_COMMAND ${CMAKE_COMMAND} ${VRPN_INSTALL_COPY}
+	CONFIGURE_COMMAND ${CMAKE_COMMAND} -DVRPN_BUILD_CLIENTS:BOOL=OFF -DVRPN_BUILD_SERVERS:BOOL=OFF ${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn
+	BUILD_COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build
+	INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${VRPN_INCLUDE_COPY} ${VRPN_INSTALL_LOCATION}/include
   )
-
+  
+  # Set the paths to the libraries.
+  set(QUAT_LIBRARY debug "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/quat/Debug/quatd.lib" optimized "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/quat/Release/quat.lib")
+  set(VRPN_LIBRARY debug "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/Debug/vrpnd.lib" optimized "${PROJECT_BINARY_DIR}/vrpn-prefix/src/vrpn-build/Release/vrpn.lib")  
+  
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  
+  # Find the NatNet library, the location of the NatNet dlls and the location of the
+  # inlucde files.
   option(USE_NATNET "use NatNet" ON)
   if(USE_NATNET)
     find_package(NATNET REQUIRED)
     message(STATUS ${NATNET_LIBRARIES})
+    message(STATUS ${NATNET_DLL_DIR})
     message(STATUS ${NATNET_INCLUDE_DIR})
-    if (!NATNET_FOUND)
-     message(FATAL_ERROR "Cannot find NatNet")
+    if (NOT NATNET_FOUND)
+      message(FATAL_ERROR "Cannot find NatNet")
     endif()
   endif(USE_NATNET)
   
-  set(LIBS vislib core glad ${NATNET_LIBRARIES})
+  set(LIBS vislib core glad ${NATNET_LIBRARIES} ${VRPN_LIBRARY} ${QUAT_LIBRARY})
   include_directories(${NATNET_INCLUDE_DIR} ${vrpn_install_dir}/include "include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -66,6 +85,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    install(DIRECTORY ${NATNET_DLL_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*.dll")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
