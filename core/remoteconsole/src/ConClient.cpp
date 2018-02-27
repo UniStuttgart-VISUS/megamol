@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
         if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
 
 
         //  Prepare our context and socket

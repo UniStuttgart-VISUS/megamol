@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace MegaMolConf {
+﻿namespace MegaMolConf {
     class NoflickerPanel : System.Windows.Forms.Panel {
         public NoflickerPanel() {
-            this.SetStyle(
+            SetStyle(
                 System.Windows.Forms.ControlStyles.UserPaint |
                 System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
                 System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer |
@@ -17,8 +12,8 @@ namespace MegaMolConf {
 
         protected override void OnMouseDown(System.Windows.Forms.MouseEventArgs e) {
             base.OnMouseDown(e);
-            if (!base.Focused) {
-                base.Focus();
+            if (!Focused) {
+                Focus();
             }
         }
     }
