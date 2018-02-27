@@ -69,6 +69,7 @@
 #include "io/TrajectoryDataSource.h"
 #include "DensityProfile.h"
 #include "ParticleSlice.h"
+#include "ParticleVelocitiesDirAnalyzer.h"
 
 
 /*
@@ -201,6 +202,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TrajectoryDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DensityProfile>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSlice>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
