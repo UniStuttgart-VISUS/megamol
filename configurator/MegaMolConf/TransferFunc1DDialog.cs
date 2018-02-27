@@ -10,25 +10,57 @@ using System.Windows.Forms;
 
 namespace MegaMolConf {
     public partial class TransferFunc1DDialog : Form {
-        public TransferFunc1DDialog() {
+        public TransferFunc1DDialog(string old_tf) {
             InitializeComponent();
 
             selected_channel = Selected_Channel_Enum.A;
 
-            res = (uint)nUD_Res.Value;
+            if (old_tf == "" || old_tf == null)
+            {
+                res = (uint) nUD_Res.Value;
+
+                r_histo = new float[res];
+                g_histo = new float[res];
+                b_histo = new float[res];
+                a_histo = new float[res];
+
+                InitHistoWithRamp(ref r_histo);
+                InitHistoWithRamp(ref g_histo);
+                InitHistoWithRamp(ref b_histo);
+                InitHistoWithRamp(ref a_histo);
+            }
+            else
+            {
+                ParseTF(old_tf);
+            }
+
+            pb_TransferFunc.Image = new Bitmap((int)res, 2);
+        }
+
+
+        public void ParseTF(string tf) {
+            var toks = tf.Split('\\');
+            toks[1] = toks[1].Replace("\"", string.Empty);
+            toks[1] = toks[1].Replace(" ", string.Empty);
+            toks = toks[1].Split(',');
+            var vals = Array.ConvertAll(toks, Double.Parse);
+
+            res = (uint)vals.Length / 4;
 
             r_histo = new float[res];
             g_histo = new float[res];
             b_histo = new float[res];
             a_histo = new float[res];
 
-            InitHistoWithRamp(ref r_histo);
-            InitHistoWithRamp(ref g_histo);
-            InitHistoWithRamp(ref b_histo);
-            InitHistoWithRamp(ref a_histo);
-
-            pb_TransferFunc.Image = new Bitmap((int)res, 2);
+            for (uint i = 0; i < res; ++i)
+            {
+                r_histo[i] = (float)vals[i * 4];
+                g_histo[i] = (float)vals[i * 4 + 1];
+                b_histo[i] = (float)vals[i * 4 + 2];
+                a_histo[i] = (float)vals[i * 4 + 3];
+            }
         }
+
 
         public string GetSerializedTransferFunction() {
             StringBuilder sb = new StringBuilder();
@@ -268,6 +300,38 @@ namespace MegaMolConf {
                 start_idx = end_idx;
                 start_val = end_val;
             }
+        }
+
+        private void btn_Zero_Click(object sender, EventArgs e) {
+            if (cb_R.Checked) {
+                Array.Clear(r_histo, 0, r_histo.Length);
+            }
+            if (cb_G.Checked) {
+                Array.Clear(g_histo, 0, g_histo.Length);
+            }
+            if (cb_B.Checked) {
+                Array.Clear(b_histo, 0, b_histo.Length);
+            }
+            if (cb_A.Checked) {
+                Array.Clear(a_histo, 0, b_histo.Length);
+            }
+            panel_Canvas.Invalidate();
+        }
+
+        private void btn_Ramp_Click(object sender, EventArgs e) {
+            if (cb_R.Checked) {
+                InitHistoWithRamp(ref r_histo);
+            }
+            if (cb_G.Checked) {
+                InitHistoWithRamp(ref g_histo);
+            }
+            if (cb_B.Checked) {
+                InitHistoWithRamp(ref b_histo);
+            }
+            if (cb_A.Checked) {
+                InitHistoWithRamp(ref a_histo);
+            }
+            panel_Canvas.Invalidate();
         }
     }
 }

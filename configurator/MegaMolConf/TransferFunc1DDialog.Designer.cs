@@ -33,6 +33,8 @@
             this.panel_Canvas = new MegaMolConf.NoflickerPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pb_TransferFunc = new System.Windows.Forms.PictureBox();
+            this.btn_Zero = new System.Windows.Forms.Button();
+            this.btn_Ramp = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
@@ -170,16 +172,38 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pb_TransferFunc.Location = new System.Drawing.Point(0, 1);
             this.pb_TransferFunc.Name = "pb_TransferFunc";
-            this.pb_TransferFunc.Size = new System.Drawing.Size(536, 125);
+            this.pb_TransferFunc.Size = new System.Drawing.Size(539, 125);
             this.pb_TransferFunc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pb_TransferFunc.TabIndex = 10;
             this.pb_TransferFunc.TabStop = false;
+            // 
+            // btn_Zero
+            // 
+            this.btn_Zero.Location = new System.Drawing.Point(392, 11);
+            this.btn_Zero.Name = "btn_Zero";
+            this.btn_Zero.Size = new System.Drawing.Size(75, 23);
+            this.btn_Zero.TabIndex = 11;
+            this.btn_Zero.Text = "Zero";
+            this.btn_Zero.UseVisualStyleBackColor = true;
+            this.btn_Zero.Click += new System.EventHandler(this.btn_Zero_Click);
+            // 
+            // btn_Ramp
+            // 
+            this.btn_Ramp.Location = new System.Drawing.Point(473, 11);
+            this.btn_Ramp.Name = "btn_Ramp";
+            this.btn_Ramp.Size = new System.Drawing.Size(75, 23);
+            this.btn_Ramp.TabIndex = 12;
+            this.btn_Ramp.Text = "Ramp";
+            this.btn_Ramp.UseVisualStyleBackColor = true;
+            this.btn_Ramp.Click += new System.EventHandler(this.btn_Ramp_Click);
             // 
             // TransferFunc1DDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(560, 450);
+            this.Controls.Add(this.btn_Ramp);
+            this.Controls.Add(this.btn_Zero);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.cb_All);
             this.Controls.Add(this.cb_A);
@@ -210,5 +234,7 @@
         private System.Windows.Forms.CheckBox cb_All;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.PictureBox pb_TransferFunc;
+        private System.Windows.Forms.Button btn_Zero;
+        private System.Windows.Forms.Button btn_Ramp;
     }
 }

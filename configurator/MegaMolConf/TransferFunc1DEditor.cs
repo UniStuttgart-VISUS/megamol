@@ -52,13 +52,13 @@ namespace MegaMolConf {
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value) {
             _editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
 
-            TransferFunc1DDialog tf1c = new TransferFunc1DDialog();
+            TransferFunc1DDialog tf1c = new TransferFunc1DDialog((string)value);
 
             // show this model stuff
             //_editorService.DropDownControl(tf1c);
             _editorService.ShowDialog(tf1c);
 
-            return tf1c.GetSerializedTransferFunction();
+            return tf1c.GetSerializedTransferFunction(); ;
         }
 
         private void OnListBoxSelectedValueChanged(object sender, EventArgs e) {
