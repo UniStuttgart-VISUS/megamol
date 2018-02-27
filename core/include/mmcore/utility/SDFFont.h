@@ -49,17 +49,17 @@ namespace megamol {
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Source of fonts free for (commercial) use: https://www.fontsquirrel.com/
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> SDF generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
+     * >>> SDF font generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
      *     Optimal Settings:   
      *     - Padding - Top,Right,Bottom,Left:   10
      *     - Padding - X,Y:                    -20
-     *     - Size:                             ~90 (Glyphs must fit on one page!)
      *     - Bold,Italic:                       false
      *     - Rendering:                         java
      *     - Glyph Cache Page - Width,Height:   1024
      *     - Glyph set:                         ASCII + ™ + €
+     *     - Size:                             ~90 (glyphs must fit on !one! page)
      *     - Distance Field - Spread:           10 
-     *     - Distance Field - Scale:           ~50 (set in the end, operation is expensive)
+     *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
      * -----------------------------------------------------------------------------------------------------------------
      */
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
