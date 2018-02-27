@@ -9,9 +9,9 @@
 
 #include <vector>
 
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
-#include "view/CallCamParamSync.h"
+#include "mmcore/view/CallCamParamSync.h"
 
 #include "vislib/graphics/graphicstypes.h"
 

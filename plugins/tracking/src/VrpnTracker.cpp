@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "VrpnTracker.h"
 
-#include "param/ButtonParam.h"
-#include "param/StringParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "vislib/StringConverter.h"
 #include "vislib/tchar.h"

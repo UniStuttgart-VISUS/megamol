@@ -10,9 +10,9 @@
 
 #include <thread>
 
-#include "param/ButtonParam.h"
-#include "param/StringParam.h"
-#include "param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
 
 #include "vislib/Trace.h"
 

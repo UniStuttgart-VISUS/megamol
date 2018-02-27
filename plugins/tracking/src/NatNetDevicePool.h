@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/Delegate.h"
 
 #include "NatNetTypes.h"

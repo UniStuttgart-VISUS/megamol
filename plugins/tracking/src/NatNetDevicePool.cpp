@@ -8,9 +8,9 @@
 #include "stdafx.h"
 #include "NatNetDevicePool.h"
 
-#include "param/EnumParam.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 
 #include "vislib/assert.h"
 #include "vislib/Trace.h"

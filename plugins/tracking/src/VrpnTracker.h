@@ -15,14 +15,14 @@
 #define MEGAMOLVRPN_VRPNMODULE_SLEEP_DURATION 0
 
 #include "Manipulator.h"
-#include "Module.h"
-#include "param/ParamSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vrpn/vrpn_Tracker.h"
 #include "vrpn/vrpn_Button.h"
 #include "VrpnDevice.h"
-#include "CallerSlot.h"
-#include "CalleeSlot.h"
-#include "view/CallCamParamSync.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/view/CallCamParamSync.h"
 #include "vislib/math/Quaternion.h"
 #include <atomic>
 #include <thread>

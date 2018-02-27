@@ -8,9 +8,9 @@
 #include "stdafx.h"
 #include "Manipulator.h"
 
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "vislib/Trace.h"
 

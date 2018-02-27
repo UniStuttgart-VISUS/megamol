@@ -14,14 +14,14 @@
 
 //#define MEGAMOLVRPN_VRPNDEVICE_WRITE_PLAYBACKLOG
 
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vrpn/vrpn_Tracker.h"
 #include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "param/StringParam.h"
-#include "param/IntParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 #include <string>
 #include <vector>
 #include <memory>

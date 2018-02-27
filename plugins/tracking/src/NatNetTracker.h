@@ -7,17 +7,17 @@
 
 #pragma once
 
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include <atomic>
 
 #include "vrpn/vrpn_Button.h"
 
-#include "view/Call6DofInteraction.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/view/Call6DofInteraction.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "Manipulator.h"
-#include "Module.h"
+#include "mmcore/Module.h"
 #include "NatNetDevicePool.h"
 #include "VrpnDevice.h"
 
