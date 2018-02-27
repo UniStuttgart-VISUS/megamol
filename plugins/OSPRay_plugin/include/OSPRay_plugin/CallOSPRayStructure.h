@@ -29,7 +29,8 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS
+    CYLINDERS,
+    PBS
 };
 
 enum volumeTypeEnum {
@@ -72,13 +73,18 @@ public:
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
     std::shared_ptr<std::pair<float, float>> valueRange;
+    std::shared_ptr<std::vector<float>> xData;
+    std::shared_ptr<std::vector<float>> yData;
+    std::shared_ptr<std::vector<float>> zData;
 
     unsigned int voxelCount;
     unsigned int maxDim;
     unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
+    unsigned int vertexStride;
     unsigned int colorLength;
+    unsigned int colorStride;
     unsigned int partCount;
     float globalRadius;
     core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;

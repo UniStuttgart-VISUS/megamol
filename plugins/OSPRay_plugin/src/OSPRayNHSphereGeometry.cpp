@@ -112,7 +112,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
     this->structureContainer.raw = std::make_shared<const void*>(std::move(parts.GetVertexData()));
     this->structureContainer.vertexLength = vertexLength;
+    this->structureContainer.vertexStride = parts.GetVertexDataStride();
     this->structureContainer.colorLength = colorLength;
+    this->structureContainer.colorStride = parts.GetColourDataStride();
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
     this->structureContainer.mmpldColor = parts.GetColourDataType();

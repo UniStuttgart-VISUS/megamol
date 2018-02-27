@@ -16,6 +16,8 @@ using System.Reflection;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Collections;
+using MegaMolConf.Data;
+using MegaMolConf.Util;
 
 namespace MegaMolConf {
     public partial class Form1 : Form     {
@@ -24,6 +26,7 @@ namespace MegaMolConf {
         private ObservingDict<GraphicalModule> tabModules = new ObservingDict<GraphicalModule>();
         //private Dictionary<TabPage, ObservableCollection<GraphicalConnection>> tabConnections = new Dictionary<TabPage, ObservableCollection<GraphicalConnection>>();
         private ObservingDict<GraphicalConnection> tabConnections = new ObservingDict<GraphicalConnection>();
+        private Dictionary<TabPage, string> tabInstantiations = new Dictionary<TabPage, string>();
         private Dictionary<TabPage, GraphicalModule> tabMainViews = new Dictionary<TabPage, GraphicalModule>();
         private Dictionary<TabPage, object> tabSelectedObjects = new Dictionary<TabPage, object>();
         private Dictionary<TabPage, string> tabStartParameters = new Dictionary<TabPage, string>();
@@ -42,7 +45,22 @@ namespace MegaMolConf {
         bool isEyedropping;
         private Cursor eyeDropperCursor;
         internal Util.ListBoxLog listBoxLog;
-        
+
+        public string TabInstantiation(TabPage tp) {
+            lock (tabInstantiations) {
+                if (tabInstantiations.ContainsKey(tp)) {
+                    return tabInstantiations[tp];
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        public void SetTabInstantiation(TabPage tp, string inst) {
+            lock (tabInstantiations) {
+                tabInstantiations[tp] = inst;
+            }
+        }
 
         #region Selection management
 
@@ -52,9 +70,9 @@ namespace MegaMolConf {
         internal static GraphicalModule copiedModule { get; private set; }
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
-        internal TabPage selectedTab {
+        internal TabPage SelectedTab {
             get {
-                if (InvokeRequired) {
+                if (!this.IsDisposed && InvokeRequired) {
                     return (TabPage)Invoke(new Func<TabPage>(() => {
                         return tabViews.SelectedTab;
                     }));
@@ -63,8 +81,22 @@ namespace MegaMolConf {
                 }
             }
         }
-        //private set {
-        //}
+
+        internal void ChooseInstantiation(TabPage tp, string[] insts) {
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    ChooseInstantiation(tp, insts);
+                }));
+            } else {
+                using (StringSelector cs = new StringSelector("Select the Instance you want to use (cancel for no filtering / LUA projects)", insts)) {
+                    if (cs.ShowDialog(ParentForm) == DialogResult.Cancel) {
+                        SetTabInstantiation(tp, "");
+                        return;
+                    }
+                    SetTabInstantiation(tp, cs.SelectedItem);
+                }
+            }
+        }
 
         private static void SelectItem(GraphicalModule m, Data.CalleeSlot s) {
             selectedCallee = s;
@@ -179,6 +211,59 @@ namespace MegaMolConf {
                     }
                 }
             }
+        }
+
+        internal void AddModule(TabPage tabPage, string className, string instanceName) {
+            if (lbModules.DataSource is List<Data.Module> mods) {
+                foreach (Data.Module m in mods) {
+                    if (m.Name == className) {
+                        tabModules.SuspendObservation = true;
+                        var newMod = AddModule(tabPage, m);
+                        tabModules.SuspendObservation = false;
+                        newMod.Name = instanceName;
+                    }
+                }
+            }
+        }
+
+        internal void AddConnection(TabPage tabPage, string className, string fromMod, string fromSlot, string toMod, string toSlot) {
+            //GraphicalConnection gc = new GraphicalConnection(mod, selectedModule, cr, selectedCallee, FindCallByName(theName));
+            //tabConnections[tp].Add(gc);
+            GraphicalModule from = null;
+            GraphicalModule to = null;
+            CallerSlot src = null;
+            CalleeSlot dest = null;
+            foreach (var mod in tabModules[tabPage]) {
+                if (mod.Name == fromMod) {
+                    from = mod;
+                }
+                if (mod.Name == toMod) {
+                    to = mod;
+                }
+            }
+            if (from != null && to != null) {
+                foreach (var slot in from.Module.CallerSlots) {
+                    if (slot.Name == fromSlot) {
+                        src = slot;
+                    }
+                }
+                foreach (var slot in to.Module.CalleeSlots) {
+                    if (slot.Name == toSlot) {
+                        dest = slot;
+                    }
+                }
+            }
+
+            if (src != null && dest != null) {
+                GraphicalConnection gc = new GraphicalConnection(from, to, src, dest,
+                    FindCallByName(className));
+                tabConnections.SuspendObservation = true;
+                tabConnections[tabPage].Add(gc);
+                tabConnections.SuspendObservation = false;
+            } else {
+                listBoxLog.Log(Level.Error, $"Cannot create connection from \"{fromMod}:{fromSlot}\" to \"{toMod}:{toSlot}\"");
+            }
+
         }
 
         private void TabModules_OnChangedItems(IList addedList, IList deletedList) {
@@ -296,7 +381,7 @@ namespace MegaMolConf {
                     m = duplicateSelectedModule();
                     selectedModule = m;
                     propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
-                    refreshCurrent();
+                    RefreshCurrent();
                     resizePanel();
                     break;
                 case (Keys.Control | Keys.C):
@@ -345,9 +430,12 @@ namespace MegaMolConf {
             return null;
         }
 
-        private void refreshCurrent() {
-            if (tabViews.SelectedTab != null) {
-                tabViews.SelectedTab.Controls[0].Refresh();
+        internal void RefreshCurrent() {
+            if (InvokeRequired) {
+                Invoke(new Action(RefreshCurrent));
+            } else {
+                //tabViews.SelectedTab?.Invalidate();
+                tabViews.SelectedTab?.Controls[0].Controls[0].Refresh();
             }
         }
 
@@ -609,41 +697,31 @@ namespace MegaMolConf {
             if (lbModules.SelectedItem != null) {
                 TabPage tp = tabViews.SelectedTab;
                 if (tp != null) {
-                    tabModules[tp].Add(new GraphicalModule((Data.Module)lbModules.SelectedItem, tabModules[tp]));
-                    if ((tabMainViews[tp] == null) && ((Data.Module)lbModules.SelectedItem).IsViewModule) {
-                        tabMainViews[tp] = tabModules[tp].Last();
-                    }
-                    tabModules[tp].Last().Position = new Point(
-                        //-(tp.Controls[0] as Panel).AutoScrollPosition.X + (tp.Controls[0] as Panel).Width / 2,
-                        //-(tp.Controls[0] as Panel).AutoScrollPosition.Y + (tp.Controls[0] as Panel).Height / 2
-                        -(tp.Controls[0] as Panel).AutoScrollPosition.X + 10,
-                        -(tp.Controls[0] as Panel).AutoScrollPosition.Y + 10
-                        );
-
+                    var mod = AddModule(tp, (Data.Module) lbModules.SelectedItem);
 
                     if (selectedCaller != null) {
-                        tabModules[tp].Last().Position = new Point(
+                        mod.Position = new Point(
                             selectedModule.Position.X + selectedModule.Bounds.Width * 2,
                             selectedModule.Position.Y
                         );
-                        foreach (Data.CalleeSlot ce in tabModules[tp].Last().Module.CalleeSlots) {
+                        foreach (Data.CalleeSlot ce in mod.Module.CalleeSlots) {
                             string[] compatibles = selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).ToArray();
                             if (compatibles.Count() == 0) continue;
                             string theName = compatibles[0];
                             if (compatibles.Count() > 1) {
-                                using (CallSelector cs = new CallSelector(compatibles)) {
+                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles)) {
                                     cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = PointToScreen(tabModules[tp].Last().Position);
+                                    Point p = PointToScreen(mod.Position);
                                     cs.Location = p;
                                     if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                         SelectItem((GraphicalConnection)null);
-                                        refreshCurrent();
+                                        RefreshCurrent();
                                         return;
                                     }
                                     theName = cs.SelectedItem;
                                 }
                             }
-                            GraphicalConnection gc = new GraphicalConnection(selectedModule, tabModules[tp].Last(), selectedCaller, ce, FindCallByName(theName));
+                            GraphicalConnection gc = new GraphicalConnection(selectedModule, mod, selectedCaller, ce, FindCallByName(theName));
                             // does the callerslot already have a connection? erase it
                             foreach (GraphicalConnection gtemp in tabConnections[tp]) {
                                 if (gtemp.src.Equals(selectedModule) && selectedCaller.Equals(gtemp.srcSlot)) {
@@ -656,40 +734,60 @@ namespace MegaMolConf {
                         }
                     }
                     if (selectedCallee != null) {
-                        tabModules[tp].Last().Position = new Point(
+                        mod.Position = new Point(
                             selectedModule.Position.X - selectedModule.Bounds.Width * 2,
                             selectedModule.Position.Y
                         );
-                        foreach (Data.CallerSlot cr in tabModules[tp].Last().Module.CallerSlots) {
+                        foreach (Data.CallerSlot cr in mod.Module.CallerSlots) {
                             string[] compatibles = selectedCallee.CompatibleCalls.Intersect(cr.CompatibleCalls).ToArray();
                             if (compatibles.Count() == 0) continue;
                             string theName = compatibles[0];
                             if (compatibles.Count() > 1) {
-                                using (CallSelector cs = new CallSelector(compatibles)) {
+                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles)) {
                                     cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = PointToScreen(tabModules[tp].Last().Position);
+                                    Point p = PointToScreen(mod.Position);
                                     cs.Location = p;
                                     if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                         SelectItem((GraphicalConnection)null);
-                                        refreshCurrent();
+                                        RefreshCurrent();
                                         return;
                                     }
                                     theName = cs.SelectedItem;
                                 }
                             }
-                            GraphicalConnection gc = new GraphicalConnection(tabModules[tp].Last(), selectedModule, cr, selectedCallee, FindCallByName(theName));
+                            GraphicalConnection gc = new GraphicalConnection(mod, selectedModule, cr, selectedCallee, FindCallByName(theName));
                             tabConnections[tp].Add(gc);
                             break;
                         }
                     }
 
-                    SelectItem(tabModules[tp].Last());
+                    SelectItem(mod);
                     propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(selectedModule);
                 }
             }
             resizePanel();
             updateFiltered();
-            refreshCurrent();
+            RefreshCurrent();
+        }
+
+        internal GraphicalModule AddModule(TabPage tp, Data.Module mod) {
+            GraphicalModule ret = null;
+            lock (tabModules[tp]) {
+                ret = new GraphicalModule(mod, tabModules[tp]);
+                tabModules[tp].Add(ret);
+            }
+
+            if ((tabMainViews[tp] == null) && (mod.IsViewModule)) {
+                tabMainViews[tp] = ret;
+            }
+
+            ret.Position = new Point(
+                //-(tp.Controls[0] as Panel).AutoScrollPosition.X + (tp.Controls[0] as Panel).Width / 2,
+                //-(tp.Controls[0] as Panel).AutoScrollPosition.Y + (tp.Controls[0] as Panel).Height / 2
+                -(tp.Controls[0] as Panel).AutoScrollPosition.X + 10,
+                -(tp.Controls[0] as Panel).AutoScrollPosition.Y + 10
+            );
+            return ret;
         }
 
         void PaintTabpage(object sender, PaintEventArgs e) {
@@ -785,7 +883,7 @@ namespace MegaMolConf {
                     }
                     updateFiltered();
                 }
-                refreshCurrent();
+                RefreshCurrent();
             }
         }
 
@@ -839,7 +937,7 @@ namespace MegaMolConf {
                 if (tabViews.SelectedTab != null) {
                     doTheScrollingShit(e.Location);
                 }
-                refreshCurrent();
+                RefreshCurrent();
             } else if (selectedCallee != null || selectedCaller != null) {
                 Point tmp = new Point(mouseDownPos.X - e.Location.X, mouseDownPos.Y - e.Location.Y);
                 int x = Math.Abs(tmp.X);
@@ -851,10 +949,10 @@ namespace MegaMolConf {
                     if (tabViews.SelectedTab != null) {
                         doTheScrollingShit(e.Location);
                     }
-                    refreshCurrent();
+                    RefreshCurrent();
                 }
             } else {
-                refreshCurrent();
+                RefreshCurrent();
             }
             lastMousePos = e.Location;
         }
@@ -904,13 +1002,13 @@ namespace MegaMolConf {
                                     string theName = compatibles[0];
                                     if (compatibles.Count() > 1) {
                                         //MessageBox.Show("DEBUG-Info: multiple compatible calls found");
-                                        using (CallSelector cs = new CallSelector(compatibles)) {
+                                        using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles)) {
                                             cs.StartPosition = FormStartPosition.Manual;
                                             Point p = PointToScreen(e.Location);
                                             cs.Location = p;
                                             if (cs.ShowDialog(this) == DialogResult.Cancel) {
                                                 SelectItem((GraphicalConnection)null);
-                                                refreshCurrent();
+                                                RefreshCurrent();
                                                 return;
                                             }
                                             theName = cs.SelectedItem;
@@ -939,7 +1037,7 @@ namespace MegaMolConf {
                     drawConnection = false;
                 }
                 resizePanel(true);
-                refreshCurrent();
+                RefreshCurrent();
             }
         }
 
@@ -1086,12 +1184,12 @@ namespace MegaMolConf {
                     tabConnections[tp].Remove(gc);
                 }
                 tabModules[tp].Remove(gm);
-                refreshCurrent();
+                RefreshCurrent();
 
             } else if (selectedConnection != null) {
                 tabConnections[tp].Remove(selectedConnection);
                 SelectItem((GraphicalConnection)null);
-                refreshCurrent();
+                RefreshCurrent();
             }
         }
 
@@ -1176,6 +1274,13 @@ namespace MegaMolConf {
         private void btnSaveProject_Click(object sender, EventArgs e) {
             TabPage tp = tabViews.SelectedTab;
             if (tp == null) return;
+            if (tp.Tag != null) {
+                if (((MegaMolInstanceInfo)tp.Tag).ReadGraphFromInstance) {
+                    MessageBox.Show("Saving of attached instances is not implemented yet!", "Error saving project",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
 
             if (tabViews.SelectedTab.Tag != null) {
                 MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
@@ -1501,10 +1606,10 @@ in PowerShell:
                 tabConnections[tp].Add(gc);
             }
 
-            refreshCurrent();
+            RefreshCurrent();
             if (modPosMissing) ForceDirectedLayout(tp);
             updateFiltered();
-            refreshCurrent();
+            RefreshCurrent();
             resizePanel();
 
             return tp;
@@ -1514,25 +1619,35 @@ in PowerShell:
         /// Performs force-directed layout on tp
         /// </summary>
         /// <param name="tp">The TabPage to layout</param>
-        private void ForceDirectedLayout(TabPage tp) {
-            Random rnd = new Random();
-            foreach (GraphicalModule gm in tabModules[tp]) {
-                gm.Position = new Point(rnd.Next(2500), rnd.Next(1000));
+        internal void ForceDirectedLayout(TabPage tp) {
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    ForceDirectedLayout(tp);
+                }));
             }
-            if (tabMainViews[tp] != null) {
-                tabMainViews[tp].Position = new Point(20, Height / 3);
-            } else if (tabModules[tp].Count > 0) {
-                tabModules[tp][0].Position = new Point(20, Height / 3);
-            }
+            else {
+                Random rnd = new Random();
+                foreach (GraphicalModule gm in tabModules[tp]) {
+                    gm.Position = new Point(rnd.Next(2500), rnd.Next(1000));
+                }
 
-            foreach (GraphicalModule gm in tabModules[tp]) {
-                gm.Pos = gm.Position;
-                gm.Speed = PointF.Empty;
-            }
+                if (tabMainViews[tp] != null) {
+                    tabMainViews[tp].Position = new Point(20, Height / 3);
+                }
+                else if (tabModules[tp].Count > 0) {
+                    tabModules[tp][0].Position = new Point(20, Height / 3);
+                }
 
-            for (int iter = 0; iter < 10000; iter++) {
-                float fullspeed = layoutStep(tp);
-                if (fullspeed < 3.0f) break;
+                foreach (GraphicalModule gm in tabModules[tp]) {
+                    gm.Pos = gm.Position;
+                    gm.Speed = PointF.Empty;
+                }
+
+                for (int iter = 0; iter < 10000; iter++) {
+                    float fullspeed = layoutStep(tp);
+                    if (fullspeed < 3.0f) break;
+                }
+                this.resizePanel((true));
             }
         }
 
@@ -1627,7 +1742,7 @@ in PowerShell:
         /// <param name="s">not used</param>
         /// <param name="e">not used</param>
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e) {
-            refreshCurrent();
+            RefreshCurrent();
             MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
             if (mmii != null) {
                 mmii.SendUpdate(e.ChangedItem.Label, e.ChangedItem.Value.ToString());
@@ -1718,7 +1833,7 @@ in PowerShell:
                     propertyGrid1.SelectedObject = null;
                 }
                 resizePanel();
-                refreshCurrent();
+                RefreshCurrent();
             }
         }
 
@@ -1767,7 +1882,7 @@ in PowerShell:
             if (tp == null) return;
             ForceDirectedLayout(tp);
             updateFiltered();
-            refreshCurrent();
+            RefreshCurrent();
             resizePanel();
         }
 
@@ -1973,9 +2088,10 @@ in PowerShell:
                     makeCmdLine(tp, tabFileNames[tp], true),
                     shell);
 
-                MegaMolInstanceInfo mmii = new MegaMolInstanceInfo();
-                mmii.Port = ReservePort();
-                mmii.ParentForm = this;
+                MegaMolInstanceInfo mmii = new MegaMolInstanceInfo {
+                    Port = ReservePort(),
+                    ParentForm = this
+                };
                 if (live) {
                     cmdLine += " -o LRHostAddress tcp://*:" + mmii.Port;
                 }
@@ -1995,16 +2111,17 @@ in PowerShell:
                         goto case StartParamDialog.StartShellType.Direct;
                 }
 
-                mmii.Process = Process.Start(psi);
-                mmii.Process.EnableRaisingEvents = true;
                 tp.ImageIndex = 0;
-                mmii.Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
-                    SetTabPageIcon(tp, 1);
-                    listBoxLog.Log(Util.Level.Info, string.Format("Tab '{0}' exited", tp.Text));
-                    mmii.Process = null;
-                });
                 mmii.TabPage = tp;
                 tp.Tag = mmii;
+                Process.Start(psi);
+                //mmii.Process = Process.Start(psi);
+                //mmii.Process.EnableRaisingEvents = true;
+                //mmii.Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
+                //    SetTabPageIcon(tp, 1);
+                //    listBoxLog.Log(Util.Level.Info, string.Format("Tab '{0}' exited", tp.Text));
+                //    mmii.Process = null;
+                //});
                 if (live) {
                     mmii.Thread = new Thread(new ThreadStart(mmii.Observe));
                     mmii.Thread.Start();
@@ -2014,6 +2131,30 @@ in PowerShell:
             } catch (Exception ex) {
                 MessageBox.Show("Failed to Start MegaMol™: " + ex.ToString(),
                     Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void attachToMegaMolToolStripMenuItem_Click(object sender, EventArgs e) {
+            TabPage tp = SelectedTab;
+            if (tabModules[tp].Count() != 0 || tabConnections[tp].Count() != 0) {
+                tp = newTabPage("Project " + ++tabCount);
+            }
+            bool live = Properties.Settings.Default.LiveConnection;
+            MegaMolInstanceInfo mmii = new MegaMolInstanceInfo {
+                Port = Convert.ToInt32(portToolStripTextBox.Text),
+                Host = hostToolStripTextBox.Text,
+                ParentForm = this
+            };
+            mmii.TabPage = tp;
+            mmii.ReadGraphFromInstance = true;
+            tp.Controls[0].Controls[0].BackColor = Color.White;
+            tp.Tag = mmii;
+            tp.ImageIndex = 0;
+            if (live) {
+                mmii.Thread = new Thread(new ThreadStart(mmii.Observe));
+                mmii.Thread.Start();
+            } else {
+                mmii.Connection = null;
             }
         }
 
@@ -2095,7 +2236,7 @@ in PowerShell:
 
         private void Form1_Shown(object sender, EventArgs e) {
             updateFiltered();
-            refreshCurrent();
+            RefreshCurrent();
             resizePanel();
 
             if (Properties.Settings.Default.StartupChecks) {
@@ -2207,7 +2348,7 @@ in PowerShell:
             GraphicalModule m = pasteModule(tabViews.SelectedTab, copiedModule);
             selectedModule = m;
             propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(m);
-            refreshCurrent();
+            RefreshCurrent();
             resizePanel();
         }
 

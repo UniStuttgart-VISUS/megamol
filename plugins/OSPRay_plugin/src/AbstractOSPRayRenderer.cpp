@@ -764,11 +764,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData vertexData = NULL;
         OSPData colorData = NULL;
         OSPData normalData = NULL;
-        OSPData texData = NULL;
-        OSPData indexData = NULL;
-        OSPData voxels = NULL;
-        OSPData isovalues = NULL;
-        OSPData planes = NULL;
+        OSPData texData    = NULL;
+        OSPData indexData  = NULL;
+        OSPData voxels     = NULL;
+        OSPData isovalues  = NULL;
+        OSPData planes     = NULL;
+        OSPData xData      = NULL;
+        OSPData yData      = NULL;
+        OSPData zData      = NULL;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
@@ -831,8 +834,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         floatWidth = 1;
                     }
 
-                    vertexData = ospNewData(element.partCount * (element.vertexLength + floatWidth), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + floatWidth * sizeof(float));
+                    vertexData = ospNewData(element.partCount * element.vertexStride / sizeof(float), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospCommit(vertexData);
                     ospSetData(geo.back(), "spheres", vertexData);
                     ospSetData(geo.back(), "color", NULL);
@@ -854,6 +857,37 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSetData(geo.back(), "color", colorData);
                 }
 
+                break;
+            case geometryTypeEnum::PBS:
+                if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                {
+                    auto ret = ospLoadModule("ngpf_spheres");
+                    if (ret != OSP_NO_ERROR) {
+                        vislib::sys::Log::DefaultLog.WriteError("Could not load ngpfSpheres module of OSPRay");
+                        throw std::runtime_error("Could not load ngpfSpheres module of OSPRay");
+                    }
+                }
+                geo.push_back(ospNewGeometry("ngpf_spheres"));
+
+                {
+
+                    xData = ospNewData(element.partCount, OSP_FLOAT, element.xData->data());
+                    yData = ospNewData(element.partCount, OSP_FLOAT, element.yData->data());
+                    zData = ospNewData(element.partCount, OSP_FLOAT, element.zData->data());
+
+                    ospCommit(xData);
+                    ospCommit(yData);
+                    ospCommit(zData);
+
+                    ospSetData(geo.back(), "x_data", xData);
+                    ospSetData(geo.back(), "y_data", yData);
+                    ospSetData(geo.back(), "z_data", zData);
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {

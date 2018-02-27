@@ -218,6 +218,7 @@ namespace utility {
         int QueryModuleGraph(lua_State *L);
         int ListCalls(lua_State *L);
         int ListModules(lua_State *L);
+        int ListInstatiations(lua_State *L);
 
         int Help(lua_State *L);
 

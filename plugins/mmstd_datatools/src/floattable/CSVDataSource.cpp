@@ -321,7 +321,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                 }
 
                 char *ez = const_cast<char*>(end - colSepEnd);
-                ez = '\0';
+                *ez = '\0';
 
                 if (this->columns[col].Type() == CallFloatTableData::ColumnType::QUANTITATIVE) {
 					if (decType == DecimalSeparator::DE) {
