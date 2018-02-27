@@ -56,7 +56,7 @@ bool megamol::core::view::TransferFunction1D::getTFCallback(megamol::core::Call&
         tfChanged = false;
     }
 
-    outCall->SetTexture(this->texID, this->tf.size() / 4, CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
+    outCall->SetTexture(this->texID, this->tf.size() / 4, this->tf.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
 
     return true;
 }
