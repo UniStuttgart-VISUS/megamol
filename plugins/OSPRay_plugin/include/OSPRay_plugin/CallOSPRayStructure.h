@@ -81,7 +81,9 @@ public:
     unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
+    unsigned int vertexStride;
     unsigned int colorLength;
+    unsigned int colorStride;
     unsigned int partCount;
     float globalRadius;
     core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
