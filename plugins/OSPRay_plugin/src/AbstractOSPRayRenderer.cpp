@@ -834,8 +834,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         floatWidth = 1;
                     }
 
-                    vertexData = ospNewData(element.partCount * (element.vertexLength + floatWidth), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + floatWidth * sizeof(float));
+                    vertexData = ospNewData(element.partCount * element.vertexStride / sizeof(float), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospCommit(vertexData);
                     ospSetData(geo.back(), "spheres", vertexData);
                     ospSetData(geo.back(), "color", NULL);
