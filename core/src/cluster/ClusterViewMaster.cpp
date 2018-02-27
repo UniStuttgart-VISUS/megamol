@@ -335,19 +335,28 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
 
         case cluster::netmessages::MSG_REQUEST_GRAPHSETUP: {
             vislib::RawStorage mem;
+            UINT32 msgType = cluster::netmessages::MSG_GRAPHSETUP;
             this->ModuleGraphLock().LockExclusive();
             try {
                 AbstractNamedObject::ptr_type root_ptr = this->RootModule();
                 RootModuleNamespace *root = dynamic_cast<RootModuleNamespace*>(root_ptr.get());
                 if (root != NULL) {
-                    root->SerializeGraph(mem);
+                    if (this->GetCoreInstance()->IsLuaProject()) {
+                        // TODO serialize lua projects
+                        auto lua = this->GetCoreInstance()->GetMergedLuaProject();
+                        mem.AssertSize(lua.Length() + 1);
+                        memcpy(mem.At(0), lua.PeekBuffer(), lua.Length() + 1);
+                        msgType = cluster::netmessages::MSG_GRAPHSETUP_LUA;
+                    } else {
+                        root->SerializeGraph(mem);
+                    }
                 }
             } catch(...) {
                 mem.EnforceSize(0);
             }
             this->ModuleGraphLock().UnlockExclusive();
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_GRAPHSETUP);
+            outMsg.GetHeader().SetMessageID(msgType);
             outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
             outMsg.AssertBodySize();
             ::memcpy(outMsg.GetBody(), mem, mem.GetSize());

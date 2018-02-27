@@ -63,6 +63,15 @@ namespace view {
                 // intentionally empty
             }
 
+            /**
+             * Hook method to be called after the view is rendered.
+             *
+             * @param view The calling view
+             */
+            virtual void AfterRender(AbstractView *view) {
+                // intentionally empty
+            }
+
         };
 
         /** Ctor. */
@@ -282,6 +291,16 @@ namespace view {
             HooksIterator i = this->getHookIterator();
             while (i.HasNext()) {
                 i.Next()->BeforeRender(this);
+            }
+        }
+
+        /**
+         * The code triggering the post render hook
+         */
+        inline void doAfterRenderHook(void) {
+            HooksIterator i = this->getHookIterator();
+            while (i.HasNext()) {
+                i.Next()->AfterRender(this);
             }
         }
 

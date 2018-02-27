@@ -13,8 +13,6 @@ void printGreeting() {
         << std::endl;
 }
 
-namespace {
-
 bool execCommand(Connection& conn, std::string command) {
     using std::cout;
     using std::endl;
@@ -29,8 +27,6 @@ bool execCommand(Connection& conn, std::string command) {
         << conn.sendCommand(command) << endl
         << endl;
     return true;
-}
-
 }
 
 void runScript(Connection& conn, const std::string& scriptfile) {
