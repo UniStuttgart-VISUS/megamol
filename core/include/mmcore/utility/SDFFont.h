@@ -28,15 +28,15 @@ namespace megamol {
 
     /**
      * -----------------------------------------------------------------------------------------------------------------
-     *
+     * 
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
-     *
+     * 
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Available predefined fonts: (Available: Regular - TODO: Bold,Oblique,Bold-Oblique)
-     *     - "Evolventa-SansSerif"
-     *     - "Roboto-SansSerif"
-     *     - "Ubuntu-Mono"
-     *     - "Vollkorn-Serif"
+     *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
+     *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
+     *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
+     *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Usage example:
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
