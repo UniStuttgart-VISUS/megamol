@@ -39,9 +39,9 @@ namespace MegaMolConf {
 
 
         public void ParseTF(string tf) {
-            var toks = tf.Split('\\');
-            toks[1] = toks[1].Replace("\"", string.Empty);
+            var toks = tf.Split('\"');
             toks[1] = toks[1].Replace(" ", string.Empty);
+            toks[1] = toks[1].Replace("\\", string.Empty);
             toks = toks[1].Split(',');
             var vals = Array.ConvertAll(toks, Double.Parse);
 
