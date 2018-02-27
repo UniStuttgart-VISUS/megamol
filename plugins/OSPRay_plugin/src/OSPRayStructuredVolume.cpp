@@ -28,11 +28,10 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
     repType("Representation", "Activates one of the three different volume representations: Volume, Isosurfae, Slice"),
     sliceNormal("Slice::sliceNormal", "Direction of the slice normal"),
     sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector"),
-    IsoValue("Isosurface::Isovalue","Sets the isovalue of the isosurface"),
+    IsoValue("Isosurface::Isovalue", "Sets the isovalue of the isosurface"),
     getTFSlot("gettransferfunction", "Connects to a color transfer function module"),
 
-    getDataSlot("getdata", "Connects to the data source")
- {
+    getDataSlot("getdata", "Connects to the data source") {
     core::param::EnumParam *rt = new core::param::EnumParam(VOLUMEREP);
     rt->SetTypePair(VOLUMEREP, "Volume");
     rt->SetTypePair(ISOSURFACE, "Isosurface");
@@ -74,6 +73,14 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::VolumeDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::VolumeDataCall>();
 
+    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (cgtf == NULL ) {
+        return false;
+    }
+    if (!(*cgtf)()) {
+        return false;
+    }
+
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
     if (os->getTime() > cd->FrameCount()) {
@@ -81,10 +88,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->IsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
+        cgtf->ResetDirty();
     } else {
         return true;
     }
@@ -95,12 +103,14 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
 
 
     unsigned int voxelCount = cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();
-    unsigned int maxDim = vislib::math::Max<unsigned int>(cd->VolumeDimension().Depth(), vislib::math::Max<unsigned int>(cd->VolumeDimension().Height(), cd->VolumeDimension().Width()));
-    float scale = 2.0f;
-    std::vector<float> gridOrigin = { -0.5f*scale, -0.5f*scale, -0.5f*scale };
-    std::vector<float> gridSpacing = { scale / (float)maxDim, scale / (float)maxDim, scale / (float)maxDim };
-    std::vector<int> dimensions = { (int)cd->VolumeDimension().GetWidth(), (int)cd->VolumeDimension().GetHeight(), (int)cd->VolumeDimension().GetDepth() };
 
+    std::vector<float> gridOrigin = { cd->BoundingBox().GetOrigin().GetX(),
+        cd->BoundingBox().GetOrigin().GetY(),
+        cd->BoundingBox().GetOrigin().GetZ() };
+    std::vector<float> gridSpacing = { cd->BoundingBox().Width() / static_cast<float>(cd->VolumeDimension().Width()),
+        cd->BoundingBox().Height() / static_cast<float>(cd->VolumeDimension().Height()),
+        cd->BoundingBox().Depth() / static_cast<float>(cd->VolumeDimension().Depth()) };
+    std::vector<int> dimensions = { (int)cd->VolumeDimension().Width(), (int)cd->VolumeDimension().Height(), (int)cd->VolumeDimension().Depth() };
 
     std::vector<float> voxels(voxelCount);
     voxels.assign(cd->VoxelMap(), cd->VoxelMap() + voxelCount);
@@ -108,24 +118,22 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if (cgtf != NULL && ((*cgtf)())) {
-        if (cgtf->OpenGLTextureFormat() == megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
-            auto numColors = cgtf->TextureSize() / 4;
-            rgb.resize(3 * numColors);
-            a.resize(numColors);
-            auto texture = cgtf->GetTextureData();
 
-            for (unsigned int i = 0; i < numColors; i++) {
-                rgb[i + 0] = texture[i + 0];
-                rgb[i + 1] = texture[i + 1];
-                rgb[i + 2] = texture[i + 2];
-                a[i]       = texture[i + 3];
-            }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError("No color transfer function connected to OSPRayStructuredVolume module");
-            return false;
+    if (cgtf->OpenGLTextureFormat() == megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
+        auto numColors = cgtf->TextureSize() ;
+        rgb.resize(3 * numColors);
+        a.resize(numColors);
+        auto texture = cgtf->GetTextureData();
+
+        for (unsigned int i = 0; i < numColors; i++) {
+            rgb[3*i + 0] = texture[4*i + 0];
+            rgb[3*i + 1] = texture[4*i + 1];
+            rgb[3*i + 2] = texture[4*i + 2];
+            a[i] = texture[4*i + 3];
         }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("No color transfer function connected to OSPRayStructuredVolume module");
+        return false;
     }
 
 
@@ -140,7 +148,6 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(std::move(gridSpacing));
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(std::move(dimensions));
     this->structureContainer.voxelCount = voxelCount;
-    this->structureContainer.maxDim = maxDim;
     this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
     this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
 
@@ -180,8 +187,8 @@ bool OSPRayStructuredVolume::InterfaceIsDirty() {
     if (
         this->clippingBoxActive.IsDirty() ||
         this->clippingBoxLower.IsDirty() ||
-        this->clippingBoxUpper.IsDirty() || 
-        this->sliceDist.IsDirty() || 
+        this->clippingBoxUpper.IsDirty() ||
+        this->sliceDist.IsDirty() ||
         this->sliceNormal.IsDirty() ||
         this->IsoValue.IsDirty() ||
         this->repType.IsDirty()

@@ -167,7 +167,7 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
                 float const y = parts[i].vert.GetYf() - bbox.GetBottom();
                 float const z = parts[i].vert.GetZf() - bbox.GetBack();
 
-                float const val = accessor(parts[i]);
+                float const val = std::fabs(accessor(parts[i]));
 
                 int const idx_x = std::floorf(x / this->cell_size[0]);
                 int const idx_y = std::floorf(y / this->cell_size[1]);
@@ -197,10 +197,11 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
 
 
 bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::isDirty() const {
-    return mainDirParamSlot.IsDirty();
+    return mainDirParamSlot.IsDirty() || resParamSlot.IsDirty();
 }
 
 
 void megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::resetDirty() {
     mainDirParamSlot.ResetDirty();
+    resParamSlot.ResetDirty();
 }

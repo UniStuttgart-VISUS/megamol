@@ -34,6 +34,7 @@ public:
 
     /** Dtor */
     virtual ~ParticleVelocitiesDirAnalyzer(void);
+
 protected:
     /** Lazy initialization of the module */
     virtual bool create(void);
