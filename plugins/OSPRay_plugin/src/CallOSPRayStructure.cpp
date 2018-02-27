@@ -30,6 +30,7 @@ OSPRayStructureContainer::OSPRayStructureContainer() :
  clipPlaneData(NULL),
  clipPlaneColor(NULL),
  raw(NULL),
+ mmpldColor(core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE),
  xData(NULL),
  yData(NULL),
  zData(NULL),
