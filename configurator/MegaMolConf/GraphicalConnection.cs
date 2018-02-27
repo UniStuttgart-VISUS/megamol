@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 
 namespace MegaMolConf {
     class GraphicalConnection {
@@ -12,8 +8,8 @@ namespace MegaMolConf {
         public Data.CalleeSlot destSlot { get; protected set; }
 
         private Data.Call theCall;
-        private bool boundsCalculated = false;
-        private Size bounds = new Size();
+        private bool boundsCalculated;
+        private Size bounds;
         static StringFormat callNameFormat = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
         static Font callNameFont = new Font("Calibri", 10.0f);
         static Brush callNameBrush = Brushes.Black;
@@ -42,7 +38,7 @@ namespace MegaMolConf {
         }
 
         public Size Bounds {
-            get { return this.bounds; }
+            get { return bounds; }
         }
 
         public Data.Call Call {
@@ -53,11 +49,11 @@ namespace MegaMolConf {
 
         public GraphicalConnection(GraphicalModule source, GraphicalModule dest,
             Data.CallerSlot sourceSlot, Data.CalleeSlot destSlot, Data.Call call) {
-                this.src = source;
+                src = source;
                 this.dest = dest;
-                this.srcSlot = sourceSlot;
+                srcSlot = sourceSlot;
                 this.destSlot = destSlot;
-                this.theCall = call;
+                theCall = call;
         }
 
         public void Draw(Graphics g) {

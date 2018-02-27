@@ -29,7 +29,8 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS
+    CYLINDERS,
+    PBS
 };
 
 enum volumeTypeEnum {
@@ -71,6 +72,9 @@ public:
     std::shared_ptr<const void*> raw;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
+    std::shared_ptr<std::vector<float>> xData;
+    std::shared_ptr<std::vector<float>> yData;
+    std::shared_ptr<std::vector<float>> zData;
 
     unsigned int voxelCount;
     unsigned int maxDim;
