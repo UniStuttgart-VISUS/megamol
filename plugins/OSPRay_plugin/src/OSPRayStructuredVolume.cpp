@@ -115,10 +115,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     std::vector<float> voxels(voxelCount);
     voxels.assign(cd->VoxelMap(), cd->VoxelMap() + voxelCount);
 
+    std::pair<float, float> valueRange = std::make_pair(cd->MinimumDensity(), cd->MaximumDensity());
+    
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-
     if (cgtf->OpenGLTextureFormat() == megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
         auto numColors = cgtf->TextureSize() ;
         rgb.resize(3 * numColors);
@@ -150,6 +151,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     this->structureContainer.voxelCount = voxelCount;
     this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
     this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
+    this->structureContainer.valueRange = std::make_shared <std::pair<float, float>>(std::move(valueRange));
 
 
     this->structureContainer.clippingBoxActive = this->clippingBoxActive.Param<core::param::BoolParam>()->Value();

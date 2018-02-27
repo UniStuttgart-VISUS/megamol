@@ -71,6 +71,7 @@ public:
     std::shared_ptr<const void*> raw;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
+    std::shared_ptr<std::pair<float, float>> valueRange;
 
     unsigned int voxelCount;
     unsigned int maxDim;
