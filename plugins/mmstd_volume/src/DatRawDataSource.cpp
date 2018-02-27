@@ -128,7 +128,7 @@ bool volume::DatRawDataSource::getDataCallback(core::Call& caller) {
 
     vdc->SetUnlocker(NULL);
     
-    /*
+    
     float min, max;
     if (this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2] > 0) {
         min = max = this->data.As<float>()[0];
@@ -138,6 +138,7 @@ bool volume::DatRawDataSource::getDataCallback(core::Call& caller) {
         }
     }
     // DEBUG normalize data
+    /*
     for (unsigned int i = 0; i < this->header.resolution[0] * this->header.resolution[1] * this->header.resolution[2]; i++) {
         this->data.As<float>()[i] = (this->data.As<float>()[i] - min) / (max - min);
     }
@@ -147,8 +148,8 @@ bool volume::DatRawDataSource::getDataCallback(core::Call& caller) {
     vdc->SetBoundingBox(this->bbox);
     vdc->SetVolumeDimension(this->header.resolution[0], this->header.resolution[1], this->header.resolution[2]);
     vdc->SetVoxelMapPointer(this->data.As<float>());
-    //vdc->SetMinimumDensity(min);
-    //vdc->SetMaximumDensity(max);
+    vdc->SetMinimumDensity(min);
+    vdc->SetMaximumDensity(max);
 
     vdc->SetDataHash(this->datahash);
 
