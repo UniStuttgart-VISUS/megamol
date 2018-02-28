@@ -8,6 +8,7 @@
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
 
 
 megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::ParticleVelocitiesDirAnalyzer(void)
@@ -16,6 +17,7 @@ megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::ParticleVelocities
     , dataInSlot("dataIn", "Data input")
     , mainDirParamSlot("mainDir", "Set dir of analysis")
     , resParamSlot("res", "Resolution of the volume to build along longest bbox edge")
+    , inverseDensityWeightingSlot("inverseDensWeighting", "Toggle weighting of cell values with inverse density")
     , frameID{-1}
     , in_datahash{std::numeric_limits<size_t>::max()}
     , my_datahash{0} {
@@ -39,6 +41,9 @@ megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::ParticleVelocities
 
     this->resParamSlot << new megamol::core::param::IntParam(100, 1, 1024);
     this->MakeSlotAvailable(&this->resParamSlot);
+
+    this->inverseDensityWeightingSlot << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->inverseDensityWeightingSlot);
 }
 
 
@@ -113,6 +118,8 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
 
         int const main_dir_idx = this->mainDirParamSlot.Param<megamol::core::param::EnumParam>()->Value();
 
+        bool const is_dens_weight = this->inverseDensityWeightingSlot.Param<megamol::core::param::BoolParam>()->Value();
+
         std::function<float(megamol::core::moldyn::DirectionalParticles::dir_particle_t const&)> accessor;
 
         switch (main_dir_idx) {
@@ -181,6 +188,12 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
                 ++num_samples[idx];
             }
         }
+
+        if (is_dens_weight) {
+            std::transform(this->volume.begin(), this->volume.end(), num_samples.begin(), this->volume.begin(),
+                [](float const& v, size_t const& n)->float {return v / static_cast<float>(n); });
+        }
+
         memset(this->stats, 0, sizeof(float) * 3);
         auto minmax_pair = std::minmax_element(this->volume.begin(), this->volume.end());
         if (minmax_pair.first != this->volume.end() && minmax_pair.second != this->volume.end()) {
@@ -197,11 +210,12 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
 
 
 bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::isDirty() const {
-    return mainDirParamSlot.IsDirty() || resParamSlot.IsDirty();
+    return mainDirParamSlot.IsDirty() || resParamSlot.IsDirty() || inverseDensityWeightingSlot.IsDirty();
 }
 
 
 void megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::resetDirty() {
     mainDirParamSlot.ResetDirty();
     resParamSlot.ResetDirty();
+    inverseDensityWeightingSlot.ResetDirty();
 }

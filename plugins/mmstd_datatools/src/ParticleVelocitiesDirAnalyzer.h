@@ -60,6 +60,8 @@ private:
 
     megamol::core::param::ParamSlot resParamSlot;
 
+    megamol::core::param::ParamSlot inverseDensityWeightingSlot;
+
     int frameID;
 
     unsigned int frameCount;
