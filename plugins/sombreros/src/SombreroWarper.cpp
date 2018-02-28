@@ -1765,7 +1765,6 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         float minHeight = 0.0f - maxHeight;
 
         // all brim vertices have a y-position of + tunnellength / 2
-        // if the flat mode is turned on, all vertices get this y-position assigned
         for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
             if (this->brimFlags[i][j]) {// || flatmode) {
                 this->vertices[i][3 * j + 1] = maxHeight;
@@ -2017,6 +2016,9 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 #ifdef NO_DEFORMATION // exit early if we want no new normals
     return true;
 #endif
+
+    bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
+
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
         auto s_length = this->sombreroLength[i];
@@ -2046,7 +2048,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         scaleInvTrans.Transpose();
 
         for (size_t j = 0; j < vert_cnt; j++) {
-            if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j)) > 0) {
+            if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j)) > 0 || flatmode) {
                 this->normals[i][j * 3 + 0] = 0.0f;
                 this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;

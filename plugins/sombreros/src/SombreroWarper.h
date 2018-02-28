@@ -205,6 +205,7 @@ namespace sombreros {
         /**
          * Computes the the x- and z-coordinates of each vertex.
          * To do this, the height already has to be computed.
+         * In flat mode, this method also assigns the new height values
          *
          * @return True on success, false otherwise.
          */
