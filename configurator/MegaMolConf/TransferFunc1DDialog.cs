@@ -13,10 +13,9 @@ namespace MegaMolConf {
         public TransferFunc1DDialog(string old_tf) {
             InitializeComponent();
 
-            selected_channel = Selected_Channel_Enum.A;
+            //selected_channel = Selected_Channel_Enum.A;
 
-            if (old_tf == "" || old_tf == null)
-            {
+            if (String.IsNullOrEmpty(old_tf)) {
                 res = (uint) nUD_Res.Value;
 
                 r_histo = new float[res];
@@ -28,9 +27,7 @@ namespace MegaMolConf {
                 InitHistoWithRamp(ref g_histo);
                 InitHistoWithRamp(ref b_histo);
                 InitHistoWithRamp(ref a_histo);
-            }
-            else
-            {
+            } else {
                 ParseTF(old_tf);
             }
 
@@ -85,14 +82,14 @@ namespace MegaMolConf {
         private float[] b_histo;
         private float[] a_histo;
 
-        private enum Selected_Channel_Enum {
-            R,
-            G,
-            B,
-            A
-        }
+        //private enum Selected_Channel_Enum {
+        //    R,
+        //    G,
+        //    B,
+        //    A
+        //}
 
-        private Selected_Channel_Enum selected_channel;
+        //private Selected_Channel_Enum selected_channel;
 
         private bool drawing = false;
 
