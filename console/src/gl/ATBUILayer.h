@@ -49,6 +49,7 @@ namespace gl {
         std::shared_ptr<ATBar> winBar;
         std::shared_ptr<ATBar> paramBar;
         bool enabled;
+        bool isCoreHotFixed;
         std::chrono::system_clock::time_point lastParamUpdateTime;
     };
 

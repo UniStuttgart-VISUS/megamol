@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
@@ -28,23 +23,23 @@ namespace MegaMolConf {
         /// </summary>
         public StartShellType ShellType {
             get {
-                if (this.radioButton1.Checked) return StartShellType.Cmd;
-                if (this.radioButton2.Checked) return StartShellType.Powershell;
+                if (radioButton1.Checked) return StartShellType.Cmd;
+                if (radioButton2.Checked) return StartShellType.Powershell;
                 return StartShellType.Direct;
             }
             set {
                 switch (value) {
                     case StartShellType.Direct:
-                        this.radioButton3.Checked = true;
+                        radioButton3.Checked = true;
                         break;
                     case StartShellType.Cmd:
-                        this.radioButton1.Checked = true;
+                        radioButton1.Checked = true;
                         break;
                     case StartShellType.Powershell:
-                        this.radioButton2.Checked = true;
+                        radioButton2.Checked = true;
                         break;
                     default:
-                        this.radioButton3.Checked = true;
+                        radioButton3.Checked = true;
                         break;
                 }
             }
@@ -54,16 +49,16 @@ namespace MegaMolConf {
         /// Gets or sets the flag if the shell is to be kept open
         /// </summary>
         public bool KeepShellOpen {
-            get { return this.checkBox1.Checked; }
-            set { this.checkBox1.Checked = value; }
+            get { return checkBox1.Checked; }
+            set { checkBox1.Checked = value; }
         }
 
         /// <summary>
         /// Gets or sets the flag if we want to manipulate parameters of the live MegaMol child process
         /// </summary>
         public bool LiveConnection {
-            get { return this.chkLive.Checked; }
-            set { this.chkLive.Checked = value; }
+            get { return chkLive.Checked; }
+            set { chkLive.Checked = value; }
         }
 
         /// <summary>
@@ -82,18 +77,18 @@ namespace MegaMolConf {
         public System.Collections.Specialized.StringCollection ArgsHistory {
             get {
                 System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
-                if ((this.comboBox1.Items != null) && (this.comboBox1.Items.Count > 0)) {
-                    foreach (object o in this.comboBox1.Items) {
+                if ((comboBox1.Items != null) && (comboBox1.Items.Count > 0)) {
+                    foreach (object o in comboBox1.Items) {
                         sc.Add(o.ToString());
                     }
                 }
                 return sc;
             }
             set {
-                this.comboBox1.Items.Clear();
+                comboBox1.Items.Clear();
                 if ((value != null) && (value.Count > 0)) {
                     foreach (string s in value) {
-                        this.comboBox1.Items.Add(s);
+                        comboBox1.Items.Add(s);
                     }
                 }
             }
@@ -103,32 +98,32 @@ namespace MegaMolConf {
         /// Gets or sets the edited start arguments
         /// </summary>
         public string StartArgs {
-            get { return this.comboBox1.Text; }
-            set { this.comboBox1.Text = value; }
+            get { return comboBox1.Text; }
+            set { comboBox1.Text = value; }
         }
 
         /// <summary>
         /// Gets or sets the MegaMol application to start
         /// </summary>
         public string Application {
-            get { return this.textBoxApp.Text; }
-            set { this.textBoxApp.Text = value; }
+            get { return textBoxApp.Text; }
+            set { textBoxApp.Text = value; }
         }
 
         /// <summary>
         /// Gets or sets the working directory to start MegaMol in
         /// </summary>
         public string WorkingDir {
-            get { return this.textBoxWorkingDir.Text; }
-            set { this.textBoxWorkingDir.Text = value; }
+            get { return textBoxWorkingDir.Text; }
+            set { textBoxWorkingDir.Text = value; }
         }
 
         /// <summary>
         /// Gets or sets the flag to use the application directory as working directory
         /// </summary>
         public bool UseApplicationWorkingDir {
-            get { return this.checkBox2.Checked; }
-            set { this.checkBox2.Checked = value; }
+            get { return checkBox2.Checked; }
+            set { checkBox2.Checked = value; }
         }
 
         /// <summary>
@@ -145,7 +140,7 @@ namespace MegaMolConf {
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void button1_Click(object sender, EventArgs e) {
-            this.contextMenuStrip1.Show(this.button1, new Point(0, this.button1.Height));
+            contextMenuStrip1.Show(button1, new Point(0, button1.Height));
         }
 
         /// <summary>
@@ -154,7 +149,7 @@ namespace MegaMolConf {
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void standardCmdCommandToolStripMenuItem_Click(object sender, EventArgs e) {
-            this.comboBox1.Text = this.StdCmdArgs;
+            comboBox1.Text = StdCmdArgs;
         }
 
         /// <summary>
@@ -163,7 +158,7 @@ namespace MegaMolConf {
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void standardPowershellCommandToolStripMenuItem_Click(object sender, EventArgs e) {
-            this.comboBox1.Text = this.StdPSArgs;
+            comboBox1.Text = StdPSArgs;
         }
 
         /// <summary>
@@ -172,7 +167,7 @@ namespace MegaMolConf {
         /// <param name="sender">not used</param>
         /// <param name="e">not used</param>
         private void checkBox2_CheckedChanged(object sender, EventArgs e) {
-            this.textBoxWorkingDir.Enabled = !this.checkBox2.Checked;
+            textBoxWorkingDir.Enabled = !checkBox2.Checked;
         }
 
         private void browseMegaMolButton_Click(object sender, EventArgs e) {

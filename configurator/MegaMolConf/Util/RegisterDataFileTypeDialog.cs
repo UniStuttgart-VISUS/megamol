@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -65,21 +61,21 @@ namespace MegaMolConf.Util {
                 mem.Position = 0;
                 string regData = Convert.ToBase64String(mem.ToArray());
 
-                if (SG.Utilities.Forms.Elevation.RestartElevated("?#FILEREG " + regData + " " + this.Handle.ToString()) == int.MinValue) {
+                if (SG.Utilities.Forms.Elevation.RestartElevated("?#FILEREG " + regData + " " + Handle.ToString()) == int.MinValue) {
                     MessageBox.Show("Failed to start elevated Process. Most likely a security conflict.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             } else {
-                Util.FileTypeRegistration.RegisterDataFileType(this, textBoxExt.Text, textBoxDescription.Text, textBoxIconPath.Text, textBoxOpenCommand.Text);
+                FileTypeRegistration.RegisterDataFileType(this, textBoxExt.Text, textBoxDescription.Text, textBoxIconPath.Text, textBoxOpenCommand.Text);
             }
         }
 
         private void unregisterFileType_Click(object sender, EventArgs e) {
             if (SG.Utilities.Forms.Elevation.IsElevationRequired && !SG.Utilities.Forms.Elevation.IsElevated) {
-                if (SG.Utilities.Forms.Elevation.RestartElevated("?#FILEUNREG " + textBoxExt.Text + " " + this.Handle.ToString()) == int.MinValue) {
+                if (SG.Utilities.Forms.Elevation.RestartElevated("?#FILEUNREG " + textBoxExt.Text + " " + Handle.ToString()) == int.MinValue) {
                     MessageBox.Show("Failed to start elevated Process. Most likely a security conflict.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             } else {
-                Util.FileTypeRegistration.UnregisterDataFileType(this, textBoxExt.Text);
+                FileTypeRegistration.UnregisterDataFileType(this, textBoxExt.Text);
             }
         }
 

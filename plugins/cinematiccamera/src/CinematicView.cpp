@@ -18,21 +18,34 @@
 #include "vislib/Trace.h"
 #include "vislib/sys/Path.h"
 
+#include <ctime>
+
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
+
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace cinematiccamera;
 
+
+// DEFINES
+#ifndef CC_MENU_HEIGHT
+    #define CC_MENU_HEIGHT (20.0f)
+#endif
+
+
 /*
 * CinematicView::CinematicView
 */
 CinematicView::CinematicView(void) : View3D(),
-	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+    keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+#ifndef USE_SIMPLE_FONT
+    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
+#endif // USE_SIMPLE_FONT
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
-	selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
+    selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
     resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
     resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
@@ -49,8 +62,8 @@ CinematicView::CinematicView(void) : View3D(),
     this->sbSide          = CinematicView::SkyboxSides::SKYBOX_NONE;
     this->cineWidth       = 1920;
     this->cineHeight      = 1080;
-    this->vpW             = 0;
-    this->vpH             = 0;
+    this->vpWLast         = 0;
+    this->vpHLast         = 0;
     this->rendering       = false;
     this->resetFbo        = true;
     this->fps             = 24;
@@ -103,7 +116,7 @@ CinematicView::CinematicView(void) : View3D(),
     //    mouse selection for manipulatiors
     this->enableMouseSelectionSlot.MakeUnavailable();
     // Disable toggleAnimPlaySlot for this view
-    // -> 'SPACE'-key is needed to be asigned to own animation param
+    // -> 'SPACE'-key is needed to be asigned to cinematic camera animation param
     param::ParamSlot* toggleAnimPlaySlot = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(3)); // toggleAnimPlaySlot
     toggleAnimPlaySlot->MakeUnavailable();
 }
@@ -161,7 +174,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
-    // Set new bounding box center
+    // Set bounding box center of model
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
     // Set total simulation time of call
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
@@ -268,6 +281,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         this->cam.Parameters()->SetView(skf.getCamPosition(), skf.getCamLookAt(), skf.getCamUp());
         this->cam.Parameters()->SetApertureAngle(skf.getCamApertureAngle());
+
         loadNewCamParams = true;
     }
 
@@ -312,10 +326,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Viewport stuff ---------------------------------------------------------
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth = vp[2] - vp[0];  
-    int   vpHeight = vp[3] - vp[1]; 
+    int   vpWidth  = (vp[2] - vp[0]);
+    int   vpHeight = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
+    float vpH      = static_cast<float>(vpHeight);
+    float vpW      = static_cast<float>(vpWidth);
 
-    float vpRatio = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
+    float vpRatio = vpW / vpH;
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
     int   fboWidth = vpWidth;
     int   fboHeight = vpHeight;
@@ -325,6 +341,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         fboHeight = this->cineHeight;
     }
     else {
+
+        // Check for viewport changes
+        if ((this->vpWLast != vpWidth) || (this->vpHLast != vpHeight)) {
+            this->vpWLast = vpWidth;
+            this->vpHLast = vpHeight;
+            this->resetFbo = true;
+        }
+
         // Calculate reduced fbo width and height
         if ((this->cineWidth < vpWidth) && (this->cineHeight < vpHeight)) {
             fboWidth  = this->cineWidth;
@@ -335,16 +359,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             fboHeight = vpHeight;
 
             if (cineRatio > vpRatio) {
-                fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+                fboHeight = (static_cast<int>(vpW / cineRatio));
             }
             else if (cineRatio < vpRatio) {
-                fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
-            }
-            // Check for viewport changes
-            if ((this->vpW != vpWidth) || (this->vpH != vpHeight)) {
-                this->vpW = vpWidth;
-                this->vpH = vpHeight;
-                this->resetFbo = true;
+                fboWidth = (static_cast<int>(vpH * cineRatio));
             }
         }
     }
@@ -395,7 +413,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Call Render-Function of parent View3D
     Base::Render(context);
 
-    this->fbo.Disable();
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
 
     // Reset override render call
     this->overrideCall = NULL;
@@ -419,7 +439,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glLoadIdentity();
     // Reset viewport
     glViewport(vp[0], vp[1], vp[2], vp[3]);
-    glOrtho(0.0f, static_cast<float>(vpWidth), 0.0f, static_cast<float>(vpHeight), -1.0, 1.0);
+    glOrtho(0.0f, vpW, 0.0f, (vpH + (CC_MENU_HEIGHT)), -1.0, 1.0); // Reset to true viewport size including menue height
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -430,16 +450,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     int fboVpHeight = fboHeight;
     if ((fboVpWidth > vpWidth) || ((fboVpWidth < vpWidth) && (fboVpHeight < vpHeight))) {
         fboVpWidth  = vpWidth;
-        fboVpHeight = static_cast<int>(static_cast<float>(vpWidth) / cineRatio);
+        fboVpHeight = static_cast<int>(vpW / cineRatio);
     }
     if ((fboVpHeight > vpHeight) || ((fboVpWidth < vpWidth) && (fboVpHeight < vpHeight))) {
         fboVpHeight = vpHeight;
-        fboVpWidth  = static_cast<int>(static_cast<float>(vpHeight) * cineRatio);
+        fboVpWidth  = static_cast<int>(vpH * cineRatio);
     }
-    float right  = static_cast<float>(vpWidth + fboVpWidth) / 2.0f;
-    float left   = static_cast<float>(vpWidth - fboVpWidth) / 2.0f;
-    float bottom = static_cast<float>(vpHeight - fboVpHeight) / 2.0f;
-    float up     = static_cast<float>(vpHeight + fboVpHeight) / 2.0f;
+    float right  = (vpWidth + static_cast<float>(fboVpWidth)) / 2.0f;
+    float left   = (vpWidth - static_cast<float>(fboVpWidth)) / 2.0f;
+    float bottom = (vpHeight - static_cast<float>(fboVpHeight)) / 2.0f;
+    float up     = (vpHeight + static_cast<float>(fboVpHeight)) / 2.0f;
 
     // Draw texture
     glActiveTexture(GL_TEXTURE0);
@@ -460,29 +480,36 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_TEXTURE_2D);
 
     // Draw letter box  -------------------------------------------------------
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
 
-    // Color stuff ------------------------------------------------------------
+    // Color stuff 
     const float *bgColor = this->bkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    // Adapt colors depending on  Lightness
+    // Adapt colors depending on lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L > 0.5f) {
         for (unsigned int i = 0; i < 3; i++) {
             lbColor[i] = 0.0f;
         }
     }
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    for (unsigned int i = 0; i < 3; i++) {
+        fgColor[i] -= lbColor[i];
+    }
 
     // Calculate position of texture
     int x = 0;
     int y = 0;
     if (fboVpWidth < vpWidth) {
-        x = (static_cast<int>(static_cast<float>(vpWidth - fboVpWidth) / 2.0f));
+        x = (static_cast<int>((vpWidth - static_cast<float>(fboVpWidth)) / 2.0f));
         y = vpHeight;
     }
     else if (fboVpHeight < vpHeight) {
         x = vpWidth;
-        y = (static_cast<int>(static_cast<float>(vpHeight - fboVpHeight) / 2.0f));
+        y = (static_cast<int>((vpHeight - static_cast<float>(fboVpHeight)) / 2.0f));
     }
     // Draw letter box quads in letter box Color
     glColor4fv(lbColor);
@@ -497,14 +524,70 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         glVertex2i(vpWidth,     vpHeight - y);
     glEnd();
 
+    // DRAW MENU --------------------------------------------------------------
+
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_POLYGON_SMOOTH);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+
+    vislib::StringA leftLabel = " [ CINEMATIC VIEW ] ";
+    vislib::StringA midLabel  = "  ";
+    if (this->rendering) {
+        midLabel  =  " ... rendering in progress ... ";
+    }
+    else if (this->playAnim) {
+        midLabel = " playing animation ";
+    }
+    vislib::StringA rightLabel = "";
+
+    float lbFontSize        = (CC_MENU_HEIGHT);
+    float leftLabelWidth    = this->theFont.LineWidth(lbFontSize, leftLabel);
+    float midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
+    float rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
+
+    // Adapt font size if height of menu text is greater than menu height
+    float vpWhalf = vpW / 2.0f;
+    while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
+        lbFontSize        -= 0.5f;
+        leftLabelWidth     = this->theFont.LineWidth(lbFontSize, leftLabel);
+        midleftLabelWidth  = this->theFont.LineWidth(lbFontSize, midLabel);
+        rightLabelWidth    = this->theFont.LineWidth(lbFontSize, rightLabel);
+    }
+
+    // Draw menu background
+    glDisable(GL_BLEND);
+    glDisable(GL_POLYGON_SMOOTH);
+    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(0.0f, vpH + (CC_MENU_HEIGHT));
+        glVertex2f(0.0f, vpH);
+        glVertex2f(vpW,  vpH);
+        glVertex2f(vpW,  vpH + (CC_MENU_HEIGHT));
+    glEnd();
+
+    // Draw menu labels
+    float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    glEnable(GL_BLEND);
+    glEnable(GL_POLYGON_SMOOTH);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    // ------------------------------------------------------------------------
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     
     // Reset opengl
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_POLYGON_SMOOTH);
 
     // Unlock renderer after first frame
     if (this->rendering && this->pngdata.lock) {
@@ -543,8 +626,16 @@ bool CinematicView::rtf_setup() {
     // Create new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
-    struct tm *now = std::localtime(&t);
-    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
+    struct tm *now = nullptr;
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+    struct tm nowdata;
+    now = &nowdata;
+    localtime_s(now, &t);
+#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+    now = localtime(&t);
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+    frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
@@ -602,6 +693,11 @@ bool CinematicView::rtf_set_time_and_camera() {
         // Increase to next time step
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
         this->pngdata.animTime += fpsFrac;
+
+        // Fit animTime to exact full seconds (removing rounding error)
+        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
+            this->pngdata.animTime = std::round(this->pngdata.animTime);
+        }
 
         // Finish rendering if max anim time is reached
         if (this->pngdata.animTime > ccc->getTotalAnimTime()) {

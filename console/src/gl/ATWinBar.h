@@ -34,6 +34,10 @@ namespace gl {
         static void toggleGUI(ATWinBar *inst);
         static void setShowFPSinWindowTitle(const void *value, Window *wnd);
         static void getShowFPSinWindowTitle(void *value, Window *wnd);
+        static void setShowSamplesinWindowTitle(const void *value, Window *wnd);
+        static void getShowSamplesinWindowTitle(void *value, Window *wnd);
+        static void setShowPrimsinWindowTitle(const void *value, Window *wnd);
+        static void getShowPrimsinWindowTitle(void *value, Window *wnd);
         static void copyFPS(Window *wnd);
         static void copyFPSList(Window *wnd);
         static void setParamFilePath(const void *value, void *ctxt);

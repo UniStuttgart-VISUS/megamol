@@ -82,6 +82,12 @@ namespace datatools {
         /** The new color value */
         core::param::ParamSlot colorSlot;
 
+        /** Activates overriding the intensity range */
+        core::param::ParamSlot overrideIntensityRangeSlot;
+
+        /** the new range */
+        core::param::ParamSlot minIntSlot;
+        core::param::ParamSlot maxIntSlot;
     };
 
 } /* end namespace datatools */

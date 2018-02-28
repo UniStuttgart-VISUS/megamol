@@ -25,9 +25,14 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 #include "Keyframe.h"
 #include "png.h"
+
+// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -35,16 +40,6 @@ namespace megamol {
 		class CinematicView : public core::view::View3D {
 
 		public:
-
-			enum SkyboxSides {
-				SKYBOX_NONE  = 0,
-				SKYBOX_FRONT = 1,
-				SKYBOX_BACK  = 2,
-				SKYBOX_LEFT  = 4,
-				SKYBOX_RIGHT = 8, 
-				SKYBOX_UP    = 16,
-				SKYBOX_DOWN  = 32
-			};
 
 			typedef core::view::View3D Base;
 
@@ -103,14 +98,32 @@ namespace megamol {
             * variables
             **********************************************************************/
 
+            // font rendering
+#ifdef USE_SIMPLE_FONT
+            vislib::graphics::gl::SimpleFont  theFont;
+#else
+            vislib::graphics::gl::OutlineFont theFont;
+#endif
+
+            enum SkyboxSides {
+                SKYBOX_NONE = 0,
+                SKYBOX_FRONT = 1,
+                SKYBOX_BACK = 2,
+                SKYBOX_LEFT = 4,
+                SKYBOX_RIGHT = 8,
+                SKYBOX_UP = 16,
+                SKYBOX_DOWN = 32
+            };
+
             clock_t                                 deltaAnimTime;
+
             Keyframe                                shownKeyframe;
             bool                                    playAnim;
 
             int                                     cineWidth;
             int                                     cineHeight;
-            int                                     vpH;
-            int                                     vpW;
+            int                                     vpHLast;
+            int                                     vpWLast;
 
             CinematicView::SkyboxSides              sbSide;
 

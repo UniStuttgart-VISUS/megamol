@@ -559,6 +559,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     AbstractRenderingView::endFrame();
 
+    if (this->doHookCode()) {
+        this->doAfterRenderHook();
+    }
 }
 
 
@@ -650,7 +653,7 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
         // stuff from protein::View3DMouse
         CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
         if (cr3d) {
-            cr3d->SetMouseInfo(static_cast<int>(x), static_cast<int>(y),
+            cr3d->SetMouseInfo(static_cast<float>(static_cast<int>(x)), static_cast<float>(static_cast<int>(y)),
                 this->mouseFlags);
             if ((*cr3d)(3)) {
                 this->mouseX = (float)static_cast<int>(x);

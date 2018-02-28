@@ -10,9 +10,9 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_TRISOUP_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_TRISOUP_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core glad)
+  set(LIBS vislib core glad geometry_calls)
   include_directories("include" "src")
 
 
@@ -31,7 +31,7 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core)
+  add_dependencies(${PROJECT_NAME} vislib core geometry_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.

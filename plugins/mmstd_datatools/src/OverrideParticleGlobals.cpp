@@ -28,7 +28,10 @@ datatools::OverrideParticleGlobals::OverrideParticleGlobals(void)
         overrideRadiusSlot("overrideRadius", "Activates overriding the radius"),
         radiusSlot("radius", "The new radius value"),
         overrideColorSlot("overrideColor", "Activates overriding the color"),
-        colorSlot("color", "The new color value") {
+        colorSlot("color", "The new color value"),
+        overrideIntensityRangeSlot("overrideInt", "Activates overriding the intensity range"),
+        minIntSlot("minInt", "the new minimum intensity"),
+        maxIntSlot("maxInt", "the new maximum intensity") {
 
     this->overrideAllListSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->overrideAllListSlot);
@@ -47,6 +50,15 @@ datatools::OverrideParticleGlobals::OverrideParticleGlobals(void)
 
     this->colorSlot.SetParameter(new core::param::StringParam("white"));
     this->MakeSlotAvailable(&this->colorSlot);
+
+    this->overrideIntensityRangeSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->overrideIntensityRangeSlot);
+
+    this->minIntSlot.SetParameter(new core::param::FloatParam(0.0f));
+    this->MakeSlotAvailable(&this->minIntSlot);
+
+    this->maxIntSlot.SetParameter(new core::param::FloatParam(99999.0f));
+    this->MakeSlotAvailable(&this->maxIntSlot);
 }
 
 
@@ -71,6 +83,9 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     bool overrideRadius = this->overrideRadiusSlot.Param<core::param::BoolParam>()->Value();
     float radius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
     bool overrideColor = this->overrideColorSlot.Param<core::param::BoolParam>()->Value();
+    float minInt = this->minIntSlot.Param<core::param::FloatParam>()->Value();
+    float maxInt = this->maxIntSlot.Param<core::param::FloatParam>()->Value();
+    bool overrideInt = this->overrideIntensityRangeSlot.Param<core::param::BoolParam>()->Value();
     uint8_t color[4];
     try {
         vislib::graphics::ColourParser::FromString(
@@ -85,7 +100,7 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 
-    if (!overrideColor && !overrideRadius) return true;
+    if (!overrideColor && !overrideRadius && !overrideInt) return true;
 
     unsigned int plc = outData.GetParticleListCount();
     unsigned int i = 0;
@@ -107,6 +122,10 @@ bool datatools::OverrideParticleGlobals::manipulateData(
         if (overrideColor) {
             p.SetGlobalColour(color[0], color[1], color[2], color[3]);
             p.SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+        }
+
+        if (overrideInt) {
+            p.SetColourMapIndexValues(minInt, maxInt);
         }
     }
 

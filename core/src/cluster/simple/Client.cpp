@@ -299,6 +299,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             }
             break;
         case MSG_MODULGRAPH:
+        case MSG_MODULGRAPH_LUA:
             // MUST BE STORED FOR CREATING SYNCHRONOUSLY
             if (!this->views.IsEmpty()) {
                 this->views[0]->SetSetupMessage(msg);

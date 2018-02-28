@@ -1,7 +1,7 @@
 /*
 * WatermarkRenderer.cpp
 *
-* Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
 * Alle Rechte vorbehalten.
 */
 
@@ -368,18 +368,6 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
                 img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
                 texSize->SetX(static_cast<vislib::graphics::SceneSpaceType>(img.Width()));
                 texSize->SetY(static_cast<vislib::graphics::SceneSpaceType>(img.Height()));
-                // Set alpha to zero for black background
-                //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
-                //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
-                //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
-                //    BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
-                //    if (r + g + b > 0) {
-                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
-                //    }
-                //    else {
-                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
-                //    }
-                //}
                 if (tex->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                     vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
                     ARY_SAFE_DELETE(buf);

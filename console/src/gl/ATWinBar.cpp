@@ -40,6 +40,14 @@ gl::ATWinBar::ATWinBar(Window& wnd, ATBUILayer& layer, const char* wndName) : AT
         reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowFPSinWindowTitle),
         reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowFPSinWindowTitle),
         &wnd, "label='Show FPS in Window Caption'");
+    ::TwAddVarCB(Handle(), "sampTitle", TW_TYPE_BOOLCPP,
+        reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowSamplesinWindowTitle),
+        reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowSamplesinWindowTitle),
+        &wnd, "label='Show Samples passed in Window Caption'");
+    ::TwAddVarCB(Handle(), "primsTitle", TW_TYPE_BOOLCPP,
+        reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowPrimsinWindowTitle),
+        reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowPrimsinWindowTitle),
+        &wnd, "label='Show Primitives generated in Window Caption'");
     ::TwAddButton(Handle(), "fpsCopy", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPS), &wnd, "label='Copy to Clipboard'");
     ::TwAddButton(Handle(), "fpsCopyList", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPSList), &wnd, "label='Copy FPS List to Clipboard'");
 
@@ -144,6 +152,22 @@ void gl::ATWinBar::setShowFPSinWindowTitle(const void *value, Window *wnd) {
 
 void gl::ATWinBar::getShowFPSinWindowTitle(void *value, Window *wnd) {
     *(bool*)value = wnd->ShowFPSinTitle();
+}
+
+void gl::ATWinBar::setShowSamplesinWindowTitle(const void *value, Window *wnd) {
+    wnd->SetShowSamplesinTitle(*(const bool*)value);
+}
+
+void gl::ATWinBar::getShowSamplesinWindowTitle(void *value, Window *wnd) {
+    *(bool*)value = wnd->ShowSamplesinTitle();
+}
+
+void gl::ATWinBar::setShowPrimsinWindowTitle(const void *value, Window *wnd) {
+    wnd->SetShowPrimsinTitle(*(const bool*)value);
+}
+
+void gl::ATWinBar::getShowPrimsinWindowTitle(void *value, Window *wnd) {
+    *(bool*)value = wnd->ShowPrimsinTitle();
 }
 
 void gl::ATWinBar::copyFPS(Window *wnd) {

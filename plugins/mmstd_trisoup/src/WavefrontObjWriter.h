@@ -14,7 +14,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_trisoup/LinesDataCall.h"
+#include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/FastFile.h"
 
@@ -107,7 +107,7 @@ namespace trisoup {
          *
          * @param ldc Pointer to the LinesDataCall
          */
-        bool writeLines(LinesDataCall* ldc);
+        bool writeLines(megamol::geocalls::LinesDataCall* ldc);
 
         /** The file name of the file to be written */
         core::param::ParamSlot filenameSlot;

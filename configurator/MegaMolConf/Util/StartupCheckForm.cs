@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MegaMolConf.Util {
@@ -26,7 +22,7 @@ namespace MegaMolConf.Util {
                         return !String.IsNullOrWhiteSpace(Properties.Settings.Default.MegaMolBin);
                     }),
                     DoFix = new Action<StartupCheck,IWin32Window>((StartupCheck sc, IWin32Window w) => {
-                        Util.ApplicationSearchDialog asd = new Util.ApplicationSearchDialog();
+                        ApplicationSearchDialog asd = new ApplicationSearchDialog();
                         asd.FileName = Properties.Settings.Default.MegaMolBin;
                         if (asd.ShowDialog(w) == DialogResult.OK) {
                             Properties.Settings.Default.MegaMolBin = asd.FileName;
@@ -162,7 +158,7 @@ namespace MegaMolConf.Util {
                         ad.MegaMolPath = Properties.Settings.Default.MegaMolBin;
                         ad.WorkingDirectory = Properties.Settings.Default.WorkingDirectory;
 
-                        if (ad.ShowDialog(w) == System.Windows.Forms.DialogResult.OK) {
+                        if (ad.ShowDialog(w) == DialogResult.OK) {
 
                             Properties.Settings.Default.MegaMolBin = ad.MegaMolPath;
                             Properties.Settings.Default.Save();
@@ -191,7 +187,7 @@ namespace MegaMolConf.Util {
                                     Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         } else {
-                            Util.FileTypeRegistration.Register(w, Application.ExecutablePath);
+                            FileTypeRegistration.Register(w, Application.ExecutablePath);
                         }
                     })
                 });
@@ -293,7 +289,7 @@ namespace MegaMolConf.Util {
             }
             if (!KeepOpen) {
                 // If all checks succeed and KeepOpen == false:
-                DialogResult = System.Windows.Forms.DialogResult.Ignore;
+                DialogResult = DialogResult.Ignore;
                 Close();
             }
         }

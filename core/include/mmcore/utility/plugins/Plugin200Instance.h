@@ -12,6 +12,7 @@
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/macro_utils.h"
 #include <memory>
+#include <string>
 
 
 namespace megamol {
@@ -31,7 +32,7 @@ namespace plugins {
         unsigned short version_len;
 
         /** The version number elements, starting with the most significant element */
-        std::vector<const char*> version;
+        std::vector<std::string> version;
 
         /** Additional flags specifying options */
         unsigned int flags;
