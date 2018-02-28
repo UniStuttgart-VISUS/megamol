@@ -17,3 +17,7 @@ configurator/MegaMolConf/Resources/mmconfig\.res
 build-linux/
 
 .vscode/**/*.bat
+
+.gitmodules
+
+*.orig
