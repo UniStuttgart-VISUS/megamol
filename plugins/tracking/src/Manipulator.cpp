@@ -16,9 +16,9 @@
 
 
 /*
- * megamol::vrpnModule::Manipulator::Manipulator
+ * megamol::tracking::Manipulator::Manipulator
  */
-megamol::vrpnModule::Manipulator::Manipulator(void) :
+megamol::tracking::Manipulator::Manipulator(void) :
         isRotating(false), isTranslating(false), isZooming(false),
         paramInvertRotate("manipulator::invertRotate", "Inverts the rotation."),
         paramInvertZoom("manipulator::invertZoom", "Inverts the zoom direction."),
@@ -59,16 +59,16 @@ megamol::vrpnModule::Manipulator::Manipulator(void) :
 
 
 /*
- * megamol::vrpnModule::Manipulator::~Manipulator
+ * megamol::tracking::Manipulator::~Manipulator
  */
-megamol::vrpnModule::Manipulator::~Manipulator(void) {
+megamol::tracking::Manipulator::~Manipulator(void) {
 }
 
 
 /*
- * megamol::vrpnModule::Manipulator::OnButtonChanged
+ * megamol::tracking::Manipulator::OnButtonChanged
  */
-void megamol::vrpnModule::Manipulator::OnButtonChanged(const int button, const bool isPressed) {
+void megamol::tracking::Manipulator::OnButtonChanged(const int button, const bool isPressed) {
     using megamol::core::param::IntParam;
 
     /* Detect reconfiguration of button mapping. */
@@ -136,9 +136,9 @@ void megamol::vrpnModule::Manipulator::OnButtonChanged(const int button, const b
 
 
 /*
- * megamol::vrpnModule::Manipulator::ApplyTransformations
+ * megamol::tracking::Manipulator::ApplyTransformations
  */
-void megamol::vrpnModule::Manipulator::ApplyTransformations(void) {
+void megamol::tracking::Manipulator::ApplyTransformations(void) {
     using namespace core::param;
 
     int xact = 0;
@@ -236,9 +236,9 @@ void megamol::vrpnModule::Manipulator::ApplyTransformations(void) {
 
 
 /*
- * megamol::vrpnModule::Manipulator::xform
+ * megamol::tracking::Manipulator::xform
  */
-megamol::vrpnModule::Manipulator::QuaternionType megamol::vrpnModule::Manipulator::xform(const VectorType& u, const VectorType& v) {
+megamol::tracking::Manipulator::QuaternionType megamol::tracking::Manipulator::xform(const VectorType& u, const VectorType& v) {
     // http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
     auto w = u.Cross(v);
     auto q = QuaternionType(w.X(), w.Y(), w.Z(), u.Dot(v));

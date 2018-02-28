@@ -11,7 +11,7 @@
 
 #include <atomic>
 
-#include "vrpn/vrpn_Button.h"
+#include "vrpn_Button.h"
 
 #include "mmcore/view/Call6DofInteraction.h"
 #include "mmcore/CalleeSlot.h"
@@ -23,7 +23,7 @@
 
 
 namespace megamol {
-namespace vrpnModule {
+namespace tracking {
 
     /**
      * 6DOF tracker using NaturalPoint's native SDK.
@@ -94,5 +94,5 @@ namespace vrpnModule {
         std::string glasses;
     };
 
-} /* end namespace vrpnModule */
+} /* end namespace tracking */
 } /* end namespace megamol */

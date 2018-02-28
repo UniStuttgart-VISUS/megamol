@@ -6,6 +6,8 @@
 
 #include "stdafx.h"
 #include "tracking/tracking.h"
+#include "NatNetTracker.h"
+#include "VrpnTracker.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -36,27 +38,9 @@ namespace {
         }
         /** Registers modules and calls */
         virtual void registerClasses(void) {
-
-            // register modules here:
-
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::tracking::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::tracking::MyModule2>();
-            //   ...
-            //
-
-            // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::tracking::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::tracking::MyCall2>();
-            //   ...
-            //
-
+			// Module registration.
+			this->module_descriptions.RegisterAutoDescription<megamol::tracking::VrpnTracker>();
+			this->module_descriptions.RegisterAutoDescription<megamol::tracking::NatNetTracker>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

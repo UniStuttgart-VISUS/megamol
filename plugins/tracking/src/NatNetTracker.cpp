@@ -21,9 +21,9 @@
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::NatNetTracker
+ * megamol::tracking::NatNetTracker::NatNetTracker
  */
-megamol::vrpnModule::NatNetTracker::NatNetTracker(void) :
+megamol::tracking::NatNetTracker::NatNetTracker(void) :
         buttonDevice("button"), buttonStates(0),
         paramConnect("connect", "Establish the connection to the tracker."),
         paramActiveNode("activeNode", "Enables the tracker only on the node with the specified name."),
@@ -78,34 +78,34 @@ megamol::vrpnModule::NatNetTracker::NatNetTracker(void) :
 }
 
 /*
- * megamol::vrpnModule::NatNetTracker::~NatNetTracker
+ * megamol::tracking::NatNetTracker::~NatNetTracker
  */
-megamol::vrpnModule::NatNetTracker::~NatNetTracker(void) {
+megamol::tracking::NatNetTracker::~NatNetTracker(void) {
     this->Release();
 }
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::create
+ * megamol::tracking::NatNetTracker::create
  */
-bool megamol::vrpnModule::NatNetTracker::create(void) {
+bool megamol::tracking::NatNetTracker::create(void) {
     return true;
 }
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::release
+ * megamol::tracking::NatNetTracker::release
  */
-void megamol::vrpnModule::NatNetTracker::release(void) {
+void megamol::tracking::NatNetTracker::release(void) {
     this->isRunning.store(false);
     this->motionDevices.Disconnect();
 }
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::onButtonChanged
+ * megamol::tracking::NatNetTracker::onButtonChanged
  */
-void VRPN_CALLBACK megamol::vrpnModule::NatNetTracker::onButtonChanged(void *userData, const vrpn_BUTTONCB vrpnData) {
+void VRPN_CALLBACK megamol::tracking::NatNetTracker::onButtonChanged(void *userData, const vrpn_BUTTONCB vrpnData) {
     //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Button = %d, State = %d\n", vrpnData.button, vrpnData.state);
 
     auto that = static_cast<NatNetTracker *>(userData);
@@ -123,9 +123,9 @@ void VRPN_CALLBACK megamol::vrpnModule::NatNetTracker::onButtonChanged(void *use
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::onConnect
+ * megamol::tracking::NatNetTracker::onConnect
  */
-bool megamol::vrpnModule::NatNetTracker::onConnect(core::param::ParamSlot& slot) {
+bool megamol::tracking::NatNetTracker::onConnect(core::param::ParamSlot& slot) {
     using vislib::sys::Log;
 
     this->onDisconnect(this->paramDisconnect);
@@ -190,9 +190,9 @@ bool megamol::vrpnModule::NatNetTracker::onConnect(core::param::ParamSlot& slot)
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::onDisconnect
+ * megamol::tracking::NatNetTracker::onDisconnect
  */
-bool megamol::vrpnModule::NatNetTracker::onDisconnect(core::param::ParamSlot& slot) {
+bool megamol::tracking::NatNetTracker::onDisconnect(core::param::ParamSlot& slot) {
     this->isRunning.store(false);
     this->motionDevices.Disconnect();
     return true;
@@ -200,9 +200,9 @@ bool megamol::vrpnModule::NatNetTracker::onDisconnect(core::param::ParamSlot& sl
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::onGetState
+ * megamol::tracking::NatNetTracker::onGetState
  */
-bool megamol::vrpnModule::NatNetTracker::onGetState(core::Call& call) {
+bool megamol::tracking::NatNetTracker::onGetState(core::Call& call) {
     auto valid = static_cast<core::view::Call6DofInteraction::ButtonMaskType>(this->paramValidButtons.Param<core::param::IntParam>()->Value());
 
     try {
@@ -222,9 +222,9 @@ bool megamol::vrpnModule::NatNetTracker::onGetState(core::Call& call) {
 
 
 /*
- * megamol::vrpnModule::NatNetTracker::onMotion
+ * megamol::tracking::NatNetTracker::onMotion
  */
-void megamol::vrpnModule::NatNetTracker::onStickMotion(const sRigidBodyData& data) {
+void megamol::tracking::NatNetTracker::onStickMotion(const sRigidBodyData& data) {
     //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Position = (%f, %f, %f), "
     //    "Orientation = (%f, %f, %f, %f)\n", data.x, data.y, data.z,
     //    data.qx, data.qy, data.qz, data.qw);
@@ -248,7 +248,7 @@ void megamol::vrpnModule::NatNetTracker::onStickMotion(const sRigidBodyData& dat
     this->manipulator.ApplyTransformations();
 }
 
-void megamol::vrpnModule::NatNetTracker::onGlassesMotion(const sRigidBodyData& data) {
+void megamol::tracking::NatNetTracker::onGlassesMotion(const sRigidBodyData& data) {
     if (!this->paramEnableGlasses.Param<core::param::BoolParam>()->Value()) {
         return;
     }

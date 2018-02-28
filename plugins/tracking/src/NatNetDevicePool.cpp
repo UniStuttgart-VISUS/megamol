@@ -19,9 +19,9 @@
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::NatNetDevicePool
+ * megamol::tracking::NatNetDevicePool::NatNetDevicePool
  */
-megamol::vrpnModule::NatNetDevicePool::NatNetDevicePool(void) :
+megamol::tracking::NatNetDevicePool::NatNetDevicePool(void) :
 
     client(nullptr),
 
@@ -67,18 +67,18 @@ megamol::vrpnModule::NatNetDevicePool::NatNetDevicePool(void) :
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::~NatNetDevicePool
+ * megamol::tracking::NatNetDevicePool::~NatNetDevicePool
  */
-megamol::vrpnModule::NatNetDevicePool::~NatNetDevicePool(void)
+megamol::tracking::NatNetDevicePool::~NatNetDevicePool(void)
 {
     this->Disconnect();
 }
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::Connect
+ * megamol::tracking::NatNetDevicePool::Connect
  */
-void megamol::vrpnModule::NatNetDevicePool::Connect(void)
+void megamol::tracking::NatNetDevicePool::Connect(void)
 {
     using namespace megamol::core::param;
     using vislib::sys::Log;
@@ -199,9 +199,9 @@ void megamol::vrpnModule::NatNetDevicePool::Connect(void)
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::Disconnect
+ * megamol::tracking::NatNetDevicePool::Disconnect
  */
-void megamol::vrpnModule::NatNetDevicePool::Disconnect(void)
+void megamol::tracking::NatNetDevicePool::Disconnect(void)
 {
     if (this->client != nullptr)
     {
@@ -212,9 +212,9 @@ void megamol::vrpnModule::NatNetDevicePool::Disconnect(void)
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::Register
+ * megamol::tracking::NatNetDevicePool::Register
  */
-void megamol::vrpnModule::NatNetDevicePool::Register(std::string rigidBodyName, CallbackType callback)
+void megamol::tracking::NatNetDevicePool::Register(std::string rigidBodyName, CallbackType callback)
 {
 	auto it = this->ids.find(rigidBodyName);
 	if (it != this->ids.end()) {
@@ -223,9 +223,9 @@ void megamol::vrpnModule::NatNetDevicePool::Register(std::string rigidBodyName, 
 }
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::ClearCallbacks
+ * megamol::tracking::NatNetDevicePool::ClearCallbacks
  */
-void megamol::vrpnModule::NatNetDevicePool::ClearCallbacks(void)
+void megamol::tracking::NatNetDevicePool::ClearCallbacks(void)
 {
     for (auto pair : this->callbacks)
     {
@@ -235,9 +235,9 @@ void megamol::vrpnModule::NatNetDevicePool::ClearCallbacks(void)
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::onData
+ * megamol::tracking::NatNetDevicePool::onData
  */
-void __cdecl megamol::vrpnModule::NatNetDevicePool::onData(sFrameOfMocapData *data, void *pUserData)
+void __cdecl megamol::tracking::NatNetDevicePool::onData(sFrameOfMocapData *data, void *pUserData)
 {
 	auto that = static_cast<NatNetDevicePool *>(pUserData);
 
@@ -286,9 +286,9 @@ void __cdecl megamol::vrpnModule::NatNetDevicePool::onData(sFrameOfMocapData *da
 
 
 /*
- * megamol::vrpnModule::NatNetDevicePool::onMessage
+ * megamol::tracking::NatNetDevicePool::onMessage
  */
-void __cdecl megamol::vrpnModule::NatNetDevicePool::onMessage(int msgType, char *msg)
+void __cdecl megamol::tracking::NatNetDevicePool::onMessage(int msgType, char *msg)
 {
     vislib::sys::Log::DefaultLog.WriteInfo(_T("NatNet: %hs"), msg);
 }

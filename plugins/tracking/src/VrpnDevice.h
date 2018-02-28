@@ -15,7 +15,7 @@
 //#define MEGAMOLVRPN_VRPNDEVICE_WRITE_PLAYBACKLOG
 
 #include "mmcore/param/ParamSlot.h"
-#include "vrpn/vrpn_Tracker.h"
+#include "vrpn_Tracker.h"
 #include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -30,7 +30,7 @@ using namespace megamol;
 using namespace vislib;
 
 namespace megamol {
-namespace vrpnModule {
+namespace tracking {
 
     template <class R> class VrpnDevice {
 
@@ -59,14 +59,14 @@ namespace vrpnModule {
 
     };
 
-} /* end namespace vrpnModule */
+} /* end namespace tracking */
 } /* end namespace megamol */
 
 template <class R>
-const std::string vrpnModule::VrpnDevice<R>::ProtocolToString[Protocol::Count] = { "udp", "tcp" };
+const std::string tracking::VrpnDevice<R>::ProtocolToString[Protocol::Count] = { "udp", "tcp" };
 
 template <class R>
-vrpnModule::VrpnDevice<R>::VrpnDevice(const std::string& prefix) :
+tracking::VrpnDevice<R>::VrpnDevice(const std::string& prefix) :
 nameSlot((prefix + "::name").c_str(), "The name of the device."),
 serverSlot((prefix + "::server").c_str(), "The sever hosting the device."),
 portSlot((prefix + "::port").c_str(), "The port used for connecting to the device."),
@@ -83,7 +83,7 @@ protocolSlot((prefix + "::protocol").c_str(), "The protocol used for connecting 
 }
 
 template <class R>
-void vrpnModule::VrpnDevice<R>::Connect(void) {
+void tracking::VrpnDevice<R>::Connect(void) {
     Protocol::Enum protocol = static_cast<Protocol::Enum>(this->protocolSlot.Param<core::param::EnumParam  >()->Value());
     std::string    name = T2A(this->nameSlot.Param<core::param::StringParam>()->Value());
     std::string    server = T2A(this->serverSlot.Param<core::param::StringParam>()->Value());
@@ -121,23 +121,23 @@ void vrpnModule::VrpnDevice<R>::Connect(void) {
 }
 
 template <class R>
-void vrpnModule::VrpnDevice<R>::Disconnect(void) {
+void tracking::VrpnDevice<R>::Disconnect(void) {
     // TODO: Is this the correct way of disconnecting?
     this->remote = nullptr;
 }
 
 template <class R> template <typename H>
-void vrpnModule::VrpnDevice<R>::Register(H handler, void *userData) {
+void tracking::VrpnDevice<R>::Register(H handler, void *userData) {
     this->remote->register_change_handler(userData, handler);
 }
 
 template <class R>
-std::vector<core::param::ParamSlot *> &vrpnModule::VrpnDevice<R>::GetParams(void) {
+std::vector<core::param::ParamSlot *> &tracking::VrpnDevice<R>::GetParams(void) {
     return this->paramSlots;
 }
 
 template <class R>
-void vrpnModule::VrpnDevice<R>::MainLoop(void) {
+void tracking::VrpnDevice<R>::MainLoop(void) {
 	if (this->remote != nullptr) {
 		this->remote->mainloop();
 	}

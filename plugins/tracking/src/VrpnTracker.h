@@ -17,8 +17,8 @@
 #include "Manipulator.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vrpn/vrpn_Tracker.h"
-#include "vrpn/vrpn_Button.h"
+#include "vrpn_Tracker.h"
+#include "vrpn_Button.h"
 #include "VrpnDevice.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
@@ -31,7 +31,7 @@ using namespace megamol;
 using namespace vislib;
 
 namespace megamol {
-namespace vrpnModule {
+namespace tracking {
 
     class VrpnTracker : public core::Module {
 
@@ -80,7 +80,7 @@ namespace vrpnModule {
         void start(void);
     };
 
-} /* end namespace vrpnModule */
+} /* end namespace tracking */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLVRPN_VRPNMODULE_H_INCLUDED */

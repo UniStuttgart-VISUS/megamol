@@ -22,7 +22,7 @@
 
 
 namespace megamol {
-namespace vrpnModule {
+namespace tracking {
 
     /**
      * Implements the camera manipulation for a 3DOF device.
@@ -110,5 +110,5 @@ namespace vrpnModule {
         PointType startPosition;
     };
 
-} /* end namespace vrpnModule */
+} /* end namespace tracking */
 } /* end namespace megamol */

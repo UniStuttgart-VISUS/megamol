@@ -20,7 +20,7 @@
 
 
 namespace megamol {
-namespace vrpnModule {
+namespace tracking {
 
     /**
      * Manages the connection to a NatNet host application.
@@ -65,5 +65,5 @@ namespace vrpnModule {
         
     };
 
-} /* end namespace vrpnModule */
+} /* end namespace tracking */
 } /* end namespace megamol */

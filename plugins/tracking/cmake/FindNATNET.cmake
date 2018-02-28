@@ -2,7 +2,7 @@
 #
 #  NATNET_FOUND       - True if NatNet was found.
 #  NATNET_LIBRARIES   - The libraries needed to use NatNet
-#  NATNET_DLL_DIR     - Location of the dlls needed to use NatNet
+#  NATNET_DLL_DIR     - Location of the dll needed to use NatNet
 #  NATNET_INCLUDE_DIR - Location of NatNetCAPI.h, NatNetClient.h, NatNetRepeater.h, NatNetRequests.h and NatNetTypes.h
  
 FIND_PATH(NATNET_INCLUDE_DIR NatNetCAPI.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/include NO_DEFAULT_PATH)
@@ -25,10 +25,10 @@ endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	FIND_LIBRARY(NATNET_GENERIC_LIBRARY "NatNetLib" PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x64/ NO_DEFAULT_PATH)
-	FIND_PATH(NATNET_DLL_DIR NatNetLib.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x64/ NO_DEFAULT_PATH)
+	FIND_FILE(NATNET_DLL_DIR NatNetLib.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x64/ NO_DEFAULT_PATH)
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
 	FIND_LIBRARY(NATNET_GENERIC_LIBRARY "NatNetLib" PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x86/ NO_DEFAULT_PATH)
-	FIND_PATH(NATNET_DLL_DIR NatNetLib.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x86/ NO_DEFAULT_PATH)
+	FIND_FILE(NATNET_DLL_DIR NatNetLib.dll PATHS ${CMAKE_CURRENT_SOURCE_DIR}/natnet/lib/x86/ NO_DEFAULT_PATH)
 endif()
 if (NOT NATNET_GENERIC_LIBRARY)
     MESSAGE(FATAL_ERROR "failed to find NatNet generic library")

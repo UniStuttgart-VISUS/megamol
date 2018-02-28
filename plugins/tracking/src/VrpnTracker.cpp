@@ -17,7 +17,7 @@
 #include <chrono>
 
 
-vrpnModule::VrpnTracker::VrpnTracker(void) : Module(),
+tracking::VrpnTracker::VrpnTracker(void) : Module(),
         motionDevice("motion"), buttonDevice("button"),
         getCamSlot("getcam", "Camera getter."),
         activeNodeSlot("activeNode", "Enables VRPN only on the node with the specified name."),
@@ -48,19 +48,19 @@ vrpnModule::VrpnTracker::VrpnTracker(void) : Module(),
     this->MakeSlotAvailable(&this->activeNodeSlot);
 }
 
-vrpnModule::VrpnTracker::~VrpnTracker(void) {
+tracking::VrpnTracker::~VrpnTracker(void) {
     this->Release();
 }
 
-bool vrpnModule::VrpnTracker::create(void) {
+bool tracking::VrpnTracker::create(void) {
     return true;
 }
 
-void vrpnModule::VrpnTracker::release(void) {
+void tracking::VrpnTracker::release(void) {
     this->stop();
 }
 
-void vrpnModule::VrpnTracker::mainLoopBody(void) {
+void tracking::VrpnTracker::mainLoopBody(void) {
     VLTRACE(vislib::Trace::LEVEL_VL_INFO, "VRPN main loop.\n");
 
     while (this->isRunning) {
@@ -72,7 +72,7 @@ void vrpnModule::VrpnTracker::mainLoopBody(void) {
     }
 }
 
-void VRPN_CALLBACK vrpnModule::VrpnTracker::onTrackerChanged(void *userData, const vrpn_TRACKERCB vrpnData) {
+void VRPN_CALLBACK tracking::VrpnTracker::onTrackerChanged(void *userData, const vrpn_TRACKERCB vrpnData) {
     //VLTRACE
     //(
     //    vislib::Trace::LEVEL_VL_INFO,
@@ -103,7 +103,7 @@ void VRPN_CALLBACK vrpnModule::VrpnTracker::onTrackerChanged(void *userData, con
     instance->manipulator.ApplyTransformations();
 }
 
-void VRPN_CALLBACK vrpnModule::VrpnTracker::onButtonChanged(void *userData, const vrpn_BUTTONCB vrpnData) {
+void VRPN_CALLBACK tracking::VrpnTracker::onButtonChanged(void *userData, const vrpn_BUTTONCB vrpnData) {
     //VLTRACE
     //(
     //    vislib::Trace::LEVEL_VL_INFO,
@@ -118,7 +118,7 @@ void VRPN_CALLBACK vrpnModule::VrpnTracker::onButtonChanged(void *userData, cons
 }
 
 
-bool vrpnModule::VrpnTracker::onConnect(core::param::ParamSlot& slot) {
+bool tracking::VrpnTracker::onConnect(core::param::ParamSlot& slot) {
     this->stop();
 
     core::view::CallCamParamSync *call = this->getCamSlot.CallAs<core::view::CallCamParamSync>();
@@ -147,7 +147,7 @@ bool vrpnModule::VrpnTracker::onConnect(core::param::ParamSlot& slot) {
     return true;
 }
 
-bool vrpnModule::VrpnTracker::onDisconnect(core::param::ParamSlot& slot) {
+bool tracking::VrpnTracker::onDisconnect(core::param::ParamSlot& slot) {
     this->stop();
 
     this->motionDevice.Disconnect();
@@ -156,7 +156,7 @@ bool vrpnModule::VrpnTracker::onDisconnect(core::param::ParamSlot& slot) {
     return true;
 }
 
-void vrpnModule::VrpnTracker::stop(void) {
+void tracking::VrpnTracker::stop(void) {
     vislib::sys::Log::DefaultLog.WriteInfo(_T("Stopping VRPN trackers ..."));
 
     this->isRunning = false;
@@ -166,7 +166,7 @@ void vrpnModule::VrpnTracker::stop(void) {
     }
 }
 
-void vrpnModule::VrpnTracker::start(void) {
+void tracking::VrpnTracker::start(void) {
     vislib::TString computerName;
     vislib::sys::SystemInformation::ComputerName(computerName);
     vislib::TString activeNode = this->activeNodeSlot.Param<core::param::StringParam>()->Value();
