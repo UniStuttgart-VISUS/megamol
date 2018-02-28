@@ -39,7 +39,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
         liftingTargetDistance("meshDeformation::liftingTargetDistance", "The distance that is applied to a vertex during the lifting process."),
         maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed."),
         flatteningParam("flat", "Flat representation of the result"),
-        southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do.") {
+        southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do."),
+        southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."){
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -71,6 +72,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->southBorderWeightParam.SetParameter(new param::IntParam(5, 1, 30));
     this->MakeSlotAvailable(&this->southBorderWeightParam);
+
+    this->southBorderHeightFactor.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->southBorderHeightFactor);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -220,6 +224,10 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->southBorderWeightParam.IsDirty()) {
         this->southBorderWeightParam.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->southBorderHeightFactor.IsDirty()) {
+        this->southBorderHeightFactor.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -1772,13 +1780,13 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         float maxHeight = this->sombreroLength[i] / 2.0f;
         float minHeight = 0.0f - maxHeight;
 
-        uint minBrimLevel = UINT_MAX;
+        uint maxBrimLevel = 0;
         // all brim vertices have a y-position of + tunnellength / 2
         for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
             if (this->brimFlags[i][j]) {
                 this->vertices[i][3 * j + 1] = maxHeight;
-                if (this->bsDistanceAttachment[i][j] < minBrimLevel) {
-                    minBrimLevel = this->bsDistanceAttachment[i][j];
+                if (this->bsDistanceAttachment[i][j] > maxBrimLevel) {
+                    maxBrimLevel = this->bsDistanceAttachment[i][j];
                 }
             }
         }
@@ -1835,8 +1843,9 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
             zValues[vertMappingToNew[v]] = maxHeight;
             zValidity[vertMappingToNew[v]] = false;
         }
+        float weight = this->southBorderHeightFactor.Param<param::FloatParam>()->Value();
         for (auto v : southBorder) {
-            zValues[vertMappingToNew[v]] = minHeight + 0.25f * (maxHeight - minHeight) / static_cast<float>(minBrimLevel);
+            zValues[vertMappingToNew[v]] = minHeight + weight * (maxHeight - minHeight) / static_cast<float>(maxBrimLevel);
             zValidity[vertMappingToNew[v]] = false;
             zVertexWeights[vertMappingToNew[v]] = static_cast<uint>(this->southBorderWeightParam.Param<param::IntParam>()->Value());
         }

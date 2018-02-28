@@ -244,6 +244,9 @@ namespace sombreros {
         /** Weight of the southern border */
         core::param::ParamSlot southBorderWeightParam;
 
+        /** Height factor for the souther border */
+        core::param::ParamSlot southBorderHeightFactor;
+
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
