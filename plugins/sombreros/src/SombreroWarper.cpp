@@ -840,8 +840,6 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         this->boundingBox.SetTop(this->boundingBox.Top() + bbmargin);
     }
 
-    printf("%f %f %f %f %f %f\n", this->boundingBox.Left(), this->boundingBox.Bottom(), this->boundingBox.Back(), this->boundingBox.Right(), this->boundingBox.Top(), this->boundingBox.Front());
-
     return true;
 }
 
@@ -1769,13 +1767,13 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         // all brim vertices have a y-position of + tunnellength / 2
         // if the flat mode is turned on, all vertices get this y-position assigned
         for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
-            if (this->brimFlags[i][j] || flatmode) {
+            if (this->brimFlags[i][j]) {// || flatmode) {
                 this->vertices[i][3 * j + 1] = maxHeight;
             }
         }
 
-        // if we went the flat version, we already know the height of all vertices and should return
-        if (flatmode) return true;
+        // if we want the flat version, we already know the height of all vertices and should return
+        //if (flatmode) return true;
 
         // for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
         // first step: identify these vertices
@@ -1982,13 +1980,28 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
                 float zCoord = radius * std::sinf(this->rahiAngles[i][v]);
                 this->vertices[i][3 * v + 0] = xCoord;
                 this->vertices[i][3 * v + 2] = zCoord;
+                if (flatmode) {
+                    this->vertices[i][3 * v + 1] = maxHeight;
+                }
             } else {
                 float l = this->sombreroLength[i];
                 float t = std::asinf((this->vertices[i][3 * v + 1] - maxHeight) / l);
                 float cost = std::cosf(t);
                 float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
+                float yCoord = this->vertices[i][3 * v + 1];
                 float zCoord = minRad * cost * std::sinf(this->rahiAngles[i][v]);
+                // TODO
+                if (flatmode) {
+                    // determine alpha
+                    float alpha = (yCoord - minHeight) / (maxHeight - minHeight);
+                    vislib::math::Vector<float, 2> vec(xCoord, zCoord);
+                    vec.ScaleToLength(alpha * minRad);
+                    xCoord = vec.GetX();
+                    yCoord = maxHeight;
+                    zCoord = vec.GetY();
+                }
                 this->vertices[i][3 * v + 0] = xCoord;
+                this->vertices[i][3 * v + 1] = yCoord;
                 this->vertices[i][3 * v + 2] = zCoord;
             }
         }
