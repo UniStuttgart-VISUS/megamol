@@ -1285,6 +1285,28 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
 #endif
 
+        // determine the vertices of the sweatband
+        std::set<uint> sweatSet;
+        // go through all forward edges, if one vertex is on the brim and one is not, take the second one
+        for (auto e : this->edgesForward[i]) {
+            if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
+                sweatSet.insert(e.second);
+            } else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
+                sweatSet.insert(e.first);
+            }
+        }
+
+        // determine starting point of the sweatband
+        // it should be the vertex that is member of the meridian and the sweatband
+        std::set<uint> meridianSet(meridian.begin(), meridian.end());
+        std::vector<uint> intRes;
+        std::set_intersection(meridianSet.begin(), meridianSet.end(), sweatSet.begin(), sweatSet.end(), std::back_inserter(intRes));
+
+        if (intRes.size() != 1) {
+            vislib::sys::Log::DefaultLog.WriteError("The sweatband and the meridian do not intersect properly");
+            return false;
+        }
+
         // have to sort the brim indices in a circular manner
         std::vector<uint> sortedBrim;
         std::set<uint> brimTest(this->brimIndices[i].begin(), this->brimIndices[i].end());
@@ -1338,7 +1360,77 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
 #endif
 
-        // the brim is sorted, now we can estimate the directions
+
+    #if 0 // TODO do this correct
+        // do the same with the sweatband
+        std::vector<uint> sweatSorted;
+        std::set<uint> sweatReadySet;
+        sweatSorted.push_back(intRes[0]);
+        sweatReadySet.insert(intRes[0]);
+        bool sweatIsClockwise = false;
+        k = 0;
+        while (sweatSorted.size() != sweatSet.size()) {
+            current = sweatSorted[sweatSorted.size() - 1];
+            auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
+            auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
+            bool found = false;
+            while (forward != edgesForward[i].end() && (*forward).first == current) {
+                auto target = (*forward).second;
+                if (sweatSet.count(target) > 0 && sweatReadySet.count(target) == 0) {
+                    sweatSorted.push_back(target);
+                    sweatReadySet.insert(target);
+                    found = true;
+                    break;
+                }
+                forward++;
+            }
+            if (!found) {
+                while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+                    auto target = (*reverse).second;
+                    if (sweatSet.count(target) > 0 && sweatReadySet.count(target) == 0) {
+                        sweatSorted.push_back(target);
+                        sweatReadySet.insert(target);
+                        found = true;
+                        break;
+                    }
+                    reverse++;
+                }
+            }
+            k++;
+            if (!found) {
+                vislib::sys::Log::DefaultLog.WriteError("The sweatband of the sombrero is not continous. Aborting...");
+                break;
+                return false;
+            }
+        }
+    #endif
+
+#if 0 // switch for the colouring of the sweatband vertices by angle
+        vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
+        float factor = 1.0f / static_cast<float>(sweatSet.size());
+        int f = 0;
+        for (auto v : sweatReadySet) {
+            this->colors[i][3 * v + 0] = static_cast<unsigned char>(f * factor * red[0]);
+            this->colors[i][3 * v + 1] = static_cast<unsigned char>(f * factor * red[1]);
+            this->colors[i][3 * v + 2] = static_cast<unsigned char>(f * factor * red[2]);
+            this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[0]);
+            this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[1]);
+            this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[2]);
+            if (v == 814 || v == 141 || v == 812) {
+                this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
+                this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[0]);
+                this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[2]);
+            }
+            if (v == 812) {
+                this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
+                this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[2]);
+                this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[0]);
+            }
+            f++;
+        }
+#endif
+
+        // the brim and sweatband is sorted, now we can estimate the directions
         // we assume that the endIndex is in the front
         vislib::math::Vector<float, 3> endVertex(&this->vertices[i][3 * endIndex]);
         vislib::math::Vector<float, 3> startVertex(&this->vertices[i][3 * startIndex]);
@@ -1518,20 +1610,28 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
 #endif
 
-#if 0
+        this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
+        this->rahiAngles[i].shrink_to_fit();
+
+#if 1
         const float thePi = 3.14159265358979f;
         // initialize the angle values of the circumpolar vertices
         // for the brim
         if (isClockwise) {
             for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
-                this->rahiAngles[i][sortedBrim[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size())));
+                this->rahiAngles[i][sortedBrim[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
             }
         } else {
             for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
-                this->rahiAngles[i][sortedBrim[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
+                this->rahiAngles[i][sortedBrim[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size())));
             }
         }
+#endif
+#if 1
+        // initialize the angle values of vertices of the sweatband
 
+#endif
+#if 0
         // for the vertices around the binding site vertex
         std::set<uint> bsVertices;
         // search for the vertex right of the first meridian vertex
@@ -1606,6 +1706,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         this->vertexLevelAttachment[i].push_back(UINT_MAX);
         this->atomIndexAttachment[i].push_back(UINT_MAX);
         this->bsDistanceAttachment[i].push_back(UINT_MAX);
+        this->rahiAngles[i].push_back(0.0f);
 
         vTypes.push_back(-1);
         // add a face for each neighbor of the new vertex
@@ -1621,14 +1722,15 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
         reconstructEdgeSearchStructures(i, newIndex + 1);
 
-        this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
-        this->rahiAngles[i].shrink_to_fit();
         // compute valid vertex vector
         std::vector<bool> validVertices(this->vertexLevelAttachment[i].size(), true);
         validVertices.shrink_to_fit();
         validVertices[startIndex] = false;
         validVertices[endIndex] = false;
         for (auto c : meridian) {
+            validVertices[c] = false;
+        }
+        for (auto c : sortedBrim) {
             validVertices[c] = false;
         }
         // vertex edge offset vector
@@ -2010,9 +2112,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
                 float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
                 float yCoord = this->vertices[i][3 * v + 1];
                 float zCoord = minRad * cost * std::sinf(this->rahiAngles[i][v]);
-                // TODO
                 if (flatmode) {
-                    // determine alpha
                     float alpha = (yCoord - minHeight) / (maxHeight - minHeight);
                     vislib::math::Vector<float, 2> vec(xCoord, zCoord);
                     vec.ScaleToLength(alpha * minRad);
