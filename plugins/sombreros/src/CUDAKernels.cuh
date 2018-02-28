@@ -142,6 +142,7 @@ namespace sombreros {
          * @param p_valid_z_vlaues Remebers if a vertex is valid.
          * @param p_vertex_edge_offset The edges that contain the vertex.
          * @param p_vertex_edge_offset_depth The number of edges per vertex.
+         * @param p_vertex_multiplicity Weights for the vertices, determining their influence on the final values
          *
          * @return True if no error occured, false otherwise.
          */
@@ -149,7 +150,8 @@ namespace sombreros {
             std::vector<float>& p_zvalues, 
             std::vector<bool> p_valid_z_values,
             const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
-            const std::vector<uint>& p_vertex_edge_offset_depth);
+            const std::vector<uint>& p_vertex_edge_offset_depth,
+            const std::vector<uint>& p_vertex_multiplicity);
     
         /**
          * Initialise a empty instance.

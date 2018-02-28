@@ -38,7 +38,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
         maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level"),
         liftingTargetDistance("meshDeformation::liftingTargetDistance", "The distance that is applied to a vertex during the lifting process."),
         maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed."),
-        flatteningParam("flat", "Flat representation of the result") {
+        flatteningParam("flat", "Flat representation of the result"),
+        southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do.") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -67,6 +68,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->flatteningParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->flatteningParam);
+
+    this->southBorderWeightParam.SetParameter(new param::IntParam(5, 1, 30));
+    this->MakeSlotAvailable(&this->southBorderWeightParam);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -212,6 +216,10 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->flatteningParam.IsDirty()) {
         this->flatteningParam.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->southBorderWeightParam.IsDirty()) {
+        this->southBorderWeightParam.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -763,7 +771,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         std::sort(radii.begin(), radii.end());
         this->sombreroRadius[i] = radii[static_cast<uint>(radii.size() / 2)];
 
-        // the brim radius is the average closest distance between the brim border vertices and the kink
+        // the brim radius is the average closest distance between the brim border vertices and the sweatband
         uint minLevel = static_cast<uint>(this->minBrimLevelParam.Param<param::IntParam>()->Value());
         float avg = 0.0f;
         for (uint j = 0; j < static_cast<uint>(this->brimIndices.size()); j++) {
@@ -1764,15 +1772,16 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         float maxHeight = this->sombreroLength[i] / 2.0f;
         float minHeight = 0.0f - maxHeight;
 
+        uint minBrimLevel = UINT_MAX;
         // all brim vertices have a y-position of + tunnellength / 2
         for (size_t j = 0; j < this->vertexLevelAttachment[i].size(); j++) {
-            if (this->brimFlags[i][j]) {// || flatmode) {
+            if (this->brimFlags[i][j]) {
                 this->vertices[i][3 * j + 1] = maxHeight;
+                if (this->bsDistanceAttachment[i][j] < minBrimLevel) {
+                    minBrimLevel = this->bsDistanceAttachment[i][j];
+                }
             }
         }
-
-        // if we want the flat version, we already know the height of all vertices and should return
-        //if (flatmode) return true;
 
         // for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
         // first step: identify these vertices
@@ -1818,16 +1827,18 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         std::vector<bool> zValidity(newVertNum, true);
         std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
         std::vector<uint> zEdgeOffsetDepth(newVertNum);
+        std::vector<uint> zVertexWeights(newVertNum, 1u);
 
-        zValues[vertMappingToNew[bsVertex]] = minHeight; // TODO
+        zValues[vertMappingToNew[bsVertex]] = minHeight;
         zValidity[vertMappingToNew[bsVertex]] = false;
         for (auto v : borderSet) { // north border
             zValues[vertMappingToNew[v]] = maxHeight;
             zValidity[vertMappingToNew[v]] = false;
         }
         for (auto v : southBorder) {
-            zValues[vertMappingToNew[v]] = minHeight; // TODO
+            zValues[vertMappingToNew[v]] = minHeight + 0.25f * (maxHeight - minHeight) / static_cast<float>(minBrimLevel);
             zValidity[vertMappingToNew[v]] = false;
+            zVertexWeights[vertMappingToNew[v]] = static_cast<uint>(this->southBorderWeightParam.Param<param::IntParam>()->Value());
         }
 
         for (auto e : this->edgesForward[i]) {
@@ -1857,7 +1868,7 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
             sum += oldVal;
         }
 
-        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth);
+        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
             vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
             return false;
@@ -1907,6 +1918,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
         std::vector<bool> zValidity(newVertNum, true);
         std::vector<std::vector<CUDAKernels::Edge>> zEdgeOffset(newVertNum);
         std::vector<uint> zEdgeOffsetDepth(newVertNum);
+        std::vector<uint> zVertexWeights(newVertNum, 1u);
 
         // mapping of the new vertices to the old ones
         std::vector<uint> vertMappingToOld(newVertNum);
@@ -1958,7 +1970,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
             sum += oldVal;
         }
 
-        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth);
+        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
             vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
             return false;

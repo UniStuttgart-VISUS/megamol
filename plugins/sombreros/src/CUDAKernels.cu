@@ -320,7 +320,7 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
     }
 
     float tmp_phi = (tmp / count) - p_phivalues_in[idx];
-    p_phivalues_out[idx] = p_phivalues_in[idx] + tmp_phi * 1.025f;
+    p_phivalues_out[idx] = p_phivalues_in[idx] + tmp_phi * 1.1f;
 }
 
 
@@ -332,10 +332,13 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
  * @param p_valid_z_values Remebers if a vertex is valid.
  * @param p_vertex_neighbours The IDs of the neighbouring vertices.
  * @param p_vertex_edge_offset_depth The number of edges per vertex.
+ * @param p_vertex_multiplicity The multiplicity factors of the vertex
  * @param p_vertex_cnt The number of vertices in the mesh.
+ * @param p_edge_cnt The total number of edges of the mesh.
  */
 __global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values,
         const uint* p_vertex_neighbours, const uint* p_vertex_edge_offset_depth,
+        const uint* p_vertex_multiplicity,
         uint p_vertex_cnt, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
@@ -346,14 +349,18 @@ __global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values,
     if (idx == p_vertex_cnt - 1) {
         end = p_edge_cnt; // necessary for the last vertex
     }
-    float count = end - begin;
     float tmp = 0.0f;
+    float multCount = 0.0f;
     // Add up the zvalues of the neighbouring vertices and increase the counter.
     for (uint i = begin; i < end; i++) {
-        tmp += p_zvalues[p_vertex_neighbours[i]];
+        uint mult = p_vertex_multiplicity[p_vertex_neighbours[i]];
+        for (uint j = 0; j < mult; j++) {
+            tmp += p_zvalues[p_vertex_neighbours[i]];
+            multCount += 1.0f;
+        }
     }
-    float tmp_z = (tmp / count) - p_zvalues[idx];
-    p_zvalues[idx] = p_zvalues[idx] + tmp_z * 1.025f;
+    float tmp_z = (tmp / multCount) - p_zvalues[idx];
+    p_zvalues[idx] = p_zvalues[idx] + tmp_z * 1.1f;
 }
 
 /**
@@ -512,7 +519,7 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
  */
 bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_zvalues,
         std::vector<bool> p_valid_z_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
-        const std::vector<uint>& p_vertex_edge_offset_depth) {
+        const std::vector<uint>& p_vertex_edge_offset_depth, const std::vector<uint>& p_vertex_multiplicity) {
     // Convert vertex edge offset to CUDA
     uint vertex_cnt = static_cast<uint>(p_zvalues.size());
     std::vector<CUDAKernels::Edge> cuda_vertex_offset;
@@ -533,6 +540,7 @@ bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_z
     thrust::device_vector<CUDAKernels::Edge> cuda_vertex_offset_d = cuda_vertex_offset;
     thrust::device_vector<uint> p_vertex_edge_offset_depth_d = p_vertex_edge_offset_depth;
     thrust::device_vector<uint> vertex_neighbours_d = vertex_neighbours;
+    thrust::device_vector<uint> p_vertex_multiplicity_d = p_vertex_multiplicity;
     uint edge_cnt = static_cast<uint>(cuda_vertex_offset.size());
     cuda_vertex_offset.clear();
     cuda_vertex_offset.shrink_to_fit();
@@ -556,6 +564,7 @@ bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_z
             thrust::raw_pointer_cast(p_valid_z_values_d.data().get()), 
             thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
+            thrust::raw_pointer_cast(p_vertex_multiplicity_d.data().get()),
             vertex_cnt,
             edge_cnt);
         checkCudaErrors(cudaDeviceSynchronize());
