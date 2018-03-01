@@ -223,6 +223,9 @@ namespace sombreros {
         /** Slot for the tunnel input */
         core::CallerSlot tunnelInSlot;
 
+        /** Slot for the binding site input */
+        core::CallerSlot bsInSlot;
+
         /** Slot for the ouput of the cut mesh */
         core::CalleeSlot warpedMeshOutSlot;
 
