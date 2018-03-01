@@ -21,6 +21,7 @@ using namespace megamol::core;
 using namespace megamol::protein;
 
 //#define MONERA
+#define HARDCODED_HYDROPHOBICITY
 
 /*
  * FillAminoAcidColorTable
@@ -404,9 +405,19 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
 			// get mid color
 			utility::ColourParser::FromString(midGradColor, r, g, b);
 			vislib::math::Vector<float, 3> colMid(r, g, b);
-			// get max color
+			// get max colorö
 			utility::ColourParser::FromString(maxGradColor, r, g, b);
 			vislib::math::Vector<float, 3> colMax(r, g, b);
+#ifdef HARDCODED_HYDROPHOBICITY 
+            utility::ColourParser::FromString("#4493ce", r, g, b);
+            colMin = vislib::math::Vector<float, 3>(r, g, b);
+            utility::ColourParser::FromString("#f0f0f0", r, g, b);
+            colMid = vislib::math::Vector<float, 3>(r, g, b);
+            utility::ColourParser::FromString("#e2c44a", r, g, b);
+            colMax = vislib::math::Vector<float, 3>(r, g, b);
+#endif
+
+
 			// temp color variable
 			vislib::math::Vector<float, 3> col;
 #ifdef MONERA
