@@ -592,9 +592,17 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tc == nullptr) return;
+    if (tc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a transfer function!");
+        return;
+    }
     auto flagsc = getFlagsSlot.CallAs<FlagCall>();
-    if (flagsc == nullptr) return;
+    if (flagsc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a flag storage!");
+        return;
+    }
 
     (*floats)(0);
     auto hash = floats->DataHash();
