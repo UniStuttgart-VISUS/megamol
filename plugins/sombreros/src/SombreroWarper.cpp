@@ -33,7 +33,6 @@ using namespace megamol::protein_calls;
 SombreroWarper::SombreroWarper(void) : Module(),
         meshInSlot("dataIn", "Receives the input mesh"),
         tunnelInSlot("tunnelIn", "Receives the tunnel data"),
-        bsInSlot("bsIn", "Receives the binding site data"),
         warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
         minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
         maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level"),
@@ -54,9 +53,6 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
     this->MakeSlotAvailable(&this->tunnelInSlot);
-
-    this->bsInSlot.SetCompatibleCall<BindingSiteCallDescription>();
-    this->MakeSlotAvailable(&this->bsInSlot);
 
     // Param slots
     this->minBrimLevelParam.SetParameter(new param::IntParam(1, 1, 100));
@@ -141,9 +137,6 @@ bool SombreroWarper::getExtent(Call& call) {
     TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tunnelCall == nullptr) return false;
 
-    BindingSiteCall * bsCall = this->bsInSlot.CallAs<BindingSiteCall>();
-    if (bsCall == nullptr) return false;
-
     this->checkParameters();
     
     if (dirtyFlag) {
@@ -158,7 +151,6 @@ bool SombreroWarper::getExtent(Call& call) {
 
     if (!(*inCall)(0)) return false;
     if (!(*tunnelCall)(0)) return false;
-    if (!(*bsCall)(0)) return false;
 
     // something happened with the input data, we have to recompute it
     if ((lastDataHash != inCall->DataHash()) || dirtyFlag) {
