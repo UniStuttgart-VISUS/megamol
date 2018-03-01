@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
@@ -396,7 +397,8 @@ namespace MegaMolConf {
             if (gm != null) {
                 string prefix = $"{ParentForm.TabInstantiation(TabPage)}::{gm.Name}::";
                 object ans = null;
-                string ret = Request($"return mmSetParamValue(\"{prefix}{p}\",\"{v}\")", ref ans);
+                string val = v.Replace("\\", "\\\\");
+                string ret = Request($"return mmSetParamValue(\"{prefix}{p}\",\"{val}\")", ref ans);
             }
         }
 
