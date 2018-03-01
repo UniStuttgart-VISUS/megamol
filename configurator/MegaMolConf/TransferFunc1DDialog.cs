@@ -223,6 +223,33 @@ namespace MegaMolConf {
         }
 
         private void CBs_CheckedChanged(object sender, EventArgs e) {
+            if ((ModifierKeys & Keys.Control) == 0) {
+                //cb_R.Enabled = false;
+                //cb_G.Enabled = false;
+                //cb_B.Enabled = false;
+                //cb_A.Enabled = false;
+                if (((CheckBox) sender).Checked) {
+                    if (cb_R != sender) {
+                        cb_R.Checked = false;
+                    }
+
+                    if (cb_G != sender) {
+                        cb_G.Checked = false;
+                    }
+
+                    if (cb_B != sender) {
+                        cb_B.Checked = false;
+                    }
+
+                    if (cb_A != sender) {
+                        cb_A.Checked = false;
+                    }
+                }
+                //cb_R.Enabled = true;
+                //cb_G.Enabled = true;
+                //cb_B.Enabled = true;
+                //cb_A.Enabled = true;
+            }
             if (!cb_R.Checked || !cb_G.Checked || !cb_B.Checked || !cb_A.Checked) {
                 cb_All.Checked = false;
             }
