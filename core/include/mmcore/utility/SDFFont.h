@@ -23,8 +23,8 @@
 
 
 namespace megamol {
-    namespace core {
-        namespace utility {
+namespace core {
+namespace utility {
 
     /**
      * -----------------------------------------------------------------------------------------------------------------
@@ -75,70 +75,70 @@ namespace megamol {
         /**
          * Ctor.
          *
-         * @param ofi The outline font info of the font
+         * @param fn The file name of the bitmap font.
          */
-        SDFFont(const vislib::StringA bmf);
+        SDFFont(const vislib::StringA fn);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param render The render type to be used
          */
-        SDFFont(const vislib::StringA bmf, RenderType render);
+        SDFFont(const vislib::StringA fn, RenderType render);
 
         /**
          * Ctor.
          *
-         * @param ofi  The outline font info of the font
+         * @param fn   The file name of the bitmap font.
          * @param size The size of the font in logical units
          */
-        SDFFont(const vislib::StringA bmf, float size);
+        SDFFont(const vislib::StringA fn, float size);
 
         /**
          * Ctor.
-         *
-         * @param ofi   The outline font info of the font
+         *   
+         * @param fn    The file name of the bitmap font.
          * @param flipY The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, bool flipY);
+        SDFFont(const vislib::StringA fn, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, RenderType render, bool flipY);
+        SDFFont(const vislib::StringA fn, RenderType render, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi   The outline font info of the font
+         * @param fn    The file name of the bitmap font.
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, float size, bool flipY);
+        SDFFont(const vislib::StringA fn, float size, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const vislib::StringA bmf, float size, RenderType render);
+        SDFFont(const vislib::StringA fn, float size, RenderType render);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, float size, RenderType render, bool flipY);
+        SDFFont(const vislib::StringA fn, float size, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -215,6 +215,7 @@ namespace megamol {
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c     The color as RGBA.
          * @param x     The left coordinate of the rectangle.
          * @param y     The upper coordinate of the rectangle.
          * @param w     The width of the rectangle.
@@ -224,12 +225,16 @@ namespace megamol {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+
+        // float c[4], 
+
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c     The color as RGBA.
          * @param x     The x coordinate of the position.
          * @param y     The y coordinate of the position.
          * @param size  The size to use.
@@ -237,12 +242,13 @@ namespace megamol {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Draws a text at the specified position.
-        *
+        *  
+        * @param c     The color as RGBA.
         * @param x     The x coordinate of the position.
         * @param y     The y coordinate of the position.
         * @param z     The z coordinate of the position.
@@ -251,8 +257,8 @@ namespace megamol {
         * @param txt   The zero-terminated string to draw.
         * @param align The alignment of the text.
         */
-        virtual void DrawString(float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -497,6 +503,7 @@ namespace megamol {
         /**
         * Draw font glyphs.
         *
+        * @param c     The color as RGBA.
         * @param run   The glyph run
         * @param x     The reference x coordinate
         * @param y     The reference y coordinate
@@ -505,12 +512,12 @@ namespace megamol {
         * @param flipY The flag controlling the direction of the y-axis
         * @param align The alignment
         */
-        void draw(int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void draw(float c[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
 
     };
 
-        } /* end namespace utility */
-    } /* end namespace core */
+} /* end namespace utility */
+} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_SDFFONT_H_INCLUDED */

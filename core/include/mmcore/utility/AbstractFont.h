@@ -20,8 +20,8 @@
 
 
 namespace megamol {
-    namespace core {
-        namespace utility {
+namespace core {
+namespace utility {
 
     /**
      * Abstract base class for graphics fonts.
@@ -201,25 +201,27 @@ namespace megamol {
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
+        inline void DrawString(float c[4], float x, float y, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -227,6 +229,7 @@ namespace megamol {
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -234,14 +237,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -249,41 +253,44 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, this->flipY,
+        inline void DrawString(float c[4], float x, float y, float w, float h, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, this->flipY,
                 txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, float size, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -292,8 +299,8 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -301,6 +308,7 @@ namespace megamol {
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -309,40 +317,43 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -351,14 +362,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -367,27 +379,14 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
-         * @param x The x coordinate of the position.
-         * @param y The y coordinate of the position.
-         * @param size The size to use.
-         * @param flipY The flag controlling the direction of the y-axis.
-         * @param txt The zero-terminated string to draw.
-         * @param align The alignment of the text.
-         */
-        inline void DrawString(float x, float y, float size, bool flipY, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
-        }
-
-        /**
-         * Draws a text at the specified position.
-         *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
@@ -395,12 +394,28 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        inline void DrawString(float c[4], float x, float y, float size, bool flipY, const::vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param c The color as RGBA.
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -410,14 +425,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const::vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -427,37 +443,40 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
             const = 0;
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -465,14 +484,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -480,40 +500,43 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, this->flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, float size, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -522,8 +545,8 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -531,6 +554,7 @@ namespace megamol {
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -539,40 +563,43 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, this->flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -581,14 +608,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -597,27 +625,14 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, this->size, flipY, txt, align);
         }
 
         /**
          * Draws a text at the specified position.
          *
-         * @param x The x coordinate of the position.
-         * @param y The y coordinate of the position.
-         * @param size The size to use.
-         * @param flipY The flag controlling the direction of the y-axis.
-         * @param txt The zero-terminated string to draw.
-         * @param align The alignment of the text.
-         */
-        inline void DrawString(float x, float y, float size, bool flipY, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
-        }
-
-        /**
-         * Draws a text at the specified position.
-         *
+         * @param c The color as RGBA.
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
@@ -625,12 +640,28 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        inline void DrawString(float c[4], float x, float y, float size, bool flipY, const::vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param c The color as RGBA.
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -640,14 +671,15 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        inline void DrawString(float x, float y, float w, float h, float size, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
+        inline void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const::vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(c, x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c The color as RGBA.
          * @param x The left coordinate of the rectangle.
          * @param y The upper coordinate of the rectangle.
          * @param w The width of the rectangle.
@@ -657,7 +689,7 @@ namespace megamol {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
 
         /**
@@ -872,8 +904,8 @@ namespace megamol {
 
     };
 
-        } /* end namespace utility */
-     } /* end namespace core */
+} /* end namespace utility */
+} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_ABSTRACTFONT_H_INCLUDED */
