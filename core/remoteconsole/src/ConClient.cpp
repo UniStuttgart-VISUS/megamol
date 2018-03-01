@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 
     try {
 
+
         auto parseRes = options.parse(argc, argv);
 
         if (parseRes.count("help")) {
@@ -44,6 +45,7 @@ int main(int argc, char* argv[]) {
 
         if (parseRes.count("open")) host = parseRes["open"].as<std::string>();
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
         if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
 
@@ -61,11 +63,13 @@ int main(int argc, char* argv[]) {
                     << "\tConnected" << endl
                     << endl;
 
-            } catch (std::exception& ex) {
+            }
+            catch (std::exception& ex) {
                 cout << endl
                     << "ERR Socket connection failed: " << ex.what() << endl
                     << endl;
-            } catch (...) {
+            }
+            catch (...) {
                 cout << endl
                     << "ERR Socket connection failed: unknown exception" << endl
                     << endl;
@@ -86,7 +90,8 @@ int main(int argc, char* argv[]) {
             interactiveConsole(conn);
         }
 
-    } catch (...) {
+    }
+    catch (...) {
         std::cout << options.help({ "" }) << std::endl;
         exit(0);
     }

@@ -559,6 +559,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     AbstractRenderingView::endFrame();
 
+    if (this->doHookCode()) {
+        this->doAfterRenderHook();
+    }
 }
 
 
