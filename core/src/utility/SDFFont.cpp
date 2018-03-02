@@ -35,8 +35,8 @@ using namespace megamol::core::utility;
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf) : AbstractFont(),
-    fontName(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false)  {
+SDFFont::SDFFont(const FontName fn) : AbstractFont(),
+    fontName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false)  {
 
 }
 
@@ -44,8 +44,8 @@ SDFFont::SDFFont(const vislib::StringA bmf) : AbstractFont(),
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf,  SDFFont::RenderType render) : AbstractFont(),
-    fontName(bmf), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn,  SDFFont::RenderType render) : AbstractFont(),
+    fontName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
 }
 
@@ -53,8 +53,8 @@ SDFFont::SDFFont(const vislib::StringA bmf,  SDFFont::RenderType render) : Abstr
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, float size)  : AbstractFont(),
-    fontName(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, float size)  : AbstractFont(),
+    fontName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetSize(size);
 }
@@ -63,8 +63,8 @@ SDFFont::SDFFont(const vislib::StringA bmf, float size)  : AbstractFont(),
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, bool flipY) : AbstractFont(),
-    fontName(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, bool flipY) : AbstractFont(),
+    fontName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetFlipY(flipY);
 }
@@ -73,8 +73,8 @@ SDFFont::SDFFont(const vislib::StringA bmf, bool flipY) : AbstractFont(),
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    fontName(bmf), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
+    fontName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetFlipY(flipY);
 }
@@ -83,8 +83,8 @@ SDFFont::SDFFont(const vislib::StringA bmf, SDFFont::RenderType render, bool fli
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, float size, bool flipY) : AbstractFont(),
-    fontName(bmf), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, float size, bool flipY) : AbstractFont(),
+    fontName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -94,8 +94,8 @@ SDFFont::SDFFont(const vislib::StringA bmf, float size, bool flipY) : AbstractFo
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, float size, SDFFont::RenderType render) : AbstractFont(),
-    fontName(bmf), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, float size, SDFFont::RenderType render) : AbstractFont(),
+    fontName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetSize(size);
 }
@@ -104,8 +104,8 @@ SDFFont::SDFFont(const vislib::StringA bmf, float size, SDFFont::RenderType rend
 /*
  * SDFFont::SDFFont
  */
-SDFFont::SDFFont(const vislib::StringA bmf, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontName(bmf), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
+SDFFont::SDFFont(const FontName fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
+        fontName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -885,7 +885,13 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 
     this->initialised = false;
 
-    //this->fontName.ToLowerCase();
+    vislib::StringA fn = "";
+    switch (this->fontName) {
+        case(SDFFont::FontName::EVOLVENTA_SANS): fn = "Evolventa-SansSerif"; break;
+        case(SDFFont::FontName::ROBOTO_SANS):    fn = "Roboto-SansSerif";    break;
+        case(SDFFont::FontName::VOLLKORN_SERIF): fn = "Vollkorn-Serif";      break;
+        case(SDFFont::FontName::UBUNTU_MONO):    fn = "Ubuntu-Mono";         break;
+    }
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
@@ -894,7 +900,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (2) Load font information -----------------------------------------------
-    vislib::StringA infoFile = this->fontName;
+    vislib::StringA infoFile = fn;
     infoFile.Append(".fnt");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file. \n");
@@ -902,7 +908,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (3) Load texture --------------------------------------------------------
-    vislib::StringA textureFile = this->fontName;
+    vislib::StringA textureFile = fn;
     textureFile.Append(".png");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to loda font texture. \n");
@@ -926,7 +932,6 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 * SDFFont::loadFontBuffers
 */
 bool SDFFont::loadFontBuffers() {
-
 
     // Reset 
     if (glIsVertexArray(this->vaoHandle)) {
@@ -987,7 +992,7 @@ bool SDFFont::loadFontBuffers() {
 /*
 * SDFFont::loadFontInfo
 *
-* Bitmap Font file format: http://www.angelcode.com/products/bmfont/doc/file_format.html
+* Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
 *
 */
 bool SDFFont::loadFontInfo(vislib::StringA filename) {
