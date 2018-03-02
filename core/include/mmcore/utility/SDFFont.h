@@ -35,6 +35,7 @@ namespace utility {
      * >>> Usage example:
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
      *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
+     *                           or this->sdfFont("MY-OWN-FONT");
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
      *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
      *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
@@ -78,12 +79,81 @@ namespace utility {
             RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
 
+
+        /**
+        * Ctor.
+        *
+        * @param fn The predefined font name.
+        */
+        SDFFont(FontName fn);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param render The render type to be used
+        */
+        SDFFont(FontName fn, RenderType render);
+
+        /**
+        * Ctor.
+        *
+        * @param fn   The predefined font name.
+        * @param size The size of the font in logical units
+        */
+        SDFFont(FontName fn, float size);
+
+        /**
+        * Ctor.
+        *
+        * @param fn    The predefined font name.
+        * @param flipY The vertical flip flag
+        */
+        SDFFont(FontName fn, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param render The render type to be used
+        * @param flipY  The vertical flip flag
+        */
+        SDFFont(FontName fn, RenderType render, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn    The predefined font name.
+        * @param size  The size of the font in logical units
+        * @param flipY The vertical flip flag
+        */
+        SDFFont(FontName fn, float size, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param size   The size of the font in logical units
+        * @param render The render type to be used
+        */
+        SDFFont(FontName fn, float size, RenderType render);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param size   The size of the font in logical units
+        * @param render The render type to be used
+        * @param flipY  The vertical flip flag
+        */
+        SDFFont(FontName fn, float size, RenderType render, bool flipY);
+
         /**
          * Ctor.
          *
          * @param fn The file name of the bitmap font.
          */
-        SDFFont(const FontName fn);
+        SDFFont(vislib::StringA fn);
 
         /**
          * Ctor.
@@ -91,7 +161,7 @@ namespace utility {
          * @param fn     The file name of the bitmap font.
          * @param render The render type to be used
          */
-        SDFFont(const FontName fn, RenderType render);
+        SDFFont(vislib::StringA fn, RenderType render);
 
         /**
          * Ctor.
@@ -99,7 +169,7 @@ namespace utility {
          * @param fn   The file name of the bitmap font.
          * @param size The size of the font in logical units
          */
-        SDFFont(const FontName fn, float size);
+        SDFFont(vislib::StringA fn, float size);
 
         /**
          * Ctor.
@@ -107,7 +177,7 @@ namespace utility {
          * @param fn    The file name of the bitmap font.
          * @param flipY The vertical flip flag
          */
-        SDFFont(const FontName fn, bool flipY);
+        SDFFont(vislib::StringA fn, bool flipY);
 
         /**
          * Ctor.
@@ -116,7 +186,7 @@ namespace utility {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const FontName fn, RenderType render, bool flipY);
+        SDFFont(vislib::StringA fn, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -125,7 +195,7 @@ namespace utility {
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const FontName fn, float size, bool flipY);
+        SDFFont(vislib::StringA fn, float size, bool flipY);
 
         /**
          * Ctor.
@@ -134,7 +204,7 @@ namespace utility {
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const FontName fn, float size, RenderType render);
+        SDFFont(vislib::StringA fn, float size, RenderType render);
 
         /**
          * Ctor.
@@ -144,7 +214,7 @@ namespace utility {
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const FontName fn, float size, RenderType render, bool flipY);
+        SDFFont(vislib::StringA fn, float size, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -340,8 +410,8 @@ namespace utility {
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-        /** The font name. */
-        FontName fontName;
+        /** The font file name. */
+        vislib::StringA fontFileName;
 
         /** The render type used. */
         RenderType renderType;
@@ -519,6 +589,13 @@ namespace utility {
         * @param align The alignment
         */
         void draw(float c[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+
+        /**
+        * Translate enum font name into font file name.
+        *
+        * @param fn The predefined font name.
+        */
+        vislib::StringA translateFontName(FontName fn);
 
     };
 
