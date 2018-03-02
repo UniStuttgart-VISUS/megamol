@@ -23,8 +23,8 @@
 
 
 namespace megamol {
-    namespace core {
-        namespace utility {
+namespace core {
+namespace utility {
 
     /**
      * -----------------------------------------------------------------------------------------------------------------
@@ -32,22 +32,21 @@ namespace megamol {
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Available predefined fonts: (Available: Regular - TODO: Bold,Oblique,Bold-Oblique)
+     * >>> Usage example:
+     *     - Declare:            megamol::core::utility::SDFFont sdfFont;
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
+     *                           or this->sdfFont("MY-OWN-FONT");
+     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
+     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
+     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     * -----------------------------------------------------------------------------------------------------------------
+     * >>> Available predefined fonts (free for commercial use) -  Available: Regular - TODO: Bold,Oblique,Bold-Oblique
      *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
      *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
      *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
      *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Usage example:
-     *     - Declare:            megamol::core::utility::SDFFont sdfFont;
-     *     - Ctor:               this->sdfFont("Roboto-SansSerif")
-     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
-     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
-     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> Path the fonts are looked for: <megamol>/share/resource/<fontname>(.fnt/.png)
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> Source of fonts free for (commercial) use: https://www.fontsquirrel.com/
+     * >>> Path the fonts are stored: <megamol>/share/resource/<fontname>(.fnt/.png)
      * -----------------------------------------------------------------------------------------------------------------
      * >>> SDF font generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
      *     Optimal Settings:   
@@ -65,6 +64,14 @@ namespace megamol {
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
+        /** Available fonts. */
+        enum FontName {
+            EVOLVENTA_SANS,
+            ROBOTO_SANS,
+            VOLLKORN_SERIF,
+            UBUNTU_MONO
+        };
+
         /** Possible render types for the font. */
         enum RenderType {
             RENDERTYPE_NONE    = 0,     // Do not render anything
@@ -72,73 +79,142 @@ namespace megamol {
             RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
 
+
         /**
-         * Ctor.
-         *
-         * @param ofi The outline font info of the font
-         */
-        SDFFont(const vislib::StringA bmf);
+        * Ctor.
+        *
+        * @param fn The predefined font name.
+        */
+        SDFFont(FontName fn);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param render The render type to be used
+        */
+        SDFFont(FontName fn, RenderType render);
+
+        /**
+        * Ctor.
+        *
+        * @param fn   The predefined font name.
+        * @param size The size of the font in logical units
+        */
+        SDFFont(FontName fn, float size);
+
+        /**
+        * Ctor.
+        *
+        * @param fn    The predefined font name.
+        * @param flipY The vertical flip flag
+        */
+        SDFFont(FontName fn, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param render The render type to be used
+        * @param flipY  The vertical flip flag
+        */
+        SDFFont(FontName fn, RenderType render, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn    The predefined font name.
+        * @param size  The size of the font in logical units
+        * @param flipY The vertical flip flag
+        */
+        SDFFont(FontName fn, float size, bool flipY);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param size   The size of the font in logical units
+        * @param render The render type to be used
+        */
+        SDFFont(FontName fn, float size, RenderType render);
+
+        /**
+        * Ctor.
+        *
+        * @param fn     The predefined font name.
+        * @param size   The size of the font in logical units
+        * @param render The render type to be used
+        * @param flipY  The vertical flip flag
+        */
+        SDFFont(FontName fn, float size, RenderType render, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn The file name of the bitmap font.
+         */
+        SDFFont(vislib::StringA fn);
+
+        /**
+         * Ctor.
+         *
+         * @param fn     The file name of the bitmap font.
          * @param render The render type to be used
          */
-        SDFFont(const vislib::StringA bmf, RenderType render);
+        SDFFont(vislib::StringA fn, RenderType render);
 
         /**
          * Ctor.
          *
-         * @param ofi  The outline font info of the font
+         * @param fn   The file name of the bitmap font.
          * @param size The size of the font in logical units
          */
-        SDFFont(const vislib::StringA bmf, float size);
+        SDFFont(vislib::StringA fn, float size);
 
         /**
          * Ctor.
-         *
-         * @param ofi   The outline font info of the font
+         *   
+         * @param fn    The file name of the bitmap font.
          * @param flipY The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, bool flipY);
+        SDFFont(vislib::StringA fn, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, RenderType render, bool flipY);
+        SDFFont(vislib::StringA fn, RenderType render, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi   The outline font info of the font
+         * @param fn    The file name of the bitmap font.
          * @param size  The size of the font in logical units
          * @param flipY The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, float size, bool flipY);
+        SDFFont(vislib::StringA fn, float size, bool flipY);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          */
-        SDFFont(const vislib::StringA bmf, float size, RenderType render);
+        SDFFont(vislib::StringA fn, float size, RenderType render);
 
         /**
          * Ctor.
          *
-         * @param ofi    The outline font info of the font
+         * @param fn     The file name of the bitmap font.
          * @param size   The size of the font in logical units
          * @param render The render type to be used
          * @param flipY  The vertical flip flag
          */
-        SDFFont(const vislib::StringA bmf, float size, RenderType render, bool flipY);
+        SDFFont(vislib::StringA fn, float size, RenderType render, bool flipY);
 
         /**
          * Ctor.
@@ -215,6 +291,7 @@ namespace megamol {
          * Draws a text into a specified rectangular area, and performs
          * soft-breaks if necessary.
          *
+         * @param c     The color as RGBA.
          * @param x     The left coordinate of the rectangle.
          * @param y     The upper coordinate of the rectangle.
          * @param w     The width of the rectangle.
@@ -224,12 +301,16 @@ namespace megamol {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+
+        // float c[4], 
+
 
         /**
          * Draws a text at the specified position.
          *
+         * @param c     The color as RGBA.
          * @param x     The x coordinate of the position.
          * @param y     The y coordinate of the position.
          * @param size  The size to use.
@@ -237,12 +318,13 @@ namespace megamol {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Draws a text at the specified position.
-        *
+        *  
+        * @param c     The color as RGBA.
         * @param x     The x coordinate of the position.
         * @param y     The y coordinate of the position.
         * @param z     The z coordinate of the position.
@@ -251,8 +333,8 @@ namespace megamol {
         * @param txt   The zero-terminated string to draw.
         * @param align The alignment of the text.
         */
-        virtual void DrawString(float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -328,8 +410,8 @@ namespace megamol {
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-        /** The sdf font. */
-        vislib::StringA fontName;
+        /** The font file name. */
+        vislib::StringA fontFileName;
 
         /** The render type used. */
         RenderType renderType;
@@ -497,6 +579,7 @@ namespace megamol {
         /**
         * Draw font glyphs.
         *
+        * @param c     The color as RGBA.
         * @param run   The glyph run
         * @param x     The reference x coordinate
         * @param y     The reference y coordinate
@@ -505,12 +588,19 @@ namespace megamol {
         * @param flipY The flag controlling the direction of the y-axis
         * @param align The alignment
         */
-        void draw(int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void draw(float c[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+
+        /**
+        * Translate enum font name into font file name.
+        *
+        * @param fn The predefined font name.
+        */
+        vislib::StringA translateFontName(FontName fn);
 
     };
 
-        } /* end namespace utility */
-    } /* end namespace core */
+} /* end namespace utility */
+} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_SDFFONT_H_INCLUDED */
