@@ -1534,6 +1534,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             isClockwise = false;
         }
 
+
+
         // determine candidate vertices
         for (auto current : meridian) {
             if (current == startIndex) continue;
@@ -1648,7 +1650,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 this->colors[i][3 * v + 0] = 0;
                 this->colors[i][3 * v + 1] = 0;
                 this->colors[i][3 * v + 2] = 255;
-            } else if(vTypes[v] == 4) { // candidates yellow
+            } else if (vTypes[v] == 4) { // candidates yellow
                 this->colors[i][3 * v + 0] = 255;
                 this->colors[i][3 * v + 1] = 255;
                 this->colors[i][3 * v + 2] = 0;
@@ -1660,11 +1662,13 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
 #endif
 
+        // check whether the sweatband is clockwise or counter-clockwise
+        sweatIsClockwise = (vTypes[sweatSorted[1]] == 2);
+
         this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
         this->rahiAngles[i].shrink_to_fit();
-
-#if 1
         const float thePi = 3.14159265358979f;
+#if 1
         // initialize the angle values of the circumpolar vertices
         // for the brim
         if (isClockwise) {
@@ -1677,9 +1681,17 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
 #endif
-#if 1
+#if 0
         // initialize the angle values of vertices of the sweatband
-
+        if (sweatIsClockwise) {
+            for (uint j = 0; j < static_cast<uint>(sweatSorted.size()); j++) {
+                this->rahiAngles[i][sweatSorted[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size()));
+            }
+        } else {
+            for (uint j = 0; j < static_cast<uint>(sweatSorted.size()); j++) {
+                this->rahiAngles[i][sweatSorted[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size())));
+            }
+        }
 #endif
 #if 0
         // for the vertices around the binding site vertex
@@ -1783,6 +1795,9 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         for (auto c : sortedBrim) {
             validVertices[c] = false;
         }
+        //for (auto c : sweatSorted) {
+        //    validVertices[c] = false;
+        //}
         // vertex edge offset vector
         std::vector<std::vector<CUDAKernels::Edge>> vertex_edge_offset_local(this->vertexLevelAttachment[i].size());
         std::vector<uint> offsetDepth(this->vertexLevelAttachment[i].size(), 0);
