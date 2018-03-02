@@ -16,6 +16,7 @@
 #include <climits>
 #include <limits>
 #include <iostream>
+#include <map>
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Matrix.h"
 
@@ -1360,55 +1361,109 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         }
 #endif
 
+        // to compute the sweatband we need the multiplicity of the vertices
+        std::map<uint, uint> vertexMultiplicity;
+        std::map<uint, uint> nonbrimMultiplicity;
+        for (auto v : sweatSet) {
+            auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][v].first;
+            auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][v].second;
+            std::set<uint> targets;
+            std::set<uint> nonBrimTargets;
+            while (forward != edgesForward[i].end() && (*forward).first == v) {
+                auto target = (*forward).second;
+                if (sweatSet.count(target) > 0) {
+                    targets.insert(target);
+                } else {
+                    if (this->brimFlags[i][target] == false) {
+                        nonBrimTargets.insert(target);
+                    }
+                }
 
-    #if 0 // TODO do this correct
+                forward++;
+            }
+
+            while (reverse != edgesReverse[i].end() && (*reverse).first == v) {
+                auto target = (*reverse).second;
+                if (sweatSet.count(target) > 0) {
+                    targets.insert(target);
+                } else{
+                    if (this->brimFlags[i][target] == false) {
+                        nonBrimTargets.insert(target);
+                    }
+                }
+                reverse++;
+            }
+            vertexMultiplicity[v] = static_cast<uint>(targets.size());
+            nonbrimMultiplicity[v] = static_cast<uint>(nonBrimTargets.size());
+        }
+
         // do the same with the sweatband
         std::vector<uint> sweatSorted;
         std::set<uint> sweatReadySet;
         sweatSorted.push_back(intRes[0]);
         sweatReadySet.insert(intRes[0]);
         bool sweatIsClockwise = false;
-        k = 0;
         while (sweatSorted.size() != sweatSet.size()) {
             current = sweatSorted[sweatSorted.size() - 1];
             auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
             auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
             bool found = false;
+            std::set<uint> targets;
             while (forward != edgesForward[i].end() && (*forward).first == current) {
                 auto target = (*forward).second;
                 if (sweatSet.count(target) > 0 && sweatReadySet.count(target) == 0) {
-                    sweatSorted.push_back(target);
-                    sweatReadySet.insert(target);
-                    found = true;
-                    break;
+                    targets.insert(target);
                 }
                 forward++;
             }
-            if (!found) {
-                while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
-                    auto target = (*reverse).second;
-                    if (sweatSet.count(target) > 0 && sweatReadySet.count(target) == 0) {
-                        sweatSorted.push_back(target);
-                        sweatReadySet.insert(target);
-                        found = true;
-                        break;
-                    }
-                    reverse++;
+            while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
+                auto target = (*reverse).second;
+                if (sweatSet.count(target) > 0 && sweatReadySet.count(target) == 0) {
+                    targets.insert(target);
                 }
+                reverse++;
             }
-            k++;
-            if (!found) {
-                vislib::sys::Log::DefaultLog.WriteError("The sweatband of the sombrero is not continous. Aborting...");
-                break;
+            if (targets.size() == 0) {
+                vislib::sys::Log::DefaultLog.WriteError("No target vertex for the sweatband computation found");
                 return false;
             }
+
+            // go through all of the target vertices
+            // we prioritize the vertices with the lowest non-brim-multiplicity.
+            // if there are more than one of these vertices, take the one with the sweat-multiplicity
+            uint minnonbrim = UINT_MAX;
+            uint minmult = UINT_MAX;
+            std::set<uint> nb;
+            for (auto v : targets) {
+                if (nonbrimMultiplicity[v] < minnonbrim) {
+                    nb.clear();
+                    minnonbrim = nonbrimMultiplicity[v];
+                    nb.insert(v);
+                } else if (nonbrimMultiplicity[v] == minnonbrim) {
+                    nb.insert(v);
+                }
+            }
+            uint finalv;
+            for (auto v : nb) {
+                if (vertexMultiplicity[v] <= minmult) {
+                    minmult = vertexMultiplicity[v];
+                    finalv = v;
+                } 
+            }
+            sweatSorted.push_back(finalv);
+            sweatReadySet.insert(finalv);
         }
-    #endif
 
 #if 0 // switch for the colouring of the sweatband vertices by angle
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
         float factor = 1.0f / static_cast<float>(sweatSet.size());
         int f = 0;
+
+        for (auto v : sweatSet) {
+            this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
+            this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[0]);
+            this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[2]);
+        }
         for (auto v : sweatReadySet) {
             this->colors[i][3 * v + 0] = static_cast<unsigned char>(f * factor * red[0]);
             this->colors[i][3 * v + 1] = static_cast<unsigned char>(f * factor * red[1]);
@@ -1416,16 +1471,11 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[0]);
             this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[1]);
             this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[2]);
-            if (v == 814 || v == 141 || v == 812) {
-                this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
-                this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[0]);
-                this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[2]);
-            }
-            if (v == 812) {
-                this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
-                this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[2]);
-                this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[0]);
-            }
+            //if (v == 1957) {
+            //    this->colors[i][3 * v + 0] = static_cast<unsigned char>(red[1]);
+            //    this->colors[i][3 * v + 1] = static_cast<unsigned char>(red[2]);
+            //    this->colors[i][3 * v + 2] = static_cast<unsigned char>(red[0]);
+            //}
             f++;
         }
 #endif
