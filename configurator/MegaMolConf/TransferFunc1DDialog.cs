@@ -182,16 +182,16 @@ namespace MegaMolConf {
 
             int idx = start_idx;
             if ((idx < res && idx >= 0) && (val <= 1.0f && val >= 0.0f)) {
-                if (cb_R.Checked) {
+                if (b_R.Checked) {
                     r_histo[idx] = val;
                 }
-                if (cb_G.Checked) {
+                if (b_G.Checked) {
                     g_histo[idx] = val;
                 }
-                if (cb_B.Checked) {
+                if (b_B.Checked) {
                     b_histo[idx] = val;
                 }
-                if (cb_A.Checked) {
+                if (b_A.Checked) {
                     a_histo[idx] = val;
                 }
             }
@@ -220,45 +220,6 @@ namespace MegaMolConf {
 
         private void PanelCanvas_Resize(object sender, EventArgs e) {
             panel_Canvas.Refresh();
-        }
-
-        private void CBs_CheckedChanged(object sender, EventArgs e) {
-            if ((ModifierKeys & Keys.Control) == 0) {
-                //cb_R.Enabled = false;
-                //cb_G.Enabled = false;
-                //cb_B.Enabled = false;
-                //cb_A.Enabled = false;
-                if (((CheckBox) sender).Checked) {
-                    if (cb_R != sender) {
-                        cb_R.Checked = false;
-                    }
-
-                    if (cb_G != sender) {
-                        cb_G.Checked = false;
-                    }
-
-                    if (cb_B != sender) {
-                        cb_B.Checked = false;
-                    }
-
-                    if (cb_A != sender) {
-                        cb_A.Checked = false;
-                    }
-                }
-                //cb_R.Enabled = true;
-                //cb_G.Enabled = true;
-                //cb_B.Enabled = true;
-                //cb_A.Enabled = true;
-            }
-            if (!cb_R.Checked || !cb_G.Checked || !cb_B.Checked || !cb_A.Checked) {
-                cb_All.Checked = false;
-            }
-        }
-
-        private void CBAll_CheckedChanged(object sender, EventArgs e) {
-            if (cb_All.Checked) {
-                cb_R.Checked = cb_G.Checked = cb_B.Checked = cb_A.Checked = true;
-            }
         }
 
         private void PanelCanvas_MouseDown(object sender, MouseEventArgs e) {
@@ -304,16 +265,16 @@ namespace MegaMolConf {
                 float val = start_val;
                 do {
                     if ((idx < res && idx >= 0) && (val <= 1.0f && val >= 0.0f)) {
-                        if (cb_R.Checked) {
+                        if (b_R.Checked) {
                             r_histo[idx] = val;
                         }
-                        if (cb_G.Checked) {
+                        if (b_G.Checked) {
                             g_histo[idx] = val;
                         }
-                        if (cb_B.Checked) {
+                        if (b_B.Checked) {
                             b_histo[idx] = val;
                         }
-                        if (cb_A.Checked) {
+                        if (b_A.Checked) {
                             a_histo[idx] = val;
                         }
                     }
@@ -327,35 +288,62 @@ namespace MegaMolConf {
         }
 
         private void btn_Zero_Click(object sender, EventArgs e) {
-            if (cb_R.Checked) {
+            if (b_R.Checked) {
                 Array.Clear(r_histo, 0, r_histo.Length);
             }
-            if (cb_G.Checked) {
+            if (b_G.Checked) {
                 Array.Clear(g_histo, 0, g_histo.Length);
             }
-            if (cb_B.Checked) {
+            if (b_B.Checked) {
                 Array.Clear(b_histo, 0, b_histo.Length);
             }
-            if (cb_A.Checked) {
+            if (b_A.Checked) {
                 Array.Clear(a_histo, 0, b_histo.Length);
             }
             panel_Canvas.Invalidate();
         }
 
         private void btn_Ramp_Click(object sender, EventArgs e) {
-            if (cb_R.Checked) {
+            if (b_R.Checked) {
                 InitHistoWithRamp(ref r_histo);
             }
-            if (cb_G.Checked) {
+            if (b_G.Checked) {
                 InitHistoWithRamp(ref g_histo);
             }
-            if (cb_B.Checked) {
+            if (b_B.Checked) {
                 InitHistoWithRamp(ref b_histo);
             }
-            if (cb_A.Checked) {
+            if (b_A.Checked) {
                 InitHistoWithRamp(ref a_histo);
             }
             panel_Canvas.Invalidate();
+        }
+
+        private void color_Clicked(object sender, EventArgs e) {
+            if ((ModifierKeys & Keys.Control) == 0) {
+                zero_Clicked(sender, e);
+                b_R.Checked = (b_R == sender);
+                b_G.Checked = (b_G == sender);
+                b_B.Checked = (b_B == sender);
+                b_A.Checked = (b_A == sender);
+            } else {
+                if (b_R == sender)
+                    b_R.Checked = !b_R.Checked;
+                if (b_G == sender)
+                    b_G.Checked = !b_G.Checked;
+                if (b_B == sender)
+                    b_B.Checked = !b_B.Checked;
+                if (b_A == sender)
+                    b_A.Checked = !b_A.Checked;
+            }
+        }
+
+        private void zero_Clicked(object sender, EventArgs e) {
+            b_R.Checked = b_G.Checked = b_B.Checked = b_A.Checked = false;
+        }
+
+        private void all_Clicked(object sender, EventArgs e) {
+            b_R.Checked = b_G.Checked = b_B.Checked = b_A.Checked = true;
         }
     }
 }
