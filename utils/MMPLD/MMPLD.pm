@@ -85,9 +85,14 @@ sub _initialize {
 }
 
 sub DESTROY {
-    #print "called destructor\n";
     my $self = shift;
-    $self->Close();
+    if (${^GLOBAL_PHASE} eq 'DESTRUCT') {
+        #if ($self and $self->{state} and $self->{state} != $CLOSED) {
+        #    print "not closing a file explicitly will result in frame table corruption!\n";
+        #}
+        return;
+    }
+    #$self->Close();
 }
 
 sub _finishup {
