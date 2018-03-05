@@ -14,6 +14,9 @@ in      vec2  inVertTexCoord;
 uniform mat4  mvpMat;         // ModelViewProjection-Matrix
 uniform float fontSize;
 
+uniform int   billboard = 0;
+uniform mat4  pMat;          // ProjectionMatrix
+
 out     vec2  texCoord;
 
 
@@ -23,8 +26,13 @@ out     vec2  texCoord;
 void main() {
 
     texCoord    = inVertTexCoord;
-    gl_Position = mvpMat * vec4(inVertPos, 1.0);
-
+    
+    if (billboard == 1) {   
+        gl_Position = pMat * vec4(inVertPos, 1.0);
+    }
+    else {
+        gl_Position = mvpMat * vec4(inVertPos, 1.0);
+    }
 }
 
 ]]>

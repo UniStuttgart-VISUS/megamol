@@ -379,6 +379,24 @@ namespace utility {
             this->renderType = t;           
         }
 
+        /**
+        * Answers status of billboard mode.
+        *
+        * @return The render type of the font
+        */
+        inline bool IsBillboardEnabled(void) const {
+            return this->billboard;
+        }
+
+        /**
+        * Sets billboard mode.
+        *
+        * @param t The render type for the font
+        */
+        inline void SetBillboard(bool b) {
+            this->billboard = b;
+        }
+
     protected:
 
         /**
@@ -415,6 +433,9 @@ namespace utility {
 
         /** The render type used. */
         RenderType renderType;
+
+        /** Billboard mode. */
+        bool billboard;
 
         /** Inidcating if font could be loaded successfully. */
         bool initialised;
