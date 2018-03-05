@@ -109,6 +109,12 @@ namespace sombreros {
         /** Activation slot for the cutting */
         core::param::ParamSlot isActiveParam;
 
+        /** Parameter slot for the selected tunnel */
+        core::param::ParamSlot tunnelIdParam;
+
+        /** Parameter slot for the alternative cutting approach */
+        core::param::ParamSlot alternativeCuttingParam;
+
         /** Slot for the mesh input. */
         core::CallerSlot meshInSlot;
 

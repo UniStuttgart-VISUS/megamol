@@ -34,7 +34,9 @@ TunnelCutter::TunnelCutter(void) : Module(),
         moleculeInSlot("molIn", "Receives the input molecular data"),
         bindingSiteInSlot("bsIn", "Receives the input binding site data"),
         growSizeParam("growSize", "The number of steps for the region growing"),
-        isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE"){
+        isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE"),
+        tunnelIdParam("tunnelID", "The id of the used tunnel. If no such tunnel is present, the first available one is used"),
+        alternativeCuttingParam("alternativeCutting", "Activates the alternative tunnel cutting approach that tries to incorporate vertices equally along all directions") {
 
     // Callee slot
     this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &TunnelCutter::getData);
@@ -60,6 +62,12 @@ TunnelCutter::TunnelCutter(void) : Module(),
 
     this->isActiveParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->isActiveParam);
+
+    this->tunnelIdParam.SetParameter(new param::IntParam(0, 0, 1000));
+    this->MakeSlotAvailable(&this->tunnelIdParam);
+
+    this->alternativeCuttingParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->alternativeCuttingParam);
 
     // other variables
     this->lastDataHash = 0;
@@ -157,10 +165,12 @@ bool TunnelCutter::getExtent(Call& call) {
     if (!(*tc)(1)) return false;
     if (!(*mdc)(1)) return false;
 
-    if (this->growSizeParam.IsDirty() || this->isActiveParam.IsDirty()) {
+    if (this->growSizeParam.IsDirty() || this->isActiveParam.IsDirty() || this->tunnelIdParam.IsDirty() || this->alternativeCuttingParam.IsDirty()) {
         this->hashOffset++;
         this->growSizeParam.ResetDirty();
         this->isActiveParam.ResetDirty();
+        this->tunnelIdParam.ResetDirty();
+        this->alternativeCuttingParam.ResetDirty();
         this->dirt = true;
     }
 
@@ -183,10 +193,18 @@ bool TunnelCutter::cutMesh(CallTriMeshData * meshCall, TunnelResidueDataCall * t
 
     // generate set of allowed residue indices
     std::set<int> allowedSet;
-    for (int i = 0; i < tunnelCall->getTunnelNumber(); i++) {
-        for (int j = 0; j < tunnelCall->getTunnelDescriptions()[i].atomIdentifiers.size(); j++) {
-            allowedSet.insert(tunnelCall->getTunnelDescriptions()[i].atomIdentifiers[j].first);
-        }
+    auto tid = static_cast<uint>(this->tunnelIdParam.Param<param::IntParam>()->Value());
+    if (tunnelCall->getTunnelNumber() == 0) {
+        vislib::sys::Log::DefaultLog.WriteError("No tunnel descriptions found");
+        return false;
+    }
+    if (static_cast<int>(tid) >= tunnelCall->getTunnelNumber()) {
+        tid = 0;
+        vislib::sys::Log::DefaultLog.WriteWarn("The given tunnel id was too large, using id 0 instead");
+    }
+
+    for (int j = 0; j < tunnelCall->getTunnelDescriptions()[tid].atomIdentifiers.size(); j++) {
+        allowedSet.insert(tunnelCall->getTunnelDescriptions()[tid].atomIdentifiers[j].first);
     }
     std::set<unsigned int> allowedVerticesSet;
     
