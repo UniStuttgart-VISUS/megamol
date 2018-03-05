@@ -172,7 +172,10 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
         vislib::StringA line;
         bool firstline = true;
-        while (tunnelFileReader.ReadLine(line)) {
+        uint linenum = 0;
+        while (tunnelFileReader.ReadLine(line, 100000u)) {
+            linenum++;
+
             if (firstline) { // ignore the first line
                 firstline = false;
                 continue;

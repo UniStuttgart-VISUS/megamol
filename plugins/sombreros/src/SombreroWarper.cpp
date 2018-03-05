@@ -27,6 +27,7 @@ using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
 //#define NO_DEFORMATION
+//#define SWEAT
 
 /*
  * SombreroWarper::SombreroWarper
@@ -1681,7 +1682,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
 #endif
-#if 0
+#ifdef SWEAT
         // initialize the angle values of vertices of the sweatband
         if (sweatIsClockwise) {
             for (uint j = 0; j < static_cast<uint>(sweatSorted.size()); j++) {
@@ -1693,7 +1694,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
 #endif
-#if 0
+#if 1
         // for the vertices around the binding site vertex
         std::set<uint> bsVertices;
         // search for the vertex right of the first meridian vertex
@@ -1795,9 +1796,11 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         for (auto c : sortedBrim) {
             validVertices[c] = false;
         }
-        //for (auto c : sweatSorted) {
-        //    validVertices[c] = false;
-        //}
+#ifdef SWEAT
+        for (auto c : sweatSorted) {
+            validVertices[c] = false;
+        }
+#endif
         // vertex edge offset vector
         std::vector<std::vector<CUDAKernels::Edge>> vertex_edge_offset_local(this->vertexLevelAttachment[i].size());
         std::vector<uint> offsetDepth(this->vertexLevelAttachment[i].size(), 0);
@@ -1863,6 +1866,13 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 #if 0 // color by angle
         for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
             this->colors[i][3 * v + 0] = 255 * (this->rahiAngles[i][v] / (2.0f * 3.14159265358979f));
+            this->colors[i][3 * v + 1] = 0;
+            this->colors[i][3 * v + 2] = 0;
+        }
+#endif
+#if 0 // color by id
+        for (uint v = 0; v < this->vertexLevelAttachment[i].size(); v++) {
+            this->colors[i][3 * v + 0] = static_cast<unsigned char>(255 * (static_cast<float>(v) / static_cast<float>(this->vertexLevelAttachment[i].size())));
             this->colors[i][3 * v + 1] = 0;
             this->colors[i][3 * v + 2] = 0;
         }
