@@ -491,6 +491,7 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wst
 
 bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
     if (L != nullptr) {
+        //vislib::sys::Log::DefaultLog.WriteInfo("trying to execute: %s", script.c_str());
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions

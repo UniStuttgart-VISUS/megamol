@@ -79,7 +79,8 @@ void gl::ATBUILayer::onDraw() {
         // dirty fix: clean up leftover ATB state
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_COLOR_ARRAY, 0);
+        // this is deprecated and NSight hates it
+        //glBindBuffer(GL_COLOR_ARRAY, 0);
     }
 }
 
