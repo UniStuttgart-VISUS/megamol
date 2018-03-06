@@ -1,6 +1,8 @@
 /*
 * TimeLineRenderer.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED
@@ -15,16 +17,13 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/SDFFont.h"
 
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -118,11 +117,8 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
+
             // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 

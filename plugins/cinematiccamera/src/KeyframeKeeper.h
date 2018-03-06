@@ -1,6 +1,8 @@
 /*
 * KeyframeKeeper.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED

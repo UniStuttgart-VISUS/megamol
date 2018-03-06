@@ -1,6 +1,8 @@
 /*
 * CallCinematicCamera.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CALLCINCAM_H_INCLUDED

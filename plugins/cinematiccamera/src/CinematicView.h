@@ -1,6 +1,8 @@
 /*
 *CinematicView.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -18,6 +20,7 @@
 #include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
@@ -25,14 +28,10 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 
 #include "Keyframe.h"
 #include "png.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -99,11 +98,7 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
 
             enum SkyboxSides {
                 SKYBOX_NONE = 0,

@@ -1,6 +1,8 @@
 /*
 * KeyframeManipulator.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYFRAME_MANIP_H_INCLUDED

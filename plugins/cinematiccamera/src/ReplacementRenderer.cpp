@@ -1,6 +1,8 @@
 /*
  * ReplacementRenderer.cpp
  *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"

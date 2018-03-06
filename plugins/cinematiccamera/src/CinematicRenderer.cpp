@@ -1,6 +1,8 @@
 /*
 * CinematicRenderer.cpp
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #include "stdafx.h"
@@ -35,13 +37,15 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
+using namespace megamol::core::utility;
 using namespace megamol::cinematiccamera;
+
 using namespace vislib;
 
 
 // DEFINES
 #ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (20.0f)
+    #define CC_MENU_HEIGHT (25.0f)
 #endif
 
 
@@ -51,9 +55,7 @@ using namespace vislib;
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     slaveRendererSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-#ifndef USE_SIMPLE_FONT
-    theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
-#endif // USE_SIMPLE_FONT
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
@@ -140,7 +142,7 @@ bool CinematicRenderer::create(void) {
     }
 
     // initialise font
-    if (!this->theFont.Initialise()) {
+    if (!this->theFont.Initialise(this->GetCoreInstance())) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
@@ -282,6 +284,8 @@ bool CinematicRenderer::Render(Call& call) {
     // Get the foreground color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float yellow[4]  = { 1.0f, 1.0f, 0.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
     for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
@@ -503,11 +507,11 @@ bool CinematicRenderer::Render(Call& call) {
     float vpH = (float)(vpHeight);
     float vpW = (float)(vpWidth);
 
-    vislib::StringA leftLabel  = " [ TRACKING SHOT VIEW ] ";
+    vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
-    vislib::StringA midLabel = "  "; // " Manipulation Mode: Camera ";
+    vislib::StringA midLabel = "";
     if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
-        midLabel = " keyframe manipulation Mode ";
+        midLabel = " keyframe manipulation mode ";
     }
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
@@ -543,51 +547,50 @@ bool CinematicRenderer::Render(Call& call) {
     float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
     glEnable(GL_BLEND);
     glEnable(GL_POLYGON_SMOOTH);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, 0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // Draw help text 
     if (this->showHelpText) {
         vislib::StringA helpText = "";
         helpText += "-----[ GLOBAL ]-----\n";
-        helpText += "[a] Apply current settings to selected/new keyframe.\n";
-        helpText += "[d] Delete selected keyframe.\n";
-        helpText += "[l] Reset Look-At of selected keyframe.\n";
-        helpText += "[r] Start/Stop rendering complete animation.\n";
-        helpText += "[s] Save keyframes to file.\n";
-        helpText += "[ctrl+z] Undo keyframe changes.\n";
-        helpText += "[ctrl+y] Redo keyframe changes.\n";
-        helpText += "[space] Toggle animation preview.\n";
-        helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
-        helpText += "[m] Toggle different manipulators for the selected keyframe.\n";
-        helpText += "[w] Keep manipulators always outside of model bounding box.\n";
-        helpText += "[tab] Toggle selection mode for manipulators.\n";
-        helpText += "-----[ TIME LINE VIEW ]-----\n";
-        helpText += "[f] Snap all keyframes to animation frames.\n";
-        helpText += "[g] Snap all keyframes to simulation frames.\n";
-        helpText += "[t] Linearize simulation time between two keyframes.\n";
-        helpText += "[left mouse button] Select keyframe.\n";
-        helpText += "[middle mouse button] Time axis scaling at mouse position.\n";
-        helpText += "[right mouse button] Drag & drop keyframe.\n";
-        helpText += "[right/left] Move to right/left animation time frame.\n";
+        helpText += "[a] Apply current settings to selected/new keyframe. \n";
+        helpText += "[d] Delete selected keyframe. \n";
+        helpText += "[s] Save keyframes to file. \n";
+        helpText += "[ctrl+z] Undo keyframe changes. \n";
+        helpText += "[ctrl+y] Redo keyframe changes. \n";
+        helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
+        helpText += "[tab] Toggle selection mode for manipulators. \n";
+        helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
+        helpText += "[w] Keep manipulators always outside of model bounding box. \n";
+        helpText += "[l] Reset Look-At of selected keyframe. \n";
+        helpText += "-----[ CINEMATIC VIEW ]----- \n";
+        helpText += "[r] Start/Stop rendering complete animation. \n";
+        helpText += "[space] Toggle animation preview. \n";
+        helpText += "-----[ TIME LINE VIEW ]----- \n";
+        helpText += "[f] Snap all keyframes to animation frames. \n";
+        helpText += "[g] Snap all keyframes to simulation frames. \n";
+        helpText += "[t] Linearize simulation time between two keyframes. \n";
+        helpText += "[left mouse button] Select keyframe. \n";
+        helpText += "[middle mouse button] Time axis scaling at mouse position. \n";
+        helpText += "[right mouse button] Drag & drop keyframe. \n";
+        helpText += "[right/left] Move to right/left animation time frame. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
-        float htFontSize  = vpW*0.025f; // max % of viewport width
+        float htFontSize  = vpW*0.027f; // max % of viewport width
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
         float htNumOfRows = 21.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
-            htFontSize -= 0.001f;
+            htFontSize -= 0.1f;
             htStrHeight = this->theFont.LineHeight(htFontSize);
         }
-        float htStrWidth = this->theFont.LineWidth(htFontSize, "----------------------------------------------------------------------"); // Length of longest help text line
+
+        float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
         htStrHeight      = this->theFont.LineHeight(htFontSize);
         htY              = htX + htStrHeight*htNumOfRows;
         // Draw background colored quad
@@ -603,8 +606,7 @@ bool CinematicRenderer::Render(Call& call) {
         // Draw help text
         glEnable(GL_BLEND);
         glEnable(GL_POLYGON_SMOOTH);
-        glColor4fv(fgColor);
-        this->theFont.DrawString(htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+        this->theFont.DrawString(fgColor, htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     }
 
     glPopMatrix();
