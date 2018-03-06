@@ -71,7 +71,7 @@ void main(void) {
         discard;
     }
 
-    float smootingEdge = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
+    float smootingEdge = 0.5 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
 
     if (renderType == RENDERTYPE_FILL) { 
 

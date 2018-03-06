@@ -397,6 +397,29 @@ namespace utility {
             this->billboard = b;
         }
 
+
+        /**
+        * Reset font orientation.
+        *
+        */
+        inline void ResetOrientation(void) const {
+
+
+        }
+
+        /**
+        * Set font orientation.
+        *
+        * @param x The X coordinate of the rotation axis.
+        * @param y The Y coordinate of the rotation axis.
+        * @param z The Z coordinate of the rotation axis.
+        * @param a The rotation angle.
+        */
+        inline void SetOrientation(float x, float y, float z, float a) {
+
+
+        }
+
     protected:
 
         /**
