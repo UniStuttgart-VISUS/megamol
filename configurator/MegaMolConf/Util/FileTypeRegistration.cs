@@ -1,7 +1,5 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,7 +9,7 @@ namespace MegaMolConf.Util {
 
         private class Report {
             public StringBuilder Text = new StringBuilder();
-            public bool HasErrors = false;
+            public bool HasErrors;
 
             public void AppendText(string text) {
                 if (Text.Length > 0) Text.Append(Environment.NewLine);

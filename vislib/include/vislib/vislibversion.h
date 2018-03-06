@@ -13,6 +13,12 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+namespace vislib {
+extern int const VISLIB_VERSION_MAJOR;
+extern int const VISLIB_VERSION_MINOR;
+extern char const* VISLIB_VERSION_REVISION;
+} /* end namespace vislib */
+
  /*
  * VISLIB_STRINGIZING_HELPERS for macro argument expansion
  */

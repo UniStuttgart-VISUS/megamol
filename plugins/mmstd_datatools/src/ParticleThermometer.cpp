@@ -394,6 +394,7 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         }
     }
     out->SetUnlocker(in->GetUnlocker());
+    in->SetUnlocker(nullptr, false);
     return true;
 }
 

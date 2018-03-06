@@ -39,6 +39,7 @@ namespace megamol {
 			static const unsigned int CallForSetCameraForKeyframe       = 5;
             static const unsigned int CallForSetDragKeyframe            = 6;
             static const unsigned int CallForSetDropKeyframe            = 7;
+            static const unsigned int CallForSetCtrlPoints              = 8;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -64,7 +65,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 8;
+				return 9;
 			}
 
 			/**
@@ -84,6 +85,7 @@ namespace megamol {
 					case CallForSetCameraForKeyframe:       return "CallForSetCameraForKeyframe";
                     case CallForSetDragKeyframe:            return "CallForSetDragKeyframe";
                     case CallForSetDropKeyframe:            return "CallForSetDropKeyframe";
+                    case CallForSetCtrlPoints:              return "CallForSetCtrlPoints";
 					default: return "";
 				}
 			}
@@ -194,6 +196,18 @@ namespace megamol {
                 return this->fps;
             }
 
+            // CONTROL POINT POSITIONS
+            inline void setControlPointPosition(vislib::math::Vector<float, 3> firstcp, vislib::math::Vector<float, 3> lastcp) {
+                this->firstCtrllPos = firstcp;
+                this->lastCtrllPos  = lastcp;
+            }
+            inline vislib::math::Vector<float, 3> getFirstControlPointPosition() {
+                return this->firstCtrllPos;
+            }
+            inline vislib::math::Vector<float, 3> getLastControlPointPosition() {
+                return this->lastCtrllPos;
+            }
+
 		private:
 
             /**********************************************************************
@@ -213,6 +227,8 @@ namespace megamol {
             float                                          totalSimTime;
             vislib::math::Point<float, 3>                  bboxCenter;
             unsigned int                                   fps;
+            vislib::math::Vector<float, 3>                 firstCtrllPos;
+            vislib::math::Vector<float, 3>                 lastCtrllPos;
 
 		};
 

@@ -148,6 +148,14 @@ namespace core {
          */
         virtual void PerformCleanup(void);
 
+        inline void SetClassName(const char *name) {
+            this->className = name;
+        }
+
+        inline const char * ClassName() const {
+            return this->className;
+        }
+
     protected:
 
         /**
@@ -202,6 +210,8 @@ namespace core {
 
         /** Flag whether this module is created or not */
         bool created;
+
+        const char *className;
 
         /* Allow the container to access the internal create flag */
         friend class ::megamol::core::AbstractNamedObjectContainer;

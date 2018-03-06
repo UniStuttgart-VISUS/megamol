@@ -61,6 +61,7 @@ namespace simple {
 #define MSG_WANTCAMERAUPDATE 10
 #define MSG_REQUESTTCUPDATE 11
 #define MSG_TCUPDATE 12
+#define MSG_MODULGRAPH_LUA 13
 
     /**
      * Struct layout a simple cluster datagram

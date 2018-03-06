@@ -32,13 +32,18 @@
 #include "ReplacementRenderer.h"
 
 
-//#define _USE_MATH_DEFINES
-
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::cinematiccamera;
 using namespace vislib;
+
+
+// DEFINES
+#ifndef CC_MENU_HEIGHT
+    #define CC_MENU_HEIGHT (20.0f)
+#endif
+
 
 /*
 * CinematicRenderer::CinematicRenderer
@@ -50,16 +55,19 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     theFont(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
 #endif // USE_SIMPLE_FONT
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
-    toggleManipulateParam(     "02_toggleManipulators", "Toggle between position manipulators and lookat/up manipulators of selected keyframe."),
+    toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
     textureShader(),
     manipulator()
     {
 
     // init variables
     this->interpolSteps     = 20;
-    this->toggleManipulator = false;
+    this->toggleManipulator = 0;
     this->showHelpText      = false;
+    this->manipOutsideModel = false;
+    this->mouseManipTime    = std::clock();
 
     // init parameters
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -76,6 +84,9 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
 
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
+
+    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam('w'));
+    this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
 
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
@@ -189,6 +200,8 @@ bool CinematicRenderer::GetExtents(Call& call) {
 
     // Compute bounding box including spline (in world space) and object (in world space).
     vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
+    // Set bounding box center of model
+    ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
     // Grow bounding box to manipulators and get information of bbox of model
     this->manipulator.updateExtents(&bboxCR3D);
@@ -241,12 +254,16 @@ bool CinematicRenderer::Render(Call& call) {
         this->stepsParam.ResetDirty();
     }
     if (this->toggleManipulateParam.IsDirty()) {
-        this->toggleManipulator = !this->toggleManipulator;
+        this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
         this->toggleManipulateParam.ResetDirty();
     }
     if (this->toggleHelpTextParam.IsDirty()) {
         this->showHelpText = !this->showHelpText;
         this->toggleHelpTextParam.ResetDirty();
+    }
+    if (this->toggleManipOusideBboxParam.IsDirty()) {
+        this->manipOutsideModel = !this->manipOutsideModel;
+        this->toggleManipOusideBboxParam.ResetDirty();
     }
 
     // Set total simulation time of call
@@ -266,12 +283,12 @@ bool CinematicRenderer::Render(Call& call) {
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
     }
     // COLORS
     float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
-                                                  // Adapt colors depending on  Lightness
+    // Adapt colors depending on  Lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
         // not used so far
@@ -353,9 +370,10 @@ bool CinematicRenderer::Render(Call& call) {
     glPopMatrix();
 
     // Disable fbo
-    if (this->fbo.IsEnabled()) this->fbo.Disable();
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
 
-       
     // Draw textures ------------------------------------------------------
 
     glDisable(GL_LINE_SMOOTH);
@@ -416,22 +434,32 @@ bool CinematicRenderer::Render(Call& call) {
         vislib::Array<KeyframeManipulator::manipType> availManip;
         availManip.Clear();
         availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
-        if (this->toggleManipulator) {
+        if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
         }
-        else {
+        else if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
         }
+        else if (this->toggleManipulator == 2) { // Unused ...
+
+
+        }
         // Update manipulator data
         this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
-            cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>() -
-            cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>());
+            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
+            this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
         // Draw manipulators
         this->manipulator.draw();
     }
@@ -458,8 +486,7 @@ bool CinematicRenderer::Render(Call& call) {
     }
     glEnd();
 
-
-    // Draw help text  --------------------------------------------------------
+    // DRAW MENU --------------------------------------------------------------
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -468,65 +495,128 @@ bool CinematicRenderer::Render(Call& call) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-
-    // Draw help text in front of bounding box rendered by the view3d
     glTranslatef(0.0f, 0.0f, 1.0f);
-    glEnable(GL_POLYGON_SMOOTH);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
-    glColor4fv(fgColor);
+    float vpH = (float)(vpHeight);
+    float vpW = (float)(vpWidth);
 
-    float fontSize = (float)(vpWidth)*0.03f; // 3% of viewport width
-    vislib::StringA tmpStr = "";
+    vislib::StringA leftLabel  = " [ TRACKING SHOT VIEW ] ";
 
+    vislib::StringA midLabel = "  "; // " Manipulation Mode: Camera ";
+    if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
+        midLabel = " keyframe manipulation Mode ";
+    }
+    vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
+        rightLabel = " [h] hide help text ";
+    }
+
+    float lbFontSize        = (CC_MENU_HEIGHT); 
+    float leftLabelWidth    = this->theFont.LineWidth(lbFontSize, leftLabel);
+    float midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
+    float rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
+
+    // Adapt font size if height of menu text is greater than menu height
+    float vpWhalf = vpW / 2.0f;
+    while (((leftLabelWidth + midleftLabelWidth/2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
+        lbFontSize -= 0.5f;
+        leftLabelWidth    = this->theFont.LineWidth(lbFontSize, leftLabel);
+        midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
+        rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
+    }
+
+    // Draw menu background
+    glDisable(GL_BLEND);
+    glDisable(GL_POLYGON_SMOOTH);
+    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(0.0f, vpH);
+        glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
+        glVertex2f(vpW,  vpH - (CC_MENU_HEIGHT));
+        glVertex2f(vpW,  vpH);
+    glEnd();
+
+    // Draw menu labels
+    float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    glEnable(GL_BLEND);
+    glEnable(GL_POLYGON_SMOOTH);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString(0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+    this->theFont.DrawString((vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    this->theFont.DrawString((vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+
+    // Draw help text 
+    if (this->showHelpText) {
+        vislib::StringA helpText = "";
+        helpText += "-----[ GLOBAL ]-----\n";
+        helpText += "[a] Apply current settings to selected/new keyframe.\n";
+        helpText += "[d] Delete selected keyframe.\n";
+        helpText += "[l] Reset Look-At of selected keyframe.\n";
+        helpText += "[r] Start/Stop rendering complete animation.\n";
+        helpText += "[s] Save keyframes to file.\n";
+        helpText += "[ctrl+z] Undo keyframe changes.\n";
+        helpText += "[ctrl+y] Redo keyframe changes.\n";
+        helpText += "[space] Toggle animation preview.\n";
+        helpText += "-----[ TRACKING SHOT VIEW ]-----\n";
+        helpText += "[m] Toggle different manipulators for the selected keyframe.\n";
+        helpText += "[w] Keep manipulators always outside of model bounding box.\n";
+        helpText += "[tab] Toggle selection mode for manipulators.\n";
+        helpText += "-----[ TIME LINE VIEW ]-----\n";
+        helpText += "[f] Snap all keyframes to animation frames.\n";
+        helpText += "[g] Snap all keyframes to simulation frames.\n";
+        helpText += "[t] Linearize simulation time between two keyframes.\n";
+        helpText += "[left mouse button] Select keyframe.\n";
+        helpText += "[middle mouse button] Time axis scaling at mouse position.\n";
+        helpText += "[right mouse button] Drag & drop keyframe.\n";
+        helpText += "[right/left] Move to right/left animation time frame.\n";
+        //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
+        //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
+
+        float htFontSize  = vpW*0.025f; // max % of viewport width
+        float htStrHeight = this->theFont.LineHeight(htFontSize);
+        float htX         = 5.0f;
+        float htY         = htX + htStrHeight;
+        float htNumOfRows = 21.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
-        float strHeight = 20.0f * this->theFont.LineHeight(fontSize);
-        while (strHeight > (float)(vpHeight)) {
-            fontSize -= 0.001f;
-            strHeight = 20.0f * this->theFont.LineHeight(fontSize);
+        while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
+            htFontSize -= 0.001f;
+            htStrHeight = this->theFont.LineHeight(htFontSize);
         }
-        tmpStr += "-----[ GLOBAL ]-----\n";
-        tmpStr += "[a] Add new keyframe.\n";
-        tmpStr += "[c] Apply cinematic view to selected Keyframe.\n";
-        tmpStr += "[d] Delete selected Keyframe.\n";
-        tmpStr += "[f] Snap keyframes to animation frames.\n";
-        tmpStr += "[g] Snap keyframes to simulation frames.\n";
-        tmpStr += "[h] Hide help text.\n";
-        tmpStr += "[l] Reset Look-At of selected Keyframe.\n";
-        tmpStr += "[m] Toggle different Keyframe manipulators.\n";
-        tmpStr += "[r] Toggle rendering complete animation.\n";
-        tmpStr += "[s] Save Keyframes to file.\n";
-        tmpStr += "[t] Straighten tangent between two Keyframes.\n";
-        tmpStr += "[v] Set same velocity between all Keyframes.\n";
-        tmpStr += "[space] Toggle animation preview.\n";
-        tmpStr += "-----[ TRACKING SHOT VIEW ]-----\n";
-        tmpStr += "[tab] Toggle Selection mode for manipulators.\n";
-        tmpStr += "-----[ TIME LINES ]-----\n";
-        tmpStr += "[left mouse button] Select Keyframe.\n";
-        tmpStr += "[right mouse button] Drag & Drop Keyframe.\n";
-        tmpStr += "[middle mouse button] Time axis scaling at mouse position.\n";
-    }
-    else {
-        tmpStr += "[h] Show help text.\n";
+        float htStrWidth = this->theFont.LineWidth(htFontSize, "----------------------------------------------------------------------"); // Length of longest help text line
+        htStrHeight      = this->theFont.LineHeight(htFontSize);
+        htY              = htX + htStrHeight*htNumOfRows;
+        // Draw background colored quad
+        glDisable(GL_BLEND);
+        glDisable(GL_POLYGON_SMOOTH);
+        glColor4fv(bgColor);
+        glBegin(GL_QUADS);
+            glVertex2f(htX,              htY);
+            glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
+            glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
+            glVertex2f(htX + htStrWidth, htY);
+        glEnd();
+        // Draw help text
+        glEnable(GL_BLEND);
+        glEnable(GL_POLYGON_SMOOTH);
+        glColor4fv(fgColor);
+        this->theFont.DrawString(htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
 
-    float strWidth = this->theFont.LineWidth(fontSize, tmpStr);
-    this->theFont.DrawString(10.0f, (float)(vpHeight) - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
-    //this->theFont.Deinitialise();
-
-    // Reset opengl -----------------------------------------------------------
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 
+    // ------------------------------------------------------------------------
+
+    // Reset opengl
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
-
     glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POLYGON_SMOOTH);
@@ -542,6 +632,8 @@ bool CinematicRenderer::Render(Call& call) {
 *
 */
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+
+    this->mouseManipTime = std::clock();
 
     bool consume = false;
 
@@ -567,23 +659,31 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         
         // Check if manipulator is selected
         if (this->manipulator.checkManipHit(x, y)) {
-            ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
-            if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
-        }
-        
+        }        
     }
     else if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
         
         // Apply changes on selected manipulator
         if (this->manipulator.processManipHit(x, y)) {
+
             ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+
+            ccc->setControlPointPosition(this->manipulator.getFirstControlPointPosition(), this->manipulator.getLastControlPointPosition());
+            if (!(*ccc)(CallCinematicCamera::CallForSetCtrlPoints)) return false;
+
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
         }
     }
+    /* Is not recognised ... so manipulated keyframes have to be updated each small step ... ;-(
+    else if (!(flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
+        
+        consume = true;
+    }
+    */
     
     return consume;
 }

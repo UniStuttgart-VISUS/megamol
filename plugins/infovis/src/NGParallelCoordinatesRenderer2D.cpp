@@ -18,7 +18,7 @@
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
-#define BE_DEBUGGABLE
+//#define REMOVE_TEXT
 
 #ifdef _DEBUG
 #define MAKE_OBJECT_LABEL(TYPE, ID) (glObjectLabel(TYPE, ID, sizeof(#ID) - 1, #ID))
@@ -83,7 +83,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
     axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
     itemCount(0), columnCount(0), dragging(false), filtering(false),
-    numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1)
+    numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1),
+    font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
 {
 
     this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -394,8 +395,8 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
 
-#ifndef BE_DEBUGGABLE
-    if (!font.Initialise()) return false;
+#ifndef REMOVE_TEXT
+    if (!font.Initialise(this->GetCoreInstance())) return false;
 #endif
 
     if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
@@ -592,9 +593,17 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tc == nullptr) return;
+    if (tc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a transfer function!");
+        return;
+    }
     auto flagsc = getFlagsSlot.CallAs<FlagCall>();
-    if (flagsc == nullptr) return;
+    if (flagsc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a flag storage!");
+        return;
+    }
 
     (*floats)(0);
     auto hash = floats->DataHash();
@@ -747,21 +756,22 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis, pickedIndicatorIndex);
         glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
         this->drawScalesProgram.Disable();
-
-#ifndef BE_DEBUGGABLE
+        float red[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+        float *color;
+#ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
         for (unsigned int c = 0; c < this->columnCount; c++) {
             unsigned int realCol = this->axisIndirection[c];
             if (this->pickedAxis == realCol) {
-                glColor3f(1.0f, 0.0f, 0.0f);
+                color = red;
             } else {
-                glColor3fv(this->axesColor);
+                color = this->axesColor;
             }
             float x = this->marginX + this->axisDistance * c;
             float fontsize = this->axisDistance / 10.0f;
 #if 0
-            this->font.DrawString(x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             bottom *= (maximums[realCol] - minimums[realCol]);
@@ -769,10 +779,10 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             top *= (maximums[realCol] - minimums[realCol]);
             top += minimums[realCol];
-            this->font.DrawString(x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
 #endif
 

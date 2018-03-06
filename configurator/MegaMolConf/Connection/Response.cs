@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MegaMolConf.Communication {
 
@@ -11,7 +7,7 @@ namespace MegaMolConf.Communication {
     /// </summary>
     public class Response {
 
-        private Request req = null;
+        private Request req;
 
         /// <summary>
         /// The original request this response was replied to
