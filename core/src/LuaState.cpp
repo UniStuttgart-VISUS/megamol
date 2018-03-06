@@ -836,7 +836,8 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMGETMODULEPARAMS)) {
         auto moduleName = luaL_checkstring(L, 1);
 
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
         AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
@@ -979,7 +980,9 @@ int megamol::core::LuaState::GetParamType(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMGETPARAMTYPE)) {
         auto paramName = luaL_checkstring(L, 1);
 
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMTYPE, paramName, &ps)) {
 
@@ -1015,7 +1018,9 @@ int megamol::core::LuaState::GetParamDescription(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMGETPARAMDESCRIPTION)) {
         auto paramName = luaL_checkstring(L, 1);
 
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMDESCRIPTION, paramName, &ps)) {
 
@@ -1037,7 +1042,8 @@ int megamol::core::LuaState::GetParamValue(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMGETPARAMVALUE)) {
         auto paramName = luaL_checkstring(L, 1);
 
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMVALUE, paramName, &ps)) {
 
@@ -1223,7 +1229,8 @@ int megamol::core::LuaState::DeleteView(lua_State *L) {
 
 int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMQUERYMODULEGRAPH)) {
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1296,7 +1303,8 @@ int megamol::core::LuaState::ListCalls(lua_State* L) {
         if (n == 1) {
             ns = luaL_checkstring(L, 1);
         }
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1361,7 +1369,8 @@ int megamol::core::LuaState::ListModules(lua_State* L) {
         if (n == 1) {
             ns = luaL_checkstring(L, 1);
         }
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1413,7 +1422,8 @@ int megamol::core::LuaState::ListModules(lua_State* L) {
 
 int megamol::core::LuaState::ListInstatiations(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMLISTINSTANTIATIONS)) {
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
