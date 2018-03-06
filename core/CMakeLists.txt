@@ -139,8 +139,9 @@ if(BUILD_CORE)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
   set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
-  
+
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -192,11 +193,13 @@ if(BUILD_CORE)
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
   source_group("Shaders" FILES ${shader_files})
+  source_group("Resources" FILES ${resource_files})
   source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
     install(TARGETS core RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")
