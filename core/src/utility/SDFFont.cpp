@@ -1001,9 +1001,9 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     // Vertex shader
     glUniform1i(this->shader.ParameterLocation("billboard"), 0);
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-    glUniformMatrix4fv(this->shader.ParameterLocation("pMat"), 1, GL_FALSE, projMatrix.PeekComponents());
     if (this->billboard) {
         glUniform1i(this->shader.ParameterLocation("billboard"), 1);
+        glUniformMatrix4fv(this->shader.ParameterLocation("pMat"), 1, GL_FALSE, projMatrix.PeekComponents());
     }
 
     // Fragment shader
