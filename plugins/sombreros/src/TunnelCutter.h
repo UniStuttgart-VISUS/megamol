@@ -10,6 +10,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "TunnelResidueDataCall.h"
+#include "SombreroHelpers.h"
 
 #include "mmcore/Module.h"
 #include "mmcore/Call.h"
@@ -96,6 +97,18 @@ namespace sombreros {
          * @return True on success, false otherwise.
          */
         bool cutMesh(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+
+        /** 
+         * Cuts away unnecessary parts from the mesh and writes the result into the meshVector.
+         * This method tries to cut the mesh equally so that the amount of geometry around the binding site stays the same in all directions
+         *
+         * @param meshCall The call containing the input mesh. 
+         * @param tunnelCall The call containing the tunnel data the cut region is based on.
+         * @param molCall The call containing the molecular data.
+         * @param bsCall The call containing the binding site data.
+         * @return True on success, false otherwise.
+         */
+        bool cutMeshEqually(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
         /** The lastly received data hash */
         SIZE_T lastDataHash;
