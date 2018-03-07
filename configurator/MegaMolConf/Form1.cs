@@ -18,6 +18,7 @@ using System.Net.NetworkInformation;
 using System.Collections;
 using MegaMolConf.Data;
 using MegaMolConf.Util;
+using Module = MegaMolConf.Data.Module;
 
 namespace MegaMolConf {
     public partial class Form1 : Form     {
@@ -214,7 +215,8 @@ namespace MegaMolConf {
         }
 
         internal void AddModule(TabPage tabPage, string className, string instanceName) {
-            if (lbModules.DataSource is List<Data.Module> mods) {
+            var mods = lbModules.DataSource as List<Module>;
+            if (mods != null) {
                 foreach (Data.Module m in mods) {
                     if (m.Name == className) {
                         tabModules.SuspendObservation = true;
