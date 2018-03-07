@@ -214,8 +214,8 @@ namespace MegaMolConf {
         }
 
         internal void AddModule(TabPage tabPage, string className, string instanceName) {
-            List<Data.Module> mods = new List<Data.Module>();
-            if (lbModules.DataSource is List<Data.Module>) {
+            var mods = lbModules.DataSource as List<Module>;
+            if (mods != null) {
                 foreach (Data.Module m in mods) {
                     if (m.Name == className) {
                         tabModules.SuspendObservation = true;
