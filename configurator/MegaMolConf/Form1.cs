@@ -214,7 +214,7 @@ namespace MegaMolConf {
         }
 
         internal void AddModule(TabPage tabPage, string className, string instanceName) {
-            var mods = lbModules.DataSource as List<Module>;
+            var mods = lbModules.DataSource as List<Data.Module>;
             if (mods != null) {
                 foreach (Data.Module m in mods) {
                     if (m.Name == className) {
