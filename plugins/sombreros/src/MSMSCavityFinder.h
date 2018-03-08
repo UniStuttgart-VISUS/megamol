@@ -98,6 +98,9 @@ namespace sombreros {
         /** Param slots */
         core::param::ParamSlot distanceParam;
 
+        /** data hash */
+        SIZE_T dataHash;
+
         // variables for detecting new data
         int lastFrame;
         SIZE_T lastHashInner;

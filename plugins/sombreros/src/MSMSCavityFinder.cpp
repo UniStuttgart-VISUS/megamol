@@ -36,7 +36,7 @@ MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
         outerMeshInSlot("outerDataIn", "Receives the outer input mesh"),
         cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
         distanceParam("distance", "Mesh-mesh distance threshold for cavity detection"),
-        lastFrame(-1), lastHashInner(0), lastHashOuter(0) {
+        dataHash(0), lastFrame(-1), lastHashInner(0), lastHashOuter(0) {
 
     std::cout << std::endl << std::endl << "HERASRAEWRARAWSDJSÖALKDJÖLK" << std::endl << std::endl << std::endl;
 
@@ -195,12 +195,14 @@ bool MSMSCavityFinder::getData(Call& call) {
             }
         }
         this->cavityMesh.SetTriangleData(this->triaIndices.Count() / 3, &this->triaIndices[0], false);
+        this->dataHash++;
     }
 
     // TODO
     //outCall->SetObjects(static_cast<unsigned int>(this->meshVector.size()), this->meshVector.data());
     //outCall->SetObjects( inInnerCall->Count(), inInnerCall->Objects());
     outCall->SetObjects(1, &this->cavityMesh);
+    outCall->SetDataHash(this->dataHash);
 
     return true;
 }
