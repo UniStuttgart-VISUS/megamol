@@ -18,6 +18,7 @@
 #include "TunnelCutter.h"
 #include "SombreroWarper.h"
 #include "MSMSCavityFinder.h"
+#include "SombreroMeshRenderer.h"
 
 #include "TunnelResidueDataCall.h"
 
@@ -61,6 +62,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::sombreros::TunnelCutter>();
             this->module_descriptions.RegisterAutoDescription<megamol::sombreros::SombreroWarper>();
             this->module_descriptions.RegisterAutoDescription<megamol::sombreros::MSMSCavityFinder>();
+            this->module_descriptions.RegisterAutoDescription<megamol::sombreros::SombreroMeshRenderer>();
 
             // register calls here:
 

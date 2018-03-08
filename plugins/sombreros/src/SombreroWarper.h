@@ -211,6 +211,13 @@ namespace sombreros {
          */
         bool computeXZCoordinatePerVertex(void);
 
+        /**
+         * Divides the mesh in the brim and crown parts so that the lighting looks correct.
+         *
+         * @return True on success, false otherwise.
+         */
+        bool divideMeshForOutput(void);
+
         /** The lastly received data hash */
         SIZE_T lastDataHash;
 
@@ -250,12 +257,21 @@ namespace sombreros {
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
+        /** Vector containing the cut modified mesh data */
+        std::vector<geocalls::CallTriMeshData::Mesh> outMeshVector;
+
         /** The vertex positions of the mesh */
         std::vector<std::vector<float>> vertices;
 
         /** The vertex normals of the mesh */
         std::vector<std::vector<float>> normals;
+
+        /** The vertex normals of the crown */
+        std::vector<std::vector<float>> crownNormals;
         
+        /** The vertex normals of the brim */
+        std::vector<std::vector<float>> brimNormals;
+
         /** The vertex colors of the mesh */
         std::vector<std::vector<unsigned char>> colors;
 
@@ -273,6 +289,12 @@ namespace sombreros {
         
         /** The faces of the mesh */
         std::vector<std::vector<uint>> faces;
+
+        /** The faces of the brim */
+        std::vector<std::vector<uint>> brimFaces;
+
+        /** The faces of the crown */
+        std::vector<std::vector<uint>> crownFaces;
 
         /** The face edges in forward order */
         std::vector<std::vector<std::pair<uint, uint>>> edgesForward;

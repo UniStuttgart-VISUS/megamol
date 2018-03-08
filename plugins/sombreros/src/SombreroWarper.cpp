@@ -121,7 +121,7 @@ bool SombreroWarper::getData(Call& call) {
     inCall->SetFrameID(outCall->FrameID());
     tunnelCall->SetFrameID(outCall->FrameID());
 
-    outCall->SetObjects(static_cast<uint>(this->meshVector.size()), this->meshVector.data());
+    outCall->SetObjects(static_cast<uint>(this->outMeshVector.size()), this->outMeshVector.data());
 
     return true;
 }
@@ -179,15 +179,8 @@ bool SombreroWarper::getExtent(Call& call) {
         // set the surface normals to correct values
         if (!this->recomputeVertexNormals()) return false;
 
-        // reset the mesh vector
-        for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-            this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
-            this->meshVector[i].SetTriangleData(static_cast<uint>(this->faces[i].size() / 3), this->faces[i].data(), false);
-            this->meshVector[i].SetMaterial(nullptr);
-            this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
-            this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
-            this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
-        }
+        // cut the mesh into two parts
+        if (!this->divideMeshForOutput()) return false;
     }
 
     outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
@@ -2214,6 +2207,8 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 #endif
 
     bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
+    this->brimNormals = this->normals;
+    this->crownNormals = this->normals;
 
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
@@ -2244,24 +2239,33 @@ bool SombreroWarper::recomputeVertexNormals(void) {
         scaleInvTrans.Transpose();
 
         for (size_t j = 0; j < vert_cnt; j++) {
-            if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j)) > 0 || flatmode) {
+            vislib::math::Vector<float, 3> pos(&this->vertices[i][j * 3]);
+            vislib::math::Vector<float, 4> posA(pos[0], pos[1], pos[2], 1.0f);
+            // normalize the position so that the sombrero exit is at 0,0,0 and all vertices below it
+            pos[1] -= s_length / 2.0f;
+            auto spherePos = scaleInv * posA;
+            spherePos[3] = 0.0f;
+            auto n = scaleInvTrans * spherePos;
+            vislib::math::Vector<float, 3> normal(n.PeekComponents());
+            normal.Normalise();
+
+            if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j) > 0) || flatmode) {
                 this->normals[i][j * 3 + 0] = 0.0f;
                 this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;
             } else {
-                vislib::math::Vector<float, 3> pos(&this->vertices[i][j * 3]);
-                vislib::math::Vector<float, 4> posA(pos[0], pos[1], pos[2], 1.0f);
-                // normalize the position so that the sombrero exit is at 0,0,0 and all vertices below it
-                pos[1] -= s_length / 2.0f;
-                auto spherePos = scaleInv * posA;
-                spherePos[3] = 0.0f;
-                auto n = scaleInvTrans * spherePos;
-                vislib::math::Vector<float, 3> normal(n.PeekComponents());
-                normal.Normalise();
                 this->normals[i][j * 3 + 0] = normal[0];
                 this->normals[i][j * 3 + 1] = normal[1];
                 this->normals[i][j * 3 + 2] = normal[2];
             }
+
+            this->brimNormals[i][j * 3 + 0] = 0.0f;
+            this->brimNormals[i][j * 3 + 1] = -1.0f;
+            this->brimNormals[i][j * 3 + 2] = 0.0f;
+
+            this->crownNormals[i][j * 3 + 0] = normal[0];
+            this->crownNormals[i][j * 3 + 1] = normal[1];
+            this->crownNormals[i][j * 3 + 2] = normal[2];
         }
 
     #if 0 // normal as color
@@ -2271,6 +2275,82 @@ bool SombreroWarper::recomputeVertexNormals(void) {
             this->colors[i][j * 3 + 2] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 2]));
         }
     #endif
+    }
+
+    if (flatmode) {
+        crownNormals = brimNormals;
+    }
+
+    return true;
+}
+
+/*
+ * SombreroWarper::divideMeshForOutput
+ */
+bool SombreroWarper::divideMeshForOutput(void) {
+
+    // reset the mesh vector
+    for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+        this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
+        this->meshVector[i].SetTriangleData(static_cast<uint>(this->faces[i].size() / 3), this->faces[i].data(), false);
+        this->meshVector[i].SetMaterial(nullptr);
+        this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
+        this->meshVector[i].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
+        this->meshVector[i].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
+    }
+
+    for (size_t i = 0; i < this->meshVector.size(); i++) {
+        // detect the vertices marking the transition between hat and brim
+        std::set<uint> innerBorderSet;
+        // go through all forward edges, if one vertex is on the brim and one is not, take the second one
+        for (auto e : this->edgesForward[i]) {
+            if (this->brimFlags[i][e.first] && !this->brimFlags[i][e.second]) {
+                innerBorderSet.insert(e.second);
+            } else if (!this->brimFlags[i][e.first] && this->brimFlags[i][e.second]) {
+                innerBorderSet.insert(e.first);
+            }
+        }
+    }
+
+    // copy the necessary faces
+    this->crownFaces.resize(this->faces.size());
+    this->brimFaces.resize(this->faces.size());
+    for (size_t i = 0; i < this->faces.size(); i++) {
+        this->crownFaces[i].clear();
+        this->brimFaces[i].clear();
+        for (size_t j = 0; j < this->faces[i].size() / 3; j++) {
+            uint v0 = this->faces[i][3 * j + 0];
+            uint v1 = this->faces[i][3 * j + 1];
+            uint v2 = this->faces[i][3 * j + 2];
+
+            if (this->brimFlags[i][v0] || this->brimFlags[i][v1] || this->brimFlags[i][v2]) {
+                this->brimFaces[i].push_back(v0);
+                this->brimFaces[i].push_back(v1);
+                this->brimFaces[i].push_back(v2);
+            } else {
+                this->crownFaces[i].push_back(v0);
+                this->crownFaces[i].push_back(v1);
+                this->crownFaces[i].push_back(v2);
+            }
+        }
+    }
+
+    this->outMeshVector.resize(2 * this->meshVector.size());
+
+    // reset the mesh vector
+    for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
+        this->outMeshVector[i * 2 + 0].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->brimNormals[i].data(), this->colors[i].data(), nullptr, false);
+        this->outMeshVector[i * 2 + 1].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->crownNormals[i].data(), this->colors[i].data(), nullptr, false);
+        this->outMeshVector[i * 2 + 0].SetTriangleData(static_cast<uint>(this->brimFaces[i].size() / 3), this->brimFaces[i].data(), false);
+        this->outMeshVector[i * 2 + 1].SetTriangleData(static_cast<uint>(this->crownFaces[i].size() / 3), this->crownFaces[i].data(), false);
+        this->outMeshVector[i * 2 + 0].SetMaterial(nullptr);
+        this->outMeshVector[i * 2 + 1].SetMaterial(nullptr);
+        this->outMeshVector[i * 2 + 0].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
+        this->outMeshVector[i * 2 + 1].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
+        this->outMeshVector[i * 2 + 0].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
+        this->outMeshVector[i * 2 + 1].AddVertexAttribPointer(this->vertexLevelAttachment[i].data());
+        this->outMeshVector[i * 2 + 0].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
+        this->outMeshVector[i * 2 + 1].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
     }
 
     return true;
