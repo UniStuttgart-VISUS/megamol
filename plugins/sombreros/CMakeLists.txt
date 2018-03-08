@@ -26,10 +26,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   set(LIBS vislib core glad protein_calls geometry_calls libtess2)
   if(MSVC)
-    include_directories("include" "src" "src/helper_includes")
+    include_directories("include" "src" "src/helper_includes" "3rd/nanoflann")
   else()
     get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
-    include_directories("include" "src" "src/helper_includes" ${CUDA_BIN_DIR}/../include)
+    include_directories("include" "src" "src/helper_includes" "3rd/nanoflann" ${CUDA_BIN_DIR}/../include)
     add_definitions(-D__CUDACC__)
   endif()
 
