@@ -223,14 +223,19 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
             //glEnableClientState(GL_COLOR_ARRAY);
             //glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            declaration = "    vec3 color;\n";
-            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].color, 1.0); \n";
+            declaration = "    float r; float g; float b;\n";
+            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
             //glEnableClientState(GL_COLOR_ARRAY);
             //glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            declaration = "    vec4 color;\n";
-            code = "    theColor = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].color;\n";
+            declaration = "    float r; float g; float b; float a;\n";
+            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
             //glEnableVertexAttribArrayARB(colIdxAttribLoc);
@@ -376,17 +381,17 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             makeColorString(parts, colCode, colDecl);
             std::string decl = "\nstruct SphereParams {\n";
 
-            if (vertStride > vertBytes) {
-                unsigned int rest = (vertStride - vertBytes);
-                if (rest % 4 == 0) {
-                    char heinz[128];
-                    while (rest > 0) {
-                        sprintf(heinz, "    float padding%u;\n", rest);
-                        decl += heinz;
-                        rest -= 4;
-                    }
-                }
-            }
+            //if (vertStride > vertBytes) {
+            //    unsigned int rest = (vertStride - vertBytes);
+            //    if (rest % 4 == 0) {
+            //        char heinz[128];
+            //        while (rest > 0) {
+            //            sprintf(heinz, "    float padding%u;\n", rest);
+            //            decl += heinz;
+            //            rest -= 4;
+            //        }
+            //    }
+            //}
 
             if (parts.GetColourData() < parts.GetVertexData()) {
                 decl += colDecl;

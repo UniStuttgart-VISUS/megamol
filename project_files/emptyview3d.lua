@@ -1,0 +1,1 @@
+mmCreateView("emptyview3d", "View3D", "view")

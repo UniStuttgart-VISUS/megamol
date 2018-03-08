@@ -15,7 +15,8 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+//#include "vislib/graphics/gl/SimpleFont.h"
+#include "mmcore/utility/SDFFont.h"
 #include <map>
 
 namespace megamol {
@@ -278,7 +279,7 @@ namespace infovis {
         GLint strokeWorkgroupSize[3];
         GLint maxWorkgroupCount[3];
 
-        vislib::graphics::gl::SimpleFont font;
+        megamol::core::utility::SDFFont font;
     };
 
 } /* end namespace infovis */

@@ -108,4 +108,5 @@ print "rewriting bounding boxes...\n";
 
 foreach my $f (@files) {
     $f->OverrideBBox($minx,$miny,$minz,$maxx,$maxy,$maxz);
+    $f->Close();
 }
