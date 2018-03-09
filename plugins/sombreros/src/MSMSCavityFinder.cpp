@@ -202,6 +202,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         this->dataHash++;
 
         // --- find connected trianges forming independent submeshes (i.e., cavities) ---
+        this->cavitySubmeshes.SetCount(0);
         // for each vertex, collect all connected faces
         vislib::Array<vislib::Array<unsigned int> > facesPerVertex;
         facesPerVertex.SetCount(this->cavityMesh.GetVertexCount());
@@ -267,7 +268,35 @@ bool MSMSCavityFinder::getData(Call& call) {
                 vi++;
 
             }
-            // DEBUG HACK!!
+
+            if (currentMeshVertices.Count() > 0) {
+                // temporary list of tringle indices
+                std::vector<unsigned int> tmpTriaIndices;
+                // copy all triangle indices of all vertices to the temporary list
+                for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
+                    // iterate over all triangles connected to the current face
+                    for (unsigned int ti = 0; ti < facesPerVertex[currentMeshVertices[i]].Count(); ti++) {
+                        tmpTriaIndices.push_back(facesPerVertex[currentMeshVertices[i]][ti]);
+                    }
+                }
+                // sort triangle indices
+                std::sort(tmpTriaIndices.begin(), tmpTriaIndices.end());
+                // remove duplicate triangle indices
+                auto end = std::unique(tmpTriaIndices.begin(), tmpTriaIndices.end());
+                // copy triangles (vertex indices) to new list
+                auto triaCnt = end - tmpTriaIndices.begin();
+                unsigned int *tmpTrias = new unsigned int[triaCnt * 3];
+                for (unsigned int i = 0; i < triaCnt; i++) {
+                    unsigned int triaIdx = tmpTriaIndices[i];
+                    tmpTrias[i * 3 + 0] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 0];
+                    tmpTrias[i * 3 + 1] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1];
+                    tmpTrias[i * 3 + 2] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2];
+                }
+                this->cavitySubmeshes.Add(this->cavityMesh);
+                this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
+            }
+
+            // DEBUG COLOR HACK!!
             //auto color = const_cast<unsigned char*>(this->cavityMesh.GetColourPointerByte());
             //float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
             //for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
@@ -276,16 +305,16 @@ bool MSMSCavityFinder::getData(Call& call) {
             //    color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
             //    color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
             //}
-            // END DEBUG HACK!!
+            // END DEBUG COLOR HACK!!
         }
         // --- END find connected trianges forming independent submeshes (i.e., cavities) ---
 
     } // END only recompute vertex distances if something has changed
 
-    // TODO
-    //outCall->SetObjects(static_cast<unsigned int>(this->meshVector.size()), this->meshVector.data());
+    // assign cavity meshes to outgoing call
     //outCall->SetObjects( inInnerCall->Count(), inInnerCall->Objects());
-    outCall->SetObjects(1, &this->cavityMesh);
+    //outCall->SetObjects(1, &this->cavityMesh);
+    outCall->SetObjects(this->cavitySubmeshes.Count(), this->cavitySubmeshes.PeekElements());
     outCall->SetDataHash(this->dataHash);
 
     return true;
