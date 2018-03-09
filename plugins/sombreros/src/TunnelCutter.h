@@ -113,6 +113,9 @@ namespace sombreros {
         /** The lastly received data hash */
         SIZE_T lastDataHash;
 
+        /** The lastly received cavity data hash */
+        SIZE_T lastCavityDataHash;
+
         /** The offset to the lastly received hash */
         SIZE_T hashOffset;
 
@@ -130,6 +133,9 @@ namespace sombreros {
 
         /** Slot for the mesh input. */
         core::CallerSlot meshInSlot;
+
+        /** Slot for the cavity mesh input */
+        core::CallerSlot cavityMeshInSlot;
 
         /** Slot for the tunnel input */
         core::CallerSlot tunnelInSlot;

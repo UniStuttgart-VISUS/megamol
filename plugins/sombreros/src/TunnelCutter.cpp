@@ -29,6 +29,7 @@ using namespace megamol::protein_calls;
  */
 TunnelCutter::TunnelCutter(void) : Module(),
         meshInSlot("dataIn", "Receives the input mesh"),
+        cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh"),
         cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
         tunnelInSlot("tunnelIn", "Receives the input tunnel data"),
         moleculeInSlot("molIn", "Receives the input molecular data"),
@@ -46,6 +47,9 @@ TunnelCutter::TunnelCutter(void) : Module(),
     // Caller slots
     this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->meshInSlot);
+
+    this->cavityMeshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->MakeSlotAvailable(&this->cavityMeshInSlot);
 
     this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
     this->MakeSlotAvailable(&this->tunnelInSlot);
@@ -71,6 +75,7 @@ TunnelCutter::TunnelCutter(void) : Module(),
 
     // other variables
     this->lastDataHash = 0;
+    this->lastCavityDataHash = 0;
     this->hashOffset = 0;
     this->dirt = false;
 }
@@ -105,6 +110,9 @@ bool TunnelCutter::getData(Call& call) {
     CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
+    CallTriMeshData * inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
+    if (inCav == nullptr) return false;
+
     TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tc == nullptr) return false;
 
@@ -119,6 +127,7 @@ bool TunnelCutter::getData(Call& call) {
     mdc->SetFrameID(outCall->FrameID());
 
     if (!(*inCall)(0)) return false;
+    if (!(*inCav)(0)) return false;
     if (!(*tc)(0)) return false;
     if (!(*mdc)(0)) return false;
     if (!(*bsc)(0)) return false;
@@ -155,6 +164,9 @@ bool TunnelCutter::getExtent(Call& call) {
     CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
+    CallTriMeshData * inCav = this->meshInSlot.CallAs<CallTriMeshData>();
+    if (inCav == nullptr) return false;
+
     TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tc == nullptr) return false;
 
@@ -162,10 +174,12 @@ bool TunnelCutter::getExtent(Call& call) {
     if (mdc == nullptr) return false;
 
     inCall->SetFrameID(outCall->FrameID());
+    inCav->SetFrameID(outCall->FrameID());
     tc->SetFrameID(outCall->FrameID());
     mdc->SetFrameID(outCall->FrameID());
 
     if (!(*inCall)(1)) return false;
+    if (!(*inCav)(1)) return false;
     if (!(*tc)(1)) return false;
     if (!(*mdc)(1)) return false;
 
@@ -183,7 +197,12 @@ bool TunnelCutter::getExtent(Call& call) {
         this->lastDataHash = inCall->DataHash();
     }
 
-    outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
+    if (inCav->DataHash() != this->lastCavityDataHash) {
+        this->dirt = true;
+        this->lastCavityDataHash = inCav->DataHash();
+    }
+
+    outCall->SetDataHash(inCall->DataHash() + inCav->DataHash() + this->hashOffset);
     outCall->SetFrameCount(inCall->FrameCount());
     outCall->SetExtent(inCall->FrameCount(), inCall->AccessBoundingBoxes());
 

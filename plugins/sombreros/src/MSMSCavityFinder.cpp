@@ -42,8 +42,6 @@ MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
         distanceParam("distance", "Mesh-mesh distance threshold for cavity detection"),
         dataHash(0), lastFrame(-1), lastHashInner(0), lastHashOuter(0) {
 
-    std::cout << std::endl << std::endl << "HERASRAEWRARAWSDJSÖALKDJÖLK" << std::endl << std::endl << std::endl;
-
     // Callee slot
     this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &MSMSCavityFinder::getData);
     this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &MSMSCavityFinder::getExtent);
@@ -294,18 +292,21 @@ bool MSMSCavityFinder::getData(Call& call) {
                 }
                 this->cavitySubmeshes.Add(this->cavityMesh);
                 this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
+
+            #if 1
+                // DEBUG COLOR HACK!!
+                auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
+                float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
+                for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
+                    int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
+                    color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
+                    color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
+                    color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
+                }
+                // END DEBUG COLOR HACK!!
+            #endif
             }
 
-            // DEBUG COLOR HACK!!
-            //auto color = const_cast<unsigned char*>(this->cavityMesh.GetColourPointerByte());
-            //float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
-            //for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
-            //    int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
-            //    color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
-            //    color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
-            //    color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
-            //}
-            // END DEBUG COLOR HACK!!
         }
         // --- END find connected trianges forming independent submeshes (i.e., cavities) ---
 
