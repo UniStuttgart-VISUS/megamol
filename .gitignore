@@ -1,4 +1,5 @@
 build/**/*
+build-intel/**/*
 bin/**/*
 include/**/*
 external/**/*
