@@ -109,7 +109,7 @@ namespace sombreros {
         std::vector<float> distanceToMesh;
         megamol::geocalls::CallTriMeshData::Mesh cavityMesh;
         vislib::Array<unsigned int> triaIndices;
-
+        vislib::Array<megamol::geocalls::CallTriMeshData::Mesh> cavitySubmeshes;
     };
 
 } /* end namespace sombreros */
