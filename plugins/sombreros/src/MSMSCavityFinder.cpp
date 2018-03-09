@@ -194,9 +194,91 @@ bool MSMSCavityFinder::getData(Call& call) {
                 triaIndices.Add(idx2);
             }
         }
+
+        // set the triangle data to the output mesh
         this->cavityMesh.SetTriangleData(this->triaIndices.Count() / 3, &this->triaIndices[0], false);
         this->dataHash++;
-    }
+
+        // --- find connected trianges forming independent submeshes (i.e., cavities) ---
+        // for each vertex, collect all connected faces
+        vislib::Array<vislib::Array<unsigned int> > facesPerVertex;
+        facesPerVertex.SetCount(this->cavityMesh.GetVertexCount());
+        for (unsigned int triaIdx = 0; triaIdx < this->cavityMesh.GetTriCount(); triaIdx++) {
+            facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 0]].Add(triaIdx);
+            facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1]].Add(triaIdx);
+            facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2]].Add(triaIdx);
+        }
+        //reset the mesh ID for all vertices
+        vislib::Array<int> vertexMeshId;
+        vertexMeshId.SetCount(this->cavityMesh.GetVertexCount());
+        int currentMeshId = -1;
+        for (unsigned int vertIdx = 0; vertIdx < this->cavityMesh.GetVertexCount(); vertIdx++) {
+            vertexMeshId[vertIdx] = -1;
+        }
+        // iterate over all vertices to propagate the mesh index
+        vislib::Array<unsigned int> currentMeshVertices;
+        for (unsigned int vertIdx = 0; vertIdx < this->cavityMesh.GetVertexCount(); vertIdx++) {
+            currentMeshVertices.Clear();
+            currentMeshVertices.AssertCapacity(this->cavityMesh.GetVertexCount());
+            // does the current vertex have any faces connected?
+            if (facesPerVertex[vertIdx].Count() < 1) {
+                continue;
+            }
+            // does the current vertex already have a mesh id assigned?
+            if (vertexMeshId[vertIdx] < 0) {
+                // if not: proceed to next mesh id
+                currentMeshId++;
+            } else {
+                // otherwise: proceed
+                continue;
+            }
+            // add the current vertex to the list of vertices that belong to the same mesh
+            currentMeshVertices.Add(vertIdx);
+            // assign the new mesh id to the current vetex
+            vertexMeshId[vertIdx] = currentMeshId;
+            unsigned int vi = 0;
+            // add all new vertices connected to the current one via a triangle to the mesh
+            while (vi < currentMeshVertices.Count()) {
+                // iterate over all triangles connected to the current face
+                for (unsigned int ti = 0; ti < facesPerVertex[currentMeshVertices[vi]].Count(); ti++) {
+                    unsigned int triaIdx = facesPerVertex[currentMeshVertices[vi]][ti];
+                    // get vertex indices of the current triangle
+                    unsigned int idx0 = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 0];
+                    unsigned int idx1 = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1];
+                    unsigned int idx2 = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2];
+                    // add all vertices that have not yet been processed to the list of connected triangles
+                    if (vertexMeshId[idx0] < 0) {
+                        currentMeshVertices.Add(idx0);
+                        vertexMeshId[idx0] = currentMeshId;
+                    }
+                    if (vertexMeshId[idx1] < 0) {
+                        currentMeshVertices.Add(idx1);
+                        vertexMeshId[idx1] = currentMeshId;
+                    }
+                    if (vertexMeshId[idx2] < 0) {
+                        currentMeshVertices.Add(idx2);
+                        vertexMeshId[idx2] = currentMeshId;
+                    }
+                }
+
+                // go to the next vertex in the list of vertices belonging to the current mesh
+                vi++;
+
+            }
+            // DEBUG HACK!!
+            //auto color = const_cast<unsigned char*>(this->cavityMesh.GetColourPointerByte());
+            //float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
+            //for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
+            //    int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
+            //    color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
+            //    color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
+            //    color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
+            //}
+            // END DEBUG HACK!!
+        }
+        // --- END find connected trianges forming independent submeshes (i.e., cavities) ---
+
+    } // END only recompute vertex distances if something has changed
 
     // TODO
     //outCall->SetObjects(static_cast<unsigned int>(this->meshVector.size()), this->meshVector.data());
