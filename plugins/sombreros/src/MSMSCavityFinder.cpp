@@ -19,8 +19,12 @@
 #include <cfloat>
 #include <iostream>
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#pragma warning(disable : 4267)
 #include "nanoflann.hpp"
 #include "utils.h"
+#pragma warning(pop)
 
 using namespace megamol;
 using namespace megamol::core;
@@ -194,9 +198,7 @@ bool MSMSCavityFinder::getData(Call& call) {
                 triaIndices.Add(idx2);
             }
         }
-
-        // set the triangle data to the output mesh
-        this->cavityMesh.SetTriangleData(this->triaIndices.Count() / 3, &this->triaIndices[0], false);
+        this->cavityMesh.SetTriangleData(static_cast<uint>(this->triaIndices.Count() / 3), &this->triaIndices[0], false);
         this->dataHash++;
 
         // --- find connected trianges forming independent submeshes (i.e., cavities) ---
