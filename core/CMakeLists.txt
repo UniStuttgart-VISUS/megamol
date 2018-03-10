@@ -85,9 +85,7 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  if(UNIX)
-    find_package(OpenMP)
-  endif()
+  find_package(OpenMP)
 
   find_package(MPI)
 
