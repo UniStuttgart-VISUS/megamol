@@ -88,27 +88,17 @@ namespace sombreros {
     private:
 
         /** 
-         * Cuts away unnecessary parts from the mesh and writes the result into the meshVector
-         *
-         * @param meshCall The call containing the input mesh. 
-         * @param tunnelCall The call containing the tunnel data the cut region is based on.
-         * @param molCall The call containing the molecular data.
-         * @param bsCall The call containing the binding site data.
-         * @return True on success, false otherwise.
-         */
-        bool cutMesh(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
-
-        /** 
          * Cuts away unnecessary parts from the mesh and writes the result into the meshVector.
          * This method tries to cut the mesh equally so that the amount of geometry around the binding site stays the same in all directions
          *
          * @param meshCall The call containing the input mesh. 
+         * @param cavityMeshCall The call containing the input cavity mesh.
          * @param tunnelCall The call containing the tunnel data the cut region is based on.
          * @param molCall The call containing the molecular data.
          * @param bsCall The call containing the binding site data.
          * @return True on success, false otherwise.
          */
-        bool cutMeshEqually(geocalls::CallTriMeshData * meshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+        bool cutMeshEqually(geocalls::CallTriMeshData * meshCall, geocalls::CallTriMeshData * cavityMeshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
 
         /** The lastly received data hash */
         SIZE_T lastDataHash;
@@ -127,9 +117,6 @@ namespace sombreros {
 
         /** Parameter slot for the selected tunnel */
         core::param::ParamSlot tunnelIdParam;
-
-        /** Parameter slot for the alternative cutting approach */
-        core::param::ParamSlot alternativeCuttingParam;
 
         /** Slot for the mesh input. */
         core::CallerSlot meshInSlot;
@@ -153,28 +140,28 @@ namespace sombreros {
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
         /** Vector containing the information for each vertex whether to keep it or not */
-        std::vector<std::vector<bool>> vertexKeepFlags;
+        std::vector<bool> vertexKeepFlags;
 
         /** Container for the kept vertices */
-        std::vector<std::vector<float>> vertices;
+        std::vector<float> vertices;
 
         /** Container for the kept vertex normals */
-        std::vector<std::vector<float>> normals;
+        std::vector<float> normals;
 
         /** Container for the kept colors */
-        std::vector<std::vector<unsigned char>> colors;
+        std::vector<unsigned char> colors;
 
         /** Container for the kept atom index vertex attributes */
-        std::vector<std::vector<unsigned int>> attributes;
+        std::vector<unsigned int> attributes;
 
         /** Container for the kept vertex level attributes */
-        std::vector<std::vector<unsigned int>> levelAttributes;
+        std::vector<unsigned int> levelAttributes;
 
         /** Container for the kept binding site distance attributes */
-        std::vector<std::vector<unsigned int>> bindingDistanceAttributes;
+        std::vector<unsigned int> bindingDistanceAttributes;
 
         /** Container for the kept faces */
-        std::vector<std::vector<unsigned int>> faces;
+        std::vector<unsigned int> faces;
 
         /** Dirty flag */
         bool dirt;

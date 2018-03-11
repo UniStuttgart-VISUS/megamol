@@ -409,14 +409,13 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
         }
     }
 
-	if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
-		ctmd->SetDataHash(this->datahash);
+    if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
+        ctmd->SetDataHash(this->datahash);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
-		ctmd->SetUnlocker(NULL);
-		this->prevTime = int(ctmd->FrameID());
-		return true;
-	}
-	else {
+        ctmd->SetUnlocker(NULL);
+        this->prevTime = int(ctmd->FrameID());
+        return true;
+    } else {
 		return false;
 	}
 }
@@ -647,7 +646,7 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         }
 
         // set mesh object
-        if (this->obj.Count() < frameID) {
+         if (this->obj.Count() < frameID) {
             return false;
         }
         this->obj[frameID]->SetVertexData(this->vertexCount, vertex, normal, color, NULL, true);
