@@ -70,6 +70,8 @@
 #include "DensityProfile.h"
 #include "ParticleSlice.h"
 #include "ParticleVelocitiesDirAnalyzer.h"
+#include "LinesToFloatTable.h"
+#include "floattable/CSVDataWriter.h"
 
 
 /*
@@ -203,6 +205,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DensityProfile>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSlice>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LinesToFloatTable>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataWriter>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

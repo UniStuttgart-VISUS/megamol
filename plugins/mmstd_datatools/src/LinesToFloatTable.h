@@ -12,14 +12,14 @@ namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-class LinesToCSV : public megamol::core::Module {
+class LinesToFloatTable : public megamol::core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static char const* ClassName(void) { return "LinesToCSV"; }
+    static char const* ClassName(void) { return "LinesToFloatTable"; }
 
     /**
      * Answer a human readable description of this module.
@@ -36,10 +36,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    LinesToCSV(void);
+    LinesToFloatTable(void);
 
     /** Dtor. */
-    virtual ~LinesToCSV(void);
+    virtual ~LinesToFloatTable(void);
 
 protected:
     /** Lazy initialization */
@@ -63,7 +63,9 @@ private:
 
     size_t datahash;
 
-}; /* end class LinesToCSV */
+    std::vector<float> data;
+
+}; /* end class LinesToFloatTable */
 
 } /* end namespace datatools */
 } /* end namespace stdplugin */

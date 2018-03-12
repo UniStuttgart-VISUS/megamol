@@ -24,7 +24,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Binary float table data file writer"; }
+    static const char* Description(void) { return "Float table data file writer"; }
 
     /**
      * Answers whether this module is available on the current system.

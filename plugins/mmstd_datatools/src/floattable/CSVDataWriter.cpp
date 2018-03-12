@@ -80,7 +80,7 @@ bool megamol::stdplugin::datatools::floattable::CSVDataWriter::run(void) {
     for (uint64_t r = 0; r < rowCnt; ++r) {
         std::string buf;
         for (uint32_t c = 0; c < colCnt; ++c) {
-            buf += std::to_string(data[r + c * rowCnt]);
+            buf += std::to_string(data[c + r * colCnt]);
             if (c < colCnt - 1) {
                 buf += ", ";
             }
