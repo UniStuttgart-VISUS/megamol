@@ -12,9 +12,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
   
-  if(UNIX)
-    find_package(OpenMP)
-  endif()
+  find_package(OpenMP)
 
   set(LIBS vislib core glad)
   include_directories("include" "src" "3rd/nanoflann")
