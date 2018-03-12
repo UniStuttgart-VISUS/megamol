@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
@@ -164,29 +165,29 @@ namespace MegaMolConf {
             System.Threading.Thread.Sleep(100);
 
             if (Connection != null && Connection.Valid) {
+                List<string> foundInstances = new List<string>();
                 do {
                     res = Request("return mmListInstantiations()", ref ans);
                     if (String.IsNullOrWhiteSpace(res)) {
                         var insts = ((string) ans).Split(new char[] {'\n'}, StringSplitOptions.None);
-                        List<string> i2 = new List<string>();
                         foreach (var i in insts) {
                             if (!String.IsNullOrEmpty(i)) {
-                                i2.Add(i);
+                                foundInstances.Add(i);
                             }
                         }
 
-                        if (i2.Count == 0) {
+                        if (foundInstances.Count == 0) {
                             ParentForm.SetTabInstantiation(TabPage, "");
-                        } // else if (i2.Count == 1) {
-                        //  ParentForm.SetTabInstantiation(TabPage, i2[0]);
-                        //    } 
+                        } else if (foundInstances.Count == 1 && !ReadGraphFromInstance) {
+                            ParentForm.SetTabInstantiation(TabPage, foundInstances[0]);
+                        } 
                         else {
-                            ParentForm.ChooseInstantiation(TabPage, i2.ToArray());
+                            ParentForm.ChooseInstantiation(TabPage, foundInstances.ToArray());
                         }
                     }
 
                     System.Threading.Thread.Sleep(1000);
-                } while (String.IsNullOrEmpty(ParentForm.TabInstantiation(TabPage)));
+                } while (foundInstances.Count == 0);
 
                 if (ReadGraphFromInstance) {
                     if (string.IsNullOrEmpty(ParentForm.TabInstantiation(TabPage))) {
@@ -396,7 +397,8 @@ namespace MegaMolConf {
             if (gm != null) {
                 string prefix = $"{ParentForm.TabInstantiation(TabPage)}::{gm.Name}::";
                 object ans = null;
-                string ret = Request($"return mmSetParamValue(\"{prefix}{p}\",\"{v}\")", ref ans);
+                string val = v.Replace("\\", "\\\\");
+                string ret = Request($"return mmSetParamValue(\"{prefix}{p}\",\"{val}\")", ref ans);
             }
         }
 
