@@ -43,7 +43,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
         flatteningParam("flat", "Flat representation of the result"),
         southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do."),
         southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."), 
-        invertNormalParam("invertNormals", "Inverts the surface normals") {
+        invertNormalParam("invertNormals", "Inverts the surface normals"),
+        fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices"),
+        meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -81,6 +83,12 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->invertNormalParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->invertNormalParam);
+
+    this->meshFixDistanceParam.SetParameter(new param::FloatParam(2.0f, 0.01f));
+    this->MakeSlotAvailable(&this->meshFixDistanceParam);
+
+    this->fixMeshParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->fixMeshParam);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -179,10 +187,16 @@ bool SombreroWarper::getExtent(Call& call) {
         // recompute the broken vertex distances
         if (!this->recomputeVertexDistances()) return false;
 
+        // compute the Rahi & Sharp angles
         if (!this->computeVertexAngles(*tunnelCall)) return false;
 
         // warp the mesh in the correct position
         if (!this->warpMesh(*tunnelCall)) return false;
+
+        // if needed, fix the mesh
+        if (this->fixMeshParam.Param<param::BoolParam>()->Value()) {
+            if (!this->fixBrokenMeshParts(this->meshFixDistanceParam.Param<param::FloatParam>()->Value())) return false;
+        }
 
         // set the surface normals to correct values
         if (!this->recomputeVertexNormals()) return false;
@@ -235,6 +249,14 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->invertNormalParam.IsDirty()) {
         this->invertNormalParam.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->meshFixDistanceParam.IsDirty()) {
+        this->meshFixDistanceParam.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->fixMeshParam.IsDirty()) {
+        this->fixMeshParam.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -2384,4 +2406,58 @@ bool SombreroWarper::divideMeshForOutput(void) {
     }
 
     return true;
+}
+
+/*
+ * SombreroWarper::fixBrokenMeshParts
+ */
+bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
+    
+    for (size_t i = 0; i < this->meshVector.size(); i++) {
+        std::set<uint> outerBorderSet = std::set<uint>(this->brimIndices[i].begin(), this->brimIndices[i].end());
+        for (size_t v = 0; v < this->vertices[i].size() / 3; v++) {
+            std::vector<uint> neighbors;
+            // find the indices of the neighboring vertices
+            auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][v].first;
+            auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][v].second;
+            while (forward != edgesForward[i].end() && (*forward).first == v) {
+                auto target = (*forward).second;
+                neighbors.push_back(target);
+                forward++;
+            }
+            while (reverse != edgesReverse[i].end() && (*reverse).first == v) {
+                auto target = (*reverse).second;
+                neighbors.push_back(target);
+                reverse++;
+            }
+            std::unique(neighbors.begin(), neighbors.end());
+
+            uint tooLongCount = 0;
+            vislib::math::Vector<float, 3> neighavg(0.0f, 0.0f, 0.0f);
+            vislib::math::Vector<float, 3> mypos(&this->vertices[i][3 * v]);
+            for (auto t : neighbors) {
+                vislib::math::Vector<float, 3> neighpos(&this->vertices[i][3 * t]);
+                neighavg += neighpos;
+                if ((mypos - neighpos).Length() > maxDistance) {
+                    tooLongCount++;
+                }
+            }
+            neighavg /= static_cast<float>(neighbors.size());
+
+            if ((mypos - neighavg).Length() > maxDistance && outerBorderSet.count(v) == 0) {
+                this->vertices[i][3 * v + 0] = neighavg[0];
+                this->vertices[i][3 * v + 1] = neighavg[1];
+                this->vertices[i][3 * v + 2] = neighavg[2];
+
+                //for (auto t : neighbors) {
+                //    this->colors[i][3 * t + 0] = 255;
+                //    this->colors[i][3 * t + 1] = 0;
+                //    this->colors[i][3 * t + 2] = 0;
+                //}
+                //this->colors[i][3 * v + 0] = 0;
+                //this->colors[i][3 * v + 1] = 0;
+                //this->colors[i][3 * v + 2] = 255;
+            }
+        }
+    }
 }

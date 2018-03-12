@@ -178,6 +178,14 @@ namespace sombreros {
         bool recomputeVertexNormals(void);
 
         /**
+         * Fixes the broken parts of the mesh
+         *
+         * @param maxDist The maximum allowed distance from the average position of the neighbors
+         * @return True on success, false otherwise
+         */
+        bool fixBrokenMeshParts(float maxDist);
+
+        /**
          * Computes the angles for each vertex using an adapted method by rahi and sharp
          *
          * @param The call containing the tunnel data.
@@ -256,6 +264,12 @@ namespace sombreros {
 
         /** Param switch for normal inversion */
         core::param::ParamSlot invertNormalParam;
+
+        /** Param switch for the mesh fixing */
+        core::param::ParamSlot fixMeshParam;
+
+        /** The maximum allowed distance before the mesh is fixed */
+        core::param::ParamSlot meshFixDistanceParam;
 
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
