@@ -42,7 +42,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
         maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed."),
         flatteningParam("flat", "Flat representation of the result"),
         southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do."),
-        southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."){
+        southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."), 
+        invertNormalParam("invertNormals", "Inverts the surface normals") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -77,6 +78,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->southBorderHeightFactor.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->southBorderHeightFactor);
+
+    this->invertNormalParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->invertNormalParam);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -223,6 +227,10 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->southBorderHeightFactor.IsDirty()) {
         this->southBorderHeightFactor.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->invertNormalParam.IsDirty()) {
+        this->invertNormalParam.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -2209,6 +2217,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 #endif
 
     bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
+    bool invnormmode = this->invertNormalParam.Param<param::BoolParam>()->Value();
     this->brimNormals = this->normals;
     this->crownNormals = this->normals;
 
@@ -2251,10 +2260,17 @@ bool SombreroWarper::recomputeVertexNormals(void) {
             vislib::math::Vector<float, 3> normal(n.PeekComponents());
             normal.Normalise();
 
+            if (invnormmode) {
+                normal = -normal;
+            }
+
             if (this->brimFlags[i][j] || innerBorderSet.count(static_cast<uint>(j) > 0) || flatmode) {
                 this->normals[i][j * 3 + 0] = 0.0f;
                 this->normals[i][j * 3 + 1] = -1.0f;
                 this->normals[i][j * 3 + 2] = 0.0f;
+                if (invnormmode) {
+                    this->normals[i][j * 3 + 1] = 1.0f;
+                }
             } else {
                 this->normals[i][j * 3 + 0] = normal[0];
                 this->normals[i][j * 3 + 1] = normal[1];
@@ -2264,6 +2280,10 @@ bool SombreroWarper::recomputeVertexNormals(void) {
             this->brimNormals[i][j * 3 + 0] = 0.0f;
             this->brimNormals[i][j * 3 + 1] = -1.0f;
             this->brimNormals[i][j * 3 + 2] = 0.0f;
+
+            if (invnormmode) {
+                this->brimNormals[i][j * 3 + 1] = 1.0f;
+            }
 
             this->crownNormals[i][j * 3 + 0] = normal[0];
             this->crownNormals[i][j * 3 + 1] = normal[1];

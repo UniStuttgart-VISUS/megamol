@@ -254,6 +254,9 @@ namespace sombreros {
         /** Height factor for the souther border */
         core::param::ParamSlot southBorderHeightFactor;
 
+        /** Param switch for normal inversion */
+        core::param::ParamSlot invertNormalParam;
+
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
