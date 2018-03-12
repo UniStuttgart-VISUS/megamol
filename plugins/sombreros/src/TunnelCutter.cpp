@@ -433,50 +433,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         return false;
     }
 
-    //auto pff = EstimateBindingSitePosition(molCall, bsCall);
-
-    // get the atom indices for the binding site
-    unsigned int firstMol;
-    unsigned int firstRes;
-    unsigned int firstAtom;
-    std::vector<vislib::math::Vector<float, 3>> atomPositions; // the atom positions
-    std::set<int> atx; // the atom indices
-    for (unsigned int cCnt = 0; cCnt < molCall->ChainCount(); cCnt++) {
-        firstMol = molCall->Chains()[cCnt].FirstMoleculeIndex();
-        for (unsigned int mCnt = firstMol; mCnt < firstMol + molCall->Chains()[cCnt].MoleculeCount(); mCnt++) {
-            firstRes = molCall->Molecules()[mCnt].FirstResidueIndex();
-            for (unsigned int rCnt = 0; rCnt < molCall->Molecules()[mCnt].ResidueCount(); rCnt++) {
-                // only check the first binding site
-                // we take the average location of the first described amino acid as starting point
-                if (bsCall->GetBindingSite(0)->Count() < 1) {
-                    vislib::sys::Log::DefaultLog.WriteError("The provided binding site was empty. No further computation possible!");
-                    return false;
-                }
-                vislib::Pair<char, unsigned int> bsRes = bsCall->GetBindingSite(0)->operator[](0);
-                if (molCall->Chains()[cCnt].Name() == bsRes.First() &&
-                    molCall->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.Second() &&
-                    molCall->ResidueTypeNames()[molCall->Residues()[firstRes + rCnt]->Type()] == bsCall->GetBindingSiteResNames(0)->operator[](0)) {
-
-                    firstAtom = molCall->Residues()[firstRes + rCnt]->FirstAtomIndex();
-                    for (unsigned int aCnt = 0; aCnt < molCall->Residues()[firstRes + rCnt]->AtomCount(); aCnt++) {
-                        unsigned int aIdx = firstAtom + aCnt;
-                        float xcoord = molCall->AtomPositions()[3 * aIdx + 0];
-                        float ycoord = molCall->AtomPositions()[3 * aIdx + 1];
-                        float zcoord = molCall->AtomPositions()[3 * aIdx + 2];
-                        atomPositions.push_back(vislib::math::Vector<float, 3>(xcoord, ycoord, zcoord));
-                        atx.insert(static_cast<int>(aIdx));
-                    }
-                }
-            }
-        }
-    }
-
-    // compute the average position of close atoms
-    vislib::math::Vector<float, 3> avgPos(0.0f, 0.0f, 0.0f);
-    for (auto s : atx) {
-        avgPos += vislib::math::Vector<float, 3>(&molCall->AtomPositions()[3 * s]);
-    }
-    avgPos /= static_cast<float>(atx.size());
+    auto bspos = EstimateBindingSitePosition(molCall, bsCall);
 
     // search for the vertex closest to the given position
     float minDist = FLT_MAX;
@@ -484,7 +441,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     for (unsigned int j = 0; j < vertCount; j++) {
         if (this->vertexKeepFlags[j]) {
             vislib::math::Vector<float, 3> vertPos = vislib::math::Vector<float, 3>(&meshCall->Objects()[0].GetVertexPointerFloat()[j * 3]);
-            vislib::math::Vector<float, 3> distVec = avgPos - vertPos;
+            vislib::math::Vector<float, 3> distVec = bspos - vertPos;
             if (distVec.Length() < minDist) {
                 minDist = distVec.Length();
                 minIndex = j;
@@ -551,6 +508,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     this->colors.resize(keptVertices * 3); // TODO accept other color configurations
     this->attributes.resize(keptVertices);
     this->levelAttributes.resize(keptVertices);
+    this->bindingDistanceAttributes.clear();
     this->bindingDistanceAttributes.resize(keptVertices, UINT_MAX);
 
     // compute vertex mapping and fill vertex vectors
@@ -574,12 +532,13 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
             this->colors[help * 3 + 1] = meshCall->Objects()[0].GetColourPointerByte()[j * 3 + 1];
             this->colors[help * 3 + 2] = meshCall->Objects()[0].GetColourPointerByte()[j * 3 + 2];
 
-            // DEBUG
-            /*if (j == minIndex) {
-                this->colors[i][help * 3 + 0] = 255;
-                this->colors[i][help * 3 + 1] = 0;
-                this->colors[i][help * 3 + 2] = 0;
-            }*/
+        #if 0 // DEBUG
+            if (j == minIndex) {
+                this->colors[help * 3 + 0] = 255;
+                this->colors[help * 3 + 1] = 0;
+                this->colors[help * 3 + 2] = 0;
+            }
+        #endif
 
             this->attributes[help] = meshCall->Objects()[0].GetVertexAttribPointerUInt32(attIdx)[j];
             this->levelAttributes[help] = vertexDistances[j];
@@ -653,12 +612,12 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     /*
      * sixth step: fill the data into the structure
      */
-    this->meshVector[i].SetVertexData(static_cast<unsigned int>(this->vertices.size() / 3), this->vertices.data(), this->normals.data(), this->colors.data(), NULL, false);
-    this->meshVector[i].SetTriangleData(static_cast<unsigned int>(this->faces.size() / 3), this->faces.data(), false);
-    this->meshVector[i].SetMaterial(nullptr);
-    this->meshVector[i].AddVertexAttribPointer(this->attributes.data());
-    this->meshVector[i].AddVertexAttribPointer(this->levelAttributes.data());
-    this->meshVector[i].AddVertexAttribPointer(this->bindingDistanceAttributes.data());
+    this->meshVector[0].SetVertexData(static_cast<unsigned int>(this->vertices.size() / 3), this->vertices.data(), this->normals.data(), this->colors.data(), NULL, false);
+    this->meshVector[0].SetTriangleData(static_cast<unsigned int>(this->faces.size() / 3), this->faces.data(), false);
+    this->meshVector[0].SetMaterial(nullptr);
+    this->meshVector[0].AddVertexAttribPointer(this->attributes.data());
+    this->meshVector[0].AddVertexAttribPointer(this->levelAttributes.data());
+    this->meshVector[0].AddVertexAttribPointer(this->bindingDistanceAttributes.data());
 
     return true;
 }
