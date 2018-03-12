@@ -690,6 +690,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
     for (auto entry : this->structureMap) {
 
+        numCreateGeo = 1;
         auto const &element = entry.second;
 
         // custom material settings
@@ -783,29 +784,40 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
-                geo.push_back(ospNewGeometry("spheres"));
 
-                vertexData = ospNewData(element.partCount * element.vertexLength, OSP_FLOAT, element.vertexData->data(), OSP_DATA_SHARED_BUFFER);
+                numCreateGeo = element.partCount*element.vertexLength*sizeof(float) / ispcLimit + 1;
 
-                ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
+                for (unsigned int i = 0; i < numCreateGeo; i++) {
+                    geo.push_back(ospNewGeometry("spheres"));
 
-                if (element.vertexLength > 3) {
-                    //ospRemoveParam(geo.back(), "radius");
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                    // TODO: HACK
-                    ospSet1f(geo.back(), "radius", 1);
-                } else {
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                    long long int vertexFloatsToRead = element.partCount * element.vertexLength / numCreateGeo;
+                    vertexFloatsToRead -= vertexFloatsToRead % element.vertexLength;
+                    if (vertexData != NULL) ospRelease(vertexData);
+                    vertexData = ospNewData(vertexFloatsToRead, OSP_FLOAT, &element.vertexData->operator[](i*vertexFloatsToRead), OSP_DATA_SHARED_BUFFER);
+
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
+
+                    if (element.vertexLength > 3) {
+                        //ospRemoveParam(geo.back(), "radius");
+                        ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                        // TODO: HACK
+                        ospSet1f(geo.back(), "radius", 1);
+                    }
+                    else {
+                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                    }
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "spheres", vertexData);
+
+                    if (element.colorLength == 4) {
+                        long long int colorFloatsToRead = element.partCount * element.colorLength / numCreateGeo;
+                        colorFloatsToRead -= colorFloatsToRead % element.colorLength;
+                        if (colorData != NULL) ospRelease(colorData); 
+                        colorData = ospNewData(colorFloatsToRead, OSP_FLOAT, &element.colorData->operator[](i*colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
+                        ospCommit(colorData);
+                        ospSetData(geo.back(), "color", colorData);
+                    }
                 }
-                ospCommit(vertexData);
-                ospSetData(geo.back(), "spheres", vertexData);
-
-                if (element.colorLength == 4) {
-                    colorData = ospNewData(element.partCount * element.colorLength, OSP_FLOAT, element.colorData->data(), OSP_DATA_SHARED_BUFFER);
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
                 // clipPlane setup
                 /* TEMPORARILY DISABLED
                 if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) { return i == 0; })) {
@@ -827,36 +839,36 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     break;
                 }
 
-                geo.push_back(ospNewGeometry("spheres"));
-                {
-                    float floatWidth = element.colorLength;
-                    if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_UINT8_RGBA) {
-                        floatWidth = 1;
-                    }
+                numCreateGeo = element.partCount*element.vertexStride/ispcLimit + 1;
 
-                    vertexData = ospNewData(element.partCount * element.vertexStride / sizeof(float), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
+                for (unsigned int i = 0; i < numCreateGeo; i++) {
+                    geo.push_back(ospNewGeometry("spheres"));
+
+
+                    long long int floatsToRead = element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
+                    floatsToRead -= floatsToRead % (element.vertexStride/sizeof(float));
+
+                    if (vertexData != NULL) ospRelease(vertexData);
+                    vertexData = ospNewData(floatsToRead, OSP_FLOAT, &static_cast<const float*>(*element.raw)[i*floatsToRead], OSP_DATA_SHARED_BUFFER);
                     ospCommit(vertexData);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospSetData(geo.back(), "spheres", vertexData);
                     ospSetData(geo.back(), "color", NULL);
 
-                }
+                    if (element.vertexLength > 3) {
+                        ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                    }
+                    else {
+                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                    }
+                    if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                        element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                if (element.vertexLength > 3) {
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                } else {
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                        ospSet1i(geo.back(), "color_offset", element.vertexLength * sizeof(float));
+                        ospSet1i(geo.back(), "color_stride", element.colorStride);
+                        ospSetData(geo.back(), "color", vertexData);
+                    }
                 }
-                if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
-                    element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
-                    colorData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-
-                    ospCommit(colorData);
-                    ospSet1i(geo.back(), "color_offset", element.vertexLength*sizeof(float));
-                    ospSet1i(geo.back(), "color_stride", element.colorLength*sizeof(float) + element.vertexLength * sizeof(float));
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
                 break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
@@ -975,13 +987,16 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             }
 
-            if (material != NULL && geo.size() > 0) {
-                ospSetMaterial(geo.back(), material);
-            }
+            // General geometry execution
+            for (unsigned int i = 0; i < this->numCreateGeo; i++) {
+                if (material != NULL && geo.size() > 0) {
+                    ospSetMaterial(geo.rbegin()[i], material);
+                }
 
-            if (geo.size() > 0) {
-                ospCommit(geo.back());
-                ospAddGeometry(world, geo.back());
+                if (geo.size() > 0) {
+                    ospCommit(geo.rbegin()[i]);
+                    ospAddGeometry(world, geo.rbegin()[i]);
+                }
             }
 
             if (vertexData != NULL) ospRelease(vertexData);
@@ -989,6 +1004,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (normalData != NULL) ospRelease(normalData);
             if (texData != NULL) ospRelease(texData);
             if (indexData != NULL) ospRelease(indexData);
+            if (xData != NULL) ospRelease(xData);
+            if (yData != NULL) ospRelease(yData);
+            if (zData != NULL) ospRelease(zData);
 
             break;
 

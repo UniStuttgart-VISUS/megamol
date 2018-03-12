@@ -21,16 +21,6 @@
 using namespace megamol::ospray;
 
 
-VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    //const float* parts = static_cast<const float*>(p.GetVertexData());
-    //return parts[index * stride + offset];
-    return static_cast<const float*>(p.GetVertexData())[index];
-}
-
-VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    return static_cast<const unsigned char*>(p.GetVertexData())[index];
-}
-
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
