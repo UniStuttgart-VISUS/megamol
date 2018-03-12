@@ -143,6 +143,7 @@ namespace moldyn {
 
             DirData_Base& operator=(DirData_Base&& rhs) {
                 pimpl = std::move(rhs.pimpl);
+                return *this;
             }
 
             float const GetDirXf() const {

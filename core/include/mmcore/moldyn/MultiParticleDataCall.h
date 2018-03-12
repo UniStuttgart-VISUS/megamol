@@ -189,6 +189,7 @@ namespace moldyn {
 
             VertexData_Base& operator=(VertexData_Base&& rhs) {
                 pimpl = std::move(rhs.pimpl);
+                return *this;
             }
 
             float const GetXf() const {
@@ -440,6 +441,7 @@ namespace moldyn {
 
             ColorData_Base& operator=(ColorData_Base&& rhs) {
                 pimpl = std::move(rhs.pimpl);
+                return *this;
             }
 
             uint8_t const GetRu8() const {
@@ -559,6 +561,7 @@ namespace moldyn {
 
             IDData_Base& operator=(IDData_Base&& rhs) {
                 pimpl = std::move(rhs.pimpl);
+                return *this;
             }
 
             uint32_t const GetIDu32() const {
@@ -592,6 +595,7 @@ namespace moldyn {
                 vert = std::move(rhs.vert);
                 col  = std::move(rhs.col);
                 id   = std::move(rhs.id);
+                return *this;
             }
 
             VertexData_Base vert;

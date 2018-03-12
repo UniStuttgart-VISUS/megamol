@@ -18,12 +18,32 @@ using namespace megamol::core;
  * LinesDataCall::Lines::Lines
  */
 megamol::geocalls::LinesDataCall::Lines::Lines(void) : colDT(CDT_NONE), count(0),
-        globCol(192, 192, 192, 255), idxDT(DT_NONE), vrtDT(DT_NONE), id(0) {
+globCol(192, 192, 192, 255), idxDT(DT_NONE), vrtDT(DT_NONE), id(0), colPtr{nullptr}, vertPtr{nullptr}, idxPtr{nullptr} {
     this->col.dataByte = NULL;
     this->idx.dataByte = NULL;
     this->vrt.dataFloat = NULL;
 }
 
+/*
+* LinesDataCall::Lines::Lines
+*/
+megamol::geocalls::LinesDataCall::Lines::Lines(Lines const& rhs)
+    : colDT{rhs.colDT}
+    , count{rhs.count}
+    , globCol{rhs.globCol}
+    , idxDT{rhs.idxDT}
+    , vrtDT{rhs.vrtDT}
+    , id{rhs.id}
+    , col{rhs.col}
+    , idx{rhs.idx}
+    , vrt{rhs.vrt}
+    , colPtr{rhs.colPtr}
+    , idxPtr{rhs.idxPtr}
+    , vertPtr{rhs.vertPtr} {
+    this->colorAccessor = rhs.colorAccessor->Clone();
+    this->vertexAccessor = rhs.vertexAccessor->Clone();
+    this->indexAccessor = rhs.indexAccessor->Clone();
+}
 
 /*
  * LinesDataCall::Lines::~Lines
