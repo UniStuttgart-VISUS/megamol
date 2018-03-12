@@ -4,6 +4,7 @@ bin/**/*
 include/**/*
 external/**/*
 share/**/*
+stage/**/*
 lib/**/*
 issues/**/*
 configurator/.vs/
