@@ -293,7 +293,7 @@ bool MSMSCavityFinder::getData(Call& call) {
                 this->cavitySubmeshes.Add(this->cavityMesh);
                 this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
 
-            #if 1
+            #if 0
                 // DEBUG COLOR HACK!!
                 auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
                 float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
