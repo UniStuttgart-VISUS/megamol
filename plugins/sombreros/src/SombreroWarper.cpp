@@ -1354,7 +1354,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             f++;
         }
 #endif
-
+#ifdef SWEAT
         // to compute the sweatband we need the multiplicity of the vertices
         std::map<uint, uint> vertexMultiplicity;
         std::map<uint, uint> nonbrimMultiplicity;
@@ -1390,7 +1390,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             vertexMultiplicity[v] = static_cast<uint>(targets.size());
             nonbrimMultiplicity[v] = static_cast<uint>(nonBrimTargets.size());
         }
-
+    
         // do the same with the sweatband
         std::vector<uint> sweatSorted;
         std::set<uint> sweatReadySet;
@@ -1447,6 +1447,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             sweatSorted.push_back(finalv);
             sweatReadySet.insert(finalv);
         }
+#endif
 
 #if 0 // switch for the colouring of the sweatband vertices by angle
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
@@ -1655,9 +1656,10 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
 #endif
-
+#ifdef SWEAT
         // check whether the sweatband is clockwise or counter-clockwise
         sweatIsClockwise = (vTypes[sweatSorted[1]] == 2);
+#endif
 
         this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
         this->rahiAngles[i].shrink_to_fit();

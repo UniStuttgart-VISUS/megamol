@@ -84,8 +84,6 @@ namespace sombreros {
                                         (atomName.Equals("N") && bsidx == 2 && bsridx == 1 && isgx) ||
                                         (atomName.Equals("OH") && bsidx == 2 && bsridx == 1 && !isgx) ) {
 
-                                        printf("%u\n", aCnt);
-
                                         vislib::math::Vector<float, 3> atpos(&mdc->AtomPositions()[3 * aCnt]);
                                         result += atpos;
                                         sum++;
