@@ -23,7 +23,7 @@ namespace sombreros {
         {
         public:
             /** Ctor. */
-            Tunnel(void) {
+            Tunnel(void) : tunnelLength(0.0f) {
                 //intentionally empty
             }
             /** array storing the voronoi vertex locations of the tunnel represented */
@@ -37,6 +37,9 @@ namespace sombreros {
 
             /** the identifiers for all atoms stored in the call. first: identifier, second: number of occurences */
             std::vector<std::pair<int, int>> atomIdentifiers;
+
+            /** The length of the tunnel */
+            float tunnelLength;
         };
 
         /**

@@ -127,6 +127,10 @@ bool SombreroWarper::getData(Call& call) {
 
     outCall->SetObjects(static_cast<uint>(this->outMeshVector.size()), this->outMeshVector.data());
 
+    if (this->outMeshVector.size() > 0) {
+        printf("Length: %f ; Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0]);
+    }
+
     return true;
 }
 
@@ -754,9 +758,9 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         /*
          * step 2: compute the necessary parameters
          */
-        // the length of the sombrero is the length of the longest tunnel
-        float longestLength = 0.0f;
-        for (uint j = 0; j < static_cast<uint>(tunnelCall.getTunnelNumber()); j++) {
+        // the length of the sombrero is the length of the first tunnel
+        /*float longestLength = 0.0f;
+        for (uint j = 0; j < static_cast<uint>(std::max(tunnelCall.getTunnelNumber(), 1)); j++) {
             auto& tunnel = tunnelCall.getTunnelDescriptions()[j];
             float localLength = 0.0f;
             vislib::math::Vector<float, 3> first, second;
@@ -769,11 +773,15 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
                 longestLength = localLength;
             }
         }
-        this->sombreroLength[i] = longestLength;
+        this->sombreroLength[i] = longestLength;*/
+
+        if (tunnelCall.getTunnelNumber() > 0) {
+            this->sombreroLength[i] = tunnelCall.getTunnelDescriptions()[0].tunnelLength;
+        }
 
         // the inner radius is the median of the sphere radii
         std::vector<float> radii;
-        for (uint j = 0; j < static_cast<uint>(tunnelCall.getTunnelNumber()); j++) {
+        for (uint j = 0; j < static_cast<uint>(std::max(tunnelCall.getTunnelNumber(), 1)); j++) {
             auto& tunnel = tunnelCall.getTunnelDescriptions()[j];
             for (uint k = 3; k < static_cast<uint>(tunnel.coordinates.size()); k += 4) {
                 radii.push_back(tunnel.coordinates[k]);

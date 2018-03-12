@@ -217,6 +217,10 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
                 for (int i = 12; i < static_cast<int>(values.size()); i++) {
                     tp->operator[]((i - 12) * 4 + 3) = static_cast<float>(std::stof(values[i].PeekBuffer()));
                 }
+            } else if (values[11].Equals(vislib::StringA("distance"))) {
+                for (int i = 12; i < static_cast<int>(values.size()); i++) {
+                    this->tunnelVector[tunnelNum - 1].tunnelLength = static_cast<float>(std::stof(values[i].PeekBuffer()));
+                }
             }
         }
 
