@@ -218,6 +218,7 @@ void AbstractOSPRayRenderer::releaseTextureScreen() {
 void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
     if (dvce == NULL) {
+        ospLoadModule("ispc");
         dvce = ospNewDevice("default");
         ospDeviceCommit(dvce);
     }
@@ -764,11 +765,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData vertexData = NULL;
         OSPData colorData = NULL;
         OSPData normalData = NULL;
-        OSPData texData = NULL;
-        OSPData indexData = NULL;
-        OSPData voxels = NULL;
-        OSPData isovalues = NULL;
-        OSPData planes = NULL;
+        OSPData texData    = NULL;
+        OSPData indexData  = NULL;
+        OSPData voxels     = NULL;
+        OSPData isovalues  = NULL;
+        OSPData planes     = NULL;
+        OSPData xData      = NULL;
+        OSPData yData      = NULL;
+        OSPData zData      = NULL;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
@@ -825,25 +829,66 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
 
                 geo.push_back(ospNewGeometry("spheres"));
+                {
+                    float floatWidth = element.colorLength;
+                    if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_UINT8_RGBA) {
+                        floatWidth = 1;
+                    }
 
-                if (element.vertexLength > 3) {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                } else {
-                    vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
-                    //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
-                    //ospSet1i(geo, "color_stride", element.vertexLength + element.colorLength);
+                    vertexData = ospNewData(element.partCount * (element.vertexLength + floatWidth), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + floatWidth * sizeof(float));
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "spheres", vertexData);
+                    ospSetData(geo.back(), "color", NULL);
 
                 }
-                ospCommit(vertexData);
-                //ospCommit(colorData);
-                ospSetData(geo.back(), "spheres", vertexData);
-                ospSetData(geo.back(), "colorData", NULL);
 
+                if (element.vertexLength > 3) {
+                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                } else {
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
+                if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                    element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+                    colorData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
+
+                    ospCommit(colorData);
+                    ospSet1i(geo.back(), "color_offset", element.vertexLength*sizeof(float));
+                    ospSet1i(geo.back(), "color_stride", element.colorLength*sizeof(float) + element.vertexLength * sizeof(float));
+                    ospSetData(geo.back(), "color", colorData);
+                }
+
+                break;
+            case geometryTypeEnum::PBS:
+                if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                {
+                    auto ret = ospLoadModule("ngpf_spheres");
+                    if (ret != OSP_NO_ERROR) {
+                        vislib::sys::Log::DefaultLog.WriteError("Could not load ngpfSpheres module of OSPRay");
+                        throw std::runtime_error("Could not load ngpfSpheres module of OSPRay");
+                    }
+                }
+                geo.push_back(ospNewGeometry("ngpf_spheres"));
+
+                {
+
+                    xData = ospNewData(element.partCount, OSP_FLOAT, element.xData->data());
+                    yData = ospNewData(element.partCount, OSP_FLOAT, element.yData->data());
+                    zData = ospNewData(element.partCount, OSP_FLOAT, element.zData->data());
+
+                    ospCommit(xData);
+                    ospCommit(yData);
+                    ospCommit(zData);
+
+                    ospSetData(geo.back(), "x_data", xData);
+                    ospSetData(geo.back(), "y_data", yData);
+                    ospSetData(geo.back(), "z_data", zData);
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {
@@ -978,11 +1023,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
             }
 
             OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-            std::vector<float> rgb = { 0.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f };
-            std::vector<float> opa = { 0.01f, 0.05f };
-            OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, rgb.data());
-            OSPData tf_opa = ospNewData(2, OSP_FLOAT, opa.data());
+
+            OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
             ospSetData(tf, "colors", tf_rgb);
             ospSetData(tf, "opacities", tf_opa);
 

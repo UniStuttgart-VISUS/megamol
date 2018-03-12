@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -19,15 +14,15 @@ namespace MegaMolConf.Analyze {
     public partial class AnalyzerDialog : Form {
 
         public string MegaMolPath {
-            get { return this.megaMolTextBox.Text; }
-            set { this.megaMolTextBox.Text = value; }
+            get { return megaMolTextBox.Text; }
+            set { megaMolTextBox.Text = value; }
         }
 
         public string WorkingDirectory {
-            get { return this.workDirTextBox.Text; }
+            get { return workDirTextBox.Text; }
             set {
-                this.workDirTextBox.Text = value;
-                if (!string.IsNullOrWhiteSpace(this.workDirTextBox.Text)) {
+                workDirTextBox.Text = value;
+                if (!string.IsNullOrWhiteSpace(workDirTextBox.Text)) {
                     useWorkDirCheckBox.Checked = true;
                 }
             }
@@ -102,7 +97,7 @@ Then you can execute MegaMol™ to generate the StateFile using the button, or y
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
 
-                string stateFileName = Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString() + ".mmstate");
+                string stateFileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".mmstate");
 
                 psi.Arguments = "-i GenStateFile genState -v ::genState::gen::filename \"" + stateFileName + "\"";
 

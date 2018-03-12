@@ -19,12 +19,12 @@ if(BUILD_REMOTECONSOLE)
     set(CXXOPTS_INSTALL_CMD "powershell")
     set(CXXOPTS_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
   endif()
-  #set(CXXOPTS_VER "1_4_4")
+  set(CXXOPTS_TAG "v2.0.0")
   #string(REPLACE "_" "." CXXOPTS_TAG ${CXXOPTS_VER})
   #string(CONCAT CXXOPTS_TAG "v" ${CXXOPTS_TAG})
   ExternalProject_Add(extlibcxxopts
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    #GIT_TAG ${CXXOPTS_TAG}
+    GIT_TAG ${CXXOPTS_TAG}
     DEPENDS extlibzmq core
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}

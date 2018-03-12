@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace MegaMolConf.Io {
@@ -55,7 +53,7 @@ namespace MegaMolConf.Io {
             }
             public static implicit operator Version(SerializableVersion v) {
                 if (!String.IsNullOrWhiteSpace(v.Version)) {
-                    System.Version vv;
+                    Version vv;
                     if (System.Version.TryParse(v.Version, out vv)) {
                         return vv;
                     }

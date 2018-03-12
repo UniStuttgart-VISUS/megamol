@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MegaMolConf.Util {
@@ -15,10 +12,10 @@ namespace MegaMolConf.Util {
         }
 
         public ApplicationSearchDialog() {
-            this.openFileDialog1 = new OpenFileDialog();
-            this.openFileDialog1.DefaultExt = "exe";
-            this.openFileDialog1.Filter = "Applications|*.exe;*.sh|All Files|*.*";
-            this.openFileDialog1.Title = "Select MegaMol Frontend...";
+            openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.DefaultExt = "exe";
+            openFileDialog1.Filter = "Applications|*.exe;*.sh|All Files|*.*";
+            openFileDialog1.Title = "Select MegaMol Frontend...";
         }
 
         public DialogResult ShowDialog() {

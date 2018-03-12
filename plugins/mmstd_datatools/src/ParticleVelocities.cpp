@@ -260,6 +260,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
     }
     this->datahash = in->DataHash();
     out->SetUnlocker(in->GetUnlocker());
+    in->SetUnlocker(nullptr, false);
     return true;
 }
 

@@ -154,9 +154,9 @@ protected:
     OSPRenderer renderer;
     OSPTexture2D maxDepthTexture;
 
-	// structure vectors
-	std::vector<OSPGeometry> geo;
-	std::vector<OSPVolume> vol;
+        // structure vectors
+        std::vector<OSPGeometry> geo;
+        std::vector<OSPVolume> vol;
 
     // Light map
     OSPRayLightMap lightMap;

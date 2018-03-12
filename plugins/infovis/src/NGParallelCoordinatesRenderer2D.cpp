@@ -18,7 +18,7 @@
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
-#define BE_DEBUGGABLE
+//#define REMOVE_TEXT
 
 #ifdef _DEBUG
 #define MAKE_OBJECT_LABEL(TYPE, ID) (glObjectLabel(TYPE, ID, sizeof(#ID) - 1, #ID))
@@ -83,7 +83,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
     axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
     itemCount(0), columnCount(0), dragging(false), filtering(false),
-    numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1)
+    numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1),
+    font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
 {
 
     this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -394,13 +395,16 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
 
-#ifndef BE_DEBUGGABLE
-    if (!font.Initialise()) return false;
+#ifndef REMOVE_TEXT
+    if (!font.Initialise(this->GetCoreInstance())) return false;
 #endif
 
     if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
     if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
     if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
+
+    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram)) return false;
+    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram)) return false;
 
     if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
     if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
@@ -479,7 +483,7 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
         return false;
     }
 
-    if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
+    if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN > 0) {
         if (mouseFlags != 0) {
             mouseReleasedX = x;
             mouseReleasedY = y;
@@ -490,6 +494,10 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
         }
     } else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
         mouseFlags = 0;
+        if (!this->dragging && !this->filtering) {
+            // I guess we stopped picking / brushing
+            // TODO: download buffer? notify storage in some other way?!
+        }
     }
     if (pickedAxis != -1 && (fabs(mousePressedX - x) > this->axisDistance * 0.5f)
         && (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
@@ -592,9 +600,17 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tc == nullptr) return;
+    if (tc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a transfer function!");
+        return;
+    }
     auto flagsc = getFlagsSlot.CallAs<FlagCall>();
-    if (flagsc == nullptr) return;
+    if (flagsc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "NGParallelCoordinatesRenderer2D requires a flag storage!");
+        return;
+    }
 
     (*floats)(0);
     auto hash = floats->DataHash();
@@ -747,21 +763,22 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis, pickedIndicatorIndex);
         glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
         this->drawScalesProgram.Disable();
-
-#ifndef BE_DEBUGGABLE
+        float red[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+        float *color;
+#ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
         for (unsigned int c = 0; c < this->columnCount; c++) {
             unsigned int realCol = this->axisIndirection[c];
             if (this->pickedAxis == realCol) {
-                glColor3f(1.0f, 0.0f, 0.0f);
+                color = red;
             } else {
-                glColor3fv(this->axesColor);
+                color = this->axesColor;
             }
             float x = this->marginX + this->axisDistance * c;
             float fontsize = this->axisDistance / 10.0f;
 #if 0
-            this->font.DrawString(x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             bottom *= (maximums[realCol] - minimums[realCol]);
@@ -769,10 +786,10 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             top *= (maximums[realCol] - minimums[realCol]);
             top += minimums[realCol];
-            this->font.DrawString(x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
 #endif
 
@@ -784,9 +801,9 @@ void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], co
     if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, otherColor, tfColorFactor);
     }
-    //if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
-    //	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
-    //}
+    if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+    	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
+    }
 }
 
 void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
@@ -830,6 +847,36 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 #endif
     prog.Disable();
     POP_DEBUG_GROUP;
+}
+
+void NGParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
+    auto& program = this->drawPickIndicatorProgram;
+
+    this->enableProgramAndBind(program);
+
+    ::glUniform2f(program.ParameterLocation("mouse"), x, y);
+    ::glUniform1f(program.ParameterLocation("pickRadius"), pickRadius);
+
+    ::glUniform4fv(program.ParameterLocation("indicatorColor"), 1, color);
+
+    ::glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    program.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
+    auto& prog = this->drawStrokeIndicatorProgram;
+
+    this->enableProgramAndBind(prog);
+
+    ::glUniform2f(prog.ParameterLocation("mousePressed"), x0, y0);
+    ::glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
+
+    ::glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
+
+    ::glDrawArrays(GL_LINES, 0, 2);
+
+    prog.Disable();
 }
 
 
@@ -1045,6 +1092,23 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
 
     drawParcos();
+
+    if (this->mouseFlags > 0 && !dragging && !filtering) {
+        switch(selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
+            case SELECT_STROKE:
+                this->doStroking(mousePressedX, mousePressedY, mouseReleasedX, mouseReleasedY);
+                if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+                    this->drawStrokeIndicator(mousePressedX, mousePressedY, mouseX, mouseY, this->selectionIndicatorColor);
+                }
+                break;
+            case SELECT_PICK:
+                this->doPicking(mouseReleasedX, mouseReleasedY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
+                if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+                    this->drawPickIndicator(mouseX, mouseY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(), this->selectionIndicatorColor);
+                }
+                break;
+        }
+    }
 
     drawAxes();
 
