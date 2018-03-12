@@ -218,26 +218,6 @@ namespace sombreros {
          */
         bool divideMeshForOutput(void);
 
-        /**
-         * Finds a circle around the border, leaving out vertices that are not real border vertices.
-         *
-         * @param vertids Vector containing the vertex ids.
-         * @return Vector containing the sorted vertex ids.
-         */
-        std::vector<uint> findBorderCircle(const std::vector<uint>& vertids, uint meshid, uint startVertex);
-
-        /**
-         * Overloaded version for sets, does the same as the method for vectors.
-         *
-         * @param vertids Set containing the vertex ids.
-         * @return Vector containing the sorted vertex ids.
-         */
-        std::vector<uint> findBorderCircle(const std::set<uint>& vertids, uint meshid, uint startVertex);
-
-        bool countOutgoingEdgesPerVertex(const std::set<uint>& filterIds = std::set<uint>());
-
-        bool countNeighboringTrianglesPerVertex(const std::set<uint>& filterIds = std::set<uint>());
-
         /** The lastly received data hash */
         SIZE_T lastDataHash;
 
@@ -309,10 +289,6 @@ namespace sombreros {
         
         /** The faces of the mesh */
         std::vector<std::vector<uint>> faces;
-
-        std::vector<std::vector<uint>> outEdgeCount;
-
-        std::vector<std::vector<uint>> outFaceCount;
 
         /** The faces of the brim */
         std::vector<std::vector<uint>> brimFaces;

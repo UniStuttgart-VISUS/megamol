@@ -162,12 +162,6 @@ bool SombreroWarper::getExtent(Call& call) {
         // copy
         if (!this->copyMeshData(*inCall)) return false;
 
-        // count edges
-        if (!this->countOutgoingEdgesPerVertex()) return false;
-
-        // count vertices
-        if (!this->countNeighboringTrianglesPerVertex())return false;
-    #if 1
         // search the sombrero border
         if (!this->findSombreroBorder()) return false;
 
@@ -184,12 +178,9 @@ bool SombreroWarper::getExtent(Call& call) {
 
         // set the surface normals to correct values
         if (!this->recomputeVertexNormals()) return false;
-   
+
         // cut the mesh into two parts
         if (!this->divideMeshForOutput()) return false;
-    #else
-        this->outMeshVector = this->meshVector;
-    #endif
     }
 
     outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
@@ -2362,102 +2353,5 @@ bool SombreroWarper::divideMeshForOutput(void) {
         this->outMeshVector[i * 2 + 1].AddVertexAttribPointer(this->bsDistanceAttachment[i].data());
     }
 
-    return true;
-}
-
-/*
- * SombreroWarper::findBorderCircle
- */
-std::vector<uint> SombreroWarper::findBorderCircle(const std::vector<uint>& vertids, uint meshid, uint startVertex) {
-    return this->findBorderCircle(std::set<uint>(vertids.begin(), vertids.end()), meshid, startVertex);
-}
-
-/*
- * SombreroWarper::findBorderCircle
- */
-std::vector<uint> SombreroWarper::findBorderCircle(const std::set<uint>& vertids, uint meshid, uint startVertex) {
-    uint i = meshid;
-
-    // first step : compute the vertex multiplicity
-    std::map<uint, uint> vertMultiplicity;
-    std::map<uint, uint> othervertMult;
-
-    for (auto v : vertids) {
-        auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][v].first;
-        auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][v].second;
-        std::set<uint> targets;
-        std::set<uint> nonsetTargets;
-        while (forward != edgesForward[i].end() && (*forward).first == v) {
-            auto target = (*forward).second;
-            if (vertids.count(target) > 0) {
-                targets.insert(target);
-            } else {
-                nonsetTargets.insert(target);
-            }
-            forward++;
-        }
-
-        while (reverse != edgesReverse[i].end() && (*reverse).first == v) {
-            auto target = (*reverse).second;
-            if (vertids.count(target) > 0) {
-                targets.insert(target);
-            } else {
-                nonsetTargets.insert(target);
-            }
-        }
-        vertMultiplicity[v] = static_cast<uint>(targets.size());
-        othervertMult[v] = static_cast<uint>(nonsetTargets.size());
-    }
-
-    // second step: construct the correct set
-    std::set<uint> readySet;
-    std::vector<uint> result;
-    readySet.insert(startVertex);
-    result.push_back(startVertex);
-    //while()
-
-    // TODO
-
-    return result;
-}
-
-/*
- * SombreroWarper::countOutgoingEdgesPerVertex
- */
-bool SombreroWarper::countOutgoingEdgesPerVertex(const std::set<uint>& filterIds) {
-    this->outEdgeCount.resize(this->meshVector.size());
-    for (size_t i = 0; i < this->meshVector.size(); i++) {
-        this->outEdgeCount[i].resize(this->vertices[i].size() / 3);
-        for (size_t j = 0; j < this->outEdgeCount[i].size(); j++) {
-            std::set<uint> targetset; // we assume that there are no double edges
-            auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][j].first;
-            auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][j].second;
-            while (forward != edgesForward[i].end() && (*forward).first == static_cast<uint>(j)) {
-                auto target = (*forward).second;
-                targetset.insert(target);
-                forward++;
-            }
-            while (reverse != edgesReverse[i].end() && (*reverse).first == static_cast<uint>(j)) {
-                auto target = (*reverse).second;
-                targetset.insert(target);
-                reverse++;
-            }
-            this->outEdgeCount[i][j] = static_cast<uint>(targetset.size());
-        }
-    }
-    return true;
-}
-
-/*
- * SombreroWarper::countNeighboringTrianglesPerVertex
- */
-bool SombreroWarper::countNeighboringTrianglesPerVertex(const std::set<uint>& filterIds) {
-    this->outFaceCount.resize(this->meshVector.size());
-    for (size_t i = 0; i < this->meshVector.size(); i++) {
-        this->outFaceCount[i].resize(this->vertices[i].size() / 3, 0u);
-        for (auto v : this->faces[i]) {
-            this->outFaceCount[i][v]++;
-        }
-    }
     return true;
 }
