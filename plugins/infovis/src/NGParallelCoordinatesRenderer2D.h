@@ -139,6 +139,10 @@ namespace infovis {
 
         void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor);
 
+        void drawPickIndicator(float x, float y, float pickRadius, const float color[4]);
+
+        void drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]);
+
         void drawItemsContinuous();
 
         void drawItemsHistogram();
@@ -243,6 +247,8 @@ namespace infovis {
         vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
         vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
         vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
+        vislib::graphics::gl::GLSLShader drawPickIndicatorProgram;
+        vislib::graphics::gl::GLSLShader drawStrokeIndicatorProgram;
 
         vislib::graphics::gl::GLSLShader drawItemContinuousProgram;
         vislib::graphics::gl::GLSLShader drawItemsHistogramProgram;
