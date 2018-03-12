@@ -37,6 +37,7 @@ namespace utility {
      *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
      *                           or this->sdfFont("MY-OWN-FONT");
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
+             !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available yet.
      *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
      *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
      * -----------------------------------------------------------------------------------------------------------------
@@ -397,15 +398,11 @@ namespace utility {
             this->billboard = b;
         }
 
-
         /**
         * Reset font orientation.
         *
         */
-        inline void ResetOrientation(void) const {
-
-
-        }
+        inline void ResetOrientation(void) const;
 
         /**
         * Set font orientation.
@@ -415,10 +412,7 @@ namespace utility {
         * @param z The Z coordinate of the rotation axis.
         * @param a The rotation angle.
         */
-        inline void SetOrientation(float x, float y, float z, float a) {
-
-
-        }
+        inline void SetOrientation(float x, float y, float z, float a) const;
 
     protected:
 

@@ -544,6 +544,32 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 }
 
 
+/**
+* SDFFont::ResetOrientation
+*/
+inline void SDFFont::ResetOrientation(void) const {
+
+
+
+
+
+
+}
+
+
+/**
+* SDFFont::SetOrientation
+*/
+inline void SDFFont::SetOrientation(float x, float y, float z, float a) const {
+
+
+
+
+
+
+}
+
+
 /* PRIVATE ********************************************************************/
 
 
