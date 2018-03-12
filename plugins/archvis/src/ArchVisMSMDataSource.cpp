@@ -9,11 +9,16 @@
 #include <random>
 #include <string>
 
+#include <sstream>
+#include <iomanip>
+
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/net/SocketException.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
@@ -28,10 +33,17 @@ using namespace megamol::ngmesh;
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_shaderFilename_slot("Shader", "The name of to the shader file to load"),
 	m_partsList_slot("Parts list", "The path to the parts list file to load"),
+	m_nodes_slot("Node list","The filepath of the node list to load"),
+	m_elements_slot("Edge list", "The filepath of the element list to load"),
 	m_nodeElement_table_slot("Node/Element table", "The path to the node/element table to load"),
 	m_rcv_IPAddr_slot("Receive IP adress", "The ip adress for receiving data"),
+	m_rcv_port_slot("Receive port", "The port for receiving data"),
 	m_snd_IPAddr_slot("Send IP adress", "The ip adress for sending data"),
-	m_rcv_socket_connected(false)
+	m_snd_port_slot("Send port", "The port for sending data"),
+	m_rcv_socket_connected(false),
+	font(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
+	m_last_spawn_time(std::chrono::steady_clock::now()),
+	m_last_update_time(std::chrono::steady_clock::now())
 {
 	this->m_shaderFilename_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
@@ -39,26 +51,44 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	this->m_partsList_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_partsList_slot);
 
-	m_nodeElement_table_slot << new core::param::FilePathParam("");
+	this->m_nodes_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_nodes_slot);
+
+	this->m_elements_slot << new core::param::FilePathParam("");
+	this->MakeSlotAvailable(&this->m_elements_slot);
+
+	this->m_nodeElement_table_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_nodeElement_table_slot);
 	
-	m_rcv_IPAddr_slot << new core::param::IntParam(0);
+	m_rcv_IPAddr_slot << new core::param::StringParam("127.0.0.1");
 	this->MakeSlotAvailable(&this->m_rcv_IPAddr_slot);
 
-	m_snd_IPAddr_slot << new core::param::IntParam(0);
+	m_rcv_port_slot << new core::param::IntParam(9050);
+	this->MakeSlotAvailable(&this->m_rcv_port_slot);
+
+	m_snd_IPAddr_slot << new core::param::StringParam("127.0.0.1");
 	this->MakeSlotAvailable(&this->m_snd_IPAddr_slot);
+
+	m_snd_port_slot << new core::param::IntParam(0);
+	this->MakeSlotAvailable(&this->m_snd_port_slot);
 
 	try {
 		// try to start up socket
 		vislib::net::Socket::Startup();
-		// create socket
+		// create receive socket
 		this->m_rcv_socket.Create(vislib::net::Socket::ProtocolFamily::FAMILY_INET, vislib::net::Socket::Type::TYPE_DGRAM, vislib::net::Socket::Protocol::PROTOCOL_UDP);
+
+		// create send socket
+		this->m_snd_socket.Create(vislib::net::Socket::ProtocolFamily::FAMILY_INET, vislib::net::Socket::Type::TYPE_STREAM, vislib::net::Socket::Protocol::PROTOCOL_TCP);
 	}
 	catch (vislib::net::SocketException e) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA());
 	}
 	
-	
+	if(font.Initialise())
+	{
+		std::cout << "Font Initialised. " << std::endl;
+	}
 	//std::cout << "Socket Endpoint: " << endpoint.ToStringA() << std::endl;
 }
 
@@ -75,12 +105,16 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 
 	if (this->m_partsList_slot.IsDirty() ||
 		this->m_shaderFilename_slot.IsDirty() ||
-		this->m_nodeElement_table_slot.IsDirty() )
+		this->m_nodeElement_table_slot.IsDirty() ||
+		this->m_nodes_slot.IsDirty() ||
+		this->m_elements_slot.IsDirty() )
 	{
 		// TODO handle different slots seperatly ?
 		this->m_shaderFilename_slot.ResetDirty();
 		this->m_partsList_slot.ResetDirty();
 		this->m_nodeElement_table_slot.ResetDirty();
+		this->m_nodes_slot.ResetDirty();
+		this->m_elements_slot.ResetDirty();
 
 		// Clear render batches TODO: add explicit clear function?
 		CallNGMeshRenderBatches::RenderBatchesData empty_render_batches;
@@ -97,17 +131,51 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		auto vislib_nodesElement_filename = m_nodeElement_table_slot.Param<megamol::core::param::FilePathParam>()->Value();
 		std::string nodesElement_filename(vislib_nodesElement_filename.PeekBuffer());
 
-		load(shdr_filename, partsList_filename, nodesElement_filename);
+
+		auto vislib_nodes_filename = m_nodes_slot.Param<megamol::core::param::FilePathParam>()->Value();
+		std::string nodes_filename(vislib_nodes_filename.PeekBuffer());
+
+		auto vislib_elements_filename = m_elements_slot.Param<megamol::core::param::FilePathParam>()->Value();
+		std::string elements_filename(vislib_elements_filename.PeekBuffer());
+
+		// Load scale model data
+		std::vector<Vec3> node_positions;
+		parseNodeList(nodes_filename, node_positions);
+
+		std::vector<std::tuple<int, int, int, int, int>> element_data;
+		parseElementList(elements_filename, element_data);
+
+		std::vector<int> input_elements;
+		parseInputElementList("input_" + elements_filename, input_elements);
+
+		m_scale_model = ScaleModel(node_positions, element_data, input_elements);
+
+		Mat4x4 tower_model_matrix;
+		tower_model_matrix.SetAt(0, 3, -0.13f);
+		tower_model_matrix.SetAt(1, 3, -1.0f);
+		tower_model_matrix.SetAt(2, 3, -0.13f);
+
+		m_scale_model.setModelTransform(tower_model_matrix);
+
+		//for (auto& element : input_elements)
+		//{
+		//	std::cout << (element) << std::endl;
+		//}
+
+		createRenderBatches(shdr_filename, partsList_filename);
+
+		//load(shdr_filename, partsList_filename, nodesElement_filename);
 	}
 
-	if (this->m_rcv_IPAddr_slot.IsDirty())
+	if (this->m_rcv_IPAddr_slot.IsDirty() || this->m_rcv_port_slot.IsDirty())
 	{
 		this->m_rcv_IPAddr_slot.ResetDirty();
 
 		try {
-			vislib::net::IPAddress server_addr;
+			vislib::net::IPAddress server_addr(static_cast<const char*>(m_rcv_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value()));
+			unsigned short server_port = static_cast<unsigned short>(m_rcv_port_slot.Param<megamol::core::param::IntParam>()->Value());
 			server_addr = server_addr.Create();
-			this->m_rcv_socket.Connect(vislib::net::IPEndPoint(server_addr, 9050));
+			this->m_rcv_socket.Connect(vislib::net::IPEndPoint(server_addr, server_port));
 			this->m_rcv_socket_connected = true;
 
 			std::string greeting("Hello, my name is MegaMol");
@@ -119,108 +187,62 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		}
 	}
 
+	if (this->m_snd_IPAddr_slot.IsDirty() || this->m_snd_port_slot.IsDirty())
+	{
+		this->m_snd_IPAddr_slot.ResetDirty();
+
+		try {
+			vislib::net::IPAddress server_addr(static_cast<const char*>(m_snd_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value()));
+			unsigned short server_port = static_cast<unsigned short>(m_snd_port_slot.Param<megamol::core::param::IntParam>()->Value());
+			server_addr = server_addr.Create();
+			this->m_snd_socket.Bind(vislib::net::IPEndPoint());
+			//this->m_snd_socket.Bind(vislib::net::IPEndPoint(vislib::net::IPAddress::ANY, server_port));
+			//this->m_snd_socket.Connect(vislib::net::IPEndPoint(vislib::net::IPAddress::ANY, server_port));
+
+			std::string greeting("Hello, my name is MegaMol");
+			//this->m_snd_socket.Send(greeting.c_str(), greeting.length());
+		}
+		catch (vislib::net::SocketException e) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during connection: %s", e.GetMsgA());
+			return false;
+		}
+	}
+
 	render_batches_call->setRenderBatches(&m_render_batches);
 
-	if(this->m_rcv_socket_connected)
-		this->m_rcv_socket.Receive(m_node_displacements.data(), m_node_displacements.size() * 4);
 
-	updateMSMTransform();
+	DataPackage data(m_scale_model.getNodeCount(), m_scale_model.getInputElementCount());
+
+	size_t bytes_received = 0;
+
+	if(this->m_rcv_socket_connected)
+		bytes_received = this->m_rcv_socket.Receive(data.data(), data.getByteSize());
+
+	if (bytes_received > 0)
+	{
+		//TODO somehow skip this tedious copying...
+		std::vector<Vec3> displacements;
+		std::vector<float> forces;
+
+		for (int i = 0; i < m_scale_model.getNodeCount(); ++i)
+		{
+			displacements.push_back(data.getNodeDisplacement(i));
+		}
+
+		for (int i = 0; i < m_scale_model.getInputElementCount(); ++i)
+		{
+			forces.push_back(data.getElementForces(i));
+		}
+
+		std::cout << "Timestep: " << data.getTime() << std::endl;
+
+		m_scale_model.updateNodeDisplacements(displacements);
+		m_scale_model.updateElementForces(forces);
+		updateMSMTransform();
+		spawnAndUpdateTextLabels();
+	}
 	
 	return true;
-}
-
-ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(Node src, Node tgt, Vec3 src_displacement, Vec3 tgt_displacement)
-{
-	Node src_displaced = { src_displacement.X() + std::get<0>(src),
-							src_displacement.Y() + std::get<1>(src),
-							src_displacement.Z() + std::get<2>(src) };
-
-	Node tgt_displaced = { tgt_displacement.X() + std::get<0>(tgt),
-							tgt_displacement.Y() + std::get<1>(tgt),
-							tgt_displacement.Z() + std::get<2>(tgt) };
-
-	// compute element rotation
-	Mat4x4 object_rotation;
-	Vec3 diag_vector = Vec3(std::get<0>(tgt_displaced) - std::get<0>(src_displaced),
-							std::get<1>(tgt_displaced) - std::get<1>(src_displaced),
-							std::get<2>(tgt_displaced) - std::get<2>(src_displaced));
-	diag_vector.Normalise();
-	Vec3 up_vector(0.0f, 1.0f, 0.0f);
-	Vec3 rot_vector = up_vector.Cross(diag_vector);
-	rot_vector.Normalise();
-	Quat rotation(std::acos(up_vector.Dot(diag_vector)), rot_vector);
-	object_rotation = rotation;
-
-	// compute element scale
-	Mat4x4 object_scale;
-	float base_distance = Vec3(std::get<0>(tgt) - std::get<0>(src),
-		std::get<1>(tgt) - std::get<1>(src),
-		std::get<2>(tgt) - std::get<2>(src)).Length();
-
-	float displaced_distance = Vec3(std::get<0>(tgt_displaced) - std::get<0>(src_displaced),
-		std::get<1>(tgt_displaced) - std::get<1>(src_displaced),
-		std::get<2>(tgt_displaced) - std::get<2>(src_displaced)).Length();
-
-	object_scale.SetAt(1, 1, displaced_distance/base_distance);
-
-	// compute element offset
-	Mat4x4 object_translation;
-	object_translation.SetAt(0, 3, std::get<0>(src_displaced));
-	object_translation.SetAt(1, 3, std::get<1>(src_displaced));
-	object_translation.SetAt(2, 3, std::get<2>(src_displaced));
-
-	return (object_translation * object_rotation * object_scale);
-}
-
-ArchVisMSMDataSource::Mat4x4 ArchVisMSMDataSource::computeElementTransform(
-	Node orgin,
-	Node corner_x,
-	Node corner_z,
-	Node corner_xz,
-	Vec3 origin_displacement,
-	Vec3 corner_x_displacement,
-	Vec3 corner_z_displacement,
-	Vec3 corner_xz_displacement)
-{
-	Node origin_displaced = { origin_displacement.X() + std::get<0>(orgin),
-		origin_displacement.Y() + std::get<1>(orgin),
-		origin_displacement.Z() + std::get<2>(orgin) };
-
-	Node corner_x_displaced = { corner_x_displacement.X() + std::get<0>(corner_x),
-		corner_x_displacement.Y() + std::get<1>(corner_x),
-		corner_x_displacement.Z() + std::get<2>(corner_x) };
-
-	Node corner_z_displaced = { corner_z_displacement.X() + std::get<0>(corner_z),
-		corner_z_displacement.Y() + std::get<1>(corner_z),
-		corner_z_displacement.Z() + std::get<2>(corner_z) };
-
-	Node corner_xz_displaced = { corner_xz_displacement.X() + std::get<0>(corner_xz),
-		corner_xz_displacement.Y() + std::get<1>(corner_xz),
-		corner_xz_displacement.Z() + std::get<2>(corner_xz) };
-
-
-	// compute element rotation around z
-	Mat4x4 object_rotation_z;
-	Vec3 diag_vector = Vec3(std::get<0>(corner_x_displaced) - std::get<0>(origin_displaced),
-		std::get<1>(corner_x_displaced) - std::get<1>(origin_displaced),
-		std::get<2>(corner_x_displaced) - std::get<2>(origin_displaced));
-	diag_vector.Normalise();
-	Vec3 up_vector(1.0f, 0.0f, 0.0f);
-	Vec3 rot_vector = up_vector.Cross(diag_vector);
-	rot_vector.Normalise();
-	Quat rotation(std::acos(up_vector.Dot(diag_vector)), rot_vector);
-	object_rotation_z = rotation;
-
-	// compute element scale
-	Mat4x4 object_scale;
-
-	// compute element offset
-	Mat4x4 object_translation;
-	object_translation.SetAt(0, 3, std::get<0>(origin_displaced));
-	object_translation.SetAt(1, 3, std::get<1>(origin_displaced));
-	object_translation.SetAt(2, 3, std::get<2>(origin_displaced));
-
-	return (object_translation * object_rotation_z);
 }
 
 std::vector<std::string> ArchVisMSMDataSource::parsePartsList(std::string const& filename)
@@ -327,87 +349,138 @@ void ArchVisMSMDataSource::parseNodeElementTable(
 	}
 }
 
+void ArchVisMSMDataSource::parseNodeList(
+	std::string const& filename,
+	std::vector<Vec3>& node_positions)
+{
+	std::ifstream file;
+	file.open(filename, std::ifstream::in);
+
+	if (file.is_open())
+	{
+		file.seekg(0, std::ifstream::beg);
+
+		unsigned int lines_read = 0;
+		while (!file.eof())
+		{
+			std::string line;
+			std::getline(file, line, '\n');
+			std::stringstream ss(line);
+
+			std::string x, y, z;
+			std::getline(ss, x, ',');
+			std::getline(ss, y, ',');
+			std::getline(ss, z, ',');
+
+			// flip input y and z axis to match y-up coordinate system
+			node_positions.push_back(Vec3(std::stof(x), std::stof(z), std::stof(y)));
+		}
+	}
+}
+
+void ArchVisMSMDataSource::parseElementList(
+	std::string const& filename,
+	std::vector<std::tuple<int, int, int, int, int>>& element_data)
+{
+	std::ifstream file;
+	file.open(filename, std::ifstream::in);
+
+	if (file.is_open())
+	{
+		file.seekg(0, std::ifstream::beg);
+
+		unsigned int lines_read = 0;
+		while (!file.eof())
+		{
+			std::string line;
+			std::getline(file, line, '\n');
+			std::stringstream ss(line);
+
+			std::string idx0, idx1, idx2, idx3;
+
+			std::getline(ss, idx0, ',');
+			std::getline(ss, idx1, ',');
+			std::getline(ss, idx2, ',');
+			std::getline(ss, idx3, ',');
+
+			int type = (lines_read % 13) == 0 ? 2 : (lines_read % 13) < 5 ? 0 : 1;
+
+			// given indices start at 1, so offset by -1
+			element_data.push_back(std::make_tuple<int, int, int, int, int>(std::move(type), std::stoi(idx0)-1, std::stoi(idx1)-1, std::stoi(idx2)-1, std::stoi(idx3)-1));
+
+			++lines_read;
+		}
+	}
+}
+
+void ArchVisMSMDataSource::parseInputElementList(
+	std::string const& filename,
+	std::vector<int>& input_elements)
+{
+	std::ifstream file;
+	file.open(filename, std::ifstream::in);
+
+	if (file.is_open())
+	{
+		file.seekg(0, std::ifstream::beg);
+
+		unsigned int lines_read = 0;
+		while (!file.eof())
+		{
+			std::string line;
+			std::getline(file, line, '\n');
+			std::stringstream ss(line);
+
+			// given indices start at 1, so offset by -1
+			input_elements.push_back(std::stoi(line)-1);
+		}
+	}
+}
+
 void ArchVisMSMDataSource::updateMSMTransform()
 {
 	ObjectShaderParamsDataAccessor mesh_shader_params;
 
-	mesh_shader_params.byte_size = 16 * 4 * m_render_batches.getDrawCommandData(0).draw_cnt;
+	mesh_shader_params.byte_size = sizeof(PerObjectShaderParams) * m_render_batches.getDrawCommandData(0).draw_cnt;
 	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
 
-	// compute element offset
-	Mat4x4 tower_model_matrix;
-	tower_model_matrix.SetAt(0, 3, 0.0f);
-	tower_model_matrix.SetAt(1, 3, -1.0f);
-	tower_model_matrix.SetAt(2, 3, 0.0f);
+	int element_cnt = m_scale_model.getElementCount();
 
-	int counter = 0;
-	for (auto& element : m_floor_elements)
+	PerObjectShaderParams per_obj_params;
+
+	for (int i = 0; i < element_cnt; ++i)
 	{
-		int origin_node_idx = std::get<3>(element);
-		int x_node_idx = std::get<0>(element);
-		int z_node_idx = std::get<1>(element);
-		int xz_node_idx = std::get<2>(element);
+		ScaleModel::ElementType type = m_scale_model.getElementType(i);
+		per_obj_params.transform = m_scale_model.getElementTransform(i);
+		per_obj_params.force = m_scale_model.getElementForce(i);
 
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(
-			m_nodes[origin_node_idx], 
-			m_nodes[x_node_idx],
-			m_nodes[z_node_idx],
-			m_nodes[xz_node_idx],
-			Vec3(m_node_displacements[origin_node_idx * 3], m_node_displacements[origin_node_idx * 3 + 1], m_node_displacements[origin_node_idx * 3 + 2]),
-			Vec3(m_node_displacements[x_node_idx * 3], m_node_displacements[x_node_idx * 3 + 1], m_node_displacements[x_node_idx * 3 + 2]),
-			Vec3(m_node_displacements[z_node_idx * 3], m_node_displacements[z_node_idx * 3 + 1], m_node_displacements[z_node_idx * 3 + 2]),
-			Vec3(m_node_displacements[xz_node_idx * 3], m_node_displacements[xz_node_idx * 3 + 1], m_node_displacements[xz_node_idx * 3 + 2]) );
-
-		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
-	}
-
-	for (auto& element : m_beam_elements)
-	{
-		int src_node_idx = std::get<0>(element);
-		int tgt_node_idx = std::get<1>(element);
-
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[src_node_idx], m_nodes[tgt_node_idx],
-			Vec3(m_node_displacements[src_node_idx * 3], m_node_displacements[src_node_idx * 3 + 1], m_node_displacements[src_node_idx * 3 + 2]),
-			Vec3(m_node_displacements[tgt_node_idx * 3], m_node_displacements[tgt_node_idx * 3 + 1], m_node_displacements[tgt_node_idx * 3 + 2]));
-
-		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
-	}
-
-	for (auto& element : m_diagonal_elements)
-	{
-		int src_node_idx = std::get<0>(element);
-		int tgt_node_idx = std::get<1>(element);
-
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[src_node_idx], m_nodes[tgt_node_idx],
-			Vec3(m_node_displacements[src_node_idx * 3], m_node_displacements[src_node_idx * 3 + 1], m_node_displacements[src_node_idx * 3 + 2]),
-			Vec3(m_node_displacements[tgt_node_idx * 3], m_node_displacements[tgt_node_idx * 3 + 1], m_node_displacements[tgt_node_idx * 3 + 2]));
-
-		std::memcpy(mesh_shader_params.raw_data + counter * (16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
+		std::memcpy(mesh_shader_params.raw_data + i * sizeof(PerObjectShaderParams), &per_obj_params, sizeof(PerObjectShaderParams));
 	}
 
 	m_render_batches.updateObjectShaderParams(0, mesh_shader_params);
 
 	delete[] mesh_shader_params.raw_data;
+
+	for (auto& particle : m_text_particles)
+	{
+		std::string label = particle.text;
+
+		float x = particle.position.X();
+		float y = particle.position.Y();
+		float z = particle.position.Z();
+
+		//glDisable(GL_BLEND);
+		//glEnable(GL_DEPTH_TEST);
+		glColor4f(particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age/2000.0));
+		
+		font.DrawString(x,y,z, 0.025f, true, label.c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+	}
 }
 
-bool ArchVisMSMDataSource::load(std::string const& shader_filename,
-	std::string const& partsList_filename,
-	std::string const& nodesElement_filename)
+void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_filename,
+	std::string const& partsList_filename)
 {
 	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
-
-	
-	// Load node and element data
-	parseNodeElementTable(nodesElement_filename, m_nodes, m_floor_elements, m_beam_elements, m_diagonal_elements);
-
-	m_node_displacements.resize(m_nodes.size() * 3);
-
 
 	ShaderPrgmDataAccessor				shader_prgm_data;
 	MeshDataAccessor					mesh_data;
@@ -418,7 +491,7 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 	shader_prgm_data.char_cnt = shader_filename.length();
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
-	
+
 	// parse parts list
 	std::vector<std::string> parts_meshes_paths = parsePartsList(partsList_filename);
 
@@ -559,87 +632,84 @@ bool ArchVisMSMDataSource::load(std::string const& shader_filename,
 
 	assert(bytes_copied == mesh_data.index_data.byte_size);
 
-	// TODO Build initial transform matrices from node/element data
 
-	std::mt19937 generator(4215);
-	std::uniform_real_distribution<float> distr(0.05f, 0.1f);
-	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
-
-	draw_command_data.draw_cnt = m_floor_elements.size() + m_beam_elements.size() + m_diagonal_elements.size();
+	int element_cnt = m_scale_model.getElementCount();
+	draw_command_data.draw_cnt = element_cnt;
 	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
-	mesh_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
+	std::cout << "Per object params byte size: " << sizeof(PerObjectShaderParams) << std::endl;
+
+	mesh_shader_params.byte_size = sizeof(PerObjectShaderParams) * draw_command_data.draw_cnt;
 	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
 
-	// compute element offset
-	Mat4x4 tower_model_matrix;
-	tower_model_matrix.SetAt(0, 3, 0.0f);
-	tower_model_matrix.SetAt(1, 3, -1.0f);
-	tower_model_matrix.SetAt(2, 3, 0.0f);
+	PerObjectShaderParams per_obj_params;
 
-	int counter = 0;
-	for (auto& element : m_floor_elements)
+	for (int i = 0; i < element_cnt; ++i)
 	{
-		draw_command_data.data[counter].cnt = indices_cnt[2];
-		draw_command_data.data[counter].instance_cnt = 1;
-		draw_command_data.data[counter].first_idx = first_indices[2];
-		draw_command_data.data[counter].base_vertex = base_vertices[2];
-		draw_command_data.data[counter].base_instance = 0;
+		ScaleModel::ElementType type = m_scale_model.getElementType(i);
+		per_obj_params.transform = m_scale_model.getElementTransform(i);
+		per_obj_params.force = m_scale_model.getElementForce(i);
 
-		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
-		GLfloat scale = distr(generator);
-		scale = 1.0f;
-		object_transform.SetAt(0, 0, scale);
-		object_transform.SetAt(1, 1, scale);
-		object_transform.SetAt(2, 2, scale);
+		draw_command_data.data[i].cnt = indices_cnt[type];
+		draw_command_data.data[i].instance_cnt = 1;
+		draw_command_data.data[i].first_idx = first_indices[type];
+		draw_command_data.data[i].base_vertex = base_vertices[type];
+		draw_command_data.data[i].base_instance = 0;
 
-		object_transform.SetAt(0, 3, std::get<0>(m_nodes[std::get<3>(element)]));
-		object_transform.SetAt(1, 3, std::get<1>(m_nodes[std::get<3>(element)]) -1.0f);
-		object_transform.SetAt(2, 3, std::get<2>(m_nodes[std::get<3>(element)]));
-
-		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
-	}
-
-	for (auto& element : m_beam_elements)
-	{
-		draw_command_data.data[counter].cnt = indices_cnt[0];
-		draw_command_data.data[counter].instance_cnt = 1;
-		draw_command_data.data[counter].first_idx = first_indices[0];
-		draw_command_data.data[counter].base_vertex = base_vertices[0];
-		draw_command_data.data[counter].base_instance = 0;
-
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[std::get<0>(element)], m_nodes[std::get<1>(element)], Vec3(), Vec3());
-
-		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
-	}
-
-	for (auto& element : m_diagonal_elements)
-	{
-		draw_command_data.data[counter].cnt = indices_cnt[1];
-		draw_command_data.data[counter].instance_cnt = 1;
-		draw_command_data.data[counter].first_idx = first_indices[1];
-		draw_command_data.data[counter].base_vertex = base_vertices[1];
-		draw_command_data.data[counter].base_instance = 0;
-
-		Mat4x4 object_transform = tower_model_matrix * computeElementTransform(m_nodes[std::get<0>(element)], m_nodes[std::get<1>(element)], Vec3(), Vec3());
-
-		std::memcpy(mesh_shader_params.raw_data + counter*(16 * 4), object_transform.PeekComponents(), 16 * 4);
-
-		counter++;
+		std::memcpy(mesh_shader_params.raw_data + i * sizeof(PerObjectShaderParams), &per_obj_params, sizeof(PerObjectShaderParams));
 	}
 
 	mtl_shader_params.elements_cnt = 0;
-	
+
 	m_render_batches.addBatch(
 		shader_prgm_data,
 		mesh_data,
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
+}
+
+void ArchVisMSMDataSource::spawnAndUpdateTextLabels()
+{
+	double elapsed_spawn_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_last_spawn_time).count();
+	double elapsed_update_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_last_update_time).count();
+	m_last_update_time = std::chrono::steady_clock::now();
 	
-	return true;
+	for (auto& particle : m_text_particles)
+	{
+		particle.age += elapsed_update_time;
+		particle.position.SetY(particle.position.GetY() + elapsed_update_time * 0.00005);
+		particle.position.SetX(particle.position.GetX() + (std::signbit(particle.position.GetX()) ? -1.0f : 1.0f) * elapsed_update_time * 0.000025);
+	}
+	
+	m_text_particles.erase(std::remove_if(m_text_particles.begin(), m_text_particles.end(), [](const TextLabelParticle& p) { return p.age > 2000; }), m_text_particles.end());
+	
+	if (elapsed_spawn_time > 500)
+	{
+		for (int i = 0; i < m_scale_model.getElementCount(); ++i)
+		{
+			TextLabelParticle new_label;
+	
+			float force = m_scale_model.getElementForce(i);
+			std::ostringstream out;
+			out << std::setprecision(3) << force;
+			new_label.text = out.str();
+	
+			new_label.position = m_scale_model.getElementCenter(i);
+	
+			new_label.age = 0.0;
+	
+			Vec3 red(1.0f, 0.0f, 0.0f);
+			Vec3 blue(0.0f, 0.0f, 1.0f);
+			new_label.color = red * ((force + 100.0) / 200.0) + blue * (1.0f - ((force + 100.0) / 200.0));
+	
+			//glDisable(GL_BLEND);
+			//glEnable(GL_DEPTH_TEST);
+			//font.DrawString(x, y, z, 0.05f, true, label.c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+	
+			m_text_particles.push_back(new_label);
+		}
+	
+		m_last_spawn_time = std::chrono::steady_clock::now();
+	}
 }

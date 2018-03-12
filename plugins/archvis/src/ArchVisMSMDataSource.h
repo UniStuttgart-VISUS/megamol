@@ -17,9 +17,15 @@
 
 #include "vislib/net/Socket.h"
 
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+
 #include "mmcore/param/ParamSlot.h"
 
 #include "ng_mesh/AbstractNGMeshDataSource.h"
+#include "ScaleModel.h"
+
+#include <chrono>
 
 using namespace megamol::ngmesh;
 
@@ -62,19 +68,6 @@ namespace archvis {
 	protected:
 
 		virtual bool getDataCallback(megamol::core::Call& caller);
-		
-		/**
-		* Loads the specified geometry and shader file
-		*
-		* @param shader_filename The shader file to load
-		* @param geometry_filename The geometry file to load
-		* @param nodeElement_filenamen The node-element table file
-		*
-		* @return True on success
-		*/
-		virtual bool load(std::string const& shader_filename,
-			std::string const& geometry_filename,
-			std::string const& nodesElement_filename);
 
 	private:
 
@@ -87,25 +80,65 @@ namespace archvis {
 		typedef vislib::math::Vector<float, 3> Vec3;
 		typedef vislib::math::Quaternion<float> Quat;
 
-		/**
-		* Given two nodes and their displacement vectors,
-		* compute the transform of an element connected to these nodes.
-		*/
-		Mat4x4 computeElementTransform(
-			Node src,
-			Node tgt,
-			Vec3 src_displacement,
-			Vec3 tgt_displacement);
+		struct TextLabelParticle
+		{
+			Vec3		position;
+			std::string text;
+			double		age;
+			Vec3		color;
+		};
 
-		Mat4x4 computeElementTransform(
-			Node orgin,
-			Node corner_x,
-			Node corner_z,
-			Node corner_xz,
-			Vec3 origin_displacement,
-			Vec3 corner_x_displacement, 
-			Vec3 corner_z_displacement,
-			Vec3 corner_xz_displacement);
+		struct PerObjectShaderParams
+		{
+			Mat4x4 transform;
+			float force;
+			Vec3 padding;
+		};
+
+		class DataPackage
+		{
+		public:
+			DataPackage(int node_cnt, int input_element_cnt)
+				: node_cnt(node_cnt),
+				input_element_cnt(input_element_cnt),
+				displacements_byteOffset(4),
+				forces_byteOffset(4 + node_cnt*3*4),
+				byte_size(4 + node_cnt * 3 * 4 + input_element_cnt * 4),
+				raw_data(new uint8_t[byte_size]) {}
+
+			~DataPackage(){
+				delete[] raw_data;
+			}
+
+			DataPackage(DataPackage const& other) = delete;
+			DataPackage(DataPackage&& other) = delete;
+			DataPackage& operator=(DataPackage const& rhs) = delete;
+			DataPackage& operator=(DataPackage&& other) = delete;
+
+			float getTime() { return reinterpret_cast<float*>(raw_data)[0]; }
+
+			Vec3 getNodeDisplacement(int idx){
+				return Vec3(reinterpret_cast<float*>(raw_data + displacements_byteOffset + idx*3*4)[0],
+					reinterpret_cast<float*>(raw_data + displacements_byteOffset + idx*3*4)[2],
+					reinterpret_cast<float*>(raw_data + displacements_byteOffset + idx*3*4)[1]);
+			};
+
+			float getElementForces(int idx) {
+				return reinterpret_cast<float*>(raw_data + forces_byteOffset + idx * 4)[0];
+			}
+
+			size_t getByteSize() { return byte_size; }
+
+			uint8_t* data() { return raw_data; }
+		private:
+			int node_cnt;
+			int input_element_cnt;
+			size_t displacements_byteOffset;
+			size_t forces_byteOffset;
+
+			size_t byte_size;
+			uint8_t* raw_data;
+		};
 
 		void parseNodeElementTable(
 			std::string const& filename,
@@ -114,24 +147,41 @@ namespace archvis {
 			std::vector<BeamElement>& beam_elements,
 			std::vector<DiagonalElement>& diagonal_elements);
 
+		void parseNodeList(
+			std::string const& filename,
+			std::vector<Vec3>& node_positions);
+
+		void parseElementList(
+			std::string const& filename,
+			std::vector<std::tuple<int,int,int,int,int>>& element_data);
+
+		void parseInputElementList(
+			std::string const& filename,
+			std::vector<int>& input_elements);
+
 		std::vector<std::string> parsePartsList(std::string const& filename);
 
 		void updateMSMTransform();
 
+		/**
+		* Loads the specified geometry and shader file
+		*
+		* @param shader_filename The shader file to load
+		* @param geometry_filename The geometry file to load
+		*/
+		void createRenderBatches(
+			std::string const& shader_filename,
+			std::string const& partsList_filename);
 
-		/** Nodes of the MSM */
-		std::vector<Node>            m_nodes;
+		void spawnAndUpdateTextLabels();
 
-		/** Floor elements of the MSM */
-		std::vector<FloorElement>    m_floor_elements;
+		/** Representation of the scale model */
+		ScaleModel m_scale_model;
 
-		/** Beam elements of the MSM */
-		std::vector<BeamElement>     m_beam_elements;
+		std::list<TextLabelParticle> m_text_particles;
 
-		/** Diagonal elements of the MSM */
-		std::vector<DiagonalElement> m_diagonal_elements;
-
-		std::vector<float>           m_node_displacements;
+		std::chrono::steady_clock::time_point m_last_spawn_time;
+		std::chrono::steady_clock::time_point m_last_update_time;
 
 
 		/** The shader file name */
@@ -140,14 +190,26 @@ namespace archvis {
 		/** The mesh list file name */
 		megamol::core::param::ParamSlot m_partsList_slot;
 
+		/** The node list file name */
+		megamol::core::param::ParamSlot m_nodes_slot;
+
+		/** The element list file name */
+		megamol::core::param::ParamSlot m_elements_slot;
+
 		/** The node/element list file name */
 		megamol::core::param::ParamSlot m_nodeElement_table_slot;
 
 		/** The IP Adress for receiving sensor or simulation data */
 		megamol::core::param::ParamSlot m_rcv_IPAddr_slot;
 
+		/** The port for receiving sensor or simulation data */
+		megamol::core::param::ParamSlot m_rcv_port_slot;
+
 		/** The IP Adress for sending sensor or simulation data (to Unity) */
 		megamol::core::param::ParamSlot m_snd_IPAddr_slot;
+
+		/** The port for sending sensor or simulation data (to Unity) */
+		megamol::core::param::ParamSlot m_snd_port_slot;
 
 		/** The socket that receives the sensor or simulation data */
 		vislib::net::Socket m_rcv_socket;
@@ -155,6 +217,8 @@ namespace archvis {
 
 		/** The socket that sends the sensor or simulation data */
 		vislib::net::Socket m_snd_socket;
+
+		vislib::graphics::gl::OutlineFont font;
 	};
 }
 }
