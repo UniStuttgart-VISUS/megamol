@@ -23,21 +23,26 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransferFunc1DDialog));
             this.lbl_Res = new System.Windows.Forms.Label();
             this.nUD_Res = new System.Windows.Forms.NumericUpDown();
-            this.cb_R = new System.Windows.Forms.CheckBox();
-            this.cb_G = new System.Windows.Forms.CheckBox();
-            this.cb_B = new System.Windows.Forms.CheckBox();
-            this.cb_A = new System.Windows.Forms.CheckBox();
-            this.cb_All = new System.Windows.Forms.CheckBox();
             this.panel_Canvas = new MegaMolConf.NoflickerPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pb_TransferFunc = new System.Windows.Forms.PictureBox();
-            this.btn_Zero = new System.Windows.Forms.Button();
-            this.btn_Ramp = new System.Windows.Forms.Button();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.b_R = new System.Windows.Forms.ToolStripButton();
+            this.b_G = new System.Windows.Forms.ToolStripButton();
+            this.b_B = new System.Windows.Forms.ToolStripButton();
+            this.b_A = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.b_All = new System.Windows.Forms.ToolStripButton();
+            this.b_None = new System.Windows.Forms.ToolStripButton();
+            this.b_Ramp = new System.Windows.Forms.ToolStripButton();
+            this.b_Zero = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // lbl_Res
@@ -51,7 +56,7 @@
             // 
             // nUD_Res
             // 
-            this.nUD_Res.Location = new System.Drawing.Point(221, 11);
+            this.nUD_Res.Location = new System.Drawing.Point(240, 3);
             this.nUD_Res.Maximum = new decimal(new int[] {
             1024,
             0,
@@ -68,85 +73,15 @@
             0});
             this.nUD_Res.ValueChanged += new System.EventHandler(this.NUDRes_ValChanged);
             // 
-            // cb_R
-            // 
-            this.cb_R.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_R.AutoSize = true;
-            this.cb_R.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cb_R.Location = new System.Drawing.Point(12, 11);
-            this.cb_R.Name = "cb_R";
-            this.cb_R.Size = new System.Drawing.Size(25, 23);
-            this.cb_R.TabIndex = 8;
-            this.cb_R.Text = "R";
-            this.cb_R.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_R.UseVisualStyleBackColor = true;
-            this.cb_R.CheckedChanged += new System.EventHandler(this.CBs_CheckedChanged);
-            // 
-            // cb_G
-            // 
-            this.cb_G.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_G.AutoSize = true;
-            this.cb_G.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cb_G.Location = new System.Drawing.Point(43, 11);
-            this.cb_G.Name = "cb_G";
-            this.cb_G.Size = new System.Drawing.Size(25, 23);
-            this.cb_G.TabIndex = 8;
-            this.cb_G.Text = "G";
-            this.cb_G.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_G.UseVisualStyleBackColor = true;
-            this.cb_G.CheckedChanged += new System.EventHandler(this.CBs_CheckedChanged);
-            // 
-            // cb_B
-            // 
-            this.cb_B.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_B.AutoSize = true;
-            this.cb_B.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cb_B.Location = new System.Drawing.Point(74, 11);
-            this.cb_B.Name = "cb_B";
-            this.cb_B.Size = new System.Drawing.Size(24, 23);
-            this.cb_B.TabIndex = 8;
-            this.cb_B.Text = "B";
-            this.cb_B.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_B.UseVisualStyleBackColor = true;
-            this.cb_B.CheckedChanged += new System.EventHandler(this.CBs_CheckedChanged);
-            // 
-            // cb_A
-            // 
-            this.cb_A.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_A.AutoSize = true;
-            this.cb_A.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cb_A.Location = new System.Drawing.Point(105, 11);
-            this.cb_A.Name = "cb_A";
-            this.cb_A.Size = new System.Drawing.Size(24, 23);
-            this.cb_A.TabIndex = 8;
-            this.cb_A.Text = "A";
-            this.cb_A.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_A.UseVisualStyleBackColor = true;
-            this.cb_A.CheckedChanged += new System.EventHandler(this.CBs_CheckedChanged);
-            // 
-            // cb_All
-            // 
-            this.cb_All.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_All.AutoSize = true;
-            this.cb_All.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cb_All.Location = new System.Drawing.Point(135, 11);
-            this.cb_All.Name = "cb_All";
-            this.cb_All.Size = new System.Drawing.Size(28, 23);
-            this.cb_All.TabIndex = 8;
-            this.cb_All.Text = "All";
-            this.cb_All.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_All.UseVisualStyleBackColor = true;
-            this.cb_All.CheckedChanged += new System.EventHandler(this.CBAll_CheckedChanged);
-            // 
             // panel_Canvas
             // 
             this.panel_Canvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel_Canvas.BackColor = System.Drawing.Color.White;
-            this.panel_Canvas.Location = new System.Drawing.Point(12, 42);
+            this.panel_Canvas.Location = new System.Drawing.Point(12, 29);
             this.panel_Canvas.Name = "panel_Canvas";
-            this.panel_Canvas.Size = new System.Drawing.Size(536, 327);
+            this.panel_Canvas.Size = new System.Drawing.Size(536, 340);
             this.panel_Canvas.TabIndex = 5;
             this.panel_Canvas.Click += new System.EventHandler(this.PanelCanvas_Click);
             this.panel_Canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelCanvas_Paint);
@@ -177,40 +112,119 @@
             this.pb_TransferFunc.TabIndex = 10;
             this.pb_TransferFunc.TabStop = false;
             // 
-            // btn_Zero
+            // toolStrip1
             // 
-            this.btn_Zero.Location = new System.Drawing.Point(392, 11);
-            this.btn_Zero.Name = "btn_Zero";
-            this.btn_Zero.Size = new System.Drawing.Size(75, 23);
-            this.btn_Zero.TabIndex = 11;
-            this.btn_Zero.Text = "Zero";
-            this.btn_Zero.UseVisualStyleBackColor = true;
-            this.btn_Zero.Click += new System.EventHandler(this.btn_Zero_Click);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.b_R,
+            this.b_G,
+            this.b_B,
+            this.b_A,
+            this.toolStripSeparator1,
+            this.b_All,
+            this.b_None,
+            this.b_Ramp,
+            this.b_Zero});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(560, 25);
+            this.toolStrip1.TabIndex = 13;
+            this.toolStrip1.Text = "toolStrip1";
             // 
-            // btn_Ramp
+            // b_R
             // 
-            this.btn_Ramp.Location = new System.Drawing.Point(473, 11);
-            this.btn_Ramp.Name = "btn_Ramp";
-            this.btn_Ramp.Size = new System.Drawing.Size(75, 23);
-            this.btn_Ramp.TabIndex = 12;
-            this.btn_Ramp.Text = "Ramp";
-            this.btn_Ramp.UseVisualStyleBackColor = true;
-            this.btn_Ramp.Click += new System.EventHandler(this.btn_Ramp_Click);
+            this.b_R.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_R.Image = ((System.Drawing.Image)(resources.GetObject("b_R.Image")));
+            this.b_R.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_R.Name = "b_R";
+            this.b_R.Size = new System.Drawing.Size(23, 22);
+            this.b_R.Text = "R";
+            this.b_R.Click += new System.EventHandler(this.color_Clicked);
+            // 
+            // b_G
+            // 
+            this.b_G.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_G.Image = ((System.Drawing.Image)(resources.GetObject("b_G.Image")));
+            this.b_G.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_G.Name = "b_G";
+            this.b_G.Size = new System.Drawing.Size(23, 22);
+            this.b_G.Text = "G";
+            this.b_G.Click += new System.EventHandler(this.color_Clicked);
+            // 
+            // b_B
+            // 
+            this.b_B.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_B.Image = ((System.Drawing.Image)(resources.GetObject("b_B.Image")));
+            this.b_B.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_B.Name = "b_B";
+            this.b_B.Size = new System.Drawing.Size(23, 22);
+            this.b_B.Text = "B";
+            this.b_B.Click += new System.EventHandler(this.color_Clicked);
+            // 
+            // b_A
+            // 
+            this.b_A.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_A.Image = ((System.Drawing.Image)(resources.GetObject("b_A.Image")));
+            this.b_A.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_A.Name = "b_A";
+            this.b_A.Size = new System.Drawing.Size(23, 22);
+            this.b_A.Text = "A";
+            this.b_A.Click += new System.EventHandler(this.color_Clicked);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // b_All
+            // 
+            this.b_All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_All.Image = ((System.Drawing.Image)(resources.GetObject("b_All.Image")));
+            this.b_All.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_All.Name = "b_All";
+            this.b_All.Size = new System.Drawing.Size(25, 22);
+            this.b_All.Text = "All";
+            this.b_All.Click += new System.EventHandler(this.all_Clicked);
+            // 
+            // b_None
+            // 
+            this.b_None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_None.Image = ((System.Drawing.Image)(resources.GetObject("b_None.Image")));
+            this.b_None.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_None.Name = "b_None";
+            this.b_None.Size = new System.Drawing.Size(40, 22);
+            this.b_None.Text = "None";
+            this.b_None.Click += new System.EventHandler(this.zero_Clicked);
+            // 
+            // b_Ramp
+            // 
+            this.b_Ramp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.b_Ramp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_Ramp.Image = ((System.Drawing.Image)(resources.GetObject("b_Ramp.Image")));
+            this.b_Ramp.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_Ramp.Name = "b_Ramp";
+            this.b_Ramp.Size = new System.Drawing.Size(42, 22);
+            this.b_Ramp.Text = "Ramp";
+            this.b_Ramp.Click += new System.EventHandler(this.btn_Ramp_Click);
+            // 
+            // b_Zero
+            // 
+            this.b_Zero.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.b_Zero.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.b_Zero.Image = ((System.Drawing.Image)(resources.GetObject("b_Zero.Image")));
+            this.b_Zero.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.b_Zero.Name = "b_Zero";
+            this.b_Zero.Size = new System.Drawing.Size(35, 22);
+            this.b_Zero.Text = "Zero";
+            this.b_Zero.Click += new System.EventHandler(this.btn_Zero_Click);
             // 
             // TransferFunc1DDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(560, 450);
-            this.Controls.Add(this.btn_Ramp);
-            this.Controls.Add(this.btn_Zero);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.cb_All);
-            this.Controls.Add(this.cb_A);
-            this.Controls.Add(this.cb_B);
-            this.Controls.Add(this.cb_G);
-            this.Controls.Add(this.cb_R);
             this.Controls.Add(this.nUD_Res);
+            this.Controls.Add(this.toolStrip1);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.lbl_Res);
             this.Controls.Add(this.panel_Canvas);
             this.Name = "TransferFunc1DDialog";
@@ -218,6 +232,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -227,14 +243,17 @@
         private NoflickerPanel panel_Canvas;
         private System.Windows.Forms.Label lbl_Res;
         private System.Windows.Forms.NumericUpDown nUD_Res;
-        private System.Windows.Forms.CheckBox cb_R;
-        private System.Windows.Forms.CheckBox cb_G;
-        private System.Windows.Forms.CheckBox cb_B;
-        private System.Windows.Forms.CheckBox cb_A;
-        private System.Windows.Forms.CheckBox cb_All;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.PictureBox pb_TransferFunc;
-        private System.Windows.Forms.Button btn_Zero;
-        private System.Windows.Forms.Button btn_Ramp;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton b_R;
+        private System.Windows.Forms.ToolStripButton b_G;
+        private System.Windows.Forms.ToolStripButton b_B;
+        private System.Windows.Forms.ToolStripButton b_A;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton b_All;
+        private System.Windows.Forms.ToolStripButton b_None;
+        private System.Windows.Forms.ToolStripButton b_Ramp;
+        private System.Windows.Forms.ToolStripButton b_Zero;
     }
 }
