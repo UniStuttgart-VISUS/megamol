@@ -65,6 +65,7 @@
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
+#include "floattable/FloatTableToLines.h"
 
 
 /*
@@ -169,6 +170,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToLines>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
