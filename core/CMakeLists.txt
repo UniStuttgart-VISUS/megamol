@@ -85,8 +85,6 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  find_package(OpenMP)
-
   find_package(MPI)
 
   if(WIN32)
@@ -121,9 +119,6 @@ if(BUILD_CORE)
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-  if (OPENMP_FOUND OR WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
   if (MPI_C_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
