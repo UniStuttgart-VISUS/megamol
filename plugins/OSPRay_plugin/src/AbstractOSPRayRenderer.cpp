@@ -218,6 +218,7 @@ void AbstractOSPRayRenderer::releaseTextureScreen() {
 void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
     if (dvce == NULL) {
+        ospLoadModule("ispc");
         dvce = ospNewDevice("default");
         ospDeviceCommit(dvce);
     }
