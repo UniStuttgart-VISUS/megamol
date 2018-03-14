@@ -20,7 +20,8 @@
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-
+#include "vislib/math/Vector.h"
+#include "vislib/math/Quaternion.h"
 
 namespace megamol {
 namespace core {
@@ -400,19 +401,18 @@ namespace utility {
 
         /**
         * Reset font orientation.
-        *
         */
-        inline void ResetOrientation(void) const;
+        void ResetOrientation(void);
 
         /**
         * Set font orientation.
         *
-        * @param x The X coordinate of the rotation axis.
-        * @param y The Y coordinate of the rotation axis.
-        * @param z The Z coordinate of the rotation axis.
         * @param a The rotation angle.
+        * @param v The rotation axis.
         */
-        inline void SetOrientation(float x, float y, float z, float a) const;
+        void SetOrientation(float a, vislib::math::Vector<float, 3> v);
+        void SetOrientation(float a, float x, float y, float z);
+
 
     protected:
 
@@ -453,6 +453,9 @@ namespace utility {
 
         /** Billboard mode. */
         bool billboard;
+
+        /** Quaternion for rotation. */
+        vislib::math::Quaternion<float> rotQuat;
 
         /** Inidcating if font could be loaded successfully. */
         bool initialised;

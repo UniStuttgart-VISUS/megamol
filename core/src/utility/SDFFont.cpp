@@ -24,7 +24,6 @@
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
-
 using namespace vislib;
 using namespace megamol::core::utility;
 
@@ -547,26 +546,28 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 /**
 * SDFFont::ResetOrientation
 */
-inline void SDFFont::ResetOrientation(void) const {
+void SDFFont::ResetOrientation(void) {
 
-
-
-
-
-
+    this->rotQuat.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
 }
 
 
 /**
 * SDFFont::SetOrientation
 */
-inline void SDFFont::SetOrientation(float x, float y, float z, float a) const {
+void SDFFont::SetOrientation(float a, float x, float y, float z) {
+
+    this->SetOrientation(a, vislib::math::Vector<float, 3>(x, y, z));
+}
 
 
+/**
+* SDFFont::SetOrientation
+*/
+void SDFFont::SetOrientation(float a, vislib::math::Vector<float, 3> v) {
 
-
-
-
+    float PI = 3.1415926535897932f;
+    this->rotQuat.Set(a * PI / 180.0f, v);
 }
 
 
@@ -869,6 +870,38 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     // Compute modelviewprojection matrix
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
+    // Rotation matrix
+    // this->rotQuad = a(*R) + b*I + c*J + d*K
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> rotMat;
+    if (!this->billboard) {
+        rotMat.SetIdentity();
+
+        float aa  = this->rotQuat.R() * this->rotQuat.R();
+        float bb  = this->rotQuat.I() * this->rotQuat.I();
+        float cc  = this->rotQuat.J() * this->rotQuat.J();
+        float dd  = this->rotQuat.K() * this->rotQuat.K();
+        float ab2 = 2.0f * this->rotQuat.R() * this->rotQuat.I();
+        float ac2 = 2.0f * this->rotQuat.R() * this->rotQuat.J();
+        float ad2 = 2.0f * this->rotQuat.R() * this->rotQuat.K();
+        float bc2 = 2.0f * this->rotQuat.I() * this->rotQuat.J();
+        float bd2 = 2.0f * this->rotQuat.I() * this->rotQuat.K();
+        float cd2 = 2.0f * this->rotQuat.J() * this->rotQuat.K();
+
+        rotMat.SetAt(0, 0, aa + bb - cc - dd);
+        rotMat.SetAt(1, 0,     bc2 + ad2);
+        rotMat.SetAt(2, 0,     bd2 - ac2);
+
+        rotMat.SetAt(0, 1,     bc2 - ad2);
+        rotMat.SetAt(1, 1, aa - bb + cc - dd);
+        rotMat.SetAt(2, 1,     cd2 + ab2);
+
+        rotMat.SetAt(0, 2,     bd2 + ac2);
+        rotMat.SetAt(1, 2,     cd2 - ab2);
+        rotMat.SetAt(2, 2, aa - bb - cc + dd);
+
+        modelViewProjMatrix = modelViewProjMatrix * rotMat;
+    }
+
     // Billboard stuff
     vislib::math::Vector<GLfloat, 4> billboardRotPoint;
     if (this->billboard) {
@@ -895,10 +928,8 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         default:
             break;
         }
-        billboardRotPoint.SetX(gx);
-        billboardRotPoint.SetY(gy + deltaY);
-        billboardRotPoint.SetZ(gz);
-        billboardRotPoint.SetW(1.0f);
+        billboardRotPoint.Set(gx, gy + deltaY, gz, 1.0f);
+        // Apply model view matrix only to start point ...
         billboardRotPoint = modelViewMatrix * billboardRotPoint;
         billboardRotPoint.SetY(billboardRotPoint.Y() - deltaY);
         gx = billboardRotPoint.X();
@@ -956,36 +987,41 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         //
         // ____________________________________
 
+        // Temp position values
+        float tmpP01x = size * (glyph->xoffset + kern) + gx;
+        float tmpP23x = tmpP01x + (size * glyph->width);
+        float tmpP03y = sy * (glyph->yoffset) + gy;
+        float tmpP12y = tmpP03y + (sy * glyph->height);
 
         // Set position data:
-        posData[charCnt * 12 + 0] = size * (glyph->xoffset + kern) + gx; // p0-x
-        posData[charCnt * 12 + 1] = sy * (glyph->yoffset) + gy; // p0-y
-        posData[charCnt * 12 + 2] = gz; // p0-z
+        posData[charCnt * 12 + 0] = tmpP01x; // p0-x
+        posData[charCnt * 12 + 1] = tmpP03y; // p0-y
+        posData[charCnt * 12 + 2] = gz;      // p0-z
 
-        posData[charCnt * 12 + 6] = size * (glyph->xoffset + glyph->width + kern) + gx; // p2-x
-        posData[charCnt * 12 + 7] = sy * (glyph->yoffset + glyph->height) + gy; // p2-y
-        posData[charCnt * 12 + 8] = gz; // p2-z
+        posData[charCnt * 12 + 6] = tmpP23x; // p2-x
+        posData[charCnt * 12 + 7] = tmpP12y; // p2-y
+        posData[charCnt * 12 + 8] = gz;      // p2-z
 
+        // Change rotation of quad positions for flipped y axisfrom CCW to CW.
         if (flipY) {
-            posData[charCnt * 12 + 3] = size * (glyph->xoffset + glyph->width + kern) + gx; // p1-x
-            posData[charCnt * 12 + 4] = sy * (glyph->yoffset) + gy; // p1-y
-            posData[charCnt * 12 + 5] = gz; // p1-z
+            posData[charCnt * 12 + 3] = tmpP23x; // p1-x
+            posData[charCnt * 12 + 4] = tmpP03y; // p1-y
+            posData[charCnt * 12 + 5] = gz;      // p1-z
 
-            posData[charCnt * 12 + 9] = size * (glyph->xoffset + kern) + gx; // p3-x
-            posData[charCnt * 12 + 10] = sy * (glyph->yoffset + glyph->height) + gy; // p3-y
-            posData[charCnt * 12 + 11] = gz; // p3-z
+            posData[charCnt * 12 + 9]  = tmpP01x;  // p3-x
+            posData[charCnt * 12 + 10] = tmpP12y;  // p3-y
+            posData[charCnt * 12 + 11] = gz;       // p3-z
         }
         else {
-            posData[charCnt * 12 + 3] = size * (glyph->xoffset + kern) + gx; // p1-x
-            posData[charCnt * 12 + 4] = sy * (glyph->yoffset + glyph->height) + gy; // p1-y
-            posData[charCnt * 12 + 5] = gz; // p1-z
+            posData[charCnt * 12 + 3] = tmpP01x; // p1-x
+            posData[charCnt * 12 + 4] = tmpP12y; // p1-y
+            posData[charCnt * 12 + 5] = gz;      // p1-z
 
-            posData[charCnt * 12 + 9] = size * (glyph->xoffset + glyph->width + kern) + gx; // p3-x
-            posData[charCnt * 12 + 10] = sy * (glyph->yoffset) + gy; // p3-y
-            posData[charCnt * 12 + 11] = gz; // p3-z
+            posData[charCnt * 12 + 9]  = tmpP23x;  // p3-x
+            posData[charCnt * 12 + 10] = tmpP03y;  // p3-y
+            posData[charCnt * 12 + 11] = gz;       // p3-z
         }
         
-
         // Set texture data
         texData[charCnt * 8 + 0] = glyph->texX0; // t0-x
         texData[charCnt * 8 + 1] = glyph->texY0; // t0-y
@@ -993,12 +1029,13 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         texData[charCnt * 8 + 4] = glyph->texX1; // t2-x
         texData[charCnt * 8 + 5] = glyph->texY1; // t2-y
 
+        // Change rotation of texture coord for flipped y axisfrom CCW to CW.
         if (flipY) {
             texData[charCnt * 8 + 2] = glyph->texX1; // t1-x
             texData[charCnt * 8 + 3] = glyph->texY0; // t1-y
 
             texData[charCnt * 8 + 6] = glyph->texX0; // t3-x
-            texData[charCnt * 8 + 7] = glyph->texY1; // t4-y
+            texData[charCnt * 8 + 7] = glyph->texY1; // t3-y
         }
         else {
             texData[charCnt * 8 + 2] = glyph->texX0; // t1-x
@@ -1007,8 +1044,6 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             texData[charCnt * 8 + 6] = glyph->texX1; // t3-x
             texData[charCnt * 8 + 7] = glyph->texY0; // t3-y
         }
-
-
 
         // Update info for next character
         charCnt++;
@@ -1061,6 +1096,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
     if (this->billboard) {
         glUniform1i(this->shader.ParameterLocation("billboard"), 1);
+        // ... only the projection matrix needs to be apllied for billboard view.
         glUniformMatrix4fv(this->shader.ParameterLocation("pMat"), 1, GL_FALSE, projMatrix.PeekComponents());
     }
 
@@ -1089,6 +1125,8 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
 bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 
     this->initialised = false;
+
+    this->ResetOrientation();
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
