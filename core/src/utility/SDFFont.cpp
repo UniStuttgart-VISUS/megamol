@@ -325,10 +325,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
 
     } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, 0.0f, size, flipY, align);
@@ -347,11 +347,11 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
 
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
     
     this->draw(c, run, x, y, 0.0f, size, flipY, align);
@@ -470,10 +470,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, z, size, flipY, align);
@@ -492,10 +492,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  * (flipY ? -1.0f : 1.0f);
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, z, size, flipY, align);
@@ -854,12 +854,10 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     float gy = y;
     float gz = z;
 
-    float sy = (flipY) ? (-size) : (size);
+    float sy = (flipY) ? (size) : (-size);
     float kern = 0.0f;
     unsigned int charCnt = 0;
     unsigned int lastGlyphId = 0;
-
-
 
     // Get current matrices 
     GLfloat modelViewMatrix_column[16];
@@ -942,41 +940,75 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             }
         }
         
-        // Set position data
-        //             p3-----------p2
+        // ____________________________________
+        //
+        //          t3=p3-----------p2=t2
         //             |      /\     |
         //          height   /  \    |
         //             |    /----\   |
         //             |   /      \  |
-        //     --------p0---width---p1
+        //     -----t0=p0---width---p1=t1
         //     |       |                   
         //  yoffset    |              
         //     |       |-kern-|     
         //     X---xoffset----|
         // (gx,gy,gz)
+        //
+        // ____________________________________
 
-        posData[charCnt * 12 + 0] = size * (glyph->xoffset + kern)                + gx; // p0-x
-        posData[charCnt * 12 + 1] = sy   * (glyph->yoffset)                       + gy; // p0-y
-        posData[charCnt * 12 + 2] =                                                 gz; // p0-z
-        posData[charCnt * 12 + 3] = size * (glyph->xoffset + glyph->width + kern) + gx; // p1-x
-        posData[charCnt * 12 + 4] = sy   * (glyph->yoffset)                       + gy; // p1-y
-        posData[charCnt * 12 + 5] =                                                 gz; // p1-z
+
+        // Set position data:
+        posData[charCnt * 12 + 0] = size * (glyph->xoffset + kern) + gx; // p0-x
+        posData[charCnt * 12 + 1] = sy * (glyph->yoffset) + gy; // p0-y
+        posData[charCnt * 12 + 2] = gz; // p0-z
+
         posData[charCnt * 12 + 6] = size * (glyph->xoffset + glyph->width + kern) + gx; // p2-x
-        posData[charCnt * 12 + 7] = sy   * (glyph->yoffset + glyph->height)       + gy; // p2-y
-        posData[charCnt * 12 + 8] =                                                 gz; // p2-z
-        posData[charCnt * 12 + 9] = size * (glyph->xoffset + kern)                + gx; // p3-x
-        posData[charCnt * 12 + 10] = sy   * (glyph->yoffset + glyph->height)      + gy; // p3-y
-        posData[charCnt * 12 + 11] =                                                gz; // p3-z
+        posData[charCnt * 12 + 7] = sy * (glyph->yoffset + glyph->height) + gy; // p2-y
+        posData[charCnt * 12 + 8] = gz; // p2-z
+
+        if (flipY) {
+            posData[charCnt * 12 + 3] = size * (glyph->xoffset + glyph->width + kern) + gx; // p1-x
+            posData[charCnt * 12 + 4] = sy * (glyph->yoffset) + gy; // p1-y
+            posData[charCnt * 12 + 5] = gz; // p1-z
+
+            posData[charCnt * 12 + 9] = size * (glyph->xoffset + kern) + gx; // p3-x
+            posData[charCnt * 12 + 10] = sy * (glyph->yoffset + glyph->height) + gy; // p3-y
+            posData[charCnt * 12 + 11] = gz; // p3-z
+        }
+        else {
+            posData[charCnt * 12 + 3] = size * (glyph->xoffset + kern) + gx; // p1-x
+            posData[charCnt * 12 + 4] = sy * (glyph->yoffset + glyph->height) + gy; // p1-y
+            posData[charCnt * 12 + 5] = gz; // p1-z
+
+            posData[charCnt * 12 + 9] = size * (glyph->xoffset + glyph->width + kern) + gx; // p3-x
+            posData[charCnt * 12 + 10] = sy * (glyph->yoffset) + gy; // p3-y
+            posData[charCnt * 12 + 11] = gz; // p3-z
+        }
+        
 
         // Set texture data
-        texData[charCnt * 8 + 0] = glyph->texX0; // X0
-        texData[charCnt * 8 + 1] = glyph->texY0; // Y0
-        texData[charCnt * 8 + 2] = glyph->texX1; // X1
-        texData[charCnt * 8 + 3] = glyph->texY0; // Y1
-        texData[charCnt * 8 + 4] = glyph->texX1; // X2
-        texData[charCnt * 8 + 5] = glyph->texY1; // Y2
-        texData[charCnt * 8 + 6] = glyph->texX0; // X3
-        texData[charCnt * 8 + 7] = glyph->texY1; // Y3
+        texData[charCnt * 8 + 0] = glyph->texX0; // t0-x
+        texData[charCnt * 8 + 1] = glyph->texY0; // t0-y
+
+        texData[charCnt * 8 + 4] = glyph->texX1; // t2-x
+        texData[charCnt * 8 + 5] = glyph->texY1; // t2-y
+
+        if (flipY) {
+            texData[charCnt * 8 + 2] = glyph->texX1; // t1-x
+            texData[charCnt * 8 + 3] = glyph->texY0; // t1-y
+
+            texData[charCnt * 8 + 6] = glyph->texX0; // t3-x
+            texData[charCnt * 8 + 7] = glyph->texY1; // t4-y
+        }
+        else {
+            texData[charCnt * 8 + 2] = glyph->texX0; // t1-x
+            texData[charCnt * 8 + 3] = glyph->texY1; // t1-y
+
+            texData[charCnt * 8 + 6] = glyph->texX1; // t3-x
+            texData[charCnt * 8 + 7] = glyph->texY0; // t3-y
+        }
+
+
 
         // Update info for next character
         charCnt++;

@@ -67,10 +67,10 @@ void main(void) {
      
     float distance = texture2D(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
 
-    if (distance == 0.0) { 
+    if (distance == 0.0)  {
         discard;
     }
-
+    
     float smootingEdge = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
 
     if (renderType == RENDERTYPE_FILL) { 
@@ -92,6 +92,10 @@ void main(void) {
     }
 
     float alpha  = clamp(distance, 0.0, 1.0);
+    if (distance == 0.0)  {
+        discard;
+    }
+    
     outFragColor = vec4(color.rgb, alpha);
 }
 
