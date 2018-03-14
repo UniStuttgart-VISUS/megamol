@@ -19,10 +19,45 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
 
+  include(ExternalProject)
+
+  ExternalProject_Add(tinyply
+    GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
+    GIT_TAG "2.0"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+  )
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-   
+
+  # Grouping in Visual Studio
+  foreach(FILE_NAME ${source_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^src" "Source Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
+  foreach(FILE_NAME ${header_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^src" "Header Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
+  foreach(FILE_NAME ${public_header_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^include\\\\mmstd_datatools" "Public Header Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
+
+  source_group("tinyply" FILES "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.h" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.cpp")
+
+  list(APPEND source_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.cpp")
+  list(APPEND header_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.h")
+
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib core)
@@ -46,8 +81,5 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   # Grouping in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-  source_group("Public Header Files" FILES ${public_header_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
   
 endif(BUILD_MMSTD_DATATOOLS_PLUGIN)
