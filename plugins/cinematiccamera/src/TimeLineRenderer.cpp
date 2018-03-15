@@ -401,6 +401,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float fColor[4]    = { 1.0f, 0.6f, 0.6f, 1.0f }; // Color for FRAME MARKER
     float white[4]     = { 1.0f, 1.0f, 1.0f, 1.0f };
     float yellow[4]    = { 1.0f, 1.0f, 0.0f, 1.0f };
+    float menu[4]      = { 0.0f, 0.0f, 0.3f, 1.0f };
     // Adapt colors depending on  Lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
@@ -413,28 +414,18 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     }
 
-
     // Opengl setup -----------------------------------------------------------
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_1D);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -505,7 +496,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw markers for existing keyframes in array ---------------------------
-    glDisable(GL_POLYGON_SMOOTH);
     for (unsigned int i = 0; i < keyframes->Count(); i++) {
         x = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
         y = this->simScaleOffset + (*keyframes)[i].getSimTime()  * this->simLenTimeFrac;
@@ -549,18 +539,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw ruler captions ----------------------------------------------------
-    glEnable(GL_POLYGON_SMOOTH);
     strHeight = this->theFont.LineHeight(this->fontSize);
     // animation time steps
     float timeStep = 0.0f;
     tmpStr.Format(this->animFormatStr.PeekBuffer(), this->animTotalTime);
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    for (float f = this->animScaleOffset; f < this->animAxisLen + this->animSegmSize/10.0f; f = f + this->animSegmSize) {
+    for (float f = this->animScaleOffset; f < this->animAxisLen + this->animSegmSize / 10.0f; f = f + this->animSegmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->animFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-            this->theFont.DrawString(fgColor, this->axisStartPos.X() + f - strWidth / 2.0f, this->axisStartPos.Y() - this->rulerMarkSize - strHeight,
-                                     strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+            this->theFont.DrawString(fgColor, this->axisStartPos.X() + f - strWidth / 2.0f, this->axisStartPos.Y() - this->rulerMarkSize ,
+                strWidth, strHeight, this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
         }
         timeStep += this->animSegmValue;
     }
@@ -569,12 +558,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     tmpStr.Format(this->simFormatStr.PeekBuffer(), this->simTotalTime);
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     float tmpStrWidth = strWidth;
-    for (float f = this->simScaleOffset; f < this->simAxisLen + this->simSegmSize/10.0f; f = f + this->simSegmSize) {
+    for (float f = this->simScaleOffset; f < this->simAxisLen + this->simSegmSize / 10.0f; f = f + this->simSegmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->simFormatStr.PeekBuffer(), timeStep);
             strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-            this->theFont.DrawString(fgColor, this->axisStartPos.X() - this->rulerMarkSize - strWidth, this->axisStartPos.Y() - strHeight / 2.0f + f,
-                                     strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+            this->theFont.DrawString(fgColor, this->axisStartPos.X() - this->rulerMarkSize - strWidth, this->axisStartPos.Y() + strHeight / 2.0f + f,
+                strWidth, strHeight, this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
         }
         timeStep += this->simSegmValue;
     }
@@ -582,13 +571,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // axis captions
     tmpStr = "animation time / frames ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    this->theFont.DrawString(fgColor, this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - 2.0f*this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize,
-        strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(fgColor, this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize, 
+        this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
     tmpStr = "simulation time ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
-    this->theFont.DrawString(fgColor, this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + strHeight / 2.0f,
-        strWidth, strHeight, this->fontSize, true, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(fgColor, this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + 1.5f*strHeight, 
+        this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
     // DRAW MENU --------------------------------------------------------------
@@ -627,9 +616,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw menu background
-    glDisable(GL_BLEND);
-    glDisable(GL_POLYGON_SMOOTH);
-    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glColor4fv(menu);
     glBegin(GL_QUADS);
         glVertex2f(0.0f, vpH);
         glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
@@ -639,22 +626,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw menu labels
     float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
-    glEnable(GL_BLEND);
-    glEnable(GL_POLYGON_SMOOTH);
-    this->theFont.DrawString(white, 0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(white, (vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // ------------------------------------------------------------------------
-
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
     // Reset opengl 
     glLineWidth(tmpLw);
     glDisable(GL_BLEND);
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
 
 	return true;
 }

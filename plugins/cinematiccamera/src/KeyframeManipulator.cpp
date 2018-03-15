@@ -618,9 +618,6 @@ bool KeyframeManipulator::draw(void) {
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.0f);
 
-    glEnable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
-
     // Rest of necessary OpenGl settings are already done in CinematicRenderer ...
 
     // Get the foreground color (inverse background color)
@@ -733,7 +730,6 @@ bool KeyframeManipulator::draw(void) {
 
     // Reset opengl
     glLineWidth(tmpLw);
-    glDisable(GL_LINE_SMOOTH);
 
     return true;
 }

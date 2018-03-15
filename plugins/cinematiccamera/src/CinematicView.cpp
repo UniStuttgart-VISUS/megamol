@@ -434,8 +434,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw final image -------------------------------------------------------
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
+
+    glDisable(GL_BLEND);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -447,6 +450,25 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
+
+    // Color stuff 
+    const float *bgColor = this->bkgndColour();
+    // COLORS
+    float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float yellow[4]  = { 1.0f, 1.0f, 0.0f, 1.0f };
+    float menu[4]    = { 0.0f, 0.0f, 0.3f, 1.0f };
+    // Adapt colors depending on lightness
+    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
+    if (L > 0.5f) {
+        for (unsigned int i = 0; i < 3; i++) {
+            lbColor[i] = 0.0f;
+        }
+    }
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    for (unsigned int i = 0; i < 3; i++) {
+        fgColor[i] -= lbColor[i];
+    }
 
     // Adjust fbo viewport size if it is greater than viewport
     int fboVpWidth  = fboWidth;
@@ -472,7 +494,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glColor4fv(white);
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(left,  bottom);
         glTexCoord2f(1.0f, 0.0f); glVertex2f(right, bottom);
@@ -483,27 +505,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_TEXTURE_2D);
 
     // Draw letter box  -------------------------------------------------------
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
-
-    // Color stuff 
-    const float *bgColor = this->bkgndColour();
-    // COLORS
-    float lbColor[4]  = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float white[4]    = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float yellow[4]   = { 1.0f, 1.0f, 0.0f, 1.0f };
-    // Adapt colors depending on lightness
-    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
-    if (L > 0.5f) {
-        for (unsigned int i = 0; i < 3; i++) {
-            lbColor[i] = 0.0f;
-        }
-    }
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    for (unsigned int i = 0; i < 3; i++) {
-        fgColor[i] -= lbColor[i];
-    }
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Calculate position of texture
     int x = 0;
@@ -530,11 +533,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glEnd();
 
     // DRAW MENU --------------------------------------------------------------
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    glEnable(GL_POLYGON_SMOOTH);
-    glDepthFunc(GL_LEQUAL);
+    if (!this->theFont.Initialise(this->GetCoreInstance())) {
+        return;
+    }
     glEnable(GL_DEPTH_TEST);
 
     vislib::StringA leftLabel = " CINEMATIC VIEW ";
@@ -562,9 +563,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Draw menu background
-    glDisable(GL_BLEND);
-    glDisable(GL_POLYGON_SMOOTH);
-    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glColor4fv(menu);
     glBegin(GL_QUADS);
         glVertex2f(0.0f, vpH + (CC_MENU_HEIGHT));
         glVertex2f(0.0f, vpH);
@@ -573,19 +572,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glEnd();
 
     // Draw menu labels
-    if (this->theFont.Initialise(this->GetCoreInstance())) {
-
-        float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
-        glEnable(GL_BLEND);
-        glEnable(GL_POLYGON_SMOOTH);
-        this->theFont.DrawString(white, 0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-        this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-        this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-
-    }
+    float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // ------------------------------------------------------------------------
-
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -593,7 +585,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Reset opengl
     glDisable(GL_BLEND);
-    glDisable(GL_POLYGON_SMOOTH);
 
     // Unlock renderer after first frame
     if (this->rendering && this->pngdata.lock) {

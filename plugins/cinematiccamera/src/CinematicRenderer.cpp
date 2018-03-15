@@ -280,12 +280,12 @@ bool CinematicRenderer::Render(Call& call) {
     float simTime = skf.getSimTime();
     oc->SetTime(simTime * totalSimTime);
 
-
     // Get the foreground color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
     float yellow[4]  = { 1.0f, 1.0f, 0.0f, 1.0f };
+    float menu[4]    = { 0.0f, 0.0f, 0.3f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
     for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
@@ -379,18 +379,15 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Draw textures ------------------------------------------------------
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // DRAW DEPTH ---------------------------------------------------------
-    glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
 
     this->textureShader.Enable();
@@ -408,25 +405,8 @@ bool CinematicRenderer::Render(Call& call) {
 
     this->fbo.DrawColourTexture();
 
-
     // Draw cinematic renderer stuff -------------------------------------------
-
-    // Opengl setup
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_1D);
-
-    glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
@@ -468,20 +448,9 @@ bool CinematicRenderer::Render(Call& call) {
         this->manipulator.draw();
     }
 
+    // Draw spline    
     vislib::math::Point<float, 3> tmpP;
     glColor4fv(sColor);
-    // Adding points at vertex ends for better line anti-aliasing -> no gaps between line segments
-    glDisable(GL_BLEND);
-    glPointSize(1.5f);
-    glBegin(GL_POINTS);
-    for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
-        tmpP = (*interpolKeyframes)[i];
-        glVertex3f(tmpP.GetX(), tmpP.GetY(), tmpP.GetZ());
-    }
-    glEnd();
-    glEnable(GL_BLEND);
-    // Draw spline
-    glEnable(GL_LINE_SMOOTH);
     glLineWidth(2.0f);
     glBegin(GL_LINE_STRIP);
     for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
@@ -500,9 +469,6 @@ bool CinematicRenderer::Render(Call& call) {
     glPushMatrix();
     glLoadIdentity();
     glTranslatef(0.0f, 0.0f, 1.0f);
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
 
     float vpH = (float)(vpHeight);
     float vpW = (float)(vpWidth);
@@ -533,9 +499,7 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Draw menu background
-    glDisable(GL_BLEND);
-    glDisable(GL_POLYGON_SMOOTH);
-    glColor4f(0.0f, 0.0f, 0.3f, 1.0f);
+    glColor4fv(menu);
     glBegin(GL_QUADS);
         glVertex2f(0.0f, vpH);
         glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
@@ -545,11 +509,9 @@ bool CinematicRenderer::Render(Call& call) {
 
     // Draw menu labels
     float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
-    glEnable(GL_BLEND);
-    glEnable(GL_POLYGON_SMOOTH);
-    this->theFont.DrawString(white, 0.0f, labelPosY, leftLabelWidth, 1.0f, lbFontSize, true, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, midleftLabelWidth, 1.0f, lbFontSize, true, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, rightLabelWidth, 1.0f, lbFontSize, true, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // Draw help text 
     if (this->showHelpText) {
@@ -586,7 +548,7 @@ bool CinematicRenderer::Render(Call& call) {
         float htNumOfRows = 21.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
-            htFontSize -= 0.1f;
+            htFontSize -= 0.5f;
             htStrHeight = this->theFont.LineHeight(htFontSize);
         }
 
@@ -595,7 +557,6 @@ bool CinematicRenderer::Render(Call& call) {
         htY              = htX + htStrHeight*htNumOfRows;
         // Draw background colored quad
         glDisable(GL_BLEND);
-        glDisable(GL_POLYGON_SMOOTH);
         glColor4fv(bgColor);
         glBegin(GL_QUADS);
             glVertex2f(htX,              htY);
@@ -605,23 +566,19 @@ bool CinematicRenderer::Render(Call& call) {
         glEnd();
         // Draw help text
         glEnable(GL_BLEND);
-        glEnable(GL_POLYGON_SMOOTH);
-        this->theFont.DrawString(fgColor, htX, htY, htStrWidth, 1.0f, htFontSize, true, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     }
 
+    // ------------------------------------------------------------------------
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 
-    // ------------------------------------------------------------------------
-
     // Reset opengl
+    glDisable(GL_BLEND);
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
-    glDisable(GL_BLEND);
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
 
     return true;
 }

@@ -3,11 +3,10 @@
 *
 * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
+*
+* DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
 */
 
-///////////////////////////////////////////////////////////////////////////////
-///// DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp" /////
-///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
