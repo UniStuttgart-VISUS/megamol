@@ -45,7 +45,8 @@ SombreroWarper::SombreroWarper(void) : Module(),
         southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."), 
         invertNormalParam("invertNormals", "Inverts the surface normals"),
         fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices"),
-        meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier") {
+        meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier"),
+        useNewRadius("newRadius", "Use the radius computed from geometry instead of the caver radii") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
@@ -89,6 +90,9 @@ SombreroWarper::SombreroWarper(void) : Module(),
 
     this->fixMeshParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->fixMeshParam);
+
+    this->useNewRadius.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->useNewRadius);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -136,7 +140,7 @@ bool SombreroWarper::getData(Call& call) {
     outCall->SetObjects(static_cast<uint>(this->outMeshVector.size()), this->outMeshVector.data());
 
     if (this->outMeshVector.size() > 0) {
-        printf("Length: %f ; Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0]);
+        printf("Length: %f ; Radius: %f; New Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0], this->sombreroRadiusNew[0]);
     }
 
     return true;
@@ -257,6 +261,10 @@ void SombreroWarper::checkParameters(void) {
     }
     if (this->fixMeshParam.IsDirty()) {
         this->fixMeshParam.ResetDirty();
+        this->dirtyFlag = true;
+    }
+    if (this->useNewRadius.IsDirty()) {
+        this->useNewRadius.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -1224,6 +1232,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
     this->rahiAngles.resize(this->meshVector.size());
     this->rahiAngles.shrink_to_fit();
+    this->sombreroRadiusNew.clear();
+    this->sombreroRadiusNew.resize(this->meshVector.size());
 
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
         // first: find the meridian
@@ -1328,6 +1338,41 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 sweatSet.insert(e.first);
             }
         }
+
+        // determine the length of all sweat-connecting edges
+        std::set<std::pair<uint, uint>> sweatedges;
+        for (auto e : this->edgesForward[i]) {
+            if (sweatSet.count(e.first) > 0 && sweatSet.count(e.second) > 0) {
+                // sweatedge found, check whether it is alread inserted
+                std::pair<uint, uint> fedge = std::make_pair(e.first, e.second);
+                std::pair<uint, uint> redge = std::make_pair(e.second, e.first);
+                if (!(sweatedges.count(fedge) > 0 || sweatedges.count(redge) > 0)) {
+                    sweatedges.insert(fedge);
+                }
+            }
+        }
+
+        float lengthSum = 0.0f;
+        for (auto e : sweatedges) {
+            vislib::math::Vector<float, 3> firstPos(&this->vertices[i][3 * e.first]);
+            vislib::math::Vector<float, 3> secondPos(&this->vertices[i][3 * e.second]);
+            lengthSum += (secondPos - firstPos).Length();
+        }
+        const float thePi = 3.14159265358979f;
+        float sombrad = lengthSum / (2.0f * thePi);
+        this->sombreroRadiusNew[i] = sombrad;
+
+#if 0 // switch for the colouring of the sweatedges
+        vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
+        for (auto e : sweatedges) {
+            this->colors[i][3 * e.first + 0] = static_cast<unsigned char>(red[0]);
+            this->colors[i][3 * e.first + 1] = static_cast<unsigned char>(red[1]);
+            this->colors[i][3 * e.first + 2] = static_cast<unsigned char>(red[2]);
+            this->colors[i][3 * e.second + 0] = static_cast<unsigned char>(red[0]);
+            this->colors[i][3 * e.second + 1] = static_cast<unsigned char>(red[1]);
+            this->colors[i][3 * e.second + 2] = static_cast<unsigned char>(red[2]);
+        }
+#endif
 
         // determine starting point of the sweatband
         // it should be the vertex that is member of the meridian and the sweatband
@@ -1701,7 +1746,6 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
         this->rahiAngles[i].resize(this->atomIndexAttachment[i].size(), 0.0f);
         this->rahiAngles[i].shrink_to_fit();
-        const float thePi = 3.14159265358979f;
 #if 1
         // initialize the angle values of the circumpolar vertices
         // for the brim
@@ -2111,6 +2155,9 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
         float minRad = this->sombreroRadius[i];
+        if (useNewRadius.Param<param::BoolParam>()->Value()) {
+            minRad = this->sombreroRadiusNew[i];
+        }
         float maxRad = minRad + this->brimWidth[i];
 
         std::set<uint> innerBorderSet;
@@ -2253,6 +2300,9 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
+        if (useNewRadius.Param<param::BoolParam>()->Value()) {
+            s_radius = this->sombreroRadiusNew[i];
+        }
         auto s_length = this->sombreroLength[i];
         auto vert_cnt = this->vertices[i].size() / 3;
 
@@ -2415,6 +2465,7 @@ bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
     
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         std::set<uint> outerBorderSet = std::set<uint>(this->brimIndices[i].begin(), this->brimIndices[i].end());
+        uint vert_cnt = this->vertices[i].size() / 3;
         for (size_t v = 0; v < this->vertices[i].size() / 3; v++) {
             std::vector<uint> neighbors;
             // find the indices of the neighboring vertices
@@ -2436,10 +2487,12 @@ bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
             vislib::math::Vector<float, 3> neighavg(0.0f, 0.0f, 0.0f);
             vislib::math::Vector<float, 3> mypos(&this->vertices[i][3 * v]);
             for (auto t : neighbors) {
-                vislib::math::Vector<float, 3> neighpos(&this->vertices[i][3 * t]);
-                neighavg += neighpos;
-                if ((mypos - neighpos).Length() > maxDistance) {
-                    tooLongCount++;
+                if (t < vert_cnt) {
+                    vislib::math::Vector<float, 3> neighpos(&this->vertices[i][3 * t]);
+                    neighavg += neighpos;
+                    if ((mypos - neighpos).Length() > maxDistance) {
+                        tooLongCount++;
+                    }
                 }
             }
             neighavg /= static_cast<float>(neighbors.size());
@@ -2460,4 +2513,6 @@ bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
             }
         }
     }
+
+    return true;
 }

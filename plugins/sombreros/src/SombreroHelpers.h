@@ -29,13 +29,15 @@ namespace sombreros {
      * @param isgx Determination whether the incoming protein is a gx- or a y-type.
      * @return The estimated position of the binding site.
      */
-    inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(protein_calls::MolecularDataCall * mdc, protein_calls::BindingSiteCall * bsc, bool isgx = true) {
+    inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(protein_calls::MolecularDataCall * mdc, protein_calls::BindingSiteCall * bsc) {
         vislib::math::Vector<float, 3> result(0.0f, 0.0f, 0.0f);
+
+        bool isgx = bsc->isOfGxType();
 
         // check the binding sites
         bool fallbackMode = false;
         auto bscount = bsc->GetBindingSiteCount();
-        if (bscount < 3) {
+        if (bscount < 3 || !bsc->isEnzymeMode()) {
             fallbackMode = true;
         } else {
             if(bsc->GetBindingSite(0)->Count() < 1 || bsc->GetBindingSite(1)->Count() < 1 || bsc->GetBindingSite(2)->Count() < 2) {

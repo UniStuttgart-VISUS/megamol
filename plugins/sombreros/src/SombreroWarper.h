@@ -271,6 +271,9 @@ namespace sombreros {
         /** The maximum allowed distance before the mesh is fixed */
         core::param::ParamSlot meshFixDistanceParam;
 
+        /** New radius computed param */
+        core::param::ParamSlot useNewRadius;
+
         /** Vector containing the modified mesh data */
         std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
@@ -348,6 +351,9 @@ namespace sombreros {
 
         /** The inner radius of the sombrero ellipsoid */
         std::vector<float> sombreroRadius;
+
+        /** */
+        std::vector<float> sombreroRadiusNew;
 
         /** The bounding box of the sombrero */
         vislib::math::Cuboid<float> boundingBox;

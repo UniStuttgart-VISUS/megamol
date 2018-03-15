@@ -241,7 +241,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         bool forceRecompute,
         const protein_calls::BindingSiteCall *bs,
 		bool useNeighbors,
-        const protein_calls::PerAtomFloatCall *pa) {
+        const protein_calls::PerAtomFloatCall *pa,
+        bool enzymeMode,
+        bool gxType) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -844,9 +846,23 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
                                         firstAtom = mol->Residues()[firstRes+rCnt]->FirstAtomIndex();
                                         for( unsigned int aCnt = 0; aCnt < mol->Residues()[firstRes+rCnt]->AtomCount(); aCnt++ ) {
                                             atomIdx = firstAtom + aCnt;
-                                            atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).X();
-                                            atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).Y();
-                                            atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).Z();
+                                            auto atomName = mol->AtomTypes()[mol->AtomTypeIndices()[aCnt]].Name();
+                                            if (enzymeMode) {
+                                                if ((atomName.Equals("OG") && bsCnt == 0) ||
+                                                    (atomName.Equals("ND2") && bsCnt == 1) ||
+                                                    (atomName.Equals("N") && bsCnt == 2 && bsResCnt == 0) ||
+                                                    (atomName.Equals("N") && bsCnt == 2 && bsResCnt == 1 && gxType) ||
+                                                    (atomName.Equals("OH") && bsCnt == 2 && bsResCnt == 1 && !gxType)) {
+
+                                                    atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).X();
+                                                    atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).Y();
+                                                    atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).Z();
+                                                }
+                                            } else {
+                                                atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).X();
+                                                atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).Y();
+                                                atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).Z();
+                                            }
                                         }
                                     }
                                 }
@@ -914,7 +930,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         bool forceRecompute,
         const protein_calls::BindingSiteCall *bs,
 		bool useNeighbors,
-        const protein_calls::PerAtomFloatCall *pa) {
+        const protein_calls::PerAtomFloatCall *pa,
+        bool enzymeMode,
+        bool gxtype) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -940,11 +958,11 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
 
         // Compute first color table
         Color::MakeColorTable(mol, cm0, color0, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true, bs, pa);
+            minGradColor, midGradColor, maxGradColor, true, bs, false, pa, enzymeMode, gxtype);
 
         // Compute second color table
         Color::MakeColorTable(mol, cm1, color1, colorLookupTable, rainbowColors,
-            minGradColor, midGradColor, maxGradColor, true, bs, pa);
+            minGradColor, midGradColor, maxGradColor, true, bs, false, pa, enzymeMode, gxtype);
 
         // Interpolate
         for(unsigned int cnt = 0; cnt < mol->AtomCount()*3; cnt++) {

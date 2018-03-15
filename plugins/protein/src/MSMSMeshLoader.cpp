@@ -219,7 +219,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 					this->minGradColorParam.Param<param::StringParam>()->Value(),
 					this->midGradColorParam.Param<param::StringParam>()->Value(),
 					this->maxGradColorParam.Param<param::StringParam>()->Value(),
-					true, bs, false, pa);
+					true, bs, false, pa, bs->isEnzymeMode(), bs->isOfGxType());
 
 				}
 				else if (currentColoringMode0 == m_hightmp_val || currentColoringMode1 == m_hightmp_val) {
@@ -229,7 +229,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 						this->minGradColorParam.Param<param::StringParam>()->Value(),
 						this->midGradColorParam.Param<param::StringParam>()->Value(),
 						this->maxGradColorParam.Param<param::StringParam>()->Value(),
-						true, bs, false, pa);
+						true, bs, false, pa, bs->isEnzymeMode(), bs->isOfGxType());
 				}
 				else {
 					Color::MakeColorTable(mol, currentColoringMode0, currentColoringMode1,
