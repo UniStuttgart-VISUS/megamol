@@ -9,6 +9,7 @@
 #include "PlyWriter.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -21,7 +22,8 @@ using namespace megamol::geocalls;
 PlyWriter::PlyWriter(void) : AbstractDataWriter(),
     filenameSlot("filename", "The path to the .ply file to be written"),
     frameIDSlot("frameID", "The ID of the frame to be written"),
-    meshDataSlot("meshData", "The slot requesting the data to be written") {
+    meshDataSlot("meshData", "The slot requesting the data to be written"),
+    allObjectsSameVerticesSlot("allObjectsSameVertices", "Do all objects use the same vertices?") {
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -31,6 +33,9 @@ PlyWriter::PlyWriter(void) : AbstractDataWriter(),
 
     this->meshDataSlot.SetCompatibleCall<CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->meshDataSlot);
+
+    this->allObjectsSameVerticesSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->allObjectsSameVerticesSlot);
 }
 
 /*
@@ -85,7 +90,7 @@ bool PlyWriter::run(void) {
     // read in the complete mesh data
     for (unsigned int objID = 0; objID < ctd->Count(); objID++) {
         const CallTriMeshData::Mesh& mesh = ctd->Objects()[objID];
-        
+
         std::vector<unsigned int> fac;
         std::vector<float> vert;
         std::vector<float> norm;
@@ -304,7 +309,9 @@ bool PlyWriter::run(void) {
             ASSERT_WRITEOUT(text.c_str(), text.size());
         }
 
-        indexOffset += static_cast<unsigned int>(vertices[objID].size());
+        if (!this->allObjectsSameVerticesSlot.Param<param::BoolParam>()->Value()) {
+            indexOffset += static_cast<unsigned int>(vertices[objID].size());
+        }
     }
     file.Close();
 

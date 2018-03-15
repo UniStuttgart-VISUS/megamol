@@ -99,6 +99,9 @@ namespace trisoup {
         /** The frame ID of the frame to be written */
         core::param::ParamSlot frameIDSlot;
 
+        /** Determine whether all objects rely on the same vertices */
+        core::param::ParamSlot allObjectsSameVerticesSlot;
+
         /** The slot asking for data. */
         core::CallerSlot meshDataSlot;
     };
