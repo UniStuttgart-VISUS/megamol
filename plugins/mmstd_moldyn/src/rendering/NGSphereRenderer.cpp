@@ -13,16 +13,13 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/FloatParam.h"
-#include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-#include <inttypes.h>
-#include <stdint.h>
+#include <cinttypes>
 
 #include <chrono>
 #include <sstream>
-#include <iostream>
 #include <iterator>
 
 //#define CHRONOTIMING
@@ -114,21 +111,11 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-//sphereShader(),
-    fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
     scalingParam("scaling", "scaling factor for particle radii"),
-//	timer(),
-    // this variant should not need the fence
-    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
-    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
-    colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
-    theShaders() {
+    colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE) {
 
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
-    fences.resize(numBuffers);
 }
 
 
@@ -138,25 +125,6 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 NGSphereRenderer::~NGSphereRenderer(void) {
     this->Release();
 }
-
-void NGSphereRenderer::queueSignal(GLsync& syncObj) {
-    if (syncObj) {
-        glDeleteSync(syncObj);
-    }
-    syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-}
-
-void NGSphereRenderer::waitSignal(GLsync& syncObj) {
-    if (syncObj) {
-        while (1) {
-            GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-            if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
-                return;
-            }
-        }
-    }
-}
-
 
 /*
  * moldyn::SimpleSphereRenderer::create
@@ -175,22 +143,8 @@ bool NGSphereRenderer::create(void) {
         return false;
     }
 
-    //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
-    //    vert.WholeCode().PeekBuffer(),
-    //    frag.WholeCode().PeekBuffer());
-
-    //bool ret = makeShader(vert, frag);
-    //if (!ret) {
-    //	return false;
-    //}
-
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
-    glGenBuffers(1, &this->theSingleBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
-    glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
     //timer.SetNumRegions(4);
@@ -432,16 +386,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
  * moldyn::SimpleSphereRenderer::release
  */
 void NGSphereRenderer::release(void) {
-    glUnmapNamedBufferEXT(this->theSingleBuffer);
-    for (auto &x : fences) {
-        if (x) {
-            glDeleteSync(x);
-        }
-    }
     //this->sphereShader.Release();
     // TODO release all shaders!
     glDeleteVertexArrays(1, &this->vertArray);
-    glDeleteBuffers(1, &this->theSingleBuffer);
     AbstractSimpleSphereRenderer::release();
 }
 
@@ -602,8 +549,6 @@ bool NGSphereRenderer::Render(Call& call) {
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     //glScalef(scaling, scaling, scaling);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
@@ -690,52 +635,31 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride);
 
+        const GLuint numChunks = streamer.SetData(parts.GetVertexData(), vertStride, vertStride,
+            parts.GetCount(), 3, 32 * 1024 * 1024);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
+
+
         //currBuf = 0;
         UINT64 numVerts, vertCounter;
         // does all data reside interleaved in the same memory?
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
                 - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
                 && vertStride == colStride) || colStride == 0)  {
-                    numVerts = this->bufSize / vertStride;
-                    const char *currVert = static_cast<const char *>(parts.GetVertexData());
-                    const char *currCol = static_cast<const char *>(parts.GetColourData());
-                    vertCounter = 0;
-                    while (vertCounter < parts.GetCount()) {
-                        //GLuint vb = this->theBuffers[currBuf];
-                        void *mem = static_cast<char*>(theSingleMappedMem) + bufSize * currBuf;
-                        currCol = colStride == 0 ? currVert : currCol;
-                        //currCol = currCol == 0 ? currVert : currCol;
-                        const char *whence = currVert < currCol ? currVert : currCol;
-                        UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
 
-#ifdef CHRONOTIMING
-                        before = std::chrono::high_resolution_clock::now();
-#endif
-                        this->waitSignal(fences[currBuf]);
-#ifdef CHRONOTIMING
-                        after = std::chrono::high_resolution_clock::now();
-                        deltas.push_back(static_cast<std::chrono::steady_clock::time_point>(after - before));
-#endif
-                        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
-                        memcpy(mem, whence, vertsThisTime * vertStride);
-                        glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
-                        //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-                        //glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
-                        glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-
-                        //this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-                        //glBindBuffer(GL_ARRAY_BUFFER, 0);
-                        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-                        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertsThisTime));
-                        //glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
-                        this->queueSignal(fences[currBuf]);
-
-                        currBuf = (currBuf + 1) % this->numBuffers;
-                        vertCounter += vertsThisTime;
-                        currVert += vertsThisTime * vertStride;
-                        currCol += vertsThisTime * colStride;
-                        //break;
-                    }
+            for(GLuint x = 0; x < numChunks; ++x) {
+                GLuint numItems, sync;
+                GLsizeiptr dstOff, dstLen;
+                streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                //streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
+                //    numItems, sync, dstOff, dstLen);
+                glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
+                    this->streamer.GetHandle(), dstOff, dstLen);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
+            }
         } else {
 
         }

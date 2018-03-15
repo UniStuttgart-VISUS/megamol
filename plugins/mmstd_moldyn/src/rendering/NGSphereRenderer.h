@@ -14,11 +14,10 @@
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-//#include "vislib/graphics/gl/shaders"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <map>
 #include <utility>
-//#include "TimeMeasure.h"
+#include "mmcore/utility/SSBOStreamer.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -111,22 +110,11 @@ namespace rendering {
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride);
 
-        void queueSignal(GLsync& syncObj);
-        void waitSignal(GLsync& syncObj);
-
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
-        std::vector<GLsync> fences;
-        GLuint theSingleBuffer;
-        unsigned int currBuf;
         GLuint colIdxAttribLoc;
-        GLsizeiptr bufSize;
-        int numBuffers;
-        void *theSingleMappedMem;
-        GLuint singleBufferCreationBits;
-        GLuint singleBufferMappingBits;
         SimpleSphericalParticles::ColourDataType colType;
         SimpleSphericalParticles::VertexDataType vertType;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
@@ -135,7 +123,7 @@ namespace rendering {
         vislib::SmartPtr<ShaderSource> vert, frag;
         core::param::ParamSlot scalingParam;
         //TimeMeasure timer;
-        //megamol::core::utility::ShaderSourceFactory::sh
+        megamol::core::utility::SSBOStreamer streamer;
     };
 
 } /* end namespace rendering */
