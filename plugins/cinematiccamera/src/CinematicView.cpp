@@ -432,13 +432,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Draw final image -------------------------------------------------------
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-
     glDisable(GL_BLEND);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -590,6 +588,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->rendering && this->pngdata.lock) {
         this->pngdata.lock = false;
     }
+
+    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
 }
 
 

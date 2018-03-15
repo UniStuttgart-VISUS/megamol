@@ -415,15 +415,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Opengl setup -----------------------------------------------------------
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -637,6 +635,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Reset opengl 
     glLineWidth(tmpLw);
     glDisable(GL_BLEND);
+
+    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
 
 	return true;
 }

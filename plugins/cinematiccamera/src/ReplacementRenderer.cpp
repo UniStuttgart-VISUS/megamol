@@ -185,19 +185,10 @@ bool ReplacementRenderer::Render(Call& call) {
     if (this->toggleReplacementRendering) {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
         glDisable(GL_LIGHTING);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_TEXTURE_1D);
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_POLYGON_SMOOTH);
-
-        glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
-
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         // Draw bounding box
         glEnable(GL_CULL_FACE);

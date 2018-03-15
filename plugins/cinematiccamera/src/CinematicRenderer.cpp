@@ -380,10 +380,8 @@ bool CinematicRenderer::Render(Call& call) {
 
     // Draw textures ------------------------------------------------------
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -579,6 +577,8 @@ bool CinematicRenderer::Render(Call& call) {
     glDisable(GL_BLEND);
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
+
+    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
 
     return true;
 }
