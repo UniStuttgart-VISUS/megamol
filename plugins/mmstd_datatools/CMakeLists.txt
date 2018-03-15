@@ -65,7 +65,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
