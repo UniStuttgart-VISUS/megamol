@@ -400,18 +400,18 @@ namespace utility {
         }
 
         /**
-        * Reset font orientation.
+        * Reset font rotation.
         */
-        void ResetOrientation(void);
+        void ResetRotation(void);
 
         /**
-        * Set font orientation.
+        * Set font rotation.
         *
-        * @param a The rotation angle.
+        * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        void SetOrientation(float a, vislib::math::Vector<float, 3> v);
-        void SetOrientation(float a, float x, float y, float z);
+        void SetRotation(float a, vislib::math::Vector<float, 3> v);
+        void SetRotation(float a, float x, float y, float z);
 
 
     protected:

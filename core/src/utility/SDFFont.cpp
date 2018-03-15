@@ -544,30 +544,30 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 
 
 /**
-* SDFFont::ResetOrientation
+* SDFFont::ResetRotation
 */
-void SDFFont::ResetOrientation(void) {
+void SDFFont::ResetRotation(void) {
 
     this->rotQuat.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
 }
 
 
 /**
-* SDFFont::SetOrientation
+* SDFFont::SetRotation
 */
-void SDFFont::SetOrientation(float a, float x, float y, float z) {
+void SDFFont::SetRotation(float a, float x, float y, float z) {
 
-    this->SetOrientation(a, vislib::math::Vector<float, 3>(x, y, z));
+    this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
 }
 
 
 /**
-* SDFFont::SetOrientation
+* SDFFont::SetRotation
 */
-void SDFFont::SetOrientation(float a, vislib::math::Vector<float, 3> v) {
+void SDFFont::SetRotation(float a, vislib::math::Vector<float, 3> v) {
 
     float PI = 3.1415926535897932f;
-    this->rotQuat.Set(a * PI / 180.0f, v);
+    this->rotQuat.Set((a * PI / 180.0f), v);
 }
 
 
@@ -870,10 +870,13 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     // Compute modelviewprojection matrix
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
-    // Rotation matrix
-    // this->rotQuad = a(*R) + b*I + c*J + d*K
+    /* Rotation matrix from quaternion
+     *
+     * see: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
+     * this->rotQuad = a(*R) + b*I + c*J + d*K
+     */
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> rotMat;
-    if (!this->billboard) {
+    if (!this->billboard) {// Additional check for angle != 0 would be too expencive.
         rotMat.SetIdentity();
 
         float aa  = this->rotQuat.R() * this->rotQuat.R();
@@ -1126,7 +1129,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 
     this->initialised = false;
 
-    this->ResetOrientation();
+    this->ResetRotation();
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
