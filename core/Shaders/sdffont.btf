@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">400</snippet>
+        <snippet type="version">460</snippet>
         <snippet name="common::defines"/>
         <snippet name="main" type="string">
             <![CDATA[
@@ -40,7 +40,7 @@ void main() {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">400</snippet>
+        <snippet type="version">460</snippet>
         <snippet name="common::defines"/>        
         <snippet name="main" type="string">
             <![CDATA[
@@ -65,7 +65,7 @@ void main(void) {
     float outlineWidth = 0.05; 
     float sdfBorder    = 0.5; 
      
-    float distance = texture2D(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
+    float distance = texture(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
 
     if (distance == 0.0)  {
         discard;

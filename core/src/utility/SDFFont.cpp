@@ -1021,7 +1021,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             posData[charCnt * 18 + 17] = gz;       // p3-z
         }
         else {
-            // Change rotation of quad positions for flipped y axisfrom CCW to CW.
+            // Change rotation of quad positions for flipped y axis from CCW to CW.
             posData[charCnt * 18 + 3] = tmpP23x;   // p2-x
             posData[charCnt * 18 + 4] = tmpP12y;   // p2-y
             posData[charCnt * 18 + 5] = gz;        // p2-z
@@ -1056,7 +1056,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             texData[charCnt * 12 + 11] = glyph->texY0; // t3-y
         }
         else {
-            // Change rotation of texture coord for flipped y axisfrom CCW to CW.
+            // Change rotation of texture coord for flipped y axis from CCW to CW.
             texData[charCnt * 12 + 2]  = glyph->texX1; // t2-x
             texData[charCnt * 12 + 3]  = glyph->texY1; // t2-y
             texData[charCnt * 12 + 4]  = glyph->texX0; // t1-x
@@ -1139,6 +1139,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         glDisable(GL_BLEND);
     }
     glBlendFunc(blendSrc, blendDst);
+
 }
 
 
@@ -1567,4 +1568,3 @@ size_t SDFFont::loadFile(vislib::StringA filename, void **outData) {
 
     return num;
 }
-
