@@ -62,7 +62,7 @@ layout(location = 0) out vec4 outFragColor;
 */
 void main(void) {
 
-    float outlineWidth = 0.025; 
+    float outlineWidth = 0.05; 
     float sdfBorder    = 0.5; 
      
     float distance = texture2D(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()

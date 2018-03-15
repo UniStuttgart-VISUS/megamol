@@ -324,10 +324,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
 
     } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, 0.0f, size, flipY, align);
@@ -346,11 +346,11 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
 
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
     
     this->draw(c, run, x, y, 0.0f, size, flipY, align);
@@ -373,28 +373,28 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
     switch (align) {
     case ALIGN_CENTER_BOTTOM:
         x += w * 0.5f;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_CENTER_MIDDLE:
         x += w * 0.5f;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_CENTER_TOP:
         x += w * 0.5f;
         break;
     case ALIGN_LEFT_BOTTOM:
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_LEFT_MIDDLE:
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_BOTTOM:
         x += w;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_RIGHT_MIDDLE:
         x += w;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_TOP:
         x += w;
@@ -423,28 +423,28 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
     switch (align) {
     case ALIGN_CENTER_BOTTOM:
         x += w * 0.5f;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_CENTER_MIDDLE:
         x += w * 0.5f;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_CENTER_TOP:
         x += w * 0.5f;
         break;
     case ALIGN_LEFT_BOTTOM:
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_LEFT_MIDDLE:
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_BOTTOM:
         x += w;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_RIGHT_MIDDLE:
         x += w;
-        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_TOP:
         x += w;
@@ -469,10 +469,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, z, size, flipY, align);
@@ -491,10 +491,10 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  *  (flipY ? -1.0f : 1.0f);
     }
     else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
     this->draw(c, run, x, y, z, size, flipY, align);
@@ -848,8 +848,8 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         tmpRun++;
         cnt++;
     }
-    GLfloat *posData = new GLfloat[cnt * 12];
-    GLfloat *texData = new GLfloat[cnt * 8];
+    GLfloat *posData = new GLfloat[cnt * 18]; // 2Triangles*3Vertices*3Coordinates
+    GLfloat *texData = new GLfloat[cnt * 12]; // 2Triangles*3Vertices*2Coordinates
 
     float gx = x;
     float gy = y;
@@ -876,7 +876,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
      * this->rotQuad = a(*R) + b*I + c*J + d*K
      */
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> rotMat;
-    if (!this->billboard) {// Additional check for angle != 0 would be too expencive.
+    if (!this->billboard) {// Additional check for angle != 0 is expencive ...
         rotMat.SetIdentity();
 
         float aa  = this->rotQuat.R() * this->rotQuat.R();
@@ -964,15 +964,6 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             }
             gy += (sy);
         }
-
-        // Get kerning
-        kern = 0.0f;
-        for (unsigned int i = 0; i < glyph->kernCnt; i++) {
-            if (lastGlyphId == glyph->kerns[i].previous) {
-                kern = glyph->kerns[i].xamount;
-                break;
-            }
-        }
         
         // ____________________________________
         //
@@ -990,6 +981,15 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         //
         // ____________________________________
 
+        // Get kerning
+        kern = 0.0f;
+        for (unsigned int i = 0; i < glyph->kernCnt; i++) {
+            if (lastGlyphId == glyph->kerns[i].previous) {
+                kern = glyph->kerns[i].xamount;
+                break;
+            }
+        }
+
         // Temp position values
         float tmpP01x = size * (glyph->xoffset + kern) + gx;
         float tmpP23x = tmpP01x + (size * glyph->width);
@@ -997,55 +997,75 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
         float tmpP12y = tmpP03y + (sy * glyph->height);
 
         // Set position data:
-        posData[charCnt * 12 + 0] = tmpP01x; // p0-x
-        posData[charCnt * 12 + 1] = tmpP03y; // p0-y
-        posData[charCnt * 12 + 2] = gz;      // p0-z
+        posData[charCnt * 18 + 0]  = tmpP01x;   // p0-x
+        posData[charCnt * 18 + 1]  = tmpP03y;   // p0-y
+        posData[charCnt * 18 + 2]  = gz;        // p0-z
 
-        posData[charCnt * 12 + 6] = tmpP23x; // p2-x
-        posData[charCnt * 12 + 7] = tmpP12y; // p2-y
-        posData[charCnt * 12 + 8] = gz;      // p2-z
+        posData[charCnt * 18 + 9]  = tmpP01x;   // p0-x
+        posData[charCnt * 18 + 10] = tmpP03y;   // p0-y
+        posData[charCnt * 18 + 11] = gz;        // p0-z
 
-        // Change rotation of quad positions for flipped y axisfrom CCW to CW.
-        if (flipY) {
-            posData[charCnt * 12 + 3] = tmpP23x; // p1-x
-            posData[charCnt * 12 + 4] = tmpP03y; // p1-y
-            posData[charCnt * 12 + 5] = gz;      // p1-z
+        if (!flipY) {
+            posData[charCnt * 18 + 3] = tmpP01x;   // p1-x
+            posData[charCnt * 18 + 4] = tmpP12y;   // p1-y
+            posData[charCnt * 18 + 5] = gz;        // p1-z
+            posData[charCnt * 18 + 6] = tmpP23x;   // p2-x
+            posData[charCnt * 18 + 7] = tmpP12y;   // p2-y
+            posData[charCnt * 18 + 8] = gz;        // p2-z
 
-            posData[charCnt * 12 + 9]  = tmpP01x;  // p3-x
-            posData[charCnt * 12 + 10] = tmpP12y;  // p3-y
-            posData[charCnt * 12 + 11] = gz;       // p3-z
+            posData[charCnt * 18 + 12] = tmpP23x;  // p2-x
+            posData[charCnt * 18 + 13] = tmpP12y;  // p2-y
+            posData[charCnt * 18 + 14] = gz;       // p2-z
+            posData[charCnt * 18 + 15] = tmpP23x;  // p3-x
+            posData[charCnt * 18 + 16] = tmpP03y;  // p3-y
+            posData[charCnt * 18 + 17] = gz;       // p3-z
         }
         else {
-            posData[charCnt * 12 + 3] = tmpP01x; // p1-x
-            posData[charCnt * 12 + 4] = tmpP12y; // p1-y
-            posData[charCnt * 12 + 5] = gz;      // p1-z
+            // Change rotation of quad positions for flipped y axisfrom CCW to CW.
+            posData[charCnt * 18 + 3] = tmpP23x;   // p2-x
+            posData[charCnt * 18 + 4] = tmpP12y;   // p2-y
+            posData[charCnt * 18 + 5] = gz;        // p2-z
+            posData[charCnt * 18 + 6] = tmpP01x;   // p1-x
+            posData[charCnt * 18 + 7] = tmpP12y;   // p1-y
+            posData[charCnt * 18 + 8] = gz;        // p1-z
 
-            posData[charCnt * 12 + 9]  = tmpP23x;  // p3-x
-            posData[charCnt * 12 + 10] = tmpP03y;  // p3-y
-            posData[charCnt * 12 + 11] = gz;       // p3-z
+            posData[charCnt * 18 + 12] = tmpP23x;  // p3-x
+            posData[charCnt * 18 + 13] = tmpP03y;  // p3-y
+            posData[charCnt * 18 + 14] = gz;       // p3-z
+            posData[charCnt * 18 + 15] = tmpP23x;  // p2-x
+            posData[charCnt * 18 + 16] = tmpP12y;  // p2-y
+            posData[charCnt * 18 + 17] = gz;       // p2-z
         }
         
         // Set texture data
-        texData[charCnt * 8 + 0] = glyph->texX0; // t0-x
-        texData[charCnt * 8 + 1] = glyph->texY0; // t0-y
+        texData[charCnt * 12 + 0] = glyph->texX0; // t0-x
+        texData[charCnt * 12 + 1] = glyph->texY0; // t0-y
 
-        texData[charCnt * 8 + 4] = glyph->texX1; // t2-x
-        texData[charCnt * 8 + 5] = glyph->texY1; // t2-y
+        texData[charCnt * 12 + 6] = glyph->texX0; // t0-x
+        texData[charCnt * 12 + 7] = glyph->texY0; // t0-y
 
-        // Change rotation of texture coord for flipped y axisfrom CCW to CW.
-        if (flipY) {
-            texData[charCnt * 8 + 2] = glyph->texX1; // t1-x
-            texData[charCnt * 8 + 3] = glyph->texY0; // t1-y
+        if (!flipY) {
+            texData[charCnt * 12 + 2]  = glyph->texX0; // t1-x
+            texData[charCnt * 12 + 3]  = glyph->texY1; // t1-y
+            texData[charCnt * 12 + 4]  = glyph->texX1; // t2-x
+            texData[charCnt * 12 + 5]  = glyph->texY1; // t2-y
 
-            texData[charCnt * 8 + 6] = glyph->texX0; // t3-x
-            texData[charCnt * 8 + 7] = glyph->texY1; // t3-y
+            texData[charCnt * 12 + 8]  = glyph->texX1; // t2-x
+            texData[charCnt * 12 + 9]  = glyph->texY1; // t2-y
+            texData[charCnt * 12 + 10] = glyph->texX1; // t3-x
+            texData[charCnt * 12 + 11] = glyph->texY0; // t3-y
         }
         else {
-            texData[charCnt * 8 + 2] = glyph->texX0; // t1-x
-            texData[charCnt * 8 + 3] = glyph->texY1; // t1-y
+            // Change rotation of texture coord for flipped y axisfrom CCW to CW.
+            texData[charCnt * 12 + 2]  = glyph->texX1; // t2-x
+            texData[charCnt * 12 + 3]  = glyph->texY1; // t2-y
+            texData[charCnt * 12 + 4]  = glyph->texX0; // t1-x
+            texData[charCnt * 12 + 5]  = glyph->texY1; // t1-y
 
-            texData[charCnt * 8 + 6] = glyph->texX1; // t3-x
-            texData[charCnt * 8 + 7] = glyph->texY0; // t3-y
+            texData[charCnt * 12 + 8]  = glyph->texX1; // t3-x
+            texData[charCnt * 12 + 9]  = glyph->texY0; // t3-y
+            texData[charCnt * 12 + 10] = glyph->texX1; // t2-x
+            texData[charCnt * 12 + 11] = glyph->texY1; // t2-y
         }
 
         // Update info for next character
@@ -1058,10 +1078,10 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 12 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 18 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
         }
         else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 8 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)charCnt * 12 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -1108,7 +1128,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
     glUniform1i(this->shader.ParameterLocation("renderType"), (int)(this->renderType));
 
-    glDrawArrays(GL_QUADS, 0, (GLsizei)charCnt * 4);
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)charCnt * 6);
 
     glUseProgram(0); // instead of this->shader.Disable() => because draw() is CONST
     glBindVertexArray(0);
