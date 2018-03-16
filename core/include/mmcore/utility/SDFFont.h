@@ -33,25 +33,41 @@ namespace utility {
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Usage example:
+     * >>> USAGE example:
+     *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
-     *                           or this->sdfFont("MY-OWN-FONT");
-     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
-             !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available yet.
-     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
-     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     *
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS);
+     *                       OR: this->sdfFont("filename-of-own-font");
+     *
+     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
+     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available yet (call once e.g. in create()) !!!
+     *
+     *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+     *
+     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE);
+     *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
+     *     - Billboard:          this->sdfFont.SetBillboard(true);
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Available predefined fonts (free for commercial use) -  Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     * >>> Predefined FONTS: (free for commercial use) 
+     *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     *
      *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
      *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
      *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
      *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Path the fonts are stored: <megamol>/share/resource/<fontname>(.fnt/.png)
+     * >>> PATH the fonts are stored: 
+     *
+     *     - <megamol>/share/resource/<fontname>(.fnt/.png)
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> SDF font generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
-     *     Optimal Settings:   
+     * >>> SDF font GENERATION using "Hiero":
+     *     https://github.com/libgdx/libgdx/wiki/Hiero
+     *
+     *     Use followings SETTINGS:   
      *     - Padding - Top,Right,Bottom,Left:   10
      *     - Padding - X,Y:                    -20
      *     - Bold,Italic:                       false
@@ -61,8 +77,10 @@ namespace utility {
      *     - Size:                             ~90 (glyphs must fit on !one! page)
      *     - Distance Field - Spread:           10 
      *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
+     *
      * -----------------------------------------------------------------------------------------------------------------
      */
+
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
@@ -80,7 +98,6 @@ namespace utility {
             RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
             RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
-
 
         /**
         * Ctor.
@@ -424,7 +441,7 @@ namespace utility {
         /**
         * Get the globally used rotation.
         *
-        * @param a The returned rotation axis.
+        * @param a The returned angle in degrees.
         * @param v The returned rotation axis.
         */
         inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
