@@ -10,9 +10,10 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
   
-  set(LIBS vislib core glad)
+  set(LIBS vislib core glad geometry_calls)
+
   include_directories("include" "src" "3rd/nanoflann")
 
   if (OPENMP_FOUND OR WIN32)
