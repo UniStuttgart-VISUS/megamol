@@ -22,6 +22,7 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
     , transitionAxisSlot("trans::axis", "Select axis perpendicular to transition planes")
     , minTransitionPlaneSlot("trans::min", "Set position of first transition plane")
     , maxTransitionPlaneSlot("trans::max", "Set position of second transition plane")
+    , toggleBreakPBCSlot("breakPBC", "Toggle whether to break PBC in trajectories")
     , datahash(0)
     , data_param_changed_(true) {
     this->trajOutSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(),
@@ -69,6 +70,9 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
     this->maxTransitionPlaneSlot << new megamol::core::param::FloatParam(0.0f, std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->maxTransitionPlaneSlot);
+
+    this->toggleBreakPBCSlot << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->toggleBreakPBCSlot);
 }
 
 
@@ -208,6 +212,8 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
         this->lines_data.clear();
         this->lines_data.reserve(this->id_begin_end_.second - this->id_begin_end_.first + 1);
 
+        bool const breakPBC = this->toggleBreakPBCSlot.Param<megamol::core::param::BoolParam>()->Value();
+
         bool const transitionOnly = this->transitionOnlySlot.Param<megamol::core::param::BoolParam>()->Value();
 
         unsigned int const trans_axis = this->transitionAxisSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -246,6 +252,9 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                 std::vector<float> cur_data((frame_end_offset - frame_begin_offset) / sizeof(float));
                 std::vector<uint8_t> cur_col_data((frame_end_offset - frame_begin_offset) / (3*sizeof(float))*4, 255);
                 std::vector<char> cur_is_fluid_data((frame_end_offset - frame_begin_offset) / (3 * sizeof(float)));
+                std::vector<size_t> pbcIdxStart;
+                pbcIdxStart.push_back(0);
+                std::vector<size_t> pbcIdxEnd;
                 fread(cur_data.data(), sizeof(char), frame_end_offset - frame_begin_offset, file);
                 fseek(file, id_offset + sizeof(uint64_t) + 2 * sizeof(unsigned int)
                     + 3 * sizeof(float)*this->file_header_.frame_count + frame_begin_offset / (frame_element_offset), SEEK_SET);
@@ -273,8 +282,14 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                     if (std::abs(cur_data[(i + 1) * 3] - cur_data[i * 3]) > half_x_dim
                         || std::abs(cur_data[(i + 1) * 3 + 1] - cur_data[i * 3 + 1]) > half_y_dim
                         || std::abs(cur_data[(i + 1) * 3 + 2] - cur_data[i * 3 + 2]) > half_z_dim) {
-                        cur_col_data[i * 4 + 3] = 42;
-                        cur_col_data[(i + 1) * 4 + 3] = 42;
+                        // PBC
+                        if (!breakPBC) {
+                            cur_col_data[i * 4 + 3] = 42;
+                            cur_col_data[(i + 1) * 4 + 3] = 42;
+                        } else {
+                            pbcIdxEnd.push_back(i);
+                            pbcIdxStart.push_back(i + 1);
+                        }
                     }
 
                     if (   (cur_data[i * 3 + trans_axis] < min_bor  && cur_data[(i + 1) * 3 + trans_axis]>= min_bor && cur_data[(i + 1) * 3 + trans_axis] < max_bor)
@@ -303,8 +318,14 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
                 if (std::abs(cur_data[last_el * 3] - cur_data[(last_el-1) * 3]) > half_x_dim
                     || std::abs(cur_data[last_el * 3 + 1] - cur_data[(last_el-1) * 3 + 1]) > half_y_dim
                     || std::abs(cur_data[last_el * 3 + 2] - cur_data[(last_el-1) * 3 + 2]) > half_z_dim) {
-                    cur_col_data[(last_el - 1) * 4 + 3] = 42;
-                    cur_col_data[last_el * 4 + 3] = 42;
+                    // PBC
+                    if (!breakPBC) {
+                        cur_col_data[(last_el - 1) * 4 + 3] = 42;
+                        cur_col_data[last_el * 4 + 3] = 42;
+                    } else {
+                        pbcIdxEnd.push_back(last_el);
+                        pbcIdxStart.push_back(last_el - 1);
+                    }
                 }
 
                 if (   (cur_data[(last_el - 1) * 3 + trans_axis] < min_bor  && cur_data[last_el * 3 + trans_axis] >= min_bor      && cur_data[last_el * 3 + trans_axis] < max_bor)
@@ -319,14 +340,31 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
 
 
                 if (!transitionOnly || has_trans) {
-                    this->data.push_back(cur_data);
-                    this->col_data.push_back(cur_col_data);
-                    // set the line
-                    megamol::geocalls::LinesDataCall::Lines l;
-                    l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
-                        this->col_data.back().data(), true);
-                    //vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
-                    this->lines_data.push_back(l);
+                        this->data.push_back(cur_data);
+                        this->col_data.push_back(cur_col_data);
+                    if (!breakPBC) {
+                        // set the line
+                        megamol::geocalls::LinesDataCall::Lines l;
+                        /*l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
+                            this->col_data.back().data(), true);*/
+                        l.Set(this->data.back().size() / 3, this->data.back().data(), this->col_data.back().data(), true);
+                        //vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
+                        this->lines_data.push_back(l);
+                    } else {
+                        for (size_t li = 0; li < pbcIdxStart.size() - 1; ++li) {
+                            auto const start = pbcIdxStart[li];
+                            auto const end = pbcIdxEnd[li];
+
+                            if (end != 0 && !((end-start) == 0)) {
+                                auto start_data_ptr = &(this->data.back().data()[start * 3]);
+                                auto start_col_data_ptr = &(this->col_data.back().data()[start * 4]);
+
+                                megamol::geocalls::LinesDataCall::Lines l;
+                                l.Set((end - start) + 1, start_data_ptr, start_col_data_ptr, true);
+                                this->lines_data.push_back(l);
+                            }
+                        }
+                    }
                 }
             }
         }

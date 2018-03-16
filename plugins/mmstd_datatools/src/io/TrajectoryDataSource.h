@@ -74,6 +74,8 @@ private:
 
     megamol::core::param::ParamSlot maxTransitionPlaneSlot;
 
+    megamol::core::param::ParamSlot toggleBreakPBCSlot;
+
     size_t datahash;
 
     std::string filepath_;

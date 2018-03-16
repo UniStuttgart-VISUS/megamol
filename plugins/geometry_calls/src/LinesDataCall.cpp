@@ -18,7 +18,8 @@ using namespace megamol::core;
  * LinesDataCall::Lines::Lines
  */
 megamol::geocalls::LinesDataCall::Lines::Lines(void) : colDT(CDT_NONE), count(0),
-globCol(192, 192, 192, 255), idxDT(DT_NONE), vrtDT(DT_NONE), id(0), colPtr{nullptr}, vertPtr{nullptr}, idxPtr{nullptr} {
+globCol(192, 192, 192, 255), idxDT(DT_NONE), vrtDT(DT_NONE), id(0), colPtr{nullptr}, vertPtr{nullptr}, idxPtr{nullptr},
+colorAccessor{new ColorData_None{}}, vertexAccessor{new VertexData_None{}}, indexAccessor{new IndexData_None{}} {
     this->col.dataByte = NULL;
     this->idx.dataByte = NULL;
     this->vrt.dataFloat = NULL;
