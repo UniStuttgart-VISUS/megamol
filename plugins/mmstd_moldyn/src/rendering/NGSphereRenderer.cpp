@@ -659,6 +659,7 @@ bool NGSphereRenderer::Render(Call& call) {
                     this->streamer.GetHandle(), dstOff, dstLen);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
+                streamer.SignalCompletion(sync);
             }
         } else {
 

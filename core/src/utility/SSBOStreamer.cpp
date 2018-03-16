@@ -99,13 +99,12 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
         this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);
     numItems = itemsThisTime;
 
-    queueSignal(this->fences[currIdx]);
     sync = currIdx;
     currIdx = (currIdx + 1) % this->numBuffers;
 }
 
-void SSBOStreamer::WaitForCompletion(unsigned int sync) {
-    waitSignal(this->fences[sync]);
+void SSBOStreamer::SignalCompletion(unsigned int sync) {
+    queueSignal(this->fences[sync]);
 }
 
 

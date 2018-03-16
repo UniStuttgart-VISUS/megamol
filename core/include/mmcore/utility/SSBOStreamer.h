@@ -55,8 +55,8 @@ namespace utility {
             GLuint& numItems, unsigned int& sync,
             GLsizeiptr& dstOffset, GLsizeiptr& dstLength);
 
-        /// @param sync the abstract sync object to wait for
-        void WaitForCompletion(unsigned int sync);
+        /// @param sync the abstract sync object to signal as done
+        void SignalCompletion(unsigned int sync);
 
         GLuint GetHandle(void) const {
             return theSSBO;
@@ -120,7 +120,6 @@ namespace utility {
             this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);
         numItems = itemsThisTime;
 
-        queueSignal(this->fences[currIdx]);
         sync = currIdx;
         currIdx = (currIdx + 1) % this->numBuffers;
     }
