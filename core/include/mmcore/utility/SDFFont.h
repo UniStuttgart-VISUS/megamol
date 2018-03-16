@@ -66,7 +66,7 @@ namespace utility {
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
-        /** Available fonts. */
+        /** Available predefined fonts. */
         enum FontName {
             EVOLVENTA_SANS,
             ROBOTO_SANS,
@@ -363,8 +363,10 @@ namespace utility {
         virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
         virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
 
+        // --- Global font settings -------------------------------------------
+
         /**
-         * Answers the render type of the font
+         * Answers the globally used render type of the font.
          *
          * @return The render type of the font
          */
@@ -373,7 +375,7 @@ namespace utility {
         }
 
         /**
-         * Sets the render type of the font
+         * Sets the render type of the font globally.
          *
          * @param t The render type for the font
          */
@@ -382,16 +384,16 @@ namespace utility {
         }
 
         /**
-        * Answers status of billboard mode.
+        * Answers the globally used status of billboard mode.
         *
         * @return The render type of the font
         */
-        inline bool IsBillboardEnabled(void) const {
+        inline bool GetBillboardStatus(void) const {
             return this->billboard;
         }
 
         /**
-        * Sets billboard mode.
+        * Sets billboard mode globally.
         *
         * @param t The render type for the font
         */
@@ -400,19 +402,35 @@ namespace utility {
         }
 
         /**
-        * Reset font rotation.
-        */
-        void ResetRotation(void);
-
-        /**
-        * Set font rotation.
+        * Set font rotation globally.
         *
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        void SetRotation(float a, vislib::math::Vector<float, 3> v);
-        void SetRotation(float a, float x, float y, float z);
+        inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
+            this->rotQuat.Set((a * 3.141592653589f / 180.0f), v);
+        }
+        inline void SetRotation(float a, float x, float y, float z) {
+            this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
+        }
 
+        /**
+        * Reset font rotation globally.
+        */
+        inline void ResetRotation(void) {
+            this->rotQuat.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+        }
+
+        /**
+        * Get the globally used rotation.
+        *
+        * @param a The returned rotation axis.
+        * @param v The returned rotation axis.
+        */
+        inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
+            this->rotQuat.AngleAndAxis(a, v);
+            a = (a / 3.141592653589f * 180.0f);
+        }
 
     protected:
 
@@ -440,7 +458,7 @@ namespace utility {
         * variables
         **********************************************************************/
 
-/** Disable dll export warning for not exported classes in ::vislib and ::std */
+// Disable dll export warning for not exported classes in ::vislib and ::std 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -510,11 +528,11 @@ namespace utility {
 
         // Regular font -------------------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphs;
+        std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdx;
+        SDFGlyphInfo               **glyphIdx;
         /** Numbner of indices in index array. */
-        unsigned int   idxCnt;
+        unsigned int                 idxCnt;
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> kernings;
 

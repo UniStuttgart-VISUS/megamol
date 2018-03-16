@@ -543,34 +543,6 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 }
 
 
-/**
-* SDFFont::ResetRotation
-*/
-void SDFFont::ResetRotation(void) {
-
-    this->rotQuat.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-}
-
-
-/**
-* SDFFont::SetRotation
-*/
-void SDFFont::SetRotation(float a, float x, float y, float z) {
-
-    this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
-}
-
-
-/**
-* SDFFont::SetRotation
-*/
-void SDFFont::SetRotation(float a, vislib::math::Vector<float, 3> v) {
-
-    float PI = 3.1415926535897932f;
-    this->rotQuat.Set((a * PI / 180.0f), v);
-}
-
-
 /* PRIVATE ********************************************************************/
 
 
@@ -1165,7 +1137,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile);
         return false;
     }
-
+    
     // (3) Load texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
