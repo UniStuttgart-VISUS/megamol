@@ -85,9 +85,15 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  find_package(OpenMP)
+  option(USE_MPI "enable MPI in build" OFF)
 
-  find_package(MPI)
+  set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
+  if (USE_MPI)
+    if (MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
+      message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
+    endif()
+    find_package(MPI)
+  endif()
 
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
