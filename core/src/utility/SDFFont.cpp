@@ -21,7 +21,6 @@
 #include "vislib/CharTraits.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Matrix.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace vislib;
@@ -842,39 +841,9 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     // Compute modelviewprojection matrix
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
 
-    /* Rotation matrix from quaternion
-     *
-     * see: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
-     * this->rotQuad = a(*R) + b*I + c*J + d*K
-     */
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> rotMat;
-    if (!this->billboard) {// Additional check for angle != 0 is expencive ...
-        rotMat.SetIdentity();
-
-        float aa  = this->rotQuat.R() * this->rotQuat.R();
-        float bb  = this->rotQuat.I() * this->rotQuat.I();
-        float cc  = this->rotQuat.J() * this->rotQuat.J();
-        float dd  = this->rotQuat.K() * this->rotQuat.K();
-        float ab2 = 2.0f * this->rotQuat.R() * this->rotQuat.I();
-        float ac2 = 2.0f * this->rotQuat.R() * this->rotQuat.J();
-        float ad2 = 2.0f * this->rotQuat.R() * this->rotQuat.K();
-        float bc2 = 2.0f * this->rotQuat.I() * this->rotQuat.J();
-        float bd2 = 2.0f * this->rotQuat.I() * this->rotQuat.K();
-        float cd2 = 2.0f * this->rotQuat.J() * this->rotQuat.K();
-
-        rotMat.SetAt(0, 0, aa + bb - cc - dd);
-        rotMat.SetAt(1, 0,     bc2 + ad2);
-        rotMat.SetAt(2, 0,     bd2 - ac2);
-
-        rotMat.SetAt(0, 1,     bc2 - ad2);
-        rotMat.SetAt(1, 1, aa - bb + cc - dd);
-        rotMat.SetAt(2, 1,     cd2 + ab2);
-
-        rotMat.SetAt(0, 2,     bd2 + ac2);
-        rotMat.SetAt(1, 2,     cd2 - ab2);
-        rotMat.SetAt(2, 2, aa - bb - cc + dd);
-
-        modelViewProjMatrix = modelViewProjMatrix * rotMat;
+    // Apply rotation
+    if (!this->billboard) {
+        modelViewProjMatrix = modelViewProjMatrix * this->Quat2RotMat(this->rotation);
     }
 
     // Billboard stuff
@@ -1539,4 +1508,43 @@ size_t SDFFont::loadFile(vislib::StringA filename, void **outData) {
     }
 
     return num;
+}
+
+
+/*
+* SDFFont::rotMat
+*
+* see: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
+* q = a(*R) + b*I + c*J + d*K
+*/
+vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> SDFFont::Quat2RotMat(vislib::math::Quaternion<float> q) const {
+
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> matrix;
+
+    matrix.SetIdentity();
+
+    float aa = q.R() * q.R();
+    float bb = q.I() * q.I();
+    float cc = q.J() * q.J();
+    float dd = q.K() * q.K();
+    float ab2 = 2.0f * q.R() * q.I();
+    float ac2 = 2.0f * q.R() * q.J();
+    float ad2 = 2.0f * q.R() * q.K();
+    float bc2 = 2.0f * q.I() * q.J();
+    float bd2 = 2.0f * q.I() * q.K();
+    float cd2 = 2.0f * q.J() * q.K();
+
+    matrix.SetAt(0, 0, aa + bb - cc - dd);
+    matrix.SetAt(1, 0, bc2 + ad2);
+    matrix.SetAt(2, 0, bd2 - ac2);
+
+    matrix.SetAt(0, 1, bc2 - ad2);
+    matrix.SetAt(1, 1, aa - bb + cc - dd);
+    matrix.SetAt(2, 1, cd2 + ab2);
+
+    matrix.SetAt(0, 2, bd2 + ac2);
+    matrix.SetAt(1, 2, cd2 - ab2);
+    matrix.SetAt(2, 2, aa - bb - cc + dd);
+
+    return matrix;
 }

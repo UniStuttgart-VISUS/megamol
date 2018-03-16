@@ -20,8 +20,11 @@
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+
 #include "vislib/math/Vector.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib/math/Matrix.h"
+
 
 namespace megamol {
 namespace core {
@@ -425,7 +428,7 @@ namespace utility {
         * @param v The rotation axis.
         */
         inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
-            this->rotQuat.Set((a * 3.141592653589f / 180.0f), v);
+            this->rotation.Set((a * 3.141592653589f / 180.0f), v);
         }
         inline void SetRotation(float a, float x, float y, float z) {
             this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
@@ -433,9 +436,10 @@ namespace utility {
 
         /**
         * Reset font rotation globally.
+        * (Facing in direction of positive z-Axis)
         */
         inline void ResetRotation(void) {
-            this->rotQuat.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
         }
 
         /**
@@ -445,7 +449,7 @@ namespace utility {
         * @param v The returned rotation axis.
         */
         inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
-            this->rotQuat.AngleAndAxis(a, v);
+            this->rotation.AngleAndAxis(a, v);
             a = (a / 3.141592653589f * 180.0f);
         }
 
@@ -490,7 +494,7 @@ namespace utility {
         bool billboard;
 
         /** Quaternion for rotation. */
-        vislib::math::Quaternion<float> rotQuat;
+        vislib::math::Quaternion<float> rotation;
 
         /** Inidcating if font could be loaded successfully. */
         bool initialised;
@@ -672,6 +676,9 @@ namespace utility {
         * @param fn The predefined font name.
         */
         vislib::StringA translateFontName(FontName fn);
+
+        /** Calculate rotation matrix from quaternion. */
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> Quat2RotMat(vislib::math::Quaternion<float> q) const;
 
     };
 
