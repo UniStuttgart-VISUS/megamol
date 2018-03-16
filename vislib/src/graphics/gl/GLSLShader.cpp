@@ -25,9 +25,9 @@
 bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint status = 0;
-	if (hProg == 0) return false;
+    if (hProg == 0) return false;
     if (::glGetProgramiv != NULL) {
-        if (GL_SUCCEEDED(::glGetProgramiv(hProg, 
+        if (GL_SUCCEEDED(::glGetProgramiv(hProg,
                 GL_DELETE_STATUS, &status))) {
             return (status == 0);
         }
@@ -338,18 +338,18 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
 
         if (GL_SUCCEEDED(::glGetProgramiv(this->hProgObj, 
             GL_ATTACHED_SHADERS, &objCnt))) {
-			if (objCnt > 0) {
-				GLhandleARB *objs = new GLhandleARB[objCnt];
+                        if (objCnt > 0) {
+                                GLhandleARB *objs = new GLhandleARB[objCnt];
 
-				if (GL_SUCCEEDED(::glGetAttachedShaders(this->hProgObj,
-					objCnt, &objCnt, objs))) {
-					for (GLint i = 0; i < objCnt; i++) {
-						::glDetachShader(this->hProgObj, objs[i]);
-						::glDeleteShader(objs[i]);
-					}
-				}
-				delete[] objs;
-			}
+                                if (GL_SUCCEEDED(::glGetAttachedShaders(this->hProgObj,
+                                        objCnt, &objCnt, objs))) {
+                                        for (GLint i = 0; i < objCnt; i++) {
+                                                ::glDetachShader(this->hProgObj, objs[i]);
+                                                ::glDeleteShader(objs[i]);
+                                        }
+                                }
+                                delete[] objs;
+                        }
         }
 
         GL_VERIFY_RETURN(::glDeleteProgram(this->hProgObj));

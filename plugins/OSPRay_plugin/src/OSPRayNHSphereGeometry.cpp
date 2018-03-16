@@ -21,16 +21,6 @@
 using namespace megamol::ospray;
 
 
-VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    //const float* parts = static_cast<const float*>(p.GetVertexData());
-    //return parts[index * stride + offset];
-    return static_cast<const float*>(p.GetVertexData())[index];
-}
-
-VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    return static_cast<const unsigned char*>(p.GetVertexData())[index];
-}
-
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
@@ -112,7 +102,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
     this->structureContainer.raw = std::make_shared<const void*>(std::move(parts.GetVertexData()));
     this->structureContainer.vertexLength = vertexLength;
+    this->structureContainer.vertexStride = parts.GetVertexDataStride();
     this->structureContainer.colorLength = colorLength;
+    this->structureContainer.colorStride = parts.GetColourDataStride();
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
     this->structureContainer.mmpldColor = parts.GetColourDataType();
