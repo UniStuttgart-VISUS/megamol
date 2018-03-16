@@ -21,11 +21,12 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   endif()
 
   include(ExternalProject)
+  find_package(Git REQUIRED)
 
   ExternalProject_Add(tinyply
     GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
     GIT_TAG "2.0"
-    CONFIGURE_COMMAND ""
+    CONFIGURE_COMMAND ${GIT_EXECUTABLE} pull
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
   )
