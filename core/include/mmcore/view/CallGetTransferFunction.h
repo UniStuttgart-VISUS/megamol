@@ -134,6 +134,7 @@ namespace view {
             this->texSize = size;
             this->texFormat = format;
             this->texData = nullptr;
+            this->dirty = true;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
@@ -155,9 +156,18 @@ namespace view {
             this->texSize = size;
             this->texFormat = format;
             this->texData = tex;
+            this->dirty = true;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
+        }
+
+        bool IsDirty() const {
+            return this->dirty;
+        }
+
+        void ResetDirty() {
+            this->dirty = false;
         }
 
     private:
@@ -173,6 +183,9 @@ namespace view {
 
         /** The texture format */
         TextureFormat texFormat;
+
+        /** Has changed */
+        bool dirty = false;
 
     };
 

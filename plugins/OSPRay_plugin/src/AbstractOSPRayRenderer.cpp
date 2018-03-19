@@ -1039,6 +1039,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
             ospSetData(tf, "colors", tf_rgb);
             ospSetData(tf, "opacities", tf_opa);
+            ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
 
             ospCommit(tf);
 

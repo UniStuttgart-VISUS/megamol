@@ -53,10 +53,10 @@ bool megamol::core::view::TransferFunction1D::getTFCallback(megamol::core::Call&
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glBindTexture(GL_TEXTURE_1D, otid);
 
+        outCall->SetTexture(this->texID, this->tf.size() / 4, this->tf.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
+
         tfChanged = false;
     }
-
-    outCall->SetTexture(this->texID, this->tf.size() / 4, CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
 
     return true;
 }
