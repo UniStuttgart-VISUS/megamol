@@ -73,6 +73,7 @@
 #include "LinesToFloatTable.h"
 #include "floattable/CSVDataWriter.h"
 #include "floattable/FloatTableToLines.h"
+#include  "TrajectoryAnimator.h"
 
 
 /*
@@ -209,6 +210,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LinesToFloatTable>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TrajectoryAnimator>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
