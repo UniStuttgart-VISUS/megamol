@@ -620,6 +620,9 @@ namespace MegaMolConf {
                 saveStateToolStripMenuItem.Enabled = (plugins != null);
             } catch (FileNotFoundException) {
                 // intentionally empty
+            } catch (Exception ex) {
+                MessageBox.Show($"Exception while loading state file {filename}:\n{ex.Message}\n{ex.InnerException?.Message}", "State File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                plugins = null;
             } finally {
             }
 
