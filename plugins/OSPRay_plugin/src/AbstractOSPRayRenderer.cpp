@@ -975,6 +975,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
 
                     ospSet1f(geo.back(), "radius", element.globalRadius);
+                    ospSet1i(geo.back(), "smooth", element.smooth);
                 }
                 break;
             case geometryTypeEnum::CYLINDERS:

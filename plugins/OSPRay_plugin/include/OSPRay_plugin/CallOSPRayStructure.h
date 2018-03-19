@@ -93,6 +93,7 @@ public:
     bool dataChanged;
     bool materialChanged;
     bool isValid;
+    bool smooth; //< valid for lines
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();
