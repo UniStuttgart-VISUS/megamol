@@ -2,6 +2,7 @@
 #define MEGAMOL_DATATOOLS_TRAJECTORYANIMATOR_H_INCLUDED
 
 #include <vector>
+#include <unordered_map>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -60,6 +61,32 @@ private:
         float x;
         float y;
         float z;
+
+        bool operator==(point const& lhs) const {
+            return x == lhs.x && y == lhs.y && z == lhs.z;
+        }
+
+        bool operator!=(point const& lhs) const {
+            return x != lhs.x || y != lhs.y || z != lhs.z;
+        }
+
+        float operator[](size_t const idx) const {
+            if (idx == 0) return x;
+            if (idx == 1) return y;
+            if (idx == 2) return z;
+            return 0.0f;
+        }
+    };
+
+    struct color {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
+
+        bool operator==(color const& lhs) const {
+            return r == lhs.r && g == lhs.g && b == lhs.b && a == lhs.a;
+        }
     };
 
     static point& interpolate(point const& a, point const& b, float i) {
@@ -78,13 +105,24 @@ private:
 
     bool getPointsExtentCallback(megamol::core::Call& c);
 
+    bool getHighlightsDataCallback(megamol::core::Call& c);
+
+    bool getHighlightsExtentCallback(megamol::core::Call& c);
+
     bool assertData(megamol::core::Call& linesC);
 
     bool isDirty();
 
+    static bool checkTransition(point const &pos_a, point const& pos_b, float const min_trans, float const max_trans, unsigned int const trans_dir,
+                         float const trans_eps);
+
+    std::pair<std::vector<float>, std::vector<unsigned char>> removePadding(megamol::geocalls::LinesDataCall::Lines const& l) const;
+
     megamol::core::CalleeSlot linesOutSlot;
 
     megamol::core::CalleeSlot pointsOutSlot;
+
+    megamol::core::CalleeSlot highlightsOutSlot;
 
     megamol::core::CallerSlot linesInSlot;
 
@@ -95,6 +133,18 @@ private:
     megamol::core::param::ParamSlot inFrameCountSlot;
 
     megamol::core::param::ParamSlot globalRadiusSlot;
+
+    megamol::core::param::ParamSlot animationLengthSlot;
+
+    megamol::core::param::ParamSlot minTransSlot;
+
+    megamol::core::param::ParamSlot maxTransSlot;
+
+    megamol::core::param::ParamSlot transDirSlot;
+
+    megamol::core::param::ParamSlot transEpsSlot;
+
+    megamol::core::param::ParamSlot highlightRadiusSlot;
 
     vislib::math::Cuboid<float> bbox;
 
@@ -111,6 +161,18 @@ private:
     unsigned int endFrameID;
 
     std::vector<float> pointData;
+
+    std::unordered_map<unsigned int /* line idx */, unsigned int /* start frame */> transitionLines2Frames;
+
+    std::unordered_map<unsigned int, std::pair<std::vector<float>, std::vector<unsigned char>>> transitionLines;
+
+    std::vector<megamol::geocalls::LinesDataCall::Lines> renderQueue;
+
+    std::vector<float> highlightPointData;
+
+    std::vector<float> dummyLinePos;
+
+    megamol::geocalls::LinesDataCall::Lines dummyLine;
 }; /* end class TrajectoryAnimator */
 
 } /* end namespace datatools */

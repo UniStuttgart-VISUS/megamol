@@ -76,6 +76,8 @@ private:
 
     megamol::core::param::ParamSlot toggleBreakPBCSlot;
 
+    megamol::core::param::ParamSlot togglePaddingSlot;
+
     size_t datahash;
 
     std::string filepath_;

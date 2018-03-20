@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "TrajectoryDataSource.h"
 
+#include <stdint.h>
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -23,6 +25,7 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
     , minTransitionPlaneSlot("trans::min", "Set position of first transition plane")
     , maxTransitionPlaneSlot("trans::max", "Set position of second transition plane")
     , toggleBreakPBCSlot("breakPBC", "Toggle whether to break PBC in trajectories")
+    , togglePaddingSlot("padding", "Introduces padding at begin and end of short trajectories")
     , datahash(0)
     , data_param_changed_(true) {
     this->trajOutSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(),
@@ -73,6 +76,9 @@ megamol::stdplugin::datatools::io::TrajectoryDataSource::TrajectoryDataSource()
 
     this->toggleBreakPBCSlot << new megamol::core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->toggleBreakPBCSlot);
+
+    this->togglePaddingSlot << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->togglePaddingSlot);
 }
 
 
@@ -214,6 +220,8 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
 
         bool const breakPBC = this->toggleBreakPBCSlot.Param<megamol::core::param::BoolParam>()->Value();
 
+        bool const padding = this->togglePaddingSlot.Param<megamol::core::param::BoolParam>()->Value();
+
         bool const transitionOnly = this->transitionOnlySlot.Param<megamol::core::param::BoolParam>()->Value();
 
         unsigned int const trans_axis = this->transitionAxisSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -340,28 +348,78 @@ bool megamol::stdplugin::datatools::io::TrajectoryDataSource::assertData() {
 
 
                 if (!transitionOnly || has_trans) {
-                        this->data.push_back(cur_data);
-                        this->col_data.push_back(cur_col_data);
+                    this->data.push_back(cur_data);
+                    this->col_data.push_back(cur_col_data);
+                    auto& data_back = this->data.back();
+                    auto& col_data_back = this->col_data.back();
                     if (!breakPBC) {
                         // set the line
                         megamol::geocalls::LinesDataCall::Lines l;
-                        /*l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(), this->data.back().data(),
-                            this->col_data.back().data(), true);*/
-                        l.Set(this->data.back().size() / 3, this->data.back().data(), this->col_data.back().data(), true);
-                        //vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
+                        /*l.Set(((this->data.back().size() / 3) - 1) * 2, this->index_dummy.data(),
+                           this->data.back().data(), this->col_data.back().data(), true);*/
+                        l.Set(
+                            this->data.back().size() / 3, this->data.back().data(), this->col_data.back().data(), true);
+                        // vislib::graphics::ColourRGBAu8{255, 255, 255, 255});
                         this->lines_data.push_back(l);
                     } else {
-                        for (size_t li = 0; li < pbcIdxStart.size() - 1; ++li) {
+                        for (size_t li = 0; li < pbcIdxStart.size(); ++li) {
                             auto const start = pbcIdxStart[li];
-                            auto const end = pbcIdxEnd[li];
+                            auto end = 0;
+                            if (li >= pbcIdxEnd.size()) {
+                                end = this->data.back().size() / 3 - 1;
+                            } else {
+                                end = pbcIdxEnd[li];
+                            }
 
-                            if (end != 0 && !((end-start) == 0)) {
-                                auto start_data_ptr = &(this->data.back().data()[start * 3]);
-                                auto start_col_data_ptr = &(this->col_data.back().data()[start * 4]);
+                            if (end != 0 && !((end - start) == 0)) {
+                                auto start_data_ptr = &(data_back.data()[start * 3]);
+                                auto start_col_data_ptr = &(col_data_back.data()[start * 4]);
 
-                                megamol::geocalls::LinesDataCall::Lines l;
-                                l.Set((end - start) + 1, start_data_ptr, start_col_data_ptr, true);
-                                this->lines_data.push_back(l);
+                                auto end_data_ptr = &(data_back.data()[end * 3]);
+                                auto end_col_data_ptr = &(col_data_back.data()[end * 4]);
+
+                                if (!padding) {
+                                    megamol::geocalls::LinesDataCall::Lines l;
+                                    l.Set((end - start) + 1, start_data_ptr, start_col_data_ptr, true);
+                                    this->lines_data.push_back(l);
+                                } else {
+                                    this->data.push_back(std::vector<float>(
+                                        (this->frame_begin_end_.second - this->frame_begin_end_.first) * 3));
+                                    this->col_data.push_back(std::vector<uint8_t>(
+                                        (this->frame_begin_end_.second - this->frame_begin_end_.first) * 4));
+
+                                    auto& data_vec = this->data.back();
+                                    auto& col_vec = this->col_data.back();
+
+                                    for (size_t fi = this->frame_begin_end_.first; fi < start; ++fi) {
+                                        data_vec[fi * 3 + 0] = start_data_ptr[0];
+                                        data_vec[fi * 3 + 1] = start_data_ptr[1];
+                                        data_vec[fi * 3 + 2] = start_data_ptr[2];
+
+                                        col_vec[fi * 4 + 0] = start_col_data_ptr[0];
+                                        col_vec[fi * 4 + 1] = start_col_data_ptr[1];
+                                        col_vec[fi * 4 + 2] = start_col_data_ptr[2];
+                                        col_vec[fi * 4 + 2] = start_col_data_ptr[3];
+                                    }
+                                    memcpy(&(data_vec.data()[start * 3]), start_data_ptr,
+                                        sizeof(float) * 3 * (end - start));
+                                    memcpy(&(col_vec.data()[start * 4]), start_col_data_ptr,
+                                        sizeof(uint8_t) * 4 * (end - start));
+                                    for (size_t fi = end; fi < this->frame_begin_end_.second; ++fi) {
+                                        data_vec[fi * 3 + 0] = end_data_ptr[0];
+                                        data_vec[fi * 3 + 1] = end_data_ptr[1];
+                                        data_vec[fi * 3 + 2] = end_data_ptr[2];
+
+                                        col_vec[fi * 4 + 0] = end_col_data_ptr[0];
+                                        col_vec[fi * 4 + 1] = end_col_data_ptr[1];
+                                        col_vec[fi * 4 + 2] = end_col_data_ptr[2];
+                                        col_vec[fi * 4 + 2] = end_col_data_ptr[3];
+                                    }
+                                    megamol::geocalls::LinesDataCall::Lines l;
+                                    l.Set(this->frame_begin_end_.second - this->frame_begin_end_.first, data_vec.data(),
+                                        col_vec.data(), true);
+                                    this->lines_data.push_back(l);
+                                }
                             }
                         }
                     }
