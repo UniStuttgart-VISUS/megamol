@@ -87,7 +87,7 @@ bool megamol::stdplugin::datatools::LinesToFloatTable::assertData(
 
         auto const lineCount = inCall->Count();
 
-        float edgeId = 0.0f;
+        //float edgeId = 0.0f;
 
         this->data.clear();
 
@@ -97,35 +97,35 @@ bool megamol::stdplugin::datatools::LinesToFloatTable::assertData(
             auto const indexArrayDT = line.IndexArrayDataType();
             if (indexArrayDT == geocalls::LinesDataCall::Lines::DT_NONE) {
                 // numElements represents number of vertices
-                for (unsigned int vi = 0; vi < numElements - 1; ++vi) {
-                    this->data.push_back(edgeId);
+                for (unsigned int vi = 0; vi < numElements; ++vi) {
+                    this->data.push_back(li);
                     auto vertex = line[vi];
                     this->data.push_back(vertex.vert.GetXf());
                     this->data.push_back(vertex.vert.GetYf());
                     this->data.push_back(vertex.vert.GetZf());
-                    this->data.push_back(edgeId);
+                    /*this->data.push_back(edgeId);
                     vertex = line[vi + 1];
                     this->data.push_back(vertex.vert.GetXf());
                     this->data.push_back(vertex.vert.GetYf());
                     this->data.push_back(vertex.vert.GetZf());
-                    edgeId += 1.0f;
+                    edgeId += 1.0f;*/
                 }
             } else {
                 // numElements represents number of indices
-                for (unsigned int i = 0; i < numElements/2; ++i) {
-                    this->data.push_back(edgeId);
+                for (unsigned int i = 0; i < numElements; ++i) {
+                    this->data.push_back(li);
                     auto idx = line.GetIdx(i * 2);
                     auto vertex = line[idx.idx.GetIDXu32()];
                     this->data.push_back(vertex.vert.GetXf());
                     this->data.push_back(vertex.vert.GetYf());
                     this->data.push_back(vertex.vert.GetZf());
-                    this->data.push_back(edgeId);
+                    /*this->data.push_back(edgeId);
                     idx = line.GetIdx(i * 2 + 1);
                     vertex = line[idx.idx.GetIDXu32()];
                     this->data.push_back(vertex.vert.GetXf());
                     this->data.push_back(vertex.vert.GetYf());
                     this->data.push_back(vertex.vert.GetZf());
-                    edgeId += 1.0f;
+                    edgeId += 1.0f;*/
                 }
             }
         }
