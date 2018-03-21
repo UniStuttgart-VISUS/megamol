@@ -217,6 +217,7 @@ namespace megamol {
             /**********************************************************************
             * parameters
             **********************************************************************/
+
             /** */
 			core::param::ParamSlot selectedSkyboxSideParam;
             /** */
@@ -229,6 +230,11 @@ namespace megamol {
             core::param::ParamSlot renderParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
+
+            /** */
+            core::param::ParamSlot eyeParam;
+            /** */
+            core::param::ParamSlot projectionParam;
 		};
 
 	} /* end namespace cinematiccamera */

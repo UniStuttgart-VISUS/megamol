@@ -52,6 +52,8 @@ CinematicView::CinematicView(void) : View3D(),
     resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
     resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
+    eyeParam(                 "stereo::eye", "Select eye position (for stereo view)."),
+    projectionParam(          "stereo::projection", "Select camera projection."),
     shownKeyframe()
     {
 
@@ -112,6 +114,22 @@ CinematicView::CinematicView(void) : View3D(),
 
     this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(' '));
     this->MakeSlotAvailable(&this->toggleAnimPlayParam);
+
+    param::EnumParam *enp = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
+    enp->SetTypePair(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE,  "Left");
+    enp->SetTypePair(vislib::graphics::CameraParameters::StereoEye::RIGHT_EYE, "Right");
+    this->eyeParam << enp;
+    this->MakeSlotAvailable(&this->eyeParam);
+
+    param::EnumParam *pep = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
+    pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::MONO_ORTHOGRAPHIC, "Mono Orthographic");
+    pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::MONO_PERSPECTIVE, "Mono Perspective");
+    pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::STEREO_OFF_AXIS, "Stereo Off-Axis");
+    pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::STEREO_PARALLEL, "Stereo Parallel");
+    pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::STEREO_TOE_IN, "Stereo ToeIn");
+    this->projectionParam << pep;
+    this->MakeSlotAvailable(&this->projectionParam);
+
 
     // TEMPORARY HACK #########################################################
     // Disable enableMouseSelectionSlot for this view
@@ -246,6 +264,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         else {
             this->rtf_finish();
         }
+    }
+    // Set (mono/stereo) projection for camera
+    if (this->projectionParam.IsDirty()) {
+        this->projectionParam.ResetDirty();
+        this->cam.Parameters()->SetProjection(static_cast<vislib::graphics::CameraParameters::ProjectionType>(this->projectionParam.Param<param::EnumParam>()->Value()));
+    }
+    // Set eye position for camera
+    if (this->eyeParam.IsDirty()) {
+        this->eyeParam.ResetDirty();
+        this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
 
@@ -534,12 +562,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (!this->theFont.Initialise(this->GetCoreInstance())) {
         return;
     }
-    glEnable(GL_DEPTH_TEST);
 
     vislib::StringA leftLabel = " CINEMATIC VIEW ";
     vislib::StringA midLabel  = "";
     if (this->rendering) {
-        midLabel  =  " !!! RENDERING IN PROGRESS !!! ";
+        midLabel  =  "! RENDERING IN PROGRESS !";
     }
     else if (this->playAnim) {
         midLabel = " playing animation ";

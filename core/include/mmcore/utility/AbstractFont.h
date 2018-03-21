@@ -66,15 +66,15 @@ namespace utility {
 
         /** Possible values for the text alignment */
         enum Alignment {
-            ALIGN_LEFT_TOP = 0x00,
-            ALIGN_CENTER_TOP = 0x01,
-            ALIGN_RIGHT_TOP = 0x02,
-            ALIGN_LEFT_MIDDLE = 0x10,
+            ALIGN_LEFT_TOP      = 0x00,
+            ALIGN_CENTER_TOP    = 0x01,
+            ALIGN_RIGHT_TOP     = 0x02,
+            ALIGN_LEFT_MIDDLE   = 0x10,
             ALIGN_CENTER_MIDDLE = 0x11,
-            ALIGN_RIGHT_MIDDLE = 0x12,
-            ALIGN_LEFT_BOTTOM = 0x20,
+            ALIGN_RIGHT_MIDDLE  = 0x12,
+            ALIGN_LEFT_BOTTOM   = 0x20,
             ALIGN_CENTER_BOTTOM = 0x21,
-            ALIGN_RIGHT_BOTTOM = 0x22
+            ALIGN_RIGHT_BOTTOM  = 0x22
         };
 
         /** Dtor. */

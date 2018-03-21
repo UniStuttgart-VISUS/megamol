@@ -21,6 +21,10 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 
+#include "vislib/math/Vector.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Matrix.h"
+
 
 namespace megamol {
 namespace core {
@@ -32,24 +36,41 @@ namespace utility {
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Usage example:
+     * >>> USAGE example:
+     *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
-     *                           or this->sdfFont("MY-OWN-FONT");
-     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
-     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
-     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     *
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS);
+     *                       OR: this->sdfFont("filename-of-own-font");
+     *
+     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
+     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available yet (call once e.g. in create()) !!!
+     *
+     *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+     *
+     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE);
+     *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
+     *     - Billboard:          this->sdfFont.SetBillboard(true);
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Available predefined fonts (free for commercial use) -  Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     * >>> Predefined FONTS: (free for commercial use) 
+     *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     *
      *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
      *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
      *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
      *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Path the fonts are stored: <megamol>/share/resource/<fontname>(.fnt/.png)
+     * >>> PATH the fonts are stored: 
+     *
+     *     - <megamol>/share/resource/<fontname>(.fnt/.png)
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> SDF font generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
-     *     Optimal Settings:   
+     * >>> SDF font GENERATION using "Hiero":
+     *     https://github.com/libgdx/libgdx/wiki/Hiero
+     *
+     *     Use followings SETTINGS:   
      *     - Padding - Top,Right,Bottom,Left:   10
      *     - Padding - X,Y:                    -20
      *     - Bold,Italic:                       false
@@ -59,12 +80,14 @@ namespace utility {
      *     - Size:                             ~90 (glyphs must fit on !one! page)
      *     - Distance Field - Spread:           10 
      *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
+     *
      * -----------------------------------------------------------------------------------------------------------------
      */
+
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
-        /** Available fonts. */
+        /** Available predefined fonts. */
         enum FontName {
             EVOLVENTA_SANS,
             ROBOTO_SANS,
@@ -78,7 +101,6 @@ namespace utility {
             RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
             RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
-
 
         /**
         * Ctor.
@@ -361,8 +383,10 @@ namespace utility {
         virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
         virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
 
+        // --- Global font settings -------------------------------------------
+
         /**
-         * Answers the render type of the font
+         * Answers the globally used render type of the font.
          *
          * @return The render type of the font
          */
@@ -371,12 +395,62 @@ namespace utility {
         }
 
         /**
-         * Sets the render type of the font
+         * Sets the render type of the font globally.
          *
          * @param t The render type for the font
          */
         inline void SetRenderType(RenderType t) {
             this->renderType = t;           
+        }
+
+        /**
+        * Answers the globally used status of billboard mode.
+        *
+        * @return The render type of the font
+        */
+        inline bool GetBillboardStatus(void) const {
+            return this->billboard;
+        }
+
+        /**
+        * Sets billboard mode globally.
+        *
+        * @param t The render type for the font
+        */
+        inline void SetBillboard(bool b) {
+            this->billboard = b;
+        }
+
+        /**
+        * Set font rotation globally.
+        *
+        * @param a The rotation angle in degrees.
+        * @param v The rotation axis.
+        */
+        inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
+            this->rotation.Set((a * 3.141592653589f / 180.0f), v);
+        }
+        inline void SetRotation(float a, float x, float y, float z) {
+            this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
+        }
+
+        /**
+        * Reset font rotation globally.
+        * (Facing in direction of positive z-Axis)
+        */
+        inline void ResetRotation(void) {
+            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+        }
+
+        /**
+        * Get the globally used rotation.
+        *
+        * @param a The returned angle in degrees.
+        * @param v The returned rotation axis.
+        */
+        inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
+            this->rotation.AngleAndAxis(a, v);
+            a = (a / 3.141592653589f * 180.0f);
         }
 
     protected:
@@ -405,7 +479,7 @@ namespace utility {
         * variables
         **********************************************************************/
 
-/** Disable dll export warning for not exported classes in ::vislib and ::std */
+// Disable dll export warning for not exported classes in ::vislib and ::std 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -415,6 +489,12 @@ namespace utility {
 
         /** The render type used. */
         RenderType renderType;
+
+        /** Billboard mode. */
+        bool billboard;
+
+        /** Quaternion for rotation. */
+        vislib::math::Quaternion<float> rotation;
 
         /** Inidcating if font could be loaded successfully. */
         bool initialised;
@@ -469,11 +549,11 @@ namespace utility {
 
         // Regular font -------------------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphs;
+        std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdx;
+        SDFGlyphInfo               **glyphIdx;
         /** Numbner of indices in index array. */
-        unsigned int   idxCnt;
+        unsigned int                 idxCnt;
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> kernings;
 
@@ -596,6 +676,9 @@ namespace utility {
         * @param fn The predefined font name.
         */
         vislib::StringA translateFontName(FontName fn);
+
+        /** Calculate rotation matrix from quaternion. */
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> Quat2RotMat(vislib::math::Quaternion<float> q) const;
 
     };
 
