@@ -295,6 +295,9 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::assertData(megamol::core
                     return false;
                 }
 
+                auto start_end = checkPadding(line);
+                if (start < start_end.first || end > start_end.second) continue;
+
                 point startPoint;
                 point endPoint;
 
@@ -318,7 +321,7 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::assertData(megamol::core
                     auto const it = this->transitionLines.find(li);
                     if (it == this->transitionLines.end()) {
                         this->transitionLines2Frames[li] = requestedFrameID;
-                        this->transitionLines[li] = removePadding(line);
+                        this->transitionLines[li] = removePadding(line, start_end);
                     }
                 }
             }
@@ -409,7 +412,7 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::checkTransition(point co
 
 
 std::pair<std::vector<float>, std::vector<unsigned char>>
-megamol::stdplugin::datatools::TrajectoryAnimator::removePadding(megamol::geocalls::LinesDataCall::Lines const& l) const {
+megamol::stdplugin::datatools::TrajectoryAnimator::removePadding(megamol::geocalls::LinesDataCall::Lines const& l, std::pair<unsigned int, unsigned int> const& start_end) const {
     std::vector<point> pos;
     pos.reserve(l.Count());
     std::vector<color> color;
@@ -428,12 +431,24 @@ megamol::stdplugin::datatools::TrajectoryAnimator::removePadding(megamol::geocal
     color.resize(std::distance(color.begin(), col_it));*/
 
     std::vector<float> pos_f;
-    pos_f.reserve(pos.size() * 3);
+    pos_f.reserve((start_end.second - start_end.first) * 3);
     //pos_f.reserve(std::distance(pos.begin(), pos_it) * 3);
     std::vector<unsigned char> col_u;
-    col_u.reserve(color.size() * 4);
+    col_u.reserve((start_end.second - start_end.first) * 4);
     //col_u.reserve(std::distance(color.begin(), col_it) * 4);
-    if (pos.size() > 1) {
+
+    for (unsigned int idx = start_end.first; idx <= start_end.second; ++idx) {
+        pos_f.push_back(pos[idx].x);
+        pos_f.push_back(pos[idx].y);
+        pos_f.push_back(pos[idx].z);
+
+        col_u.push_back(color[idx].r);
+        col_u.push_back(color[idx].g);
+        col_u.push_back(color[idx].b);
+        col_u.push_back(color[idx].a);
+    }
+
+    /*if (pos.size() > 1) {
         for (unsigned int idx = 0; idx < pos.size() - 1; ++idx) {
             if (pos[idx] != pos[idx + 1]) {
                 pos_f.push_back(pos[idx].x);
@@ -462,7 +477,7 @@ megamol::stdplugin::datatools::TrajectoryAnimator::removePadding(megamol::geocal
     }
 
     pos_f.shrink_to_fit();
-    col_u.shrink_to_fit();
+    col_u.shrink_to_fit();*/
 
     /*for (auto pit = pos.begin(); pit != pos_it; ++pit) {
         pos_f.push_back(pit->x);
@@ -478,4 +493,35 @@ megamol::stdplugin::datatools::TrajectoryAnimator::removePadding(megamol::geocal
     }*/
 
     return std::make_pair(pos_f, col_u);
+}
+
+
+std::pair<unsigned int, unsigned int> megamol::stdplugin::datatools::TrajectoryAnimator::checkPadding(
+    megamol::geocalls::LinesDataCall::Lines const& l) const {
+    std::pair<unsigned int, unsigned int> start_end;
+
+    std::vector<point> pos;
+    pos.reserve(l.Count());
+
+    for (unsigned int li = 0; li < l.Count(); ++li) {
+        pos.push_back({l[li].vert.GetXf(), l[li].vert.GetYf(), l[li].vert.GetZf()});
+    }
+
+    if (pos.size() > 1) {
+        for (size_t i = 0; i < pos.size() - 1; ++i) {
+            if (pos[i] != pos[i+1]) {
+                start_end.first = i;
+                break;
+            }
+        }
+
+        for (size_t i = pos.size() - 1; i > 0; --i) {
+            if (pos[i] != pos[i - 1]) {
+                start_end.second = i;
+                break;
+            }
+        }
+    }
+
+    return start_end;
 }

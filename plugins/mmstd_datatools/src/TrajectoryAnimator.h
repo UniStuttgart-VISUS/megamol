@@ -116,7 +116,9 @@ private:
     static bool checkTransition(point const &pos_a, point const& pos_b, float const min_trans, float const max_trans, unsigned int const trans_dir,
                          float const trans_eps);
 
-    std::pair<std::vector<float>, std::vector<unsigned char>> removePadding(megamol::geocalls::LinesDataCall::Lines const& l) const;
+    std::pair<std::vector<float>, std::vector<unsigned char>> removePadding(megamol::geocalls::LinesDataCall::Lines const& l, std::pair<unsigned int, unsigned int> const& start_end) const;
+
+    std::pair<unsigned int, unsigned int> checkPadding(megamol::geocalls::LinesDataCall::Lines const& l) const;
 
     megamol::core::CalleeSlot linesOutSlot;
 
