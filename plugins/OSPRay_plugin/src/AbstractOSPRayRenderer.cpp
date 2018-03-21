@@ -16,12 +16,9 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-
-
 
 #include <stdio.h>
 
@@ -951,38 +948,34 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
+                {
+                    geo.push_back(ospNewGeometry("streamlines"));
 
-                geo.push_back(ospNewGeometry("streamlines"));
+                    osp::vec3fa* data = new osp::vec3fa[element.vertexData->size() / 3];
 
-                osp::vec3fa* data;
-                data = new osp::vec3fa[element.vertexData->size() / 3];
+                    // fill aligned array with vertex data
+                    for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
+                        data[i].x = element.vertexData->data()[3 * i + 0];
+                        data[i].y = element.vertexData->data()[3 * i + 1];
+                        data[i].z = element.vertexData->data()[3 * i + 2];
+                    }
 
-                // fill aligned array with vertex data
-                for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
-                    data[i].x = element.vertexData->data()[3 * i + 0];
-                    data[i].y = element.vertexData->data()[3 * i + 1];
-                    data[i].z = element.vertexData->data()[3 * i + 2];
-                    data[i].a = 64;
-                    data[i].w = 0;
-                    data[i].u = 16;
+                    vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data, OSP_DATA_SHARED_BUFFER);
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "vertex", vertexData);
+
+                    indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
+                    ospCommit(indexData);
+                    ospSetData(geo.back(), "index", indexData);
+
+                    if (element.colorData->size() > 0) {
+                        colorData = ospNewData(element.colorData->size() / element.colorLength, OSP_FLOAT4, element.colorData->data(), OSP_DATA_SHARED_BUFFER);
+                        ospCommit(colorData);
+                        ospSetData(geo.back(), "vertex.color", colorData);
+                    }
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
                 }
-
-                vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data);
-                ospCommit(vertexData);
-                ospSetData(geo.back(), "vertex", vertexData);
-
-                indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data());
-                ospCommit(indexData);
-                ospSetData(geo.back(), "index", indexData);
-
-                if (element.colorData->size() > 0) {
-                    colorData = ospNewData(element.colorData->size() / 4, OSP_FLOAT4, element.colorData->data());
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
-                ospSet1f(geo.back(), "radius", element.globalRadius);
-
                 break;
             case geometryTypeEnum::CYLINDERS:
                 break;
