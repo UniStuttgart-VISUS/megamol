@@ -777,6 +777,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
+            case geometryTypeEnum::OSPRAY_API_GEOMETRY:
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
+                break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     returnValue = false;
@@ -960,6 +967,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         data[i].z = element.vertexData->data()[3 * i + 2];
                     }
 
+
                     vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data, OSP_DATA_SHARED_BUFFER);
                     ospCommit(vertexData);
                     ospSetData(geo.back(), "vertex", vertexData);
@@ -1005,46 +1013,56 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::VOLUME:
-            if (element.voxels == NULL) {
-                returnValue = false;
+
+            if (element.volumeType == volumeTypeEnum::OSPRAY_API_VOLUME) {
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
                 break;
-            }
-
-            vol.push_back(ospNewVolume("shared_structured_volume"));
-
-            ospSetString(vol.back(), "voxelType", "float");
-            // scaling properties of the volume
-            ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
-            ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-            ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
-
-            // add data 
-            voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
-            ospCommit(voxels);
-            ospSetData(vol.back(), "voxelData", voxels);
-
-            // ClippingBox
-
-            if (element.clippingBoxActive) {
-                ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
-                ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
             } else {
-                ospSetVec3f(vol.back(), "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
-                ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+
+                if (element.voxels == NULL) {
+                    returnValue = false;
+                    break;
+                }
+
+                vol.push_back(ospNewVolume("shared_structured_volume"));
+
+                ospSetString(vol.back(), "voxelType", "float");
+                // scaling properties of the volume
+                ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
+                ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+
+                // add data 
+                voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(vol.back(), "voxelData", voxels);
+
+                // ClippingBox
+
+                if (element.clippingBoxActive) {
+                    ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
+                    ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
+                } else {
+                    ospSetVec3f(vol.back(), "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
+                    ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+                }
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+                OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+
+                ospCommit(tf);
+
+                ospSetObject(vol.back(), "transferFunction", tf);
+                ospCommit(vol.back());
             }
-
-            OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-            OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
-            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
-            ospSetData(tf, "colors", tf_rgb);
-            ospSetData(tf, "opacities", tf_opa);
-
-            ospCommit(tf);
-
-            ospSetObject(vol.back(), "transferFunction", tf);
-            ospCommit(vol.back());
-
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());
