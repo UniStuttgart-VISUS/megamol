@@ -403,6 +403,9 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
     if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
 
+    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram)) return false;
+    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram)) return false;
+
     if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
     if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
 
@@ -480,7 +483,7 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
         return false;
     }
 
-    if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
+    if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN > 0) {
         if (mouseFlags != 0) {
             mouseReleasedX = x;
             mouseReleasedY = y;
@@ -491,6 +494,10 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
         }
     } else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
         mouseFlags = 0;
+        if (!this->dragging && !this->filtering) {
+            // I guess we stopped picking / brushing
+            // TODO: download buffer? notify storage in some other way?!
+        }
     }
     if (pickedAxis != -1 && (fabs(mousePressedX - x) > this->axisDistance * 0.5f)
         && (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
@@ -794,9 +801,9 @@ void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], co
     if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, otherColor, tfColorFactor);
     }
-    //if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
-    //	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
-    //}
+    if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+    	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
+    }
 }
 
 void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
@@ -840,6 +847,36 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 #endif
     prog.Disable();
     POP_DEBUG_GROUP;
+}
+
+void NGParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
+    auto& program = this->drawPickIndicatorProgram;
+
+    this->enableProgramAndBind(program);
+
+    ::glUniform2f(program.ParameterLocation("mouse"), x, y);
+    ::glUniform1f(program.ParameterLocation("pickRadius"), pickRadius);
+
+    ::glUniform4fv(program.ParameterLocation("indicatorColor"), 1, color);
+
+    ::glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    program.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
+    auto& prog = this->drawStrokeIndicatorProgram;
+
+    this->enableProgramAndBind(prog);
+
+    ::glUniform2f(prog.ParameterLocation("mousePressed"), x0, y0);
+    ::glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
+
+    ::glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
+
+    ::glDrawArrays(GL_LINES, 0, 2);
+
+    prog.Disable();
 }
 
 
@@ -1055,6 +1092,23 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
 
     drawParcos();
+
+    if (this->mouseFlags > 0 && !dragging && !filtering) {
+        switch(selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
+            case SELECT_STROKE:
+                this->doStroking(mousePressedX, mousePressedY, mouseReleasedX, mouseReleasedY);
+                if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+                    this->drawStrokeIndicator(mousePressedX, mousePressedY, mouseX, mouseY, this->selectionIndicatorColor);
+                }
+                break;
+            case SELECT_PICK:
+                this->doPicking(mouseReleasedX, mouseReleasedY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
+                if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+                    this->drawPickIndicator(mouseX, mouseY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(), this->selectionIndicatorColor);
+                }
+                break;
+        }
+    }
 
     drawAxes();
 
