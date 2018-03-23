@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include "mmcore/api/MegaMolCore.std.h"
+#include <omp.h>
 
 namespace megamol {
 namespace core {
@@ -49,9 +50,22 @@ namespace utility {
             GLsizeiptr& dstOffset, GLsizeiptr& dstLength);
 
         /// use this uploader if you want to add a per-item transformation
-        /// like [](double d) -> float { return d - localOrigin; }
-        template<class TSrc, class TDst, class fun>
-        void UploadChunk(unsigned int idx, fun unaryOp,
+        /// that will be executed inside an omp parallel for
+        /// @param idx the chunk to upload [0..SetData()-1]
+        /// @param copyOp the lambda you want to execute. A really hacky subset-changing
+        ///            one could be:
+        ///            [vertStride](const char *src, char *dst) -> void {
+        ///                memcpy(dst, src, vertStride);
+        ///                *reinterpret_cast<float *>(dst + 4) =
+        ///                    *reinterpret_cast<const float *>(src + 4) - 100.0f;
+        ///            }
+        /// @param numItems returns the number of items in this chunk
+        ///                 (last one is probably shorter than bufferSize)
+        /// @param sync returns the internal ID of a sync object abstraction
+        /// @param dstOffset the buffer offset required for binding the buffer range 
+        /// @param dstLength the buffer length required for binding the buffer range
+        template<class fun>
+        void UploadChunk(unsigned int idx, fun copyOp,
             GLuint& numItems, unsigned int& sync,
             GLsizeiptr& dstOffset, GLsizeiptr& dstLength);
 
@@ -88,9 +102,10 @@ namespace utility {
         /// which ring element we upload to next
         GLuint currIdx;
         std::vector<GLsync> fences;
+        int numThr;
     };
 
-    template<class TSrc, class TDst, class fun>
+    template<class fun>
     void SSBOStreamer::UploadChunk(unsigned int idx, fun unaryOp, GLuint& numItems,
         unsigned int& sync, GLsizeiptr& dstOffset, GLsizeiptr& dstLength) {
         if (theData == nullptr || idx > this->numChunks - 1) return;
@@ -100,7 +115,7 @@ namespace utility {
 
         dstOffset = this->bufferSize * this->currIdx;
         GLsizeiptr srcOffset = this->numItemsPerChunk * this->srcStride * idx;
-        void *dst = static_cast<char*>(this->mappedMem) + dstOffset;
+        char *dst = static_cast<char*>(this->mappedMem) + dstOffset;
         const char *src = static_cast<const char*>(this->theData) + srcOffset;
         const size_t itemsThisTime = std::min<unsigned int>(
             this->numItems - idx * this->numItemsPerChunk, this->numItemsPerChunk);
@@ -112,9 +127,10 @@ namespace utility {
 
         waitSignal(this->fences[currIdx]);
 
-        std::transform(reinterpret_cast<const TSrc*>(src), 
-            reinterpret_cast<const TSrc*>(srcEnd),
-            reinterpret_cast<TDst*>(dst), unaryOp);
+#pragma omp parallel for
+        for (INT64 i = 0; i < itemsThisTime; ++i) {
+            unaryOp(src + i * this->srcStride, dst + i * this->dstStride);
+        }
 
         glFlushMappedNamedBufferRange(this->theSSBO,
             this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);

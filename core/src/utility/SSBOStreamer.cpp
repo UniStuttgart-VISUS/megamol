@@ -14,7 +14,7 @@ using namespace megamol::core::utility;
 
 SSBOStreamer::SSBOStreamer() : theSSBO(0),
         bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
-        mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0) {
+        mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()) {
     
 }
 
