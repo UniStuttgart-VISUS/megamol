@@ -205,7 +205,7 @@ bool TunnelCutter::getExtent(Call& call) {
     }
 
     outCall->SetDataHash(inCall->DataHash() + inCav->DataHash() + this->hashOffset);
-    outCall->SetFrameCount(mdc->FrameCount());
+    outCall->SetFrameCount(inCall->FrameCount());
     outCall->SetExtent(inCall->FrameCount(), inCall->AccessBoundingBoxes());
 
     return true;
