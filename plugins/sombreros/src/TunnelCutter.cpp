@@ -18,6 +18,7 @@
 #include <cfloat>
 #include <iostream>
 #include <iterator>
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -132,7 +133,15 @@ bool TunnelCutter::getData(Call& call) {
 
     if (this->dirt) {
         if (this->isActiveParam.Param<param::BoolParam>()->Value()) {
+#ifdef SOMBRERO_TIMING
+            auto timebegin = std::chrono::steady_clock::now();
+#endif
             cutMeshEqually(inCall, inCav, tc, mdc, bsc);
+#ifdef SOMBRERO_TIMING
+            auto timeend = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+            std::cout << "***********Tunnel Cutting took " << elapsed.count() << " ms" << std::endl;
+#endif
         } else {
             this->meshVector.clear();
             this->meshVector.resize(inCall->Count());

@@ -18,6 +18,7 @@
 #include <climits>
 #include <cfloat>
 #include <iostream>
+#include <chrono>
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
@@ -86,6 +87,10 @@ bool MSMSCavityFinder::getData(Call& call) {
     CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
+#ifdef SOMBRERO_TIMING
+    auto timebegin = std::chrono::steady_clock::now();
+#endif
+
     CallTriMeshData * inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
     if (inInnerCall == nullptr) return false;
 
@@ -117,6 +122,13 @@ bool MSMSCavityFinder::getData(Call& call) {
         this->lastHashOuter != inOuterCall->DataHash() ||
         this->distanceParam.IsDirty() ||
         this->vertexIndex.size() != innerObj->GetVertexCount() ) {
+
+#ifdef SOMBRERO_TIMING
+        auto timeend = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********MSMS Calculation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
 
         // store values of this request
         this->lastFrame = outCall->FrameID();
@@ -310,6 +322,12 @@ bool MSMSCavityFinder::getData(Call& call) {
         }
         // --- END find connected trianges forming independent submeshes (i.e., cavities) ---
 
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********MSMS Cavity Detection took " << elapsed.count() << " ms" << std::endl << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
     } // END only recompute vertex distances if something has changed
 
     // assign cavity meshes to outgoing call

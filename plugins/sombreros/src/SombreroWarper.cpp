@@ -17,6 +17,7 @@
 #include <limits>
 #include <iostream>
 #include <map>
+#include <chrono>
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Matrix.h"
 
@@ -139,9 +140,9 @@ bool SombreroWarper::getData(Call& call) {
 
     outCall->SetObjects(static_cast<uint>(this->outMeshVector.size()), this->outMeshVector.data());
 
-    if (this->outMeshVector.size() > 0) {
-        printf("Length: %f ; Radius: %f; New Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0], this->sombreroRadiusNew[0]);
-    }
+    //if (this->outMeshVector.size() > 0) {
+    //    printf("Length: %f ; Radius: %f; New Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0], this->sombreroRadiusNew[0]);
+    //}
 
     return true;
 }
@@ -179,6 +180,9 @@ bool SombreroWarper::getExtent(Call& call) {
         lastDataHash = inCall->DataHash();
         dirtyFlag = false;
 
+#ifdef SOMBRERO_TIMING
+        auto timebegin = std::chrono::steady_clock::now();
+#endif
         // copy
         if (!this->copyMeshData(*inCall)) return false;
 
@@ -188,25 +192,62 @@ bool SombreroWarper::getExtent(Call& call) {
         // fill the holes of the mesh
         if (!this->fillMeshHoles()) return false;
 
+#ifdef SOMBRERO_TIMING
+        auto timeend = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********Hole filling took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
+
         // recompute the broken vertex distances
         if (!this->recomputeVertexDistances()) return false;
 
         // compute the Rahi & Sharp angles
         if (!this->computeVertexAngles(*tunnelCall)) return false;
 
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********Phi value computation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
+
         // warp the mesh in the correct position
         if (!this->warpMesh(*tunnelCall)) return false;
+
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********Mesh warping took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
 
         // if needed, fix the mesh
         if (this->fixMeshParam.Param<param::BoolParam>()->Value()) {
             if (!this->fixBrokenMeshParts(this->meshFixDistanceParam.Param<param::FloatParam>()->Value())) return false;
         }
 
+#ifdef SOMBRERO_TIMING
+        timebegin = std::chrono::steady_clock::now();
+#endif
         // set the surface normals to correct values
         if (!this->recomputeVertexNormals()) return false;
 
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********Normal computation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
+
         // cut the mesh into two parts
         if (!this->divideMeshForOutput()) return false;
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "***********Mesh division took " << elapsed.count() << " ms" << std::endl << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
     }
 
     outCall->SetDataHash(inCall->DataHash() + this->hashOffset);
@@ -820,6 +861,10 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         std::sort(radii.begin(), radii.end());
         this->sombreroRadius[i] = radii[static_cast<uint>(radii.size() / 2)];
 
+#ifdef SOMBRERO_TIMING
+        auto timebegin = std::chrono::steady_clock::now();
+#endif
+
         // the brim radius is the average closest distance between the brim border vertices and the sweatband
         uint minLevel = static_cast<uint>(this->minBrimLevelParam.Param<param::IntParam>()->Value());
         float avg = 0.0f;
@@ -863,15 +908,36 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         }
         this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
 
+#ifdef SOMBRERO_TIMING
+        auto timeend = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timebegin - timeend);
+        std::cout << "Brim width computation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
+
         /**
          * step 3: mesh deformation
          */
     #ifndef NO_DEFORMATION
         bool yResult = this->computeHeightPerVertex(bsVertex);
         if (!yResult) return false;
+
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "Height per vertex computation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
         
         bool xzResult = this->computeXZCoordinatePerVertex();
         if (!xzResult) return false;
+
+#ifdef SOMBRERO_TIMING
+        timeend = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
+        std::cout << "x-z coordinate computation took " << elapsed.count() << " ms" << std::endl;
+        timebegin = std::chrono::steady_clock::now();
+#endif
     #endif    
     }
 

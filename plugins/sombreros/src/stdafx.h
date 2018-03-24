@@ -33,5 +33,6 @@
 #include "vislib/types.h"
 
 typedef unsigned int uint;
+#define SOMBRERO_TIMING
 
 #endif /* SOMBREROS_STDAFX_H_INCLUDED */
