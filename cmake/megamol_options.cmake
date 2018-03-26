@@ -5,7 +5,7 @@ else()
   set(BITS 32)
 endif()
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 if (UNIX)
     find_package(OpenMP)
