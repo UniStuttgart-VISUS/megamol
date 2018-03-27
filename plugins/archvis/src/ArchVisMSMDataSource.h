@@ -17,8 +17,7 @@
 
 #include "vislib/net/Socket.h"
 
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/OutlineFont.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -218,7 +217,7 @@ namespace archvis {
 		/** The socket that sends the sensor or simulation data */
 		vislib::net::Socket m_snd_socket;
 
-		vislib::graphics::gl::OutlineFont font;
+		core::utility::SDFFont font;
 	};
 }
 }

@@ -41,7 +41,7 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_snd_IPAddr_slot("Send IP adress", "The ip adress for sending data"),
 	m_snd_port_slot("Send port", "The port for sending data"),
 	m_rcv_socket_connected(false),
-	font(vislib::graphics::gl::FontInfo_Verdana, vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL),
+	font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL),
 	m_last_spawn_time(std::chrono::steady_clock::now()),
 	m_last_update_time(std::chrono::steady_clock::now())
 {
@@ -85,10 +85,6 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA());
 	}
 	
-	if(font.Initialise())
-	{
-		std::cout << "Font Initialised. " << std::endl;
-	}
 	//std::cout << "Socket Endpoint: " << endpoint.ToStringA() << std::endl;
 }
 
@@ -99,6 +95,14 @@ ArchVisMSMDataSource::~ArchVisMSMDataSource()
 
 bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 {
+	static bool fontInitialized = false;
+	if (!fontInitialized) {
+		if (font.Initialise(this->GetCoreInstance()))
+		{
+			std::cout << "Font Initialised. " << std::endl;
+		}
+		fontInitialized = true;
+	}
 	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
 	if (render_batches_call == NULL)
 		return false;
@@ -471,9 +475,12 @@ void ArchVisMSMDataSource::updateMSMTransform()
 
 		//glDisable(GL_BLEND);
 		//glEnable(GL_DEPTH_TEST);
-		glColor4f(particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age/2000.0));
+		//glColor4f(particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age/2000.0));
+
+		float c[4] = { particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age / 2000.0) };
 		
-		font.DrawString(x,y,z, 0.025f, true, label.c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+		glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+		font.DrawString(c, x, y, z, 0.025f, true, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
 	}
 }
 

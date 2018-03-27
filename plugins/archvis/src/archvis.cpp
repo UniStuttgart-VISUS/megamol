@@ -99,15 +99,15 @@ mmplgGetPluginCompatibilityInfo(
 #endif
         );
 
-    SetLibraryVersionInfo(ci->libs[1], "vislib",
-        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, 0
+	SetLibraryVersionInfo(ci->libs[1], "vislib",
+		vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR, vislib::VISLIB_VERSION_REVISION, 0
 #if defined(DEBUG) || defined(_DEBUG)
-        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+		| MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif
 #if defined(VISLIB_DIRTY_BUILD) && (VISLIB_DIRTY_BUILD != 0)
-        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+		| MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
 #endif
-        );
+	);
     //
     // If you want to test additional compatibilties, add the corresponding versions here
     //
