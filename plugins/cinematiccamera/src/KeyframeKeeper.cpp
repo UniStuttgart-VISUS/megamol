@@ -1022,7 +1022,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
 bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
 
     // Get index of keyframe to delete
-    int selIndex = static_cast<int>(this->keyframes.IndexOf(kf));
+    unsigned int selIndex = static_cast<unsigned int>(this->keyframes.IndexOf(kf));
 
     // Choose new selected keyframe
     if (selIndex >= 0) {
@@ -1151,7 +1151,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
     t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
     // Check if there is an existing keyframe at requested time
-    for (int i = 0; i < this->keyframes.Count(); i++) {
+    for (SIZE_T i = 0; i < this->keyframes.Count(); i++) {
         if (t == this->keyframes[i].getAnimTime()) {
             return this->keyframes[i];
         }
@@ -1406,7 +1406,6 @@ void KeyframeKeeper::loadKeyframes() {
         vislib::StringSerialiserA ser;
         std::string               line;
         vislib::StringA           cameraStr = "";;
-        float                     time      = 0.0f;
 
         // get total time
         std::getline(infile, line); 
