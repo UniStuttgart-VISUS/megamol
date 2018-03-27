@@ -219,17 +219,17 @@ namespace megamol {
             **********************************************************************/
 
             /** */
-			core::param::ParamSlot selectedSkyboxSideParam;
-            /** */
-            core::param::ParamSlot resHeightParam;
-            /** */
-            core::param::ParamSlot resWidthParam;
-            /** */
-            core::param::ParamSlot fpsParam;
-            /** */
             core::param::ParamSlot renderParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
+            /** */
+			core::param::ParamSlot selectedSkyboxSideParam;
+            /** */
+            core::param::ParamSlot resWidthParam;
+            /** */
+            core::param::ParamSlot resHeightParam;
+            /** */
+            core::param::ParamSlot fpsParam;
 
             /** */
             core::param::ParamSlot eyeParam;

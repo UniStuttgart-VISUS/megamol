@@ -22,6 +22,13 @@
 
 #include "Keyframe.h"
 
+
+// GLOBAL CC DEFINES
+#ifndef CC_MENU_HEIGHT
+    #define CC_MENU_HEIGHT (25.0f)
+#endif
+
+
 namespace megamol {
 	namespace cinematiccamera {
 

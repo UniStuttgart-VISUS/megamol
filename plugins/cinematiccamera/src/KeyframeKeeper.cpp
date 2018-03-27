@@ -40,6 +40,7 @@ using namespace megamol::core;
 * KeyframeKeeper::KeyframeKeeper
 */
 KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
+    selectedKeyframe(), dragDropKeyframe(),
     cinematicCallSlot("scene3D", "holds keyframe data"),
     applyKeyframeParam(            "01_applyKeyframe", "Apply current settings to selected/new keyframe."),
     undoChangesParam(              "02_undoChanges", "Undo changes."),
@@ -60,8 +61,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     editCurrentApertureParam(      "editSelected::07_apertureAngle", "Edit apperture angle of the selected keyframe."),
     fileNameParam(                 "storage::01_filename", "The name of the file to load or save keyframes."),
     saveKeyframesParam(            "storage::02_save", "Save keyframes to file."),
-    loadKeyframesParam(            "storage::03_autoLoad", "Load keyframes from file when filename changes."),
-    selectedKeyframe(), dragDropKeyframe()
+    loadKeyframesParam(            "storage::03_autoLoad", "Load keyframes from file when filename changes.")
     {
 
     // setting up callback
@@ -212,7 +212,7 @@ void KeyframeKeeper::release(void) {
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     // Get bounding box center
     this->modelBboxCenter = ccc->getBboxCenter();
@@ -236,7 +236,7 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     this->interpolSteps = ccc->getInterpolationSteps();
     this->refreshInterpolCamPos(this->interpolSteps);
@@ -252,7 +252,7 @@ bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     bool appliedChanges = false;
 
@@ -282,7 +282,7 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     Keyframe prevSelKf = this->selectedKeyframe;
 
@@ -304,7 +304,7 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     this->camViewUp            = ccc->getCameraParameters()->Up();
     this->camViewPosition      = ccc->getCameraParameters()->Position();
@@ -321,7 +321,7 @@ bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     // Checking if selected keyframe exists in keyframe array is done by caller
 
@@ -344,7 +344,7 @@ bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     // Insert dragged keyframe at new position
     float t = ccc->getDropAnimTime();
@@ -365,7 +365,7 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     this->firstCtrllPos = ccc->getFirstControlPointPosition();
     this->lastCtrllPos = ccc->getLastControlPointPosition();
@@ -383,7 +383,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
 
     // UPDATE PARAMETERS

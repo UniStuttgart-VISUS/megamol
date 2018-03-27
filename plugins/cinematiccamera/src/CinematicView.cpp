@@ -34,18 +34,12 @@ using namespace megamol::cinematiccamera;
 using namespace vislib;
 
 
-// DEFINES
-#ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
-#endif
-
-
 /*
 * CinematicView::CinematicView
 */
 CinematicView::CinematicView(void) : View3D(),
-    keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+    keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
     selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
@@ -53,15 +47,14 @@ CinematicView::CinematicView(void) : View3D(),
     resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
     eyeParam(                 "stereo::eye", "Select eye position (for stereo view)."),
-    projectionParam(          "stereo::projection", "Select camera projection."),
-    shownKeyframe()
+    projectionParam(          "stereo::projection", "Select camera projection.")
     {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init variables
-
+    this->shownKeyframe   = Keyframe();
     this->deltaAnimTime   = clock();
     this->playAnim        = false;
     this->sbSide          = CinematicView::SkyboxSides::SKYBOX_NONE;
@@ -81,9 +74,9 @@ CinematicView::CinematicView(void) : View3D(),
     this->pngdata.filename = "";
     this->pngdata.cnt      = 0;
     this->pngdata.animTime = 0.0f;
-    this->pngdata.buffer   = NULL;
-    this->pngdata.ptr      = NULL;
-    this->pngdata.infoptr  = NULL;
+    this->pngdata.buffer   = nullptr;
+    this->pngdata.ptr      = nullptr;
+    this->pngdata.infoptr  = nullptr;
     this->pngdata.filename = "";
     this->pngdata.lock     = true;
     //this->pngdata.file;
@@ -148,12 +141,12 @@ CinematicView::CinematicView(void) : View3D(),
 */
 CinematicView::~CinematicView(void) {
 
-    if (this->pngdata.ptr != NULL) {
-        if (this->pngdata.infoptr != NULL) {
+    if (this->pngdata.ptr != nullptr) {
+        if (this->pngdata.infoptr != nullptr) {
             png_destroy_write_struct(&this->pngdata.ptr, &this->pngdata.infoptr);
         }
         else {
-            png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)NULL);
+            png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)nullptr);
         }
     }
 
@@ -162,14 +155,14 @@ CinematicView::~CinematicView(void) {
 
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
-    if (this->pngdata.buffer != NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.buffer is not NULL.");
+    if (this->pngdata.buffer != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.buffer is not nullptr.");
     }
-    if (this->pngdata.ptr != NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.ptr is not NULL.");
+    if (this->pngdata.ptr != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.ptr is not nullptr.");
     }
-    if (this->pngdata.infoptr != NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.infoptr is not NULL.");
+    if (this->pngdata.infoptr != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.infoptr is not nullptr.");
     }
 
     if (this->fbo.IsValid()) {
@@ -187,11 +180,11 @@ CinematicView::~CinematicView(void) {
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
     view::CallRender3D *cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
-    if (cr3d == NULL) return;
+    if (cr3d == nullptr) return;
     if (!(*cr3d)(1)) return; // get extents
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return;
+    if (ccc == nullptr) return;
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
@@ -449,9 +442,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Reset override render call
-    this->overrideCall = NULL;
+    this->overrideCall = nullptr;
     // Reset override viewport
-    this->overrideViewport = NULL;
+    this->overrideViewport = nullptr;
 
 
     // Write frame to file
@@ -626,7 +619,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 bool CinematicView::rtf_setup() {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 
     // init png data struct
     this->pngdata.bpp       = 3;
@@ -634,9 +627,9 @@ bool CinematicView::rtf_setup() {
     this->pngdata.height    = static_cast<unsigned int>(this->cineHeight);
     this->pngdata.cnt       = 0;
     this->pngdata.animTime  = 0.0f;
-    this->pngdata.buffer    = NULL;
-    this->pngdata.ptr       = NULL;
-    this->pngdata.infoptr   = NULL;
+    this->pngdata.buffer    = nullptr;
+    this->pngdata.ptr       = nullptr;
+    this->pngdata.infoptr   = nullptr;
     //this->pngdata.file;
 
     // Calculate pre-decimal point positions for frame counter in filename
@@ -670,7 +663,7 @@ bool CinematicView::rtf_setup() {
 
     // Create new byte buffer
     this->pngdata.buffer = new BYTE[this->pngdata.width * this->pngdata.height * this->pngdata.bpp];
-    if (this->pngdata.buffer == NULL) {
+    if (this->pngdata.buffer == nullptr) {
         throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
@@ -700,7 +693,7 @@ bool CinematicView::rtf_set_time_and_camera() {
 
     if (!this->pngdata.lock) {
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-        if (ccc == NULL) return false;
+        if (ccc == nullptr) return false;
 
         if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
             throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Invalid animation time.", __FILE__, __LINE__);
@@ -752,12 +745,12 @@ bool CinematicView::rtf_create_frame() {
         }
 
         // init png lib
-        this->pngdata.ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, &this->pngError, &this->pngWarn);
-        if (this->pngdata.ptr == NULL) {
+        this->pngdata.ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, &this->pngError, &this->pngWarn);
+        if (this->pngdata.ptr == nullptr) {
             throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png structure", __FILE__, __LINE__);
         }
         this->pngdata.infoptr = png_create_info_struct(this->pngdata.ptr);
-        if (this->pngdata.infoptr == NULL) {
+        if (this->pngdata.infoptr == nullptr) {
             throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot create png info", __FILE__, __LINE__);
         }
         png_set_write_fn(this->pngdata.ptr, static_cast<void*>(&this->pngdata.file), &this->pngWrite, &this->pngFlush);
@@ -780,7 +773,7 @@ bool CinematicView::rtf_write_frame() {
             throw vislib::Exception("[CINEMATIC VIEW] [writeTextureToPng] Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
         }
 
-        BYTE** rows = NULL;
+        BYTE **rows = nullptr;
         try {
             rows = new BYTE*[this->cineHeight];
             for (UINT i = 0; i < this->pngdata.height; i++) {
@@ -788,23 +781,23 @@ bool CinematicView::rtf_write_frame() {
             }
             png_set_rows(this->pngdata.ptr, this->pngdata.infoptr, rows);
 
-            png_write_png(this->pngdata.ptr, this->pngdata.infoptr, PNG_TRANSFORM_IDENTITY, NULL);
+            png_write_png(this->pngdata.ptr, this->pngdata.infoptr, PNG_TRANSFORM_IDENTITY, nullptr);
 
             ARY_SAFE_DELETE(rows);
         }
         catch (...) {
-            if (rows != NULL) {
+            if (rows != nullptr) {
                 ARY_SAFE_DELETE(rows);
             }
             throw;
         }
 
-        if (this->pngdata.ptr != NULL) {
-            if (this->pngdata.infoptr != NULL) {
+        if (this->pngdata.ptr != nullptr) {
+            if (this->pngdata.infoptr != nullptr) {
                 png_destroy_write_struct(&this->pngdata.ptr, &this->pngdata.infoptr);
             }
             else {
-                png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)NULL);
+                png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)nullptr);
             }
         }
 
@@ -820,12 +813,12 @@ bool CinematicView::rtf_write_frame() {
 */
 bool CinematicView::rtf_finish() {
 
-    if (this->pngdata.ptr != NULL) {
-        if (this->pngdata.infoptr != NULL) {
+    if (this->pngdata.ptr != nullptr) {
+        if (this->pngdata.infoptr != nullptr) {
             png_destroy_write_struct(&this->pngdata.ptr, &this->pngdata.infoptr);
         }
         else {
-            png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)NULL);
+            png_destroy_write_struct(&this->pngdata.ptr, (png_infopp)nullptr);
         }
     }
 
@@ -855,8 +848,8 @@ bool CinematicView::rtf_finish() {
 bool CinematicView::setSimTime(float st) {
 
     view::CallRender3D *cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
-    if (cr3d == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [setSimTime] cr3d is NULL.");
+    if (cr3d == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [setSimTime] cr3d is nullptr.");
         return false;
     }
 

@@ -38,22 +38,15 @@ using namespace megamol::cinematiccamera;
 using namespace vislib;
 
 
-// DEFINES
-#ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
-#endif
-
-
 /*
 * cinematiccamera::TimeLineRenderer::TimeLineRenderer
 */
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
     rulerFontParam( "01_fontSize", "The font size."),
     moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
-    moveLeftFrame( "03_leftFrame", "Move to left animation time frame."),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
-	dragDropKeyframe()
+    moveLeftFrame( "03_leftFrame", "Move to left animation time frame.")
 	{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -61,9 +54,18 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
     // init variables
     this->fontSize          = 22.0f;
-    this->redoAdaptation    = true;
 
+    this->markerTextures.Clear();
+    this->redoAdaptation    = true;
+    this->dragDropKeyframe  = Keyframe();
     this->axisStartPos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
+    this->lastMousePos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
+    this->scaleAxis         = 0;
+    this->dragDropActive    = false;
+    this->dragDropAxis      = 0;
+    this->rulerMarkSize     = 1.0f;
+    this->keyfMarkSize      = 1.0f;
+    this->fps               = 24;
 
     this->animAxisEndPos    = vislib::math::Vector<float, 2>(0.0f, 0.0f);
     this->animAxisLen       = 0.0f;
@@ -88,16 +90,6 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->simScalePos       = 0.0f;
     this->simScaleDelta     = 0.0f;
     this->simFormatStr      = "%.5f ";
-
-    this->lastMousePos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->scaleAxis         = 0;
-    this->dragDropActive    = false;
-    this->dragDropAxis      = 0;
-    this->rulerMarkSize     = 1.0f;
-    this->keyfMarkSize      = 1.0f;
-    this->fps               = 24;
-    
-    this->markerTextures.Clear();
 
     // init parameters
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
@@ -157,7 +149,7 @@ void TimeLineRenderer::release(void) {
 bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 	core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
-	if (cr == NULL) return false;
+	if (cr == nullptr) return false;
 
     cr->SetBoundingBox(cr->GetViewport());
 
@@ -204,7 +196,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
-    if (cr == NULL) return false;
+    if (cr == nullptr) return false;
 
     // Update data in cinematic camera call
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
@@ -213,8 +205,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is NULL.");
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -679,14 +671,14 @@ void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY) {
 bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     //Get keyframes
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is NULL.");
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -904,7 +896,7 @@ bool TimeLineRenderer::LoadTexture(vislib::StringA filename) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void *buf = NULL;
+    void *buf = nullptr;
     SIZE_T size = 0;
 
     if ((size = megamol::core::utility::ResourceWrapper::LoadResource(

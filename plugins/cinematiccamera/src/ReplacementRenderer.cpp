@@ -36,6 +36,7 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     alphaParam(                     "04_alpha", "The alpha value of the replacement rendering.")
     {
 
+    // init variables
     this->alpha = 0.75f;
     this->toggleReplacementRendering = false;
     this->bbox.SetNull();

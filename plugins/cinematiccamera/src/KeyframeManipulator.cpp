@@ -21,11 +21,10 @@ using namespace megamol::cinematiccamera;
 /*
 * KeyframeManipulator::KeyframeManipulator
 */
-KeyframeManipulator::KeyframeManipulator(void) :
-    selectedKf()
-    {
+KeyframeManipulator::KeyframeManipulator(void) {
 
     // init variables
+    this->selectedKf          = Keyframe();
     this->activeType          = manipType::NONE;
     this->lastMousePos        = vislib::math::Vector<float, 2>();
     this->sKfSsPos            = vislib::math::Vector<float, 2>();

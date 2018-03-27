@@ -43,25 +43,17 @@ using namespace megamol::cinematiccamera;
 using namespace vislib;
 
 
-// DEFINES
-#ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
-#endif
-
-
 /*
 * CinematicRenderer::CinematicRenderer
 */
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), manipulator(), textureShader(),
     slaveRendererSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
-    textureShader(),
-    manipulator()
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box.")
     {
 
     // init variables
@@ -170,10 +162,10 @@ void CinematicRenderer::release(void) {
 */
 bool CinematicRenderer::GetCapabilities(Call& call) {
 	CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == NULL) return false;
+	if (cr3d == nullptr) return false;
 
 	CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (!(oc == NULL) || (!(*oc)(2))) {
+	if (!(oc == nullptr) || (!(*oc)(2))) {
 		cr3d->AddCapability(oc->GetCapabilities());
 	}
 
@@ -187,13 +179,13 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 bool CinematicRenderer::GetExtents(Call& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == NULL) return false;
+	if (cr3d == nullptr) return false;
 
 	view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (oc == NULL) return false;
+	if (oc == nullptr) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
 	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
 	// Get bounding box of renderer.
@@ -212,8 +204,8 @@ bool CinematicRenderer::GetExtents(Call& call) {
 
     // Get bounding box of spline.
     vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
-    if (bboxCCC == NULL)  {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is NULL.");
+    if (bboxCCC == nullptr)  {
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
         return false;
     }
 
@@ -238,13 +230,13 @@ bool CinematicRenderer::GetExtents(Call& call) {
 bool CinematicRenderer::Render(Call& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
+    if (cr3d == nullptr) return false;
 
     view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-    if (oc == NULL) return false;
+    if (oc == nullptr) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
@@ -316,15 +308,15 @@ bool CinematicRenderer::Render(Call& call) {
 
     // Get pointer to keyframes array
     Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to keyframe array is NULL.");
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
     }
 
     // Get pointer to interpolated keyframes array
     Array<vislib::math::Point<float, 3> > *interpolKeyframes = ccc->getInterpolCamPositions();
-    if (interpolKeyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to interpolated camera positions array is NULL.");
+    if (interpolKeyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
     }
 
@@ -597,10 +589,10 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     bool consume = false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
+    if (ccc == nullptr) return false;
     Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] Pointer to keyframe array is NULL.");
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] Pointer to keyframe array is nullptr.");
         return false;
     }
 
