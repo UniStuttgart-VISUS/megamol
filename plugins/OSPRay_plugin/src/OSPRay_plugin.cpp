@@ -18,8 +18,10 @@
 #include "OSPRayNHSphereGeometry.h"
 #include "OSPRayTriangleMesh.h"
 #include "OSPRayStructuredVolume.h"
+#include "OSPRayAPIStructure.h"
 #include "OSPRayLineGeometry.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "OSPRay_plugin/CallOSPRayAPIObject.h"
 
 #include "OSPRayDistantLight.h"
 #include "OSPRayAmbientLight.h"
@@ -73,6 +75,7 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMesh>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
@@ -97,6 +100,7 @@ namespace {
 
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
+               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayAPIObject>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();
 
         }
