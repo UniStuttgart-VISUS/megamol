@@ -94,7 +94,7 @@ void main(void) {
         discard;
     }
     
-    outFragColor = vec4(color.rgb, alpha);
+    outFragColor = vec4(color.rgb, color.a * alpha);
 }
 
 ]]>
