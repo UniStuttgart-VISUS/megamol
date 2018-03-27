@@ -7,7 +7,6 @@
  * This implementation is based on "vislib/graphics/OutlinetFont.h"
  */
 
-
 #ifndef MEGAMOL_SDFFONT_H_INCLUDED
 #define MEGAMOL_SDFFONT_H_INCLUDED
 

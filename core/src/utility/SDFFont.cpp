@@ -7,7 +7,6 @@
  * This implementation is based on "vislib/graphics/OutlinetFont.h"
  */
 
-
 #include "mmcore/utility/SDFFont.h"
 
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -847,6 +846,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     }
 
     // Billboard stuff
+    // -> Setting fixed rotation point depending on alignment.
     vislib::math::Vector<GLfloat, 4> billboardRotPoint;
     if (this->billboard) {
         float deltaY = 0.0f;
@@ -873,7 +873,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             break;
         }
         billboardRotPoint.Set(gx, gy + deltaY, gz, 1.0f);
-        // Apply model view matrix only to start point ...
+        // Apply model view matrix ONLY to rotation point ...
         billboardRotPoint = modelViewMatrix * billboardRotPoint;
         billboardRotPoint.SetY(billboardRotPoint.Y() - deltaY);
         gx = billboardRotPoint.X();
