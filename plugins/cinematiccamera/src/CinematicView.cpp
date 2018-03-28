@@ -165,11 +165,10 @@ CinematicView::~CinematicView(void) {
         vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.infoptr is not nullptr.");
     }
 
-    if (this->fbo.IsValid()) {
-        if (this->fbo.IsEnabled()) {
-            this->fbo.Disable();
-        }
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
     }
+
     this->fbo.Release();
 }
 
@@ -827,11 +826,10 @@ bool CinematicView::rtf_finish() {
 
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
-    if (this->fbo.IsValid()) {
-        if (this->fbo.IsEnabled()) {
-            this->fbo.Disable();
-        }
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
     }
+
     this->fbo.Release();
 
     this->resetFbo = true;
