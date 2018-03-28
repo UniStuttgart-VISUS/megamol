@@ -1425,7 +1425,6 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core, vislib::StringA 
 
     vislib::graphics::gl::ShaderSource vs, fs;
     const char *shaderName = "SDFFont";
-    size_t size = 0;
 
     // Load shaders from file
     try {

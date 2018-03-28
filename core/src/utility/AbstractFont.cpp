@@ -17,7 +17,7 @@
  * megamol::core::utility::AbstractFont::AbstractFont
  */
 megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
-    // intentionally empty
+    // nothing to do here ...
 }
 
 
