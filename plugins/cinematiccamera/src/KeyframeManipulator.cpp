@@ -477,6 +477,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
                                                   tmpVec.ScaleToLength(lineDiff);
                                                   skfPosV += tmpVec;
                                                   break;
+	default: break;
     }
 
     if (this->activeType == manipType::SELECTED_KF_UP) {

@@ -385,15 +385,16 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         fgColor[i] -= bgColor[i];
     }
     // COLORS
-    float armColor[4]  = { 0.8f, 0.0f, 0.0f, 1.0f }; // Color for ANIMATION REPEAT MARKER
     float kColor[4]    = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME 
     float dkmColor[4]  = { 0.5f, 0.5f, 1.0f, 1.0f }; // Color for DRAGGED KEYFRAME MARKER 
     float skColor[4]   = { 0.2f, 0.2f, 1.0f, 1.0f }; // Color for SELECTED KEYFRAME 
     float sColor[4]    = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
     float fColor[4]    = { 1.0f, 0.6f, 0.6f, 1.0f }; // Color for FRAME MARKER
     float white[4]     = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float yellow[4]    = { 1.0f, 1.0f, 0.0f, 1.0f };
     float menu[4]      = { 0.0f, 0.0f, 0.3f, 1.0f };
+    //float yellow[4]    = { 1.0f, 1.0f, 0.0f, 1.0f };
+    //float armColor[4]  = { 0.8f, 0.0f, 0.0f, 1.0f }; // Color for ANIMATION REPEAT MARKER
+    
     // Adapt colors depending on  Lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
@@ -812,7 +813,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             float at = 0.0f;
             float st = 0.0f;
             if (this->dragDropAxis == 1) { // animation axis - X
-                at = at = this->dragDropKeyframe.getAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                at = this->dragDropKeyframe.getAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
                 if (x <= this->axisStartPos.X()) {
                     at = 0.0f;
                 }
@@ -896,11 +897,10 @@ bool TimeLineRenderer::LoadTexture(vislib::StringA filename) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void *buf = nullptr;
+    BYTE *buf = nullptr;
     SIZE_T size = 0;
 
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-        this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf))) > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
