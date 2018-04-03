@@ -28,6 +28,7 @@ namespace utility {
     /// like items/chunk and the sync objects. You can align multiple streamers
     /// by giving the first a desired buffer size and make all others follow
     /// the resulting GetMaxNumItemsPerChunk to set their buffer sizes automatically.
+    /// See NGSphereRenderer for a usage example.
     class MEGAMOLCORE_API SSBOStreamer {
     public:
 
@@ -44,7 +45,6 @@ namespace utility {
         /// @returns number of chunks
         GLuint SetDataWithSize(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
             GLuint numBuffers, GLuint bufferSize);
-        void genBufferAndMap(GLuint numBuffers, GLuint bufferSize);
 
         /// @param data the pointer to the original data
         /// @param srcStride the size of a single data item in the original data
@@ -104,6 +104,7 @@ namespace utility {
     private:
         static void queueSignal(GLsync &syncObj);
         static void waitSignal(GLsync &syncObj);
+        void genBufferAndMap(GLuint numBuffers, GLuint bufferSize);
 
         GLuint theSSBO;
         /// in bytes!
