@@ -23,6 +23,11 @@ namespace megamol {
 namespace core {
 namespace utility {
 
+    /// A class that helps you stream some memory to a persistently mapped
+    /// buffer that can be used as a SSBO. Abstracts some micro-management
+    /// like items/chunk and the sync objects. You can align multiple streamers
+    /// by giving the first a desired buffer size and make all others follow
+    /// the resulting GetMaxNumItemsPerChunk to set their buffer sizes automatically.
     class MEGAMOLCORE_API SSBOStreamer {
     public:
 
@@ -37,8 +42,20 @@ namespace utility {
         /// @param numBuffers how long the ring buffer should be
         /// @param bufferSize the size of a ring buffer in bytes
         /// @returns number of chunks
-        GLuint SetData(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
+        GLuint SetDataWithSize(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
             GLuint numBuffers, GLuint bufferSize);
+        void genBufferAndMap(GLuint numBuffers, GLuint bufferSize);
+
+        /// @param data the pointer to the original data
+        /// @param srcStride the size of a single data item in the original data
+        /// @param dstStride the size of a single data item that will be uploaded
+        ///                   and must not be split across buffers
+        /// @param numItems the length of the original data in multiples of stride
+        /// @param numBuffers how long the ring buffer should be
+        /// @param numChunks how many chunks you want to upload
+        /// @returns the size of a ring buffer in bytes
+        GLuint SetDataWithItems(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
+            GLuint numBuffers, GLuint numChunks);
 
         /// @param idx the chunk to upload [0..SetData()-1]
         /// @param numItems returns the number of items in this chunk
@@ -106,7 +123,7 @@ namespace utility {
     };
 
     template<class fun>
-    void SSBOStreamer::UploadChunk(unsigned int idx, fun unaryOp, GLuint& numItems,
+    void SSBOStreamer::UploadChunk(unsigned int idx, fun copyOp, GLuint& numItems,
         unsigned int& sync, GLsizeiptr& dstOffset, GLsizeiptr& dstLength) {
         if (theData == nullptr || idx > this->numChunks - 1) return;
 
@@ -129,7 +146,7 @@ namespace utility {
 
 #pragma omp parallel for
         for (INT64 i = 0; i < itemsThisTime; ++i) {
-            unaryOp(src + i * this->srcStride, dst + i * this->dstStride);
+            copyOp(src + i * this->srcStride, dst + i * this->dstStride);
         }
 
         glFlushMappedNamedBufferRange(this->theSSBO,

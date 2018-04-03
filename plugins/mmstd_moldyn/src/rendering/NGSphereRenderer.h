@@ -16,6 +16,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <map>
+#include <tuple>
 #include <utility>
 #include "mmcore/utility/SSBOStreamer.h"
 
@@ -105,10 +106,10 @@ namespace rendering {
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-            unsigned int &colStride, unsigned int &vertStride);
+            unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
@@ -117,13 +118,14 @@ namespace rendering {
         GLuint colIdxAttribLoc;
         SimpleSphericalParticles::ColourDataType colType;
         SimpleSphericalParticles::VertexDataType vertType;
-        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
+        typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader>> shaderMap;
         std::shared_ptr<GLSLShader> newShader;
         shaderMap theShaders;
         vislib::SmartPtr<ShaderSource> vert, frag;
         core::param::ParamSlot scalingParam;
         //TimeMeasure timer;
         megamol::core::utility::SSBOStreamer streamer;
+        megamol::core::utility::SSBOStreamer colStreamer;
     };
 
 } /* end namespace rendering */

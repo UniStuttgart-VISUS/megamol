@@ -32,7 +32,7 @@ SSBOStreamer::~SSBOStreamer() {
     }
 }
 
-GLuint SSBOStreamer::SetData(const void *data, GLuint srcStride, GLuint dstStride,
+GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint dstStride,
         size_t numItems, GLuint numBuffers, GLuint bufferSize) {
 
     if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 ||
@@ -41,6 +41,24 @@ GLuint SSBOStreamer::SetData(const void *data, GLuint srcStride, GLuint dstStrid
         return 0;
     }
 
+    genBufferAndMap(numBuffers, bufferSize);
+
+    this->dstStride = dstStride;
+    this->srcStride = dstStride;
+    this->numItems = numItems;
+    this->theData = data;
+    this->numItemsPerChunk = bufferSize / dstStride;
+    // evil hack: if you synchronize this with another buffer that has tiny items (4 bytes, like color)
+    // make sure we will not get chunks with numItems that result in non-aligned (modern GPUs: 32bytes seems a safe bet)
+    // pointers. that is, we need to upload multiples of at least 8 things to come out at 8 * 4 = 32
+    const int multiRound = 8;
+    this->numItemsPerChunk = ((this->numItemsPerChunk) / multiRound) * multiRound;
+    this->numChunks = (numItems + numItemsPerChunk - 1) / numItemsPerChunk; // round up int division!
+    this->fences.resize(numBuffers, nullptr);
+    return numChunks;
+}
+
+void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
     if (this->theSSBO == 0) {
         glGenBuffers(1, &this->theSSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSSBO);
@@ -52,24 +70,38 @@ GLuint SSBOStreamer::SetData(const void *data, GLuint srcStride, GLuint dstStrid
         }
         const size_t mapSize = bufferSize * numBuffers;
         glNamedBufferStorage(this->theSSBO, mapSize, nullptr,
-            GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+                             GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
         this->mappedMem = glMapNamedBufferRange(this->theSSBO, 0,
-            mapSize,
-            GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+                                                mapSize,
+                                                GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
         if (this->mappedMem == nullptr) {
             throw std::exception("SSBOStreamer: could not map memory (%ul bytes)", mapSize);
         }
         this->bufferSize = bufferSize;
         this->numBuffers = numBuffers;
     }
+}
+
+GLuint SSBOStreamer::SetDataWithItems(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
+        GLuint numBuffers, GLuint numItemsPerChunk) {
+    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 ||
+        numBuffers == 0 || numItemsPerChunk == 0) {
+        theData = nullptr;
+        return 0;
+    }
+
+    const GLuint bufferSize = numItemsPerChunk * dstStride;
+
+    genBufferAndMap(numBuffers, bufferSize);
+
     this->dstStride = dstStride;
     this->srcStride = dstStride;
     this->numItems = numItems;
     this->theData = data;
-    this->numItemsPerChunk = bufferSize / dstStride;
+    this->numItemsPerChunk = numItemsPerChunk;
     this->numChunks = (numItems + numItemsPerChunk - 1) / numItemsPerChunk; // round up int division!
     this->fences.resize(numBuffers, nullptr);
-    return numChunks;
+    return this->bufferSize;
 }
 
 void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync,
