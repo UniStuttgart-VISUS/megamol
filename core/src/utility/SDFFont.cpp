@@ -33,11 +33,7 @@ using namespace megamol::core::utility;
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -47,11 +43,7 @@ SDFFont::SDFFont(FontName fn) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -61,11 +53,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -76,11 +64,7 @@ SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -91,11 +75,7 @@ SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -106,11 +86,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -122,11 +98,7 @@ SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -137,11 +109,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -153,11 +121,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false)  {
-=======
     fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings()  {
->>>>>>> upstream/master-dev
 
 }
 
@@ -166,11 +130,7 @@ SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
 }
 
@@ -179,11 +139,7 @@ SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
 }
@@ -193,11 +149,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetFlipY(flipY);
 }
@@ -207,11 +159,7 @@ SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetFlipY(flipY);
 }
@@ -221,11 +169,7 @@ SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -236,11 +180,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
 }
@@ -250,11 +190,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-        fontFileName(fn), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
         fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -265,11 +201,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, boo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(src.fontFileName), renderType(src.renderType), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -280,11 +212,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(src.fontFileName), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -295,11 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-<<<<<<< HEAD
-        fontFileName(src.fontFileName), renderType(src.renderType), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
         fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -310,11 +234,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(src.fontFileName), renderType(src.renderType), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false){
-=======
     fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings(){
->>>>>>> upstream/master-dev
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -325,11 +245,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-        fontFileName(src.fontFileName), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
         fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -340,11 +256,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(src.fontFileName), renderType(src.renderType), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -355,11 +267,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(),
-<<<<<<< HEAD
-    fontFileName(src.fontFileName),  renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
     fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -370,11 +278,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-<<<<<<< HEAD
-        fontFileName(src.fontFileName), renderType(render), texture(), shader(), glyphs(), vbos(), glyphIdx(nullptr), idxCnt(0), initialised(false), billboard(false) {
-=======
         fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdx(nullptr), idxCnt(0), kernings() {
->>>>>>> upstream/master-dev
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -945,10 +849,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
     }
 
     // Billboard stuff
-<<<<<<< HEAD
-=======
     // -> Setting fixed rotation point depending on alignment.
->>>>>>> upstream/master-dev
     vislib::math::Vector<GLfloat, 4> billboardRotPoint;
     if (this->billboard) {
         float deltaY = 0.0f;
@@ -975,11 +876,7 @@ void SDFFont::draw(float c[4], int *run, float x, float y, float z, float size, 
             break;
         }
         billboardRotPoint.Set(gx, gy + deltaY, gz, 1.0f);
-<<<<<<< HEAD
-        // Apply model view matrix only to start point ...
-=======
         // Apply model view matrix ONLY to rotation point ...
->>>>>>> upstream/master-dev
         billboardRotPoint = modelViewMatrix * billboardRotPoint;
         billboardRotPoint.SetY(billboardRotPoint.Y() - deltaY);
         gx = billboardRotPoint.X();

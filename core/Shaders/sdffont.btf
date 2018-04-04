@@ -94,11 +94,7 @@ void main(void) {
         discard;
     }
     
-<<<<<<< HEAD
-    outFragColor = vec4(color.rgb, alpha);
-=======
     outFragColor = vec4(color.rgb, color.a * alpha);
->>>>>>> upstream/master-dev
 }
 
 ]]>

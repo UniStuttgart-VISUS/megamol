@@ -170,14 +170,9 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     if ((camParams->EyeDirection().PeekComponents()[0] != cr->GetCameraParameters()->EyeDirection().PeekComponents()[0]) ||
         (camParams->EyeDirection().PeekComponents()[1] != cr->GetCameraParameters()->EyeDirection().PeekComponents()[1]) ||
-        (camParams->EyeDirection().PeekComponents()[2] != cr->GetCameraParameters()->EyeDirection().PeekComponents()[2]) ||
-        (camParams->EyePosition().GetX() != cr->GetCameraParameters()->EyePosition().GetX()) ||
-        (camParams->EyePosition().GetY() != cr->GetCameraParameters()->EyePosition().GetY()) ||
-        (camParams->EyePosition().GetZ() != cr->GetCameraParameters()->EyePosition().GetZ())
-        ) {
+        (camParams->EyeDirection().PeekComponents()[2] != cr->GetCameraParameters()->EyeDirection().PeekComponents()[2])) {
         cam_has_changed = true;
-    }
-    else {
+    } else {
         cam_has_changed = false;
     }
     camParams->CopyFrom(cr->GetCameraParameters());
