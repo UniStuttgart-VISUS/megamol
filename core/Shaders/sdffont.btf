@@ -4,9 +4,8 @@
 
     <shader name="vertex">
         <snippet type="version">400</snippet>
-        <snippet name="common::defines"/>
         <snippet name="main" type="string">
-            <![CDATA[
+<![CDATA[
 
 in      vec3  inVertPos;
 in      vec2  inVertTexCoord;
@@ -40,9 +39,8 @@ void main() {
 
     <shader name="fragment">
         <snippet type="version">400</snippet>
-        <snippet name="common::defines"/>        
         <snippet name="main" type="string">
-            <![CDATA[
+<![CDATA[
          
 // Must be the same as defined in SDFFont.h
 #define RENDERTYPE_FILL    1
@@ -96,7 +94,11 @@ void main(void) {
         discard;
     }
     
+<<<<<<< HEAD
     outFragColor = vec4(color.rgb, alpha);
+=======
+    outFragColor = vec4(color.rgb, color.a * alpha);
+>>>>>>> upstream/master-dev
 }
 
 ]]>
