@@ -303,8 +303,8 @@ bool CinematicRenderer::Render(Call& call) {
     // Get current viewport
     int vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth  = vp[2] - vp[0];
-    int   vpHeight = vp[3] - vp[1];
+    unsigned int vpWidth  = vp[2] - vp[0];
+    unsigned int vpHeight = vp[3] - vp[1];
 
     // Get pointer to keyframes array
     Array<Keyframe> *keyframes = ccc->getKeyframes();
