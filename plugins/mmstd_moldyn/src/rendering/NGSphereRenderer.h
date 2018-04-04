@@ -14,11 +14,11 @@
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-//#include "vislib/graphics/gl/shaders"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <map>
+#include <tuple>
 #include <utility>
-//#include "TimeMeasure.h"
+#include "mmcore/utility/SSBOStreamer.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -106,36 +106,26 @@ namespace rendering {
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-            unsigned int &colStride, unsigned int &vertStride);
-
-        void queueSignal(GLsync& syncObj);
-        void waitSignal(GLsync& syncObj);
+            unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
-        std::vector<GLsync> fences;
-        GLuint theSingleBuffer;
-        unsigned int currBuf;
         GLuint colIdxAttribLoc;
-        GLsizeiptr bufSize;
-        int numBuffers;
-        void *theSingleMappedMem;
-        GLuint singleBufferCreationBits;
-        GLuint singleBufferMappingBits;
         SimpleSphericalParticles::ColourDataType colType;
         SimpleSphericalParticles::VertexDataType vertType;
-        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
+        typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader>> shaderMap;
         std::shared_ptr<GLSLShader> newShader;
         shaderMap theShaders;
         vislib::SmartPtr<ShaderSource> vert, frag;
         core::param::ParamSlot scalingParam;
         //TimeMeasure timer;
-        //megamol::core::utility::ShaderSourceFactory::sh
+        megamol::core::utility::SSBOStreamer streamer;
+        megamol::core::utility::SSBOStreamer colStreamer;
     };
 
 } /* end namespace rendering */
