@@ -1,0 +1,8 @@
+
+  file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ *)
+  foreach(util ${utils})
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt)
+      add_subdirectory(${util})
+    endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt)
+  endforeach(util ${utils})
+  
