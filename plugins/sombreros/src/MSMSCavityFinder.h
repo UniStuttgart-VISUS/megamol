@@ -97,6 +97,7 @@ namespace sombreros {
 
         /** Param slots */
         core::param::ParamSlot distanceParam;
+        core::param::ParamSlot areaParam;
 
         /** data hash */
         SIZE_T dataHash;

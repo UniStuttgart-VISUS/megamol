@@ -41,6 +41,7 @@ MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
         outerMeshInSlot("outerDataIn", "Receives the outer input mesh"),
         cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
         distanceParam("distance", "Mesh-mesh distance threshold for cavity detection"),
+        areaParam("min area", "Minimum area of a cavity mesh"),
         dataHash(0), lastFrame(-1), lastHashInner(0), lastHashOuter(0) {
 
     // Callee slot
@@ -58,6 +59,9 @@ MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
     // Parameter slots
     this->distanceParam.SetParameter(new param::FloatParam(4.0f, 0.0f));
     this->MakeSlotAvailable(&this->distanceParam);
+
+    this->areaParam.SetParameter(new param::FloatParam(50.0f, 0.0f));
+    this->MakeSlotAvailable(&this->areaParam);
 }
 
 /*
@@ -296,24 +300,47 @@ bool MSMSCavityFinder::getData(Call& call) {
                 // copy triangles (vertex indices) to new list
                 auto triaCnt = end - tmpTriaIndices.begin();
                 unsigned int *tmpTrias = new unsigned int[triaCnt * 3];
+                float tmpMeshArea = 0.0f;
+                vislib::math::Vector<float, 3> tmpVec1, tmpVec2;
                 for (unsigned int i = 0; i < triaCnt; i++) {
                     unsigned int triaIdx = tmpTriaIndices[i];
                     tmpTrias[i * 3 + 0] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 0];
                     tmpTrias[i * 3 + 1] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1];
                     tmpTrias[i * 3 + 2] = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2];
+                    // compute the triangle area
+                    auto vert0X = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 0] * 3 + 0];
+                    auto vert0Y = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 0] * 3 + 1];
+                    auto vert0Z = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 0] * 3 + 2];
+                    auto vert1X = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 1] * 3 + 0];
+                    auto vert1Y = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 1] * 3 + 1];
+                    auto vert1Z = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 1] * 3 + 2];
+                    auto vert2X = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 2] * 3 + 0];
+                    auto vert2Y = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 2] * 3 + 1];
+                    auto vert2Z = this->cavityMesh.GetVertexPointerFloat()[tmpTrias[i * 3 + 2] * 3 + 2];
+                    tmpVec1.Set(vert1X - vert0X, vert1Y - vert0Y, vert1Z - vert0Z);
+                    tmpVec2.Set(vert2X - vert0X, vert2Y - vert0Y, vert2Z - vert0Z);
+                    tmpMeshArea += 0.5f * tmpVec1.Cross(tmpVec2).Length();
                 }
-                this->cavitySubmeshes.Add(this->cavityMesh);
-                this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
+                // only add the mesh if it is large enough
+                if (this->areaParam.Param<param::FloatParam>()->Value() < tmpMeshArea) {
+                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea << " (Added)." << std::endl;
+                    this->cavitySubmeshes.Add(this->cavityMesh);
+                    this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
+                } else {
+                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea << " (Too small, threshold: " << this->areaParam.Param<param::FloatParam>()->Value() << ")." << std::endl;
+                }
 
-            #if 0
+            #if 1
                 // DEBUG COLOR HACK!!
-                auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
-                float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
-                for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
-                    int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
-                    color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
-                    color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
-                    color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
+                if (this->cavitySubmeshes.Count() > 0) {
+                    auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
+                    float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
+                    for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
+                        int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
+                        color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
+                        color[currentMeshVertices[i] * 3 + 1] = colTab[colInd * 3 + 1];
+                        color[currentMeshVertices[i] * 3 + 2] = colTab[colInd * 3 + 2];
+                    }
                 }
                 // END DEBUG COLOR HACK!!
             #endif
@@ -325,7 +352,7 @@ bool MSMSCavityFinder::getData(Call& call) {
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
-        std::cout << "***********MSMS Cavity Detection took " << elapsed.count() << " ms" << std::endl << std::endl;
+        std::cout << "*********** MSMS Cavity Detection took " << elapsed.count() << " ms" << std::endl << std::endl;
         timebegin = std::chrono::steady_clock::now();
 #endif
     } // END only recompute vertex distances if something has changed
