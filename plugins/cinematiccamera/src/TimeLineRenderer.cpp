@@ -629,8 +629,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glLineWidth(tmpLw);
     glDisable(GL_BLEND);
 
-    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
-
 	return true;
 }
 

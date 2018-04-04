@@ -217,10 +217,6 @@ namespace megamol {
                 return this->lastCtrllPos;
             }
 
-            /** OpenGL error check - only in DEBUG mode*/
-            void OGLCheckErrors(const char *file, const char *func, int line) const;
-            // USAGE: ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
-
 		private:
 
             /**********************************************************************

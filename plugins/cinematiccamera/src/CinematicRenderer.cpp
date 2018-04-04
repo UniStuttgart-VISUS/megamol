@@ -570,8 +570,6 @@ bool CinematicRenderer::Render(Call& call) {
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
 
-    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
-
     return true;
 }
 

@@ -607,8 +607,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->rendering && this->pngdata.lock) {
         this->pngdata.lock = false;
     }
-
-    ccc->OGLCheckErrors(__FILE__, __func__, __LINE__);
 }
 
 
