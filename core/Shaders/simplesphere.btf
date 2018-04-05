@@ -55,7 +55,7 @@ void main(void) {
     inPos.w = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        gl_FrontColor = gl_Color;
+        gl_FrontColor = texture1D(colTab, 0.5 / COLTAB_SIZE);
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);

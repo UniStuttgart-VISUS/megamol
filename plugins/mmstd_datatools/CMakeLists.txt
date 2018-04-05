@@ -10,9 +10,10 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
   
-  set(LIBS vislib core glad)
+  set(LIBS vislib core glad geometry_calls)
+
   include_directories("include" "src" "3rd/nanoflann")
 
   if (OPENMP_FOUND OR WIN32)
@@ -20,13 +21,14 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   endif()
 
   include(ExternalProject)
+  find_package(Git REQUIRED)
 
-  ExternalProject_Add(tinyply
-    GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
-    GIT_TAG "2.0"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.0" --depth 1
+    OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeout.txt
+    ERROR_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeerr.txt
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix
   )
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -53,10 +55,10 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
 
-  source_group("tinyply" FILES "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.h" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.cpp")
+  source_group("tinyply" FILES "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source/tinyply.h" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source/tinyply.cpp")
 
-  list(APPEND source_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.cpp")
-  list(APPEND header_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source/tinyply.h")
+  list(APPEND source_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source/tinyply.cpp")
+  list(APPEND header_files "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source/tinyply.h")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
