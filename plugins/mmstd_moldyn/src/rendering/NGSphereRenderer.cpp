@@ -305,7 +305,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
     bool interleaved;
     this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-    shaderMap::iterator i = theShaders.find({ c, p, interleaved });
+    shaderMap::iterator i = theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == theShaders.end()) {
         //instance()->ShaderSourceFactory().MakeShaderSource()
 
@@ -370,7 +370,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, frag)));
-        i = theShaders.find({ c, p, interleaved });
+        i = theShaders.find(std::make_tuple(c, p, interleaved));
     }
     return i->second;
 }

@@ -9,6 +9,8 @@
 #include "mmcore/utility/SSBOStreamer.h"
 #include <algorithm>
 #include "vislib/assert.h"
+#include <iostream>
+#include <sstream>
 
 using namespace megamol::core::utility;
 
@@ -75,7 +77,9 @@ void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
                                                 mapSize,
                                                 GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
         if (this->mappedMem == nullptr) {
-            throw std::exception("SSBOStreamer: could not map memory (%ul bytes)", mapSize);
+	    std::stringstream err;
+	    err << std::string("SSBOStreamer: could not map memory (") << mapSize << std::string(" bytes)") << std::endl;
+	    throw std::runtime_error(err.str());
         }
         this->bufferSize = bufferSize;
         this->numBuffers = numBuffers;
