@@ -37,6 +37,9 @@ include(megamol_options)
 # MEGAMOL MAKROS
 include(check_mmdep)
 
+# NUGET SETTINGS
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config NuGet.Config COPYONLY)
+
 
 ###############################
 # vislib
