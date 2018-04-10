@@ -18,6 +18,7 @@ using System.Net.NetworkInformation;
 using System.Collections;
 using MegaMolConf.Data;
 using MegaMolConf.Util;
+using Module = MegaMolConf.Data.Module;
 
 namespace MegaMolConf {
     public partial class Form1 : Form     {
@@ -214,7 +215,8 @@ namespace MegaMolConf {
         }
 
         internal void AddModule(TabPage tabPage, string className, string instanceName) {
-            if (lbModules.DataSource is List<Data.Module> mods) {
+            var mods = lbModules.DataSource as List<Data.Module>;
+            if (mods != null) {
                 foreach (Data.Module m in mods) {
                     if (m.Name == className) {
                         tabModules.SuspendObservation = true;
@@ -618,6 +620,9 @@ namespace MegaMolConf {
                 saveStateToolStripMenuItem.Enabled = (plugins != null);
             } catch (FileNotFoundException) {
                 // intentionally empty
+            } catch (Exception ex) {
+                MessageBox.Show($"Exception while loading state file {filename}:\n{ex.Message}\n{ex.InnerException?.Message}", "State File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                plugins = null;
             } finally {
             }
 

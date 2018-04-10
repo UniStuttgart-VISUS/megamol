@@ -154,9 +154,9 @@ protected:
     OSPRenderer renderer;
     OSPTexture2D maxDepthTexture;
 
-	// structure vectors
-	std::vector<OSPGeometry> geo;
-	std::vector<OSPVolume> vol;
+    // structure vectors
+    std::vector<OSPGeometry> geo;
+    std::vector<OSPVolume> vol;
 
     // Light map
     OSPRayLightMap lightMap;
@@ -166,6 +166,9 @@ protected:
     OSPRayExtendMap extendMap;
 
     void fillLightArray(float * eyeDir);
+
+    long long int ispcLimit = 1ULL << 30;
+    long long int numCreateGeo;
 
 };
 

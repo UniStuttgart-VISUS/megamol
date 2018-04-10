@@ -1,8 +1,10 @@
 build/**/*
+build-intel/**/*
 bin/**/*
 include/**/*
 external/**/*
 share/**/*
+stage/**/*
 lib/**/*
 issues/**/*
 configurator/.vs/
@@ -17,3 +19,11 @@ configurator/MegaMolConf/Resources/mmconfig\.res
 build-linux/
 
 .vscode/**/*.bat
+
+.gitmodules
+
+*.orig
+
+utils/MMPLD/mmpld\.bat
+
+utils/MMPLD/mmpld\.reg

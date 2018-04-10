@@ -85,11 +85,15 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  if(UNIX)
-    find_package(OpenMP)
-  endif()
+  option(USE_MPI "enable MPI in build" OFF)
 
-  find_package(MPI)
+  set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
+  if (USE_MPI)
+    if (MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
+      message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
+    endif()
+    find_package(MPI)
+  endif()
 
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
@@ -123,9 +127,6 @@ if(BUILD_CORE)
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-  if (OPENMP_FOUND OR WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
   if (MPI_C_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
@@ -139,8 +140,9 @@ if(BUILD_CORE)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
   set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
-  
+
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -192,11 +194,13 @@ if(BUILD_CORE)
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
   source_group("Shaders" FILES ${shader_files})
+  source_group("Resources" FILES ${resource_files})
   source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
     install(TARGETS core RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")

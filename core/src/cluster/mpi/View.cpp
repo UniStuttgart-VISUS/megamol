@@ -246,6 +246,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         ASSERT(this->knowsBcastMaster());
 
         state.RelaySize = this->filterRelayBuffer();
+        _TRACE_MESSAGING("Rank %d found RelaySize to be %d\n", this->mpiRank, state.RelaySize);
         // It is safe using this size without any lock, because filtering of the
         // relay buffer must only be triggered by the rendering thread, ie
         // cannot occur concurrently while the following code is executed.
@@ -267,6 +268,8 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
             _TRACE_MESSAGING("Rank %d is preparing to receive %u bytes of "
                 "relayed messages...\n", this->mpiRank, state.RelaySize);
             this->filteredRelayBuffer.AssertSize(state.RelaySize);
+        } else {
+            _TRACE_MESSAGING("Rank %d thinks itself the master and will receive nothing\n", this->mpiRank);
         }
 
         if (state.RelaySize > 0) {
@@ -275,6 +278,8 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
             ::MPI_Bcast(static_cast<void *>(this->filteredRelayBuffer),
                 static_cast<int>(state.RelaySize), MPI_BYTE,
                 this->getBcastMaster(), this->comm);
+        } else {
+            _TRACE_MESSAGING("Rank %d has nothing to relay\n", this->mpiRank);
         }
 #endif /* WITH_MPI */
     } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
@@ -322,6 +327,14 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                     this->processInitialisationMessage();
                     break;
 
+                case MSG_MODULGRAPH_LUA:
+                    //::DebugBreak();
+                    _TRACE_INFO("Rank %d is preparing the lua module "
+                        "graph...", this->mpiRank);
+                    this->SetSetupMessage(msg);
+                    this->processInitialisationMessage();
+                    break;
+
                 case MSG_VIEWCONNECT: {
                     //::DebugBreak();
                     vislib::StringA name(msg.GetBodyAs<char>(),
@@ -355,6 +368,9 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                         av->DeserialiseCamera(ser);
                     }
                     break;
+                default:
+                    vislib::sys::Log::DefaultLog.WriteWarn("Rank %d got an unknown message with ID %d\n",
+                        this->mpiRank, msg.GetHeader().GetMessageID());
             } /* end switch (msg.GetHeader().GetMessageID()) */
         } /* end while (offset < state.RelaySize) */
 

@@ -30,13 +30,15 @@ enum geometryTypeEnum {
     TRIANGLES,
     STREAMLINES,
     CYLINDERS,
-    PBS
+    PBS,
+    OSPRAY_API_GEOMETRY
 };
 
 enum volumeTypeEnum {
     STRUCTUREDVOLUME,
     BLOCKBRICKEDVOLUME,
-    GHOSTBLOCKBRICKEDVOLUME
+    GHOSTBLOCKBRICKEDVOLUME,
+    OSPRAY_API_VOLUME
 };
 
 enum volumeRepresentationType {
@@ -75,14 +77,18 @@ public:
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
+    void* ospstructure;
+
 
     unsigned int voxelCount;
     unsigned int maxDim;
     unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
+    unsigned int vertexStride;
     unsigned int colorLength;
-    unsigned int partCount;
+    unsigned int colorStride;
+    long long int partCount;
     float globalRadius;
     core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
 
