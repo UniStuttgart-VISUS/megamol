@@ -57,7 +57,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="ZeroMQ, Version=4.1.0.25, Culture=neutral, PublicKeyToken=4a9630883fd6c563, processorArchitecture=MSIL">
-      <HintPath>..\..\build\packages\ZeroMQ.4.1.0.26\lib\net40\ZeroMQ.dll</HintPath>
+      <HintPath>..\..\external\nuget\ZeroMQ.4.1.0.26\lib\net40\ZeroMQ.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -326,12 +326,12 @@
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
-  <Import Project="..\..\build\packages\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets" Condition="Exists('..\..\build\packages\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" />
+  <Import Project="..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets" Condition="Exists('..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\build\packages\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\build\packages\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets'))" />
+    <Error Condition="!Exists('..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
