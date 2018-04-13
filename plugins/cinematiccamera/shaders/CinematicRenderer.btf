@@ -3,21 +3,26 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">400</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="common::defines"/>
         <snippet name="main" type="string">
             <![CDATA[
             
-layout (location = 0) in vec4 VertexPosition; 
-layout (location = 1) in vec2 VertexUV;
+//layout (location = 0) in vec4 VertexPosition; 
+//layout (location = 1) in vec2 VertexUV;
 
 //uniform mat4 MVP; // ModelViewProjection-Matrix
     
    
 
 void main(void) {
+    const vec4 vertices[4] = vec4[4]( vec4(-1.0, -1.0, 0.0, 1.0),
+                                      vec4(1.0, -1.0, 0.0, 1.0),
+                                      vec4(-1.0, 1.0, 0.0, 1.0),
+                                      vec4(1.0, 1.0, 0.0, 1.0) );
 
-    gl_Position = VertexPosition;
+    gl_Position = vertices[gl_VertexID];
+    //gl_Position = VertexPosition;
     //gl_Position = MVP * VertexPosition; // MVP is identity matrix ...
 }
 
@@ -26,12 +31,12 @@ void main(void) {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">400</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="common::defines"/>        
         <snippet name="main" type="string">
             <![CDATA[
          
-layout( location = 0 ) out vec4 FragColor;
+//layout( location = 0 ) out vec4 FragColor;
 
 uniform float vpH;
 uniform float vpW;
@@ -43,7 +48,7 @@ void main()
    
     vec2  UV     = vec2(gl_FragCoord.x / vpW, gl_FragCoord.y / vpH);
     gl_FragDepth = texture2D(depthtex, UV).r; //rgb have the same value ...
-    FragColor    = vec4(0.0, 0.0, 0.0, 0.0);
+    gl_FragColor    = vec4(0.0, 0.0, 0.0, 0.0);
 }
 ]]>
         </snippet>

@@ -72,6 +72,11 @@ endif()
 ###############################
 add_subdirectory(plugins)
 
+###############################
+# utils
+###############################
+add_subdirectory(utils)
+
 # Check dependencies and throw error
 foreach(d ${DEP_LIST})
   string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")

@@ -6,6 +6,8 @@ if role == "head" then
     mmSetParamValue("::scs::viewname", "::mini-lua::v")
     mmSetParamValue("::scs::server::Name", "127.0.0.1")
     mmSetParamValue("::scs::udptarget", "127.0.0.1")
+    -- use this only if the clients are mpiclusterviews -> they do not need the broadcast
+    mmSetParamValue("::scs::server::noEcho", "true")
 else
     mmCreateModule("View3D", "::mini-lua::v")
 end
