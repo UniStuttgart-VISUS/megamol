@@ -10,6 +10,10 @@ cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 if(BUILD_PROTEIN_CUDA_PLUGIN)
   project(protein_cuda LANGUAGES CXX CUDA)
 
+  # Check option dependencies: First list item is always the current build option,
+  # afterwards list the dependencies.
+  set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_CUDA_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
   #NVCC options
   set(CMAKE_CUDA_STANDARD 11)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
@@ -18,7 +22,7 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
 
   get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
   
-  set(LIBS vislib core mmstd_trisoup protein_calls glad cufft)
+  set(LIBS vislib core geometry_calls protein_calls glad cufft)
   if(MSVC)
     include_directories("include" "src" "src/helper_includes")
   else()

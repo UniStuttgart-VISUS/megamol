@@ -1573,9 +1573,9 @@ void MoleculeCudaSESRenderer::writeAtomPositions( MolecularDataCall *protein ) {
 //                positions[cnt*3+0], positions[cnt*3+1], positions[cnt*3+2],
 //                protein->AtomTypes()[protein->AtomTypeIndices()[cnt]].Radius());
 	}
-	// setArray( POSITION, m_hPos, 0, this->numAtoms);
-	//copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
-	checkCudaErrors( cudaMemcpyAsync( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice, 0));
+	//setArray( POSITION, m_hPos, 0, this->numAtoms);
+	copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
+	//checkCudaErrors( cudaMemcpyAsync( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice, 0));
 	//checkCudaErrors( cudaMemcpy( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice));
 }
 
