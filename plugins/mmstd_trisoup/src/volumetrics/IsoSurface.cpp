@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "volumetrics/IsoSurface.h"
 #include "mmcore/CallVolumeData.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FloatParam.h"
 #include <climits>
@@ -91,7 +91,7 @@ void IsoSurface::release(void) {
  * IsoSurface::outDataCallback
  */
 bool IsoSurface::outDataCallback(core::Call& caller) {
-    trisoup::CallTriMeshData *tmd = dynamic_cast<trisoup::CallTriMeshData*>(&caller);
+    megamol::geocalls::CallTriMeshData *tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
     if (tmd == NULL) return false;
 
     core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
@@ -204,7 +204,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
  * IsoSurface::outExtentCallback
  */
 bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
-    trisoup::CallTriMeshData *tmd = dynamic_cast<trisoup::CallTriMeshData*>(&caller);
+    megamol::geocalls::CallTriMeshData *tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
     if (tmd == NULL) return false;
 
     tmd->AccessBoundingBoxes().Clear();

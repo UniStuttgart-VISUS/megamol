@@ -25,6 +25,8 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
     this->interpolSteps    = 10;
     this->fps              = 24;
     this->bboxCenter       = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
+    this->firstCtrllPos    = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+    this->lastCtrllPos     = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 }
 
 

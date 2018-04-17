@@ -15,8 +15,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
-#include "mmstd_trisoup/LinesDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls/LinesDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
@@ -41,13 +41,13 @@ namespace trisoup {
     protected:
 
         /** Alias for mesh class */
-        typedef trisoup::CallTriMeshData::Mesh Mesh;
+        typedef megamol::geocalls::CallTriMeshData::Mesh Mesh;
 
         /** Alias for material class */
-        typedef trisoup::CallTriMeshData::Material Material;
+        typedef megamol::geocalls::CallTriMeshData::Material Material;
 
         /** Alias for lines class */
-        typedef trisoup::LinesDataCall::Lines Lines;
+        typedef megamol::geocalls::LinesDataCall::Lines Lines;
 
         /**
          * Implementation of 'Create'.

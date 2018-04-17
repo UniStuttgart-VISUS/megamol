@@ -85,11 +85,15 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  if(UNIX)
-    find_package(OpenMP)
-  endif()
+  option(USE_MPI "enable MPI in build" OFF)
 
-  find_package(MPI)
+  set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
+  if (USE_MPI)
+    if (MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
+      message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
+    endif()
+    find_package(MPI)
+  endif()
 
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
@@ -103,13 +107,26 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
+  # include zfp
+  set(ZFP_VER "0_5_2")
+  string(REPLACE "_" "." ZFP_TAG ${ZFP_VER})
+  if (MSVC)
+    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/zfp.lib" CACHE INTERNAL '')
+  else()
+    include(GNUInstallDirs)
+    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzfp.a")
+  endif()
+  ExternalProject_Add(extzfp
+    GIT_REPOSITORY https://github.com/LLNL/zfp.git
+    GIT_TAG ${ZFP_TAG}
+    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_UTILITIES=OFF -DBUILD_TESTING=OFF -DZFP_WITH_ALIGNED_ALLOC=ON -DZFP_WITH_CACHE_FAST_HASH=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
+  )
+  message(STATUS "ZFP Git Tag: " ${ZFP_TAG})
+
   set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-  if (OPENMP_FOUND OR WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
   if (MPI_C_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
@@ -123,6 +140,9 @@ if(BUILD_CORE)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
+  set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
+
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -138,7 +158,7 @@ if(BUILD_CORE)
     )    
 
   # Target definition
-  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   add_dependencies(core vislib glad extlibzmq extlibcppzmq)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
@@ -152,14 +172,35 @@ if(BUILD_CORE)
 
   # Target structure in Visual Studio
   set_target_properties(core PROPERTIES FOLDER base)
-  source_group("Public Header Files" FILES ${public_header_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
+  #source_group("Public Header Files" FILES ${public_header_files})
+  #source_group("Header Files" FILES ${header_files})
+  #source_group("Source Files" FILES ${source_files})
+  foreach(FILE_NAME ${source_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^src" "Source Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
+  foreach(FILE_NAME ${header_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^src" "Header Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
+  foreach(FILE_NAME ${public_header_files})
+    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
+    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
+    string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
+    source_group(${GROUP_NAME} FILES ${FILE_NAME})
+  endforeach()
   source_group("Shaders" FILES ${shader_files})
+  source_group("Resources" FILES ${resource_files})
+  source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
     install(TARGETS core RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")

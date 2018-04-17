@@ -481,7 +481,7 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
 /*
  * WavefrontObjDataSource::makeMesh
  */
-void WavefrontObjDataSource::makeMesh(trisoup::CallTriMeshData::Mesh& mesh,
+void WavefrontObjDataSource::makeMesh(megamol::geocalls::CallTriMeshData::Mesh& mesh,
         const vislib::Array<WavefrontObjDataSource::Tri>& tris,
         unsigned int* vu, const vislib::Array<vislib::math::Vector<float, 3> >& v,
         const vislib::Array<vislib::math::Vector<float, 3> >& n,

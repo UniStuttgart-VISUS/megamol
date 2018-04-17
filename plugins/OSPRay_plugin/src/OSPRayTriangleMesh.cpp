@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "OSPRayTriangleMesh.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
@@ -25,7 +25,7 @@ OSPRayTriangleMesh::OSPRayTriangleMesh(void) :
     objectID("objectID", "Switches between objects")
 {
 
-    this->getDataSlot.SetCompatibleCall<megamol::trisoup::CallTriMeshDataDescription>();
+    this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
 
@@ -41,7 +41,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::trisoup::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::trisoup::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
@@ -76,13 +76,13 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     std::vector<unsigned int> indexD;
 
 
-    const trisoup::CallTriMeshData::Mesh& obj = cd->Objects()[this->objectID.Param<core::param::IntParam>()->Value()];
+    const geocalls::CallTriMeshData::Mesh& obj = cd->Objects()[this->objectID.Param<core::param::IntParam>()->Value()];
     unsigned int triangleCount = obj.GetTriCount();
     unsigned int vertexCount = obj.GetVertexCount();
 
     // check vertex data type
     switch (obj.GetVertexDataType()) {
-    case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+    case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
         auto vertexPointer = obj.GetVertexPointerFloat();
         vertexD.resize(obj.GetVertexCount() * 3);
         vertexD.assign(vertexPointer, vertexPointer + obj.GetVertexCount() * 3);
@@ -96,7 +96,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     // check normal pointer
     if (obj.HasNormalPointer() != NULL) {
         switch (obj.GetNormalDataType()) {
-        case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+        case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             auto normalPointer = obj.GetNormalPointerFloat();
             normalD.resize(obj.GetVertexCount() * 3);
             normalD.assign(normalPointer, normalPointer + obj.GetVertexCount() * 3);
@@ -109,7 +109,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     // check colorpointer and convert to rgba
     if (obj.HasColourPointer() != NULL) {
         switch (obj.GetColourDataType()) {
-        case trisoup::CallTriMeshData::Mesh::DT_BYTE:
+        case geocalls::CallTriMeshData::Mesh::DT_BYTE:
             colorD.reserve(vertexCount * 4);
             for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
                 colorD.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
@@ -118,7 +118,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
                 }
             }
             break;
-        case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+        case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             // TODO: not tested
             colorD.reserve(vertexCount * 4);
             for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
@@ -137,7 +137,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     // check texture array
     if (obj.HasTextureCoordinatePointer() != NULL) {
         switch (obj.GetTextureCoordinateDataType()) {
-        case trisoup::CallTriMeshData::Mesh::DT_FLOAT:
+        case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             auto texPointer = obj.GetTextureCoordinatePointerFloat();
             texD.resize(obj.GetTriCount() * 2);
             texD.assign(texPointer, texPointer + obj.GetTriCount() * 2);
@@ -154,7 +154,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
             //    break;
             //case trisoup::CallTriMeshData::Mesh::DT_UINT16:
             //    break;
-        case trisoup::CallTriMeshData::Mesh::DT_UINT32:
+        case geocalls::CallTriMeshData::Mesh::DT_UINT32:
             auto indexPointer = obj.GetTriIndexPointerUInt32();
             indexD.resize(obj.GetTriCount() * 3);
             indexD.assign(indexPointer, indexPointer + obj.GetTriCount() * 3);
@@ -208,7 +208,7 @@ bool OSPRayTriangleMesh::InterfaceIsDirty() {
 
 bool OSPRayTriangleMesh::getExtends(megamol::core::Call &call) {
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::trisoup::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::trisoup::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     
     if (cd == NULL) return false;
     if (os->getTime() > cd->FrameCount()) {

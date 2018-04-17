@@ -2,36 +2,38 @@
  * CallTriMeshData.h
  *
  * Copyright (C) 2010 by Sebastian Grottel
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED
-#define MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED
+#ifndef MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
+#define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
-#include "mmstd_trisoup/mmstd_trisoup.h"
+#include "geometry_calls/geometry_calls.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
+#include <climits>
 
+#define MAX_PARAMETER_NUMBER 100
 
 namespace megamol {
-namespace trisoup {
+namespace geocalls {
 
     /**
      * Call transporting tri soup mesh data
      */
-    class MMSTD_TRISOUP_API CallTriMeshData : public core::AbstractGetData3DCall {
+    class GEOMETRY_CALLS_API CallTriMeshData : public core::AbstractGetData3DCall {
     public:
 
         /**
          * Subclass storing material information
          */
-        class MMSTD_TRISOUP_API Material {
+        class GEOMETRY_CALLS_API Material {
         public:
 
             /** Possible values for the illumination modell */
@@ -394,7 +396,7 @@ namespace trisoup {
         /**
          * Subclass storing the pointers to the mesh data
          */
-        class MMSTD_TRISOUP_API Mesh {
+        class GEOMETRY_CALLS_API Mesh {
         public:
 
             /** Possible data types */
@@ -403,6 +405,8 @@ namespace trisoup {
                 DT_BYTE, // UINT8
                 DT_UINT16,
                 DT_UINT32,
+                DT_INT16,
+                DT_INT32,
                 DT_FLOAT,
                 DT_DOUBLE
             };
@@ -640,12 +644,122 @@ namespace trisoup {
             }
 
             /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(uint8_t * ptr) {
+                if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_BYTE;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataByte = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(double * ptr) {
+                if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_DOUBLE;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataDouble = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(float * ptr) {
+                if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_FLOAT;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataFloat = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(int16_t * ptr) {
+                if (this->vattCount == MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_INT16;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataInt16 = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(int32_t * ptr) {
+                if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_INT32;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataInt32 = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(uint16_t * ptr) {
+                if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_UINT16;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataUInt16 = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
+             * Adds a new vertex attribute.
+             *
+             * @return The index of the newly added attribute, or UINT_MAX in the case of failure
+             */
+            inline unsigned int AddVertexAttribPointer(unsigned int * ptr) {
+                if (this->vattCount >= MAX_PARAMETER_NUMBER) return UINT_MAX;
+                this->vattDTypes[this->vattCount] = DT_UINT32;
+                this->vattVector = this->allocateAdditionalEntry(this->vattVector, this->vattCount);
+                this->vattVector[this->vattCount].dataUInt32 = ptr;
+                this->vattCount = this->vattCount + 1;
+                return this->vattCount - 1;
+            }
+
+            /**
             * Answer the data type for vertex attrib
             *
             * @return The data type for vertex attrib
             */
-            inline DataType GetVertexAttribDataType(void) const {
-                return this->vattDT;
+            inline DataType GetVertexAttribDataType(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return DT_NONE;
+                }
+                return this->vattDTypes[attribID];
+            }
+
+            /**
+             * Answer the number of vertex attributes.
+             *
+             * @return The number of vertex attributes.
+             */
+            inline unsigned int GetVertexAttribCount(void) const {
+                return this->vattCount;
             }
 
             /**
@@ -654,17 +768,109 @@ namespace trisoup {
             * @return True if vertex attrib data is present
             */
             inline bool HasVertexAttribPointer(void) const {
-                return this->vatt.dataUInt32 != NULL;
+                bool hasPointer = (this->vattCount > 0);
+                bool hasData = false;
+                if (hasPointer) {
+                    hasData = hasData || (this->vattVector[0].dataByte != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataDouble != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataFloat != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataInt16 != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataInt32 != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataUInt16 != nullptr);
+                    hasData = hasData || (this->vattVector[0].dataUInt32 != nullptr);
+                }
+                return hasPointer && hasData;
             }
 
             /**
-            * Gets vertex attrib
-            *
-            * @return vertex attrib
-            */
-            inline const unsigned int * GetVertexAttribPointerUInt32(void) const {
-                ASSERT(this->vattDT == DT_UINT32);
-                return this->vatt.dataUInt32;
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const uint8_t * GetVertexAttribPointerByte(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_BYTE);
+                return this->vattVector[attribID].dataByte;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const double * GetVertexAttribPointerDouble(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_DOUBLE);
+                return this->vattVector[attribID].dataDouble;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const float * GetVertexAttribPointerFloat(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_FLOAT);
+                return this->vattVector[attribID].dataFloat;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const int16_t * GetVertexAttribPointerInt16(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_INT16);
+                return this->vattVector[attribID].dataInt16;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const int * GetVertexAttribPointerInt32(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_INT32);
+                return this->vattVector[attribID].dataInt32;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const uint16_t * GetVertexAttribPointerUInt16(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_UINT16);
+                return this->vattVector[attribID].dataUInt16;
+            }
+
+            /**
+             * Gets vertex attrib
+             *
+             * @return vertex attrib
+             */
+            inline const unsigned int * GetVertexAttribPointerUInt32(unsigned int attribID) const {
+                if (attribID >= this->vattCount) {
+                    return nullptr;
+                }
+                ASSERT(this->vattDTypes[attribID] == DT_UINT32);
+                return this->vattVector[attribID].dataUInt32;
             }
 
             /**
@@ -727,40 +933,6 @@ namespace trisoup {
                     this->setNrmData(normals);
                     this->setColData(colours);
                     this->setTexData(textureCoordinates);
-                    this->setVertexAttribData(NULL);
-                    this->vrtMemOwned = takeOwnership;
-                }
-            }
-
-            /**
-            * Sets the vertex data
-            *
-            * @param cnt The number of vertices
-            * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
-            * @param normals Pointer to 3 times cnt floats holding the normal vectors
-            * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
-            * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
-            * @param vertexAttribute Pointer to cnt insigned int holding the per-vertex attribute
-            * @param takeOwnership If true the object will take ownership of
-            *                      all the memory of the pointers provided
-            *                      and will free the memory on its
-            *                      destruction. Otherwise the caller must
-            *                      ensure the memory stays valid as long as
-            *                      it is used.
-            */
-            template<class Tp1, class Tp2, class Tp3, class Tp4, class Tp5>
-            inline void SetVertexData(unsigned int cnt,
-                Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
-                Tp5 vertexAttribute, bool takeOwnership) {
-                this->clearVrtData();
-                this->vrtCnt = cnt;
-                if (cnt > 0) {
-                    ASSERT(vertices != NULL);
-                    this->setVrtData(vertices);
-                    this->setNrmData(normals);
-                    this->setColData(colours);
-                    this->setTexData(textureCoordinates);
-                    this->setVertexAttribData(vertexAttribute);
                     this->vrtMemOwned = takeOwnership;
                 }
             }
@@ -988,13 +1160,94 @@ namespace trisoup {
             }
 
             /**
-            * Sets the triangle data pointer
-            *
-            * @param v The new pointer value
-            */
-            inline void setVertexAttribData(unsigned int *v) {
-                this->vattDT = DT_UINT32;
-                this->vatt.dataUInt32 = v;
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(uint8_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_BYTE;
+                this->vattVector[attribID].dataByte = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(double *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_DOUBLE;
+                this->vattVector[attribID].dataDouble = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(float *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_FLOAT;
+                this->vattVector[attribID].dataFloat = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(int16_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_INT16;
+                this->vattVector[attribID].dataInt16 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(int *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_INT32;
+                this->vattVector[attribID].dataInt32 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(uint16_t *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_UINT16;
+                this->vattVector[attribID].dataUInt16 = v;
+            }
+
+            /**
+             * Sets the vertex attrib data pointer
+             * for a specific attribute.
+             * If the attribute is not present, nothing is changed...
+             *
+             * @param v The new pointer value
+             */
+            inline void setVertexAttribData(unsigned int *v, unsigned int attribID) {
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_UINT32;
+                this->vattVector[attribID].dataUInt32 = v;
             }
 
             /**
@@ -1003,10 +1256,28 @@ namespace trisoup {
             * @param v The new pointer value
             */
             template<class Tp>
-            inline void setVertexAttribData(Tp v) {
+            inline void setVertexAttribData(Tp v, unsigned int attribID) {
                 ASSERT(v == NULL);
-                this->vattDT = DT_NONE;
-                this->vatt.dataUInt32 = NULL;
+                if (attribID >= this->vattCount) return;
+                this->vattDTypes[attribID] = DT_NONE;
+                this->vattVector[attribID].dataUInt32 = NULL;
+            }
+
+            /**
+             * Reallocates an array containing an additional entry
+             *
+             * @param arrayPtr The array pointer.
+             * @param oldSize The number of elements of the input array. 
+             * @return New array pointer for an array one element bigger.
+             *         Ideally, this pointer is assigned to the old one.
+             */
+            template<class Tp>
+            inline Tp * allocateAdditionalEntry(Tp * arrayPtr, unsigned int oldSize) {
+                Tp * result = new Tp[oldSize + 1];
+                std::memcpy(result, arrayPtr, oldSize * sizeof(Tp));
+                delete[] arrayPtr;
+                arrayPtr = nullptr;
+                return result;
             }
 
             /** Triangle count (ignored if t is NULL) */
@@ -1068,13 +1339,25 @@ namespace trisoup {
                 double * dataDouble;
             } tex;
 
-            /** The vertex attrob data type */
-            DataType vattDT;
+            /** The vertex attrib data types */            
+            DataType vattDTypes[MAX_PARAMETER_NUMBER];
 
-            /** Vertex attrib data */
+            /** Vertex attrib data possibilities */
             union _vatt_t {
                 unsigned int * dataUInt32;
-            } vatt;
+                int * dataInt32;
+                uint16_t * dataUInt16;
+                int16_t * dataInt16;
+                uint8_t * dataByte;
+                float * dataFloat;
+                double * dataDouble;
+            };
+
+            /** Vector with pointers to all attributes */
+            _vatt_t * vattVector;
+
+            /** Count of currently present vertex attributes */
+            unsigned int vattCount;
 
             /**
              * Flag indicating the if the vertex data memory is owned by this
@@ -1084,7 +1367,6 @@ namespace trisoup {
 
             /** The material */
             const Material * mat;
-
         };
 
         /**
@@ -1174,9 +1456,9 @@ namespace trisoup {
     };
 
     /** Description class typedef */
-    typedef core::factories::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
+    typedef megamol::core::factories::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
 
-} /* end namespace trisoup */
+} /* end namespace geocalls */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED */
+#endif /* MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED */

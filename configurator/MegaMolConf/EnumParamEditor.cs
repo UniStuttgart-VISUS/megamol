@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 
@@ -29,14 +26,14 @@ namespace MegaMolConf {
             public int Value { get; set; }
             public string Name { get; set; }
             public Element(int v, string n) {
-                this.Value = v;
-                this.Name = n;
+                Value = v;
+                Name = n;
             }
             public string DisplayName {
-                get { return string.Format("{0}: {1}", this.Value, this.Name); }
+                get { return string.Format("{0}: {1}", Value, Name); }
             }
             public override string ToString() {
-                return this.Value.ToString();
+                return Value.ToString();
             }
         };
 

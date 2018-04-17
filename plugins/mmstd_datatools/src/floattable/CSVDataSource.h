@@ -25,7 +25,7 @@ namespace floattable {
     public:
 
         static const char *ClassName(void) { return "CSVDataSource"; }
-        static const char *Description(void) { return "Comma-separated data source"; }
+        static const char *Description(void) { return "Data source for parsing tabular comma-separated values"; }
         static bool IsAvailable(void) { return true; }
 
         CSVDataSource(void);
@@ -46,11 +46,13 @@ namespace floattable {
         void shuffleData();
 
         core::param::ParamSlot filenameSlot;
-        core::param::ParamSlot readNameLineSlot;
-        core::param::ParamSlot readTypeLineSlot;
+		core::param::ParamSlot skipPrefaceSlot;
+		core::param::ParamSlot headerNamesSlot;
+        core::param::ParamSlot headerTypesSlot;
+		core::param::ParamSlot commentPrefixSlot;
         core::param::ParamSlot clearSlot;
         core::param::ParamSlot colSepSlot;
-        core::param::ParamSlot decTypeSlot;
+        core::param::ParamSlot decSepSlot;
         core::param::ParamSlot shuffleSlot;
 
         core::CalleeSlot getDataSlot;

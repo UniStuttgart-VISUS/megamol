@@ -18,8 +18,10 @@
 #include "OSPRayNHSphereGeometry.h"
 #include "OSPRayTriangleMesh.h"
 #include "OSPRayStructuredVolume.h"
-#include "OSPRayStreamLines.h"
+#include "OSPRayAPIStructure.h"
+#include "OSPRayLineGeometry.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "OSPRay_plugin/CallOSPRayAPIObject.h"
 
 #include "OSPRayDistantLight.h"
 #include "OSPRayAmbientLight.h"
@@ -39,7 +41,6 @@
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayPlasticMaterial.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
-
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -74,7 +75,8 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMesh>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStreamLines>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAmbientLight>();
@@ -98,6 +100,7 @@ namespace {
 
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
+               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayAPIObject>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();
 
         }
@@ -140,7 +143,7 @@ mmplgGetPluginCompatibilityInfo(
         );
 
     SetLibraryVersionInfo(ci->libs[1], "vislib",
-        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, 0
+        vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR, vislib::VISLIB_VERSION_REVISION, 0
 #if defined(DEBUG) || defined(_DEBUG)
         | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif

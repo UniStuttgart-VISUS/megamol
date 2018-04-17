@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace MegaMolConf.Data.ParamType {
 
@@ -24,7 +21,7 @@ namespace MegaMolConf.Data.ParamType {
             DefaultValue = ParseValue(v);
         }
         public override string DefaultValueString() {
-            return this.DefaultValue.ToString();
+            return DefaultValue.ToString();
         }
         public override bool ValuesEqual(string a, string b) {
             return ParseValue(a).Equals(ParseValue(b));

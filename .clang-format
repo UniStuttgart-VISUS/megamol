@@ -1,0 +1,27 @@
+---
+BasedOnStyle: LLVM
+AccessModifierOffset: '-4'
+AlignTrailingComments: true
+AlignAfterOpenBracket: DontAlign
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+BreakBeforeBraces: Attach
+BreakConstructorInitializersBeforeComma: true
+ColumnLimit: '120'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+Cpp11BracedListStyle: true
+IndentWidth: '4'
+MaxEmptyLinesToKeep: '2'
+PointerBindsToType: true
+TabWidth: 4
+UseTab: Never
+IncludeCategories:
+  - Regex:           '^"(stdafx|PrecompiledHeader)'
+    Priority:        -1
+  - Regex:           '^<'
+    Priority:        1
+  - Regex:           '^"'
+    Priority:        2
+
+...

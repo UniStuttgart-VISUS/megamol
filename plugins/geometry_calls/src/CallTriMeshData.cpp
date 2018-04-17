@@ -2,11 +2,11 @@
  * CallTriMeshData.cpp
  *
  * Copyright (C) 2010 by Sebastian Grottel
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
+#include "geometry_calls/CallTriMeshData.h"
 //#include <GL/gl.h>
 #include <GL/glu.h>
 #include "vislib/graphics/BitmapCodecCollection.h"
@@ -17,7 +17,7 @@
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol;
-using namespace megamol::trisoup;
+using namespace megamol::geocalls;
 
 /****************************************************************************/
 
@@ -255,13 +255,16 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
  */
 CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */triMemOwned(false),
         vrtCnt(0), vrtDT(DT_NONE), /*vrt(NULL), */nrmDT(DT_NONE), /*nrm(NULL), */
-        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vattDT(DT_NONE), vrtMemOwned(false), mat(NULL) {
+        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL), vattCount(0) {
     this->tri.dataByte = NULL;
     this->vrt.dataFloat = NULL;
     this->nrm.dataFloat = NULL;
     this->col.dataByte = NULL;
     this->tex.dataFloat = NULL;
-    this->vatt.dataUInt32 = NULL;
+    this->vattVector = NULL;
+    for (int i = 0; i < MAX_PARAMETER_NUMBER; i++) {
+        this->vattDTypes[i] = DT_NONE;
+    }
 }
 
 
@@ -312,9 +315,12 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
 
     this->texDT = rhs.texDT;
     this->tex.dataFloat = rhs.tex.dataFloat;
+    for (int i = 0; i < MAX_PARAMETER_NUMBER; i++) {
+        this->vattDTypes[i] = rhs.vattDTypes[i];
+    }
 
-    this->vattDT = rhs.vattDT;
-    this->vatt.dataUInt32 = rhs.vatt.dataUInt32;
+    this->vattVector = rhs.vattVector;
+    this->vattCount = rhs.vattCount;
 
     this->mat = rhs.mat;
 
@@ -326,15 +332,13 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
  * CallTriMeshData::Mesh::operator==
  */
 bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
-    return (this->col.dataByte == rhs.col.dataByte)
+    bool isEqual = (this->col.dataByte == rhs.col.dataByte)
         && (this->colDT == rhs.colDT)
         && (this->mat == rhs.mat)
         && (this->nrm.dataFloat == rhs.nrm.dataFloat)
         && (this->nrmDT == rhs.nrmDT)
         && (this->tex.dataFloat == rhs.tex.dataFloat)
         && (this->texDT == rhs.texDT)
-        && (this->vatt.dataUInt32 == rhs.vatt.dataUInt32)
-        && (this->vattDT == rhs.vattDT)
         && (this->tri.dataByte == rhs.tri.dataByte)
         && (this->triDT == rhs.triDT)
         && (this->triCnt == rhs.triCnt)
@@ -343,6 +347,15 @@ bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
         && (this->vrtDT == rhs.vrtDT)
         && (this->vrtCnt == rhs.vrtCnt)
         && (this->vrtMemOwned == rhs.vrtMemOwned);
+    // this is necessary if we do not want to crash in the next few lines
+    if (this->vattCount != rhs.vattCount || !isEqual) {
+        return false;
+    }
+    for (size_t i = 0; i < this->vattCount; i++) {
+        isEqual = isEqual && (this->vattDTypes[i] == rhs.vattDTypes[i]);
+        isEqual = isEqual && (this->vattVector[i].dataByte == rhs.vattVector[i].dataByte);
+    }
+    return isEqual;
 }
 
 
@@ -401,11 +414,26 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
             default: ASSERT(false);
             }
         }
-        if (this->vatt.dataUInt32 != NULL) {
-            switch (this->vattDT) {
-            case DT_UINT32: delete[] this->vatt.dataUInt32; break;
-            default: ASSERT(false);
+        for (size_t i = 0; i < this->vattCount; i++) {
+            // we have to check only one of the unified pointers, because its a union...
+            if (this->vattVector[i].dataByte != nullptr) {
+                switch (this->vattDTypes[i]) {
+                case DT_BYTE: delete[] this->vattVector[i].dataByte; break;
+                case DT_DOUBLE: delete[] this->vattVector[i].dataDouble; break;
+                case DT_FLOAT: delete[] this->vattVector[i].dataFloat; break;
+                case DT_INT16: delete[] this->vattVector[i].dataInt16; break;
+                case DT_INT32: delete[] this->vattVector[i].dataInt32; break;
+                case DT_UINT16: delete[] this->vattVector[i].dataUInt16; break;
+                case DT_UINT32: delete[] this->vattVector[i].dataUInt32; break;
+                default: ASSERT(false);
+                }
             }
+        }
+        for (int i = 0; i < MAX_PARAMETER_NUMBER; i++) {
+            this->vattDTypes[i] = DT_NONE;
+        }
+        if (this->vattVector != NULL) {
+            delete[] this->vattVector;
         }
     }
     this->vrtDT = DT_NONE;
@@ -416,8 +444,8 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     this->col.dataByte = NULL;
     this->texDT = DT_NONE;
     this->tex.dataFloat = NULL;
-    this->vattDT = DT_NONE;
-    this->vatt.dataUInt32 = NULL;
+    this->vattVector = NULL;
+    this->vattCount = 0;
 }
 
 /****************************************************************************/

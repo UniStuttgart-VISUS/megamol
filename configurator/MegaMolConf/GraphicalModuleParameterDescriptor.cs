@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 
 namespace MegaMolConf {
 
@@ -18,11 +15,11 @@ namespace MegaMolConf {
         }
 
         public Data.ParamSlot Parameter {
-            get { return this.p; }
+            get { return p; }
         }
 
         public override bool CanResetValue(object component) {
-            return ((GraphicalModule)component).ParameterValues[this.p] != ((Data.ParamTypeValueBase)this.p.Type).DefaultValueString();
+            return ((GraphicalModule)component).ParameterValues[p] != ((Data.ParamTypeValueBase)p.Type).DefaultValueString();
         }
 
         public override Type ComponentType {
@@ -30,19 +27,19 @@ namespace MegaMolConf {
         }
 
         public override object GetValue(object component) {
-            if (this.p.Type is Data.ParamType.Enum) {
-                int v = ((Data.ParamType.Enum)this.p.Type).ParseValue(((GraphicalModule)component).ParameterValues[this.p]);
-                for (int j = 0; j < ((Data.ParamType.Enum)this.p.Type).Values.Length; j++) {
-                    if (((Data.ParamType.Enum)this.p.Type).Values[j] == v) {
-                        return new EnumParamEditor.Element(v, ((Data.ParamType.Enum)this.p.Type).ValueNames[j]);
+            if (p.Type is Data.ParamType.Enum) {
+                int v = ((Data.ParamType.Enum)p.Type).ParseValue(((GraphicalModule)component).ParameterValues[p]);
+                for (int j = 0; j < ((Data.ParamType.Enum)p.Type).Values.Length; j++) {
+                    if (((Data.ParamType.Enum)p.Type).Values[j] == v) {
+                        return new EnumParamEditor.Element(v, ((Data.ParamType.Enum)p.Type).ValueNames[j]);
                     }
                 }
                 throw new Exception("Internal Error 72");
-            } else if (this.p.Type is Data.ParamType.FlexEnum) {
-                return new FlexEnumParamEditor.Element(((GraphicalModule)component).ParameterValues[this.p]);
+            } else if (p.Type is Data.ParamType.FlexEnum) {
+                return new FlexEnumParamEditor.Element(((GraphicalModule)component).ParameterValues[p]);
                 throw new Exception("Internal Error 73");
             }
-            return ((GraphicalModule)component).ParameterValues[this.p];
+            return ((GraphicalModule)component).ParameterValues[p];
         }
 
         public override bool IsReadOnly {
@@ -62,7 +59,7 @@ namespace MegaMolConf {
         }
 
         public override void ResetValue(object component) {
-            ((GraphicalModule)component).ParameterValues[this.p] = ((Data.ParamTypeValueBase)this.p.Type).DefaultValueString();
+            ((GraphicalModule)component).ParameterValues[p] = ((Data.ParamTypeValueBase)p.Type).DefaultValueString();
         }
 
         //[System.Diagnostics.DebuggerStepThrough]
@@ -82,24 +79,24 @@ namespace MegaMolConf {
                 }
                 value = f.ToString(System.Globalization.CultureInfo.InvariantCulture);
             }
-            ((GraphicalModule)component).ParameterValues[this.p] = value.ToString();
+            ((GraphicalModule)component).ParameterValues[p] = value.ToString();
         }
 
         public override bool ShouldSerializeValue(object component) {
-            return this.CanResetValue(component);
+            return CanResetValue(component);
         }
 
         public override string DisplayName {
             get {
-                string name = this.p.Name;
-                if (this.useInCmdLine) name += "*";
+                string name = p.Name;
+                if (useInCmdLine) name += "*";
                 return name;
             }
         }
 
         public override string Description {
             get {
-                return this.p.Description;
+                return p.Description;
             }
         }
 
@@ -110,8 +107,8 @@ namespace MegaMolConf {
         }
 
         public bool UseInCmdLine {
-            get { return this.useInCmdLine; }
-            set { this.useInCmdLine = value; }
+            get { return useInCmdLine; }
+            set { useInCmdLine = value; }
         }
 
         public override object GetEditor(Type editorBaseType) {
