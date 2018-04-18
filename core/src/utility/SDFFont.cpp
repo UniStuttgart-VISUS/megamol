@@ -1106,7 +1106,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile);
+        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
     
@@ -1114,7 +1114,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile);
+        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }
 

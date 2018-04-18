@@ -243,9 +243,10 @@ bool PBSDataSource::read(void) {
                     stream >> this->g_bbox.get()[i];
                 }
                 std::getline(header, line);
-                stream = std::istringstream(line);
+		std::istringstream stream2(line); 
+                //stream = std::istringstream(line); GCC doesn't allow copy constructor
                 for (int i = 0; i < 6; i++) {
-                    stream >> this->l_bbox.get()[i];
+		    stream2 >> this->l_bbox.get()[i];
                 }
                 header >> num_elements;
                 header.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -284,7 +285,7 @@ bool PBSDataSource::read(void) {
                             this->insertElements(this->z_data, buffer, num_elements);
                             break;
                         case attribute_type::nx:
-                            this->insertElements(this->nx_data, buffer, num_elements);
+                           this->insertElements(this->nx_data, buffer, num_elements);
                             this->with_normals = true;
                             break;
                         case attribute_type::ny:
@@ -315,7 +316,7 @@ bool PBSDataSource::read(void) {
                     "Copy duration: %d\n", std::chrono::duration_cast<std::chrono::milliseconds>(copy_duration));
             } else {
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "PBSDataSource::read: Attribute %s is missing\n", this->filename_prefixes[attr]);
+                    "PBSDataSource::read: Attribute %s is missing\n", this->filename_prefixes[attr].c_str());
             }
         }
 
