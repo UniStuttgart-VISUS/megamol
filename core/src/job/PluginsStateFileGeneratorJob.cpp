@@ -1,7 +1,7 @@
 /*
  * PluginsStateFileGeneratorJob.cpp
  *
- * Copyright (C) 2016 by MegaMol Team; TU Drewsden.
+ * Copyright (C) 2016 by MegaMol Team; TU Dresden.
  * Alle Rechte vorbehalten.
  */
 
@@ -397,13 +397,14 @@ void job::PluginsStateFileGeneratorJob::WriteCallInfo(std::ofstream& file,
  * job::PluginsStateFileGeneratorJob::WriteParamInfo
  */
 void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, const param::AbstractParam* param) const {
-    const param::BoolParam     * p1 = dynamic_cast<const param::BoolParam    *>(param);
-    const param::ButtonParam   * p2 = dynamic_cast<const param::ButtonParam  *>(param);
-    const param::EnumParam     * p3 = dynamic_cast<const param::EnumParam    *>(param);
-    const param::FloatParam    * p4 = dynamic_cast<const param::FloatParam   *>(param);
-    const param::IntParam      * p5 = dynamic_cast<const param::IntParam     *>(param);
-    const param::FilePathParam * p6 = dynamic_cast<const param::FilePathParam*>(param);
-    const param::FlexEnumParam * p7 = dynamic_cast<const param::FlexEnumParam*>(param);
+    const param::BoolParam           * p1 = dynamic_cast<const param::BoolParam          *>(param);
+    const param::ButtonParam         * p2 = dynamic_cast<const param::ButtonParam        *>(param);
+    const param::EnumParam           * p3 = dynamic_cast<const param::EnumParam          *>(param);
+    const param::FloatParam          * p4 = dynamic_cast<const param::FloatParam         *>(param);
+    const param::IntParam            * p5 = dynamic_cast<const param::IntParam           *>(param);
+    const param::FilePathParam       * p6 = dynamic_cast<const param::FilePathParam      *>(param);
+    const param::FlexEnumParam       * p7 = dynamic_cast<const param::FlexEnumParam      *>(param);
+    const param::TransferFunc1DParam * p8 = dynamic_cast<const param::TransferFunc1DParam*>(param);
     if (p1 != nullptr) { WriteParamInfo(file, p1); return; }
     if (p2 != nullptr) { WriteParamInfo(file, p2); return; }
     if (p3 != nullptr) { WriteParamInfo(file, p3); return; }
@@ -411,6 +412,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     if (p5 != nullptr) { WriteParamInfo(file, p5); return; }
     if (p6 != nullptr) { WriteParamInfo(file, p6); return; }
     if (p7 != nullptr) { WriteParamInfo(file, p7); return; }
+    if (p8 != nullptr) { WriteParamInfo(file, p8); return; }
     // fallback string:
     file << "              <Type xsi:type=\"String\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
@@ -501,6 +503,16 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
  */
 void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, const param::FilePathParam* param) const {
     file << "              <Type xsi:type=\"FilePath\">" << std::endl;
+    WriteParamCommonTypeInfoe(file, "                ", param);
+    file << "              </Type>" << std::endl;
+}
+
+/*
+ * job::PluginsStateFileGeneratorJob::WriteParamInfo
+ */
+void megamol::core::job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file,
+    param::TransferFunc1DParam const* param) const {
+    file << "              <Type xsi:type=\"TransferFunc1D\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
     file << "              </Type>" << std::endl;
 }

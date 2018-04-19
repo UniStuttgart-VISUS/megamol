@@ -13,6 +13,12 @@ using namespace megamol::core;
 
 /****************************************************************************/
 
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::VertexDataSize[] = {0, 12, 16, 6};
+
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::ColorDataSize[] = {0, 3, 4, 12, 16, 4};
+
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::IDDataSize[] = {0, 4, 8};
+
 
 /*
  * moldyn::SimpleSphericalParticles::SimpleSphericalParticles
@@ -22,7 +28,10 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     , maxColI(1.0f), minColI(0.0f), radius(0.5f), particleType(0)
     , vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0)
     , disabledNullChecks(false), clusterInfos(NULL)
-    , idDataType{IDDATA_NONE}, idPtr{nullptr}, idStride{0} {
+    , idDataType{IDDATA_NONE}, idPtr{nullptr}, idStride{0}
+    , vertexAccessor{new VertexData_None{ }}
+    , colorAccessor{new ColorData_None{ }}
+    , idAccessor{new IDData_None{ }} {
     this->col[0] = 255;
     this->col[1] = 0;
     this->col[2] = 0;
@@ -107,6 +116,7 @@ bool moldyn::SimpleSphericalParticles::operator==(
         && (this->idPtr == rhs.idPtr)
         && (this->idStride == rhs.idStride));
 }
+
 
 /****************************************************************************/
 

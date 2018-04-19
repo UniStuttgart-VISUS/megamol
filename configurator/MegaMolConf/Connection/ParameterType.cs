@@ -16,7 +16,8 @@
         Vector2fParam,
         Vector3fParam,
         Vector4fParam,
-        FlexEnumParam
+        FlexEnumParam,
+        TransferFunc1DParam
     }
 
 }

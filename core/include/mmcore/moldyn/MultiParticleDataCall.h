@@ -33,31 +33,614 @@ namespace moldyn {
      */
     class MEGAMOLCORE_API SimpleSphericalParticles {
     public:
+        class VertexData_Detail {
+        public:
+            virtual float const GetXf() const = 0;
+            virtual float const GetYf() const = 0;
+            virtual float const GetZf() const = 0;
+            virtual float const GetRf() const = 0;
+            virtual short const GetXs() const = 0;
+            virtual short const GetYs() const = 0;
+            virtual short const GetZs() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual std::unique_ptr<VertexData_Detail> Clone() const = 0;
+            virtual ~VertexData_Detail() = default;
+        };
+
+        class VertexData_None : public VertexData_Detail {
+        public:
+            VertexData_None() = default;
+
+            VertexData_None(VertexData_None const& rhs) = default;
+
+            virtual float const GetXf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetYf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetZf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual short const GetXs() const override {
+                return 0;
+            }
+
+            virtual short const GetYs() const override {
+                return 0;
+            }
+
+            virtual short const GetZs() const override {
+                return 0;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { };
+
+            virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                return std::unique_ptr<VertexData_Detail>{new VertexData_None{*this}};
+            }
+        };
+
+        template<class T, bool hasRad>
+        class VertexData_Impl : public VertexData_Detail {
+        public:
+            VertexData_Impl() = default;
+
+            VertexData_Impl(VertexData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual float const GetXf() const override {
+                return GetX<float>();
+            }
+
+            virtual short const GetXs() const override {
+                return GetX<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetX() const {
+                return this->basePtr[0];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetX() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            virtual float const GetYf() const override {
+                return GetY<float>();
+            }
+
+            virtual short const GetYs() const override {
+                return GetY<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetY() const {
+                return this->basePtr[1];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetY() const {
+                return static_cast<R>(this->basePtr[1]);
+            }
+
+            virtual float const GetZf() const override {
+                return GetZ<float>();
+            }
+
+            virtual short const GetZs() const override {
+                return GetZ<short>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetZ() const {
+                return this->basePtr[2];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetZ() const {
+                return static_cast<R>(this->basePtr[2]);
+            }
+
+            virtual float const GetRf() const override {
+                return GetR<hasRad>();
+            }
+
+            template<bool hasRad_v>
+            std::enable_if_t<hasRad_v, float> const GetR() const {
+                return this->basePtr[3];
+            }
+
+            template<bool hasRad_v>
+            std::enable_if_t<!hasRad_v, float> const GetR() const {
+                return 0.0f;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                return std::unique_ptr<VertexData_Detail>{new VertexData_Impl{*this}};
+            }
+        private:
+            T const* basePtr;
+        };
+
+        class VertexData_Base {
+        public:
+            VertexData_Base(std::unique_ptr<VertexData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
+            }
+
+            VertexData_Base(VertexData_Base const& rhs) = delete;
+
+            VertexData_Base(VertexData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(rhs.pimpl)} { }
+
+            VertexData_Base& operator=(VertexData_Base const& rhs) = delete;
+
+            VertexData_Base& operator=(VertexData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+                return *this;
+            }
+
+            float const GetXf() const {
+                return pimpl->GetXf();
+            }
+
+            float const GetYf() const {
+                return pimpl->GetYf();
+            }
+
+            float const GetZf() const {
+                return pimpl->GetZf();
+            }
+
+            float const GetRf() const {
+                return pimpl->GetRf();
+            }
+
+            short const GetXs() const {
+                return pimpl->GetXs();
+            }
+
+            short const GetYs() const {
+                return pimpl->GetYs();
+            }
+
+            short const GetZs() const {
+                return pimpl->GetZs();
+            }
+        private:
+            std::unique_ptr<VertexData_Detail> pimpl;
+        };
+
+        class ColorData_Detail {
+        public:
+            virtual uint8_t const GetRu8() const = 0;
+            virtual uint8_t const GetGu8() const = 0;
+            virtual uint8_t const GetBu8() const = 0;
+            virtual uint8_t const GetAu8() const = 0;
+            virtual float const GetRf() const = 0;
+            virtual float const GetGf() const = 0;
+            virtual float const GetBf() const = 0;
+            virtual float const GetAf() const = 0;
+            virtual float const GetIf() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual std::unique_ptr<ColorData_Detail> Clone() const = 0;
+            virtual ~ColorData_Detail() = default;
+        };
+
+        class ColorData_None : public ColorData_Detail {
+        public:
+            ColorData_None() = default;
+
+            ColorData_None(ColorData_None const& rhs) = default;
+
+            virtual uint8_t const GetRu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetGu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetBu8() const override {
+                return 0;
+            }
+
+            virtual uint8_t const GetAu8() const override {
+                return 0;
+            }
+
+            virtual float const GetRf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetGf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetBf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetAf() const override {
+                return 0.0f;
+            }
+
+            virtual float const GetIf() const override {
+                return 0.0f;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { }
+
+            virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                return std::unique_ptr<ColorData_Detail>{new ColorData_None{*this}};
+            }
+        };
+
+        template<class T, bool hasAlpha, bool isI>
+        class ColorData_Impl : public ColorData_Detail {
+        public:
+            ColorData_Impl() = default;
+
+            ColorData_Impl(ColorData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint8_t const GetRu8() const override {
+                return GetR<uint8_t, isI>();
+            }
+
+            virtual float const GetRf() const override {
+                return GetR<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetR() const {
+                return this->basePtr[0];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetR() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetR() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetGu8() const override {
+                return GetG<uint8_t, isI>();
+            }
+
+            virtual float const GetGf() const override {
+                return GetG<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetG() const {
+                return this->basePtr[1];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetG() const {
+                return static_cast<R>(this->basePtr[1]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetG() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetBu8() const override {
+                return GetB<uint8_t, isI>();
+            }
+
+            virtual float const GetBf() const override {
+                return GetB<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetB() const {
+                return this->basePtr[2];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetB() const {
+                return static_cast<R>(this->basePtr[2]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetB() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual uint8_t const GetAu8() const override {
+                return GetA<uint8_t, hasAlpha, isI>();
+            }
+
+            virtual float const GetAf() const override {
+                return GetA<float, hasAlpha, isI>();
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
+                return this->basePtr[3];
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
+                return static_cast<R>(this->basePtr[3]);
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<!hasAlpha_v && !isI_v, R> const GetA() const {
+                return static_cast<R>(0.0);
+            }
+
+            template<class R, bool hasAlpha_v, bool isI_v>
+            std::enable_if_t<isI_v, R> const GetA() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual float const GetIf() const override {
+                return GetI<float, isI>();
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<std::is_same<T, R>::value && isI_v, R> const GetI() const {
+                return this->basePtr[0];
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!std::is_same<T, R>::value && isI_v, R> const GetI() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            template<class R, bool isI_v>
+            std::enable_if_t<!isI_v, R> const GetI() const {
+                return static_cast<R>(0.0);
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                return std::unique_ptr<ColorData_Detail>{new ColorData_Impl{*this}};
+            }
+        private:
+            T const* basePtr;
+        };
+
+        class ColorData_Base {
+        public:
+            ColorData_Base(std::unique_ptr<ColorData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
+            }
+
+            ColorData_Base(ColorData_Base const& rhs) = delete;
+
+            ColorData_Base(ColorData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(rhs.pimpl)} {
+
+            }
+
+            ColorData_Base& operator=(ColorData_Base const& rhs) = delete;
+
+            ColorData_Base& operator=(ColorData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+                return *this;
+            }
+
+            uint8_t const GetRu8() const {
+                return pimpl->GetRu8();
+            }
+            uint8_t const GetGu8() const {
+                return pimpl->GetGu8();
+            }
+            uint8_t const GetBu8() const {
+                return pimpl->GetBu8();
+            }
+            uint8_t const GetAu8() const {
+                return pimpl->GetAu8();
+            }
+            float const GetRf() const {
+                return pimpl->GetRf();
+            }
+            float const GetGf() const {
+                return pimpl->GetGf();
+            }
+            float const GetBf() const {
+                return pimpl->GetBf();
+            }
+            float const GetAf() const {
+                return pimpl->GetAf();
+            }
+            float const GetIf() const {
+                return pimpl->GetIf();
+            }
+        private:
+            std::unique_ptr<ColorData_Detail> pimpl;
+        };
+
+        class IDData_Detail {
+        public:
+            virtual uint32_t const GetIDu32() const = 0;
+            virtual uint64_t const GetIDu64() const = 0;
+            virtual void SetBasePtr(void const* ptr) = 0;
+            virtual std::unique_ptr<IDData_Detail> Clone() const = 0;
+            virtual ~IDData_Detail() = default;
+        };
+
+        class IDData_None : public IDData_Detail {
+        public:
+            IDData_None() = default;
+
+            IDData_None(IDData_None const& rhs) = default;
+
+            virtual uint32_t const GetIDu32() const override {
+                return 0;
+            }
+
+            virtual uint64_t const GetIDu64() const override {
+                return 0;
+            }
+
+            virtual void SetBasePtr(void const* ptr) override { }
+
+            virtual std::unique_ptr<IDData_Detail> Clone() const override {
+                return std::unique_ptr<IDData_Detail>{new IDData_None{*this}};
+            }
+        };
+
+        template<class T>
+        class IDData_Impl : public IDData_Detail {
+        public:
+            IDData_Impl() = default;
+
+            IDData_Impl(IDData_Impl const& rhs)
+                : basePtr{rhs.basePtr} { }
+
+            virtual uint32_t const GetIDu32() const override {
+                return GetID<uint32_t>();
+            }
+
+            virtual uint64_t const GetIDu64() const override {
+                return GetID<uint64_t>();
+            }
+
+            template<class R>
+            std::enable_if_t<std::is_same<T, R>::value, R> const GetID() const {
+                return this->basePtr[0];
+            }
+
+            template<class R>
+            std::enable_if_t<!std::is_same<T, R>::value, R> const GetID() const {
+                return static_cast<R>(this->basePtr[0]);
+            }
+
+            virtual void SetBasePtr(void const* ptr) override {
+                this->basePtr = reinterpret_cast<T const*>(ptr);
+            }
+
+            virtual std::unique_ptr<IDData_Detail> Clone() const override {
+                return std::unique_ptr<IDData_Detail>{new IDData_Impl{*this}};
+            }
+        private:
+
+            T const* basePtr;
+        };
+
+        class IDData_Base {
+        public:
+            IDData_Base(std::unique_ptr<IDData_Detail>&& impl, void const* basePtr)
+                : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(impl)} {
+                pimpl->SetBasePtr(basePtr);
+            }
+
+            IDData_Base(IDData_Base const& rhs) = delete;
+
+            IDData_Base(IDData_Base&& rhs)
+                : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(rhs.pimpl)} {
+
+            }
+
+            IDData_Base& operator=(IDData_Base const& rhs) = delete;
+
+            IDData_Base& operator=(IDData_Base&& rhs) {
+                pimpl = std::move(rhs.pimpl);
+                return *this;
+            }
+
+            uint32_t const GetIDu32() const {
+                return pimpl->GetIDu32();
+            }
+            uint64_t const GetIDu64() const {
+                return pimpl->GetIDu64();
+            }
+        private:
+
+            std::unique_ptr<IDData_Detail> pimpl;
+        };
+
+        /** Struct holding pointers into data streams for a specific particle */
+        struct particle_t {
+            particle_t(VertexData_Base&& v, ColorData_Base&& c, IDData_Base&& i)
+                : vert{std::forward<VertexData_Base>(v)}
+                , col{std::forward<ColorData_Base>(c)}
+                , id{std::forward<IDData_Base>(i)} { }
+
+            particle_t(particle_t const& rhs) = delete;
+
+            particle_t(particle_t&& rhs)
+                : vert{std::move(rhs.vert)}
+                , col{std::move(rhs.col)}
+                , id{std::move(rhs.id)} { }
+
+            particle_t& operator=(particle_t const& rhs) = delete;
+
+            particle_t& operator=(particle_t&& rhs) {
+                vert = std::move(rhs.vert);
+                col  = std::move(rhs.col);
+                id   = std::move(rhs.id);
+                return *this;
+            }
+
+            VertexData_Base vert;
+            ColorData_Base col;
+            IDData_Base id;
+            /*void const* vertPtr;
+            void const* colPtr;
+            void const* idPtr;*/
+        };
 
         /** possible values for the vertex data */
         enum VertexDataType {
-            VERTDATA_NONE, //< indicates that this object is void
-            VERTDATA_FLOAT_XYZ, //< use global radius
-            VERTDATA_FLOAT_XYZR,
-            VERTDATA_SHORT_XYZ //< quantized positions and global radius
+            VERTDATA_NONE = 0, //< indicates that this object is void
+            VERTDATA_FLOAT_XYZ = 1, //< use global radius
+            VERTDATA_FLOAT_XYZR = 2,
+            VERTDATA_SHORT_XYZ = 3 //< quantized positions and global radius
         };
 
         /** possible values for the colour data */
         enum ColourDataType {
-            COLDATA_NONE, //< use global colour
-            COLDATA_UINT8_RGB,
-            COLDATA_UINT8_RGBA,
-            COLDATA_FLOAT_RGB,
-            COLDATA_FLOAT_RGBA,
-            COLDATA_FLOAT_I //< single float value to be mapped by a transfer function
+            COLDATA_NONE = 0, //< use global colour
+            COLDATA_UINT8_RGB = 1,
+            COLDATA_UINT8_RGBA = 2,
+            COLDATA_FLOAT_RGB = 3,
+            COLDATA_FLOAT_RGBA = 4,
+            COLDATA_FLOAT_I = 5 //< single float value to be mapped by a transfer function
         };
 
         /** possible values for the id data */
         enum IDDataType {
-            IDDATA_NONE,
-            IDDATA_UINT32,
-            IDDATA_UINT64
+            IDDATA_NONE = 0,
+            IDDATA_UINT32 = 1,
+            IDDATA_UINT64 = 2
         };
+
+        /** possible values of accumulated data sizes over all vertex coordinates */
+        static unsigned int VertexDataSize[4];
+
+        /** possible values of accumulated data sizes over all color elements */
+        static unsigned int ColorDataSize[6];
+
+        /** possible values of data sizes of the id */
+        static unsigned int IDDataSize[3];
 
         /**
          * Ctor
@@ -101,7 +684,7 @@ namespace moldyn {
          * @return The colour data stride in byte.
          */
         inline unsigned int GetColourDataStride(void) const {
-            return this->colStride;
+            return this->colStride == ColorDataSize[this->colDataType] ? 0 : this->colStride;
         }
 
         /**
@@ -184,7 +767,7 @@ namespace moldyn {
          * @return The vertex data stride in byte.
          */
         inline unsigned int GetVertexDataStride(void) const {
-            return this->vertStride;
+            return this->vertStride == VertexDataSize[this->vertDataType] ? 0 : this->vertStride;
         }
 
         /**
@@ -212,7 +795,7 @@ namespace moldyn {
          * @return The id data stride in byte.
          */
         inline unsigned int GetIDDataStride(void) const {
-            return this->idStride;
+            return this->idStride == IDDataSize[this->idDataType] ? 0 : this->idStride;
         }
 
         /**
@@ -228,7 +811,28 @@ namespace moldyn {
         //    ASSERT((p != NULL) || (t == COLDATA_NONE));
             this->colDataType = t;
             this->colPtr = p;
-            this->colStride = s;
+            this->colStride = s == 0 ? ColorDataSize[t] : s;
+
+            switch (t) {
+            case COLDATA_UINT8_RGB:
+                this->colorAccessor.reset(new ColorData_Impl<uint8_t, false, false>{});
+                break;
+            case COLDATA_UINT8_RGBA:
+                this->colorAccessor.reset(new ColorData_Impl<uint8_t, true, false>{ });
+                break;
+            case COLDATA_FLOAT_RGB:
+                this->colorAccessor.reset(new ColorData_Impl<float, false, false>{ });
+                break;
+            case COLDATA_FLOAT_RGBA:
+                this->colorAccessor.reset(new ColorData_Impl<float, true, false>{ });
+                break;
+            case COLDATA_FLOAT_I:
+                this->colorAccessor.reset(new ColorData_Impl<float, false, true>{ });
+                break;
+            case COLDATA_NONE:
+            default:
+                this->colorAccessor.reset(new ColorData_None{});
+            }
         }
 
         /**
@@ -249,9 +853,11 @@ namespace moldyn {
          */
         void SetCount(UINT64 cnt) {
             this->colDataType = COLDATA_NONE;
-            this->colPtr = NULL; // DO NOT DELETE
+            this->colPtr = nullptr; // DO NOT DELETE
             this->vertDataType = VERTDATA_NONE;
-            this->vertPtr = NULL; // DO NOT DELETE
+            this->vertPtr = nullptr; // DO NOT DELETE
+            this->idDataType = IDDATA_NONE;
+            this->idPtr = nullptr; // DO NOT DELETE
 
             this->count = cnt;
         }
@@ -303,7 +909,22 @@ namespace moldyn {
             ASSERT(this->disabledNullChecks || (p != NULL) || (t == VERTDATA_NONE));
             this->vertDataType = t;
             this->vertPtr = p;
-            this->vertStride = s;
+            this->vertStride = s == 0 ? VertexDataSize[t] : s;
+
+            switch (t) {
+            case VERTDATA_FLOAT_XYZ:
+                this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
+                break;
+            case VERTDATA_FLOAT_XYZR:
+                this->vertexAccessor.reset(new VertexData_Impl<float, true>{});
+                break;
+            case VERTDATA_SHORT_XYZ:
+                this->vertexAccessor.reset(new VertexData_Impl<short, false>{});
+                break;
+            case VERTDATA_NONE:
+            default:
+                this->vertexAccessor.reset(new VertexData_None{});
+            }
         }
 
         /**
@@ -319,7 +940,28 @@ namespace moldyn {
             ASSERT(this->disabledNullChecks || (p != NULL) || (t == IDDATA_NONE));
             this->idDataType = t;
             this->idPtr = p;
-            this->idStride = s;
+            this->idStride = s == 0 ? IDDataSize[t] : s;
+
+            switch (t) {
+            case IDDATA_UINT32:
+                this->idAccessor.reset(new IDData_Impl<uint32_t>{ });
+                break;
+            case IDDATA_UINT64:
+                this->idAccessor.reset(new IDData_Impl<uint64_t>{});
+                break;
+            case IDDATA_NONE:
+            default:
+                this->idAccessor.reset(new IDData_None{});
+            }
+        }
+
+        /**
+         * Reports existance of IDs.
+         *
+         * @return true, if the particles have IDs.
+         */
+        inline bool HasID() const {
+            return this->idDataType != IDDATA_NONE;
         }
 
         /**
@@ -339,6 +981,41 @@ namespace moldyn {
          * @return 'true' if 'this' and 'rhs' are equal.
          */
         bool operator==(const SimpleSphericalParticles& rhs) const;
+
+        /**
+         * Access particle at index without range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         */
+        inline particle_t operator[](size_t idx) const noexcept {
+            return particle_t{
+                VertexData_Base{this->vertexAccessor->Clone(),
+                this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr},
+                ColorData_Base{this->colorAccessor->Clone(),
+                this->colPtr != nullptr ? static_cast<char const*>(this->colPtr) + idx * this->colStride : nullptr},
+                IDData_Base{this->idAccessor->Clone(),
+                this->idPtr != nullptr ? static_cast<char const*>(this->idPtr) + idx * this->idStride : nullptr}
+            };
+        }
+
+        /**
+         * Access particle at index with range check.
+         *
+         * @param idx Index of particle in the streams.
+         *
+         * @return Struct of pointers to positions of the particle in the streams.
+         *
+         * @throws std::out_of_range if idx is larger than particle count.
+         */
+        inline particle_t const& At(size_t idx) const {
+            if (idx < this->count) {
+                return this->operator[](idx);
+            } else {
+                throw std::out_of_range("Idx larger than particle count.");
+            }
+        }
 
         /**
          * Disable NULL-checks in case we have an OpenGL-VAO
@@ -481,6 +1158,15 @@ namespace moldyn {
 
         /** The particle ID stride */
         unsigned int idStride;
+
+        /** Polymorphic vertex access object */
+        std::unique_ptr<VertexData_Detail> vertexAccessor;
+
+        /** Polymorphic color access object */
+        std::unique_ptr<ColorData_Detail> colorAccessor;
+
+        /** Polymorphic id access object */
+        std::unique_ptr<IDData_Detail> idAccessor;
     };
 
 

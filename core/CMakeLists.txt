@@ -31,7 +31,7 @@ if(BUILD_CORE)
   include(ExternalProject)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
-  
+
   set(ZMQ_VER "4_2_2")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})

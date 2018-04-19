@@ -30,6 +30,8 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
         numNeighborSlot("numNeighbors", "how many neighbors to collect"),
         searchTypeSlot("searchType", "num of neighbors or radius"),
         particleNumberSlot("idx", "the particle to track"),
+        toggleNeighborOutputSlot("neighborhoodOutput", "Toogle output of neighborhood only"),
+        toggleDriftMagOutputSlot("driftMagOutput", "Toogle output of drift mag as intensity (defaults to distance)"),
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         datahash(0), lastTime(-1), newColors(), maxDist(0),
@@ -49,6 +51,12 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
 
     this->numNeighborSlot.SetParameter(new core::param::IntParam(10));
     this->MakeSlotAvailable(&this->numNeighborSlot);
+
+    this->toggleNeighborOutputSlot.SetParameter(new megamol::core::param::BoolParam("true"));
+    this->MakeSlotAvailable(&this->toggleNeighborOutputSlot);
+
+    this->toggleDriftMagOutputSlot.SetParameter(new megamol::core::param::BoolParam("true"));
+    this->MakeSlotAvailable(&this->toggleDriftMagOutputSlot);
 
     core::param::EnumParam *st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
     st->SetTypePair(searchTypeEnum::RADIUS, "Radius");
@@ -210,7 +218,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
     if (this->radiusSlot.IsDirty() || this->particleNumberSlot.IsDirty()
         || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
-        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()) {
+        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty()
+        || this->toggleNeighborOutputSlot.IsDirty() || this->toggleDriftMagOutputSlot.IsDirty()) {
 
         if (thePart >= 0) {
 
@@ -250,6 +259,9 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
             ret_matches.clear();
             ret_matches.reserve(100);
+
+            this->matchData.clear();
+            this->matchData.reserve(300);
 
             for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
                 for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
@@ -309,9 +321,58 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             }
             std::fill(newColors.begin(), newColors.end(), maxDist);
 
-            for (size_t i = 0; i < num_matches; ++i) {
-                this->newColors[ret_matches[i].first] = ret_matches[i].second;
+            if (this->toggleDriftMagOutputSlot.Param<megamol::core::param::BoolParam>()->Value() && inDpdc != nullptr) {
+                maxDist = 0.0f;
             }
+
+            for (size_t i = 0; i < num_matches; ++i) {
+                float col_i{ret_matches[i].second};
+
+                const float *vptr;
+                const float *dptr;
+
+                if (inDpdc != nullptr) {
+                    vptr = myDirPts->get_position(ret_matches[i].first);
+                    dptr = myDirPts->get_velocity(ret_matches[i].first);
+                    if (this->toggleDriftMagOutputSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+                        col_i = std::sqrtf(dptr[0] * dptr[0] + dptr[1] * dptr[1] + dptr[2] * dptr[2]);
+                        if (maxDist < col_i) maxDist = col_i;
+                    }
+                } else {
+                    vptr = myPts->get_position(ret_matches[i].first);
+                }
+                this->matchData.push_back(vptr[0]);
+                this->matchData.push_back(vptr[1]);
+                this->matchData.push_back(vptr[2]);
+                this->matchData.push_back(col_i);
+                if (inDpdc != nullptr) {
+                    this->matchData.push_back(dptr[0]);
+                    this->matchData.push_back(dptr[1]);
+                    this->matchData.push_back(dptr[2]);
+                }
+                this->newColors[ret_matches[i].first] = col_i;
+            }
+
+            //maxDist = *std::max_element(this->newColors.begin(), this->newColors.end());
+
+            /*for (size_t i = 0; i < num_matches; ++i) {
+                const float *vptr;
+                const float *dptr;
+                if (inDpdc != nullptr) {
+                    vptr = myDirPts->get_position(el.first);
+                    dptr = myDirPts->get_velocity(el.first);
+                } else {
+                    vptr = myPts->get_position(el.first);
+                }
+                this->matchData.push_back(vptr[0]);
+                this->matchData.push_back(vptr[1]);
+                this->matchData.push_back(vptr[2]);
+                if (inDpdc != nullptr) {
+                    this->matchData.push_back(dptr[0]);
+                    this->matchData.push_back(dptr[1]);
+                    this->matchData.push_back(dptr[2]);
+                }
+            }*/
         } else {
         // reset all colors
             std::fill(newColors.begin(), newColors.end(), 0.0f);
@@ -323,55 +384,79 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         this->cyclZSlot.ResetDirty();
         this->numNeighborSlot.ResetDirty();
         this->searchTypeSlot.ResetDirty();
+        this->toggleNeighborOutputSlot.ResetDirty();
+        this->toggleDriftMagOutputSlot.ResetDirty();
     }
     in->SetUnlocker(nullptr, false);
     in->Unlock();
 
     size_t allpartcnt = 0;
-    if (outMpdc != nullptr) {
-        outMpdc->SetParticleListCount(plc);
-        for (unsigned int i = 0; i < plc; ++i) {
-            if (!isListOK(in, i)) {
-                outMpdc->AccessParticles(i).SetCount(0);
-                continue;
+    if (!this->toggleNeighborOutputSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+        if (outMpdc != nullptr) {
+            outMpdc->SetParticleListCount(plc);
+            for (unsigned int i = 0; i < plc; ++i) {
+                if (!isListOK(in, i)) {
+                    outMpdc->AccessParticles(i).SetCount(0);
+                    continue;
+                }
+                auto theCount = getListCount(in, i);
+                outMpdc->AccessParticles(i).SetCount(theCount);
+                if (inMpdc != nullptr) {
+                    outMpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
+                        inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
+                } else {
+                    outMpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
+                        inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
+                }
+                outMpdc->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    this->newColors.data() + allpartcnt, 0);
+                outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
+                allpartcnt += theCount;
             }
-            auto theCount = getListCount(in, i);
-            outMpdc->AccessParticles(i).SetCount(theCount);
-            if (inMpdc != nullptr) {
-                outMpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
-                    inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
-            } else {
-                outMpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
-                    inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
+        } else if (outDpdc != nullptr) {
+            outDpdc->SetParticleListCount(plc);
+            for (unsigned int i = 0; i < plc; ++i) {
+                if (!isListOK(in, i)) {
+                    outDpdc->AccessParticles(i).SetCount(0);
+                    continue;
+                }
+                auto theCount = getListCount(in, i);
+                outDpdc->AccessParticles(i).SetCount(theCount);
+                if (inMpdc != nullptr) {
+                    outDpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
+                        inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
+                    outDpdc->AccessParticles(i).SetDirData(DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_NONE, nullptr, 0);
+                } else {
+                    outDpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
+                        inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
+                    outDpdc->AccessParticles(i).SetDirData(inDpdc->AccessParticles(i).GetDirDataType(),
+                        inDpdc->AccessParticles(i).GetDirData(), inDpdc->AccessParticles(i).GetDirDataStride());
+                }
+                outDpdc->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    this->newColors.data() + allpartcnt, 0);
+                outDpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
+                allpartcnt += theCount;
             }
-            outMpdc->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
-            outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
-            allpartcnt += theCount;
         }
-    } else if (outDpdc != nullptr) {
-        outDpdc->SetParticleListCount(plc);
-        for (unsigned int i = 0; i < plc; ++i) {
-            if (!isListOK(in, i)) {
-                outDpdc->AccessParticles(i).SetCount(0);
-                continue;
-            }
-            auto theCount = getListCount(in, i);
-            outDpdc->AccessParticles(i).SetCount(theCount);
-            if (inMpdc != nullptr) {
-                outDpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(), 
-                    inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
-                outDpdc->AccessParticles(i).SetDirData(DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_NONE, nullptr, 0);
-            } else {
-                outDpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
-                    inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
-                outDpdc->AccessParticles(i).SetDirData(inDpdc->AccessParticles(i).GetDirDataType(),
-                    inDpdc->AccessParticles(i).GetDirData(), inDpdc->AccessParticles(i).GetDirDataStride());
-            }
-            outDpdc->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
-            outDpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
-            allpartcnt += theCount;
+    } else {
+        if (outMpdc != nullptr) {
+            outMpdc->SetParticleListCount(1);
+            outMpdc->AccessParticles(0).SetCount(this->matchData.size() / 4);
+            outMpdc->AccessParticles(0).SetVertexData(megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ,
+                this->matchData.data(), 4*sizeof(float));
+            outMpdc->AccessParticles(0).SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
+                this->matchData.data()+3, 4 * sizeof(float));
+            outMpdc->AccessParticles(0).SetColourMapIndexValues(0.0f, maxDist);
+        } else if (outDpdc != nullptr) {
+            outDpdc->SetParticleListCount(1);
+            outDpdc->AccessParticles(0).SetCount(this->matchData.size() / 7);
+            outDpdc->AccessParticles(0).SetVertexData(megamol::core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZ,
+                this->matchData.data(), 7*sizeof(float));
+            outDpdc->AccessParticles(0).SetColourData(megamol::core::moldyn::DirectionalParticles::COLDATA_FLOAT_I,
+                this->matchData.data() + 3, 7 * sizeof(float));
+            outDpdc->AccessParticles(0).SetDirData(megamol::core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ,
+                this->matchData.data() + 4, 7 * sizeof(float));
+            outDpdc->AccessParticles(0).SetColourMapIndexValues(0.0f, maxDist);
         }
     }
     out->SetUnlocker(in->GetUnlocker());

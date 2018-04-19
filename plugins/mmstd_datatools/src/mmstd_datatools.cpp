@@ -65,7 +65,15 @@
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
+#include "TrajectoryFactory.h"
+#include "io/TrajectoryDataSource.h"
+#include "DensityProfile.h"
+#include "ParticleSlice.h"
+#include "ParticleVelocitiesDirAnalyzer.h"
+#include "LinesToFloatTable.h"
+#include "floattable/CSVDataWriter.h"
 #include "floattable/FloatTableToLines.h"
+#include  "TrajectoryAnimator.h"
 
 
 /*
@@ -195,6 +203,14 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TrajectoryFactory>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TrajectoryDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DensityProfile>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSlice>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LinesToFloatTable>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TrajectoryAnimator>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

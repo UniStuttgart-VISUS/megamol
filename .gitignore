@@ -1,12 +1,15 @@
 build/**/*
 build-intel/**/*
+build_intel/**/*
 bin/**/*
 include/**/*
 external/**/*
 share/**/*
 stage/**/*
+stage_intel/**/*
 lib/**/*
 issues/**/*
+mmprjs/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/
