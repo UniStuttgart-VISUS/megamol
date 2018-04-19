@@ -611,7 +611,7 @@ namespace utility {
         bool loadFontShader(megamol::core::CoreInstance *core, vislib::StringA vert, vislib::StringA frag);
 
         /** Load file into outData buffer and return size. */
-        SIZE_T loadFile(vislib::StringA filename, BYTE **outData);
+        size_t loadFile(vislib::StringA filename, BYTE **outData);
 
         /**
         * Answer the number of lines in the glyph run
