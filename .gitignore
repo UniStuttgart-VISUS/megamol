@@ -23,3 +23,7 @@ build-linux/
 .gitmodules
 
 *.orig
+
+utils/MMPLD/mmpld\.bat
+
+utils/MMPLD/mmpld\.reg

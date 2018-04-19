@@ -292,6 +292,7 @@ cluster::simple::Server::Server(void) : Module(),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
         serverNameSlot("server::Name", "The name for this server"),
         singleClientSlot("server::SingleClient", "Restrict the server to a single client"),
+        prohibitUDPEchoSlot("server::noEcho", "Prohibit echoing of UDP messages via broadcast (without MPI, only one renderer can work!)"),
         serverThread(), clientsLock(), clients(),
         camUpdateThread(&Server::cameraUpdateThread), camUpdateThreadForce(false) {
     vislib::net::Socket::Startup();
@@ -348,6 +349,9 @@ cluster::simple::Server::Server(void) : Module(),
 
     this->singleClientSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->singleClientSlot);
+
+    this->prohibitUDPEchoSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->prohibitUDPEchoSlot);
 
     this->serverThread.AddListener(this);
 }
@@ -604,13 +608,18 @@ void cluster::simple::Server::sendUDPDiagram(cluster::simple::Datagram& datagram
         }
         datagram.cntEchoed = 0;
         if (this->udpTarget.GetIPAddress4()[3] != 0) { // assume it's not a broadcast address
-            datagram.cntEchoed++;
+            if (this->prohibitUDPEchoSlot.Param<core::param::BoolParam>()->Value()) {
+                vislib::sys::Log::DefaultLog.WriteInfo("SCS: UDP echo broadcast prohibited");
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo("SCS: requesting UDP echo");
+                datagram.cntEchoed++;
+            }
         }
         if (this->udpTarget.GetPort() != 0) {
             this->udpSocket.Send(this->udpTarget, &datagram, sizeof(cluster::simple::Datagram));
             VLTRACE(VISLIB_TRCELVL_INFO, "Server >>> UDP Datagram sent to %s\n", this->udpTarget.ToStringA().PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn("Not udp target set to send the message");
+            vislib::sys::Log::DefaultLog.WriteWarn("SCS: No udp target set to send the message");
         }
 
     } catch(vislib::Exception ex) {
