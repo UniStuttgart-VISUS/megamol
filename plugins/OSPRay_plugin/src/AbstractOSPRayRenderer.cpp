@@ -16,12 +16,9 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-
-
 
 #include <stdio.h>
 
@@ -780,6 +777,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
+            case geometryTypeEnum::OSPRAY_API_GEOMETRY:
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
+                break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     returnValue = false;
@@ -951,38 +955,35 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
+                {
+                    geo.push_back(ospNewGeometry("streamlines"));
 
-                geo.push_back(ospNewGeometry("streamlines"));
+                    osp::vec3fa* data = new osp::vec3fa[element.vertexData->size() / 3];
 
-                osp::vec3fa* data;
-                data = new osp::vec3fa[element.vertexData->size() / 3];
+                    // fill aligned array with vertex data
+                    for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
+                        data[i].x = element.vertexData->data()[3 * i + 0];
+                        data[i].y = element.vertexData->data()[3 * i + 1];
+                        data[i].z = element.vertexData->data()[3 * i + 2];
+                    }
 
-                // fill aligned array with vertex data
-                for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
-                    data[i].x = element.vertexData->data()[3 * i + 0];
-                    data[i].y = element.vertexData->data()[3 * i + 1];
-                    data[i].z = element.vertexData->data()[3 * i + 2];
-                    data[i].a = 64;
-                    data[i].w = 0;
-                    data[i].u = 16;
+
+                    vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data, OSP_DATA_SHARED_BUFFER);
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "vertex", vertexData);
+
+                    indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
+                    ospCommit(indexData);
+                    ospSetData(geo.back(), "index", indexData);
+
+                    if (element.colorData->size() > 0) {
+                        colorData = ospNewData(element.colorData->size() / element.colorLength, OSP_FLOAT4, element.colorData->data(), OSP_DATA_SHARED_BUFFER);
+                        ospCommit(colorData);
+                        ospSetData(geo.back(), "vertex.color", colorData);
+                    }
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
                 }
-
-                vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data);
-                ospCommit(vertexData);
-                ospSetData(geo.back(), "vertex", vertexData);
-
-                indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data());
-                ospCommit(indexData);
-                ospSetData(geo.back(), "index", indexData);
-
-                if (element.colorData->size() > 0) {
-                    colorData = ospNewData(element.colorData->size() / 4, OSP_FLOAT4, element.colorData->data());
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
-                ospSet1f(geo.back(), "radius", element.globalRadius);
-
                 break;
             case geometryTypeEnum::CYLINDERS:
                 break;
@@ -1012,46 +1013,56 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::VOLUME:
-            if (element.voxels == NULL) {
-                returnValue = false;
+
+            if (element.volumeType == volumeTypeEnum::OSPRAY_API_VOLUME) {
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
                 break;
-            }
-
-            vol.push_back(ospNewVolume("shared_structured_volume"));
-
-            ospSetString(vol.back(), "voxelType", "float");
-            // scaling properties of the volume
-            ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
-            ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-            ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
-
-            // add data 
-            voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
-            ospCommit(voxels);
-            ospSetData(vol.back(), "voxelData", voxels);
-
-            // ClippingBox
-
-            if (element.clippingBoxActive) {
-                ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
-                ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
             } else {
-                ospSetVec3f(vol.back(), "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
-                ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+
+                if (element.voxels == NULL) {
+                    returnValue = false;
+                    break;
+                }
+
+                vol.push_back(ospNewVolume("shared_structured_volume"));
+
+                ospSetString(vol.back(), "voxelType", "float");
+                // scaling properties of the volume
+                ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
+                ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+
+                // add data 
+                voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(vol.back(), "voxelData", voxels);
+
+                // ClippingBox
+
+                if (element.clippingBoxActive) {
+                    ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
+                    ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
+                } else {
+                    ospSetVec3f(vol.back(), "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
+                    ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+                }
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+                OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+
+                ospCommit(tf);
+
+                ospSetObject(vol.back(), "transferFunction", tf);
+                ospCommit(vol.back());
             }
-
-            OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-            OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
-            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
-            ospSetData(tf, "colors", tf_rgb);
-            ospSetData(tf, "opacities", tf_opa);
-
-            ospCommit(tf);
-
-            ospSetObject(vol.back(), "transferFunction", tf);
-            ospCommit(vol.back());
-
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());

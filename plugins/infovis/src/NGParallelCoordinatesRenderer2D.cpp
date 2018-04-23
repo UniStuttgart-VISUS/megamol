@@ -777,8 +777,8 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
             float x = this->marginX + this->axisDistance * c;
             float fontsize = this->axisDistance / 10.0f;
 #if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             bottom *= (maximums[realCol] - minimums[realCol]);
@@ -786,10 +786,10 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             top *= (maximums[realCol] - minimums[realCol]);
             top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, false, std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false, std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, false, names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
 #endif
 

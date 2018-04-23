@@ -456,6 +456,8 @@ namespace simple {
         /** Restricts the server to a single client at a time. */
         param::ParamSlot singleClientSlot;
 
+        param::ParamSlot prohibitUDPEchoSlot;
+
         /** The server thread */
         vislib::sys::RunnableThread<vislib::net::CommServer> serverThread;
 
