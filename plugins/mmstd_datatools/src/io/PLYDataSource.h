@@ -73,6 +73,12 @@ namespace io {
         bool getExtentCallback(core::Call& caller);
 
         core::param::ParamSlot filename;
+
+        core::param::ParamSlot xElemSlot;
+        core::param::ParamSlot yElemSlot;
+        core::param::ParamSlot zElemSlot;
+        core::param::ParamSlot iElemSlot;
+
         core::CalleeSlot getData;
 
         vislib::sys::File *file;

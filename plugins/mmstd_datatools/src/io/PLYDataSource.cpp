@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "io/PLYDataSource.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include <fstream>
 #include "tinyply.h"
 
@@ -16,14 +17,27 @@ using namespace megamol::stdplugin::datatools;
 
 
 io::PLYDataSource::PLYDataSource(void) : core::Module(),
-        filename("filename", "The path to the MMPLD file to load."),
+        filename("filename", "The path to the PLY file to load."),
+        xElemSlot("x element", "which element to get the x position from"),
+        yElemSlot("y element", "which element to get the y position from"),
+        zElemSlot("z element", "which element to get the z position from"),
+        iElemSlot("i element", "which element to get the intensity from"),
         getData("getdata", "Slot to request data from this data source."),
         file(nullptr), data_hash(0) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&PLYDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
-    
+
+    this->xElemSlot.SetParameter(new core::param::FlexEnumParam("undef"));
+    this->MakeSlotAvailable(&this->xElemSlot);
+    this->yElemSlot.SetParameter(new core::param::FlexEnumParam("undef"));
+    this->MakeSlotAvailable(&this->yElemSlot);
+    this->zElemSlot.SetParameter(new core::param::FlexEnumParam("undef"));
+    this->MakeSlotAvailable(&this->zElemSlot);
+    this->iElemSlot.SetParameter(new core::param::FlexEnumParam("undef"));
+    this->MakeSlotAvailable(&this->iElemSlot);
+
     this->getData.SetCallback("GraphDataCall", "GetData", &PLYDataSource::getDataCallback);
     this->getData.SetCallback("GraphDataCall", "GetExtent", &PLYDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
@@ -58,10 +72,16 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     std::ifstream instream(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".", vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".", vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         // TODO ?
         return true;
     }
+
+    this->xElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+    this->yElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+    this->zElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+    this->iElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+
     tinyply::PlyFile plf;
     plf.parse_header(instream);
     for (auto e: plf.get_elements()) {
@@ -70,7 +90,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "    property: %s %s", p.name.c_str(), tinyply::PropertyTable[p.propertyType].str.c_str());
         }
     }
-    
+
 //    using vislib::sys::Log;
 //    using vislib::sys::File;
 //    this->resetFrameCache();
