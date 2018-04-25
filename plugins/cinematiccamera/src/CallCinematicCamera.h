@@ -120,7 +120,7 @@ namespace megamol {
 
             // SELECTED KEYFRAME 
             inline void setSelectedKeyframeTime(float t) { 
-                this->selectedKeyframe.setAnimTime(t);
+                this->selectedKeyframe.SetAnimTime(t);
             }
             inline void setSelectedKeyframe(Keyframe k) {
                 this->selectedKeyframe = k;

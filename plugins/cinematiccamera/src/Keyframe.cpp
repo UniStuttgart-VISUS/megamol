@@ -43,9 +43,9 @@ Keyframe::~Keyframe() {
 
 
 /*
-* Keyframe::serialise
+* Keyframe::Serialise
 */
-void Keyframe::serialise(vislib::Serialiser& serialiser) {
+void Keyframe::Serialise(vislib::Serialiser& serialiser) {
     serialiser.Serialise((float)this->animTime, "AnimationTime");
     serialiser.Serialise((float)this->simTime, "SimulationTime");
     serialiser.Serialise((float)this->camera.apertureangle, "ApertureAngle");
@@ -62,9 +62,9 @@ void Keyframe::serialise(vislib::Serialiser& serialiser) {
 
 
 /*
-* Keyframe::deserialise
+* Keyframe::Deserialise
 */
-void Keyframe::deserialise(vislib::Serialiser& serialiser) {
+void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
     float f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11;
     serialiser.Deserialise(f0, "AnimationTime");
     serialiser.Deserialise(f1, "SimulationTime");

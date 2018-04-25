@@ -136,8 +136,10 @@ namespace megamol {
                    Keyframe       prevKeyframe;
             };
 
+            /** */
             vislib::Array<UndoAction> undoQueue;
 
+            /** */
             int undoQueueIndex;
 
             /**********************************************************************

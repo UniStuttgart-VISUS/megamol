@@ -234,7 +234,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (this->moveRightFrame.IsDirty()) {
         this->moveRightFrame.ResetDirty();
         // Set selected animation time to right animation time frame
-        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t += fpsFrac;
@@ -249,7 +249,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (this->moveLeftFrame.IsDirty()) {
         this->moveLeftFrame.ResetDirty();
         // Set selected animation time to left animation time frame
-        float at = ccc->getSelectedKeyframe().getAnimTime();
+        float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t -= fpsFrac;
@@ -472,24 +472,24 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glBegin(GL_LINE_STRIP);
             // First vertex
             x = this->animScaleOffset;
-            y = this->simScaleOffset + (*keyframes).First().getSimTime()  * this->simLenTimeFrac;
+            y = this->simScaleOffset + (*keyframes).First().GetSimTime()  * this->simLenTimeFrac;
             glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
             for (unsigned int i = 0; i < keyframes->Count(); i++) {
-                x = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
-                y = this->simScaleOffset  + (*keyframes)[i].getSimTime()  * this->simLenTimeFrac;
+                x = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
+                y = this->simScaleOffset  + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
                 glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
             }
             // Last vertex
             x = this->animScaleOffset + this->animTotalTime * this->animLenTimeFrac;
-            y = this->simScaleOffset + (*keyframes).Last().getSimTime()  * this->simLenTimeFrac;
+            y = this->simScaleOffset + (*keyframes).Last().GetSimTime()  * this->simLenTimeFrac;
             glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
         glEnd();
     }
 
     // Draw markers for existing keyframes in array ---------------------------
     for (unsigned int i = 0; i < keyframes->Count(); i++) {
-        x = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
-        y = this->simScaleOffset + (*keyframes)[i].getSimTime()  * this->simLenTimeFrac;
+        x = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
+        y = this->simScaleOffset + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
         if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
             if ((*keyframes)[i] == skf) {
                 glColor4fv(skColor);
@@ -502,8 +502,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw interpolated selected keyframe marker -----------------------------
-    x = this->animScaleOffset + skf.getAnimTime() * this->animLenTimeFrac;
-    y = this->simScaleOffset + skf.getSimTime()  * this->simLenTimeFrac;
+    x = this->animScaleOffset + skf.GetAnimTime() * this->animLenTimeFrac;
+    y = this->simScaleOffset + skf.GetSimTime()  * this->simLenTimeFrac;
     if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
         float tmpMarkerSize = this->keyfMarkSize;
         this->keyfMarkSize = this->keyfMarkSize*0.75f;
@@ -521,8 +521,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw dragged keyframe --------------------------------------------------
     if (this->dragDropActive) {
-        x = this->animScaleOffset + this->dragDropKeyframe.getAnimTime() * this->animLenTimeFrac;
-        y = this->simScaleOffset + this->dragDropKeyframe.getSimTime()  * this->simLenTimeFrac;
+        x = this->animScaleOffset + this->dragDropKeyframe.GetAnimTime() * this->animLenTimeFrac;
+        y = this->simScaleOffset + this->dragDropKeyframe.GetSimTime()  * this->simLenTimeFrac;
         if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
             glColor4fv(dkmColor);
             this->DrawKeyframeMarker(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
@@ -575,13 +575,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // selected keyframe info
     glColor4fv(fgColor);
-    float aT = skf.getAnimTime();
-    float aF = skf.getAnimTime() * (float)(this->fps);;
-    float sT = skf.getSimTime()*this->simTotalTime;
+    float aT = skf.GetAnimTime();
+    float aF = skf.GetAnimTime() * (float)(this->fps);;
+    float sT = skf.GetSimTime()*this->simTotalTime;
     if (this->dragDropActive) {
-        aT = this->dragDropKeyframe.getAnimTime();
-        aF = this->dragDropKeyframe.getAnimTime() * (float)(this->fps);
-        sT = this->dragDropKeyframe.getSimTime()*this->simTotalTime;
+        aT = this->dragDropKeyframe.GetAnimTime();
+        aF = this->dragDropKeyframe.GetAnimTime() * (float)(this->fps);
+        sT = this->dragDropKeyframe.GetSimTime()*this->simTotalTime;
     }
 
     float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
@@ -692,23 +692,23 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 		//Check all keyframes if they are hit
         bool hit = false;
 		for (unsigned int i = 0; i < keyframes->Count(); i++){
-            animAxisX = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
+            animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                 posX = this->axisStartPos.X() + animAxisX;
                 if ((x < (posX + offset)) && (x > (posX - offset))) {
                     // If another keyframe is already hit, check which keyframe is closer to mouse position
                     if (hit) { 
                         float deltaX = vislib::math::Abs(posX - x);
-                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().getAnimTime() * this->animLenTimeFrac;
+                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
                         if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                             posX = this->axisStartPos.X() + animAxisX;
                             if (deltaX < vislib::math::Abs(posX - x)) {
-                                ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                             }
                         }
                     }
                     else {
-                        ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                     }
                     hit = true;
                 }
@@ -738,25 +738,25 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 
         bool hit = false;
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            animAxisX = this->animScaleOffset + (*keyframes)[i].getAnimTime() * this->animLenTimeFrac;
+            animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                 posX = this->axisStartPos.X() + animAxisX;
                 if ((x < (posX + (this->keyfMarkSize / 2.0f))) && (x >(posX - (this->keyfMarkSize / 2.0f)))) {
                     // If another keyframe is already hit, check which keyframe is closer to mouse position
                     if (hit) {
                         float deltaX = vislib::math::Abs(posX - x);
-                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().getAnimTime() * this->animLenTimeFrac;
+                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
                         if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                             posX = this->axisStartPos.X() + animAxisX;
                             if (deltaX < vislib::math::Abs(posX - x)) {
                                 this->dragDropKeyframe = (*keyframes)[i];
-                                ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                             }
                         }
                     }
                     else {
                         this->dragDropKeyframe = (*keyframes)[i];
-                        ccc->setSelectedKeyframeTime((*keyframes)[i].getAnimTime());
+                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                     }
                     hit = true;
                 }
@@ -782,24 +782,24 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                 }
             }
             else if (this->dragDropAxis == 1) { // animation axis - X
-                float at = this->dragDropKeyframe.getAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                float at = this->dragDropKeyframe.GetAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
                 if (x < this->axisStartPos.X()) {
                     at = 0.0f;
                 }
                 if (x > this->animAxisEndPos.X()) {
                     at = this->animTotalTime;
                 }
-                this->dragDropKeyframe.setAnimTime(at);
+                this->dragDropKeyframe.SetAnimTime(at);
             }
             else if (this->dragDropAxis == 2) { // simulation axis - Y
-                float st = this->dragDropKeyframe.getSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
+                float st = this->dragDropKeyframe.GetSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
                 if (y < this->axisStartPos.Y()) {
                     st = 0.0f;
                 }
                 if (y > this->simAxisEndPos.Y()) {
                     st = 1.0f;
                 }
-                this->dragDropKeyframe.setSimTime(st);
+                this->dragDropKeyframe.SetSimTime(st);
             }
             this->lastMousePos.Set(x, y);
         }
@@ -811,24 +811,24 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             float at = 0.0f;
             float st = 0.0f;
             if (this->dragDropAxis == 1) { // animation axis - X
-                at = this->dragDropKeyframe.getAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                at = this->dragDropKeyframe.GetAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
                 if (x <= this->axisStartPos.X()) {
                     at = 0.0f;
                 }
                 if (x >= this->animAxisEndPos.X()) {
                     at = this->animTotalTime;
                 }
-                st = this->dragDropKeyframe.getSimTime();
+                st = this->dragDropKeyframe.GetSimTime();
             }
             else if (this->dragDropAxis == 2) { // simulation axis - Y
-                st = this->dragDropKeyframe.getSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
+                st = this->dragDropKeyframe.GetSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
                 if (y < this->axisStartPos.Y()) {
                     st = 0.0f;
                 }
                 if (y > this->simAxisEndPos.Y()) {
                     st = 1.0f;
                 }
-                at = this->dragDropKeyframe.getAnimTime();
+                at = this->dragDropKeyframe.GetAnimTime();
             }
             ccc->setDropTimes(at, st);
             if (!(*ccc)(CallCinematicCamera::CallForSetDropKeyframe)) return false;

@@ -86,19 +86,19 @@ namespace megamol {
 			/** Dtor. */
 			virtual ~CinematicRenderer(void);
 
-			/**
-			* Implementation of 'Create'.
-			*
-			* @return 'true' on success, 'false' otherwise.
-			*/
-			virtual bool create(void);
-
-			/**
-			* Implementation of 'Release'.
-			*/
-			virtual void release(void);
-
 		protected:
+
+            /**
+            * Implementation of 'Create'.
+            *
+            * @return 'true' on success, 'false' otherwise.
+            */
+            virtual bool create(void);
+
+            /**
+            * Implementation of 'Release'.
+            */
+            virtual void release(void);
 
   			/**
 			* The get capabilities callback. The module should set the members

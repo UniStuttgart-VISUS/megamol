@@ -198,7 +198,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
     // Grow bounding box to manipulators and get information of bbox of model
-    this->manipulator.updateExtents(&bboxCR3D);
+    this->manipulator.SetExtents(&bboxCR3D);
 
     vislib::math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
 
@@ -269,7 +269,7 @@ bool CinematicRenderer::Render(Call& call) {
     *oc = *cr3d;
 
     Keyframe skf = ccc->getSelectedKeyframe();
-    float simTime = skf.getSimTime();
+    float simTime = skf.GetSimTime();
     oc->SetTime(simTime * totalSimTime);
 
     // Get the foreground color (inverse background color)
@@ -428,14 +428,14 @@ bool CinematicRenderer::Render(Call& call) {
 
         }
         // Update manipulator data
-        this->manipulator.updateRendering(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+        this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
             (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
             (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
             this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
         // Draw manipulators
-        this->manipulator.draw();
+        this->manipulator.Draw();
     }
 
     // Draw spline    
@@ -598,16 +598,16 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
 
         // Check if new keyframe position is selected
-        int index = this->manipulator.checkKfPosHit(x, y);
+        int index = this->manipulator.CheckKeyframePositionHit(x, y);
         if (index >= 0) {
-            ccc->setSelectedKeyframeTime((*keyframes)[index].getAnimTime());
+            ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
             if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] KEYFRAME SELECT.");
         }
         
         // Check if manipulator is selected
-        if (this->manipulator.checkManipHit(x, y)) {
+        if (this->manipulator.CheckManipulatorHit(x, y)) {
             consume = true;
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
         }        
@@ -615,12 +615,12 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     else if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
         
         // Apply changes on selected manipulator
-        if (this->manipulator.processManipHit(x, y)) {
+        if (this->manipulator.ProcessManipulatorHit(x, y)) {
 
-            ccc->setSelectedKeyframe(this->manipulator.getManipulatedKeyframe());
+            ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
             if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
 
-            ccc->setControlPointPosition(this->manipulator.getFirstControlPointPosition(), this->manipulator.getLastControlPointPosition());
+            ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
             if (!(*ccc)(CallCinematicCamera::CallForSetCtrlPoints)) return false;
 
             consume = true;

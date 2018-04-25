@@ -281,7 +281,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             clock_t cTime       = tmpTime - this->deltaAnimTime;
             this->deltaAnimTime = tmpTime;
 
-            float animTime = ccc->getSelectedKeyframe().getAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
+            float animTime = ccc->getSelectedKeyframe().GetAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
             if (animTime > ccc->getTotalAnimTime()) { // Reset time if max animation time is reached
                 animTime = 0.0f;
             }
@@ -291,7 +291,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             
             loadNewCamParams = true;
         }
-        this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
+        this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
     }
 
     // Set camera parameters of selected keyframe for this view.
@@ -302,8 +302,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if ((this->shownKeyframe != skf) || loadNewCamParams) {
         this->shownKeyframe = skf;
 
-        this->cam.Parameters()->SetView(skf.getCamPosition(), skf.getCamLookAt(), skf.getCamUp());
-        this->cam.Parameters()->SetApertureAngle(skf.getCamApertureAngle());
+        this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
+        this->cam.Parameters()->SetApertureAngle(skf.GetCamApertureAngle());
 
         loadNewCamParams = true;
     }
@@ -669,7 +669,7 @@ bool CinematicView::rtf_setup() {
     // Update selected keyframe
     if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
     // Set current simulation time
-    this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
+    this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
     
     // Lock rendering and wait for one frame to get the new animation time applied. 
     // Otherwise first frame is not set right -> just for high resolutions ?
@@ -702,7 +702,7 @@ bool CinematicView::rtf_set_time_and_camera() {
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
 
         // Set current simulation time
-        this->setSimTime(ccc->getSelectedKeyframe().getSimTime());
+        this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
 
         // Increase to next time step
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
