@@ -59,6 +59,8 @@ FBOTransmitter::FBOTransmitter(void)
 
     this->frameSkipSlot << new core::param::IntParam(3, 0);
     this->MakeSlotAvailable(&this->frameSkipSlot);
+
+    //this->zmq_socket.setsockopt(ZMQ_SNDHWM, 1);
 }
 
 
@@ -171,7 +173,7 @@ void FBOTransmitter::AfterRender(core::view::AbstractView* view) {
                  std::this_thread::sleep_for(std::chrono::milliseconds(10));
                  vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
              }*/
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
+            //vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter: Waiting for request\n");
             // this->zmq_socket.recv(&dump);*/
             zmq::message_t msg(sizeof(int32_t) + sizeof(uint32_t) + sizeof(int) * 4 + sizeof(float) * 6 +
                                this->color_buf.size() + this->depth_buf.size());
@@ -191,6 +193,7 @@ void FBOTransmitter::AfterRender(core::view::AbstractView* view) {
             ptr += color_buf.size();
             memcpy(ptr, this->depth_buf.data(), this->depth_buf.size());
             this->zmq_socket.send(msg);
+            //this->zmq_socket.send(msg, ZMQ_DONTWAIT);
             // this->frame_id++;
         } else {
             // connect socket
