@@ -75,12 +75,7 @@ protected:
     */
     virtual bool Render(megamol::core::Call& call);
 
-    //virtual bool Resize();
-
-
-
 private:
-
 
     /**
     * The get capabilities callback. The module should set the members
@@ -110,12 +105,7 @@ private:
     /** The texture shader */
     vislib::graphics::gl::GLSLShader osprayShader;
 
-
-
-    //tmp variable
-    unsigned int number;
-
-    // Interface dirty flag
+   // Interface dirty flag
     bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
@@ -130,11 +120,13 @@ private:
 
     osp::vec2i imgSize;
 
-    // OSPRay texture
-    const uint32_t * fb;
+    // OSPRay textures
+    const uint32_t* fb;
+    std::vector<float> db;
+    OSPTexture2D getOSPDepthTextureFromOpenGLPerspective(megamol::core::Call& call);
+    void getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db);
 
     bool renderer_has_changed;
-
 };
 
 } /*end namespace ospray*/

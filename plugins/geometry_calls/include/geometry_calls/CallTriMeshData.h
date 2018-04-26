@@ -17,6 +17,7 @@
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
+#include <climits>
 
 #define MAX_PARAMETER_NUMBER 100
 
@@ -1257,7 +1258,7 @@ namespace geocalls {
             template<class Tp>
             inline void setVertexAttribData(Tp v, unsigned int attribID) {
                 ASSERT(v == NULL);
-                if (attribID >= this->vattDTypes.size()) return;
+                if (attribID >= this->vattCount) return;
                 this->vattDTypes[attribID] = DT_NONE;
                 this->vattVector[attribID].dataUInt32 = NULL;
             }

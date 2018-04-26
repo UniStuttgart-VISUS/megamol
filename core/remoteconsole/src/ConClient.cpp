@@ -18,18 +18,20 @@ int main(int argc, char* argv[]) {
     using std::endl;
 
     std::string host;
-    std::string file;
+    std::string file, script;
     bool keepOpen = false;
 
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
     options.add_options()
         ("open", "open host", cxxopts::value<std::string>())
         ("source", "source file", cxxopts::value<std::string>())
+        ("exec", "execute script", cxxopts::value<std::string>())
         ("keep-open", "keep open")
         ("help", "print help")
         ;
 
     try {
+
 
         auto parseRes = options.parse(argc, argv);
 
@@ -43,7 +45,9 @@ int main(int argc, char* argv[]) {
 
         if (parseRes.count("open")) host = parseRes["open"].as<std::string>();
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
+        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
 
 
         //  Prepare our context and socket
@@ -59,11 +63,13 @@ int main(int argc, char* argv[]) {
                     << "\tConnected" << endl
                     << endl;
 
-            } catch (std::exception& ex) {
+            }
+            catch (std::exception& ex) {
                 cout << endl
                     << "ERR Socket connection failed: " << ex.what() << endl
                     << endl;
-            } catch (...) {
+            }
+            catch (...) {
                 cout << endl
                     << "ERR Socket connection failed: unknown exception" << endl
                     << endl;
@@ -72,7 +78,10 @@ int main(int argc, char* argv[]) {
 
         if (!file.empty()) {
             runScript(conn, file);
-
+        } else if (!script.empty()) {
+            if (!execCommand(conn, script)) {
+                cout << "\tFailed" << endl;
+            }
         } else {
             keepOpen = true;
         }
@@ -81,7 +90,8 @@ int main(int argc, char* argv[]) {
             interactiveConsole(conn);
         }
 
-    } catch (...) {
+    }
+    catch (...) {
         std::cout << options.help({ "" }) << std::endl;
         exit(0);
     }

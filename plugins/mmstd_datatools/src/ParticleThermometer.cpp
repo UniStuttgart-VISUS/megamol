@@ -353,8 +353,8 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
     }
 
     // now the colors are known, inject them
-    in->SetUnlocker(nullptr, false);
-    in->Unlock();
+    //in->SetUnlocker(nullptr, false);
+    //in->Unlock();
 
     //vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermometer: found temperatures between %f and %f", minTemp, maxTemp);
 
@@ -394,6 +394,7 @@ bool datatools::ParticleThermometer::assertData(core::moldyn::DirectionalParticl
         }
     }
     out->SetUnlocker(in->GetUnlocker());
+    in->SetUnlocker(nullptr, false);
     return true;
 }
 

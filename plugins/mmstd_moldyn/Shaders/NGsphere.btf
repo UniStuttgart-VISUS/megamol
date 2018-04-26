@@ -8,7 +8,7 @@
         <snippet name="attributes" type="string">
             <![CDATA[
 #extension GL_ARB_shader_storage_buffer_object : require
-#extension GL_EXT_gpu_shader4 : require
+#extension GL_ARB_gpu_shader5 : require
 uniform vec4 viewAttr;
 
 uniform float scaling;
@@ -72,7 +72,7 @@ void main(void) {
     //rad = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        vertColor = theColor;
+        vertColor = texture1D(colTab, 0.5 / COLTAB_SIZE);
     } else {
         cid = (theColIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
