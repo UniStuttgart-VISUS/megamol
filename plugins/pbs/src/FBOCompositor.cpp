@@ -184,6 +184,9 @@ void FBOCompositor::release(void) {
         this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
     }
 
+    this->stopRequested = true;
+    this->receiverThread.join();
+
     SAFE_DELETE(this->receiverData);
     SAFE_DELETE(this->renderData);
 }
@@ -372,7 +375,7 @@ void FBOCompositor::receiverCallback(void) {
         }*/
         std::vector<bool> gotData(this->num_render_nodes, false);
         std::vector<std::queue<fbo_data>> fifo(this->num_render_nodes);
-        while (true) {
+        while (!stopRequested) {
             std::fill(gotData.begin(), gotData.end(), false);
             // for (int i = 0; i < this->num_render_nodes; i++) {
             // while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
