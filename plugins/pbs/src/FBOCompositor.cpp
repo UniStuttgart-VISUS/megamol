@@ -1,3 +1,10 @@
+/*
+ * FBOCompositor.cpp
+ *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
 #include "stdafx.h"
 #include "FBOCompositor.h"
 
@@ -5,8 +12,8 @@
 #include <queue>
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D.h"
 
@@ -18,18 +25,19 @@ using namespace megamol;
 using namespace megamol::pbs;
 
 
-FBOCompositor::FBOCompositor(void) : core::view::Renderer3DModule(),
-fboWidthSlot("width", "Sets width of FBO"),
-fboHeightSlot("height", "Sets height of FBO"),
-ipAddressSlot("address", "IP address of reciever"),
-numRenderNodesSlot("numRenderNodes", "Number of render nodes connected to this compositor"),
-zmq_ctx(1),
-zmq_socket(zmq_ctx, zmq::socket_type::pull),
-num_render_nodes(0),
-fbo_width(-1),
-fbo_height(-1),
-color_textures(nullptr),
-depth_textures(nullptr) {
+FBOCompositor::FBOCompositor(void)
+    : core::view::Renderer3DModule()
+    , fboWidthSlot("width", "Sets width of FBO")
+    , fboHeightSlot("height", "Sets height of FBO")
+    , ipAddressSlot("address", "IP address of reciever")
+    , numRenderNodesSlot("numRenderNodes", "Number of render nodes connected to this compositor")
+    , zmq_ctx(1)
+    , zmq_socket(zmq_ctx, zmq::socket_type::pull)
+    , num_render_nodes(0)
+    , fbo_width(-1)
+    , fbo_height(-1)
+    , color_textures(nullptr)
+    , depth_textures(nullptr) {
     /*this->viewport[0] = 0;
     this->viewport[1] = 0;
     this->viewport[2] = 1;
@@ -50,15 +58,13 @@ depth_textures(nullptr) {
 }
 
 
-FBOCompositor::~FBOCompositor(void) {
-    this->Release();
-}
+FBOCompositor::~FBOCompositor(void) { this->Release(); }
 
 
 bool FBOCompositor::printShaderInfoLog(GLuint shader) const {
     int infoLogLen = 0;
     int charsWritten = 0;
-    GLchar *infoLog;
+    GLchar* infoLog;
 
     GLint compileStatus;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
@@ -78,7 +84,7 @@ bool FBOCompositor::printShaderInfoLog(GLuint shader) const {
 bool FBOCompositor::printProgramInfoLog(GLuint shaderProg) const {
     int infoLogLen = 0;
     int charsWritten = 0;
-    GLchar *infoLog;
+    GLchar* infoLog;
 
     GLint linkStatus;
     glGetProgramiv(shaderProg, GL_INFO_LOG_LENGTH, &infoLogLen);
@@ -96,7 +102,7 @@ bool FBOCompositor::printProgramInfoLog(GLuint shaderProg) const {
 
 
 bool FBOCompositor::create(void) {
-    //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
+    // this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
 
     this->renderData = new std::vector<fbo_data>();
     this->receiverData = new std::vector<fbo_data>();
@@ -105,12 +111,7 @@ bool FBOCompositor::create(void) {
     glBindVertexArray(this->vao);
     glGenBuffers(1, &this->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    float buffer[] = {
-        -1, -1, 0,
-        1, -1, 0,
-        1, 1, 0,
-        -1, 1, 0
-    };
+    float buffer[] = {-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12, buffer, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
@@ -120,11 +121,14 @@ bool FBOCompositor::create(void) {
     auto vert_shader = glCreateShader(GL_VERTEX_SHADER);
     auto frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    auto path_to_vert = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbscompositor.vert.glsl");
-    auto path_to_frag = core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "pbscompositor.frag.glsl");
+    auto path_to_vert = core::utility::ResourceWrapper::getFileName(
+        this->GetCoreInstance()->Configuration(), "pbscompositor.vert.glsl");
+    auto path_to_frag = core::utility::ResourceWrapper::getFileName(
+        this->GetCoreInstance()->Configuration(), "pbscompositor.frag.glsl");
 
     std::ifstream shader_file(W2A(path_to_vert.PeekBuffer()));
-    std::string shader_string = std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
+    std::string shader_string =
+        std::string(std::istreambuf_iterator<char>(shader_file), std::istreambuf_iterator<char>());
     shader_file.close();
 
     auto shader_cstring = shader_string.c_str();
@@ -176,7 +180,7 @@ void FBOCompositor::release(void) {
     glDeleteVertexArrays(1, &this->vao);
     glDeleteBuffers(1, &this->vbo);
 
-    for (int i = 0; i < this->ip_address.size(); i++) {
+    for (int i = 0; i < this->ip_address.size(); ++i) {
         this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
     }
 
@@ -185,37 +189,44 @@ void FBOCompositor::release(void) {
 }
 
 
-bool FBOCompositor::GetCapabilities(core::Call &call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+bool FBOCompositor::GetCapabilities(core::Call& call) {
+    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    cr->SetCapabilities(
-        core::view::CallRender3D::CAP_RENDER
-        | core::view::CallRender3D::CAP_LIGHTING
-        | core::view::CallRender3D::CAP_ANIMATION
-    );
+    cr->SetCapabilities(core::view::CallRender3D::CAP_RENDER | core::view::CallRender3D::CAP_LIGHTING |
+                        core::view::CallRender3D::CAP_ANIMATION);
 
     return true;
 }
 
 
-bool FBOCompositor::GetExtents(core::Call &call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+bool FBOCompositor::GetExtents(core::Call& call) {
+    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
 
     cr->SetTimeFramesCount(1);
 
-    auto &out_bbox = cr->AccessBoundingBoxes();
+    auto& out_bbox = cr->AccessBoundingBoxes();
+
+    std::lock_guard<std::mutex> guard(this->swap_guard);
 
     if (this->num_render_nodes > 0) {
-        out_bbox.SetObjectSpaceBBox((*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_LEFT],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BOTTOM],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BACK],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_RIGHT],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_TOP],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_FRONT]);
+        out_bbox.SetObjectSpaceBBox((*this->renderData)[0].bbox[0],
+            (*this->renderData)[0].bbox[1],
+            (*this->renderData)[0].bbox[2],
+            (*this->renderData)[0].bbox[3],
+            (*this->renderData)[0].bbox[4],
+            (*this->renderData)[0].bbox[5]);
         out_bbox.SetObjectSpaceClipBox(out_bbox.ObjectSpaceBBox());
-        out_bbox.MakeScaledWorld(1.0f);
+
+        float scaling = out_bbox.ObjectSpaceBBox().LongestEdge();
+        if (scaling > 0.0000001) {
+            scaling = 10.0f / scaling;
+        } else {
+            scaling = 1.0f;
+        }
+        out_bbox.MakeScaledWorld(scaling);
+        //out_bbox.MakeScaledWorld(1.0f);
     } else {
         out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -224,20 +235,20 @@ bool FBOCompositor::GetExtents(core::Call &call) {
 }
 
 
-bool FBOCompositor::Render(core::Call &call) {
-    //this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
+bool FBOCompositor::Render(core::Call& call) {
+    // this->num_render_nodes = this->numRenderNodesSlot.Param<core::param::IntParam>()->Value();
     this->resizeBuffers();
 
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
 
     if (this->is_new_data.load()) {
         std::lock_guard<std::mutex> guard(this->swap_guard);
 
         // do upload
-        for (int i = 0; i < this->num_render_nodes; i++) {
-        //for (int i = this->num_render_nodes-1; i >= 0; i--) {
-            auto &data = (*this->renderData)[i];
+        for (int i = 0; i < this->num_render_nodes; ++i) {
+            // for (int i = this->num_render_nodes-1; i >= 0; i--) {
+            auto& data = (*this->renderData)[i];
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
@@ -252,13 +263,13 @@ bool FBOCompositor::Render(core::Call &call) {
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
-        //glBindTexture(GL_TEXTURE_2D, 0);
+        // glBindTexture(GL_TEXTURE_2D, 0);
 
         this->is_new_data.store(false);
     }
 
     // do render
-    
+
     glViewport(0, 0, this->fbo_width, this->fbo_height);
     glEnable(GL_DEPTH_TEST);
 
@@ -277,7 +288,7 @@ bool FBOCompositor::Render(core::Call &call) {
     glUniformMatrix4fv(glGetUniformLocation(this->shader, "modelview"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(glGetUniformLocation(this->shader, "project"), 1, GL_FALSE, projMatrix_column);
 
-    for (int i = 0; i < this->num_render_nodes; i++) {
+    for (int i = 0; i < this->num_render_nodes; ++i) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
 
@@ -300,9 +311,9 @@ bool FBOCompositor::Render(core::Call &call) {
 }
 
 
-bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
+bool FBOCompositor::connectSocketCallback(core::param::ParamSlot& p) {
     if (this->is_connected) {
-        for (int i = 0; i < this->ip_address.size(); i++) {
+        for (int i = 0; i < this->ip_address.size(); ++i) {
             this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
         }
         this->is_connected = false;
@@ -321,13 +332,13 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
         this->ip_address.push_back(addresses);
     }
 
-    for (int i = 0; i < this->ip_address.size(); i++) {
+    for (int i = 0; i < this->ip_address.size(); ++i) {
         this->connectSocket(this->ip_address[i]);
     }
 
-    //auto tmp = this->num_render_nodes;
+    // auto tmp = this->num_render_nodes;
     this->num_render_nodes = this->ip_address.size();
-    //this->resizeBuffers(tmp);
+    // this->resizeBuffers(tmp);
 
     std::lock_guard<std::mutex> guard(this->swap_guard);
 
@@ -340,7 +351,7 @@ bool FBOCompositor::connectSocketCallback(core::param::ParamSlot &p) {
 }
 
 
-void FBOCompositor::connectSocket(std::string &address) {
+void FBOCompositor::connectSocket(std::string& address) {
     try {
         this->zmq_socket.connect("tcp://" + address);
         this->is_connected = true;
@@ -363,38 +374,39 @@ void FBOCompositor::receiverCallback(void) {
         std::vector<std::queue<fbo_data>> fifo(this->num_render_nodes);
         while (true) {
             std::fill(gotData.begin(), gotData.end(), false);
-            //for (int i = 0; i < this->num_render_nodes; i++) {
-            //while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
-            while (std::any_of(fifo.begin(), fifo.end(), [](const std::queue<fbo_data> &a) {return (a.size()==0); })) {
-                //auto &data = this->receiverData[i];
+            // for (int i = 0; i < this->num_render_nodes; i++) {
+            // while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
+            while (
+                std::any_of(fifo.begin(), fifo.end(), [](const std::queue<fbo_data>& a) { return (a.size() == 0); })) {
+                // auto &data = this->receiverData[i];
 
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
-                //this->zmq_socket.send("Frame", strlen("Frame"));
+                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
+                // this->zmq_socket.send("Frame", strlen("Frame"));
                 this->zmq_socket.recv(&msg);
                 fbo_data data;
                 if (msg.size() < sizeof(data.viewport) + sizeof(int32_t) + sizeof(uint32_t)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (viewport) corrupted\n");
                 }
-                char *ptr = reinterpret_cast<char*>(msg.data());
+                char* ptr = reinterpret_cast<char*>(msg.data());
                 int32_t rank = *reinterpret_cast<int32_t*>(msg.data());
                 ptr += sizeof(int32_t);
                 data.fid = *reinterpret_cast<uint32_t*>(msg.data());
                 ptr += sizeof(uint32_t);
 
                 ASSERT(rank >= 0 && rank < receiverData->size());
-                
 
-                //auto &data = (*this->receiverData)[rank];
-                
+
+                // auto &data = (*this->receiverData)[rank];
+
                 memcpy(data.viewport, ptr, sizeof(data.viewport));
-                //memcpy(this->viewport, data.viewport, sizeof(data.viewport));
+                // memcpy(this->viewport, data.viewport, sizeof(data.viewport));
                 ptr += sizeof(data.viewport);
                 int width = data.viewport[2] - data.viewport[0];
                 int height = data.viewport[3] - data.viewport[1];
                 memcpy(data.bbox, ptr, sizeof(data.bbox));
                 ptr += sizeof(data.bbox);
-                int datasize = (width)*(height)*4;
-                if (width < 0 || height < 0 || datasize < 0 || msg.size() < 2*datasize + sizeof(data.viewport)) {
+                int datasize = (width) * (height)*4;
+                if (width < 0 || height < 0 || datasize < 0 || msg.size() < 2 * datasize + sizeof(data.viewport)) {
                     throw std::runtime_error("FBOCompositor receiver thread: message (data) corrupted\n");
                 }
                 data.color_buf.resize(datasize);
@@ -422,7 +434,7 @@ void FBOCompositor::receiverCallback(void) {
                 fifo[i].pop();
             }*/
 
-            for (int i = 0; i < this->num_render_nodes; i++) {
+            for (int i = 0; i < this->num_render_nodes; ++i) {
                 (*this->receiverData)[i] = fifo[i].front();
                 fifo[i].pop();
             }
@@ -436,18 +448,42 @@ void FBOCompositor::receiverCallback(void) {
 
 
 void FBOCompositor::resizeBuffers(void) {
-    //std::lock_guard<std::mutex> guard(this->swap_guard);
+    // std::lock_guard<std::mutex> guard(this->swap_guard);
 
-    //this->renderData.resize(this->num_render_nodes);
-    //this->receiverData.resize(this->num_render_nodes);
-    
+    // this->renderData.resize(this->num_render_nodes);
+    // this->receiverData.resize(this->num_render_nodes);
+
+    this->max_viewport[0] = std::numeric_limits<int>::max();
+    this->max_viewport[1] = std::numeric_limits<int>::max();
+    this->max_viewport[2] = std::numeric_limits<int>::lowest();
+    this->max_viewport[3] = std::numeric_limits<int>::lowest();
+
+    for (auto const& el : *this->renderData) {
+        if (this->max_viewport[0] > el.viewport[0]) {
+            this->max_viewport[0] = el.viewport[0];
+        }
+        if (this->max_viewport[1] > el.viewport[1]) {
+            this->max_viewport[1] = el.viewport[1];
+        }
+        if (this->max_viewport[2] < el.viewport[2]) {
+            this->max_viewport[2] = el.viewport[2];
+        }
+        if (this->max_viewport[3] < el.viewport[3]) {
+            this->max_viewport[3] = el.viewport[3];
+        }
+    }
+
     auto old_fbo_width = this->fbo_width;
     auto old_fbo_height = this->fbo_height;
 
-    this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
-    this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();
+    this->fbo_width = this->max_viewport[2] - this->max_viewport[0];
+    this->fbo_height = this->max_viewport[3] - this->max_viewport[1];
 
-    if (this->fbo_width != old_fbo_width || this->fbo_height != this->fbo_width/* || oldSize != this->num_render_nodes*/) {
+    /*this->fbo_width = this->fboWidthSlot.Param<core::param::IntParam>()->Value();
+    this->fbo_height = this->fboHeightSlot.Param<core::param::IntParam>()->Value();*/
+
+    if (this->fbo_width != old_fbo_width ||
+        this->fbo_height != this->fbo_width /* || oldSize != this->num_render_nodes*/) {
 
         if (this->color_textures != nullptr) {
             glDeleteTextures(this->num_render_nodes, this->color_textures);
@@ -468,14 +504,16 @@ void FBOCompositor::resizeBuffers(void) {
         for (int i = 0; i < this->num_render_nodes; i++) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, this->color_textures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->fbo_width, this->fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(
+                GL_TEXTURE_2D, 0, GL_RGBA8, this->fbo_width, this->fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glBindTexture(GL_TEXTURE_2D, 0);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, this->depth_textures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->fbo_width, this->fbo_height, 0, GL_DEPTH_COMPONENT,
+                GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -492,7 +530,7 @@ void FBOCompositor::swapFBOData(void) {
         this->is_new_data.store(true);
     }
 
-    //resizeBuffers(this->num_render_nodes);
+    // resizeBuffers(this->num_render_nodes);
 
-    //updateNumRenderNodesCallback(this->ipAddressSlot);
+    // updateNumRenderNodesCallback(this->ipAddressSlot);
 }

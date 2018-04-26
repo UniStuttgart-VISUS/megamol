@@ -671,13 +671,13 @@ int *SDFFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
 */
 int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
-    SIZE_T txtlen = static_cast<SIZE_T>(CharTraitsA::SafeStringLength(txtutf8));
-    SIZE_T pos = 0;
+    size_t txtlen = static_cast<size_t>(CharTraitsA::SafeStringLength(txtutf8));
+    size_t pos = 0;
     int *glyphrun = new int[txtlen + 1];
     bool knowLastWhite = false;
     bool blackspace = true;
-    SIZE_T lastWhiteGlyph = 0;
-    SIZE_T lastWhiteSpace = 0;
+    size_t lastWhiteGlyph = 0;
+    size_t lastWhiteSpace = 0;
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
 
@@ -695,7 +695,7 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
     // = 0 end
 
     // build glyph run
-    for (SIZE_T i = 0; i < txtlen; i++) {
+    for (size_t i = 0; i < txtlen; i++) {
 
         if (txtutf8[i] == '\n') { // special handle new lines
             nextAsNewLine = true;
@@ -1106,7 +1106,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile);
+        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
     
@@ -1114,7 +1114,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile);
+        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }
 
