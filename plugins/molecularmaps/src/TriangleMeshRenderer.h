@@ -32,6 +32,11 @@ namespace molecularmaps {
 		 */
 		virtual bool Render(core::view::CallRender3D& call);
 
+        /**
+         * Invokes the rendering calls using wireframe rendering
+         */
+        virtual bool RenderWireFrame(core::view::CallRender3D& call);
+
 		/**
 		 * Update function for the local data to render
 		 *

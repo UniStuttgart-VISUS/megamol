@@ -675,6 +675,9 @@ namespace molecularmaps {
 		/** Determines what to render */
 		core::param::ParamSlot display_param;
 
+        /** Switch for the wireframe rendering */
+        core::param::ParamSlot draw_wireframe_param;
+
 		/** Vertex indices of the mesh faces */
 		std::vector<uint> faces;
 

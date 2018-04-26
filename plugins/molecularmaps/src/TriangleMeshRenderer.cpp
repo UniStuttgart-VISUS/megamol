@@ -67,6 +67,19 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D& call) {
 }
 
 /*
+ * TriangleMeshRenderer::RenderWireFrame
+ */
+bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D& call) {
+    GLint oldpolymode[2];
+    glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    this->Render(call);
+    glPolygonMode(GL_FRONT, oldpolymode[0]);
+    glPolygonMode(GL_BACK, oldpolymode[1]);
+    return true;
+}
+
+/*
  * TriangleMeshRenderer::update
  */
 bool TriangleMeshRenderer::update(const std::vector<uint> * faces, const std::vector<float> * vertices, const std::vector<float> * vertex_colors,

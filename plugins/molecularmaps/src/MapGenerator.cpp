@@ -51,6 +51,7 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 		computeButton("recompute", "Button that starts the computation of the molecular map"),
 		cut_colour_param("colour::cutColour", "The path to the file that contains the colours for the cuts"),
 		display_param("display mode", "Choose what to display, protein, sphere, map and debug modes"),
+        draw_wireframe_param("wireframe" , "Choose whether to render meshes as wireframe or not"),
 		geodesic_lines_param("geodesic lines", "Choose what kind of geodesic lines to display"),
 		group_colour_param("colour::groupColour", "The path to the file that contains the colours for the groups"),
 		lat_lines_count_param("grid::latLinesCount", "The number of latitude lines"),
@@ -160,6 +161,9 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 	display_mode_param->SetTypePair(display_mode, "Show map");
 	this->display_param << display_mode_param;
 	this->MakeSlotAvailable(&this->display_param);
+
+    this->draw_wireframe_param.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->draw_wireframe_param);
 
 	this->face_edge_offset = std::vector<std::vector<Edge>>(0);
 	this->face_edge_offset_depth = std::vector<uint>(0);
@@ -1230,6 +1234,13 @@ void MapGenerator::drawMap() {
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
 
+    // Enable wireframe mode if needed
+    GLint oldpolymode[2];
+    glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
+    if (this->draw_wireframe_param.Param<param::BoolParam>()->Value()) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
 	// Set data pointer
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -1251,6 +1262,10 @@ void MapGenerator::drawMap() {
 	// Draw FBO
 	glPopMatrix();
 	this->map_fbo.Disable();
+
+    glPolygonMode(GL_FRONT, oldpolymode[0]);
+    glPolygonMode(GL_BACK, oldpolymode[1]);
+
 	this->map_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
 
 	// Render geodesic lines.
@@ -2458,7 +2473,7 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
 	}
 
 	if (!this->map_fbo.IsValid() && !shaderReload) {
-		uint pxW = 1570;
+		uint pxW = 1570 * 4;
 		uint pxH = static_cast<uint>(pxW / vislib::math::PI_DOUBLE);
 		this->map_fbo.Create(pxW, pxH);
 	}
@@ -3944,7 +3959,11 @@ bool MapGenerator::Render(Call& call) {
 	}
 
 	// Render the protein.
-	this->triMeshRenderer.Render(*cr3d);
+    if (this->draw_wireframe_param.Param<param::BoolParam>()->Value()) {
+        this->triMeshRenderer.RenderWireFrame(*cr3d);
+    } else {
+        this->triMeshRenderer.Render(*cr3d);
+    }
 
 	// Render the geodesic lines.
 	if (render_geo_lines) {
