@@ -157,17 +157,29 @@ $m->Close();
 
 open my $batch, ">", "SphereTest.bat" or die "cannot open batch file";
 
-my @renderers = ("SimpleSphereRenderer", "SimpleGeoSphereRenderer", "NGSphereRenderer");
+my @renderers = ("SimpleSphereRenderer", "SimpleGeoSphereRenderer", "NGSphereRenderer", "OSPRaySphereGeometry", "OSPRayNHSphereGeometry");
 foreach my $r (@renderers) {
     foreach my $f (@outfiles) {
         my $proj = "$f-$r.lua";
         open my $fh, ">", $proj or die "cannot open $proj";
         print $fh qq{mmCreateView("test", "View3D", "::v")\n};
         print $fh qq{mmCreateJob("imagemaker", "ScreenShooter", "::imgmaker")\n};
-        print $fh qq{mmCreateModule("$r", "::rnd")\n};
         print $fh qq{mmCreateModule("MMPLDDataSource", "::dat")\n};
-        print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
-        print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getData", "::dat::getData")\n};
+        print $fh qq{mmCreateModule("$r", "::rnd")\n};
+        if ($r =~ /^OSPRay/) {
+            print $fh qq{mmCreateModule("OSPRayRenderer", "::osp")\n};
+            print $fh qq{mmCreateModule("OSPRayAmbientLight", "::amb")\n};
+            print $fh qq{mmCreateModule("OSPRayOBJMaterial", "::mat")\n};
+            print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::osp::rendering")\n};
+            print $fh qq{mmCreateCall("CallOSPRayStructure", "::osp::getStructure", "::rnd::deployStructureSlot")\n};
+            print $fh qq{mmCreateCall("CallOSPRayLight", "::osp::getLight", "::amb::deployLightSlot")\n};
+            print $fh qq{mmCreateCall("CallOSPRayMaterial", "::rnd::getMaterialSlot", "::mat::deployMaterialSlot")\n};
+            print $fh qq{mmSetParamValue("::osp::useDBcomponent", "false")\n};
+        } else {
+            print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
+            print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getData", "::dat::getData")\n};
+        }
+        print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};
         print $fh qq{mmSetParamValue("::imgmaker::filename", "}.getcwd().qq{/$f-$r.png")\n};
         print $fh qq{mmSetParamValue("::imgmaker::view", "test")\n};
