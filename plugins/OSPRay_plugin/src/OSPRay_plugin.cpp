@@ -41,6 +41,8 @@
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayPlasticMaterial.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
+#include "Pkd.h"
+#include "OSPRayPKDGeometry.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -94,6 +96,9 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayGlassMaterial>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayThinGlassMaterial>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPlasticMaterial>();
+
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::PkdBuilder>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPKDGeometry>();
 
 
             // register calls here:

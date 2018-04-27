@@ -32,6 +32,7 @@ enum geometryTypeEnum {
     CYLINDERS,
     PBS,
     OSPRAY_API_GEOMETRY
+    PKD
 };
 
 enum volumeTypeEnum {
