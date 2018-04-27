@@ -75,6 +75,7 @@ public:
     std::shared_ptr<const void*> raw;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
+    std::shared_ptr<std::pair<float, float>> valueRange;
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
@@ -97,6 +98,7 @@ public:
     bool dataChanged;
     bool materialChanged;
     bool isValid;
+    bool smooth; //< valid for lines
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

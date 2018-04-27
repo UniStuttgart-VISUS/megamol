@@ -1014,6 +1014,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
 
                     ospSet1f(geo.back(), "radius", element.globalRadius);
+                    ospSet1i(geo.back(), "smooth", element.smooth);
                 }
                 break;
             case geometryTypeEnum::CYLINDERS:
@@ -1088,6 +1089,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
                 ospSetData(tf, "colors", tf_rgb);
                 ospSetData(tf, "opacities", tf_opa);
+                ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
 
                 ospCommit(tf);
 

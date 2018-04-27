@@ -95,10 +95,13 @@ namespace datatools {
         core::param::ParamSlot maxTempSlot;
         core::param::ParamSlot massSlot;
         core::param::ParamSlot freedomSlot;
+        megamol::core::param::ParamSlot toggleNewColorSlot;
+        megamol::core::param::ParamSlot toggleNewVelocitySlot;
         
         size_t datahash;
         int lastTime;
         std::vector<float> newColors;
+        std::vector<float> newVelocities;
         std::vector<size_t> allParts;
         float maxDist;
 
