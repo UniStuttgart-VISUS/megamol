@@ -160,19 +160,10 @@ bool NGSphereRenderer::create(void) {
 
 bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
     bool ret = true;
-
-    const unsigned char* gc; /// for COLDATA_NONE
-    vislib::StringA colStr;  /// for COLDATA_NONE
-
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            gc = parts.GetGlobalColour();
-            colStr.Format("vec4(%f, %f, %f, 1.0)",
-                static_cast<float>(gc[0]) / 255.0,
-                static_cast<float>(gc[1]) / 255.0,
-                static_cast<float>(gc[2]) / 255.0);
-            code = "    theColor = " + std::string(colStr.PeekBuffer()) + ";\n";
+            code = "";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
             ret = false;
@@ -608,6 +599,13 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
+            case MultiParticleDataCall::Particles::COLDATA_NONE: {
+                glUniform4f(this->newShader->ParameterLocation("globalCol"), 
+                    static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
+                    1.0f);
+            } break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 glEnable(GL_TEXTURE_1D);
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -644,7 +642,8 @@ bool NGSphereRenderer::Render(Call& call) {
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
         //currBuf = 0;
-        UINT64 numVerts, vertCounter;
+        //UINT64 numVerts, vertCounter;
+
         // does all data reside interleaved in the same memory?
         if (interleaved)  {
 
