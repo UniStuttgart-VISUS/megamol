@@ -31,7 +31,7 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
-    OSPRAY_API_GEOMETRY
+    OSPRAY_API_GEOMETRY,
     PKD
 };
 
