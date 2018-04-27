@@ -17,6 +17,9 @@ build-linux/
 .vscode/**/*.bat
 .gitmodules
 *.orig
-utils/MMPLD/mmpld\.bat
-utils/MMPLD/mmpld\.reg
+utils/MMPLD/mmpld.bat
+utils/MMPLD/mmpld.reg
+utils/MMPLD/test*.mmpld
+utils/MMPLD/test*.lua
+utils/MMPLD/test*.png
 build-intel/

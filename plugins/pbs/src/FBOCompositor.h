@@ -123,6 +123,8 @@ private:
     /** atomic flag signalling that new data is available */
     std::atomic<bool> is_new_data;
 
+    bool stopRequested = false;
+
     int num_render_nodes = 0;
 
     int fbo_width;
