@@ -160,10 +160,19 @@ bool NGSphereRenderer::create(void) {
 
 bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
     bool ret = true;
+
+    const unsigned char* gc; /// for COLDATA_NONE
+    vislib::StringA colStr;  /// for COLDATA_NONE
+
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "    theColor = vec4(1.0);\n";
+            gc = parts.GetGlobalColour();
+            colStr.Format("vec4(%f, %f, %f, 1.0)",
+                static_cast<float>(gc[0]) / 255.0,
+                static_cast<float>(gc[1]) / 255.0,
+                static_cast<float>(gc[2]) / 255.0);
+            code = "    theColor = " + std::string(colStr.PeekBuffer()) + ";\n";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
             ret = false;
