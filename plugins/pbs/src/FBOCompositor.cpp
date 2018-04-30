@@ -184,6 +184,9 @@ void FBOCompositor::release(void) {
         this->zmq_socket.disconnect("tcp://" + this->ip_address[i]);
     }
 
+    this->stopRequested = true;
+    this->receiverThread.join();
+
     SAFE_DELETE(this->receiverData);
     SAFE_DELETE(this->renderData);
 }
@@ -208,15 +211,25 @@ bool FBOCompositor::GetExtents(core::Call& call) {
 
     auto& out_bbox = cr->AccessBoundingBoxes();
 
+    std::lock_guard<std::mutex> guard(this->swap_guard);
+
     if (this->num_render_nodes > 0) {
-        out_bbox.SetObjectSpaceBBox((*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_LEFT],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BOTTOM],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_BACK],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_RIGHT],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_TOP],
-            (*this->renderData)[0].bbox[vislib::math::Cuboid<float>::FACE_FRONT]);
+        out_bbox.SetObjectSpaceBBox((*this->renderData)[0].bbox[0],
+            (*this->renderData)[0].bbox[1],
+            (*this->renderData)[0].bbox[2],
+            (*this->renderData)[0].bbox[3],
+            (*this->renderData)[0].bbox[4],
+            (*this->renderData)[0].bbox[5]);
         out_bbox.SetObjectSpaceClipBox(out_bbox.ObjectSpaceBBox());
-        out_bbox.MakeScaledWorld(1.0f);
+
+        float scaling = out_bbox.ObjectSpaceBBox().LongestEdge();
+        if (scaling > 0.0000001) {
+            scaling = 10.0f / scaling;
+        } else {
+            scaling = 1.0f;
+        }
+        out_bbox.MakeScaledWorld(scaling);
+        //out_bbox.MakeScaledWorld(1.0f);
     } else {
         out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -362,7 +375,7 @@ void FBOCompositor::receiverCallback(void) {
         }*/
         std::vector<bool> gotData(this->num_render_nodes, false);
         std::vector<std::queue<fbo_data>> fifo(this->num_render_nodes);
-        while (true) {
+        while (!stopRequested) {
             std::fill(gotData.begin(), gotData.end(), false);
             // for (int i = 0; i < this->num_render_nodes; i++) {
             // while (std::any_of(gotData.begin(), gotData.end(), [](const bool &a) {return !a; })) {
@@ -370,7 +383,7 @@ void FBOCompositor::receiverCallback(void) {
                 std::any_of(fifo.begin(), fifo.end(), [](const std::queue<fbo_data>& a) { return (a.size() == 0); })) {
                 // auto &data = this->receiverData[i];
 
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
+                //vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor: Request frame\n");
                 // this->zmq_socket.send("Frame", strlen("Frame"));
                 this->zmq_socket.recv(&msg);
                 fbo_data data;
