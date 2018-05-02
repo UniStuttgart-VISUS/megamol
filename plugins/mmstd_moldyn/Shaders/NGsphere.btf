@@ -32,7 +32,7 @@ uniform mat4 MVPtransp;
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
-uniform vec4 globalCol;
+uniform vec4 globalColor;
 
 out vec4 objPos;
 out vec4 camPos;
@@ -59,7 +59,7 @@ out vec2 centerFragment;
         <![CDATA[
 void main(void) {
     float theColIdx;
-    vec4 theColor = globalCol;
+    vec4 theColor;
     vec4 inPos;
 ]]>
         </snippet>

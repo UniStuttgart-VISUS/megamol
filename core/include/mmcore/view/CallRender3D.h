@@ -17,6 +17,8 @@
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutput.h"
 
+#include "vislib/graphics/gl/MatrixTransform.h"
+
 
 namespace megamol {
 namespace core {
@@ -132,6 +134,33 @@ namespace view {
         }
 
         /**
+        * Sets the view matrix of the matrix transformation.
+        *
+        * @param vm The view matrix.
+        */
+        inline void SetModelViewMatrix(float vm[16]) {
+            this->matrixTransform.SetModelViewMatrix(vm);
+        }
+
+        /**
+        * Sets the projection matrix of the matrix transformation.
+        *
+        * @param pm The projection matrix.
+        */
+        inline void SetProjectionMatrix(float pm[16]) {
+            this->matrixTransform.SetProjectionMatrix(pm);
+        }
+
+        /**
+        * Answer the matrix transformation.
+        *
+        * @return The matrix transformation (by reference).
+        */
+        inline vislib::graphics::gl::MatrixTransform &MatrixTransform(void) {
+            return this->matrixTransform;
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -147,6 +176,23 @@ namespace view {
 
             /** The mouse flags for the mouse event */
             MouseFlags mouseFlags;
+
+ // Disable dll export warning for not exported classes in ::vislib 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
+            /** 
+             * Holds the currently applied model view and projection matrix.
+             * Should be set by the caller. Before usage the callee can 
+             * modify the model view matrix. This changes are not applied
+             * to e.g. OpenGL and are for 'local' use in callee only.
+             */
+            vislib::graphics::gl::MatrixTransform matrixTransform;
+
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 #ifdef _WIN32

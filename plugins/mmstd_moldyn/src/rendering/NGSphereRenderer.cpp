@@ -163,7 +163,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "";
+            code = "    theColor = globalColor;\n";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
             ret = false;
@@ -546,29 +546,8 @@ bool NGSphereRenderer::Render(Call& call) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    //glScalef(scaling, scaling, scaling);
-
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
-    scaleMat.SetAt(0, 0, scaling);
-    scaleMat.SetAt(1, 1, scaling);
-    scaleMat.SetAt(2, 2, scaling);
-    modelViewMatrix = modelViewMatrix * scaleMat;
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    // Compute modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = modelViewMatrix;
-    modelViewMatrixInv.Invert();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixInv = modelViewProjMatrix;
-    modelViewProjMatrixInv.Invert();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
-    modelViewProjMatrixTransp.Transpose();
-    // end suck
+    // (the apex of suck is dead ... )
+    cr->MatrixTransform().Scale(scaling);
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -580,7 +559,7 @@ bool NGSphereRenderer::Render(Call& call) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
-             newShader = this->generateShader(parts);
+            newShader = this->generateShader(parts);
         }
         newShader->Enable();
         colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
@@ -590,17 +569,17 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
-        glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+        glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, cr->MatrixTransform().MVinv().PeekComponents());
+        glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, cr->MatrixTransform().MVP().PeekComponents());
+        glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, cr->MatrixTransform().MVPinv().PeekComponents());
+        glUniformMatrix4fv(newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, cr->MatrixTransform().MVPtransp().PeekComponents());
         glUniform1f(newShader->ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
             case MultiParticleDataCall::Particles::COLDATA_NONE: {
-                glUniform4f(this->newShader->ParameterLocation("globalCol"), 
+                glUniform4f(this->newShader->ParameterLocation("globalColor"), 
                     static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
                     static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
                     static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
@@ -697,7 +676,7 @@ bool NGSphereRenderer::Render(Call& call) {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         //glDisableClientState(GL_COLOR_ARRAY);
         //glDisableClientState(GL_VERTEX_ARRAY);
-        //glDisableVertexAttribArrayARB(colIdxAttribLoc);
+        glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
         newShader->Disable();
 #ifdef CHRONOTIMING

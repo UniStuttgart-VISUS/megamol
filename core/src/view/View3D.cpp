@@ -505,6 +505,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     this->cam.glMultProjectionMatrix();
+    // forward current projection matrix to render call
+    float projMat[16];
+    this->cam.ProjectionMatrix(projMat);
+    cr3d->SetProjectionMatrix(projMat);
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
@@ -512,6 +516,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     if (this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
 
     this->cam.glMultViewMatrix();
+    // forward current view matrix to render call
+    float viewMat[16];
+    this->cam.ViewMatrix(viewMat);
+    cr3d->SetModelViewMatrix(viewMat);
 
     if (!this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
 
