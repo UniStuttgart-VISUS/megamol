@@ -61,9 +61,11 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 		lat_lon_lines_gm_colour_param("grid::meridian color", "The color of the Greenwich meridian"),
 		lighting("rendering::lighting", "Flag whether or not use lighting for the surface"),
 		lon_lines_count_param("grid::lonLinesCount", "The number of longitude lines"),
+        meshDataOutSlot("meshDataOut", "The output mesh data"),
 		meshDataSlot("meshData", "The input mesh data"), 
 		meshDataSlotWithCap("capData", "The input mesh data with the cap"),
 		mirror_map_param("mirrorMap", "Choose whether the final map should be mirrored or not"),
+        out_mesh_selection_slot("outputMeshMode", "Choose the mesh that is passed on to the rest of the application"),
 		probeRadiusSlot("probeRadius", "The radius of the probe for protein channel detection in Angstrom"),
 		proteinDataSlot("proteinData", "The input protein data"),
 		radius_offset_param("radiusOffset", "The offset for the BoundingSphere radius"),
@@ -218,6 +220,10 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 	this->map_shader_init = false;
 	this->map_vertex_vbo = 0;
 
+    this->meshDataOutSlot.SetCallback(geocalls::CallTriMeshData::ClassName(), geocalls::CallTriMeshData::FunctionName(0), &MapGenerator::GetMeshData);
+    this->meshDataOutSlot.SetCallback(geocalls::CallTriMeshData::ClassName(), geocalls::CallTriMeshData::FunctionName(1), &MapGenerator::GetMeshExtents);
+    this->MakeSlotAvailable(&this->meshDataOutSlot);
+
 	this->meshDataSlot.SetCompatibleCall<CallTriMeshDataDescription>();
 	this->MakeSlotAvailable(&this->meshDataSlot);
 
@@ -229,6 +235,18 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 
 	this->normals = std::vector<float>(0);
 	this->normals_rebuild = std::vector<float>(0);
+
+    param::EnumParam* out_mesh_param = new param::EnumParam(static_cast<int>(MeshMode::MESH_ORIGINAL));
+    MeshMode out_mesh_mode = MeshMode::MESH_ORIGINAL;
+    out_mesh_param->SetTypePair(out_mesh_mode, "Original");
+    out_mesh_mode = MeshMode::MESH_CUT;
+    out_mesh_param->SetTypePair(out_mesh_mode, "Cut Mesh");
+    out_mesh_mode = MeshMode::MESH_SPHERE;
+    out_mesh_param->SetTypePair(out_mesh_mode, "Sphere");
+    out_mesh_mode = MeshMode::MESH_MAP;
+    out_mesh_param->SetTypePair(out_mesh_mode, "Map");
+    this->out_mesh_selection_slot << out_mesh_param;
+    this->MakeSlotAvailable(&this->out_mesh_selection_slot);
 
 	this->probeRadiusSlot.SetParameter(new param::FloatParam(1.5f, 0.0f, 10.0f));
 	this->MakeSlotAvailable(&this->probeRadiusSlot);
@@ -1333,6 +1351,22 @@ bool MapGenerator::GetExtents(Call& call) {
 	cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
 
 	return true;
+}
+
+
+/*
+ * MapGenerator::GetMeshData
+ */
+bool MapGenerator::GetMeshData(Call& call) {
+    return true;
+}
+
+
+/*
+ * MapGenerator::GetMeshExtents
+ */
+bool MapGenerator::GetMeshExtents(Call& call) {
+    return true;
 }
 
 

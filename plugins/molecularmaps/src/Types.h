@@ -831,4 +831,14 @@ enum GeodesicMode {
 	ALL_TO_ALL = ONE_TO_ALL + 1
 };
 
+/**
+ * The modes for the mesh output
+ */
+enum MeshMode {
+    MESH_ORIGINAL = 0,
+    MESH_CUT = MESH_ORIGINAL + 1,
+    MESH_SPHERE = MESH_CUT + 1,
+    MESH_MAP = MESH_SPHERE + 1
+};
+
 #endif /* MMMOLMAPPLG_TYPES_H_INCLUDED */

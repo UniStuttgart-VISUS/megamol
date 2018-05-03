@@ -259,6 +259,25 @@ namespace molecularmaps {
          */
         virtual bool GetExtents(core::Call& call);
 
+        /**
+         * The get data callback for the resulting mesh. The module should set the members of
+         * 'call' to give the caller access to its data.
+         *
+         *  @param call The calling call.
+         *	@return The return value of the function.
+         */
+        virtual bool GetMeshData(core::Call& call);
+
+        /**
+         * The get extents callback for the resulting mesh. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         * 
+         * @param call The calling call.
+         * @return The return value of the function.
+         */
+        virtual bool GetMeshExtents(core::Call& call);
+
 		/**
 		 *	Fills the local mesh data vectors with a given mesh
 		 *
@@ -759,6 +778,9 @@ namespace molecularmaps {
 		/** The state of the shaders */
 		bool map_shader_init;
 
+        /** The output slot for the mesh data */
+        core::CalleeSlot meshDataOutSlot;
+
 		/** The input mesh data slot */
 		core::CallerSlot meshDataSlot;
 
@@ -776,6 +798,12 @@ namespace molecularmaps {
 
 		/** The Octree that contains all faces of the surface. */
 		Octree octree;
+
+        /** Mesh that gets outputted via a call for possible further processing */
+        geocalls::CallTriMeshData::Mesh out_mesh;
+
+        /** Parameter slot for the selection of the output mesh */
+        core::param::ParamSlot out_mesh_selection_slot;
 
 		/** The input slot for the probe radius necessary for filtering the voronoi diagram. */
 		core::param::ParamSlot probeRadiusSlot;
