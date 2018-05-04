@@ -148,9 +148,9 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
 
         auto const cell_length = bbox.LongestEdge() / static_cast<float>(res);
 
-        this->cell_num[0] = std::floorf(bbox.Width() / cell_length);
-        this->cell_num[1] = std::floorf(bbox.Height() / cell_length);
-        this->cell_num[2] = std::floorf(bbox.Depth() / cell_length);
+        this->cell_num[0] = std::floor(bbox.Width() / cell_length);
+        this->cell_num[1] = std::floor(bbox.Height() / cell_length);
+        this->cell_num[2] = std::floor(bbox.Depth() / cell_length);
 
         this->cell_size[0] = bbox.Width() / static_cast<float>(this->cell_num[0]);
         this->cell_size[1] = bbox.Height() / static_cast<float>(this->cell_num[1]);
@@ -176,9 +176,9 @@ bool megamol::stdplugin::datatools::ParticleVelocitiesDirAnalyzer::assertData(me
 
                 float const val = std::fabs(accessor(parts[i]));
 
-                int const idx_x = std::floorf(x / this->cell_size[0]);
-                int const idx_y = std::floorf(y / this->cell_size[1]);
-                int const idx_z = std::floorf(z / this->cell_size[2]);
+                int const idx_x = std::floor(x / this->cell_size[0]);
+                int const idx_y = std::floor(y / this->cell_size[1]);
+                int const idx_z = std::floor(z / this->cell_size[2]);
 
                 auto const idx = idx_x + this->cell_num[0] * (idx_y + this->cell_num[1] * idx_z);
 

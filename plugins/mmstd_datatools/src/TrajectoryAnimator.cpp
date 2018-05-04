@@ -364,7 +364,7 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::assertData(megamol::core
 
                 auto const idx_inter = (requestedFrameID - anim_start) / static_cast<float>(anim_end - anim_start);
 
-                unsigned int const pos_idx_start = std::floorf(traj_l * idx_inter);
+                unsigned int const pos_idx_start = std::floor(traj_l * idx_inter);
 
                 if (pos_idx_start<traj_l) {
                     this->highlightPointData.push_back(pos[pos_idx_start * 3 + 0]);

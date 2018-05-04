@@ -335,7 +335,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                     vptr = myDirPts->get_position(ret_matches[i].first);
                     dptr = myDirPts->get_velocity(ret_matches[i].first);
                     if (this->toggleDriftMagOutputSlot.Param<megamol::core::param::BoolParam>()->Value()) {
-                        col_i = std::sqrtf(dptr[0] * dptr[0] + dptr[1] * dptr[1] + dptr[2] * dptr[2]);
+                        col_i = std::sqrt(dptr[0] * dptr[0] + dptr[1] * dptr[1] + dptr[2] * dptr[2]);
                         if (maxDist < col_i) maxDist = col_i;
                     }
                 } else {
