@@ -124,6 +124,14 @@ namespace molecularmaps {
 		bool colourBindingSite(protein_calls::BindingSiteCall* p_bs, const vec3f& p_colour, 
 			protein_calls::MolecularDataCall* p_mdc, const float p_radius, float p_radiusOffset = 0.0f, bool p_ignoreRadius = false);
 
+        /** 
+         * Computes the bounding box of a given set of vertices
+         * 
+         * @param verts The coordinates of the vertices stored as continous vector
+         * @return The bounding box of the vertices
+         */
+        vislib::math::Cuboid<float> computeBoundingBox(std::vector<float>& verts);
+
 		/**
 		 * Compute the next point on the geodesic line based on the a and b interpolation
 		 * parameters. See
@@ -778,6 +786,9 @@ namespace molecularmaps {
 		/** The state of the shaders */
 		bool map_shader_init;
 
+        /** The bounding box of the mesh */
+        vislib::math::Cuboid<float> meshBoundingBox;
+
         /** The output slot for the mesh data */
         core::CalleeSlot meshDataOutSlot;
 
@@ -786,6 +797,12 @@ namespace molecularmaps {
 
 		/** The input mesh data slot, also contains the cap that was removed in the meshDataSlot */
 		core::CallerSlot meshDataSlotWithCap;
+
+        /** The faces of the output mesh */
+        std::vector<uint> mesh_faces;
+
+        /** The vertex positions of the output mesh */
+        std::vector<float> mesh_vertices;
 
 		/** Parameter slot to trigger the mirroring of the final map */
 		core::param::ParamSlot mirror_map_param;
@@ -819,6 +836,9 @@ namespace molecularmaps {
 
 		/** Center of the sphere */
 		vislib::math::Vector<float, 4> sphere_data;
+
+        /** Flag determining whether a new mesh should be stored */
+        bool store_new_mesh;
 
 		/** Button to store the map as an PNG. */
 		core::param::ParamSlot store_png_button;

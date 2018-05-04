@@ -220,6 +220,8 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 	this->map_shader_init = false;
 	this->map_vertex_vbo = 0;
 
+    this->meshBoundingBox = vislib::math::Cuboid<float>();
+
     this->meshDataOutSlot.SetCallback(geocalls::CallTriMeshData::ClassName(), geocalls::CallTriMeshData::FunctionName(0), &MapGenerator::GetMeshData);
     this->meshDataOutSlot.SetCallback(geocalls::CallTriMeshData::ClassName(), geocalls::CallTriMeshData::FunctionName(1), &MapGenerator::GetMeshExtents);
     this->MakeSlotAvailable(&this->meshDataOutSlot);
@@ -259,6 +261,8 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 
 	this->shaderReloadButtonParam << new param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->shaderReloadButtonParam);
+
+    this->store_new_mesh = false;
 
 	this->store_png_button.SetParameter(new param::ButtonParam('s'));
 	this->MakeSlotAvailable(&this->store_png_button);
@@ -596,6 +600,21 @@ bool MapGenerator::colourBindingSite(protein_calls::BindingSiteCall* p_bs, const
 	}
 
 	return true;
+}
+
+
+/*
+ * MapGenerator::computeBoundingBox
+ */
+vislib::math::Cuboid<float> MapGenerator::computeBoundingBox(std::vector<float>& verts) {
+    vislib::math::Cuboid<float> result;
+    if (verts.size() > 2) {
+        result.Set(verts[0], verts[1], verts[2], verts[0], verts[1], verts[2]);
+    }
+    for (size_t i = 1; i < verts.size() / 3; i++) {
+        result.GrowToPoint(vislib::math::Point<float, 3>(verts[3 * i + 0], verts[3 * i + 1], verts[3 * i + 2]));
+    }
+    return result;
 }
 
 
@@ -1358,6 +1377,11 @@ bool MapGenerator::GetExtents(Call& call) {
  * MapGenerator::GetMeshData
  */
 bool MapGenerator::GetMeshData(Call& call) {
+    geocalls::CallTriMeshData *ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
+    if (ctmd == nullptr) return false;
+
+    ctmd->SetObjects(1, &this->out_mesh);
+
     return true;
 }
 
@@ -1366,6 +1390,38 @@ bool MapGenerator::GetMeshData(Call& call) {
  * MapGenerator::GetMeshExtents
  */
 bool MapGenerator::GetMeshExtents(Call& call) {
+
+    geocalls::CallTriMeshData *ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
+    if (ctmd == nullptr) return false;
+
+    if (this->store_new_mesh) {
+        MeshMode selected = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+        geocalls::CallTriMeshData::Mesh themesh;
+        if (selected == MeshMode::MESH_ORIGINAL) {
+            themesh.SetVertexData(static_cast<uint>(this->vertices.size() / 3), this->vertices.data(), this->normals.data(), this->vertexColors.data(), nullptr, false);
+            themesh.SetTriangleData(static_cast<uint>(this->faces.size() / 3), this->faces.data(), false);
+            this->meshBoundingBox = this->computeBoundingBox(this->vertices);
+        } else if (selected == MeshMode::MESH_CUT) {
+            themesh.SetVertexData(static_cast<uint>(this->vertices_rebuild.size() / 3), this->vertices_rebuild.data(), this->normals_rebuild.data(), this->vertexColors_rebuild.data(), nullptr, false);
+            themesh.SetTriangleData(static_cast<uint>(this->faces_rebuild.size() / 3), this->faces_rebuild.data(), false);
+            this->meshBoundingBox = this->computeBoundingBox(this->vertices_rebuild);
+        } else if (selected == MeshMode::MESH_SPHERE) {
+            themesh.SetVertexData(static_cast<uint>(this->vertices_sphere.size() / 3), this->vertices_sphere.data(), this->vertices_sphere.data(), this->vertexColors_rebuild.data(), nullptr, false);
+            themesh.SetTriangleData(static_cast<uint>(this->faces_rebuild.size() / 3), this->faces_rebuild.data(), false);
+            this->meshBoundingBox = this->computeBoundingBox(this->vertices_sphere);
+        } else if (selected == MeshMode::MESH_MAP) {
+            // TODO
+        }
+        this->out_mesh = themesh;
+        this->store_new_mesh = false;
+    }
+
+    ctmd->SetFrameCount(1);
+    ctmd->AccessBoundingBoxes().Clear();
+    ctmd->AccessBoundingBoxes().SetObjectSpaceBBox(this->meshBoundingBox);
+    ctmd->AccessBoundingBoxes().SetObjectSpaceClipBox(this->meshBoundingBox);
+    // Make scaled world?
+
     return true;
 }
 
@@ -3427,6 +3483,12 @@ bool MapGenerator::Render(Call& call) {
 		shaderReloaded = true;
 	}
 
+    MeshMode meshMode = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+    if (this->out_mesh_selection_slot.IsDirty()) {
+        store_new_mesh = true;
+        this->out_mesh_selection_slot.ResetDirty();
+    }
+
 	// Set up the calls for the CallTriMeshData call and the MolecularDataCall call.
 	view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
 	if (cr3d == nullptr) return false;
@@ -3504,6 +3566,8 @@ bool MapGenerator::Render(Call& call) {
 		// Initialise computed flags.
 		this->computed_map = false;
 		this->computed_sphere = false;
+
+        this->store_new_mesh = true;
 
 		// Reset the latitude and longitude lines.
 		glDeleteBuffers(1, &this->lat_lon_lines_vbo);
@@ -3894,8 +3958,9 @@ bool MapGenerator::Render(Call& call) {
 	// Determine the data that is rendered based on the Display mode and
 	// update the renderer with the new data.
 	if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
-		this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
-
+        if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
+            this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
+        }
 	} else if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::SHADOW) {
 		// Get the AO texture.
 		auto vector = this->aoCalculator.getVertexShadows();
