@@ -801,11 +801,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("pkd_geometry"));
 
-                vertexData = ospNewData(element.partCount, OSP_FLOAT3, *element.raw, OSP_DATA_SHARED_BUFFER);
+                vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
                 ospSet1f(geo.back(), "radius", element.globalRadius);
+                ospSet1i(geo.back(), "colorType", element.colorType);
                 ospSetData(geo.back(), "position", vertexData);
+
+                printf("ColorType is %d\n", element.colorType);
 
                 break;
             case geometryTypeEnum::SPHERES:

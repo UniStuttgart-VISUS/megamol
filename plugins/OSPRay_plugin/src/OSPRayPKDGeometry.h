@@ -74,7 +74,7 @@ protected:
     core::CallerSlot getDataSlot;
 
 private:
-
+    megamol::core::param::ParamSlot colorTypeSlot;
 
     // color transfer data
     unsigned int tex_size;

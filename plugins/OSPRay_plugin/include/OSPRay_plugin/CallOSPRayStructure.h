@@ -90,6 +90,7 @@ public:
     unsigned int vertexStride;
     unsigned int colorLength;
     unsigned int colorStride;
+    int colorType;
     long long int partCount;
     float globalRadius;
     core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
