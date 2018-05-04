@@ -134,8 +134,8 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
         }
 
         float tmp_slice_size = min_rad * sliceSizeFactor;
-        float const slice_size = lng_edge / std::ceilf(lng_edge / tmp_slice_size);
-        unsigned int const bucket_count = static_cast<unsigned int>(std::ceilf(lng_edge / slice_size));
+        float const slice_size = lng_edge / std::ceil(lng_edge / tmp_slice_size);
+        unsigned int const bucket_count = static_cast<unsigned int>(std::ceil(lng_edge / slice_size));
 
         printf("HURZ: %f", slice_size);
 
@@ -156,8 +156,8 @@ bool megamol::stdplugin::datatools::DensityProfile::assertData(void) {
                 for (uint64_t par_i = 0; par_i < part_count; ++par_i) {
                     megamol::core::moldyn::SimpleSphericalParticles::particle_t par = parts[par_i];
                     float par_pos[3] = {par.vert.GetXf(), par.vert.GetYf(), par.vert.GetZf()};
-                    unsigned int bucket_idx = static_cast<unsigned int>(std::floorf(par_pos[lng_edge_idx] / slice_size)) >= bucket_count
-                        ? bucket_count - 1 : static_cast<unsigned int>(std::floorf(par_pos[lng_edge_idx] / slice_size));
+                    unsigned int bucket_idx = static_cast<unsigned int>(std::floor(par_pos[lng_edge_idx] / slice_size)) >= bucket_count
+                        ? bucket_count - 1 : static_cast<unsigned int>(std::floor(par_pos[lng_edge_idx] / slice_size));
                     ++(slices[bucket_idx]);
                 }
             }

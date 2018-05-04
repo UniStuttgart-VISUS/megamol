@@ -63,7 +63,7 @@ bool megamol::core::view::TransferFunction1D::getTFCallback(megamol::core::Call&
 
 
 bool megamol::core::view::TransferFunction1D::tfUpdated(megamol::core::param::ParamSlot& p) {
-    std::string script = p.Param<megamol::core::param::TransferFunc1DParam>()->Value();
+    std::string script = std::string(T2A(p.Param<megamol::core::param::TransferFunc1DParam>()->Value()));
     std::string result;
     auto ret = RunString(script, result);
     if (!ret) {
