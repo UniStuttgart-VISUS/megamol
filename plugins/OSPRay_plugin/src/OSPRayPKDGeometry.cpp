@@ -113,6 +113,7 @@ bool OSPRayPKDGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.colorLength = colorLength;
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
+    this->structureContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
 
     return true;
 }

@@ -79,6 +79,7 @@ public:
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
+    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however, this makes access more concise in the renderer
     void* ospstructure;
 
 

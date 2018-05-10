@@ -775,6 +775,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData xData      = NULL;
         OSPData yData      = NULL;
         OSPData zData      = NULL;
+        OSPData bboxData   = nullptr;
         OSPError error;
         //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
@@ -789,11 +790,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
             case geometryTypeEnum::PKD:
+            {
                 if (element.raw == NULL) {
                     returnValue = false;
                     break;
-                }                
-                
+                }
+
                 error = ospLoadModule("pkd");
                 if (error != OSPError::OSP_NO_ERROR) {
                     vislib::sys::Log::DefaultLog.WriteError("Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
@@ -804,11 +806,17 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
+                // set bbox
+                bboxData = ospNewData(6, OSP_FLOAT, element.boundingBox->ObjectSpaceBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(bboxData);
+
                 ospSet1f(geo.back(), "radius", element.globalRadius);
                 ospSet1i(geo.back(), "colorType", element.colorType);
                 ospSetData(geo.back(), "position", vertexData);
+                ospSetData(geo.back(), "bbox", bboxData);
 
-                printf("ColorType is %d\n", element.colorType);
+                printf("AbstractOSPRayRenderer: ColorType is %d\n", element.colorType); //< TODO temporary debug info
+            }
 
                 break;
             case geometryTypeEnum::SPHERES:
@@ -1044,6 +1052,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (xData != NULL) ospRelease(xData);
             if (yData != NULL) ospRelease(yData);
             if (zData != NULL) ospRelease(zData);
+            if (bboxData != nullptr) ospRelease(bboxData);
 
             break;
 
