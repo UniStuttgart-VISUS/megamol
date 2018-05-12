@@ -202,12 +202,14 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospRelease(world);
         ospRelease(renderer);
         switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
-        case SCIVIS:
-            this->setupOSPRay(renderer, camera, world, "scivis");
-            break;
         case PATHTRACER:
             this->setupOSPRay(renderer, camera, world, "pathtracer");
             break;
+        case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+            this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+            break;
+        default:
+            this->setupOSPRay(renderer, camera, world, "scivis");
         }
         renderer_has_changed = true;
     }
