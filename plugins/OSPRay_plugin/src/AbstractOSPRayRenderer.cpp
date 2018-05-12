@@ -51,7 +51,8 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     getLightSlot("getLight", "Connects to a light source")
     ,
     // Use depth buffer component
-    useDB("useDBcomponent", "activates depth composition with OpenGL content") {
+    useDB("useDBcomponent", "activates depth composition with OpenGL content")
+    , deviceTypeSlot("device", "Set the type of the OSPRay device") {
 
     // ospray lights
     lightsToRender = NULL;
@@ -65,6 +66,7 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
     rdt->SetTypePair(SCIVIS, "SciVis");
     rdt->SetTypePair(PATHTRACER, "PathTracer");
+    rdt->SetTypePair(MPI_RAYCAST, "MPI_Raycast");
 
     // Ambient parameters
     this->AOtransparencyEnabled << new core::param::BoolParam(false);
@@ -96,6 +98,13 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     // Depth
     this->useDB << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->useDB);
+
+    // Device
+    auto deviceEp = new megamol::core::param::EnumParam(deviceType::DEFAULT);
+    deviceEp->SetTypePair(deviceType::DEFAULT, "default");
+    deviceEp->SetTypePair(deviceType::MPI_DISTRIBUTED, "mpi_distributed");
+    this->deviceTypeSlot << deviceEp;
+    this->MakeSlotAvailable(&this->deviceTypeSlot);
 }
 
 void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
@@ -219,12 +228,21 @@ void AbstractOSPRayRenderer::releaseTextureScreen() {
     glDeleteTextures(1, &this->depth);
 }
 
-void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
 
-    if (dvce == NULL) {
+void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
+    if (dvce == nullptr) {
         ospLoadModule("ispc");
-        dvce = ospNewDevice("default");
-        ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+        switch (this->deviceTypeSlot.Param<megamol::core::param::EnumParam>()->Value()) {
+        case deviceType::MPI_DISTRIBUTED: {
+            ospLoadModule("mpi");
+            dvce = ospNewDevice("mpi_distributed");
+            ospDeviceSet1i(dvce, "masterRank", 0);
+        } break;
+        default: {
+            dvce = ospNewDevice("default");
+            ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+        }
+        }
         ospDeviceCommit(dvce);
     }
     ospSetCurrentDevice(dvce);

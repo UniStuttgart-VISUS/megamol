@@ -128,9 +128,13 @@ protected:
     core::param::ParamSlot shadows;
     core::param::ParamSlot useDB;
 
+    megamol::core::param::ParamSlot deviceTypeSlot;
+
+    // device type
+    enum deviceType {DEFAULT, MPI_DISTRIBUTED};
 
     // renderer type
-    enum rdenum { SCIVIS, PATHTRACER };
+    enum rdenum {SCIVIS, PATHTRACER, MPI_RAYCAST};
 
     // light
     std::vector<OSPLight> lightArray;
