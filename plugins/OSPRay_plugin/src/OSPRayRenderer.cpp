@@ -100,9 +100,9 @@ bool OSPRayRenderer::create() {
         return false;
     }
 
-    this->initOSPRay(device);
+    //this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, "scivis");
+    //this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -121,10 +121,30 @@ void OSPRayRenderer::release() {
 ospray::OSPRayRenderer::Render
 */
 bool OSPRayRenderer::Render(megamol::core::Call& call) {
+    this->initOSPRay(device);
 
     if (device != ospGetCurrentDevice()) {
         ospSetCurrentDevice(device);
     }
+
+    // if user wants to switch renderer
+    if (this->rd_type.IsDirty()) {
+        ospRelease(camera);
+        ospRelease(world);
+        ospRelease(renderer);
+        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+        case PATHTRACER:
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
+            break;
+        case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+            this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+            break;
+        default:
+            this->setupOSPRay(renderer, camera, world, "scivis");
+        }
+        renderer_has_changed = true;
+    }
+
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -195,24 +215,23 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospCommit(framebuffer);
     }
 
-
-    // if user wants to switch renderer
-    if (this->rd_type.IsDirty()) {
-        ospRelease(camera);
-        ospRelease(world);
-        ospRelease(renderer);
-        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
-        case PATHTRACER:
-            this->setupOSPRay(renderer, camera, world, "pathtracer");
-            break;
-        case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
-            this->setupOSPRay(renderer, camera, world, "mpi_raycast");
-            break;
-        default:
-            this->setupOSPRay(renderer, camera, world, "scivis");
-        }
-        renderer_has_changed = true;
-    }
+    //// if user wants to switch renderer
+    //if (this->rd_type.IsDirty()) {
+    //    ospRelease(camera);
+    //    ospRelease(world);
+    //    ospRelease(renderer);
+    //    switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+    //    case PATHTRACER:
+    //        this->setupOSPRay(renderer, camera, world, "pathtracer");
+    //        break;
+    //    case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+    //        this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+    //        break;
+    //    default:
+    //        this->setupOSPRay(renderer, camera, world, "scivis");
+    //    }
+    //    renderer_has_changed = true;
+    //}
     setupOSPRayCamera(camera, cr);
     ospCommit(camera);
 

@@ -16,6 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "ospray/ospray.h"
+#include "ospcommon/box.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"
@@ -244,8 +245,9 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
         }
         }
         ospDeviceCommit(dvce);
+        ospSetCurrentDevice(dvce);
     }
-    ospSetCurrentDevice(dvce);
+    //this->deviceTypeSlot.MakeUnavailable(); //< TODO: Make sure you can set a device only once
 }
 
 
@@ -706,6 +708,10 @@ bool AbstractOSPRayRenderer::fillWorld() {
     // ospRelease(this->world);
 
 
+    ospcommon::box3f worldBounds;
+    std::vector<ospcommon::box3f> ghostRegions;
+    std::vector<ospcommon::box3f> regions;
+
     for (auto entry : this->structureMap) {
 
         numCreateGeo = 1;
@@ -714,7 +720,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         // custom material settings
         OSPMaterial material;
         material = NULL;
-        if (element.materialContainer != NULL) {
+        if (element.materialContainer != NULL && this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
                 material = ospNewMaterial(renderer, "OBJMaterial");
@@ -797,6 +803,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData zData = NULL;
         OSPData bboxData = nullptr;
         OSPError error;
+
         // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
@@ -835,6 +842,17 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet1i(geo.back(), "colorType", element.colorType);
                 ospSetData(geo.back(), "position", vertexData);
                 ospSetData(geo.back(), "bbox", bboxData);
+
+                if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
+                    auto const half_radius = element.globalRadius*0.5f;
+
+                    auto const bbox = element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
+                    ospcommon::vec3f lower{bbox[0]-half_radius, bbox[1]-half_radius, bbox[2]-half_radius}; //< TODO The bbox needs to include complete sphere bound
+                    ospcommon::vec3f upper{bbox[3]+half_radius, bbox[4]+half_radius, bbox[5]+half_radius};
+                    //ghostRegions.emplace_back(lower, upper);
+                    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
+                    regions.emplace_back(lower, upper);
+                }
             }
 
             break;
@@ -1177,8 +1195,19 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         }
 
-
     } // for element loop
+
+    if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size()>0 && regions.size()>0) {
+        for (auto const& el : regions) {
+            ghostRegions.push_back(worldBounds);
+        }
+        auto ghostRegionData = ospNewData(2 * ghostRegions.size(), OSP_FLOAT3, ghostRegions.data());
+        auto regionData = ospNewData(2 * regions.size(), OSP_FLOAT3, ghostRegions.data());
+        ospCommit(ghostRegionData);
+        ospCommit(regionData);
+        ospSetData(world, "ghostRegions", ghostRegionData);
+        ospSetData(world, "regions", ghostRegionData);
+    }
 
     return returnValue;
 }
