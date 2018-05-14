@@ -1379,7 +1379,6 @@ bool MapGenerator::GetExtents(Call& call) {
 bool MapGenerator::GetMeshData(Call& call) {
     geocalls::CallTriMeshData *ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
     if (ctmd == nullptr) return false;
-
     ctmd->SetObjects(1, &this->out_mesh);
 
     return true;
@@ -1390,7 +1389,6 @@ bool MapGenerator::GetMeshData(Call& call) {
  * MapGenerator::GetMeshExtents
  */
 bool MapGenerator::GetMeshExtents(Call& call) {
-
     geocalls::CallTriMeshData *ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
     if (ctmd == nullptr) return false;
 
@@ -1415,7 +1413,6 @@ bool MapGenerator::GetMeshExtents(Call& call) {
         this->out_mesh = themesh;
         this->store_new_mesh = false;
     }
-
     ctmd->SetFrameCount(1);
     ctmd->AccessBoundingBoxes().Clear();
     ctmd->AccessBoundingBoxes().SetObjectSpaceBBox(this->meshBoundingBox);
