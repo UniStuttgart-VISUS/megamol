@@ -1,0 +1,53 @@
+#pragma once
+
+namespace megamol {
+namespace pbs {
+
+template <int DIM>
+struct box {
+    float lower[DIM];
+    float upper[DIM];
+};
+
+using bbox_t = box<3>;
+using viewp_t = box<2>;
+
+enum fbo_color_type : unsigned int {
+    RGBAf,
+    RGBAu8,
+    RGBf,
+    RGBu8
+};
+
+enum fbo_depth_type : unsigned int {
+    Df,
+    Du16,
+    Du24,
+    Du32
+};
+
+using data_ptr = char*;
+
+using id_t = unsigned int;
+
+struct fbo_msg_header {
+    // node id
+    id_t node_id;
+    // obbox
+    bbox_t os_bbox;
+    // cbbox
+    bbox_t cs_bbox;
+    // viewport
+    viewp_t screen_area;
+    // updated viewport
+    viewp_t updated_area;
+    // fbo color type
+    fbo_color_type color_type;
+    // fbo depth type
+    fbo_depth_type depth_type;
+};
+
+using fbo_msg_header_t = fbo_msg_header;
+
+} // end namespace pbs
+} // end namespace megamol
