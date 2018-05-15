@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #ifdef WITH_MPI
 #include <mpi.h>
 #endif
@@ -13,15 +14,20 @@ enum send_type : unsigned int { ST_UNDEF = 0, BCAST, SCATTER, SEND, ISEND };
 
 enum recv_type : unsigned int { RT_UNDEF = 0, RECV, IRECV };
 
+
 class AbstractCommFabric {
 public:
     virtual bool Connect(std::string const& address) = 0;
     virtual bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) = 0;
     virtual bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) = 0;
     virtual bool Disconnect(void) = 0;
-    virtual ~AbstractCommFabric(void);
+    virtual ~AbstractCommFabric(void) = default;
 };
 
+
+/**
+ * Comm layer for MPI
+ */
 class MPICommFabric : public AbstractCommFabric {
 public:
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
@@ -29,6 +35,9 @@ public:
     virtual ~MPICommFabric(void);
 };
 
+/**
+ * Comm layer for ZeroMQ
+ */
 class ZMQCommFabric : public AbstractCommFabric {
 public:
     ZMQCommFabric(zmq::socket_type const& type);
@@ -49,16 +58,38 @@ private:
     std::string address_;
 };
 
+
+/**
+ * Comm layer for WebSocket
+ */
 class WSCommFabric : public AbstractCommFabric {};
 
-class FBOCommFabric {
-public:
-    FBOCommFabric(void);
 
-    virtual ~FBOCommFabric(void);
+class FBOCommFabric : public AbstractCommFabric {
+public:
+    FBOCommFabric(AbstractCommFabric&& pimpl);
+
+    FBOCommFabric(FBOCommFabric const& rhs) = delete;
+
+    FBOCommFabric& operator=(FBOCommFabric const& rhs) = delete;
+
+    FBOCommFabric(FBOCommFabric&& rhs) noexcept = default;
+
+    FBOCommFabric& operator=(FBOCommFabric&& rhs) noexcept = default;
+
+    bool Connect(std::string const& address) override;
+
+    bool Send(std::vector<char> const& buf, send_type const type) override;
+
+    bool Recv(std::vector<char>& buf, recv_type const type) override;
+
+    bool Disconnect(void) override;
+
+    virtual ~FBOCommFabric(void) = default;
 
 protected:
 private:
+    std::unique_ptr<AbstractCommFabric> pimpl_;
 };
 
 } // end namespace pbs

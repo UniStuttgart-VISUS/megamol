@@ -51,3 +51,24 @@ bool megamol::pbs::ZMQCommFabric::Disconnect() {
 
 
 megamol::pbs::ZMQCommFabric::~ZMQCommFabric() { this->Disconnect(); }
+
+
+megamol::pbs::FBOCommFabric::FBOCommFabric(AbstractCommFabric&& pimpl) {
+    this->pimpl_ = std::make_unique<AbstractCommFabric>(pimpl);
+}
+
+
+bool megamol::pbs::FBOCommFabric::Connect(std::string const& address) { return this->pimpl_->Connect(address); }
+
+
+bool megamol::pbs::FBOCommFabric::Send(std::vector<char> const& buf, send_type const type) {
+    return this->pimpl_->Send(buf, type);
+}
+
+
+bool megamol::pbs::FBOCommFabric::Recv(std::vector<char>& buf, recv_type const type) {
+    return this->pimpl_->Recv(buf, type);
+}
+
+
+bool megamol::pbs::FBOCommFabric::Disconnect() { return this->pimpl_->Disconnect(); }
