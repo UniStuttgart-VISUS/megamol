@@ -33,7 +33,7 @@ using namespace megamol::core::utility;
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -43,7 +43,7 @@ SDFFont::SDFFont(FontName fn) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -53,7 +53,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -64,7 +64,7 @@ SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -75,7 +75,7 @@ SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -86,7 +86,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -98,7 +98,7 @@ SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -109,7 +109,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -121,7 +121,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false)  {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false)  {
 
 }
 
@@ -130,7 +130,7 @@ SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
 }
 
@@ -139,7 +139,7 @@ SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
 }
@@ -149,7 +149,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
 }
@@ -159,7 +159,7 @@ SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
 }
@@ -169,7 +169,7 @@ SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -180,7 +180,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
 }
@@ -190,7 +190,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+        fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -201,7 +201,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, boo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -212,7 +212,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -223,7 +223,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+        fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -234,7 +234,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false){
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false){
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -245,7 +245,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -256,7 +256,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -267,7 +267,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+    fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -278,7 +278,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useStringCache(false) {
+        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -315,7 +315,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -328,7 +328,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
-    this->drawGlyphs(c, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -337,7 +337,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -351,7 +351,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
     
-    this->drawGlyphs(c, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -360,7 +360,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float size, bool flipY, c
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -401,7 +401,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
         break;
     }
 
-    this->drawGlyphs(c, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -410,7 +410,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -451,7 +451,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
         break;
     }
 
-    this->drawGlyphs(c, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -460,7 +460,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float w, float h, float s
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -473,7 +473,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
-    this->drawGlyphs(c, run, x, y, z, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -482,7 +482,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
+void SDFFont::DrawString(float col[4], float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -495,7 +495,7 @@ void SDFFont::DrawString(float c[4], float x, float y, float z, float size, bool
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
-    this->drawGlyphs(c, run, x, y, z, size, flipY, align);
+    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -542,31 +542,28 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 
 
 /*
- * SDFFont::DrawStringCache
+ * SDFFont::BatchDrawString
  */
-/*
-void SDFFont::DrawStringCache(void) {
+void SDFFont::BatchDrawString(float col[4]) const {
 
-
-
+    // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)glyphCount * 18 * sizeof(GLfloat), this->posDataCache, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(),
+                GL_STATIC_DRAW);
         } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)glyphCount * 12 * sizeof(GLfloat), this->texDataCache, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(),
+                GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-
-    // ------------------------------------------------------------------------
-    // Draw data buffers
-    this->render(col, glyphCount, modelViewProjMatrix);
-
-    
+    // Draw batch cache 
+    unsigned int glyphIter = (this->posBatchCache.size() / 18);
+    this->render(col, glyphIter);
 }
-*/
+
 
 /* PRIVATE ********************************************************************/
 
@@ -828,15 +825,17 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
-    unsigned cnt = 0;
+    unsigned glyphCnt = 0;
     int *tmpRun = run;
     while ((*tmpRun) != 0) {
         tmpRun++;
-        cnt++;
+        glyphCnt++;
     }
+    unsigned int posCnt = glyphCnt * 18; // 2 Triangles * 3 Vertices * 3 Coordinates
+    unsigned int texCnt = glyphCnt * 12; // 2 Triangles * 3 Vertices * 2 Coordinates
 
-    GLfloat *posData = new GLfloat[cnt * 18]; // 2 Triangles * 3 Vertices * 3 Coordinates
-    GLfloat *texData = new GLfloat[cnt * 12]; // 2 Triangles * 3 Vertices * 2 Coordinates
+    GLfloat* posData = new GLfloat[posCnt];   
+    GLfloat* texData = new GLfloat[texCnt]; 
 
     float gx = x;
     float gy = y;
@@ -844,7 +843,6 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
 
     float sy = (flipY) ? (size) : (-size);
     float kern = 0.0f;
-    unsigned int glyphCount = 0;
     unsigned int lastGlyphId = 0;
 
     // Billboard stuff
@@ -897,6 +895,7 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         gx -= this->lineWidth(run, false) * size;
     }
 
+    unsigned int glyphIter = 0;
     while ((*run) != 0) {
 
         // Run contains only available character indices (=> glyph is always != nullptr)
@@ -946,88 +945,96 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         float tmpP12y = tmpP03y + (sy * glyph->height);
 
         // Set position data:
-        posData[glyphCount * 18 + 0]  = tmpP01x;   // p0-x
-        posData[glyphCount * 18 + 1]  = tmpP03y;   // p0-y
-        posData[glyphCount * 18 + 2]  = gz;        // p0-z
+        posData[glyphIter * 18 + 0]  = tmpP01x;   // p0-x
+        posData[glyphIter * 18 + 1]  = tmpP03y;   // p0-y
+        posData[glyphIter * 18 + 2]  = gz;        // p0-z
 
-        posData[glyphCount * 18 + 3] = tmpP01x;    // p1-x
-        posData[glyphCount * 18 + 4] = tmpP12y;    // p1-y
-        posData[glyphCount * 18 + 5] = gz;         // p1-z
+        posData[glyphIter * 18 + 3] = tmpP01x;    // p1-x
+        posData[glyphIter * 18 + 4] = tmpP12y;    // p1-y
+        posData[glyphIter * 18 + 5] = gz;         // p1-z
 
-        posData[glyphCount * 18 + 6] = tmpP23x;    // p2-x
-        posData[glyphCount * 18 + 7] = tmpP12y;    // p2-y
-        posData[glyphCount * 18 + 8] = gz;         // p2-z
+        posData[glyphIter * 18 + 6] = tmpP23x;    // p2-x
+        posData[glyphIter * 18 + 7] = tmpP12y;    // p2-y
+        posData[glyphIter * 18 + 8] = gz;         // p2-z
 
-        posData[glyphCount * 18 + 9]  = tmpP01x;   // p0-x
-        posData[glyphCount * 18 + 10] = tmpP03y;   // p0-y
-        posData[glyphCount * 18 + 11] = gz;        // p0-z
+        posData[glyphIter * 18 + 9]  = tmpP01x;   // p0-x
+        posData[glyphIter * 18 + 10] = tmpP03y;   // p0-y
+        posData[glyphIter * 18 + 11] = gz;        // p0-z
 
-        posData[glyphCount * 18 + 12] = tmpP23x;   // p2-x
-        posData[glyphCount * 18 + 13] = tmpP12y;   // p2-y
-        posData[glyphCount * 18 + 14] = gz;        // p2-z
+        posData[glyphIter * 18 + 12] = tmpP23x;   // p2-x
+        posData[glyphIter * 18 + 13] = tmpP12y;   // p2-y
+        posData[glyphIter * 18 + 14] = gz;        // p2-z
 
-        posData[glyphCount * 18 + 15] = tmpP23x;   // p3-x
-        posData[glyphCount * 18 + 16] = tmpP03y;   // p3-y
-        posData[glyphCount * 18 + 17] = gz;        // p3-z
+        posData[glyphIter * 18 + 15] = tmpP23x;   // p3-x
+        posData[glyphIter * 18 + 16] = tmpP03y;   // p3-y
+        posData[glyphIter * 18 + 17] = gz;        // p3-z
 
         // Change rotation of quad positions for flipped y axis from CCW to CW.
         if (flipY) {
-            posData[glyphCount * 18 + 3] = tmpP23x;   // p2-x
-            posData[glyphCount * 18 + 6] = tmpP01x;   // p1-x
-            posData[glyphCount * 18 + 13] = tmpP03y;  // p3-y
-            posData[glyphCount * 18 + 16] = tmpP12y;  // p2-y
+            posData[glyphIter * 18 + 3] = tmpP23x;   // p2-x
+            posData[glyphIter * 18 + 6] = tmpP01x;   // p1-x
+            posData[glyphIter * 18 + 13] = tmpP03y;  // p3-y
+            posData[glyphIter * 18 + 16] = tmpP12y;  // p2-y
         }
         
         // Set texture data
-        texData[glyphCount * 12 + 0] = glyph->texX0; // t0-x
-        texData[glyphCount * 12 + 1] = glyph->texY0; // t0-y
+        texData[glyphIter * 12 + 0] = glyph->texX0; // t0-x
+        texData[glyphIter * 12 + 1] = glyph->texY0; // t0-y
 
-        texData[glyphCount * 12 + 2] = glyph->texX0; // t1-x
-        texData[glyphCount * 12 + 3] = glyph->texY1; // t1-y
+        texData[glyphIter * 12 + 2] = glyph->texX0; // t1-x
+        texData[glyphIter * 12 + 3] = glyph->texY1; // t1-y
 
-        texData[glyphCount * 12 + 4] = glyph->texX1; // t2-x
-        texData[glyphCount * 12 + 5] = glyph->texY1; // t2-y
+        texData[glyphIter * 12 + 4] = glyph->texX1; // t2-x
+        texData[glyphIter * 12 + 5] = glyph->texY1; // t2-y
 
-        texData[glyphCount * 12 + 6] = glyph->texX0; // t0-x
-        texData[glyphCount * 12 + 7] = glyph->texY0; // t0-y
+        texData[glyphIter * 12 + 6] = glyph->texX0; // t0-x
+        texData[glyphIter * 12 + 7] = glyph->texY0; // t0-y
 
-        texData[glyphCount * 12 + 8]  = glyph->texX1; // t2-x
-        texData[glyphCount * 12 + 9]  = glyph->texY1; // t2-y
+        texData[glyphIter * 12 + 8]  = glyph->texX1; // t2-x
+        texData[glyphIter * 12 + 9]  = glyph->texY1; // t2-y
 
-        texData[glyphCount * 12 + 10] = glyph->texX1; // t3-x
-        texData[glyphCount * 12 + 11] = glyph->texY0; // t3-y
+        texData[glyphIter * 12 + 10] = glyph->texX1; // t3-x
+        texData[glyphIter * 12 + 11] = glyph->texY0; // t3-y
 
         // Change rotation of texture coord for flipped y axis from CCW to CW.
         if (flipY) {
-            texData[glyphCount * 12 + 2]  = glyph->texX1; // t2-x
-            texData[glyphCount * 12 + 4]  = glyph->texX0; // t1-x
-            texData[glyphCount * 12 + 9]  = glyph->texY0; // t3-y
-            texData[glyphCount * 12 + 11] = glyph->texY1; // t2-y
+            texData[glyphIter * 12 + 2]  = glyph->texX1; // t2-x
+            texData[glyphIter * 12 + 4]  = glyph->texX0; // t1-x
+            texData[glyphIter * 12 + 9]  = glyph->texY0; // t3-y
+            texData[glyphIter * 12 + 11] = glyph->texY1; // t2-y
         }
 
         // Update info for next character
-        glyphCount++;
+        glyphIter++;
         gx += ((glyph->xadvance + kern) * size);
         lastGlyphId = glyph->id;
         run++;
     }
 
-    if (!this->useStringCache) {
-    
+    if (this->useBatchDraw) {
+        // Copy new data to batch cache
+        for (unsigned int i = 0; i < posCnt; ++i) {
+            this->posBatchCache.push_back(posData[i]);
+        }
+        for (unsigned int i = 0; i < texCnt; ++i) {
+            this->texBatchCache.push_back(texData[i]);
+        }
+    } 
+    else {
         for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
             glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
             if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)glyphCount * 18 * sizeof(GLfloat), posData, GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)posCnt * sizeof(GLfloat), posData, GL_STATIC_DRAW);
             }
             else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)glyphCount * 12 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)texCnt * sizeof(GLfloat), texData, GL_STATIC_DRAW);
             }
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 
         // Draw data buffers
-        this->render(col, glyphCount);
-    }
+        this->render(col, glyphCnt);
+    } 
 }
 
 

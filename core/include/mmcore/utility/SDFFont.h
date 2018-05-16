@@ -323,10 +323,10 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
-        // float c[4], 
+        // float col[4], 
 
 
         /**
@@ -340,8 +340,8 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Draws a text at the specified position.
@@ -355,8 +355,8 @@ namespace utility {
         * @param txt   The zero-terminated string to draw.
         * @param align The alignment of the text.
         */
-        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float col[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -454,26 +454,26 @@ namespace utility {
             a = (a / 3.141592653589f * 180.0f);
         }
 
-        /*
-        inline void EnableStringCache(void) { 
-            this->useStringCache = true;
+
+        inline void EnableBatchDraw(void) { 
+            this->useBatchDraw = true;
         }
 
-        inline void DisableStringCache(void) { 
-            this->useStringCache = false;
+        inline void DisableBatchDraw(void) { 
+            this->useBatchDraw = false;
         }
 
-        inline bool IsStringCacheEnabled(void) { 
-            return this->useStringCache;
+        inline bool IsBatchDrawEnabled(void) { 
+            return this->useBatchDraw;
         }
 
-        inline void ClearStringCache(void) {
-            ARY_SAFE_DELETE(this->posDataCache);
-            ARY_SAFE_DELETE(this->texDataCache);
+        inline void ClearBatchCache(void) {
+            this->posBatchCache.clear();
+            this->texBatchCache.clear();
         }
 
-        void DrawStringCache(void);
-        */
+        void BatchDrawString(float col[4]) const;
+
 
     protected:
 
@@ -515,9 +515,6 @@ namespace utility {
         /** Billboard mode. */
         bool billboard;
 
-        /** String cache status. */
-        bool useStringCache;
-
         /** Quaternion for rotation. */
         vislib::math::Quaternion<float> rotation;
 
@@ -548,9 +545,12 @@ namespace utility {
         /** Vertex buffer objects. */
         std::vector<SDFVBO> vbos;
 
+        /** String batch cache status. */
+        bool useBatchDraw;
+
         /** Position and texture data cache. */
-        //GLfloat* posDataCache;
-        //GLfloat* texDataCache;
+        mutable std::vector<float> posBatchCache;
+        mutable std::vector<float> texBatchCache;
 
 
         /** The glyph kernings. */
@@ -674,7 +674,7 @@ namespace utility {
         * @param gc   The total glyph count to render.
         * @param mvp  The model view projection matrix to use.
         */
-        void render(float c[4], unsigned int gc) const;
+        void render(float col[4], unsigned int gc) const;
 
         /**
         * Translate enum font name into font file name.
