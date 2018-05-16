@@ -61,7 +61,6 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleManipulator = 0;
     this->showHelpText      = false;
     this->manipOutsideModel = false;
-    this->mouseManipTime    = std::clock();
 
     // init parameters
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -161,6 +160,7 @@ void CinematicRenderer::release(void) {
 * CinematicRenderer::GetCapabilities
 */
 bool CinematicRenderer::GetCapabilities(Call& call) {
+
 	CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
 	if (cr3d == nullptr) return false;
 
@@ -264,11 +264,12 @@ bool CinematicRenderer::Render(Call& call) {
     float totalSimTime = static_cast<float>(oc->TimeFramesCount());
     ccc->setTotalSimTime(totalSimTime);
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-    // Set simulation time based on selected keyframe ('disables' animation via view3d)
 
     *oc = *cr3d;
 
     Keyframe skf = ccc->getSelectedKeyframe();
+
+    // Set simulation time based on selected keyframe ('disables' animation via view3d)
     float simTime = skf.GetSimTime();
     oc->SetTime(simTime * totalSimTime);
 
@@ -466,8 +467,10 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
-        midLabel = " keyframe manipulation mode ";
+    if (cr3d->MouseToggleSelection()) {
+        midLabel = " KEYFRAME manipulation mode ";
+    } else {
+        midLabel = " SCENE manipulation mode ";
     }
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
@@ -526,8 +529,8 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[t] Linearize simulation time between two keyframes. \n";
         helpText += "[left mouse button] Select keyframe. \n";
         helpText += "[middle mouse button] Time axis scaling at mouse position. \n";
-        helpText += "[right mouse button] Drag & drop keyframe. \n";
-        helpText += "[right/left] Move to right/left animation time frame. \n";
+        helpText += "[right mouse button] Drag & drop keyframe OR pan axes. \n";
+        helpText += "[right/left] Move keyframe selection to right/left on animation time axis. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
@@ -581,8 +584,6 @@ bool CinematicRenderer::Render(Call& call) {
 *
 */
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-
-    this->mouseManipTime = std::clock();
 
     bool consume = false;
 

@@ -124,9 +124,7 @@ namespace megamol {
 
             vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
 
-            bool                           redoAdaptation;     // indicates if the segment size/value should be recalculated
-
-            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of naimation axis
+            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
             float                          animAxisLen;        // length of the animation axis
             float                          animTotalTime;      // the total animation time
             float                          animSegmSize;       // the world space size of one segment of the animation time ruler
@@ -161,18 +159,20 @@ namespace megamol {
             float                          keyfMarkSize;
             float                          rulerMarkSize;
             unsigned int                   fps;
-
+            vislib::math::Vector<float, 2> viewport;
 
             /**********************************************************************
             * functions
             **********************************************************************/
 
             /** Loading texture for keyframe marker. */
-            bool LoadTexture(vislib::StringA filename);
+            bool loadTexture(vislib::StringA filename);
 
             /** Draw the keyframe marker. */
-            void DrawKeyframeMarker(float posX, float posY);
+            void drawKeyframeMarker(float posX, float posY);
 
+            /** Adapt axis scaling. */
+            void axisAdaptation(void);
 
             /**********************************************************************
             * callback stuff

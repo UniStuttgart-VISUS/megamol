@@ -170,6 +170,24 @@ namespace view {
         }
 
         /**
+         * Gets the state of the mouse toggle selection.
+         *
+         * @return The current state of the mouse toggle selection
+         */
+        inline bool MouseToggleSelection(void) { 
+            return this->mouseToggleSelection; 
+        }
+
+        /**
+         * Sets the state of the mouse toggle selection.
+         *
+         * @param selection The current state of the mouse toggle selection
+         */
+        inline void SetMouseToggleSelection(bool selection) { 
+            this->mouseToggleSelection = selection; 
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -202,6 +220,9 @@ namespace view {
 
         /** The number of milliseconds required to render the last frame */
         double lastFrameTime;
+
+        /** The current state of the mouse toggle selection */
+        bool mouseToggleSelection;
 
     };
 #ifdef _WIN32

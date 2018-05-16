@@ -152,7 +152,6 @@ namespace megamol {
             unsigned int                     toggleManipulator;
             bool                             manipOutsideModel;
             bool                             showHelpText;
-            clock_t                          mouseManipTime;
 
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;

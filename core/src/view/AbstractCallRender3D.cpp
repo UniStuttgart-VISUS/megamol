@@ -57,6 +57,6 @@ view::AbstractCallRender3D& view::AbstractCallRender3D::operator=(
  * view::AbstractCallRender3D::AbstractCallRender3D
  */
 view::AbstractCallRender3D::AbstractCallRender3D(void) : AbstractCallRender(),
-        camParams(), bboxs(), capabilities(0), lastFrameTime(0.0) {
+        camParams(), bboxs(), capabilities(0), lastFrameTime(0.0), mouseToggleSelection(false) {
     // intentionally empty
 }

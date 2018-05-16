@@ -126,11 +126,11 @@ CinematicView::CinematicView(void) : View3D(),
 
     // TEMPORARY HACK #########################################################
     // Disable enableMouseSelectionSlot for this view
-    // -> 'TAB'-key is needed in view3D of cinematic renderer to enable 
+    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer 
     //    mouse selection for manipulatiors
     this->enableMouseSelectionSlot.MakeUnavailable();
-    // Disable toggleAnimPlaySlot for this view
-    // -> 'SPACE'-key is needed to be asigned to cinematic camera animation param
+    // Disable toggleAnimPlaySlot in this view(3d)
+    // -> 'SPACE'-key is needed to be active in the View3D of the CinematicRenderer
     param::ParamSlot* toggleAnimPlaySlot = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(3)); // toggleAnimPlaySlot
     toggleAnimPlaySlot->MakeUnavailable();
 }
