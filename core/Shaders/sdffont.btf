@@ -11,26 +11,16 @@ in      vec3  inVertPos;
 in      vec2  inVertTexCoord;
 
 uniform float fontSize;
-uniform int   billboard = 0;
-uniform mat4  pMat;          // ProjectionMatrix
-uniform mat4  mvpMat;        // ModelViewProjection-Matrix
+uniform mat4  mvpMat;
 
 out     vec2  texCoord;
 
-
-/*
-* MAIN
-*/
+/** MAIN **/
 void main() {
 
     texCoord = inVertTexCoord;
     
-    if (billboard == 1) {   
-        gl_Position = pMat * vec4(inVertPos, 1.0);
-    }
-    else {
-        gl_Position = mvpMat * vec4(inVertPos, 1.0);
-    }
+    gl_Position = mvpMat * vec4(inVertPos, 1.0);
 }
 
 ]]>
@@ -54,10 +44,7 @@ uniform int       renderType = 1;
 
 layout(location = 0) out vec4 outFragColor;
 
-
-/*
-* MAIN
-*/
+/** MAIN **/
 void main(void) {
 
     float outlineWidth = 0.05; 

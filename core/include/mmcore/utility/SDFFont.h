@@ -406,16 +406,16 @@ namespace utility {
         /**
         * Answers the globally used status of billboard mode.
         *
-        * @return The render type of the font
+        * @return True if billboard mode is enabled, false otherwise.
         */
-        inline bool GetBillboardStatus(void) const {
+        inline bool IsBillboardEnabled(void) const {
             return this->billboard;
         }
 
         /**
         * Sets billboard mode globally.
         *
-        * @param t The render type for the font
+        * @param b The status of the billboard mode to use.
         */
         inline void SetBillboard(bool b) {
             this->billboard = b;
@@ -430,6 +430,7 @@ namespace utility {
         inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
             this->rotation.Set((a * 3.141592653589f / 180.0f), v);
         }
+
         inline void SetRotation(float a, float x, float y, float z) {
             this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
         }
@@ -452,6 +453,27 @@ namespace utility {
             this->rotation.AngleAndAxis(a, v);
             a = (a / 3.141592653589f * 180.0f);
         }
+
+        /*
+        inline void EnableStringCache(void) { 
+            this->useStringCache = true;
+        }
+
+        inline void DisableStringCache(void) { 
+            this->useStringCache = false;
+        }
+
+        inline bool IsStringCacheEnabled(void) { 
+            return this->useStringCache;
+        }
+
+        inline void ClearStringCache(void) {
+            ARY_SAFE_DELETE(this->posDataCache);
+            ARY_SAFE_DELETE(this->texDataCache);
+        }
+
+        void DrawStringCache(void);
+        */
 
     protected:
 
@@ -493,6 +515,9 @@ namespace utility {
         /** Billboard mode. */
         bool billboard;
 
+        /** String cache status. */
+        bool useStringCache;
+
         /** Quaternion for rotation. */
         vislib::math::Quaternion<float> rotation;
 
@@ -523,6 +548,10 @@ namespace utility {
         /** Vertex buffer objects. */
         std::vector<SDFVBO> vbos;
 
+        /** Position and texture data cache. */
+        //GLfloat* posDataCache;
+        //GLfloat* texDataCache;
+
 
         /** The glyph kernings. */
         struct SDFGlyphKerning {
@@ -551,39 +580,9 @@ namespace utility {
         /** The glyphs. */
         std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
-        std::vector<SDFGlyphInfo*>   glyphIdx;
+        std::vector<SDFGlyphInfo*>   glyphIdcs;
         /** The glyph kernings. */
-        std::vector<SDFGlyphKerning> kernings;
-
-        // Bold font ----------------------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsBold;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxBold;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntBold;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsBold;
-
-        // Oblique font -------------------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsOblique;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxOblique;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntOblique;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsOblique;
-
-        // Bold and Oblique font ----------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsBoldOblique;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxBoldOblique;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntBoldOblique;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsBoldOblique;
+        std::vector<SDFGlyphKerning> glyphKrns;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
@@ -657,7 +656,7 @@ namespace utility {
         /**
         * Draw font glyphs.
         *
-        * @param c     The color as RGBA.
+        * @param col   The color as RGBA.
         * @param run   The glyph run
         * @param x     The reference x coordinate
         * @param y     The reference y coordinate
@@ -666,7 +665,16 @@ namespace utility {
         * @param flipY The flag controlling the direction of the y-axis
         * @param align The alignment
         */
-        void draw(float c[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void drawGlyphs(float col[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+
+        /** 
+        * Renders buffer data. 
+        * 
+        * @param c    The color as RGBA.
+        * @param gc   The total glyph count to render.
+        * @param mvp  The model view projection matrix to use.
+        */
+        void render(float c[4], unsigned int gc) const;
 
         /**
         * Translate enum font name into font file name.
@@ -674,9 +682,6 @@ namespace utility {
         * @param fn The predefined font name.
         */
         vislib::StringA translateFontName(FontName fn);
-
-        /** Calculate rotation matrix from quaternion. */
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> Quat2RotMat(vislib::math::Quaternion<float> q) const;
 
     };
 
