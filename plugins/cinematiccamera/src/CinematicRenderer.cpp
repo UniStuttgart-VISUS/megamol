@@ -409,7 +409,7 @@ bool CinematicRenderer::Render(Call& call) {
         vislib::Array<KeyframeManipulator::manipType> availManip;
         availManip.Clear();
         availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
-        if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators
+        if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
@@ -417,17 +417,14 @@ bool CinematicRenderer::Render(Call& call) {
             availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
             availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
         }
-        else if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
+        else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
             availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
         }
-        else if (this->toggleManipulator == 2) { // Unused ...
 
-
-        }
         // Update manipulator data
         this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
             (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
@@ -467,10 +464,14 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d->MouseToggleSelection()) {
-        midLabel = " KEYFRAME manipulation mode ";
+    if (cr3d->MouseSelection()) {
+        if (this->toggleManipulator == 0) { 
+            midLabel = "KEYFRAME manipulation (position, spline control point)";
+        } else {// if (this->toggleManipulator == 1) { 
+            midLabel = "KEYFRAME manipulation (lookat, up, position along lookat)";
+        }
     } else {
-        midLabel = " SCENE manipulation mode ";
+        midLabel = "SCENE manipulation";
     }
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
@@ -516,7 +517,7 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[ctrl+z] Undo keyframe changes. \n";
         helpText += "[ctrl+y] Redo keyframe changes. \n";
         helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
-        helpText += "[tab] Toggle selection mode for manipulators. \n";
+        helpText += "[tab] Toggle keyframe/scene manipulation mode. \n";
         helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
         helpText += "[w] Keep manipulators always outside of model bounding box. \n";
         helpText += "[l] Reset Look-At of selected keyframe. \n";
@@ -524,13 +525,13 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[r] Start/Stop rendering complete animation. \n";
         helpText += "[space] Toggle animation preview. \n";
         helpText += "-----[ TIME LINE VIEW ]----- \n";
+        helpText += "[right/left] Move keyframe selection to right/left on animation time axis. \n";
         helpText += "[f] Snap all keyframes to animation frames. \n";
         helpText += "[g] Snap all keyframes to simulation frames. \n";
         helpText += "[t] Linearize simulation time between two keyframes. \n";
         helpText += "[left mouse button] Select keyframe. \n";
-        helpText += "[middle mouse button] Time axis scaling at mouse position. \n";
-        helpText += "[right mouse button] Drag & drop keyframe OR pan axes. \n";
-        helpText += "[right/left] Move keyframe selection to right/left on animation time axis. \n";
+        helpText += "[middle mouse button] Axes scaling in mouse direction. \n";
+        helpText += "[right mouse button] Pan axes OR drag & drop keyframe. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 

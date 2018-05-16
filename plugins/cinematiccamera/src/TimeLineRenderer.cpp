@@ -819,7 +819,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             // Pan axes ...
             float panFac = 0.5f;
             this->animScaleOffset += (x - this->lastMousePos.X()) * panFac;
-            this->simScaleOffset  += (this->lastMousePos.Y() - y) * panFac;
+            this->simScaleOffset  += (y - this->lastMousePos.Y()) * panFac;
         }
         this->lastMousePos.Set(x, y);
     }
