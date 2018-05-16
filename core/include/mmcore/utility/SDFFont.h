@@ -36,7 +36,7 @@ namespace utility {
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> USAGE example:
+     * >>> USAGE example (for megamol modules):
      *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
      *
@@ -44,7 +44,7 @@ namespace utility {
      *                       OR: this->sdfFont("filename-of-own-font");
      *
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
-     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available yet (call once e.g. in create()) !!!
+     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
      *
      *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
      *
@@ -551,9 +551,7 @@ namespace utility {
         /** The glyphs. */
         std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo               **glyphIdx;
-        /** Numbner of indices in index array. */
-        unsigned int                 idxCnt;
+        std::vector<SDFGlyphInfo*>   glyphIdx;
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> kernings;
 
