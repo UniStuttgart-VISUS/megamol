@@ -67,7 +67,7 @@ class WSCommFabric : public AbstractCommFabric {};
 
 class FBOCommFabric : public AbstractCommFabric {
 public:
-    FBOCommFabric(AbstractCommFabric&& pimpl);
+    FBOCommFabric(std::unique_ptr<AbstractCommFabric>&& pimpl);
 
     FBOCommFabric(FBOCommFabric const& rhs) = delete;
 
@@ -79,9 +79,9 @@ public:
 
     bool Connect(std::string const& address) override;
 
-    bool Send(std::vector<char> const& buf, send_type const type) override;
+    bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
 
-    bool Recv(std::vector<char>& buf, recv_type const type) override;
+    bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
 
     bool Disconnect(void) override;
 
