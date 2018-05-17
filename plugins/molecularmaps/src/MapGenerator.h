@@ -711,6 +711,9 @@ namespace molecularmaps {
 		/** Rebuilt version of the mesh face vertex indices */
 		std::vector<uint> faces_rebuild;
 
+        /** Faces of the map (only for writeout) */
+        std::vector<uint> faces_map;
+
 		/** The edges that belong to a certain face */
 		std::vector<std::vector<Edge>> face_edge_offset;
 
@@ -908,6 +911,9 @@ namespace molecularmaps {
 
 		/** Sphere vertices */
 		std::vector<float> vertices_sphere;
+
+        /** Map vertices (only for writeout) */
+        std::vector<float> vertices_map;
 
 		/** Calculator for the voronoi protein channels */
 		VoronoiChannelCalculator voronoiCalc;

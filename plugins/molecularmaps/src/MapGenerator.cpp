@@ -1408,7 +1408,128 @@ bool MapGenerator::GetMeshExtents(Call& call) {
             themesh.SetTriangleData(static_cast<uint>(this->faces_rebuild.size() / 3), this->faces_rebuild.data(), false);
             this->meshBoundingBox = this->computeBoundingBox(this->vertices_sphere);
         } else if (selected == MeshMode::MESH_MAP) {
-            // TODO
+            this->vertices_map = this->vertices_sphere;
+            this->faces_map = this->faces_rebuild;
+            vislib::math::Vector<float, 3> front(&this->vertices_map[this->look_at_id * 3]);
+            vislib::math::Vector<float, 3> sp(this->sphere_data.X(), this->sphere_data.Y(), this->sphere_data.Z());
+            float sr = this->sphere_data.W();
+            for (size_t i = 0; i < this->vertices_map.size() / 3; i++) {
+                vislib::math::Vector<float, 3> coord(&this->vertices_map[i * 3]);
+                float len = (coord - sp).Length();
+                if (std::abs(len / sr) > 1.0) {
+                    len = 1.0f - len / sr;
+                } else {
+                    len = -0.1f;
+                }
+                auto relCoord = coord - sp;
+                relCoord.Normalise();
+                auto relCoord2 = front - sp;
+                relCoord2.Normalise();
+                float factor = 1.0f;
+                if (std::signbit(relCoord.X())) {
+                    factor = -1.0f;
+                }
+                float lambda = factor * static_cast<float>(vislib::math::PI_DOUBLE) / 2.0f;
+                if (std::abs(relCoord.Z()) > 0.001f) {
+                    lambda = std::atan2f(relCoord.X() , relCoord.Z());
+                }
+                float lambda2 = 0.0f;
+                if (std::abs(relCoord2.Z()) > 0.001) {
+                    lambda = std::atan2f(relCoord2.X() , relCoord2.Z());
+                }
+                auto fin = vislib::math::Vector<float, 3>((lambda - lambda2) / static_cast<float>(vislib::math::PI_DOUBLE), relCoord.Y(), len);
+
+                if (fin.X() > 1.0) fin[0] -= 2.0f;
+                if (fin.X() < -1.0) fin[0] += 2.0f;
+
+                this->vertices_map[3 * i + 0] = fin.X();
+                this->vertices_map[3 * i + 1] = fin.Y();
+                this->vertices_map[3 * i + 2] = fin.Z();
+            }
+
+            for (size_t i = 0; i < this->faces_rebuild.size() / 3; i++) {
+                std::array<vislib::math::Vector<float, 3>, 3> v = {
+                    vislib::math::Vector<float, 3>(&this->vertices_map[this->faces_rebuild[i * 3 + 0]]),
+                    vislib::math::Vector<float, 3>(&this->vertices_map[this->faces_rebuild[i * 3 + 1]]),
+                    vislib::math::Vector<float, 3>(&this->vertices_map[this->faces_rebuild[i * 3 + 2]])
+                };
+                //sort vectors
+                int idx0 = 0;
+                int idx1 = 1;
+                int idx2 = 2;
+                if (v[0].X() < v[1].X()) {
+                    if (v[0].X() < v[2].X()) {
+                        if (v[1].X() > v[2].X()) {
+                            idx1 = 2;
+                            idx2 = 1;
+                        }
+                    } else {
+                        idx0 = 2;
+                        idx1 = 0;
+                        idx2 = 1;
+                    }
+                } else {
+                    if (v[1].X() < v[2].X()) {
+                        if (v[0].X() < v[2].X()) {
+                            idx0 = 1;
+                            idx1 = 0;
+                        } else {
+                            idx0 = 1;
+                            idx1 = 2;
+                            idx2 = 0;
+                        }
+                    } else {
+                        idx0 = 2;
+                        idx2 = 0;
+                    }
+                }
+
+                if (v[idx0].X() < -0.5 && v[idx1].X() < -0.5 && v[idx2].X() > 0.5) {
+
+                    this->faces_map[i * 3 + 0] = idx0;
+                    this->faces_map[i * 3 + 1] = idx1;
+                    this->vertices_map.push_back(v[idx2].X() - 2.0f);
+                    this->vertices_map.push_back(v[idx2].Y());
+                    this->vertices_map.push_back(v[idx2].Z());
+                    this->faces_map[i * 3 + 2] = static_cast<uint>((this->vertices_map.size() / 3) - 1);
+
+                    this->vertices_map.push_back(v[idx0].X() + 2.0f);
+                    this->vertices_map.push_back(v[idx0].Y());
+                    this->vertices_map.push_back(v[idx0].Z());
+                    this->faces_map.push_back(static_cast<uint>((this->vertices_map.size() / 3) - 1));
+                    this->vertices_map.push_back(v[idx1].X() + 2.0f);
+                    this->vertices_map.push_back(v[idx1].Y());
+                    this->vertices_map.push_back(v[idx1].Z());
+                    this->faces_map.push_back(static_cast<uint>((this->vertices_map.size() / 3) - 1));
+                    this->faces_map.push_back(idx2);
+
+                } else if (v[idx0].X() < -0.5f && v[idx1].X() > 0.5f && v[idx2].X() > 0.5f) {
+                    this->faces_map[i * 3 + 0] = idx0;
+                    this->vertices_map.push_back(v[idx1].X() - 2.0f);
+                    this->vertices_map.push_back(v[idx1].Y());
+                    this->vertices_map.push_back(v[idx1].Z());
+                    this->faces_map[i * 3 + 1] = static_cast<uint>((this->vertices_map.size() / 3) - 1);
+                    this->vertices_map.push_back(v[idx2].X() - 2.0f);
+                    this->vertices_map.push_back(v[idx2].Y());
+                    this->vertices_map.push_back(v[idx2].Z());
+                    this->faces_map[i * 3 + 2] = static_cast<uint>((this->vertices_map.size() / 3) - 1);
+
+                    this->vertices_map.push_back(v[idx0].X() - 2.0f);
+                    this->vertices_map.push_back(v[idx0].Y());
+                    this->vertices_map.push_back(v[idx0].Z());
+                    this->faces_map.push_back(static_cast<uint>((this->vertices_map.size() / 3) - 1));
+                    this->faces_map.push_back(idx2);
+                    this->faces_map.push_back(idx0);
+                } else {
+                    this->faces_map[i * 3 + 0] = idx0;
+                    this->faces_map[i * 3 + 1] = idx1;
+                    this->faces_map[i * 3 + 2] = idx2;
+                }
+            }
+
+            themesh.SetVertexData(static_cast<uint>(this->vertices_map.size() / 3), this->vertices_map.data(), this->vertices_map.data(), this->vertexColors_rebuild.data(), nullptr, false);
+            themesh.SetTriangleData(static_cast<uint>(this->faces_map.size() / 3), this->faces_map.data(), false);
+            this->meshBoundingBox = this->computeBoundingBox(this->vertices_map);
         }
         this->out_mesh = themesh;
         this->store_new_mesh = false;
