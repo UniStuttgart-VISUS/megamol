@@ -404,21 +404,26 @@ namespace utility {
         }
 
         /**
+         * Enables billboard mode.
+         */
+        inline void EnableBillboard(void) { 
+            this->billboard = true; 
+        }
+
+        /**
+         * Disbales billboard mode.
+         */
+        inline void DisableBillboard(void) { 
+            this->billboard = false; 
+        }
+
+        /**
         * Answers the globally used status of billboard mode.
         *
         * @return True if billboard mode is enabled, false otherwise.
         */
         inline bool IsBillboardEnabled(void) const {
             return this->billboard;
-        }
-
-        /**
-        * Sets billboard mode globally.
-        *
-        * @param b The status of the billboard mode to use.
-        */
-        inline void SetBillboard(bool b) {
-            this->billboard = b;
         }
 
         /**
@@ -454,26 +459,53 @@ namespace utility {
             a = (a / 3.141592653589f * 180.0f);
         }
 
-
+        /**
+         * Enable batch draw. 
+         * Determines that all DrawString() calls are cached for later batch draw.
+         */
         inline void EnableBatchDraw(void) { 
             this->useBatchDraw = true;
         }
 
+        /**
+         * Disable batch draw.
+         * Determines that all DrawString() calls are rendered instantly (default).
+         */
         inline void DisableBatchDraw(void) { 
             this->useBatchDraw = false;
         }
 
-        inline bool IsBatchDrawEnabled(void) { 
+        /**
+         * Answer status of batch draw.
+         * 
+         * @return True if batch draw is enabled, false otherwise.
+         */
+        inline bool IsBatchDrawEnabled(void) const { 
             return this->useBatchDraw;
         }
 
+        /**
+         * Clears the batch draw caches.
+         */
         inline void ClearBatchCache(void) {
             this->posBatchCache.clear();
             this->texBatchCache.clear();
+            //this->colBatchCache.clear();
         }
 
+        /**
+         * Renders all cached string data at once.
+         * Faster since given color is used for all cached DrawString() calls.
+         * 
+         * @param col The color.
+         */
         void BatchDrawString(float col[4]) const;
 
+        /**
+         * Renders all cached string data at once.
+         * Slower since additional per vertex color data is used from individual DrawString() call.
+         */
+        //void BatchDrawString() const;
 
     protected:
 
@@ -530,7 +562,8 @@ namespace utility {
         /** Vertex buffer object attributes. */
         enum VBOAttrib {
             POSITION = 0,
-            TEXTURE = 1
+            TEXTURE  = 1,
+            COLOR    = 2  
         };
 
         /** Vertex buffer object info. */
@@ -548,9 +581,10 @@ namespace utility {
         /** String batch cache status. */
         bool useBatchDraw;
 
-        /** Position and texture data cache. */
+        /** Position, texture and color data cache for batch draw. */
         mutable std::vector<float> posBatchCache;
         mutable std::vector<float> texBatchCache;
+        //mutable std::vector<float> colBatchCache;
 
 
         /** The glyph kernings. */
@@ -670,11 +704,10 @@ namespace utility {
         /** 
         * Renders buffer data. 
         * 
-        * @param c    The color as RGBA.
         * @param gc   The total glyph count to render.
-        * @param mvp  The model view projection matrix to use.
+        * @param col  The color.
         */
-        void render(float col[4], unsigned int gc) const;
+        void render(unsigned int gc, float col[4]) const;
 
         /**
         * Translate enum font name into font file name.

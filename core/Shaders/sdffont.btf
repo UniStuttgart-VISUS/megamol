@@ -9,16 +9,21 @@
 
 in      vec3  inVertPos;
 in      vec2  inVertTexCoord;
+//in      vec4  inVertColor;
 
 uniform float fontSize;
 uniform mat4  mvpMat;
 
+uniform vec4  instColor;
+
 out     vec2  texCoord;
+out     vec4  color;
 
 /** MAIN **/
 void main() {
 
-    texCoord = inVertTexCoord;
+    texCoord    = inVertTexCoord;
+    color       = instColor;
     
     gl_Position = mvpMat * vec4(inVertPos, 1.0);
 }
@@ -37,8 +42,8 @@ void main() {
 #define RENDERTYPE_OUTLINE 2
 
 in      vec2      texCoord;
+in      vec4      color;
 
-uniform vec4      color;
 uniform sampler2D fontTex;
 uniform int       renderType = 1;
 

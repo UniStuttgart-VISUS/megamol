@@ -550,22 +550,50 @@ void SDFFont::BatchDrawString(float col[4]) const {
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(),
-                GL_STATIC_DRAW);
-        } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(),
-                GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(), GL_STATIC_DRAW);
         }
+        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(), GL_STATIC_DRAW);
+        } 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     // Draw batch cache 
-    unsigned int glyphIter = (this->posBatchCache.size() / 18);
-    this->render(col, glyphIter);
+    unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+    this->render(glyphCnt, col);
 }
 
 
-/* PRIVATE ********************************************************************/
+/*
+ * SDFFont::BatchDrawString
+ */
+/*
+void SDFFont::BatchDrawString() const {
+
+    // Bind glyph data in batch cache
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
+        if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(), GL_STATIC_DRAW);
+        } 
+        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(), GL_STATIC_DRAW);
+        } 
+        else if (this->vbos[i].index == (GLuint)VBOAttrib::COLOR) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->colBatchCache.size() * sizeof(GLfloat), &this->colBatchCache.front(), GL_STATIC_DRAW);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    // Draw batch cache
+    unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+    float col[4] = {0.0, 0.0, 0.0, 0.0};
+    this->render(glyphCnt, col);
+}
+*/
+
+/* PRIVATE********************************************************************/
+
 
 /*
  * SDFFont::initialise
@@ -585,17 +613,20 @@ bool SDFFont::initialise(megamol::core::CoreInstance *core) {
 void SDFFont::deinitialise(void) {
 
     // String cache
-    //this->ClearStringCache();
+    this->ClearBatchCache();
 
     // Texture
     this->texture.Release();
+
     // Shader
     this->shader.Release();
+
     // VBOs
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glDeleteBuffers(1, &this->vbos[i].handle);
     }
     this->vbos.clear();
+
     // VAO
     glDeleteVertexArrays(1, &this->vaoHandle);
     // Delete allocated memory
@@ -605,6 +636,7 @@ void SDFFont::deinitialise(void) {
         }
     }
 
+    // Set glyph indey pointer to null
     for (size_t i = 0; i < this->glyphIdcs.size(); i++) {
         this->glyphIdcs[i] = nullptr;
     }
@@ -834,8 +866,8 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
     unsigned int posCnt = glyphCnt * 18; // 2 Triangles * 3 Vertices * 3 Coordinates
     unsigned int texCnt = glyphCnt * 12; // 2 Triangles * 3 Vertices * 2 Coordinates
 
-    GLfloat* posData = new GLfloat[posCnt];   
-    GLfloat* texData = new GLfloat[texCnt]; 
+    GLfloat *posData = new GLfloat[posCnt];   
+    GLfloat *texData = new GLfloat[texCnt]; 
 
     float gx = x;
     float gy = y;
@@ -1011,16 +1043,25 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         run++;
     }
 
-    if (this->useBatchDraw) {
-        // Copy new data to batch cache
+    if (this->IsBatchDrawEnabled()) {
+        // Copy new data to batch cache ...
         for (unsigned int i = 0; i < posCnt; ++i) {
             this->posBatchCache.push_back(posData[i]);
         }
         for (unsigned int i = 0; i < texCnt; ++i) {
             this->texBatchCache.push_back(texData[i]);
         }
+        /*
+        for (unsigned int i = 0; i < (glyphCnt * 6); ++i) {
+            this->colBatchCache.push_back(col[0]);
+            this->colBatchCache.push_back(col[1]);
+            this->colBatchCache.push_back(col[2]);
+            this->colBatchCache.push_back(col[3]);
+        }
+        */
     } 
     else {
+        // ... or draw glyphs instantly.
         for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
             glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
             if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
@@ -1033,15 +1074,18 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         }
 
         // Draw data buffers
-        this->render(col, glyphCnt);
+        this->render(glyphCnt, col);
     } 
+
+    ARY_SAFE_DELETE(posData);
+    ARY_SAFE_DELETE(texData);
 }
 
 
 /*
  * SDFFont::render
  */
-void SDFFont::render(float col[4], unsigned int gc) const {
+void SDFFont::render(unsigned int gc, float col[4]) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
@@ -1098,9 +1142,18 @@ void SDFFont::render(float col[4], unsigned int gc) const {
 
     // Vertex shader
     glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniform4fv(this->shader.ParameterLocation("instColor"), 1, col);
+
+    /*
+    if (!this->IsBatchDrawEnabled()) {
+        GLint colLoc = glGetAttribLocation(this->shader, "inVertColor");
+        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [render] inVertColor: %i \n", (int)colLoc);
+        glEnableVertexAttribArray(colLoc);
+        glVertexAttribPointer(colLoc, 4, GL_FLOAT, GL_FALSE, 0, (GLubyte*)&col);
+    }
+    */
 
     // Fragment shader
-    glUniform4fv(this->shader.ParameterLocation("color"), 1, col);
     glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
     glUniform1i(this->shader.ParameterLocation("renderType"), (int)(this->renderType));
 
@@ -1126,7 +1179,9 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     this->initialised = false;
 
     this->ResetRotation();
-    //this->ClearStringCache();
+    this->DisableBatchDraw();
+    this->ClearBatchCache();
+    this->DisableBillboard();
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
@@ -1200,21 +1255,25 @@ bool SDFFont::loadFontBuffers() {
 
     // Init vbos
     SDFVBO newVBO;
+    newVBO.handle = 0; // Default init
 
     // VBO for position data
     newVBO.name = "inVertPos";
     newVBO.index = (GLuint)VBOAttrib::POSITION;
     newVBO.dim = 3;
-    newVBO.handle = 0; // Default init
     this->vbos.push_back(newVBO);
-
 
     // VBO for texture data
     newVBO.name = "inVertTexCoord";
     newVBO.index = (GLuint)VBOAttrib::TEXTURE;
     newVBO.dim = 2;
-    newVBO.handle = 0; // Default init
     this->vbos.push_back(newVBO);
+
+    // VBO for texture data
+    //newVBO.name = "inVertColor";
+    //newVBO.index = (GLuint)VBOAttrib::COLOR;
+    //newVBO.dim = 4;
+    //this->vbos.push_back(newVBO);
 
     // ------------------------------------------------------------------------
 
