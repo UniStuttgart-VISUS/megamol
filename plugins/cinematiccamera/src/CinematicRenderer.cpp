@@ -507,7 +507,7 @@ bool CinematicRenderer::Render(Call& call) {
 
     vislib::StringA midLabel = "  "; // " Manipulation Mode: Camera ";
     if (float(clock() - this->mouseManipTime) / (float)(CLOCKS_PER_SEC) < 1.0f) {
-        midLabel = " keyframe manipulation Mode ";
+        midLabel = " keyframe manipulation mode ";
     }
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
