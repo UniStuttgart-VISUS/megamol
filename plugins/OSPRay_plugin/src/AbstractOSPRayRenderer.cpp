@@ -28,10 +28,13 @@
 
 using namespace megamol::ospray;
 
-AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
-    : core::view::Renderer3DModule()
-    , extraSamles("extraSamples", "Extra sampling when camera is not moved")
-    ,
+void ospErrorCallback(OSPError err, const char* details) {
+    vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+}
+
+AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
+    core::view::Renderer3DModule(),
+    extraSamles("extraSamples", "Extra sampling when camera is not moved"),
     // general renderer parameters
     rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
     , rd_spp("SamplesPerPixel", "Samples per pixel")
@@ -244,6 +247,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
             ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
         }
         }
+        ospDeviceSetErrorFunc(dvce, ospErrorCallback);
         ospDeviceCommit(dvce);
         ospSetCurrentDevice(dvce);
     }
