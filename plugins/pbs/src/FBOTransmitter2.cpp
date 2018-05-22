@@ -68,7 +68,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         float upper[] = {viewport[1], viewport[3]};
         this->fbo_msg_read_->screen_area = viewp_t{lower, upper};
         this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
-        this->fbo_msg_read_->color_type = fbo_color_type::RGBAf;
+        this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
         this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
 
         this->color_buf_read_->resize(col_buf.size());

@@ -65,8 +65,7 @@ protected:
     void release() override;
 private:
     void swapBuffers(void) {
-        std::lock_guard<std::mutex> read_guard(this->buffer_read_guard_);
-        std::lock_guard<std::mutex> send_guard(this->buffer_send_guard_);
+        std::scoped_lock<std::mutex, std::mutex> guard{this->buffer_send_guard_, this->buffer_read_guard_};
         swap(fbo_msg_read_, fbo_msg_send_);
         swap(color_buf_read_, color_buf_send_);
         swap(depth_buf_read_, depth_buf_send_);

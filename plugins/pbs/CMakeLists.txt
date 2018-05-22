@@ -9,6 +9,10 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pbs" OFF)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(pbs)
 
+  if (USE_MPI)
+    find_package(MPI)
+  endif()
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
@@ -16,6 +20,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB})
   include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+  if (MPI_C_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
+  endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")

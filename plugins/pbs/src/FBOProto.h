@@ -6,9 +6,7 @@ namespace pbs {
 template <int DIM> struct vec {
     float coord_[DIM];
     vec(void) = default;
-    vec(float coord[DIM]) {
-        std::copy(coord, coord + DIM, coord_);
-    }
+    vec(float coord[DIM]) { std::copy(coord, coord + DIM, coord_); }
     vec& operator=(vec const& rhs) {
         std::copy(rhs.coord_, rhs.coord_ + DIM, coord_);
         return *this;
@@ -17,12 +15,12 @@ template <int DIM> struct vec {
         std::copy(coord, coord + DIM, coord_);
         return *this;
     }
+    float operator[](size_t idx) { return coord_[idx]; }
 };
 
 template <int DIM> using vec_t = vec<DIM>;
 
-template <int DIM>
-struct box {
+template <int DIM> struct box {
     vec_t<DIM> lower_;
     vec_t<DIM> upper_;
     box(void) = default;
@@ -30,24 +28,21 @@ struct box {
         lower_ = lower;
         upper_ = upper;
     }
+    float volume() {
+        float ret{0.0f};
+        for (int i = 0; i < DIM; ++i) {
+            ret *= upper_[i] - lower_[i];
+        }
+        return ret;
+    }
 };
 
 using bbox_t = box<3>;
 using viewp_t = box<2>;
 
-enum fbo_color_type : unsigned int {
-    RGBAf,
-    RGBAu8,
-    RGBf,
-    RGBu8
-};
+enum fbo_color_type : unsigned int { RGBAf, RGBAu8, RGBf, RGBu8 };
 
-enum fbo_depth_type : unsigned int {
-    Df,
-    Du16,
-    Du24,
-    Du32
-};
+enum fbo_depth_type : unsigned int { Df, Du16, Du24, Du32 };
 
 using data_ptr = char*;
 
@@ -73,6 +68,23 @@ struct fbo_msg_header {
 };
 
 using fbo_msg_header_t = fbo_msg_header;
+
+struct fbo_msg {
+    fbo_msg() = default;
+
+    explicit fbo_msg(fbo_msg_header_t&& header, std::vector<char>&& col, std::vector<char>&& depth)
+        : fbo_msg_header{std::forward<fbo_msg_header_t>(header)}
+        , color_buf{std::forward<std::vector<char>>(col)}
+        , depth_buf{std::forward<std::vector<char>>(depth)} {
+        
+    }
+
+    fbo_msg_header_t fbo_msg_header;
+    std::vector<char> color_buf;
+    std::vector<char> depth_buf;
+};
+
+using fbo_msg_t = fbo_msg;
 
 } // end namespace pbs
 } // end namespace megamol
