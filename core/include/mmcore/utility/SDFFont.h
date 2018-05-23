@@ -14,16 +14,28 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <cfloat>
 
 #include "mmcore/utility/AbstractFont.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/utility/ResourceWrapper.h"
 
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 
+#include "vislib/CharTraits.h"
+#include "vislib/UTF8Encoder.h"
+
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
+
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
 
 
 namespace megamol {
@@ -639,7 +651,7 @@ namespace utility {
         bool loadFontTexture(vislib::StringA filename);
 
         /** Load shaders from files. */
-        bool loadFontShader(megamol::core::CoreInstance *core, vislib::StringA vert, vislib::StringA frag);
+        bool loadFontShader(megamol::core::CoreInstance *core);
 
         /** Load file into outData buffer and return size. */
         size_t loadFile(vislib::StringA filename, BYTE **outData);

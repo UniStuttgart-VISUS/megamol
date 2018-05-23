@@ -9,18 +9,6 @@
 
 #include "mmcore/utility/SDFFont.h"
 
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/utility/ResourceWrapper.h"
-
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/File.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/CharTraits.h"
-#include "vislib/UTF8Encoder.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace vislib;
 using namespace megamol::core::utility;
@@ -1183,6 +1171,11 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     this->ClearBatchCache();
     this->DisableBillboard();
 
+    if (core == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
+        return false;
+    }
+
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
@@ -1197,7 +1190,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
         return false;
     }
     
-    // (3) Load texture --------------------------------------------------------
+    // (3) Load font texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
@@ -1206,9 +1199,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    vislib::StringA vertShaderFile = "sdffont.glvs";
-    vislib::StringA fragShaderFile = "sdffont.glfs";
-    if (!this->loadFontShader(core, vertShaderFile, fragShaderFile)) {
+    if (!this->loadFontShader(core)) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
     }  
@@ -1219,12 +1210,11 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 
 
 /*
-* SDFFont::loadFontBuffers
+* SDFFont::translateFontName
 */
 vislib::StringA SDFFont::translateFontName(FontName fn) {
 
     vislib::StringA fileName = "";
-
     switch (fn) {
         case(SDFFont::FontName::EVOLVENTA_SANS): fileName = "Evolventa-SansSerif"; break;
         case(SDFFont::FontName::ROBOTO_SANS):    fileName = "Roboto-SansSerif";    break;
@@ -1232,7 +1222,6 @@ vislib::StringA SDFFont::translateFontName(FontName fn) {
         case(SDFFont::FontName::UBUNTU_MONO):    fileName = "Ubuntu-Mono";         break;
         default: break;
     }
-
     return fileName;
 }
 
@@ -1477,15 +1466,17 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
         return false;
     }
 
-    if (pbc.Load(buf, size)) {
+    if (pbc.Load((void *)buf, size)) {
         // (Using template with minimum channels containing alpha)
         img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); 
+
         // (Red channel is Gray value - Green channel is alpha value from png)
-        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) { 
+        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
             return false;
         }
+
         this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
         this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         ARY_SAFE_DELETE(buf);
@@ -1503,7 +1494,12 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
 /*
 * SDFFont::loadFontShader
 */
-bool SDFFont::loadFontShader(megamol::core::CoreInstance *core, vislib::StringA vert, vislib::StringA frag) {
+bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
+
+    if (core == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontShader] Pointer to MegaMol CoreInstance is NULL. \n");
+        return false;
+    }
 
     // Reset shader
     this->shader.Release();
@@ -1515,9 +1511,11 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core, vislib::StringA 
     try {
 
         if (!core->ShaderSourceFactory().MakeShaderSource("sdffont::vertex", vs)) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
             return false;
         }
         if (!core->ShaderSourceFactory().MakeShaderSource("sdffont::fragment", fs)) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
             return false;
         }
 
