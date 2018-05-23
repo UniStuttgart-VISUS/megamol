@@ -172,12 +172,14 @@ void datatools::floattable::CSVDataSource::assertData(void) {
     this->columns.clear();
     this->values.clear();
 
+	auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+
     try {
         vislib::sys::ASCIIFileBuffer file;
 
         // 1. Load the whole file into memory (FAST!)
         //////////////////////////////////////////////////////////////////////
-        if (!file.LoadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!file.LoadFile(filename, vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
         if (file.Count() < 2) throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
 
         // 2. Determine the first row, column separator, and decimal point
@@ -422,7 +424,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
             static_cast<unsigned int>(colCnt), static_cast<unsigned int>(rowCnt));
 
     } catch (const vislib::Exception& ex) {
-        this->GetCoreInstance()->Log().WriteError("Could not load tabular data: %s [%s, &d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        this->GetCoreInstance()->Log().WriteError("Could not load \"%s\": %s [%s, %d]", filename, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
     } catch (...) {
