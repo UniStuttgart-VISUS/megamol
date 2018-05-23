@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+if(POLICY CMP0054)
+    cmake_policy(SET CMP0054 NEW)
+endif()
+
 project(megamol)
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

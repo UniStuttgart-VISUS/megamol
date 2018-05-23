@@ -36,7 +36,10 @@ if(BUILD_CORE)
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
   if (MSVC)
-    set(ZMQ_LIB debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib" CACHE INTERNAL '')
+    set(ZMQ_LIB
+        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
+        optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
+        CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
   else()
     include(GNUInstallDirs)
