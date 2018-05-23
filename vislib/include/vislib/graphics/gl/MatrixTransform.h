@@ -26,7 +26,7 @@ namespace gl {
 
 
     /**
-     * Provides exchange and modification of model view and projection matrices
+     * Provides exchange and modification of view and projection matrices
      * without falling back on graphics api functions.
      */
     class MatrixTransform  {
@@ -44,19 +44,19 @@ namespace gl {
 
 
         /**
-        * Set the model view matrix.
+        * Set the view matrix.
         *
-        * @param vm The model view matrix.
+        * @param vm The view matrix.
         */
-        inline void SetModelViewMatrix(float vm[16]) {
-            this->modelViewMatrix = MatrixType(vm);
+        inline void SetViewMatrix(float vm[16]) {
+            this->viewMatrix = MatrixType(vm);
             this->isMVPset = false;
         }
 
         /**
         * Set the projection matrix.
         *
-        * @param pm The model view matrix.
+        * @param pm The view matrix.
         */
         inline void SetProjectionMatrix(float pm[16]) {
             this->projectionMatrix = MatrixType(pm);
@@ -65,7 +65,7 @@ namespace gl {
 
 
         /**
-        * Scale the model view matrix.
+        * Scale the view matrix.
         *
         * @param x The scaling factor for x coordinate.
         * @param y The scaling factor for y coordinate.
@@ -76,12 +76,12 @@ namespace gl {
             scaleMat.SetAt(0, 0, x);
             scaleMat.SetAt(1, 1, y);
             scaleMat.SetAt(2, 2, z);
-            this->modelViewMatrix = this->modelViewMatrix * scaleMat;
+            this->viewMatrix = this->viewMatrix * scaleMat;
             this->isMVPset = false;
         }
 
         /**
-        * Scale the model view matrix.
+        * Scale the view matrix.
         *
         * @param xyz The scaling factor for all three coordinates.
         */
@@ -90,7 +90,7 @@ namespace gl {
         }
 
         /**
-        * Translate the model view matrix.
+        * Translate the view matrix.
         *
         * @param x The translation factor for x coordinate.
         * @param y The translation factor for y coordinate.
@@ -101,12 +101,12 @@ namespace gl {
             translateMat.SetAt(0, 3, x);
             translateMat.SetAt(1, 3, y);
             translateMat.SetAt(2, 3, z);
-            this->modelViewMatrix = this->modelViewMatrix * translateMat;
+            this->viewMatrix = this->viewMatrix * translateMat;
             this->isMVPset = false;
         }
 
         /**
-        * Translate the model view matrix.
+        * Translate the view matrix.
         *
         * @param xyz The translation factor for all three coordinates.
         */
@@ -115,17 +115,17 @@ namespace gl {
         }
 
         /**
-        * Rotate model view matrix.
+        * Rotate view matrix.
         *
         * @param quat The ...
         */
         inline void Rotate(vislib::math::Quaternion<float> q) {
-            this->modelViewMatrix = this->modelViewMatrix * Quat2RotMat(q);
+            this->viewMatrix = this->viewMatrix * Quat2RotMat(q);
             this->isMVPset = false;
         }
 
         /**
-        * Rotate model view matrix.
+        * Rotate view matrix.
         *
         * @param x     The ...
         * @param y     The ...
@@ -139,18 +139,18 @@ namespace gl {
 
 
         /**
-        * Answer the model view matrix.
+        * Answer the view matrix.
         *
-        * @return The model view matrix.
+        * @return The view matrix.
         */
         inline MatrixType MV(void) {
-            return this->modelViewMatrix;
+            return this->viewMatrix;
         }
 
         /**
-        * Answer the inverted model view matrix.
+        * Answer the inverted view matrix.
         *
-        * @return The inverted model view matrix.
+        * @return The inverted view matrix.
         */
         inline MatrixType MVinv(void) {
             MatrixType mv = this->MV();
@@ -159,9 +159,9 @@ namespace gl {
         }
 
         /**
-        * Answer the transposed model view matrix.
+        * Answer the transposed view matrix.
         *
-        * @return The transposed model view matrix.
+        * @return The transposed view matrix.
         */
         inline MatrixType MVtransp(void) {
             MatrixType mv = this->MV();
@@ -170,22 +170,22 @@ namespace gl {
         }
 
         /**
-        * Answer the model view projection matrix.
+        * Answer the view projection matrix.
         *
-        * @return The model view projection matrix.
+        * @return The view projection matrix.
         */
         inline MatrixType MVP(void) {
             if (!this->isMVPset) {
-                this->modelViewProjMatrix = (this->projectionMatrix * this->modelViewMatrix);
+                this->viewProjMatrix = (this->projectionMatrix * this->viewMatrix);
                 this->isMVPset = true;
             }
-            return this->modelViewProjMatrix;
+            return this->viewProjMatrix;
         }
 
         /**
-        * Answer the inverted model view projection matrix.
+        * Answer the inverted view projection matrix.
         *
-        * @return The inverted model view projection matrix.
+        * @return The inverted view projection matrix.
         */
         inline MatrixType MVPinv(void) {
             MatrixType mvp = this->MVP();
@@ -194,9 +194,9 @@ namespace gl {
         }
 
         /**
-        * Answer the transposed model view projection matrix.
+        * Answer the transposed view projection matrix.
         *
-        * @return The transposed model view projection matrix.
+        * @return The transposed view projection matrix.
         */
         inline MatrixType MVPtransp(void) {
             MatrixType mvp = this->MVP();
@@ -210,13 +210,13 @@ namespace gl {
         * variables
         **********************************************************************/
 
-        /** The model view matrix (MV). */
-        MatrixType modelViewMatrix;
+        /** The view matrix (MV). */
+        MatrixType viewMatrix;
         /** The projection matrix (P). */
         MatrixType projectionMatrix;
 
-        /** The model view projection matrix (MVP). */
-        MatrixType modelViewProjMatrix;
+        /** The view projection matrix (MVP). */
+        MatrixType viewProjMatrix;
         /** Indicates whether MVP is updated or not. */
         bool isMVPset;
 

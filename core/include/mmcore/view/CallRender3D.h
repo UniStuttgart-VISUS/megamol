@@ -139,7 +139,7 @@ namespace view {
         * @param vm The view matrix.
         */
         inline void SetModelViewMatrix(float vm[16]) {
-            this->matrixTransform.SetModelViewMatrix(vm);
+            this->matrixTransform.SetViewMatrix(vm);
         }
 
         /**

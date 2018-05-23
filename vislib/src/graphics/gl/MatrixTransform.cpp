@@ -14,7 +14,7 @@ using namespace vislib::graphics::gl;
 /*
  * MatrixTransform::MatrixTransform
  */
-MatrixTransform::MatrixTransform(): modelViewMatrix(), projectionMatrix(), modelViewProjMatrix(), isMVPset(false) {
+MatrixTransform::MatrixTransform(): viewMatrix(), projectionMatrix(), viewProjMatrix(), isMVPset(false) {
 
 }
 
