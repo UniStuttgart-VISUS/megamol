@@ -1,4 +1,4 @@
-message(WARNING "setting gcc compiler flags")
+#message(WARNING "setting gcc compiler flags")
 
 set(COMMON_CXX_FLAGS "-Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} ${OpenMP_CXX_FLAGS}")
 
@@ -8,7 +8,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${COMMON_C
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99 -ldl ${OpenMP_C_FLAGS}")
 
-#if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+#if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
 #    message(STATUS "Version < 4.7")
 #    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++0x")
 #    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++0x")

@@ -1,13 +1,13 @@
-# processor word size detection
+# Word size detection
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(BITS 64)
 else()
   set(BITS 32)
 endif()
 
-set (CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14)
 
-if (UNIX)
+if(UNIX)
     find_package(OpenMP)
 endif()
 
