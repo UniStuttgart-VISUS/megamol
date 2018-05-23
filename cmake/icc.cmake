@@ -1,4 +1,3 @@
-
 if(UNIX)
     set(COMMON_CXX_FLAGS "-std=c++11 -fPIC -fno-strict-aliasing -no-ansi-alias -DNOMINMAX -DUNIX -D_GNU_SOURCE -D_LIN${BITS}")
 
@@ -8,7 +7,6 @@ if(UNIX)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99 -ldl")
 else()
-
     set(COMMON_CXX_FLAGS "/Gm /DNOMINMAX /W3 /Qopenmp /MP /GR")
     set(INTEL_OPTIMIZATION_FLAGS "/Ob2 /O3 /Oi /Qparallel /GA /QaxSSE3,CORE-AVX2" CACHE STRING "icc-specific optimization options - check your architecture!")
 
