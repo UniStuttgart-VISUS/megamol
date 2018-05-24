@@ -359,25 +359,25 @@ sub _state {
 sub _stringState {
     my $self = shift;
     #die "private method _stringState called" unless caller[0]->isa(ref($self));
-    if ($self == $NOTHINGGOES) {
+    if ($self->{state} == $NOTHINGGOES) {
         return "uninitialized";
     }
-    if ($self == $CANADDFRAME) {
+    if ($self->{state} == $CANADDFRAME) {
         return "waiting for a frame";
     }
-    if ($self == $CANADDLIST) {
+    if ($self->{state} == $CANADDLIST) {
         return "waiting for a list";
     }
-    if ($self == $CANADDPARTICLE) {
+    if ($self->{state} == $CANADDPARTICLE) {
         return "waiting for a particle";
     }
-    if ($self == $ALLDONE) {
+    if ($self->{state} == $ALLDONE) {
         return "all done";
     }
-    if ($self == $CLOSED) {
+    if ($self->{state} == $CLOSED) {
         return "closed"
     }
-    return "illegal";
+    return "illegal state: " . $self->{state};
 }
 
 sub NumFrames {

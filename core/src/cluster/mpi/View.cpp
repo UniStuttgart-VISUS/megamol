@@ -43,10 +43,10 @@
 #include "vislib/UTF8Encoder.h"
 
 
-//#define _TRACE_INFO(fmt, ...)
+#define _TRACE_INFO(fmt, ...)
 #define _TRACE_MESSAGING(fmt, ...)
 //#define _TRACE_PACKAGING(fmt, ...)
-//#define _TRACE_BARRIERS(fmt, ...)
+#define _TRACE_BARRIERS(fmt, ...)
 #define _TRACE_GSYNC(fmt, ...)
 #define _TRACE_LOCKS(fmt, ...)
 
