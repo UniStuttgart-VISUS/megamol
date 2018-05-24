@@ -31,9 +31,21 @@ public:
  */
 class MPICommFabric : public AbstractCommFabric {
 public:
+    MPICommFabric(int target_rank, int source_rank);
+    bool Connect(std::string const& address) override;
+    bool Bind(std::string const& address) override;
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
+    bool Disconnect() override;
     virtual ~MPICommFabric(void);
+private:
+    int my_rank_;
+
+    int target_rank_;
+
+    int source_rank_;
+
+    int recv_count_;
 };
 
 /**
@@ -69,6 +81,8 @@ class WSCommFabric : public AbstractCommFabric {};
 
 class FBOCommFabric : public AbstractCommFabric {
 public:
+    enum commtype { ZMQ_COMM, MPI_COMM };
+
     FBOCommFabric(std::unique_ptr<AbstractCommFabric>&& pimpl);
 
     FBOCommFabric(FBOCommFabric const& rhs) = delete;

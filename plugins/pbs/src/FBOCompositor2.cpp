@@ -4,15 +4,17 @@
 #include <fstream>
 #include <sstream>
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/CoreInstance.h"
 
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
+    , commSelectSlot_{"communicator", "Select the communicator to use"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -22,6 +24,11 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , connected_{false} {
     addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
     this->MakeSlotAvailable(&addressesSlot_);
+    auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
+    ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
+    ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
+    commSelectSlot_ << ep;
+    this->MakeSlotAvailable(&commSelectSlot_);
 }
 
 
@@ -120,7 +127,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
     if (!this->fbo_msg_write_->empty()) {
         float bbox[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
         for (auto& el : *this->fbo_msg_write_) {
-            //bbox.unite(el.fbo_msg_header.os_bbox);
+            // bbox.unite(el.fbo_msg_header.os_bbox);
             for (int i = 0; i < 3; ++i) {
                 bbox[i] = fmin(bbox[i], el.fbo_msg_header.os_bbox[i]);
             }
@@ -149,27 +156,14 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    /*GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, reinterpret_cast<GLint*>(viewport));
-
-    auto const width = viewport[2] - viewport[0];
-    auto const height = viewport[3] - viewport[1];
-
-    if (this->width_ != width || this->height_ != height) {
-        this->width_ = width;
-        this->height_ = height;
-        this->resize(this->width_, this->height_);
-    }*/
-
     if (!connected_) {
-        //close_future_ = close_promise_.get_future();
+        // close_future_ = close_promise_.get_future();
 
         auto const addresses =
             std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};
 
         auto comms = this->connectComms(this->getAddresses(addresses));
-        this->collector_thread_ =
-            std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
+        this->collector_thread_ = std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
 
         connected_ = true;
     }
@@ -279,24 +273,6 @@ void megamol::pbs::FBOCompositor2::receiverJob(
             vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
         }
 
-        /*{
-            std::lock_guard<std::mutex> recv_guard{this->buffer_recv_guard_};
-            char* buf_ptr = buf.data();
-            std::copy(buf_ptr, buf_ptr + sizeof(fbo_msg_header_t), reinterpret_cast<char*>(&*this->fbo_msg_recv_));
-            buf_ptr += sizeof(fbo_msg_header_t);
-            size_t fbo_depth_size;
-            size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(this->fbo_msg_recv_->updated_area.volume());
-            fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
-            fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
-            this->color_buf_recv_->resize(fbo_col_size);
-            std::copy(buf_ptr, buf_ptr + fbo_col_size, this->color_buf_recv_->begin());
-            buf_ptr += fbo_col_size;
-            this->depth_buf_recv_->resize(fbo_depth_size);
-            std::copy(buf_ptr, buf_ptr + fbo_depth_size, this->depth_buf_recv_->begin());
-        }*/
-
-        // this->swapBuffers();
-
         fbo_msg_header_t header;
         char* buf_ptr = buf.data();
         std::copy(buf_ptr, buf_ptr + sizeof(fbo_msg_header_t), reinterpret_cast<char*>(&header));
@@ -315,10 +291,6 @@ void megamol::pbs::FBOCompositor2::receiverJob(
 
         auto const msg = fbo_msg{std::move(header), std::move(col_buf), std::move(depth_buf)};
 
-        /*while (promise_atomic_.load()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }*/
-
         while (true) {
             try {
                 fbo_msg_future->SetPromise(msg);
@@ -327,18 +299,6 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
-
-        /*while (true) {
-            try {
-                fbo_msg_promise->set_value(msg);
-                break;
-            } catch (std::future_error const& e) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-        }*/
-
-        //promise_exchange_guard_.unlock();
-        //promise_exchange_.notify_one();
     }
     vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
 }
@@ -354,7 +314,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
         std::promise<bool> close_sig;
         auto close_sig_fut = close_sig.get_future();
         recv_close_sig.emplace_back(std::move(close_sig));
-        //fbo_msg_futures.emplace_back();
+        // fbo_msg_futures.emplace_back();
         jobs.emplace_back(
             &FBOCompositor2::receiverJob, this, std::ref(comm), fbo_msg_futures[i].GetPtr(), std::move(close_sig_fut));
         i += 1;
@@ -378,7 +338,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
         if (status == std::future_status::ready) break;
         std::fill(fbo_gate.begin(), fbo_gate.end(), false);
         while (!std::all_of(fbo_gate.begin(), fbo_gate.end(), [](bool const& a) { return a; })) {
-            //promise_exchange_.notify_all();
+            // promise_exchange_.notify_all();
             for (size_t i = 0; i < fbo_gate.size(); ++i) {
                 if (!fbo_gate[i]) {
                     auto const status = fbo_msg_futures[i].WaitFor(std::chrono::milliseconds(1));
@@ -394,10 +354,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
 
             for (size_t i = 0; i < fbo_msg_futures.size(); ++i) {
                 (*this->fbo_msg_recv_)[i] = fbo_msg_futures[i].GetAndReset();
-                /*fbo_msg_promises[i] = std::promise<fbo_msg_t>();
-                fbo_msg_futures[i] = fbo_msg_promises[i].get_future();*/
             }
-
         }
         this->swapBuffers();
     }
@@ -470,8 +427,22 @@ std::vector<megamol::pbs::FBOCommFabric> megamol::pbs::FBOCompositor2::connectCo
     std::vector<std::string> const& addr) const {
     std::vector<FBOCommFabric> ret;
 
+    auto const comm_type = static_cast<FBOCommFabric::commtype>(this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
+
     for (auto const& el : addr) {
-        FBOCommFabric comm(std::make_unique<ZMQCommFabric>(zmq::socket_type::req));
+        std::unique_ptr<AbstractCommFabric> pimpl;
+        switch (comm_type) {
+        case FBOCommFabric::MPI_COMM: {
+            int const rank = atoi(el.c_str());
+            pimpl.reset(new MPICommFabric{rank, rank});
+        } break;
+        case FBOCommFabric::ZMQ_COMM:
+        default:
+            pimpl.reset(new ZMQCommFabric{zmq::socket_type::req});
+        }
+
+        // FBOCommFabric comm(std::make_unique<ZMQCommFabric>(zmq::socket_type::req));
+        FBOCommFabric comm{std::move(pimpl)};
         if (comm.Connect(el)) {
             ret.push_back(std::move(comm));
         } else {

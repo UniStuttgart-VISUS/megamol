@@ -7,12 +7,14 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
 
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     : address_slot_{"address", "The address the transmitter should connect to"}
+    , commSelectSlot_{"communicator", "Select the communicator to use"}
     , view_name_slot_{"view", "The name of the view instance to be used"}
     , trigger_button_slot_{"trigger", "Triggers transmission"}
     , frame_id_{0}
@@ -28,6 +30,11 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , connected_{false} {
     this->address_slot_ << new megamol::core::param::StringParam{"tcp://*:34242"};
     this->MakeSlotAvailable(&this->address_slot_);
+    auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
+    ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
+    ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
+    commSelectSlot_ << ep;
+    this->MakeSlotAvailable(&commSelectSlot_);
     this->view_name_slot_ << new megamol::core::param::StringParam{"inst"};
     this->MakeSlotAvailable(&this->view_name_slot_);
     this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
@@ -51,9 +58,19 @@ void megamol::pbs::FBOTransmitter2::release() {
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!connected_) {
-        this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
-
+        auto const comm_type = static_cast<FBOCommFabric::commtype>(
+            this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
         auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        switch (comm_type) {
+        case FBOCommFabric::MPI_COMM: {
+            int const rank = atoi(address.c_str());
+            this->comm_.reset(new FBOCommFabric{std::make_unique<MPICommFabric>(rank, rank)});
+        } break;
+        case FBOCommFabric::ZMQ_COMM:
+        default:
+            this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
+        }
+
         this->comm_->Bind(address);
 
         this->thread_stop_ = false;
@@ -91,15 +108,15 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         for (int i = 0; i < 4; ++i) {
             this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = viewport[i];
         }
-        //this->fbo_msg_read_->screen_area = {viewport[0], viewport[1], viewport[2], viewport[3]};
-        //this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
+        // this->fbo_msg_read_->screen_area = {viewport[0], viewport[1], viewport[2], viewport[3]};
+        // this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
         this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
         this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
         for (int i = 0; i < 6; ++i) {
             this->fbo_msg_read_->os_bbox[i] = this->fbo_msg_read_->cs_bbox[i] = bbox[i];
         }
-        //this->fbo_msg_read_->os_bbox = bbox;
-        //this->fbo_msg_read_->cs_bbox = bbox;
+        // this->fbo_msg_read_->os_bbox = bbox;
+        // this->fbo_msg_read_->cs_bbox = bbox;
 
         this->color_buf_read_->resize(col_buf.size());
         std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
@@ -129,6 +146,9 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
             }
 #endif
+        } catch (zmq::error_t const& e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
         } catch (...) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
         }
@@ -158,6 +178,9 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
                 }
 #endif
+            } catch (zmq::error_t const& e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: Exception during send in 'transmitterJob': %s\n", e.what());
             } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during send in 'transmitterJob'\n");
             }

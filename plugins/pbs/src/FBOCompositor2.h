@@ -68,7 +68,8 @@ private:
         data_has_changed_.store(true);
     }
 
-    void receiverJob(FBOCommFabric& comm, core::utility::sys::FutureReset<fbo_msg_t>* fbo_msg_future, std::future<bool>&& close);
+    void receiverJob(
+        FBOCommFabric& comm, core::utility::sys::FutureReset<fbo_msg_t>* fbo_msg_future, std::future<bool>&& close);
 
     void collectorJob(std::vector<FBOCommFabric>&& comms);
 
@@ -87,6 +88,8 @@ private:
     bool printProgramInfoLog(GLuint shaderProg) const;
 
     megamol::core::param::ParamSlot addressesSlot_;
+
+    megamol::core::param::ParamSlot commSelectSlot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
 

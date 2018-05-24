@@ -1,18 +1,18 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
-#include <thread>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <vector>
-#include <atomic>
 
 #include "mmcore/Module.h"
-#include "mmcore/view/AbstractView.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/AbstractView.h"
 
-#include "FBOProto.h"
 #include "FBOCommFabric.h"
+#include "FBOProto.h"
 
 namespace megamol {
 namespace pbs {
@@ -63,6 +63,7 @@ protected:
     bool create() override;
 
     void release() override;
+
 private:
     void swapBuffers(void) {
         std::scoped_lock<std::mutex, std::mutex> guard{this->buffer_send_guard_, this->buffer_read_guard_};
@@ -78,6 +79,8 @@ private:
     bool extractBoundingBox(float bbox[6]);
 
     megamol::core::param::ParamSlot address_slot_;
+
+    megamol::core::param::ParamSlot commSelectSlot_;
 
     megamol::core::param::ParamSlot view_name_slot_;
 

@@ -1,6 +1,44 @@
 #include "stdafx.h"
 #include "FBOCommFabric.h"
 
+#include <mpi.h>
+
+
+megamol::pbs::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
+    : my_rank_{0}
+    , target_rank_{target_rank}
+    , source_rank_{source_rank}
+    , recv_count_{1} {
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_);
+}
+
+
+bool megamol::pbs::MPICommFabric::Connect(std::string const &address) { return true; }
+
+
+bool megamol::pbs::MPICommFabric::Bind(std::string const &address) { return true; }
+
+
+bool megamol::pbs::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
+    auto status = MPI_Send(buf.data(), buf.size(), MPI_CHAR, target_rank_, 0, MPI_COMM_WORLD);
+    return status == MPI_SUCCESS;
+}
+
+
+bool megamol::pbs::MPICommFabric::Recv(std::vector<char> &buf, recv_type const type) {
+    MPI_Status stat;
+    buf.resize(recv_count_);
+    auto status = MPI_Recv(buf.data(), recv_count_, MPI_CHAR, source_rank_, 0, MPI_COMM_WORLD, &stat);
+    MPI_Get_count(&stat, MPI_CHAR, &recv_count_);
+    return status == MPI_SUCCESS;
+}
+
+
+bool megamol::pbs::MPICommFabric::Disconnect() { return true; }
+
+
+megamol::pbs::MPICommFabric::~MPICommFabric() {  }
+
 
 megamol::pbs::ZMQCommFabric::ZMQCommFabric(zmq::socket_type const& type) : ctx_{1}, socket_{ctx_, type} {}
 
@@ -29,7 +67,7 @@ bool megamol::pbs::ZMQCommFabric::Connect(std::string const& address) {
 }
 
 
-bool megamol::pbs::ZMQCommFabric::Bind(std::string const &address) {
+bool megamol::pbs::ZMQCommFabric::Bind(std::string const& address) {
     this->address_ = address;
     try {
         this->socket_.bind(address);
@@ -74,7 +112,7 @@ megamol::pbs::FBOCommFabric::FBOCommFabric(std::unique_ptr<AbstractCommFabric>&&
 bool megamol::pbs::FBOCommFabric::Connect(std::string const& address) { return this->pimpl_->Connect(address); }
 
 
-bool megamol::pbs::FBOCommFabric::Bind(std::string const &address) { return this->pimpl_->Bind(address); }
+bool megamol::pbs::FBOCommFabric::Bind(std::string const& address) { return this->pimpl_->Bind(address); }
 
 
 bool megamol::pbs::FBOCommFabric::Send(std::vector<char> const& buf, send_type const type) {
