@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 #ifdef WITH_MPI
 #include <mpi.h>
 #endif
@@ -18,6 +18,7 @@ enum recv_type : unsigned int { RT_UNDEF = 0, RECV, IRECV };
 class AbstractCommFabric {
 public:
     virtual bool Connect(std::string const& address) = 0;
+    virtual bool Bind(std::string const& address) = 0;
     virtual bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) = 0;
     virtual bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) = 0;
     virtual bool Disconnect(void) = 0;
@@ -46,6 +47,7 @@ public:
     ZMQCommFabric(ZMQCommFabric&& rhs) noexcept;
     ZMQCommFabric& operator=(ZMQCommFabric&& rhs) noexcept;
     bool Connect(std::string const& address) override;
+    bool Bind(std::string const& address) override;
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
     bool Disconnect(void) override;
@@ -78,6 +80,8 @@ public:
     FBOCommFabric& operator=(FBOCommFabric&& rhs) noexcept = default;
 
     bool Connect(std::string const& address) override;
+
+    bool Bind(std::string const& address) override;
 
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
 

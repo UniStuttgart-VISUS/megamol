@@ -5,37 +5,41 @@
 
 #include "vislib/sys/Log.h"
 
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/view/CallRender3D.h"
 
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
-    : megamol::core::Module{}
-    , megamol::core::view::AbstractView::Hooks{}
-    , address_slot_{"address", "The address the transmitter should connect to"}
+    : address_slot_{"address", "The address the transmitter should connect to"}
+    , view_name_slot_{"view", "The name of the view instance to be used"}
+    , trigger_button_slot_{"trigger", "Triggers transmission"}
     , frame_id_{0}
     , thread_stop_{false}
-    , col_buf_el_size_{16}
-    , depth_buf_el_size_{4} {
-    this->address_slot_ << new megamol::core::param::StringParam{"tcp:\\127.0.0.1:34242"};
+    , fbo_msg_read_{new fbo_msg_header_t}
+    , fbo_msg_send_{new fbo_msg_header_t}
+    , color_buf_read_{new std::vector<char>}
+    , depth_buf_read_{new std::vector<char>}
+    , color_buf_send_{new std::vector<char>}
+    , depth_buf_send_{new std::vector<char>}
+    , col_buf_el_size_{4}
+    , depth_buf_el_size_{4}
+    , connected_{false} {
+    this->address_slot_ << new megamol::core::param::StringParam{"tcp://*:34242"};
     this->MakeSlotAvailable(&this->address_slot_);
+    this->view_name_slot_ << new megamol::core::param::StringParam{"inst"};
+    this->MakeSlotAvailable(&this->view_name_slot_);
+    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
+    this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
+    this->MakeSlotAvailable(&this->trigger_button_slot_);
 }
 
 
-megamol::pbs::FBOTransmitter2::~FBOTransmitter2(){ this->Release(); }
+megamol::pbs::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
 
 
-bool megamol::pbs::FBOTransmitter2::create() {
-    this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
-
-    auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
-    this->comm_->Connect(address);
-
-    this->thread_stop_ = false;
-
-    this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
-
-    return true;
-}
+bool megamol::pbs::FBOTransmitter2::create() { return true; }
 
 
 void megamol::pbs::FBOTransmitter2::release() {
@@ -46,6 +50,19 @@ void megamol::pbs::FBOTransmitter2::release() {
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
+    if (!connected_) {
+        this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
+
+        auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        this->comm_->Bind(address);
+
+        this->thread_stop_ = false;
+
+        this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
+
+        connected_ = true;
+    }
+
     // get viewport of current render context
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -60,16 +77,29 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
     glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
 
+    float bbox[6];
+    if (!this->extractBoundingBox(bbox)) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box");
+    }
+
     // copy data to read buffer, if possible
     {
         std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
         float lower[] = {viewport[0], viewport[2]};
         float upper[] = {viewport[1], viewport[3]};
-        this->fbo_msg_read_->screen_area = viewp_t{lower, upper};
-        this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
+        for (int i = 0; i < 4; ++i) {
+            this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = viewport[i];
+        }
+        //this->fbo_msg_read_->screen_area = {viewport[0], viewport[1], viewport[2], viewport[3]};
+        //this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
         this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
         this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
+        for (int i = 0; i < 6; ++i) {
+            this->fbo_msg_read_->os_bbox[i] = this->fbo_msg_read_->cs_bbox[i] = bbox[i];
+        }
+        //this->fbo_msg_read_->os_bbox = bbox;
+        //this->fbo_msg_read_->cs_bbox = bbox;
 
         this->color_buf_read_->resize(col_buf.size());
         std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
@@ -88,9 +118,17 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
         // transmit only upon request
         std::vector<char> buf;
         try {
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Waiting for request\n");
+#endif
             if (!this->comm_->Recv(buf, recv_type::RECV)) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
             }
+#if _DEBUG
+            else {
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
+            }
+#endif
         } catch (...) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
         }
@@ -109,9 +147,17 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
 
             // send data
             try {
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending answer\n");
+#endif
                 if (!this->comm_->Send(buf, send_type::SEND)) {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during send in 'transmitterJob'\n");
                 }
+#if _DEBUG
+                else {
+                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
+                }
+#endif
             } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during send in 'transmitterJob'\n");
             }
@@ -119,3 +165,55 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
     }
 }
 
+
+bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::ParamSlot& slot) {
+    // happy trigger finger hit button action happend
+    using vislib::sys::Log;
+
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
+
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto vi = dynamic_cast<megamol::core::view::AbstractView*>(ano.get());
+    if (vi != nullptr) {
+        vi->RegisterHook(this);
+    } else {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to find view \"%s\" for transmission", mvn.c_str());
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+
+    return true;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
+    if (vi != nullptr) {
+        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
+            if (sl != nullptr) {
+                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
+                if (r != nullptr) {
+                    bbox[0] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
+                    bbox[1] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
+                    bbox[2] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
+                    bbox[3] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
+                    bbox[4] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
+                    bbox[5] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
+                    break;
+                }
+            }
+        }
+    } else {
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}

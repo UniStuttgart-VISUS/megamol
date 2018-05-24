@@ -73,7 +73,15 @@ private:
 
     void transmitterJob();
 
+    bool triggerButtonClicked(core::param::ParamSlot& slot);
+
+    bool extractBoundingBox(float bbox[6]);
+
     megamol::core::param::ParamSlot address_slot_;
+
+    megamol::core::param::ParamSlot view_name_slot_;
+
+    megamol::core::param::ParamSlot trigger_button_slot_;
 
     std::mutex buffer_read_guard_;
 
@@ -104,6 +112,8 @@ private:
     int col_buf_el_size_;
 
     int depth_buf_el_size_;
+
+    bool connected_;
 };
 
 } // end namespace pbs

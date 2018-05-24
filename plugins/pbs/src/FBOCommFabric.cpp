@@ -17,12 +17,26 @@ megamol::pbs::ZMQCommFabric& megamol::pbs::ZMQCommFabric::operator=(ZMQCommFabri
 
 
 bool megamol::pbs::ZMQCommFabric::Connect(std::string const& address) {
-    if (!this->socket_.connected()) {
+    /*if (!this->socket_.connected()) {
         this->address_ = address;
         this->socket_.connect(address);
         return this->socket_.connected();
     }
-    return true;
+    return true;*/
+    this->address_ = address;
+    this->socket_.connect(address);
+    return this->socket_.connected();
+}
+
+
+bool megamol::pbs::ZMQCommFabric::Bind(std::string const &address) {
+    this->address_ = address;
+    try {
+        this->socket_.bind(address);
+    } catch (zmq::error_t const& e) {
+        printf("ZMQ ERROR: %s", e.what());
+    }
+    return this->socket_.connected();
 }
 
 
@@ -58,6 +72,9 @@ megamol::pbs::FBOCommFabric::FBOCommFabric(std::unique_ptr<AbstractCommFabric>&&
 
 
 bool megamol::pbs::FBOCommFabric::Connect(std::string const& address) { return this->pimpl_->Connect(address); }
+
+
+bool megamol::pbs::FBOCommFabric::Bind(std::string const &address) { return this->pimpl_->Bind(address); }
 
 
 bool megamol::pbs::FBOCommFabric::Send(std::vector<char> const& buf, send_type const type) {

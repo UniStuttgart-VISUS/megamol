@@ -3,6 +3,7 @@
 #include <atomic>
 #include <future>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -14,6 +15,7 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/sys/FutureReset.h"
 
 
 namespace megamol {
@@ -66,9 +68,9 @@ private:
         data_has_changed_.store(true);
     }
 
-    void receiverJob(FBOCommFabric& comm, std::promise<fbo_msg_t>&& fbo_msg_promise, std::future<bool>&& close) const;
+    void receiverJob(FBOCommFabric& comm, core::utility::sys::FutureReset<fbo_msg_t>* fbo_msg_future, std::future<bool>&& close);
 
-    void collectorJob(std::vector<FBOCommFabric>&& comms, std::future<bool>&& close);
+    void collectorJob(std::vector<FBOCommFabric>&& comms);
 
     void initTextures(size_t n, GLsizei width, GLsizei heigth);
 
@@ -80,6 +82,10 @@ private:
 
     std::vector<FBOCommFabric> connectComms(std::vector<std::string>&& addr) const;
 
+    bool printShaderInfoLog(GLuint shader) const;
+
+    bool printProgramInfoLog(GLuint shaderProg) const;
+
     megamol::core::param::ParamSlot addressesSlot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
@@ -87,6 +93,18 @@ private:
     std::thread collector_thread_;
 
     std::promise<bool> close_promise_;
+
+    std::future<bool> close_future_;
+
+    std::condition_variable_any promise_exchange_;
+
+    std::condition_variable_any promise_release_;
+
+    std::atomic<bool> promise_atomic_;
+
+    std::shared_mutex promise_exchange_lock_;
+
+    std::shared_mutex promise_release_lock_;
 
     std::mutex buffer_write_guard_;
 
@@ -125,6 +143,10 @@ private:
     std::vector<GLuint> depth_textures_;
 
     bool connected_;
+
+    GLuint shader;
+
+    GLuint vao, vbo;
 }; // end class FBOCompositor2
 
 } // end namespace pbs
