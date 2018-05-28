@@ -36,6 +36,7 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/File.h"
+#include "vislib/Trace.h"
 
 
 namespace megamol {
@@ -502,12 +503,12 @@ namespace utility {
         inline void ClearBatchCache(void) {
             this->posBatchCache.clear();
             this->texBatchCache.clear();
-            //this->colBatchCache.clear();
+            this->colBatchCache.clear();
         }
 
         /**
          * Renders all cached string data at once.
-         * Faster since given color is used for all cached DrawString() calls.
+         * Given color is used for all cached DrawString() calls (-> Faster version).
          * 
          * @param col The color.
          */
@@ -515,9 +516,9 @@ namespace utility {
 
         /**
          * Renders all cached string data at once.
-         * Slower since additional per vertex color data is used from individual DrawString() call.
+         * Color data from individual DrawString() calls are used in additional vbo (-> Slower version).
          */
-        //void BatchDrawString() const;
+         void BatchDrawString() const;
 
     protected:
 
@@ -526,7 +527,7 @@ namespace utility {
          * Instead call 'Initialise'. You must call 'Initialise' before the
          * object can be used.
          *
-         * @param conf The megamol core isntance, neeeded for being able to load shader/resource files.
+         * @param conf The megamol core isntance. Needed for being able to load files from 'share/shaders' and 'share/resources' folders.
          *
          * @return 'true' on success, 'false' on failure.
          */
@@ -567,6 +568,7 @@ namespace utility {
 
         /** The shader of the font. */
         vislib::graphics::gl::GLSLShader shader;
+        vislib::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
         vislib::graphics::gl::OpenGLTexture2D texture;
@@ -596,7 +598,7 @@ namespace utility {
         /** Position, texture and color data cache for batch draw. */
         mutable std::vector<float> posBatchCache;
         mutable std::vector<float> texBatchCache;
-        //mutable std::vector<float> colBatchCache;
+        mutable std::vector<float> colBatchCache;
 
 
         /** The glyph kernings. */
@@ -717,9 +719,9 @@ namespace utility {
         * Renders buffer data. 
         * 
         * @param gc   The total glyph count to render.
-        * @param col  The color.
+        * @param col  Pointer to the color array. If col is nullptr, per vertex color is used.
         */
-        void render(unsigned int gc, float col[4]) const;
+        void render(unsigned int gc, float *col[4]) const;
 
         /**
         * Translate enum font name into font file name.

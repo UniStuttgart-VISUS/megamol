@@ -21,7 +21,7 @@ using namespace megamol::core::utility;
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -31,7 +31,7 @@ SDFFont::SDFFont(FontName fn) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->fontFileName = this->translateFontName(fn);
 }
@@ -41,7 +41,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -52,7 +52,7 @@ SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -63,7 +63,7 @@ SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
     this->fontFileName = this->translateFontName(fn);
@@ -74,7 +74,7 @@ SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -86,7 +86,7 @@ SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->fontFileName = this->translateFontName(fn);
@@ -97,7 +97,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : Abstract
 * SDFFont::SDFFont
 */
 SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -109,7 +109,7 @@ SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false)  {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false)  {
 
 }
 
@@ -118,7 +118,7 @@ SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
 }
 
@@ -127,7 +127,7 @@ SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
 }
@@ -137,7 +137,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
 }
@@ -147,7 +147,7 @@ SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetFlipY(flipY);
 }
@@ -157,7 +157,7 @@ SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -168,7 +168,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
 }
@@ -178,7 +178,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+        fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -189,7 +189,7 @@ SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, boo
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -200,7 +200,7 @@ SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
@@ -211,7 +211,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+        fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -222,7 +222,7 @@ SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false){
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false){
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -233,7 +233,7 @@ SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
@@ -244,7 +244,7 @@ SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : A
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -255,7 +255,7 @@ SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+    fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
@@ -266,7 +266,7 @@ SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : 
  * SDFFont::SDFFont
  */
 SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
 
     this->SetSize(size);
     this->SetFlipY(flipY);
@@ -548,14 +548,13 @@ void SDFFont::BatchDrawString(float col[4]) const {
 
     // Draw batch cache 
     unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
-    this->render(glyphCnt, col);
+    this->render(glyphCnt, &col);
 }
 
 
 /*
  * SDFFont::BatchDrawString
  */
-/*
 void SDFFont::BatchDrawString() const {
 
     // Bind glyph data in batch cache
@@ -575,10 +574,8 @@ void SDFFont::BatchDrawString() const {
 
     // Draw batch cache
     unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
-    float col[4] = {0.0, 0.0, 0.0, 0.0};
-    this->render(glyphCnt, col);
+    this->render(glyphCnt, nullptr);
 }
-*/
 
 /* PRIVATE********************************************************************/
 
@@ -608,6 +605,7 @@ void SDFFont::deinitialise(void) {
 
     // Shader
     this->shader.Release();
+    this->shadervertcol.Release();
 
     // VBOs
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -1039,14 +1037,12 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         for (unsigned int i = 0; i < texCnt; ++i) {
             this->texBatchCache.push_back(texData[i]);
         }
-        /*
         for (unsigned int i = 0; i < (glyphCnt * 6); ++i) {
             this->colBatchCache.push_back(col[0]);
             this->colBatchCache.push_back(col[1]);
             this->colBatchCache.push_back(col[2]);
             this->colBatchCache.push_back(col[3]);
         }
-        */
     } 
     else {
         // ... or draw glyphs instantly.
@@ -1062,7 +1058,7 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
         }
 
         // Draw data buffers
-        this->render(glyphCnt, col);
+        this->render(glyphCnt, &col);
     } 
 
     ARY_SAFE_DELETE(posData);
@@ -1073,15 +1069,22 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
 /*
  * SDFFont::render
  */
-void SDFFont::render(unsigned int gc, float col[4]) const {
+void SDFFont::render(unsigned int gc, float *col[4]) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [render] Texture is not valid. \n");
         return;
     }
-    // Check shader
-    if (!this->shader.IsValidHandle(this->shader.ProgramHandle())) {
+
+    // Check if per vertex color should be used
+    const vislib::graphics::gl::GLSLShader *usedShader = &this->shader;
+    if (col == nullptr) {
+        usedShader = &this->shadervertcol;
+    }
+
+    // Check shaders
+    if (!usedShader->IsValidHandle(usedShader->ProgramHandle())) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [render] Shader handle is not valid. \n");
         return;
     }
@@ -1126,28 +1129,23 @@ void SDFFont::render(unsigned int gc, float col[4]) const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because draw() is CONST
 
-    glUseProgram(this->shader.ProgramHandle()); // instead of this->shader.Enable() => because draw() is CONST
+    glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
 
     // Vertex shader
-    glUniformMatrix4fv(this->shader.ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-    glUniform4fv(this->shader.ParameterLocation("instColor"), 1, col);
+    glUniformMatrix4fv(usedShader->ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 
-    /*
-    if (!this->IsBatchDrawEnabled()) {
-        GLint colLoc = glGetAttribLocation(this->shader, "inVertColor");
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [render] inVertColor: %i \n", (int)colLoc);
-        glEnableVertexAttribArray(colLoc);
-        glVertexAttribPointer(colLoc, 4, GL_FLOAT, GL_FALSE, 0, (GLubyte*)&col);
+    // Set global color, if given
+    if (col != nullptr) {
+        glUniform4fv(usedShader->ParameterLocation("inColor"), 1, (*col));
     }
-    */
 
     // Fragment shader
-    glUniform1i(this->shader.ParameterLocation("fontTex"), 0);
-    glUniform1i(this->shader.ParameterLocation("renderType"), (int)(this->renderType));
+    glUniform1i(usedShader->ParameterLocation("fontTex"), 0);
+    glUniform1i(usedShader->ParameterLocation("renderType"), (int)(this->renderType));
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)gc * 6); // 2 triangles per glyph -> 6 vertices
 
-    glUseProgram(0); // instead of this->shader.Disable() => because draw() is CONST
+    glUseProgram(0); // instead of usedShader->Disable() => because draw() is CONST
     glBindVertexArray(0);
     glDisable(GL_TEXTURE_2D);
 
@@ -1247,22 +1245,22 @@ bool SDFFont::loadFontBuffers() {
     newVBO.handle = 0; // Default init
 
     // VBO for position data
-    newVBO.name = "inVertPos";
+    newVBO.name  = "inPos";
     newVBO.index = (GLuint)VBOAttrib::POSITION;
-    newVBO.dim = 3;
+    newVBO.dim   = 3;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
-    newVBO.name = "inVertTexCoord";
+    newVBO.name  = "inTexCoord";
     newVBO.index = (GLuint)VBOAttrib::TEXTURE;
-    newVBO.dim = 2;
+    newVBO.dim   = 2;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
-    //newVBO.name = "inVertColor";
-    //newVBO.index = (GLuint)VBOAttrib::COLOR;
-    //newVBO.dim = 4;
-    //this->vbos.push_back(newVBO);
+    newVBO.name  = "inColor";
+    newVBO.index = (GLuint)VBOAttrib::COLOR;
+    newVBO.dim   = 4;
+    this->vbos.push_back(newVBO);
 
     // ------------------------------------------------------------------------
 
@@ -1501,53 +1499,110 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
         return false;
     }
 
-    // Reset shader
-    this->shader.Release();
-
     vislib::graphics::gl::ShaderSource vs, fs;
-    const char *shaderName = "SDFFont";
 
-    // Load shaders from file
-    try {
+    StringA shaderNamespace  = "sdffont";
 
-        if (!core->ShaderSourceFactory().MakeShaderSource("sdffont::vertex", vs)) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
-            return false;
+    StringA vertShaderName = shaderNamespace;
+    vertShaderName.Append("::vertex");
+
+    StringA fragShaderName = shaderNamespace;
+    fragShaderName.Append("::fragment");
+
+    StringA versSnipName = vertShaderName;
+    versSnipName.Append("::version");
+
+    StringA mainSnipName = vertShaderName;
+    mainSnipName.Append("::main");
+
+    // Create array of shaders to loop over
+    vislib::graphics::gl::GLSLShader *shaderPtr[2];
+    shaderPtr[0] = &this->shader;
+    shaderPtr[1] = &this->shadervertcol;
+
+    // Defining used vbo attributes for each shader
+    std::vector<unsigned int> attribLoc[2];
+    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        GLuint index = this->vbos[i].index;
+        if (index == (GLuint)VBOAttrib::POSITION) {
+            attribLoc[0].push_back(i);
+            attribLoc[1].push_back(i);
         }
-        if (!core->ShaderSourceFactory().MakeShaderSource("sdffont::fragment", fs)) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
-            return false;
+        else if (index == (GLuint)VBOAttrib::TEXTURE) {
+            attribLoc[0].push_back(i);
+            attribLoc[1].push_back(i);
         }
-
-        // Compiling shaders
-        if (!this->shader.Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderName);
-            return false;
-        }
-
-        // Bind vertex shader attributes (before linking shaders!)
-        for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
-            glBindAttribLocation(this->shader.ProgramHandle(), this->vbos[i].index, this->vbos[i].name.PeekBuffer());
-        }
-
-        // Linking shaders
-        if (!this->shader.Link()) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderName);
-            return false;
+        else if (index == (GLuint)VBOAttrib::COLOR) {
+            attribLoc[1].push_back(i);
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderName,
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
-        return false;
-    }
-    catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderName, e.GetMsgA());
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderName);
-        return false;
+
+    // Loop over all shaders in array
+    for (unsigned int i = 0; i < 2; ++i) {
+        // Reset shader
+        shaderPtr[i]->Release();
+
+        // Load shader
+        try {
+
+            vs.Clear();
+            if (!core->ShaderSourceFactory().MakeShaderSource(vertShaderName, vs)) {
+                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
+                return false;
+            }
+
+            fs.Clear();
+            if (!core->ShaderSourceFactory().MakeShaderSource(fragShaderName, fs)) {
+                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
+                return false;
+            }
+
+            // Choose right color snippet for current shader
+            StringA colSnipName = vertShaderName;
+            if (&this->shader == shaderPtr[i]) {
+                colSnipName.Append("::globalColor");
+            }
+            else if (&this->shadervertcol == shaderPtr[i]) {
+                colSnipName.Append("::vertexColor");
+            }
+
+            // Putting vertex shader together
+            vs.Clear();
+            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(versSnipName)); /// 1)
+            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(colSnipName));  /// 2)
+            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(mainSnipName)); /// 3)
+            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "\n----- Vertex shader using '%s': ----- \n%s\n", colSnipName.PeekBuffer(), vs.WholeCode().PeekBuffer());
+
+            // Compiling shaders
+            if (!shaderPtr[i]->Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
+                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                return false;
+            }
+
+            // Bind vertex shader attributes (before linking shaders!)
+            for (unsigned int j = 0; j < attribLoc[i].size(); j++) {
+                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index, this->vbos[attribLoc[i][j]].name.PeekBuffer());
+            }
+
+            // Linking shaders
+            if (!shaderPtr[i]->Link()) {
+                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                return false;
+            }
+        }
+        catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderNamespace.PeekBuffer(),
+                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+            return false;
+        }
+        catch (vislib::Exception e) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderNamespace.PeekBuffer(), e.GetMsgA());
+            return false;
+        }
+        catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderNamespace.PeekBuffer());
+            return false;
+        }
     }
 
     return true;
