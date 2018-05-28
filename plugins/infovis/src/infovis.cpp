@@ -14,6 +14,7 @@
 #include "FlagCall.h"
 #include "FlagStorage.h"
 #include "ParallelCoordinatesRenderer2D.h"
+#include "ScatterplotMatrixRenderer2D.h"
 
 //#include "NVGDiagramRenderer.h"
 #include "DiagramSeries.h"
@@ -48,7 +49,7 @@ namespace {
 
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
-            //this->module_descriptions.RegisterAutoDescription<megamol::infovis::NVGDiagramRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
             // register calls here:
