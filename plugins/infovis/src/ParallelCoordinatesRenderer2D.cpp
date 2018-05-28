@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "NGParallelCoordinatesRenderer2D.h"
+#include "ParallelCoordinatesRenderer2D.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 #include "FlagCall.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -37,7 +37,7 @@
 using namespace megamol;
 using namespace megamol::infovis;
 
-NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Renderer2DModule(),
+ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void) : Renderer2DModule(),
     getDataSlot("getdata", "connects to the float table data"),
     getTFSlot("getTF", "connects to the transfer function"),
     getFlagsSlot("getFlags", "connects to the flag storage"),
@@ -107,10 +107,10 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     this->MakeSlotAvailable(&drawSelectedItemsSlot);
 
     selectedItemsColorSlot << new ::megamol::core::param::StringParam("red");
-    selectedItemsColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
+    selectedItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
     this->MakeSlotAvailable(&selectedItemsColorSlot);
     selectedItemsAlphaSlot << new param::FloatParam(1.0f, 0.0f, 1.0f);
-    selectedItemsAlphaSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
+    selectedItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
     this->MakeSlotAvailable(&selectedItemsAlphaSlot);
     selectedItemsColorSlotCallback(selectedItemsColorSlot);
 
@@ -118,10 +118,10 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     this->MakeSlotAvailable(&drawOtherItemsSlot);
 
     otherItemsColorSlot << new ::megamol::core::param::StringParam("gray");
-    otherItemsColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
+    otherItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsColorSlot);
     otherItemsAlphaSlot << new param::FloatParam(1.0f, 0.0f, 1.0f);
-    otherItemsAlphaSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
+    otherItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsAlphaSlot);
     otherItemsColorSlotCallback(otherItemsColorSlot);
 
@@ -129,12 +129,12 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     this->MakeSlotAvailable(&drawAxesSlot);
 
     axesColorSlot << new ::megamol::core::param::StringParam("white");
-    axesColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::axesColorSlotCallback);
+    axesColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::axesColorSlotCallback);
     this->MakeSlotAvailable(&axesColorSlot);
     axesColorSlotCallback(axesColorSlot);
 
     filterIndicatorColorSlot << new ::megamol::core::param::StringParam("orange");
-    filterIndicatorColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback);
+    filterIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback);
     this->MakeSlotAvailable(&filterIndicatorColorSlot);
     filterIndicatorColorSlotCallback(filterIndicatorColorSlot);
 
@@ -142,7 +142,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     this->MakeSlotAvailable(&drawSelectionIndicatorSlot);
 
     selectionIndicatorColorSlot << new ::megamol::core::param::StringParam("MegaMolBlue");
-    selectionIndicatorColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback);
+    selectionIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback);
     this->MakeSlotAvailable(&selectionIndicatorColorSlot);
     selectionIndicatorColorSlotCallback(selectionIndicatorColorSlot);
 
@@ -162,7 +162,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     //this->MakeSlotAvailable(&scaleFullscreenSlot_);
 
     scaleToFitSlot << new param::BoolParam(false);
-    scaleToFitSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::scalingChangedCallback);
+    scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
     this->MakeSlotAvailable(&scaleToFitSlot);
 
     //projectionMatrixSlot_ << new ::megamol::core::param::StringParam("");
@@ -191,11 +191,11 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     this->MakeSlotAvailable(&sqrtDensitySlot);
     
     resetFlagsSlot << new ::megamol::core::param::ButtonParam();
-    resetFlagsSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
+    resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
     this->MakeSlotAvailable(&resetFlagsSlot);
 
     resetFiltersSlot << new ::megamol::core::param::ButtonParam();
-    resetFiltersSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
+    resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
 
     fragmentMinMax.resize(2);
@@ -205,11 +205,11 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 /*
 * misc::LinesRenderer::~LinesRenderer
 */
-NGParallelCoordinatesRenderer2D::~NGParallelCoordinatesRenderer2D(void) {
+ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) {
     this->Release();
 }
 
-bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) {
+bool ParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) {
     vislib::graphics::gl::ShaderSource vert, frag;
 
     vislib::StringA vertname((prefix + "::vert").c_str());
@@ -244,7 +244,7 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program) {
+bool ParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program) {
     vislib::graphics::gl::ShaderSource comp;
 
     vislib::StringA compname((prefix + "::comp").c_str());
@@ -283,7 +283,7 @@ bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vis
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::makeTessellationProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program) {
+bool ParallelCoordinatesRenderer2D::makeTessellationProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program) {
     vislib::graphics::gl::ShaderSource vert, frag, control, eval, geom;
 
     vislib::StringA vertname((prefix + "::vert").c_str());
@@ -339,7 +339,7 @@ bool NGParallelCoordinatesRenderer2D::makeTessellationProgram(std::string prefix
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
+bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
     program.Enable();
     // bindbuffer?
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
@@ -363,7 +363,7 @@ bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl:
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::create(void) {
+bool ParallelCoordinatesRenderer2D::create(void) {
     //std::array< zen::gl::debug_action, 1 > actions =
     //{
     //    //zen::gl::make_debug_action_ostream(std::cerr)
@@ -434,7 +434,7 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
     return true;
 }
 
-void NGParallelCoordinatesRenderer2D::release(void) {
+void ParallelCoordinatesRenderer2D::release(void) {
     glDeleteBuffers(1, &dataBuffer);
     glDeleteBuffers(1, &flagsBuffer);
     glDeleteBuffers(1, &minimumsBuffer);
@@ -447,7 +447,7 @@ void NGParallelCoordinatesRenderer2D::release(void) {
     this->drawAxesProgram.Release();
 }
 
-int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
+int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     float f = (x - this->marginX) / this->axisDistance;
     float frac = f - static_cast<long>(f);
     int integral = static_cast<int>(std::round(f));
@@ -460,7 +460,7 @@ int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     }
 }
 
-void NGParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
+void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
     axis = mouseXtoAxis(x);
     float val = (y - this->marginY) / axisHeight;
     if (val >= 0.0f && val <= 1.0f && axis != -1) {
@@ -478,7 +478,7 @@ void NGParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis,
     }
 }
 
-bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags) {
+bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags) {
     if (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_CTRL_DOWN) {
         return false;
     }
@@ -555,40 +555,40 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
     utility::ColourParser::FromString(this->selectedItemsColorSlot.Param<param::StringParam>()->Value(), 4, selectedItemsColor);
     selectedItemsColor[3] = this->selectedItemsAlphaSlot.Param<param::FloatParam>()->Value();
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
     utility::ColourParser::FromString(this->otherItemsColorSlot.Param<param::StringParam>()->Value(), 4, otherItemsColor);
     otherItemsColor[3] = this->otherItemsAlphaSlot.Param<param::FloatParam>()->Value();
     return true;
 }
-bool NGParallelCoordinatesRenderer2D::axesColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::axesColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
     utility::ColourParser::FromString(this->axesColorSlot.Param<param::StringParam>()->Value(), 4, axesColor);
     return true;
 }
-bool NGParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
     utility::ColourParser::FromString(this->filterIndicatorColorSlot.Param<param::StringParam>()->Value(), 4, filterIndicatorColor);
     return true;
 }
-bool NGParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
     utility::ColourParser::FromString(this->selectionIndicatorColorSlot.Param<param::StringParam>()->Value(), 4, selectionIndicatorColor);
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::scalingChangedCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::scalingChangedCallback(::megamol::core::param::ParamSlot & caller) {
     this->computeScaling();
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::param::ParamSlot & caller) {
     return true;
 }
 
-bool NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::param::ParamSlot & caller) {
+bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::param::ParamSlot & caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
         this->filters[i].lower = 0.0f;
         this->filters[i].upper = 1.0f;
@@ -596,19 +596,19 @@ bool NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::
     return true;
 }
 
-void NGParallelCoordinatesRenderer2D::assertData(void) {
+void ParallelCoordinatesRenderer2D::assertData(void) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "NGParallelCoordinatesRenderer2D requires a transfer function!");
+            "ParallelCoordinatesRenderer2D requires a transfer function!");
         return;
     }
     auto flagsc = getFlagsSlot.CallAs<FlagCall>();
     if (flagsc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "NGParallelCoordinatesRenderer2D requires a flag storage!");
+            "ParallelCoordinatesRenderer2D requires a flag storage!");
         return;
     }
 
@@ -678,7 +678,7 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
     MAKE_OBJECT_LABEL(GL_BUFFER, minmaxBuffer);
 }
 
-void NGParallelCoordinatesRenderer2D::computeScaling(void) {
+void ParallelCoordinatesRenderer2D::computeScaling(void) {
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (fc == nullptr) return;
 
@@ -699,7 +699,7 @@ void NGParallelCoordinatesRenderer2D::computeScaling(void) {
     this->bounds.SetTop(3.0f * marginY + this->axisHeight);
 }
 
-bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call) {
+bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
     this->assertData();
@@ -709,7 +709,7 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
     return true;
 }
 
-void NGParallelCoordinatesRenderer2D::drawAxes(void) {
+void ParallelCoordinatesRenderer2D::drawAxes(void) {
     PUSH_DEBUG_GROUP(1, "drawAxes");
     if (this->columnCount > 0) {
 
@@ -797,7 +797,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
+void ParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
     if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, otherColor, tfColorFactor);
     }
@@ -806,7 +806,7 @@ void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], co
     }
 }
 
-void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
+void ParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tf == nullptr) return;
 
@@ -849,7 +849,7 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
+void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
     auto& program = this->drawPickIndicatorProgram;
 
     this->enableProgramAndBind(program);
@@ -864,7 +864,7 @@ void NGParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float 
     program.Disable();
 }
 
-void NGParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
+void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
     auto& prog = this->drawStrokeIndicatorProgram;
 
     this->enableProgramAndBind(prog);
@@ -880,7 +880,7 @@ void NGParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, fl
 }
 
 
-void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
+void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
     PUSH_DEBUG_GROUP(3, "doPicking");
     // TODO, plus shader is broken
 
@@ -903,7 +903,7 @@ void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadi
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
+void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
     PUSH_DEBUG_GROUP(3, "doStroking");
     // TODO, plus shader is broken
 
@@ -926,7 +926,7 @@ void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, f
 }
 
 
-void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
+void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     PUSH_DEBUG_GROUP(4, "doFragmentCount");
     int invocations[] = {
         static_cast<int>(std::ceil(windowWidth / 16)),
@@ -967,7 +967,7 @@ void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
+void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tf == nullptr) return;
     PUSH_DEBUG_GROUP(6, "drawItemsContinuous");
@@ -988,7 +988,7 @@ void NGParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
+void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     PUSH_DEBUG_GROUP(7, "drawItemsHistogram");
     doFragmentCount();
     this->enableProgramAndBind(drawItemsHistogramProgram);
@@ -1000,7 +1000,7 @@ void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     POP_DEBUG_GROUP;
 }
 
-void NGParallelCoordinatesRenderer2D::drawParcos(void) {
+void ParallelCoordinatesRenderer2D::drawParcos(void) {
 
     // TODO only when filters changed!
     GLuint groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
@@ -1058,7 +1058,7 @@ void NGParallelCoordinatesRenderer2D::drawParcos(void) {
 
 }
 
-bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
+bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
     // this is the apex of suck and must die
@@ -1079,7 +1079,7 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     if (fc == nullptr) return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("%s cannot draw without a transfer function!", NGParallelCoordinatesRenderer2D::ClassName());
+        vislib::sys::Log::DefaultLog.WriteWarn("%s cannot draw without a transfer function!", ParallelCoordinatesRenderer2D::ClassName());
         return false;
     }
 

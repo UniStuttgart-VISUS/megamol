@@ -1,5 +1,5 @@
-#ifndef MEGAMOL_INFOVIS_NGPARCORENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_NGPARCORENDERER2D_H_INCLUDED
+#ifndef MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED
+#define MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -24,7 +24,7 @@ namespace infovis {
 
     using namespace megamol::core;
 
-    class NGParallelCoordinatesRenderer2D : public view::Renderer2DModule {
+    class ParallelCoordinatesRenderer2D : public view::Renderer2DModule {
     public:
 
         enum // draw mode
@@ -53,7 +53,7 @@ namespace infovis {
         * @return The name of this module.
         */
         static inline const char *ClassName(void) {
-            return "NGParallelCoordinatesRenderer2D";
+            return "ParallelCoordinatesRenderer2D";
         }
 
         /**
@@ -62,7 +62,7 @@ namespace infovis {
         * @return A human readable description of this module.
         */
         static inline const char *Description(void) {
-            return "Parallel Coordinates Renderer for generic Float Tables";
+            return "Parallel coordinates renderer for generic float tables";
         }
 
         /**
@@ -78,12 +78,12 @@ namespace infovis {
         /**
         * Initialises a new instance.
         */
-        NGParallelCoordinatesRenderer2D(void);
+        ParallelCoordinatesRenderer2D(void);
 
         /**
         * Finalises an instance.
         */
-        virtual ~NGParallelCoordinatesRenderer2D(void);
+        virtual ~ParallelCoordinatesRenderer2D(void);
 
     protected:
 
@@ -291,4 +291,4 @@ namespace infovis {
 } /* end namespace infovis */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_INFOVIS_NGPARCORENDERER2D_H_INCLUDED */
+#endif /* MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED */
