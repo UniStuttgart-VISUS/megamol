@@ -37,7 +37,7 @@ if(BUILD_CORE)
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
   if(MSVC)
     set(ZMQ_LIB
-        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
+        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib"
         optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
         CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
@@ -48,8 +48,9 @@ if(BUILD_CORE)
   ExternalProject_Add(extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
-  )
+    CMAKE_ARGS
+      -DZMQ_BUILD_TESTS=OFF 
+      -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION})
   message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
 
   # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
