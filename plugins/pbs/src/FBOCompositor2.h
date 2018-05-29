@@ -93,6 +93,8 @@ private:
 
     megamol::core::param::ParamSlot targetBandwidthSlot_;
 
+    megamol::core::param::ParamSlot numRendernodesSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;

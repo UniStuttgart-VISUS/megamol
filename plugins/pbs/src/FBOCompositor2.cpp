@@ -17,6 +17,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     : addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , commSelectSlot_{"communicator", "Select the communicator to use"}
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
+    , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -32,6 +33,9 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     commSelectSlot_ << ep;
     this->MakeSlotAvailable(&commSelectSlot_);
     targetBandwidthSlot_ << new megamol::core::param::IntParam(100, 1, std::numeric_limits<int>::max());
+    this->MakeSlotAvailable(&targetBandwidthSlot_);
+    numRendernodesSlot_ << new megamol::core::param::IntParam(1, 1, std::numeric_limits<int>::max());
+    this->MakeSlotAvailable(&numRendernodesSlot_);
 }
 
 
@@ -377,7 +381,8 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
             (sizeof(fbo_msg_header_t) + width_ * height_ * (col_buf_el_size_ + depth_buf_el_size_)) * num_jobs;
         auto const bandwidth = msg_size * 1000.0f / recv_duration.count();
 
-        float const target_bandwidth = this->targetBandwidthSlot_.Param<megamol::core::param::IntParam>()->Value();
+        float const target_bandwidth =
+            this->targetBandwidthSlot_.Param<megamol::core::param::IntParam>()->Value() * 1000 * 1000;
         float const target_fps = target_bandwidth / msg_size;
 
 #if _DEBUG
