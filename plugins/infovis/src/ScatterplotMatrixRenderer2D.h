@@ -81,18 +81,24 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
+	struct MouseData {
+        float x;
+        float y;
+        bool selects;
+        bool inspects;
+	};
+
     enum GeometryType {
         GEOMETRY_TYPE_POINT,
 		GEOMETRY_TYPE_LINE
 	};
 
-    typedef struct _selectorIdxs {
-        size_t abcissaIdx;
+      struct Selectors {
         size_t colorIdx;
-        size_t descIdx;
-    } selectorIdxs_t;
+        size_t labelIdx;
+    } ;
 
-    typedef struct _shaderInfo {
+      struct ShaderInfo {
         vislib::graphics::gl::GLSLShader shader;
         GLuint ssboBindingPoint;
         GLuint bufferId;
@@ -103,17 +109,13 @@ private:
         GLuint bufferMappingBits;
         std::vector<GLsync> fences;
         unsigned int currBuf;
-    } shaderInfo_t;
+    } ;
 
     typedef std::tuple<float, float, float, float> point_t;
 
     typedef std::tuple<int, int> viewport_t;
 
     typedef std::tuple<float, float> range_t;
-
-    typedef std::tuple<float, float, size_t> call_t;
-
-    typedef std::vector<float> abcissa_t;
 
     typedef std::vector<std::vector<float>> series_t;
 
@@ -138,15 +140,11 @@ private:
 
 	bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 
-    void seriesInsertionCB(const DiagramSeriesCall::DiagramSeriesTuple &tuple);
+    bool isDirty(void) const;
 
-    bool assertData(void);
+    void resetDirty(void);
 
-    bool isAnythingDirty(void) const;
-
-    void resetDirtyFlag(void);
-
-    bool updateColumnSelectors(void);
+	bool validateData(void);
 
 	void drawPoints(void);
 
@@ -196,15 +194,9 @@ private:
 
     core::param::ParamSlot attenuateSubpixelParam;
 
-    DiagramSeriesCall::fpSeriesInsertionCB fpSeriesInsertionCB;
-
     std::vector<DiagramSeriesCall::DiagramSeriesTuple> columnSelectors;
 
-    std::vector<bool> selectedSeries;
-
-    selectorIdxs_t columnIdxs;
-
-    abcissa_t abcissa;
+    Selectors columnIdxs;
 
     series_t series;
 
@@ -212,9 +204,7 @@ private:
 
     range_t yRange;
 
-    shaderInfo_t shaderInfo;
-
-    std::vector<std::vector<call_t>> callStack;
+    ShaderInfo shaderInfo;
 
     const stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo *columnInfos;
 
@@ -222,11 +212,7 @@ private:
 
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> oglTrans;
 
-    bool mouseRightPressed;
-
-    float mouseX;
-
-    float mouseY;
+    MouseData mouse;
 
     size_t dataHash;
 };
