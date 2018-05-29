@@ -10,11 +10,13 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
+#include "mmcore/param/IntParam.h"
 
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , commSelectSlot_{"communicator", "Select the communicator to use"}
+    , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -29,6 +31,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
     commSelectSlot_ << ep;
     this->MakeSlotAvailable(&commSelectSlot_);
+    targetBandwidthSlot_ << new megamol::core::param::IntParam(100, 1, std::numeric_limits<int>::max());
 }
 
 
@@ -299,15 +302,21 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
+
+        {
+            std::shared_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
+            heartbeat_.wait(heartbeat_guard);
+        }
     }
     vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
 }
 
 
 void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& comms) {
+    auto const num_jobs = comms.size();
     // initialize threads
     std::vector<std::thread> jobs;
-    std::vector<core::utility::sys::FutureReset<fbo_msg_t>> fbo_msg_futures(comms.size());
+    std::vector<core::utility::sys::FutureReset<fbo_msg_t>> fbo_msg_futures(num_jobs);
     std::vector<std::promise<bool>> recv_close_sig;
     size_t i = 0;
     for (auto& comm : comms) {
@@ -336,6 +345,9 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
     while (true) {
         auto const status = close_future_.wait_for(std::chrono::milliseconds(1));
         if (status == std::future_status::ready) break;
+
+        auto const start = std::chrono::high_resolution_clock::now();
+
         std::fill(fbo_gate.begin(), fbo_gate.end(), false);
         while (!std::all_of(fbo_gate.begin(), fbo_gate.end(), [](bool const& a) { return a; })) {
             // promise_exchange_.notify_all();
@@ -356,6 +368,28 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
                 (*this->fbo_msg_recv_)[i] = fbo_msg_futures[i].GetAndReset();
             }
         }
+
+        auto const end = std::chrono::high_resolution_clock::now();
+
+        // calculate heartbeat timer
+        auto recv_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        auto const msg_size =
+            (sizeof(fbo_msg_header_t) + width_ * height_ * (col_buf_el_size_ + depth_buf_el_size_)) * num_jobs;
+        auto const bandwidth = msg_size * 1000.0f / recv_duration.count();
+
+        float const target_bandwidth = this->targetBandwidthSlot_.Param<megamol::core::param::IntParam>()->Value();
+        float const target_fps = target_bandwidth / msg_size;
+
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Bandwidth %f\n", bandwidth);
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
+#endif
+        {
+            std::unique_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<size_t>(1000.0f / target_fps)));
+            heartbeat_.notify_all();
+        }
+
         this->swapBuffers();
     }
 
@@ -427,7 +461,8 @@ std::vector<megamol::pbs::FBOCommFabric> megamol::pbs::FBOCompositor2::connectCo
     std::vector<std::string> const& addr) const {
     std::vector<FBOCommFabric> ret;
 
-    auto const comm_type = static_cast<FBOCommFabric::commtype>(this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
+    auto const comm_type =
+        static_cast<FBOCommFabric::commtype>(this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
 
     for (auto const& el : addr) {
         std::unique_ptr<AbstractCommFabric> pimpl;

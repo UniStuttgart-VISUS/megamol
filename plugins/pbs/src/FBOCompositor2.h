@@ -91,6 +91,8 @@ private:
 
     megamol::core::param::ParamSlot commSelectSlot_;
 
+    megamol::core::param::ParamSlot targetBandwidthSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;
@@ -99,11 +101,15 @@ private:
 
     std::future<bool> close_future_;
 
+    std::condition_variable_any heartbeat_;
+
     std::condition_variable_any promise_exchange_;
 
     std::condition_variable_any promise_release_;
 
     std::atomic<bool> promise_atomic_;
+
+    std::shared_mutex heartbeat_lock_;
 
     std::shared_mutex promise_exchange_lock_;
 
