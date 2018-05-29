@@ -108,7 +108,7 @@ namespace gl {
         /**
         * Translate the view matrix.
         *
-        * @param xyz The translation factor for all three coordinates.
+        * @param xyz One translation factor for all three coordinates.
         */
         inline void Translate(float xyz) {
             this->Translate(xyz, xyz, xyz);
@@ -117,26 +117,25 @@ namespace gl {
         /**
         * Rotate view matrix.
         *
-        * @param quat The ...
+        * @param quat The quaternion representing the rotation.
         */
         inline void Rotate(vislib::math::Quaternion<float> q) {
-            this->viewMatrix = this->viewMatrix * Quat2RotMat(q);
+            this->viewMatrix = this->viewMatrix * static_cast<MatrixType>(q);
             this->isMVPset = false;
         }
 
         /**
         * Rotate view matrix.
         *
-        * @param x     The ...
-        * @param y     The ...
-        * @param z     The ...
-        * @param angle The ...
+        * @param x     The x component of the rotation axis.
+        * @param y     The y component of the rotation axis.
+        * @param z     The z component of the rotation axis.
+        * @param angle The rotation angle in rad.
         */
         inline void Rotate(float x, float y, float z, float angle) {
             vislib::math::Quaternion<float> rotQ(angle, vislib::math::Vector<float, 3>(x, y, z));
             this->Rotate(rotQ);
         }
-
 
         /**
         * Answer the view matrix.
@@ -212,26 +211,15 @@ namespace gl {
 
         /** The view matrix (MV). */
         MatrixType viewMatrix;
+
         /** The projection matrix (P). */
         MatrixType projectionMatrix;
 
         /** The view projection matrix (MVP). */
         MatrixType viewProjMatrix;
+
         /** Indicates whether MVP is updated or not. */
         bool isMVPset;
-
-        /**********************************************************************
-        * functions
-        **********************************************************************/
-
-        /** Transform quaternion to rotation matrix.
-        *
-        * @param q The quaternion.
-        *
-        * @return The rotation matrix.
-        */
-        MatrixType Quat2RotMat(vislib::math::Quaternion<float> q) const;
-
     };
 
 } /* end namespace gl */

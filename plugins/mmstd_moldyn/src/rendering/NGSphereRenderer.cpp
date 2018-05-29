@@ -28,7 +28,7 @@
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 #define MAP_BUFFER_LOCALLY
-#define DEBUG_BLAHBLAH
+//#define DEBUG_BLAHBLAH
 
 const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
@@ -546,7 +546,7 @@ bool NGSphereRenderer::Render(Call& call) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // (the apex of suck is dead ... )
+    // Apply model transformation 
     cr->MatrixTransform().Scale(scaling);
 
 #ifdef CHRONOTIMING
