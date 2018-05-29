@@ -73,7 +73,6 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
     }
 
     this->structureContainer.ospstructure = cd->getAPIObject();
-    this->structureContainer.dataChanged = cd->isDirty();
 
     return true;
 }

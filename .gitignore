@@ -1,6 +1,5 @@
 build/**/*
-build-intel/**/*
-build_intel/**/*
+build-*/**/*
 bin/**/*
 include/**/*
 external/**/*
@@ -16,7 +15,6 @@ configurator/MegaMolConf/obj/
 configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 configurator/MegaMolConf/Resources/mmconfig\.res
-build-linux/
 .vscode/**/*.bat
 .gitmodules
 *.orig
@@ -26,4 +24,3 @@ utils/MMPLD/test*.mmpld
 utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
-build-intel/
