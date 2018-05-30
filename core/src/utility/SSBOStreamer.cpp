@@ -153,6 +153,7 @@ void SSBOStreamer::queueSignal(GLsync& syncObj) {
 
 void SSBOStreamer::waitSignal(GLsync& syncObj) {
     if (syncObj) {
+		//XXX: Spinlocks in user code are a really bad idea.
         while (true) {
             const GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
             if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
