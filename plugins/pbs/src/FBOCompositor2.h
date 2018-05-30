@@ -73,6 +73,8 @@ private:
 
     void collectorJob(std::vector<FBOCommFabric>&& comms);
 
+    void registerJob(std::vector<std::string>& addresses);
+
     void initTextures(size_t n, GLsizei width, GLsizei heigth);
 
     void resize(size_t n, GLsizei width, GLsizei height);
@@ -87,7 +89,7 @@ private:
 
     bool printProgramInfoLog(GLuint shaderProg) const;
 
-    megamol::core::param::ParamSlot addressesSlot_;
+    //megamol::core::param::ParamSlot addressesSlot_;
 
     megamol::core::param::ParamSlot commSelectSlot_;
 
@@ -158,6 +160,14 @@ private:
     GLuint shader;
 
     GLuint vao, vbo;
+
+    FBOCommFabric registerComm_;
+
+    std::thread registerThread_;
+
+    std::atomic<bool> isRegistered_;
+
+    std::vector<std::string> addresses_;
 }; // end class FBOCompositor2
 
 } // end namespace pbs

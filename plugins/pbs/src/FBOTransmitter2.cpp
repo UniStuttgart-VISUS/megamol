@@ -11,6 +11,11 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
 
+#ifdef __unix__
+#include <unistd.h>
+#include <limits.h>
+#endif
+
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     : address_slot_{"address", "The address the transmitter should connect to"}
@@ -58,9 +63,47 @@ void megamol::pbs::FBOTransmitter2::release() {
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!connected_) {
+        auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+
+        FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
+        registerComm.Connect("tcp://127.0.0.1:42000");
+
+        std::string hostname;
+#if _WIN32
+        DWORD buf_size = 32767;
+        hostname.resize(buf_size);
+        GetComputerNameA(hostname.data(), &buf_size);
+#else
+        hostname.resize(HOST_NAME_MAX);
+        gethostname(hostname.data(), HOST_NAME_MAX);
+#endif
+        char stuff[1024];
+        sprintf(stuff, "tcp://%s:%s", hostname.c_str(), address.c_str());
+        auto name = std::string{stuff};
+        std::vector<char> buf(name.begin(), name.end()); //<TODO there should be a better way
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
+#endif
+        registerComm.Send(buf);
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
+#endif
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
+#endif
+        registerComm.Recv(buf);
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
+#endif
+
+
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
+#endif
+
         auto const comm_type = static_cast<FBOCommFabric::commtype>(
             this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
-        auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        //auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
         switch (comm_type) {
         case FBOCommFabric::MPI_COMM: {
             int const rank = atoi(address.c_str());
@@ -71,7 +114,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
         }
 
-        this->comm_->Bind(address);
+        this->comm_->Bind(std::string{"tcp://*:"} + address);
 
         this->thread_stop_ = false;
 

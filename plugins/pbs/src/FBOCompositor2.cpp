@@ -14,8 +14,8 @@
 
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
-    : addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
-    , commSelectSlot_{"communicator", "Select the communicator to use"}
+    : commSelectSlot_{"communicator", "Select the communicator to use"}
+     //addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , close_future_{close_promise_.get_future()}
@@ -24,9 +24,11 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , data_has_changed_{false}
     , col_buf_el_size_{4}
     , depth_buf_el_size_{4}
-    , connected_{false} {
-    addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
-    this->MakeSlotAvailable(&addressesSlot_);
+    , connected_{false}
+    , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
+    , isRegistered_{false} {
+    //addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
+    //this->MakeSlotAvailable(&addressesSlot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
@@ -100,6 +102,9 @@ bool megamol::pbs::FBOCompositor2::create() {
     glDeleteShader(vert_shader);
     glDeleteShader(frag_shader);
 
+
+    registerComm_.Bind(std::string{"tcp://*:42000"});
+
     return true;
 }
 
@@ -107,6 +112,7 @@ bool megamol::pbs::FBOCompositor2::create() {
 void megamol::pbs::FBOCompositor2::release() {
     close_promise_.set_value(true);
     collector_thread_.join();
+    registerThread_.join();
 }
 
 
@@ -163,13 +169,23 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    if (!connected_) {
+    static bool register_done = false;
+    if (!register_done) {
+        registerThread_ = std::thread{&FBOCompositor2::registerJob, this, std::ref(addresses_)};
+        register_done = true;
+    }
+
+    if (!connected_ && isRegistered_.load()) {
         // close_future_ = close_promise_.get_future();
 
-        auto const addresses =
-            std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting collector thread\n");
+#endif
+        /*auto const addresses =
+            std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};*/
 
-        auto comms = this->connectComms(this->getAddresses(addresses));
+        //auto comms = this->connectComms(this->getAddresses(addresses));
+        auto comms = this->connectComms(addresses_);
         this->collector_thread_ = std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
 
         connected_ = true;
@@ -406,6 +422,51 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
         job.join();
     }
     vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
+}
+
+
+void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& addresses) {
+    int const numNodes = this->numRendernodesSlot_.Param<megamol::core::param::IntParam>()->Value();
+
+    std::vector<char> buf;
+
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting client registration of %d clients\n", numNodes);
+#endif
+
+    do {
+        try {
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
+#endif
+            registerComm_.Recv(buf);
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
+#endif
+        } catch (zmq::error_t const& e) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Failed to recv on register socket %s\n", e.what());
+        }
+        std::string str{buf.begin(), buf.end()};
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
+#endif
+        addresses.push_back(str);
+
+        try {
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending client ack\n");
+#endif
+            registerComm_.Send(buf);
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sent client ack\n");
+#endif
+        } catch (zmq::error_t const& e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOCompositor2: Failed to send  on register socket %s\n", e.what());
+        }
+    } while (addresses.size() < numNodes);
+
+    this->isRegistered_.store(true);
 }
 
 
