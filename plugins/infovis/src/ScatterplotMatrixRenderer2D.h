@@ -3,18 +3,18 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/utility/SSBOStreamer.h"
 
-#include "vislib/math/Matrix.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Matrix.h"
 
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
 #include "DiagramSeriesCall.h"
-
 
 namespace megamol {
 namespace infovis {
@@ -22,131 +22,113 @@ namespace infovis {
 class ScatterplotMatrixRenderer2D : public core::view::Renderer2DModule {
 public:
     /**
-    * Answer the name of this module.
-    *
-    * @return The name of this module.
-    */
-    static const char *ClassName(void) {
-        return "ScatterplotMatrixRenderer2D";
-    }
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "ScatterplotMatrixRenderer2D"; }
 
     /**
-    * Answer a human readable description of this module.
-    *
-    * @return A human readable description of this module.
-    */
-    static const char *Description(void) {
-        return "Scatterplot matrix renderer for generic float tables.";
-    }
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Scatterplot matrix renderer for generic float tables."; }
 
     /**
-    * Answers whether this module is available on the current system.
-    *
-    * @return 'true' if the module is available, 'false' otherwise.
-    */
-    static bool IsAvailable(void) {
-        return true;
-    }
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-	/**
-	* Initialises a new instance.
-	*/
+    /**
+     * Initialises a new instance.
+     */
     ScatterplotMatrixRenderer2D();
 
-	/**
-	* Finalises an instance.
-	*/
+    /**
+     * Finalises an instance.
+     */
     virtual ~ScatterplotMatrixRenderer2D();
 
 protected:
     /**
-    * Implementation of 'Create'.
-    *
-    * @return 'true' on success, 'false' otherwise.
-    */
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
     virtual bool create(void);
 
     /**
-    * Implementation of 'Release'.
-    */
+     * Implementation of 'Release'.
+     */
     virtual void release(void);
 
     /**
-    * Callback for mouse events (move, press, and release)
-    *
-    * @param x The x coordinate of the mouse in world space
-    * @param y The y coordinate of the mouse in world space
-    * @param flags The mouse flags
-    */
+     * Callback for mouse events (move, press, and release)
+     *
+     * @param x The x coordinate of the mouse in world space
+     * @param y The y coordinate of the mouse in world space
+     * @param flags The mouse flags
+     */
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
-	struct MouseData {
+    enum GeometryType { GEOMETRY_TYPE_POINT, GEOMETRY_TYPE_LINE };
+
+    struct ParamState {
+        size_t colorIdx;
+        size_t labelIdx;
+    };
+
+    struct MouseState {
         float x;
         float y;
         bool selects;
         bool inspects;
-	};
+    };
 
-    enum GeometryType {
-        GEOMETRY_TYPE_POINT,
-		GEOMETRY_TYPE_LINE
-	};
+    struct PlotInfo {
+        GLuint xIndex;
+        GLuint yIndex;
+        GLfloat xOffset;
+        GLfloat xSize;
+        GLfloat yOffset;
+        GLfloat ySize;
+    };
 
-      struct Selectors {
-        size_t colorIdx;
-        size_t labelIdx;
-    } ;
-
-      struct ShaderInfo {
-        vislib::graphics::gl::GLSLShader shader;
-        GLuint ssboBindingPoint;
-        GLuint bufferId;
-        int numBuffers;
-        GLsizeiptr bufSize;
-        void *memMapPtr;
-        GLuint bufferCreationBits;
-        GLuint bufferMappingBits;
-        std::vector<GLsync> fences;
-        unsigned int currBuf;
-    } ;
-
-    typedef std::tuple<float, float, float, float> point_t;
-
-    typedef std::tuple<int, int> viewport_t;
-
-    typedef std::tuple<float, float> range_t;
-
-    typedef std::vector<std::vector<float>> series_t;
 
     /**
-    * The OpenGL Render callback.
-    *
-    * @param call The calling call.
-    * @return The return value of the function.
-    */
+     * The OpenGL Render callback.
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
     virtual bool Render(core::view::CallRender2D& call);
 
     /**
-    * The get extents callback. The module should set the members of
-    * 'call' to tell the caller the extents of its data (bounding boxes
-    * and times).
-    *
-    * @param call The calling call.
-    *
-    * @return The return value of the function.
-    */
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-	bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
+    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 
     bool isDirty(void) const;
 
     void resetDirty(void);
 
-	bool validateData(void);
+    bool validateData(void);
 
-	void drawPoints(void);
+    void updateColumns(void);
+
+    void drawPoints(void);
 
     void drawLines(void);
 
@@ -154,19 +136,15 @@ private:
 
     void drawYAxis(void);
 
-    void drawToolTip(const float x, const float y, const std::string &text) const;
+    void drawToolTip(const float x, const float y, const std::string& text) const;
 
     size_t searchAndDispPointAttr(const float x, const float y);
 
-    void lockSingle(GLsync &syncObj);
-
-    void waitSingle(GLsync &syncObj);
-
     core::CallerSlot floatTableInSlot;
 
-	core::CallerSlot transferFunctionInSlot;
+    core::CallerSlot transferFunctionInSlot;
 
-	core::CallerSlot flagStorageInSlot;
+    core::CallerSlot flagStorageInSlot;
 
     core::param::ParamSlot columnsParam;
 
@@ -176,11 +154,11 @@ private:
 
     core::param::ParamSlot geometryTypeParam;
 
-	core::param::ParamSlot geometryWidthParam;
-	
-	core::param::ParamSlot axisColorParam;
-	
-	core::param::ParamSlot axisWidthParam;
+    core::param::ParamSlot kernelWidthParam;
+
+    core::param::ParamSlot axisColorParam;
+
+    core::param::ParamSlot axisWidthParam;
 
     core::param::ParamSlot axisTicksXParam;
 
@@ -188,36 +166,30 @@ private:
 
     core::param::ParamSlot scaleXParam;
 
-	core::param::ParamSlot scaleYParam;
+    core::param::ParamSlot scaleYParam;
 
     core::param::ParamSlot alphaScalingParam;
 
     core::param::ParamSlot attenuateSubpixelParam;
 
-    std::vector<DiagramSeriesCall::DiagramSeriesTuple> columnSelectors;
-
-    Selectors columnIdxs;
-
-    series_t series;
-
-    viewport_t viewport;
-
-    range_t yRange;
-
-    ShaderInfo shaderInfo;
-
-    const stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo *columnInfos;
-
-    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> nvgTrans;
-
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> oglTrans;
-
-    MouseData mouse;
-
     size_t dataHash;
+
+    stdplugin::datatools::floattable::CallFloatTableData* floatTable;
+
+    ParamState map;
+
+    MouseState mouse;
+
+    std::vector<PlotInfo> plots;
+
+    vislib::graphics::gl::GLSLShader shader;
+
+    core::utility::SSBOStreamer rowSSBO;
+
+    core::utility::SSBOStreamer plotSSBO;
 };
 
-} /* end namespace infovis */
-} /* end namespace meagmol */
+} // end namespace infovis
+} // end namespace megamol
 
-#endif /* MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED */
+#endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED

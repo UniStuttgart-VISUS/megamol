@@ -24,6 +24,8 @@ using namespace megamol::stdplugin::datatools;
 
 using vislib::sys::Log;
 
+const GLuint SSBOBindingPoint = 2;
+
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : core::view::Renderer2DModule()
     , floatTableInSlot("ftIn", "Float table input")
@@ -33,7 +35,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , colorSelectorParam("colorSelector", "Sets a color column")
     , labelSelectorParam("labelSelector", "Sets a label column")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
-    , geometryWidthParam("geometryWidth", "Kernel width of the geometry, i.e., point size or line width")
+    , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksXParam("axisXTicks", "Number of ticks on the X axis")
@@ -42,7 +44,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , scaleYParam("scaleY", "Set the scaling of y axis")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , attenuateSubpixelParam("attenuateSubpixel", "Attenuate alpha of points that should have subpixel size")
-    , mouse({0,0, false, false}) {
+    , mouse({0, 0, false, false}) {
     this->floatTableInSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -67,8 +69,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->geometryTypeParam << geometryTypes;
     this->MakeSlotAvailable(&this->geometryTypeParam);
 
-    this->geometryWidthParam << new core::param::FloatParam(1.0f, 0.0001f);
-    this->MakeSlotAvailable(&this->geometryWidthParam);
+    this->kernelWidthParam << new core::param::FloatParam(1.0f, 0.0001f);
+    this->MakeSlotAvailable(&this->kernelWidthParam);
 
     this->axisColorParam << new core::param::StringParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
@@ -95,32 +97,11 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->MakeSlotAvailable(&this->attenuateSubpixelParam);
 }
 
-ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() {
-	this->Release(); 
-}
+ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
 
 bool ScatterplotMatrixRenderer2D::create(void) {
-    auto rw = core::utility::ResourceWrapper();
-
-    // initialize shader.
-    this->shaderInfo.ssboBindingPoint = 2;
-    this->shaderInfo.numBuffers = 3;
-    this->shaderInfo.bufSize = 32 * 1024 * 1024;
-    this->shaderInfo.bufferCreationBits = GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT;
-    this->shaderInfo.bufferMappingBits = GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT;
-    this->shaderInfo.fences.resize(this->shaderInfo.numBuffers);
-    this->shaderInfo.currBuf = 0;
-    glGenBuffers(1, &this->shaderInfo.bufferId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderInfo.bufferId);
-    glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->shaderInfo.bufSize * this->shaderInfo.numBuffers, nullptr,
-        this->shaderInfo.bufferCreationBits);
-    this->shaderInfo.memMapPtr = glMapNamedBufferRangeEXT(this->shaderInfo.bufferId, 0,
-        this->shaderInfo.bufSize * this->shaderInfo.numBuffers, this->shaderInfo.bufferMappingBits);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindVertexArray(0);
-
-    if (!makeProgram("::splom", this->shaderInfo.shader)) return false;
+    if (!makeProgram("::splom", this->shader)) return false;
 
     return true;
 }
@@ -129,7 +110,7 @@ void ScatterplotMatrixRenderer2D::release(void) {}
 
 bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
     bool leftDown = (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0;
-	bool rightDown = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN) != 0;
+    bool rightDown = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN) != 0;
     bool rightChanged = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_CHANGED) != 0;
 
     this->mouse.x = x;
@@ -137,9 +118,9 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
     this->mouse.selects = leftDown;
     this->mouse.inspects = rightDown && rightChanged;
 
-	if (this->mouse.selects || this->mouse.inspects) {
-		//TODO: Some hit testing might be nice here when clicking transparent areas.
-		return true;
+    if (this->mouse.selects || this->mouse.inspects) {
+        // TODO: Some hit testing might be nice here when clicking transparent areas.
+        return true;
     }
 
     return false;
@@ -147,8 +128,6 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        this->viewport = {call.GetWidth(), call.GetHeight()};
-
         if (!this->validateData()) return false;
 
         this->drawYAxis();
@@ -221,104 +200,86 @@ void ScatterplotMatrixRenderer2D::resetDirty(void) {
 }
 
 bool ScatterplotMatrixRenderer2D::validateData(void) {
-    floattable::CallFloatTableData* ft = this->floatTableInSlot.CallAs<floattable::CallFloatTableData>();
-    if (ft == nullptr || !(*ft)(0)) return false;
+    this->floatTable = this->floatTableInSlot.CallAs<floattable::CallFloatTableData>();
+    if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
 
-    if (this->dataHash == ft->DataHash() && !isDirty()) return true;
+    if (this->dataHash == this->floatTable->DataHash() && !isDirty()) return true;
 
-    this->columnInfos = ft->GetColumnsInfos();
-    const size_t colCount = ft->GetColumnsCount();
+    auto columnInfos = this->floatTable->GetColumnsInfos();
+    const size_t colCount = this->floatTable->GetColumnsCount();
 
-    if (this->dataHash != ft->DataHash()) {
+    if (this->dataHash != this->floatTable->DataHash()) {
         // Update dynamic parameters.
         this->colorSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         for (size_t i = 0; i < colCount; i++) {
-            this->colorSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(this->columnInfos[i].Name());
-            this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(this->columnInfos[i].Name());
+            this->colorSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
+            this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
 
     // Resolve selectors.
     auto nameToIndex = [&](const std::string& name, size_t defaultIdx) -> size_t {
         for (size_t i = 0; i < colCount; i++) {
-            if (this->columnInfos[i].Name().compare(name) == 0) {
+            if (columnInfos[i].Name().compare(name) == 0) {
                 return i;
             }
         }
         return defaultIdx;
     };
-    this->columnIdxs.colorIdx = nameToIndex(this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
-    this->columnIdxs.labelIdx = nameToIndex(this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    map.colorIdx = nameToIndex(this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    map.labelIdx = nameToIndex(this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
 
-    const size_t rowsCount = ft->GetRowsCount();
-    const float* data = ft->GetData();
+    updateColumns();
 
-    if (this->dataHash != ft->DataHash()) {
-        /*
-        // set abcissa
-        this->abcissa.clear();
-        this->abcissa.resize(rowsCount);
-        this->abcissa.shrink_to_fit();
-        float abcMin = this->columnInfos[this->columnIdxs.abcissaIdx].MinimumValue();
-        float abcMax = this->columnInfos[this->columnIdxs.abcissaIdx].MaximumValue();
-        float abcRange = abcMax - abcMin;
-        for (size_t i = 0; i < rowsCount; i++) {
-            float val = (data[this->columnIdxs.abcissaIdx + i * colCount] - abcMin) / (abcRange);
-            this->abcissa[i] = val; //< only valid if the selected column is sorted
-        }
-
-        // set series
-        std::get<0>(this->yRange) = (std::numeric_limits<float>::max)();
-        std::get<1>(this->yRange) = (std::numeric_limits<float>::min)();
-        this->series.clear();
-        this->series.resize(this->columnSelectors.size());
-        this->series.shrink_to_fit();
-        for (size_t s = 0; s < this->columnSelectors.size(); s++) {
-            size_t seriesIdx = std::get<1>(this->columnSelectors[s]);
-            this->series[s].resize(rowsCount * 4);
-            this->series.shrink_to_fit();
-            float minV = this->columnInfos[seriesIdx].MinimumValue();
-            float maxV = this->columnInfos[seriesIdx].MaximumValue();
-            float rangeV = maxV - minV;
-            if (std::get<0>(this->yRange) > minV) std::get<0>(this->yRange) = minV;
-            if (std::get<1>(this->yRange) < maxV) std::get<1>(this->yRange) = maxV;
-            for (size_t i = 0; i < rowsCount; i++) {
-                float val = (data[seriesIdx + i * colCount] - minV) / rangeV;
-                this->series[s][i * 4] = this->abcissa[i];
-                this->series[s][i * 4 + 1] = val;
-                this->series[s][i * 4 + 2] = data[this->columnIdxs.colorIdx + i * colCount];
-                this->series[s][i * 4 + 3] = data[this->columnIdxs.labelIdx + i * colCount];
-            }
-        }
-        */
-    }
-
-    this->dataHash = ft->DataHash();
+    this->dataHash = this->floatTable->DataHash();
     this->resetDirty();
 
     return true;
+}
+
+void ScatterplotMatrixRenderer2D::updateColumns(void) {
+    auto columnCount = this->floatTable->GetColumnsCount();
+    const float size = 10.0f; // XXX: make this guy configurable, i.e., for zooming.
+
+    plots.clear();
+    for (GLuint y = 0; y < columnCount; ++y) {
+        for (GLuint x = 0; x < y; ++x) {
+            plots.push_back({x, y, x * size, y * size, size, size});
+        }
+    }
+
+    const GLuint numChunks = this->plotSSBO.SetDataWithSize(
+        plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size(), 1, plots.size() * sizeof(PlotInfo));
+
+    GLuint numItems, sync;
+    GLsizeiptr dstOffset, dstLength;
+    rowSSBO.UploadChunk(0, numItems, sync, dstOffset, dstLength);
+    rowSSBO.SignalCompletion(sync);
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
     auto xScale = this->scaleXParam.Param<core::param::FloatParam>()->Value();
     auto yScale = this->scaleYParam.Param<core::param::FloatParam>()->Value();
 
+    auto columnInfos = this->floatTable->GetColumnsInfos();
+    auto columnCount = this->floatTable->GetColumnsCount();
+
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
-	// Blending.
+    // Blending.
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
-	// Point sprites.
+    // Point sprites.
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glEnable(GL_POINT_SPRITE);
     glPointSize(std::max(viewport[2], viewport[3]));
 
-	// XXX: maybe we should move this before first usage?
+    // XXX: maybe we should move this before first usage?
     viewport[2] = 2.0f / std::max(1.0f, viewport[2]);
     viewport[3] = 2.0f / std::max(1.0f, viewport[3]);
 
@@ -334,22 +295,25 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
     // end suck
 
-	// Setup program.
-    this->shaderInfo.shader.Enable();
-    glUniform4fv(this->shaderInfo.shader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->shaderInfo.shader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
-        modelViewProjMatrix.PeekComponents());
-    glUniformMatrix4fv(this->shaderInfo.shader.ParameterLocation("modelViewInverse"), 1, GL_FALSE,
-        modelViewMatrixInv.PeekComponents());
-    glUniformMatrix4fv(
-        this->shaderInfo.shader.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
-    glUniform1f(this->shaderInfo.shader.ParameterLocation("alphaScaling"),
-        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->shaderInfo.shader.ParameterLocation("attenuateSubpixel"),
-        this->attenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    //glUniform1ui(this->shaderInfo.shader.ParameterLocation("pointIdx"), idx);
-    //glUniform1i(this->shaderInfo.shader.ParameterLocation("pik"), this->mouseRightPressed ? 1 : 0);
+    this->shader.Enable();
 
+    // Transformation uniforms.
+    glUniform4fv(this->shader.ParameterLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(
+        this->shader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniformMatrix4fv(
+        this->shader.ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+    glUniformMatrix4fv(this->shader.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+
+    // Other uniforms.
+    glUniform1f(this->shader.ParameterLocation("kernelWidth"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->shader.ParameterLocation("alphaScaling"),
+        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->shader.ParameterLocation("attenuateSubpixel"),
+        this->attenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    // Color map uniforms.
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
     unsigned int colTabSize = 0;
@@ -358,55 +322,36 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
         colTabSize = tf->TextureSize();
     }
-    glUniform1i(this->shaderInfo.shader.ParameterLocation("colorTable"), 0);
+    glUniform1i(this->shader.ParameterLocation("colorTable"), 0);
+    glUniform3f(this->shader.ParameterLocation("colorConsts"), columnInfos[this->map.colorIdx].MinimumValue(),
+        columnInfos[this->map.colorIdx].MaximumValue(), colTabSize);
 
-    glUniform4f(this->shaderInfo.shader.ParameterLocation("inConsts1"),
-        this->geometryWidthParam.Param<core::param::FloatParam>()->Value(),
-        this->columnInfos[this->columnIdxs.colorIdx].MinimumValue(),
-        this->columnInfos[this->columnIdxs.colorIdx].MaximumValue(), colTabSize);
+    // Setup streaming.
+    const GLuint numBuffers = 3;
+    const GLuint bufferSize = 32 * 1024 * 1024;
+    const float* data = this->floatTable->GetData();
+    const GLuint dataStride = columnCount * sizeof(float);
+    const GLuint dataItems = bufferSize / dataStride;
+    const GLuint numChunks =
+        this->rowSSBO.SetDataWithSize(data, dataStride, dataStride, dataItems, numBuffers, bufferSize);
 
-	    // glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderInfo.bufferId);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, this->shaderInfo.ssboBindingPoint, this->shaderInfo.bufferId);
-
-    for (size_t s = 0; s < this->series.size(); s++) {
-        // drawarrays
-        size_t numElements = 4;
-        size_t vertCounter = 0;
-        size_t numVerts = this->shaderInfo.bufSize / (numElements * sizeof(float));
-        const char* currVert = reinterpret_cast<const char*>(this->series[s].data());
-        size_t numEntries = this->series[s].size() / numElements;
-        // numEntries = (std::min<size_t>)(1000000, numEntries);
-        while (vertCounter < numEntries) {
-            void* mem =
-                static_cast<char*>(this->shaderInfo.memMapPtr) + this->shaderInfo.bufSize * this->shaderInfo.currBuf;
-            size_t vertsThisTime = vislib::math::Min(numEntries - vertCounter, numVerts);
-            this->waitSingle(this->shaderInfo.fences[this->shaderInfo.currBuf]);
-            memcpy(mem, currVert, vertsThisTime * numElements * sizeof(float));
-            glFlushMappedNamedBufferRangeEXT(this->shaderInfo.bufferId,
-                this->shaderInfo.bufSize * this->shaderInfo.currBuf, vertsThisTime * numElements * sizeof(float));
-            // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-            // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
-            glUniform1i(this->shaderInfo.shader.ParameterLocation("instanceOffset"), 0);
-            glUniform1ui(this->shaderInfo.shader.ParameterLocation("idxOffset"), numVerts * this->shaderInfo.currBuf);
-
-            // this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence),
-            // this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));  glBindBuffer(GL_ARRAY_BUFFER,
-            // 0);
-            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, this->shaderInfo.ssboBindingPoint, this->shaderInfo.bufferId,
-                this->shaderInfo.bufSize * this->shaderInfo.currBuf, this->shaderInfo.bufSize);
-            glDrawArrays(GL_POINTS, 0, vertsThisTime);
-            // glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
-            this->lockSingle(this->shaderInfo.fences[this->shaderInfo.currBuf]);
-
-            this->shaderInfo.currBuf = (this->shaderInfo.currBuf + 1) % this->shaderInfo.numBuffers;
-            vertCounter += vertsThisTime;
-            currVert += vertsThisTime * numElements * sizeof(float);
-        }
+    // For each chunk of rows, render all points in the lower half of the scatterplot matrix at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, rowSSBO.GetHandle());
+    for (GLuint chunk = 0; chunk < numChunks; ++chunk) {
+        GLuint numItems, sync;
+        GLsizeiptr dstOffset, dstLength;
+        rowSSBO.UploadChunk(chunk, numItems, sync, dstOffset, dstLength);
+        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->rowSSBO.GetHandle(), dstOffset, dstLength);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        glDrawArraysInstanced(GL_POINTS, 0, static_cast<GLsizei>(numItems), plots.size());
+        rowSSBO.SignalCompletion(sync);
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    this->shader.Disable();
+
     glDisable(GL_TEXTURE_1D);
-    this->shaderInfo.shader.Disable();
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -539,7 +484,6 @@ void ScatterplotMatrixRenderer2D::drawXAxis(void) {
     */
 }
 
-
 void ScatterplotMatrixRenderer2D::drawYAxis(void) {
     /*
     TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
@@ -668,7 +612,6 @@ void ScatterplotMatrixRenderer2D::drawYAxis(void) {
     */
 }
 
-
 void ScatterplotMatrixRenderer2D::drawToolTip(const float x, const float y, const std::string& text) const {
     /*auto ctx = static_cast<NVGcontext *>(this->nvgCtx);
     float ttOH = 10;
@@ -692,7 +635,6 @@ void ScatterplotMatrixRenderer2D::drawToolTip(const float x, const float y, cons
     nvgFill(ctx);
     */
 }
-
 
 size_t ScatterplotMatrixRenderer2D::searchAndDispPointAttr(const float x, const float y) {
     /*
@@ -761,24 +703,4 @@ size_t ScatterplotMatrixRenderer2D::searchAndDispPointAttr(const float x, const 
     }
     */
     return 0;
-}
-
-
-void ScatterplotMatrixRenderer2D::lockSingle(GLsync& syncObj) {
-    if (syncObj) {
-        glDeleteSync(syncObj);
-    }
-    syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-}
-
-
-void ScatterplotMatrixRenderer2D::waitSingle(GLsync& syncObj) {
-    if (syncObj) {
-        while (1) {
-            GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-            if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
-                return;
-            }
-        }
-    }
 }
