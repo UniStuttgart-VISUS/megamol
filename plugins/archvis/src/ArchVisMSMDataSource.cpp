@@ -473,14 +473,15 @@ void ArchVisMSMDataSource::updateMSMTransform()
 		float y = particle.position.Y();
 		float z = particle.position.Z();
 
-		//glDisable(GL_BLEND);
+	
 		//glEnable(GL_DEPTH_TEST);
 		//glColor4f(particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age/2000.0));
 
-		float c[4] = { particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0f - (particle.age / 2000.0) };
+		float c[4] = { particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0 };
 		
-		glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		font.DrawString(c, x, y, z, 0.025f, true, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
+		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+		font.SetBillboard(true);
+		font.DrawString(c, x, y, z, 0.03f, false, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
 	}
 }
 
@@ -682,39 +683,58 @@ void ArchVisMSMDataSource::spawnAndUpdateTextLabels()
 	double elapsed_update_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_last_update_time).count();
 	m_last_update_time = std::chrono::steady_clock::now();
 	
-	for (auto& particle : m_text_particles)
-	{
-		particle.age += elapsed_update_time;
-		particle.position.SetY(particle.position.GetY() + elapsed_update_time * 0.00005);
-		particle.position.SetX(particle.position.GetX() + (std::signbit(particle.position.GetX()) ? -1.0f : 1.0f) * elapsed_update_time * 0.000025);
-	}
+	//for (auto& particle : m_text_particles)
+	//{
+	//	particle.age += elapsed_update_time;
+	//	particle.position.SetY(particle.position.GetY() + elapsed_update_time * 0.00005);
+	//	particle.position.SetX(particle.position.GetX() + (std::signbit(particle.position.GetX()) ? -1.0f : 1.0f) * elapsed_update_time * 0.000025);
+	//}
 	
-	m_text_particles.erase(std::remove_if(m_text_particles.begin(), m_text_particles.end(), [](const TextLabelParticle& p) { return p.age > 2000; }), m_text_particles.end());
+	//m_text_particles.erase(std::remove_if(m_text_particles.begin(), m_text_particles.end(), [](const TextLabelParticle& p) { return p.age > 2000; }), m_text_particles.end());
 	
-	if (elapsed_spawn_time > 500)
+	std::list<TextLabelParticle>::iterator particle_itr = m_text_particles.begin();
+	if (m_text_particles.size() > 0)
 	{
 		for (int i = 0; i < m_scale_model.getElementCount(); ++i)
 		{
-			TextLabelParticle new_label;
+			if (m_scale_model.getElementType(i) != ScaleModel::DIAGONAL)
+			{
+				(*particle_itr).age += elapsed_update_time;
+				(*particle_itr).position = m_scale_model.getElementCenter(i) + (m_scale_model.getElementCenter(i)*Vec3(0.25, 0.0, 0.25));
+
+				if (particle_itr != m_text_particles.end())
+					++particle_itr;// = std::next(particle_itr, 1);
+			}
+		}
+	}
+
+
+	if (elapsed_spawn_time > 33)
+	{
+		m_text_particles.clear();
+
+		for (int i = 0; i < m_scale_model.getElementCount(); ++i)
+		{
+			if(m_scale_model.getElementType(i) != ScaleModel::DIAGONAL)
+			{
+				TextLabelParticle new_label;
 	
-			float force = m_scale_model.getElementForce(i);
-			std::ostringstream out;
-			out << std::setprecision(3) << force;
-			new_label.text = out.str();
+				float force = m_scale_model.getElementForce(i);
+				std::ostringstream out;
+				out << std::setprecision(3) << force;
+				new_label.text = out.str();
 	
-			new_label.position = m_scale_model.getElementCenter(i);
+				new_label.position = m_scale_model.getElementCenter(i) + (m_scale_model.getElementCenter(i)*Vec3(0.25,0.0,0.25));
 	
-			new_label.age = 0.0;
+				new_label.age = 0.0;
 	
-			Vec3 red(1.0f, 0.0f, 0.0f);
-			Vec3 blue(0.0f, 0.0f, 1.0f);
-			new_label.color = red * ((force + 100.0) / 200.0) + blue * (1.0f - ((force + 100.0) / 200.0));
+				Vec3 white(1.0f, 1.0f, 1.0f);
+				Vec3 red(1.0f, 0.0f, 0.0f);
+				Vec3 blue(0.0f, 0.0f, 1.0f);
+				new_label.color = (force < 0.0f) ? blue * (-force/100.0f) + white * (1.0f - (-force/100.0f)) : red * (force / 100.0f) + white * (1.0f - (force / 100.0f));
 	
-			//glDisable(GL_BLEND);
-			//glEnable(GL_DEPTH_TEST);
-			//font.DrawString(x, y, z, 0.05f, true, label.c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-	
-			m_text_particles.push_back(new_label);
+				m_text_particles.push_back(new_label);
+			}
 		}
 	
 		m_last_spawn_time = std::chrono::steady_clock::now();

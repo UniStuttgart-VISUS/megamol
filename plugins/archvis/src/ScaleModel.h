@@ -35,7 +35,7 @@ public:
 	ScaleModel() {}
 
     ScaleModel(std::vector<Vec3> node_positions,
-        std::vector<std::tuple<int, int,int,int,int>> elements,
+        std::vector<std::tuple<int,int,int,int,int>> elements,
         std::vector<int> input_elements);
 
 	void setModelTransform(Mat4x4 transform);

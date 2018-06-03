@@ -39,6 +39,7 @@ bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
 	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
 	if (render_batches_call == NULL)
 		return false;
+
 	if (this->m_geometryFilename_slot.IsDirty() || this->m_shaderFilename_slot.IsDirty())
 	{
 		this->m_geometryFilename_slot.ResetDirty();
