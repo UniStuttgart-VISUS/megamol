@@ -161,6 +161,24 @@ namespace view {
         }
 
         /**
+        * Gets the state of the mouse selection.
+        *
+        * @return The current state of the mouse selection
+        */
+        inline bool MouseSelection(void) { 
+            return this->mouseSelection; 
+        }
+
+        /**
+         * Sets the state of the mouse selection.
+         *
+         * @param selection The current state of the mouse selection
+         */
+        inline void SetMouseSelection(bool selection) { 
+            this->mouseSelection = selection; 
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -193,6 +211,9 @@ namespace view {
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
+
+            /** The current state of the mouse toggle selection */
+            bool mouseSelection;
 
     };
 #ifdef _WIN32

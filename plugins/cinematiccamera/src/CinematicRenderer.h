@@ -1,6 +1,8 @@
 /*
 * CinematicRenderer.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED
@@ -17,9 +19,9 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/Cuboid.h"
@@ -28,12 +30,9 @@
 #include "vislib/String.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 
 #include "KeyframeManipulator.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -87,19 +86,19 @@ namespace megamol {
 			/** Dtor. */
 			virtual ~CinematicRenderer(void);
 
-			/**
-			* Implementation of 'Create'.
-			*
-			* @return 'true' on success, 'false' otherwise.
-			*/
-			virtual bool create(void);
-
-			/**
-			* Implementation of 'Release'.
-			*/
-			virtual void release(void);
-
 		protected:
+
+            /**
+            * Implementation of 'Create'.
+            *
+            * @return 'true' on success, 'false' otherwise.
+            */
+            virtual bool create(void);
+
+            /**
+            * Implementation of 'Release'.
+            */
+            virtual void release(void);
 
   			/**
 			* The get capabilities callback. The module should set the members
@@ -147,16 +146,12 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
+
             unsigned int                     interpolSteps;
             unsigned int                     toggleManipulator;
             bool                             manipOutsideModel;
             bool                             showHelpText;
-            clock_t                          mouseManipTime;
 
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;

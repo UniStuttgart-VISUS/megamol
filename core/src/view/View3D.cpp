@@ -309,6 +309,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    cr3d->SetMouseSelection(this->toggleMouseSelection);
+
     AbstractRenderingView::beginFrame();
 
     // Conditionally synchronise camera from somewhere else.
