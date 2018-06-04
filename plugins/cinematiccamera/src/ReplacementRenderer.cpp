@@ -1,6 +1,8 @@
 /*
  * ReplacementRenderer.cpp
  *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -34,6 +36,7 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     alphaParam(                     "04_alpha", "The alpha value of the replacement rendering.")
     {
 
+    // init variables
     this->alpha = 0.75f;
     this->toggleReplacementRendering = false;
     this->bbox.SetNull();
@@ -176,26 +179,17 @@ bool ReplacementRenderer::Render(Call& call) {
         this->MakeSlotAvailable(&this->toggleReplacementRenderingParam);
         // Remove Enum param ...
         this->replacementKeyParam.ResetDirty();
-        this->replacementKeyParam.MakeUnavailable();
+        this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->replacementKeyParam));
     }
 
     // Render ...
     if (this->toggleReplacementRendering) {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
         glDisable(GL_LIGHTING);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_TEXTURE_1D);
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_POLYGON_SMOOTH);
-
-        glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
-
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         // Draw bounding box
         glEnable(GL_CULL_FACE);
