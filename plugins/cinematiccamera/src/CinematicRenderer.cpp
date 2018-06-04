@@ -466,9 +466,9 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA midLabel = "";
     if (cr3d->MouseSelection()) {
         if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (position, spline control point)";
+            midLabel = "KEYFRAME manipulation (keyframe position, spline control point)";
         } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat, up, position along lookat)";
+            midLabel = "KEYFRAME manipulation (lookat, up, keyframe position along lookat)";
         }
     } else {
         midLabel = "SCENE manipulation";

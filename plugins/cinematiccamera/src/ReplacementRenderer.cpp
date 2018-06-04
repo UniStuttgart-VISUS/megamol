@@ -179,7 +179,7 @@ bool ReplacementRenderer::Render(Call& call) {
         this->MakeSlotAvailable(&this->toggleReplacementRenderingParam);
         // Remove Enum param ...
         this->replacementKeyParam.ResetDirty();
-        this->replacementKeyParam.MakeUnavailable();
+        this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->replacementKeyParam));
     }
 
     // Render ...

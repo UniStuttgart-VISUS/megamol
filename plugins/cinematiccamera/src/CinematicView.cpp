@@ -129,10 +129,15 @@ CinematicView::CinematicView(void) : View3D(),
     // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer 
     //    mouse selection for manipulatiors
     this->enableMouseSelectionSlot.MakeUnavailable();
+    /// The right way doesn't work if (child->Parent().get() != this) ...
+    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
+
     // Disable toggleAnimPlaySlot in this view(3d)
     // -> 'SPACE'-key is needed to be active in the View3D of the CinematicRenderer
     param::ParamSlot* toggleAnimPlaySlot = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(3)); // toggleAnimPlaySlot
     toggleAnimPlaySlot->MakeUnavailable();
+    /// The right way doesn't work if (child->Parent().get() != this) ...
+    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(toggleAnimPlaySlot));
 }
 
 
