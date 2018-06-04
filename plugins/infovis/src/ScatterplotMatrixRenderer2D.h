@@ -128,13 +128,11 @@ private:
 
     void updateColumns(void);
 
+	void drawAxes(void);
+
     void drawPoints(void);
 
     void drawLines(void);
-
-    void drawXAxis(void);
-
-    void drawYAxis(void);
 
     void drawToolTip(const float x, const float y, const std::string& text) const;
 
@@ -182,7 +180,11 @@ private:
 
     std::vector<PlotInfo> plots;
 
-    vislib::graphics::gl::GLSLShader shader;
+    vislib::math::Rectangle<float> bounds;
+
+    vislib::graphics::gl::GLSLShader axisShader;
+
+    vislib::graphics::gl::GLSLShader pointShader;
 
     core::utility::SSBOStreamer rowSSBO;
 

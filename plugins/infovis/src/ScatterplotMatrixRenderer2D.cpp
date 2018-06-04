@@ -27,6 +27,18 @@ using vislib::sys::Log;
 const GLuint PlotSSBOBindingPoint = 2;
 const GLuint RowSSBOBindingPoint = 3;
 
+vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProjection() {
+    // this is the apex of suck and must die
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    // end suck
+    return projMatrix * modelViewMatrix;
+}
+
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : core::view::Renderer2DModule()
     , floatTableInSlot("ftIn", "Float table input")
@@ -102,7 +114,8 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
 
 bool ScatterplotMatrixRenderer2D::create(void) {
-    if (!makeProgram("::splom", this->shader)) return false;
+    if (!makeProgram("::splom::axes", this->axisShader)) return false;
+    if (!makeProgram("::splom::points", this->pointShader)) return false;
 
     return true;
 }
@@ -131,8 +144,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
         if (!this->validateData()) return false;
 
-        this->drawYAxis();
-        this->drawXAxis();
+        this->drawAxes();
 
         auto geometryType = this->geometryTypeParam.Param<core::param::EnumParam>()->Value();
         switch (geometryType) {
@@ -151,7 +163,8 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    call.SetBoundingBox(0.0f, 0.0f, call.GetWidth(), call.GetHeight());
+    this->validateData();
+    call.SetBoundingBox(this->bounds);
     return true;
 }
 
@@ -242,13 +255,16 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
 void ScatterplotMatrixRenderer2D::updateColumns(void) {
     auto columnCount = this->floatTable->GetColumnsCount();
     const float size = 10.0f; // XXX: make this guy configurable, i.e., for zooming.
+    const float padding = 1.0f;
 
     plots.clear();
     for (GLuint y = 0; y < columnCount; ++y) {
         for (GLuint x = 0; x < y; ++x) {
-            plots.push_back({x, y, x * size, y * size, size, size});
+            plots.push_back({x, y, x * (size + padding), y * (size + padding), size, size});
         }
     }
+
+    this->bounds.Set(0, 0, columnCount * (size + padding), columnCount * (size + padding));
 
     const GLuint numChunks = this->plotSSBO.SetDataWithSize(
         plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size(), 1, plots.size() * sizeof(PlotInfo));
@@ -260,13 +276,59 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     plotSSBO.SignalCompletion(sync);
 }
 
+void ScatterplotMatrixRenderer2D::drawAxes(void) {
+    this->axisShader.Enable();
+
+    // Transformation uniform.
+    glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        getModelViewProjection().PeekComponents());
+
+    // Render all axis lines at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, plotSSBO.GetHandle());
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset,
+        this->plotDstLength);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	const GLsizei numItems = plots.size() * 2;
+    glDrawArrays(GL_LINES, 0, numItems);
+ 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    this->axisShader.Disable();
+
+	//auto numXTicks = this->axisTicksXParam.Param<core::param::IntParam>()->Value();
+	//auto aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
+
+	//float minX = this->columnInfos[this->columnIdxs.abcissaIdx].MinimumValue();
+	//float maxX = this->columnInfos[this->columnIdxs.abcissaIdx].MaximumValue();
+
+	//std::vector<std::string> xTickText(numXTicks);
+	//float xTickLabel = (maxX - minX) / (numXTicks - 1);
+	//for (int i = 0; i < numXTicks; i++) {
+	//	xTickText[i] = std::to_string(xTickLabel*i + minX);
+	//}
+
+	//float tickSize = this->nvgRenderInfo.fontSize;
+
+	//float dw = std::get<0>(this->viewport)*aspect;
+	//float dh = std::get<1>(this->viewport);
+	//float mw = dw / 2.0f;
+	//float mh = dh / 2.0f;
+
+	//float xTickOff = 1.0f / (numXTicks - 1);
+	//for (int i = 0; i < numXTicks; i++) {
+	//	nvgBeginPath(ctx);
+	//	nvgMoveTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - dh / 2);
+	//	nvgLineTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - (0.5f + tickSize)*dh);
+	//	nvgStroke(ctx);
+	//}
+
+	//for (int i = 0; i < numXTicks; i++) {
+	//	nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, xTickText[i].c_str(), nullptr);
+	//}
+}
+
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
-    auto xScale = this->scaleXParam.Param<core::param::FloatParam>()->Value();
-    auto yScale = this->scaleYParam.Param<core::param::FloatParam>()->Value();
-
-    auto columnInfos = this->floatTable->GetColumnsInfos();
-    auto columnCount = this->floatTable->GetColumnsCount();
-
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
@@ -285,29 +347,19 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     viewport[2] = 2.0f / std::max(1.0f, viewport[2]);
     viewport[3] = 2.0f / std::max(1.0f, viewport[3]);
 
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
-    // end suck
-
-    this->shader.Enable();
+    this->pointShader.Enable();
 
     // Transformation uniforms.
-    glUniform4fv(this->shader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(
-        this->shader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniform4fv(this->pointShader.ParameterLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        getModelViewProjection().PeekComponents());
 
     // Other uniforms.
-    glUniform1f(this->shader.ParameterLocation("kernelWidth"),
+    glUniform1f(this->pointShader.ParameterLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->shader.ParameterLocation("alphaScaling"),
+    glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->shader.ParameterLocation("attenuateSubpixel"),
+    glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
         this->attenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Color map uniforms.
@@ -319,10 +371,11 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
         colTabSize = tf->TextureSize();
     }
-    glUniform1i(this->shader.ParameterLocation("colorTable"), 0);
-    glUniform2ui(this->shader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
+    glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
+    glUniform2ui(this->pointShader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
 
     // Setup streaming.
+    const auto columnCount = this->floatTable->GetColumnsCount();
     const GLuint numBuffers = 3;
     const GLuint bufferSize = 32 * 1024 * 1024;
     const float* data = this->floatTable->GetData();
@@ -347,7 +400,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-    this->shader.Disable();
+    this->pointShader.Disable();
 
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -408,202 +461,6 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
         }
 
         nvgStroke(ctx);
-    }
-
-    nvgRestore(ctx);
-    */
-}
-
-void ScatterplotMatrixRenderer2D::drawXAxis(void) {
-    /*
-    auto numXTicks = this->axisTicksXParam.Param<core::param::IntParam>()->Value();
-    auto aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
-
-    float minX = this->columnInfos[this->columnIdxs.abcissaIdx].MinimumValue();
-    float maxX = this->columnInfos[this->columnIdxs.abcissaIdx].MaximumValue();
-
-    std::vector<std::string> xTickText(numXTicks);
-    float xTickLabel = (maxX - minX) / (numXTicks - 1);
-    for (int i = 0; i < numXTicks; i++) {
-        xTickText[i] = std::to_string(xTickLabel*i + minX);
-    }
-
-    float arrWidth = 0.05f;
-    float arrHeight = 0.025f;
-    float tickSize = this->nvgRenderInfo.fontSize;
-
-    float dw = std::get<0>(this->viewport)*aspect;
-    float dh = std::get<1>(this->viewport);
-    float mw = dw / 2.0f;
-    float mh = dh / 2.0f;
-
-    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtx);
-    nvgSave(ctx);
-    nvgTransform(ctx, this->nvgTrans.GetAt(0, 0), this->nvgTrans.GetAt(1, 0),
-        this->nvgTrans.GetAt(0, 1), this->nvgTrans.GetAt(1, 1),
-        this->nvgTrans.GetAt(0, 2), this->nvgTrans.GetAt(1, 2));
-
-    unsigned char col[4] = {255};
-    core::utility::ColourParser::FromString(this->axisColorParam.Param<core::param::StringParam>()->Value(), 4, col);
-
-    nvgStrokeWidth(ctx, 2.0f);
-    nvgStrokeColor(ctx, nvgRGB(col[0], col[1], col[2]));
-
-    nvgFontSize(ctx, this->nvgRenderInfo.fontSize*dh);
-    nvgFontFace(ctx, "sans");
-    nvgTextAlign(ctx, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
-    nvgFillColor(ctx, nvgRGB(col[0], col[1], col[2]));
-
-    nvgBeginPath(ctx);
-    nvgMoveTo(ctx, mw - dw / 2, mh - dh / 2);
-    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
-    nvgMoveTo(ctx, mw + dw / 2, mh - (0.5f - arrHeight)*dh);
-    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
-    nvgMoveTo(ctx, mw + dw / 2, mh - (0.5f + arrHeight)*dh);
-    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
-    nvgStroke(ctx);
-
-    float xTickOff = 1.0f / (numXTicks - 1);
-    for (int i = 0; i < numXTicks; i++) {
-        nvgBeginPath(ctx);
-        nvgMoveTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - dh / 2);
-        nvgLineTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - (0.5f + tickSize)*dh);
-        nvgStroke(ctx);
-    }
-
-    nvgScale(ctx, 1.0f, -1.0f);
-    nvgTranslate(ctx, 0.0f, -std::get<1>(this->viewport));
-
-    for (int i = 0; i < numXTicks; i++) {
-        nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, xTickText[i].c_str(), nullptr);
-    }
-
-    nvgRestore(ctx);
-    */
-}
-
-void ScatterplotMatrixRenderer2D::drawYAxis(void) {
-    /*
-    TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
-    if (tic == nullptr) return;
-
-    tic->SetRequest(TraceInfoCall::RequestType::GetClusterRanges, 0);
-    if (!(*tic)(0)) return;
-
-    auto clusterAddressRanges = tic->GetAddressRanges();
-    auto clusterRanges = tic->GetRanges();
-
-
-    int numYTicks = this->axisTicksYParam.Param<core::param::IntParam>()->Value();
-    float aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
-    float yScaling = this->scaleYParam.Param<core::param::FloatParam>()->Value();
-
-    std::vector<std::string> yTickText(numYTicks);
-
-    float minY = std::get<0>(this->yRange);
-    float maxY = std::get<1>(this->yRange);
-
-    std::vector<float> yTicks(numYTicks);
-    float yTickLabel = (maxY - minY) / (numYTicks - 1);
-    float yTickOff = 1.0f / (numYTicks - 1);
-    for (int i = 0; i < numYTicks; i++) {
-        yTickText[i] = std::to_string(yTickLabel *i + minY);
-        yTicks[i] = (1.0f / (numYTicks - 1)) * i;
-    }
-
-    float arrWidth = 0.025f;
-    float arrHeight = 0.05f;
-    float tickSize = this->nvgRenderInfo.fontSize*0.25f;
-
-    float dw = std::get<0>(this->viewport); //< Should not care about aspect
-    float dh = std::get<1>(this->viewport)*yScaling;
-    float mw = dw / 2.0f;
-    float mh = dh / 2.0f;
-
-    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtx);
-    nvgSave(ctx);
-    nvgTransform(ctx, this->nvgTrans.GetAt(0, 0), this->nvgTrans.GetAt(1, 0),
-        this->nvgTrans.GetAt(0, 1), this->nvgTrans.GetAt(1, 1),
-        this->nvgTrans.GetAt(0, 2), this->nvgTrans.GetAt(1, 2));
-
-    unsigned char col[4] = {255};
-    core::utility::ColourParser::FromString(this->axisColorParam.Param<core::param::StringParam>()->Value(), 4, col);
-
-    nvgStrokeWidth(ctx, 2.0f);
-    nvgStrokeColor(ctx, nvgRGB(col[0], col[1], col[2]));
-
-    nvgFontSize(ctx, this->nvgRenderInfo.fontSize*dh*0.5f);
-    nvgFontFace(ctx, "sans");
-    nvgTextAlign(ctx, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
-    nvgFillColor(ctx, nvgRGB(col[0], col[1], col[2]));
-
-    int offset = 20;
-
-    nvgBeginPath(ctx);
-    nvgMoveTo(ctx, mw - dw / 2, mh - dh / 2);
-    nvgLineTo(ctx, mw - dw / 2, offset + mh + (0.5f + arrHeight)*dh);
-    nvgMoveTo(ctx, mw - (0.5f + arrWidth)*dw, offset + mh + dh / 2);
-    nvgLineTo(ctx, mw - dw / 2, offset + mh + (0.5f + arrHeight)*dh);
-    nvgMoveTo(ctx, mw - (0.5f - arrWidth)*dw, offset + mh + dh / 2);
-    nvgLineTo(ctx, mw - dw / 2, offset + mh + (0.5f + arrHeight)*dh);
-    nvgStroke(ctx);
-
-    if (clusterRanges->size() < 2) return;
-
-
-
-    // nullte
-    float normY = this->columnInfos[std::get<1>(this->columnSelectors[0])].MaximumValue() -
-    this->columnInfos[std::get<1>(this->columnSelectors[0])].MinimumValue();
-
-    //float lastTick = mh - (0.5f - std::get<0>((*clusterRanges)[0]))*dh;
-    float lastTick = (std::get<1>((*clusterRanges)[clusterRanges->size()-1]) / normY)*dh;
-    nvgBeginPath(ctx);
-    nvgMoveTo(ctx, mw - dw / 2, lastTick);
-    nvgLineTo(ctx, mw - (0.5f + tickSize)*dw, lastTick);
-    nvgStroke(ctx);
-
-    for (size_t i = clusterRanges->size() - 2; i >= 0; i--) {
-        //float currentTick = mh - (0.5f - std::get<0>((*clusterRanges)[i]))*dh;
-        float currentTick = (std::get<1>((*clusterRanges)[i]) / normY)*dh;
-
-        if (std::abs(currentTick - lastTick) > 3.0f*this->nvgRenderInfo.fontSize*dh) {
-            lastTick = currentTick;
-            nvgBeginPath(ctx);
-            nvgMoveTo(ctx, mw - dw / 2, lastTick);
-            nvgLineTo(ctx, mw - (0.5f + tickSize)*dw, lastTick);
-            nvgStroke(ctx);
-        }
-
-        if (i == 0) break;
-    }
-
-    nvgScale(ctx, 1.0f, -1.0f);
-    nvgTranslate(ctx, 0.0f, -std::get<1>(this->viewport));
-
-    // nullte
-    //lastTick = mh - (0.5f - std::get<0>((*clusterRanges)[0]))*dh;
-    lastTick = (std::get<1>((*clusterRanges)[clusterRanges->size() - 1]) / normY)*dh;
-
-    std::stringstream ss;
-    //ss << "0x" << std::setfill('0') << std::setw(16) << std::hex <<
-    (*clusterAddressRanges)[clusterAddressRanges->size() - 1].first; ss << std::hex <<
-    (*clusterAddressRanges)[clusterAddressRanges->size() - 1].first; nvgText(ctx, mw - (0.5f + tickSize)*dw,
-    dh-lastTick, ss.str().c_str(), nullptr);
-
-    for (size_t i = clusterRanges->size() - 2; i >= 0; i--) {
-        //float currentTick = mh - (0.5f - std::get<0>((*clusterRanges)[i]))*dh;
-        float currentTick = (std::get<1>((*clusterRanges)[i]) / normY)*dh;
-
-        if (std::abs(currentTick - lastTick) > 3.0f*this->nvgRenderInfo.fontSize*dh) {
-            lastTick = currentTick;
-            std::stringstream ss;
-            //ss << "0x" << std::setfill('0') << std::setw(16) << std::hex << (*clusterAddressRanges)[i].first;
-            ss << std::hex << (*clusterAddressRanges)[i].first;
-            nvgText(ctx, mw - (0.5f + tickSize)*dw, dh - lastTick, ss.str().c_str(), nullptr);
-        }
-
-        if (i == 0) break;
     }
 
     nvgRestore(ctx);

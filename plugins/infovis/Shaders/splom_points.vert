@@ -1,5 +1,3 @@
-//#version 430
-
 struct Plot {
     uvec2 index;
     vec2 offset;

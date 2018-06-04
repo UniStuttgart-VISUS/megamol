@@ -1,5 +1,3 @@
-//#version 430
-
 uniform float alphaScaling;
 
 in vec4 vsPosition;
