@@ -9,9 +9,6 @@
 
 #include "mmcore/utility/AbstractFont.h"
 
-#include "vislib/assert.h"
-#include "vislib/IllegalParamException.h"
-
 
  /*
  * megamol::core::utility::AbstractFont::AbstractFont

@@ -25,6 +25,10 @@
 
 using namespace megamol::ospray;
 
+void ospErrorCallback(OSPError err, const char* details) {
+    vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+}
+
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     core::view::Renderer3DModule(),
     extraSamles("extraSamples", "Extra sampling when camera is not moved"),
@@ -217,6 +221,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
     if (dvce == NULL) {
         ospLoadModule("ispc");
         dvce = ospNewDevice("default");
+        ospDeviceSetErrorFunc(dvce, ospErrorCallback);
         ospDeviceCommit(dvce);
     }
     ospSetCurrentDevice(dvce);
