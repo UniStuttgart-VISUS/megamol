@@ -93,8 +93,8 @@ private:
         GLuint xIndex;
         GLuint yIndex;
         GLfloat xOffset;
-        GLfloat xSize;
         GLfloat yOffset;
+        GLfloat xSize;
         GLfloat ySize;
     };
 

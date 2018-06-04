@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="splom" type="MegaMolGLSLShader" version="1.0">
   <shader name="vert">
-    <snippet type="version">140</snippet>
-    <snippet type="file">splom.vert.glsl</snippet>
+    <snippet type="version">430</snippet>
+    <snippet type="file">splom.vert</snippet>
   </shader>
   <shader name="frag">
-    <snippet type="version">140</snippet>
-    <snippet type="file">splom.frag.glsl</snippet>
+    <snippet type="version">430</snippet>
+    <snippet type="file">splom.frag</snippet>
   </shader>
 </btf>

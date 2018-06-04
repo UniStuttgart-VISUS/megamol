@@ -24,8 +24,8 @@ using namespace megamol::stdplugin::datatools;
 
 using vislib::sys::Log;
 
-const GLuint RowSSBOBindingPoint = 2;
-const GLuint PlotSSBOBindingPoint = 3;
+const GLuint PlotSSBOBindingPoint = 2;
+const GLuint RowSSBOBindingPoint = 3;
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : core::view::Renderer2DModule()
@@ -292,8 +292,6 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv(modelViewMatrix);
-    modelViewMatrixInv.Invert();
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
     // end suck
 
@@ -303,9 +301,6 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniform4fv(this->shader.ParameterLocation("viewport"), 1, viewport);
     glUniformMatrix4fv(
         this->shader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-    glUniformMatrix4fv(
-        this->shader.ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-    glUniformMatrix4fv(this->shader.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
 
     // Other uniforms.
     glUniform1f(this->shader.ParameterLocation("kernelWidth"),
@@ -325,8 +320,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         colTabSize = tf->TextureSize();
     }
     glUniform1i(this->shader.ParameterLocation("colorTable"), 0);
-    glUniform3f(this->shader.ParameterLocation("colorConsts"), columnInfos[this->map.colorIdx].MinimumValue(),
-        columnInfos[this->map.colorIdx].MaximumValue(), colTabSize);
+    glUniform2ui(this->shader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
 
     // Setup streaming.
     const GLuint numBuffers = 3;
