@@ -121,7 +121,7 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
     if (this->mouse.selects || this->mouse.inspects) {
         // TODO: Some hit testing might be nice here when clicking transparent areas.
-        return true;
+        //return true;
     }
 
     return false;
