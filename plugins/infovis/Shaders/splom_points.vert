@@ -14,11 +14,11 @@ uniform bool attenuateSubpixel;
 uniform sampler1D colorTable;
 uniform uvec2 colorConsts;
 
-layout(std430, packed, binding = 3) buffer PlotSSBO {
+layout(std430, packed, binding = 2) buffer PlotSSBO {
     Plot plots[];
 };
 
-layout(std430, packed, binding = 2) buffer RowSSBO {
+layout(std430, packed, binding = 3) buffer RowSSBO {
     float values[];
 };
 

@@ -6,7 +6,7 @@ struct Plot {
 
 uniform mat4 modelViewProjection;
 
-layout(std430, packed, binding = 3) buffer PlotSSBO {
+layout(std430, packed, binding = 2) buffer PlotSSBO {
     Plot plots[];
 };
 
@@ -29,6 +29,6 @@ void main(void) {
         position = vec2(plot.offset.x + plot.size.x, plot.offset.y);
         break;
     }
-    
+
     gl_Position = modelViewProjection * vec4(position, 0.0f, 1.0f);
 }
