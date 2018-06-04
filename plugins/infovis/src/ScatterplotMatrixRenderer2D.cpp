@@ -24,7 +24,8 @@ using namespace megamol::stdplugin::datatools;
 
 using vislib::sys::Log;
 
-const GLuint SSBOBindingPoint = 2;
+const GLuint RowSSBOBindingPoint = 2;
+const GLuint PlotSSBOBindingPoint = 3;
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : core::view::Renderer2DModule()
@@ -252,10 +253,11 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     const GLuint numChunks = this->plotSSBO.SetDataWithSize(
         plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size(), 1, plots.size() * sizeof(PlotInfo));
 
+    assert(numChunks <= 2 && "Number of chunks should be one (or two, due to alignment)");
+
     GLuint numItems, sync;
-    GLsizeiptr dstOffset, dstLength;
-    rowSSBO.UploadChunk(0, numItems, sync, dstOffset, dstLength);
-    rowSSBO.SignalCompletion(sync);
+    plotSSBO.UploadChunk(0, numItems, sync, this->plotDstOffset, this->plotDstLength);
+    plotSSBO.SignalCompletion(sync);
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
@@ -331,17 +333,19 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     const GLuint bufferSize = 32 * 1024 * 1024;
     const float* data = this->floatTable->GetData();
     const GLuint dataStride = columnCount * sizeof(float);
-    const GLuint dataItems = bufferSize / dataStride;
+    const GLuint dataItems = this->floatTable->GetRowsCount();
     const GLuint numChunks =
         this->rowSSBO.SetDataWithSize(data, dataStride, dataStride, dataItems, numBuffers, bufferSize);
 
     // For each chunk of rows, render all points in the lower half of the scatterplot matrix at once.
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, rowSSBO.GetHandle());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, plotSSBO.GetHandle());
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset, this->plotDstLength);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, RowSSBOBindingPoint, rowSSBO.GetHandle());
     for (GLuint chunk = 0; chunk < numChunks; ++chunk) {
         GLuint numItems, sync;
         GLsizeiptr dstOffset, dstLength;
         rowSSBO.UploadChunk(chunk, numItems, sync, dstOffset, dstLength);
-        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->rowSSBO.GetHandle(), dstOffset, dstLength);
+        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, RowSSBOBindingPoint, this->rowSSBO.GetHandle(), dstOffset, dstLength);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         glDrawArraysInstanced(GL_POINTS, 0, static_cast<GLsizei>(numItems), plots.size());
         rowSSBO.SignalCompletion(sync);

@@ -187,6 +187,8 @@ private:
     core::utility::SSBOStreamer rowSSBO;
 
     core::utility::SSBOStreamer plotSSBO;
+    GLsizeiptr plotDstOffset;
+	GLsizeiptr plotDstLength;
 };
 
 } // end namespace infovis
