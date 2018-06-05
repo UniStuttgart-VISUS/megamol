@@ -14,6 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "vislib/sys/File.h"
+#include "tinyply.h"
 #include <cstdint>
 #include <vector>
 
@@ -118,7 +119,7 @@ namespace io {
          * @param caller The triggering call.
          * @return True on success. False otherwise.
          */
-        bool getDataCallback(core::Call& caller);
+        bool getMeshDataCallback(core::Call& caller);
 
         /**
          * Reimplementation of the getExtent callback.
@@ -126,19 +127,53 @@ namespace io {
          * @param The triggering call.
          * @return True on success. False otherwise.
          */
-        bool getExtentCallback(core::Call& caller);
+        bool getMeshExtentCallback(core::Call& caller);
+
+        /**
+         * Reimplementation of the getData callback.
+         * 
+         * @param caller The triggering call.
+         * @return True on success. False otherwise.
+         */
+        bool getSphereDataCallback(core::Call& caller);
+
+        /**
+         * Reimplementation of the getExtent callback.
+         *
+         * @param The triggering call.
+         * @return True on success. False otherwise.
+         */
+        bool getSphereExtentCallback(core::Call& caller);
 
         /** The slot for the filename */
         core::param::ParamSlot filename;
         
-        /** The slot to put out the data */
-        core::CalleeSlot getData;
+        /** The slot to put out the mesh data */
+        core::CalleeSlot getDataMesh;
+
+        /** The slot to put out the vertex data */
+        core::CalleeSlot getDataSpheres;
 
         /** Pointer to the vislib file */
         vislib::sys::File *file;
 
         /** The current data hash */
         size_t data_hash;
+
+        /** The vertex position data */
+        std::shared_ptr<tinyply::PlyData> vertexData;
+
+        /** The vertex normal data */
+        std::shared_ptr<tinyply::PlyData> vertexNormalData;
+
+        /** The vertex color data */
+        std::shared_ptr<tinyply::PlyData> vertexColorData;
+
+        /** The face data */
+        std::shared_ptr<tinyply::PlyData> faceData;
+
+        /** The texture coordinate data */
+        std::shared_ptr<tinyply::PlyData> texCoordData;
     };
 
 } /* end namespace io */
