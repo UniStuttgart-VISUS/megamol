@@ -14,7 +14,9 @@
 using namespace megamol;
 using namespace megamol::stdplugin::datatools;
 
-
+/*
+ * io::PLYDataSource::PLYDataSource
+ */
 io::PLYDataSource::PLYDataSource(void) : core::Module(),
         filename("filename", "The path to the MMPLD file to load."),
         getData("getdata", "Slot to request data from this data source."),
@@ -32,15 +34,24 @@ io::PLYDataSource::PLYDataSource(void) : core::Module(),
     //this->initFrameCache(1);
 }
 
+/*
+ * io::PLYDataSource::~PLYDataSource
+ */
 io::PLYDataSource::~PLYDataSource(void) {
     Release();
 }
 
+/*
+ * io::PLYDataSource::create
+ */
 bool io::PLYDataSource::create(void) {
     // intentionally empty
     return true;
 }
 
+/*
+ * io::PLYDataSource::release
+ */
 void io::PLYDataSource::release(void) {
     //this->resetFrameCache();
     //if (file != nullptr) {
@@ -52,6 +63,9 @@ void io::PLYDataSource::release(void) {
     //frameIdx.clear();
 }
 
+/*
+ * io::PLYDataSource::filenameChanged
+ */
 bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
@@ -136,6 +150,9 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 //    return true;
 }
 
+/*
+ * io::PLYDataSource::getDataCallback
+ */
 bool io::PLYDataSource::getDataCallback(core::Call& caller) {
     //GraphDataCall *c2 = dynamic_cast<GraphDataCall*>(&caller);
     //if (c2 == nullptr) return false;
@@ -150,9 +167,12 @@ bool io::PLYDataSource::getDataCallback(core::Call& caller) {
     //    f->SetData(*c2);
     //}
 
-    //return true;
+    return true;
 }
 
+/*
+ * io::PLYDataSource::getExtentCallback
+ */
 bool io::PLYDataSource::getExtentCallback(core::Call& caller) {
     //GraphDataCall *c2 = dynamic_cast<GraphDataCall*>(&caller);
 
@@ -162,5 +182,5 @@ bool io::PLYDataSource::getExtentCallback(core::Call& caller) {
     //    return true;
     //}
 
-    //return false;
+    return false;
 }

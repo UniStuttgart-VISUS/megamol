@@ -14,8 +14,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   
   set(LIBS vislib core glad geometry_calls)
 
-  include_directories("include" "src" "3rd/nanoflann")
-
   if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
@@ -30,6 +28,8 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     ERROR_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeerr.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix
   )
+
+  include_directories("include" "src" "3rd/nanoflann" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
