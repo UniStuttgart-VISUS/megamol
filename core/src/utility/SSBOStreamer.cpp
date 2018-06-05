@@ -49,15 +49,20 @@ GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint 
     this->srcStride = dstStride;
     this->numItems = numItems;
     this->theData = data;
-    this->numItemsPerChunk = bufferSize / dstStride;
-    // evil hack: if you synchronize this with another buffer that has tiny items (4 bytes, like color)
-    // make sure we will not get chunks with numItems that result in non-aligned (modern GPUs: 32bytes seems a safe bet)
-    // pointers. that is, we need to upload multiples of at least 8 things to come out at 8 * 4 = 32
-    const int multiRound = 8;
-    this->numItemsPerChunk = ((this->numItemsPerChunk) / multiRound) * multiRound;
+    this->numItemsPerChunk = GetNumItemsPerChunkAligned(bufferSize / dstStride);
     this->numChunks = (numItems + numItemsPerChunk - 1) / numItemsPerChunk; // round up int division!
     this->fences.resize(numBuffers, nullptr);
     return numChunks;
+}
+
+GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) {
+	// Rounding the number of items per chunk is important for alignment and thus performance.
+	// That means, if we synchronize with another buffer that has tiny items, we have to make 
+	// sure that we do not get non-aligned chunks with due to the number of items.
+	// For modern GPUs, 32bytes seems like a safe bet, i.e., we upload in multiples of eight
+	// to get 8 * 4 = 32.
+    const GLuint multiRound = 8;
+    return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound; 
 }
 
 void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
