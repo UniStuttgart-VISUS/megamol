@@ -5,17 +5,19 @@ struct Plot {
 };
 
 uniform mat4 modelViewProjection;
+uniform vec4 axisColor;
+
+out vec4 vsColor;
 
 layout(std430, packed, binding = 2) buffer PlotSSBO {
     Plot plots[];
 };
 
 void main(void) {
-    const uint plotIndex = gl_VertexID / 4;
-    const Plot plot = plots[plotIndex];
+    const Plot plot = plots[gl_InstanceID];
 
-    // Map plot to position.
-    const uint vertexIndex = gl_VertexID % 4;
+    // Map plot to axis vertices.
+    const uint vertexIndex = gl_VertexID;
     vec2 position;
     switch (vertexIndex) {
     case 0:
@@ -30,5 +32,7 @@ void main(void) {
         break;
     }
 
+    vsColor = axisColor;
+    
     gl_Position = modelViewProjection * vec4(position, 0.0f, 1.0f);
 }

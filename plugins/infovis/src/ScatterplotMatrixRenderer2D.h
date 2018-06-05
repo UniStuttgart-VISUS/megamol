@@ -8,6 +8,7 @@
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/utility/SSBOStreamer.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
@@ -134,8 +135,6 @@ private:
 
     void drawLines(void);
 
-    void drawToolTip(const float x, const float y, const std::string& text) const;
-
     size_t searchAndDispPointAttr(const float x, const float y);
 
     core::CallerSlot floatTableInSlot;
@@ -181,6 +180,8 @@ private:
     std::vector<PlotInfo> plots;
 
     vislib::math::Rectangle<float> bounds;
+
+	megamol::core::utility::SDFFont font;
 
     vislib::graphics::gl::GLSLShader axisShader;
 
