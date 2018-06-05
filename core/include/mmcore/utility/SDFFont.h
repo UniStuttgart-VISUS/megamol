@@ -38,6 +38,8 @@
 #include "vislib/sys/File.h"
 #include "vislib/Trace.h"
 
+#include <float.h>
+
 
 namespace megamol {
 namespace core {
@@ -336,11 +338,8 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
-
-        // float col[4], 
-
+        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
          * Draws a text at the specified position.
@@ -353,8 +352,8 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Draws a text at the specified position.
@@ -368,8 +367,8 @@ namespace utility {
         * @param txt   The zero-terminated string to draw.
         * @param align The alignment of the text.
         */
-        virtual void DrawString(float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float col[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -512,7 +511,7 @@ namespace utility {
          * 
          * @param col The color.
          */
-        void BatchDrawString(float col[4]) const;
+        void BatchDrawString(const float col[4]) const;
 
         /**
          * Renders all cached string data at once.
@@ -713,7 +712,7 @@ namespace utility {
         * @param flipY The flag controlling the direction of the y-axis
         * @param align The alignment
         */
-        void drawGlyphs(float col[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void drawGlyphs(const float col[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
 
         /** 
         * Renders buffer data. 
@@ -721,7 +720,7 @@ namespace utility {
         * @param gc   The total glyph count to render.
         * @param col  Pointer to the color array. If col is nullptr, per vertex color is used.
         */
-        void render(unsigned int gc, float *col[4]) const;
+        void render(unsigned int gc, const float *col[4]) const;
 
         /**
         * Translate enum font name into font file name.
