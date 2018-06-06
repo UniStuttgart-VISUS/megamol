@@ -91,14 +91,17 @@ private:
     };
 
     struct PlotInfo {
-        GLuint xIndex;
-        GLuint yIndex;
-        GLfloat xOffset;
-        GLfloat yOffset;
-        GLfloat xSize;
-        GLfloat ySize;
-    };
-
+        GLuint indexX;
+        GLuint indexY;
+        GLfloat offsetX;
+        GLfloat offsetY;
+        GLfloat sizeX;
+        GLfloat sizeY;
+        GLfloat minX;
+        GLfloat maxX;
+        GLfloat minY;
+        GLfloat maxY;
+	};
 
     /**
      * The OpenGL Render callback.
@@ -177,6 +180,8 @@ private:
 
     MouseState mouse;
 
+	float axisColor[4];
+
     std::vector<PlotInfo> plots;
 
     vislib::math::Rectangle<float> bounds;
@@ -187,7 +192,7 @@ private:
 
     vislib::graphics::gl::GLSLShader pointShader;
 
-    core::utility::SSBOStreamer rowSSBO;
+    core::utility::SSBOStreamer valueSSBO;
 
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;

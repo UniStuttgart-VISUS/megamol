@@ -1,24 +1,16 @@
-struct Plot {
-    uvec2 index;
-    vec2 offset;
-    vec2 size;
-};
-
 uniform vec4 viewport;
 uniform mat4 modelViewProjection;
+
+uniform sampler1D colorTable;
+uniform uvec2 colorConsts;
+
+uniform int rowStride;
 
 uniform float kernelWidth;
 uniform float alphaScaling;
 uniform bool attenuateSubpixel;
 
-uniform sampler1D colorTable;
-uniform uvec2 colorConsts;
-
-layout(std430, packed, binding = 2) buffer PlotSSBO {
-    Plot plots[];
-};
-
-layout(std430, packed, binding = 3) buffer RowSSBO {
+layout(std430, binding = 3) buffer ValueSSBO {
     float values[];
 };
 
@@ -28,18 +20,21 @@ out float vsEffectiveDiameter;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
-    const vec2 position = vec2(values[gl_VertexID + plot.index.x],
-                               values[gl_VertexID + plot.index.y]);
+    const int rowOffset = gl_VertexID / rowStride * rowStride;
 
-    // Map value to position.
-    vsPosition = vec4(position.x / plot.size.x + plot.offset.x,
-                      position.y / plot.size.y + plot.offset.y,
+    // Map value pair to position.
+    const vec2 point = vec2(values[rowOffset + plot.indexX],
+                            values[rowOffset + plot.indexY]);
+    const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
+                                (point.y - plot.minY) / (plot.maxY - plot.minY));
+    vsPosition = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
+                      unitPoint.y * plot.sizeY + plot.offsetY,
                       0.0f, 1.0f);
 
-    const float colorCount = float(colorConsts.y);
+    const float colorCount = float(colorConsts[1]);
     if (colorCount != 0) {
         // Fetch color from table.
-        const float colorIndex = values[gl_VertexID + colorConsts.x];
+        const float colorIndex = values[rowOffset + colorConsts[0]];
         const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
                                   + 0.5 / colorCount;
         vsColor = texture(colorTable, colorOffset);
@@ -50,7 +45,7 @@ void main(void) {
 
     if (attenuateSubpixel) {
         // Attenuate alpha depending on subpixels.
-        vsEffectiveDiameter = gl_PointSize;
+        vsEffectiveDiameter = kernelWidth;
     } else {
         vsEffectiveDiameter = 1.0;
     }

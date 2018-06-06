@@ -3,6 +3,7 @@
   <namespace name="axes">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom_axes.vert</snippet>
     </shader>
     <shader name="frag">
@@ -13,6 +14,7 @@
   <namespace name="points">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom_points.vert</snippet>
     </shader>
     <shader name="frag">

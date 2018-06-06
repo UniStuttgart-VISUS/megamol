@@ -20,10 +20,6 @@ void main(void) {
     alpha *= pow(vsEffectiveDiameter, 2);
     alpha *= alphaScaling;
 
-#if 0
     // Blend against white.
     fsColor = vec4(vsColor.rgb, vsColor.a * alpha);
-#else
-    fsColor = vec4(1.0, 0.0, 0.0, 1.0);
-#endif
 }
