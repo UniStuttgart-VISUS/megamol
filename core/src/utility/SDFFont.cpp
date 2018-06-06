@@ -303,7 +303,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt)
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -325,7 +325,7 @@ void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY,
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -348,7 +348,7 @@ void SDFFont::DrawString(float col[4], float x, float y, float size, bool flipY,
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -398,7 +398,7 @@ void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float
 /*
  * SDFFont::DrawString
  */
-void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -448,7 +448,7 @@ void SDFFont::DrawString(float col[4], float x, float y, float w, float h, float
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float col[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -470,7 +470,7 @@ void SDFFont::DrawString(float col[4], float x, float y, float z, float size, bo
 /*
 * SDFFont::DrawString
 */
-void SDFFont::DrawString(float col[4], float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
+void SDFFont::DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
 
@@ -532,7 +532,7 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
 /*
  * SDFFont::BatchDrawString
  */
-void SDFFont::BatchDrawString(float col[4]) const {
+void SDFFont::BatchDrawString(const float col[4]) const {
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -840,7 +840,7 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 /*
 * SDFFont::drawGlyphs
 */
-void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
+void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
     unsigned glyphCnt = 0;
@@ -1069,7 +1069,7 @@ void SDFFont::drawGlyphs(float col[4], int* run, float x, float y, float z, floa
 /*
  * SDFFont::render
  */
-void SDFFont::render(unsigned int gc, float *col[4]) const {
+void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
