@@ -14,10 +14,9 @@
 
 using namespace megamol::core::utility;
 
-SSBOStreamer::SSBOStreamer() : theSSBO(0),
-        bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
-        mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()) {
-    
+SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
+    : theSSBO(0), bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
+      mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()), debugLabel(debugLabel) {
 }
 
 SSBOStreamer::~SSBOStreamer() {
@@ -69,7 +68,10 @@ void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
     if (this->theSSBO == 0) {
         glGenBuffers(1, &this->theSSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+#if _DEBUG
+        glObjectLabel(GL_BUFFER, this->theSSBO, debugLabel.length(), debugLabel.c_str());
+#endif
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     if (bufferSize != this->bufferSize || numBuffers != this->numBuffers) {
         if (this->mappedMem != nullptr && this->theSSBO != 0) {

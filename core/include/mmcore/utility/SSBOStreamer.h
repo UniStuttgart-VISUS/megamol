@@ -32,7 +32,7 @@ namespace utility {
     class MEGAMOLCORE_API SSBOStreamer {
     public:
 
-         SSBOStreamer();
+         SSBOStreamer(const std::string& debugLabel = std::string());
         ~SSBOStreamer();
 
         /// @param data the pointer to the original data
@@ -126,6 +126,7 @@ namespace utility {
         GLuint currIdx;
         std::vector<GLsync> fences;
         int numThr;
+        std::string debugLabel;
     };
 
     template<class fun>
