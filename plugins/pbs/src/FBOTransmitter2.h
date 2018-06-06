@@ -86,6 +86,8 @@ private:
 
     megamol::core::param::ParamSlot trigger_button_slot_;
 
+    megamol::core::param::ParamSlot target_machine_slot_;
+
     std::mutex buffer_read_guard_;
 
     std::mutex buffer_send_guard_;

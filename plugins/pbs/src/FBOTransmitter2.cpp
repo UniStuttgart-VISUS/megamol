@@ -22,6 +22,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , commSelectSlot_{"communicator", "Select the communicator to use"}
     , view_name_slot_{"view", "The name of the view instance to be used"}
     , trigger_button_slot_{"trigger", "Triggers transmission"}
+    , target_machine_slot_{"targetMachine", "Name of the target machine"}
     , frame_id_{0}
     , thread_stop_{false}
     , fbo_msg_read_{new fbo_msg_header_t}
@@ -45,6 +46,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
     this->MakeSlotAvailable(&this->trigger_button_slot_);
+    this->target_machine_slot_ << new megamol::core::param::StringParam{"127.0.0.1"};
+    this->MakeSlotAvailable(&this->target_machine_slot_);
 }
 
 
@@ -64,9 +67,12 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!connected_) {
         auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        auto const target = std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
 
         FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
-        registerComm.Connect("tcp://127.0.0.1:42000");
+        std::string const registerAddress = std::string("tcp://") + target + std::string(":42000");
+        printf("FBOTransmitter2: registerAddress: %s", registerAddress.c_str());
+        registerComm.Connect(registerAddress);
 
         std::string hostname;
 #if _WIN32
