@@ -1,6 +1,8 @@
 /*
  * ReplacementRenderer.h
  *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_REPLACEMENTRENDERER_H_INCLUDED

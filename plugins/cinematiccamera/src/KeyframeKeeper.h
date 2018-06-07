@@ -1,6 +1,8 @@
 /*
 * KeyframeKeeper.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED
@@ -134,8 +136,10 @@ namespace megamol {
                    Keyframe       prevKeyframe;
             };
 
+            /** */
             vislib::Array<UndoAction> undoQueue;
 
+            /** */
             int undoQueueIndex;
 
             /**********************************************************************
@@ -231,6 +235,16 @@ namespace megamol {
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
+            core::param::ParamSlot setTotalAnimTimeParam;
+            /** */
+            core::param::ParamSlot  snapAnimFramesParam;
+            /** */
+            core::param::ParamSlot  snapSimFramesParam;
+            /** */
+            core::param::ParamSlot  simTangentParam;
+            /** */
+            core::param::ParamSlot  interpolTangentParam;
+            /** */
             //UNUSED core::param::ParamSlot setKeyframesToSameSpeed;
 			/**param for current keyframe aniamtion time */
 			core::param::ParamSlot editCurrentAnimTimeParam;
@@ -240,28 +254,18 @@ namespace megamol {
 			core::param::ParamSlot editCurrentPosParam;
 			/**param for current keyframe LookAt */
 			core::param::ParamSlot editCurrentLookAtParam;
+            /** */
+            core::param::ParamSlot  resetLookAtParam;
 			/**param for current keyframe Up */
 			core::param::ParamSlot editCurrentUpParam;
             /** */
-            core::param::ParamSlot setTotalAnimTimeParam;
+            core::param::ParamSlot  editCurrentApertureParam;
+            /** */
+            core::param::ParamSlot fileNameParam;
             /** */
             core::param::ParamSlot saveKeyframesParam;
             /** */
             core::param::ParamSlot loadKeyframesParam;
-            /** */
-            core::param::ParamSlot fileNameParam;
-            /** */
-            core::param::ParamSlot  editCurrentApertureParam;
-            /** */
-            core::param::ParamSlot  resetLookAtParam;
-            /** */
-            core::param::ParamSlot  snapAnimFramesParam;
-            /** */
-            core::param::ParamSlot  snapSimFramesParam;
-            /** */
-            core::param::ParamSlot  simTangentParam;
-            /** */
-            core::param::ParamSlot  interpolTangentParam;
 		};
 
 		/** Description class typedef */
