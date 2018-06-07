@@ -139,15 +139,29 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
     std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
     if (!this->fbo_msg_write_->empty()) {
         float bbox[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-        for (auto& el : *this->fbo_msg_write_) {
-            // bbox.unite(el.fbo_msg_header.os_bbox);
+
+        auto& vec = (*this->fbo_msg_write_);
+
+        memcpy(bbox, vec[0].fbo_msg_header.os_bbox, 6 * sizeof(float));
+
+        for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
             for (int i = 0; i < 3; ++i) {
-                bbox[i] = fmin(bbox[i], el.fbo_msg_header.os_bbox[i]);
+                bbox[i] = fmin(bbox[i], vec[bidx].fbo_msg_header.os_bbox[i]);
             }
             for (int i = 3; i < 6; ++i) {
-                bbox[i] = fmax(bbox[i], el.fbo_msg_header.os_bbox[i]);
+                bbox[i] = fmax(bbox[i], vec[bidx].fbo_msg_header.os_bbox[i]);
             }
         }
+
+        //for (auto& el : *this->fbo_msg_write_) {
+        //    // bbox.unite(el.fbo_msg_header.os_bbox);
+        //    for (int i = 0; i < 3; ++i) {
+        //        bbox[i] = fmin(bbox[i], el.fbo_msg_header.os_bbox[i]);
+        //    }
+        //    for (int i = 3; i < 6; ++i) {
+        //        bbox[i] = fmax(bbox[i], el.fbo_msg_header.os_bbox[i]);
+        //    }
+        //}
         out_bbox.SetObjectSpaceBBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         out_bbox.SetObjectSpaceClipBox(out_bbox.ObjectSpaceBBox());
 
