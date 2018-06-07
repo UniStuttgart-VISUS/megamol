@@ -230,6 +230,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     glGetLightfv(GL_LIGHT0, GL_POSITION, light_pos);
     // end suck
 
+    glEnable(GL_DEPTH_TEST);
+
     glUseProgram(this->shader);
 
     glUniformMatrix4fv(glGetUniformLocation(this->shader, "modelview"), 1, GL_FALSE, modelViewMatrix_column);
@@ -250,6 +252,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     }
 
     glUseProgram(0);
+
+    glDisable(GL_DEPTH_TEST);
 
     return true;
 }
