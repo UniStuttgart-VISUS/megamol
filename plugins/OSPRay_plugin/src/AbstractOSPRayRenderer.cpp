@@ -95,6 +95,8 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     this->shadows << new core::param::BoolParam(0);
     this->MakeSlotAvailable(&this->shadows);
 
+    this->rd_type.ForceSetDirty(); //< TODO HAZARD Dirty hack
+
     // PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
@@ -555,8 +557,8 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
                 static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
     // setup camera
-    ospSet2fv(camera, "image_start", imgStart.data());
-    ospSet2fv(camera, "image_end", imgEnd.data());
+    ospSet2fv(camera, "imageStart", imgStart.data());
+    ospSet2fv(camera, "imageEnd", imgEnd.data());
     ospSetf(camera, "aspect",
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
             static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
@@ -898,7 +900,10 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             &element.colorData->operator[](i* colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
                         ospCommit(colorData);
                         ospSetData(geo.back(), "color", colorData);
-                        ospSet1i(geo.back(), "color_components", 4);
+                        //ospSet1i(geo.back(), "color_components", 4);
+                        ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                        //ospSet1i(geo.back(), "color_offset", 0);
+                        //ospSet1i(geo.back(), "color_stride", 4 * sizeof(float));
                     }
                 }
                 // clipPlane setup
@@ -956,9 +961,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         ospSetData(geo.back(), "color", vertexData);
                         if (element.mmpldColor ==
                             core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                            ospSet1i(geo.back(), "color_components", 3);
+                            //ospSet1i(geo.back(), "color_components", 3);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
                         } else {
-                            ospSet1i(geo.back(), "color_components", 4);
+                            //ospSet1i(geo.back(), "color_components", 4);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                         }
                     }
                 }
@@ -1061,7 +1068,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSetData(geo.back(), "vertex", vertexData);
 
                     indexData = ospNewData(
-                        element.indexData->size(), OSP_UINT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
+                        element.indexData->size(), OSP_INT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
                     ospCommit(indexData);
                     ospSetData(geo.back(), "index", indexData);
 

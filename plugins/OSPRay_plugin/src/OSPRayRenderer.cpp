@@ -143,6 +143,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             this->setupOSPRay(renderer, camera, world, "scivis");
         }
         renderer_has_changed = true;
+        this->rd_type.ResetDirty();
     }
 
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
