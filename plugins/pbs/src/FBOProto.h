@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <cmath>
+#include <memory>
 
 namespace megamol {
 namespace pbs {

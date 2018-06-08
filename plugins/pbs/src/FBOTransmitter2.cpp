@@ -14,8 +14,8 @@
 #include "mmcore/view/CallRender3D.h"
 
 #ifdef __unix__
-#include <unistd.h>
 #include <limits.h>
+#include <unistd.h>
 #endif
 
 
@@ -69,7 +69,8 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!connected_) {
         auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
-        auto const target = std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        auto const target =
+            std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
 
         FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
         std::string const registerAddress = std::string("tcp://") + target + std::string(":42000");
@@ -111,7 +112,8 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
         auto const comm_type = static_cast<FBOCommFabric::commtype>(
             this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
-        //auto const address = std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+        // auto const address =
+        // std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
         switch (comm_type) {
         case FBOCommFabric::MPI_COMM: {
             int const rank = atoi(address.c_str());

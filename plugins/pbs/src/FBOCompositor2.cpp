@@ -6,18 +6,18 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
-#include "mmcore/param/IntParam.h"
 
 #include "snappy.h"
 
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : commSelectSlot_{"communicator", "Select the communicator to use"}
-     //addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
+    // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , close_future_{close_promise_.get_future()}
@@ -29,8 +29,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , connected_{false}
     , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
     , isRegistered_{false} {
-    //addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
-    //this->MakeSlotAvailable(&addressesSlot_);
+    // addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
+    // this->MakeSlotAvailable(&addressesSlot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
@@ -155,7 +155,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
             }
         }
 
-        //for (auto& el : *this->fbo_msg_write_) {
+        // for (auto& el : *this->fbo_msg_write_) {
         //    // bbox.unite(el.fbo_msg_header.os_bbox);
         //    for (int i = 0; i < 3; ++i) {
         //        bbox[i] = fmin(bbox[i], el.fbo_msg_header.os_bbox[i]);
@@ -200,7 +200,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
         /*auto const addresses =
             std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};*/
 
-        //auto comms = this->connectComms(this->getAddresses(addresses));
+        // auto comms = this->connectComms(this->getAddresses(addresses));
         auto comms = this->connectComms(addresses_);
         this->collector_thread_ = std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
 

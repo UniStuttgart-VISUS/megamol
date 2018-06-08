@@ -89,7 +89,7 @@ private:
 
     bool printProgramInfoLog(GLuint shaderProg) const;
 
-    //megamol::core::param::ParamSlot addressesSlot_;
+    // megamol::core::param::ParamSlot addressesSlot_;
 
     megamol::core::param::ParamSlot commSelectSlot_;
 
