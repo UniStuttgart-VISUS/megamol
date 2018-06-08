@@ -12,6 +12,8 @@
 #include "vislib/sys/Log.h"
 #include "mmcore/param/IntParam.h"
 
+#include "snappy.h"
+
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : commSelectSlot_{"communicator", "Select the communicator to use"}
@@ -324,11 +326,24 @@ void megamol::pbs::FBOCompositor2::receiverJob(
         size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
         fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
         fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+
         std::vector<char> col_buf(fbo_col_size);
+        std::vector<char> col_comp_buf(header.color_buf_size);
+        std::copy(buf_ptr, buf_ptr + header.color_buf_size, col_comp_buf.begin());
+        buf_ptr += header.color_buf_size;
+        std::vector<char> depth_buf(fbo_depth_size);
+        std::vector<char> depth_comp_buf(header.depth_buf_size);
+        std::copy(buf_ptr, buf_ptr + header.depth_buf_size, depth_comp_buf.begin());
+
+        // snappy uncompress
+        snappy::RawUncompress(col_comp_buf.data(), col_comp_buf.size(), col_buf.data());
+        snappy::RawUncompress(depth_comp_buf.data(), depth_comp_buf.size(), depth_buf.data());
+
+        /*std::vector<char> col_buf(fbo_col_size);
         std::copy(buf_ptr, buf_ptr + fbo_col_size, col_buf.begin());
         buf_ptr += fbo_col_size;
         std::vector<char> depth_buf(fbo_depth_size);
-        std::copy(buf_ptr, buf_ptr + fbo_depth_size, depth_buf.begin());
+        std::copy(buf_ptr, buf_ptr + fbo_depth_size, depth_buf.begin());*/
 
         auto const msg = fbo_msg{std::move(header), std::move(col_buf), std::move(depth_buf)};
 

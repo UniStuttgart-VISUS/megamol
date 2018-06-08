@@ -3,6 +3,8 @@
 
 #include "glad/glad.h"
 
+#include "snappy.h"
+
 #include "vislib/sys/Log.h"
 
 #include "mmcore/CallerSlot.h"
@@ -202,17 +204,32 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
         }
 
+        // snappy compression
+        std::vector<char> col_comp_buf(snappy::MaxCompressedLength(this->color_buf_send_->size()));
+        size_t col_comp_size = 0;
+        snappy::RawCompress(
+            this->color_buf_send_->data(), this->color_buf_send_->size(), col_comp_buf.data(), &col_comp_size);
+        std::vector<char> depth_comp_buf(snappy::MaxCompressedLength(this->depth_buf_send_->size()));
+        size_t depth_comp_size = 0;
+        snappy::RawCompress(
+            this->depth_buf_send_->data(), this->depth_buf_send_->size(), depth_comp_buf.data(), &depth_comp_size);
+
         // wait for request
         {
             std::lock_guard<std::mutex> send_lock(this->buffer_send_guard_);
+            fbo_msg_send_->color_buf_size = col_comp_size;
+            fbo_msg_send_->depth_buf_size = depth_comp_size;
             // compose message from header, color_buf, and depth_buf
             buf.resize(sizeof(fbo_msg_header_t) + this->color_buf_send_->size() + this->depth_buf_send_->size());
             std::copy(reinterpret_cast<char*>(&(*fbo_msg_send_)),
                 reinterpret_cast<char*>(&(*fbo_msg_send_)) + sizeof(fbo_msg_header_t), buf.data());
-            std::copy(
+            /*std::copy(
                 this->color_buf_send_->begin(), this->color_buf_send_->end(), buf.data() + sizeof(fbo_msg_header_t));
             std::copy(this->depth_buf_send_->begin(), this->depth_buf_send_->end(),
-                buf.data() + sizeof(fbo_msg_header_t) + this->color_buf_send_->size());
+                buf.data() + sizeof(fbo_msg_header_t) + this->color_buf_send_->size());*/
+            std::copy(col_comp_buf.begin(), col_comp_buf.end(), buf.data() + sizeof(fbo_msg_header_t));
+            std::copy(
+                depth_comp_buf.begin(), depth_comp_buf.end(), buf.data() + sizeof(fbo_msg_header_t) + col_comp_size);
 
             // send data
             try {

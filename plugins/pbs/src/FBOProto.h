@@ -94,6 +94,10 @@ struct fbo_msg_header {
     fbo_color_type color_type;
     // fbo depth type
     fbo_depth_type depth_type;
+    // color buf size
+    size_t color_buf_size;
+    // depth buf size
+    size_t depth_buf_size;
 };
 
 using fbo_msg_header_t = fbo_msg_header;
