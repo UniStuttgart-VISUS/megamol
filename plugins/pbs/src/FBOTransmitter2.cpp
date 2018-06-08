@@ -228,9 +228,9 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                 this->color_buf_send_->begin(), this->color_buf_send_->end(), buf.data() + sizeof(fbo_msg_header_t));
             std::copy(this->depth_buf_send_->begin(), this->depth_buf_send_->end(),
                 buf.data() + sizeof(fbo_msg_header_t) + this->color_buf_send_->size());*/
-            std::copy(col_comp_buf.begin(), col_comp_buf.end(), buf.data() + sizeof(fbo_msg_header_t));
-            std::copy(
-                depth_comp_buf.begin(), depth_comp_buf.end(), buf.data() + sizeof(fbo_msg_header_t) + col_comp_size);
+            std::copy(col_comp_buf.data(), col_comp_buf.data() + col_comp_size, buf.data() + sizeof(fbo_msg_header_t));
+            std::copy(depth_comp_buf.data(), depth_comp_buf.data() + depth_comp_size,
+                buf.data() + sizeof(fbo_msg_header_t) + col_comp_size);
 
             // send data
             try {
