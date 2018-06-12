@@ -9,7 +9,7 @@
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 
-#include <iostream>
+#include <sstream>
 
 
 using namespace megamol;
@@ -21,9 +21,9 @@ PrincipalComponentAnalysis::PrincipalComponentAnalysis(void)
     : megamol::core::Module()
     , dataOutSlot("dataOut", "Ouput")
     , dataInSlot("dataIn", "Input")
-    , reduceToNSlot("selection", "Reduce to N Dimensions")
-    , scaleSlot("scale", "Scale each column to unit variance")
-    , centerSlot("center", "Shift center to zero")
+    , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
+    , scaleSlot("scale", "Set to scale each column to unit variance")
+    , centerSlot("center", "Set to shift the mean centroid to the origin")
     , datahash(0)
     , dataInHash(0)
     , columnInfos() {
@@ -234,7 +234,7 @@ bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
 
     for (int indexX = 0; indexX < outputDimCount; indexX++) {
         columnInfos[indexX]
-            .SetName("x" + std::to_string(indexX))
+            .SetName("PC" + std::to_string(indexX))
             .SetType(megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnType::QUANTITATIVE)
             .SetMinimumValue(result.col(indexX).minCoeff())
             .SetMaximumValue(result.col(indexX).maxCoeff());

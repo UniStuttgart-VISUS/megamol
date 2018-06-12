@@ -17,14 +17,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   include(ExternalProject)
   set(EIGEN_VER "3_3_4")
   string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
-
-  if(UNIX)
-    set(EIGEN_INSTALL_CMD "eval")
-    set(EIGEN_INSTALL_ARGS "cp -r ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen/* ${EXTERNAL_INSTALL_LOCATION}/include/Eigen/")
-  else()
-    set(EIGEN_INSTALL_CMD "powershell")
-    set(EIGEN_INSTALL_ARGS "Copy-Item -r -Force ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen/* ${EXTERNAL_INSTALL_LOCATION}/include/Eigen/")
-  endif()
+  set(EIGEN_INSTALL_CMD ${CMAKE_COMMAND})
+  set(EIGEN_INSTALL_ARGS -E copy_directory ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen ${EXTERNAL_INSTALL_LOCATION}/include/Eigen)
   
   ExternalProject_Add(extlibeigen
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
@@ -32,9 +26,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${EIGEN_INSTALL_CMD} ${EIGEN_INSTALL_ARGS}
-  )
-
+    INSTALL_COMMAND ${EIGEN_INSTALL_CMD} ${EIGEN_INSTALL_ARGS})
 
   add_library(Eigen INTERFACE)
   add_dependencies(Eigen extlibeigen)
