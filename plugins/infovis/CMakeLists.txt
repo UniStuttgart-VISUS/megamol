@@ -12,9 +12,36 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
+
+  # Add "Eigen" External
+  include(ExternalProject)
+  set(EIGEN_VER "3_3_4")
+  string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
+
+  if(UNIX)
+    set(EIGEN_INSTALL_CMD "eval")
+    set(EIGEN_INSTALL_ARGS "cp -r ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen/* ${EXTERNAL_INSTALL_LOCATION}/include/Eigen/")
+  else()
+    set(EIGEN_INSTALL_CMD "powershell")
+    set(EIGEN_INSTALL_ARGS "Copy-Item -r -Force ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen/* ${EXTERNAL_INSTALL_LOCATION}/include/Eigen/")
+  endif()
   
-  set(LIBS vislib core glad mmstd_datatools)
-  include_directories("include" "src")
+  ExternalProject_Add(extlibeigen
+    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
+    GIT_TAG ${EIGEN_TAG}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ${EIGEN_INSTALL_CMD} ${EIGEN_INSTALL_ARGS}
+  )
+
+
+  add_library(Eigen INTERFACE)
+  add_dependencies(Eigen extlibeigen)
+
+  
+  set(LIBS vislib core glad mmstd_datatools Eigen)
+  include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
