@@ -11,19 +11,20 @@ const unsigned int megamol::infovis::DiagramSeriesCall::ScalingIdx = 3;
 
 const unsigned int megamol::infovis::DiagramSeriesCall::CallForGetSeries = 0;
 
-megamol::infovis::DiagramSeriesCall::DiagramSeriesCall(void) : core::Call() { }
+megamol::infovis::DiagramSeriesCall::DiagramSeriesCall(void) : core::Call() {}
 
-megamol::infovis::DiagramSeriesCall::~DiagramSeriesCall(void) { }
+megamol::infovis::DiagramSeriesCall::~DiagramSeriesCall(void) {}
 
-megamol::infovis::DiagramSeriesCall &megamol::infovis::DiagramSeriesCall::operator=(const DiagramSeriesCall &rhs) {
+megamol::infovis::DiagramSeriesCall& megamol::infovis::DiagramSeriesCall::operator=(const DiagramSeriesCall& rhs) {
     this->ptmSeriesInsertionCB = rhs.ptmSeriesInsertionCB;
     return *this;
 }
 
-megamol::infovis::DiagramSeriesCall::fpSeriesInsertionCB megamol::infovis::DiagramSeriesCall::GetSeriesInsertionCB(void) const {
+megamol::infovis::DiagramSeriesCall::fpSeriesInsertionCB megamol::infovis::DiagramSeriesCall::GetSeriesInsertionCB(
+    void) const {
     return this->ptmSeriesInsertionCB;
 }
 
-void megamol::infovis::DiagramSeriesCall::SetSeriesInsertionCB(const fpSeriesInsertionCB &fpsicb) {
+void megamol::infovis::DiagramSeriesCall::SetSeriesInsertionCB(const fpSeriesInsertionCB& fpsicb) {
     this->ptmSeriesInsertionCB = fpsicb;
 }

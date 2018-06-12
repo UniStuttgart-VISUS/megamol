@@ -1,10 +1,10 @@
 #ifndef MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED
 #define MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED
 
-#include <string>
-#include <functional>
-#include <tuple>
 #include <array>
+#include <functional>
+#include <string>
+#include <tuple>
 
 #include "mmcore/Call.h"
 
@@ -28,7 +28,7 @@ public:
 
     typedef std::tuple<uint32_t, size_t, std::string, float, std::array<float, 3>> DiagramSeriesTuple;
 
-    typedef std::function<void(const DiagramSeriesCall::DiagramSeriesTuple &tuple)> fpSeriesInsertionCB;
+    typedef std::function<void(const DiagramSeriesCall::DiagramSeriesTuple& tuple)> fpSeriesInsertionCB;
 
     static const unsigned int IdIdx;
 
@@ -43,30 +43,24 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char *ClassName(void) {
-        return "DiagramSeriesCall";
-    }
+    static const char* ClassName(void) { return "DiagramSeriesCall"; }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char *Description(void) {
-        return "Call to get diagram series selection";
-    }
+    static const char* Description(void) { return "Call to get diagram series selection"; }
 
     /** Index of the 'GetSeries' function */
     static const unsigned int CallForGetSeries;
-    
+
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
-        return 1;
-    }
+    static unsigned int FunctionCount(void) { return 1; }
 
     /**
      * Answer the name of the function used for this call.
@@ -90,11 +84,12 @@ public:
     virtual ~DiagramSeriesCall(void);
 
     /** Copy operator of the funtion pointer for cascaded DiagramSeries modules */
-    DiagramSeriesCall &operator=(const DiagramSeriesCall &rhs);
+    DiagramSeriesCall& operator=(const DiagramSeriesCall& rhs);
 
     fpSeriesInsertionCB GetSeriesInsertionCB(void) const;
 
-    void SetSeriesInsertionCB(const fpSeriesInsertionCB &fpsicb);
+    void SetSeriesInsertionCB(const fpSeriesInsertionCB& fpsicb);
+
 private:
     /** Function pointer to push operation in renderer */
     fpSeriesInsertionCB ptmSeriesInsertionCB;
