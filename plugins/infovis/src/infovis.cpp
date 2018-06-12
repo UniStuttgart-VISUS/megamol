@@ -25,42 +25,41 @@
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+/** Implementing the instance class of this plugin */
+class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
+public:
+    /** ctor */
+    plugin_instance(void)
+        : ::megamol::core::utility::plugins::Plugin200Instance(
 
-                /* machine-readable plugin assembly name */
-                "infovis", // TODO: Change this!
+              /* machine-readable plugin assembly name */
+              "infovis", // TODO: Change this!
 
-                /* human-readable plugin description */
-                "Describing infovis (TODO: Change this!)") {
+              /* human-readable plugin description */
+              "Describing infovis (TODO: Change this!)"){
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
-            // register modules here:
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::PrincipalComponentAnalysis>();
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
+              // here we could perform addition initialization
+          };
+    /** Dtor */
+    virtual ~plugin_instance(void) {
+        // here we could perform addition de-initialization
+    }
+    /** Registers modules and calls */
+    virtual void registerClasses(void) {
+        // register modules here:
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::PrincipalComponentAnalysis>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
-            // register calls here:
-            this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
-            this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
-
-        }
-        MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
-    };
-}
+        // register calls here:
+        this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
+    }
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
+};
+} // namespace
 
 
 /*

@@ -45,7 +45,7 @@ private:
 
     bool getHashCallback(core::Call& c);
 
-	bool computePCA(megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall);
+    bool computePCA(megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall);
 
     /** Data output slot */
     CalleeSlot dataOutSlot;
@@ -55,15 +55,15 @@ private:
 
     /** Parameter slot for column selection */
     ::megamol::core::param::ParamSlot reduceToNSlot;
-	::megamol::core::param::ParamSlot scaleSlot;
-	::megamol::core::param::ParamSlot centerSlot;
+    ::megamol::core::param::ParamSlot scaleSlot;
+    ::megamol::core::param::ParamSlot centerSlot;
 
     /** ID of the current frame */
     // int frameID; //TODO: unknown
 
     /** Hash of the current data */
     size_t datahash;
-	size_t dataInHash;
+    size_t dataInHash;
 
     /** Vector storing information about columns */
     std::vector<megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo> columnInfos;

@@ -4,11 +4,11 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/utility/SSBOStreamer.h"
-#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
@@ -101,7 +101,7 @@ private:
         GLfloat maxX;
         GLfloat minY;
         GLfloat maxY;
-	};
+    };
 
     /**
      * The OpenGL Render callback.
@@ -132,7 +132,7 @@ private:
 
     void updateColumns(void);
 
-	void drawAxes(void);
+    void drawAxes(void);
 
     void drawPoints(void);
 
@@ -180,13 +180,13 @@ private:
 
     MouseState mouse;
 
-	float axisColor[4];
+    float axisColor[4];
 
     std::vector<PlotInfo> plots;
 
     vislib::math::Rectangle<float> bounds;
 
-	megamol::core::utility::SDFFont font;
+    megamol::core::utility::SDFFont font;
 
     vislib::graphics::gl::GLSLShader axisShader;
 
@@ -196,7 +196,7 @@ private:
 
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;
-	GLsizeiptr plotDstLength;
+    GLsizeiptr plotDstLength;
 };
 
 } // end namespace infovis

@@ -118,7 +118,7 @@ bool PrincipalComponentAnalysis::getHashCallback(core::Call& c) {
 bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
     megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall) {
 
-	//check if inData has changed and if Slots have changed
+    // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
         if (!reduceToNSlot.IsDirty() && !scaleSlot.IsDirty() && !centerSlot.IsDirty()) {
             return true; // Nothing to do
@@ -154,13 +154,13 @@ bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
     mean_vector = inDataMat.colwise().mean();
 
 
-	// prepare data
-	if (center) {
-		// substract mean columnwise
-		for (int col = 0; col < columnCount; col++) {
-			inDataMat.col(col) -= Eigen::VectorXd::Constant(rowsCount, mean_vector(col));
-		}
-	}
+    // prepare data
+    if (center) {
+        // substract mean columnwise
+        for (int col = 0; col < columnCount; col++) {
+            inDataMat.col(col) -= Eigen::VectorXd::Constant(rowsCount, mean_vector(col));
+        }
+    }
 
 
     if (scale) {
@@ -177,12 +177,12 @@ bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
     MatrixXd covarianceMatrix = inDataMat;
 
     /** if center is off: "R ggfortify" doesn't substract mean for the covariance matrix
-	//substract mean for cov Matrix 
+    //substract mean for cov Matrix
     mean_vector = inDataMat.colwise().mean();
     for (int col = 0; col < columnCount; col++) {
         covarianceMatrix.col(col) -= Eigen::VectorXd::Constant(rowsCount, mean_vector(col));
     }*/
-    
+
 
     covarianceMatrix = covarianceMatrix.transpose() * covarianceMatrix;
     covarianceMatrix = covarianceMatrix / (float)(rowsCount - 1);
@@ -215,12 +215,11 @@ bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
 
 
     //// center
-    //mean_vector = result.colwise().mean();
+    // mean_vector = result.colwise().mean();
     //// substract mean adjusted Matrix (shift to mean to zero)
-    //for (int col = 0; col < result.cols(); col++) {
+    // for (int col = 0; col < result.cols(); col++) {
     //    result.col(col) -= Eigen::VectorXd::Constant(rowsCount, mean_vector(col));
     //}
-
 
 
     std::stringstream debug;

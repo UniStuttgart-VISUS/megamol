@@ -69,8 +69,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Shaders" FILES ${shader_files})
 
   # Format
-  #add_clang_format(${PROJECT_NAME} 
-  #  STYLE "${CMAKE_SOURCE_DIR}/.clang-format" 
-  #  FILES ${public_header_files} ${header_files} ${source_files})
+  add_clang_format(${PROJECT_NAME} 
+    STYLE "${CMAKE_SOURCE_DIR}/.clang-format" 
+    FILES ${public_header_files} ${header_files} ${source_files})
 
 endif(BUILD_${EXPORT_NAME}_PLUGIN)
