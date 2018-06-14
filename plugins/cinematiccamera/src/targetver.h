@@ -1,5 +1,6 @@
 /*
  * targetver.h
+ *
  * Copyright (C) 2010-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */

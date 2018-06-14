@@ -163,7 +163,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "    theColor = vec4(1.0);\n";
+            code = "";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
             ret = false;
@@ -305,7 +305,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
     bool interleaved;
     this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-    shaderMap::iterator i = theShaders.find({ c, p, interleaved });
+    shaderMap::iterator i = theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == theShaders.end()) {
         //instance()->ShaderSourceFactory().MakeShaderSource()
 
@@ -370,7 +370,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, frag)));
-        i = theShaders.find({ c, p, interleaved });
+        i = theShaders.find(std::make_tuple(c, p, interleaved));
     }
     return i->second;
 }
@@ -599,6 +599,13 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
+            case MultiParticleDataCall::Particles::COLDATA_NONE: {
+                glUniform4f(this->newShader->ParameterLocation("globalCol"), 
+                    static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
+                    1.0f);
+            } break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 glEnable(GL_TEXTURE_1D);
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -635,7 +642,8 @@ bool NGSphereRenderer::Render(Call& call) {
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
         //currBuf = 0;
-        UINT64 numVerts, vertCounter;
+        //UINT64 numVerts, vertCounter;
+
         // does all data reside interleaved in the same memory?
         if (interleaved)  {
 
