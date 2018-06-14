@@ -145,6 +145,11 @@ namespace io {
          */
         bool getSphereExtentCallback(core::Call& caller);
 
+        /**
+         * clears all fields
+         */
+        void clearAllFields(void);
+
         /** The slot for the filename */
         core::param::ParamSlot filename;
         
@@ -160,20 +165,43 @@ namespace io {
         /** The current data hash */
         size_t data_hash;
 
-        /** The vertex position data */
-        std::shared_ptr<tinyply::PlyData> vertexData;
+        /** Struct for the different possible position types */
+        struct pos_type {
+            double * pos_double = nullptr;
+            float * pos_float = nullptr;
+        } posPointers;
 
-        /** The vertex normal data */
-        std::shared_ptr<tinyply::PlyData> vertexNormalData;
+        /** Struct for the different possible color types */
+        struct col_type {
+            unsigned char * col_uchar = nullptr;
+            float * col_float = nullptr;
+            double * col_double = nullptr;
+        } colorPointers;
 
-        /** The vertex color data */
-        std::shared_ptr<tinyply::PlyData> vertexColorData;
+        /** Struct for the different possible normal types */
+        struct normal_type {
+            double * norm_double = nullptr;
+            float * norm_float = nullptr;
+        } normalPointers;
 
-        /** The face data */
-        std::shared_ptr<tinyply::PlyData> faceData;
+        /** Struct for the different possible face types */
+        struct face_type {
+            uint8_t * face_uchar = nullptr;
+            uint16_t * face_u16 = nullptr;
+            uint32_t * face_u32 = nullptr;
+        } facePointers;
 
-        /** The texture coordinate data */
-        std::shared_ptr<tinyply::PlyData> texCoordData;
+        /** Pointer to the face data */
+        face_type faces;
+
+        /** Pointer to the vertex color data */
+        col_type vertColors;
+
+        /** Pointer to the vertex normal data */
+        normal_type vertNormals;
+
+        /** Pointer to the vertex position data */
+        pos_type vertPositions;
     };
 
 } /* end namespace io */
