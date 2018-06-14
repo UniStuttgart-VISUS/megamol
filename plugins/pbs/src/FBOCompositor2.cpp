@@ -173,8 +173,8 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
         } else {
             scaling = 1.0f;
         }
-        out_bbox.MakeScaledWorld(scaling);
-        // out_bbox.MakeScaledWorld(1.0f);
+        //out_bbox.MakeScaledWorld(scaling);
+        out_bbox.MakeScaledWorld(1.0f);
     } else {
         out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);

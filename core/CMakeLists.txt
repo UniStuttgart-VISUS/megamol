@@ -96,7 +96,7 @@ if(BUILD_CORE)
     if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
       message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
     endif()
-    find_package(MPI)
+    find_package(MPI REQUIRED)
   endif()
 
   if(WIN32)

@@ -438,6 +438,7 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
         finalBox.MakeScaledWorld(scale);
     } */
 
+    /*
     float scaling = finalBox.ObjectSpaceBBox().LongestEdge();
     if (scaling > 0.0000001) {
         scaling = 10.0f / scaling;
@@ -445,6 +446,9 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
         scaling = 1.0f;
     }
     finalBox.MakeScaledWorld(scaling);
+    */
+    
+    finalBox.MakeScaledWorld(1.0f);
 
     cr->SetTimeFramesCount(frameCnt);
     cr->AccessBoundingBoxes() = finalBox;
