@@ -790,6 +790,13 @@ void view::View3D::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::View3D::create(void) {
     
+    bool wasd = false;
+    try {
+        wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
+    } catch (...) {
+        
+    }
+
     this->cursor2d.SetButtonCount(3); /* This could be configurable. */
     this->modkeys.SetModifierCount(3);
 
@@ -799,17 +806,24 @@ bool view::View3D::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator1.SetModifierTestCount(2);
     this->rotator1.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, wasd);
     this->rotator1.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
+    if (wasd) {
+        this->rotator2.SetInvertX(false);
+        this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKeyCode('w');
+        this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKeyCode('s');
+        this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKeyCode('a');
+        this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetKeyCode('d');
+    }
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
     this->rotator2.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator2.SetModifierTestCount(2);
     this->rotator2.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, !wasd);
     this->rotator2.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 

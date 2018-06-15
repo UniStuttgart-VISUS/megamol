@@ -111,9 +111,21 @@ void vislib::graphics::CameraRotate2D::Trigger(
                 // rotation. There the "roll"-effect is irrelevant but here
                 // the people are getting seasick.
 
+                ImageSpaceType xdiff, ydiff;
+                if (this->invertX) {
+                    xdiff = curX - preX;
+                } else {
+                    xdiff = preX - curX;
+                }
+                if (this->invertY) {
+                    ydiff = curY - preY;
+                } else {
+                    ydiff = preY - curY;
+                }
+
                 math::Vector<SceneSpaceType, 3> rot 
-                    = (this->CameraParams()->Right() * (curX - preX)) 
-                    + (this->CameraParams()->Up() * (curY - preY));
+                    = (this->CameraParams()->Right() * xdiff) 
+                    + (this->CameraParams()->Up() * ydiff);
 
                 math::AngleRad angle = static_cast<math::AngleRad>(
                     rot.Normalise() / halfHeight) 
