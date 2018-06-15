@@ -71,6 +71,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
         viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
+        mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode"),
         viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
         viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
         viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)"),
@@ -173,6 +174,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 
     this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    this->mouseSensitivitySlot << new param::FloatParam(3.0f, 0.001f, 10.0f);
+    this->mouseSensitivitySlot.SetUpdateCallback(&View3D::mouseSensitivityChanged);
+    this->MakeSlotAvailable(&this->mouseSensitivitySlot);
 
     param::EnumParam *vrpsev = new param::EnumParam(1);
     vrpsev->SetTypePair(0, "Position");
@@ -791,10 +796,22 @@ void view::View3D::unpackMouseCoordinates(float &x, float &y) {
 bool view::View3D::create(void) {
     
     bool wasd = false;
+    bool invertX = true;
+    bool invertY = true;
     try {
         wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
     } catch (...) {
         
+    }
+    try {
+        invertX = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertX"));
+    } catch (...) {
+
+    }
+    try {
+        invertY = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertY"));
+    } catch (...) {
+
     }
 
     this->cursor2d.SetButtonCount(3); /* This could be configurable. */
@@ -811,7 +828,8 @@ bool view::View3D::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
     if (wasd) {
-        this->rotator2.SetInvertX(false);
+        this->rotator2.SetInvertX(invertX);
+        this->rotator2.SetInvertY(invertY);
         this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKeyCode('w');
         this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKeyCode('s');
         this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKeyCode('a');
@@ -884,6 +902,12 @@ void view::View3D::release(void) {
     this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
     this->cursor2d.UnregisterCursorEvent(&this->mover);
     SAFE_DELETE(this->frozenValues);
+}
+
+
+bool view::View3D::mouseSensitivityChanged(param::ParamSlot& p) {
+    this->rotator2.SetMouseSensitivity(p.Param<param::FloatParam>()->Value());
+    return true;
 }
 
 

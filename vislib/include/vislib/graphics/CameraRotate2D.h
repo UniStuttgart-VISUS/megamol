@@ -96,12 +96,20 @@ namespace graphics {
             this->invertY = inv;
         }
 
+        inline void SetMouseSensitivity(float s) {
+            this->mouseSensitivity = s;
+        }
+
         inline bool GetInvertX() const {
             return this->invertX;
         }
 
         inline bool GetInvertY() const {
             return this->invertY;
+        }
+
+        inline float GetMouseSensitivity() const {
+            return this->mouseSensitivity;
         }
     private:
 
@@ -116,6 +124,8 @@ namespace graphics {
 
         /** airplane mode is default */
         bool invertY = true;
+
+        float mouseSensitivity = 1.0f;
 
     };
     

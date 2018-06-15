@@ -122,6 +122,8 @@ void vislib::graphics::CameraRotate2D::Trigger(
                 } else {
                     ydiff = preY - curY;
                 }
+                xdiff *= mouseSensitivity;
+                ydiff *= mouseSensitivity;
 
                 math::Vector<SceneSpaceType, 3> rot 
                     = (this->CameraParams()->Right() * xdiff) 
