@@ -276,6 +276,8 @@ namespace view {
          */
         void renderSoftCursor(void);
 
+        bool mouseSensitivityChanged(param::ParamSlot &p);
+
         /**
          * Handles a request for the camera parameters used by the view.
          *
@@ -462,6 +464,9 @@ namespace view {
 
         /** The angle rotate step in degrees */
         param::ParamSlot viewKeyAngleStepSlot;
+
+        /** sensitivity for mouse rotation in WASD mode */
+        param::ParamSlot mouseSensitivitySlot;
 
         /** The point around which the view will be roateted */
         param::ParamSlot viewKeyRotPointSlot;
