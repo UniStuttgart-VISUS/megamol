@@ -145,7 +145,9 @@ void vislib::graphics::CameraRotate2D::Trigger(
                 math::Point<SceneSpaceType, 3> pos 
                     = this->CameraParams()->Position();
 
-                up = quat * up;
+                // TODO originally this changed the up vector. But why would we actually want that?
+                // BUG? the changing up vector did not make for a good FPS-controller
+                //up = quat * up;
                 look = quat * look;
 
                 this->CameraParams()->SetView(pos, pos + look, up);
