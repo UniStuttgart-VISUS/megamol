@@ -88,7 +88,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
         toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
-        bboxCol(192, 192, 192, 255),
+        bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse"),
         showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
@@ -250,10 +250,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
     this->bboxColSlot << new param::StringParam(
-        utility::ColourParser::ToString(
-            static_cast<float>(this->bboxCol.R()) / 255.0f,
-            static_cast<float>(this->bboxCol.G()) / 255.0f,
-            static_cast<float>(this->bboxCol.B()) / 255.0f));
+        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot << new param::BoolParam(true);
@@ -444,20 +441,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (this->bboxColSlot.IsDirty()) {
-        float r, g, b;
+	if (this->bboxColSlot.IsDirty()) {
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
         this->bboxColSlot.ResetDirty();
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), r, g, b);
-        int ir = static_cast<int>(r * 255.0f);
-        if (ir < 0) ir = 0; else if (ir > 255) ir = 255;
-        int ig = static_cast<int>(g * 255.0f);
-        if (ig < 0) ig = 0; else if (ig > 255) ig = 255;
-        int ib = static_cast<int>(b * 255.0f);
-        if (ib < 0) ib = 0; else if (ib > 255) ib = 255;
-        this->bboxCol.Set(static_cast<unsigned char>(ir),
-            static_cast<unsigned char>(ig),
-            static_cast<unsigned char>(ib),
-            255);
     }
 
     // set light parameters
@@ -1018,7 +1004,8 @@ void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_BACK, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 160);
+	// XXX: Note that historically, we had a hard-coded alpha of 0.625f, but just for the backside.
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     //::glPolygonMode(GL_BACK, GL_FILL);
@@ -1047,7 +1034,7 @@ void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_FRONT, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 255);
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     ::glDepthFunc(GL_LESS);
