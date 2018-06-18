@@ -26,7 +26,7 @@ bool icompare(std::string const& a, std::string const& b) {
     }
 }
 
-const char theUndef[] = "<undef>";
+const char theUndef[] = "undef";
 
 io::PLYDataSource::PLYDataSource(void) : core::Module(),
         filename("filename", "The path to the PLY file to load."),
