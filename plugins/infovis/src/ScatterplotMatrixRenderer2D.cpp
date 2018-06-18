@@ -39,6 +39,14 @@ vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProject
     return projMatrix * modelViewMatrix;
 }
 
+inline float lerp(float x, float y, float a) { return x * (1.0f - a) + y * a; }
+
+inline std::string to_string(float x) {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(2) << x;
+    return stream.str();
+}
+
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : core::view::Renderer2DModule()
     , floatTableInSlot("ftIn", "Float table input")
@@ -121,6 +129,8 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     if (!makeProgram("::splom::axes", this->axisShader)) return false;
     if (!makeProgram("::splom::points", this->pointShader)) return false;
 
+    this->font.EnableBatchDraw();
+
     return true;
 }
 
@@ -189,14 +199,14 @@ bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphi
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s): %s\n",
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
             pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
@@ -267,21 +277,18 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
 void ScatterplotMatrixRenderer2D::updateColumns(void) {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
-    const float size = 10.0f;   // XXX: make this guy configurable, i.e., for zooming.
-    const float padding = 1.0f; // XXX: or this guy and normalize the other one? hm.
+    const float size = 10.0f;  // XXX: make this guy configurable, i.e., for zooming.
+    const float margin = 1.0f; // XXX: or this guy and normalize the other one? hm.
 
     plots.clear();
     for (GLuint y = 0; y < columnCount; ++y) {
         for (GLuint x = 0; x < y; ++x) {
-            const auto minX = columnInfos[x].MinimumValue();
-            const auto maxX = columnInfos[x].MaximumValue();
-            const auto minY = columnInfos[y].MinimumValue();
-            const auto maxY = columnInfos[y].MaximumValue();
-            plots.push_back({x, y, x * (size + padding), y * (size + padding), size, size, minX, maxX, minY, maxY});
+            plots.push_back({x, y, x * (size + margin), y * (size + margin), size, size, columnInfos[x].MinimumValue(),
+                columnInfos[x].MaximumValue(), columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue()});
         }
     }
 
-    this->bounds.Set(0, 0, columnCount * (size + padding), columnCount * (size + padding));
+    this->bounds.Set(0, 0, columnCount * (size + margin), columnCount * (size + margin));
 
     const GLuint plotItems = core::utility::SSBOStreamer::GetNumItemsPerChunkAligned(plots.size(), true);
     const GLuint bufferSize = plotItems * sizeof(PlotInfo);
@@ -302,40 +309,65 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
+    const GLfloat tickSize = 0.5;     // XXX: parameter please.
+    const GLsizei numTicks = 5;       // XXX: parameter please.
+    const bool skipInnerTicks = true; // XXX: true if padding == 0.
     glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1, this->axisColor);
+    glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
+    glUniform1f(this->axisShader.ParameterLocation("tickSize"), tickSize);
+    glUniform1i(this->axisShader.ParameterLocation("skipInnerTicks"), skipInnerTicks ? 1 : 0);
 
-    // Render all axis lines at once.
+    // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset,
         this->plotDstLength);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    const GLsizei numItems = 4;
+    const GLsizei numVerticesPerLine = 2;
+    const GLsizei numBorderVertices = numVerticesPerLine * 4;
+    const GLsizei numTickVertices = numVerticesPerLine * numTicks * 2;
+    const GLsizei numItems = numBorderVertices + numTickVertices;
     glDrawArraysInstanced(GL_LINES, 0, numItems, this->plots.size());
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
     this->axisShader.Disable();
 
-    float textColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    float fontsize = 1.0f;
+    float textColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    float columnFontsize = 2.0f;
+    float tickFontsize = 0.5f;
 
-    const auto columnInfos = this->floatTable->GetColumnsInfos();
-    for (const auto& plot : this->plots) {
-        std::string label = columnInfos[plot.indexX].Name() + "\n" + columnInfos[plot.indexY].Name();
-        const float x = plot.offsetX + plot.sizeX * 0.5;
-        const float y = plot.offsetY + plot.sizeY * 0.5;
-        this->font.DrawString(
-            this->axisColor, x, y, fontsize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-    }
+    this->font.ClearBatchCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
     for (size_t i = 0; i < columnCount; ++i) {
-        const float xy = i * (10 + 1) + 10 * 0.5; // XXX: unhack magic values: i * (size + padding) + size * 0.5
+        const float size = 10.0f;  // XXX: make this guy configurable, i.e., for zooming.
+        const float margin = 1.0f; // XXX: or this guy and normalize the other one? hm.
+        const float xyBL = i * (size + margin);
+        const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->font.DrawString(
-            textColor, xy, xy, fontsize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        this->font.DrawString(textColor, xyBL, xyTL, size, size, columnFontsize, false, label.c_str(),
+            core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+
+        const float tickStart = i * (size + margin);
+        const float tickEnd = (i + 1) * (size + margin) - margin;
+
+        for (size_t tick = 0; tick < numTicks; ++tick) {
+            const float t = static_cast<float>(tick) / (numTicks - 1);
+            const float p = lerp(tickStart, tickEnd, t);
+            const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
+            const std::string pLabel = to_string(pValue);
+            if (i < columnCount - 1) {
+                this->font.DrawString(textColor, p, xyTL + tickSize, tickFontsize, false, pLabel.c_str(),
+                    core::utility::AbstractFont::ALIGN_CENTER_TOP);
+            }
+            if (i > 0) {
+                this->font.DrawString(textColor, xyBL - margin + tickSize, p, tickFontsize, false, pLabel.c_str(),
+                    core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+            }
+        }
     }
+
+    this->font.BatchDrawString();
 
     // auto numXTicks = this->axisTicksXParam.Param<core::param::IntParam>()->Value();
     // auto aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
@@ -395,6 +427,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
+    float colorFallback[] = {0.0f, 0.0f, 0.0f, 1.0f}; // XXX: parameter please.
+
     // Color map uniforms.
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
@@ -406,6 +440,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     }
     glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
     glUniform2ui(this->pointShader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
+    glUniform4fv(this->pointShader.ParameterLocation("colorFallback"), 1, colorFallback);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();

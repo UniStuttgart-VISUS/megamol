@@ -3,6 +3,7 @@ uniform mat4 modelViewProjection;
 
 uniform sampler1D colorTable;
 uniform uvec2 colorConsts;
+uniform vec4 colorFallback;
 
 uniform int rowStride;
 
@@ -40,7 +41,7 @@ void main(void) {
         vsColor = texture(colorTable, colorOffset);
     } else {
         // Use fallback color.
-        vsColor = vec4(1.0f);
+        vsColor = colorFallback;
     }
 
     if (attenuateSubpixel) {
