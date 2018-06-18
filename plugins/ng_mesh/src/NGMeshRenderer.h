@@ -325,7 +325,7 @@ namespace ngmesh {
 				glBindVertexArray(0);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-				GLuint vi_size = static_cast<GLuint>(datastorage.size() * sizeof(Container::value_type));
+				GLuint vi_size = static_cast<GLuint>(indices.size() * sizeof(Container::value_type));
 
 				switch (m_indices_type)
 				{
