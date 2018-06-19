@@ -58,8 +58,10 @@ public class TcpSrvrSample
         Console.WriteLine("Number of force values: " + y_f.Length.ToString());
         
         byte[] data = new byte[1024];
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("141.58.24.204"), 11000);
         TcpListener server = new TcpListener(ipep);
+
+        server.Start();
 
         Console.WriteLine("ArchVisMSM dummy server");
 
@@ -133,7 +135,8 @@ public class TcpSrvrSample
             //    Buffer.BlockCopy(BitConverter.GetBytes(displacement), 0, simulation_data.raw_storage, 4 + i*3*4, 4);
             //}
 
-            newsock.Send(simulation_data.raw_storage, simulation_data.raw_storage.Length, sender);
+            //newsock.Send(simulation_data.raw_storage, simulation_data.raw_storage.Length, sender);
+            stream.Write(simulation_data.raw_storage, 0, simulation_data.raw_storage.Length); 
         }
     }
 }
