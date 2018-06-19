@@ -273,6 +273,7 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         }
                     }
                     delete[] buf;
+                    delete[] allImage;
 #ifdef WITH_MPI
                     if (!useMpi || roleRank == 0) {
                         img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
