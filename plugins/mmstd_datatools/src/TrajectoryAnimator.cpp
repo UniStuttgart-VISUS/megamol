@@ -12,6 +12,7 @@
 #include "geometry_calls/LinesDataCall.h"
 
 #include "vislib/sys/Log.h"
+#include <omp.h>
 
 
 megamol::stdplugin::datatools::TrajectoryAnimator::TrajectoryAnimator(void)
@@ -285,15 +286,17 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::assertData(megamol::core
             (static_cast<float>(requestedFrameID) / static_cast<float>(animationFactor)) - static_cast<float>(start);
 
         if (start < this->inFrameCount && end < this->inFrameCount) {
+
+#pragma omp parallel for
             for (unsigned int li = 0; li < linesCount; ++li) {
                 auto& line = lines[li];
 
-                if (line.Count() != this->inFrameCount) {
+                /*if (line.Count() != this->inFrameCount) {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "TrajectoryAnimator: Unexpected length of line. Length is %d and should be %d\n", line.Count(),
                         this->inFrameCount);
                     return false;
-                }
+                }*/
 
                 auto start_end = checkPadding(line);
                 if (start < start_end.first || end > start_end.second) continue;
@@ -312,15 +315,20 @@ bool megamol::stdplugin::datatools::TrajectoryAnimator::assertData(megamol::core
                 // interpolate
                 auto const res = interpolate(startPoint, endPoint, diff);
 
+#pragma omp critical (point)
                 this->pointData.push_back(res.x);
+#pragma omp critical (point)
                 this->pointData.push_back(res.y);
+#pragma omp critical (point)
                 this->pointData.push_back(res.z);
 
                 // if current point is within the transition area, add the current trajectory to the render queue
                 if (checkTransition(startPoint, endPoint, min_bor, max_bor, trans_axis, trans_eps)) {
                     auto const it = this->transitionLines.find(li);
                     if (it == this->transitionLines.end()) {
+#pragma omp critical (lineframe)
                         this->transitionLines2Frames[li] = requestedFrameID;
+#pragma omp critical (line)
                         this->transitionLines[li] = removePadding(line, start_end);
                     }
                 }
