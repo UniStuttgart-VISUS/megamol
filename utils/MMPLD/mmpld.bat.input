@@ -1,0 +1,35 @@
+@echo off
+SET MEGAMOLDIR=@THESRC@
+SET MEGAMOLBINDIR=%MEGAMOLDIR%bin\
+SET MMPLDINFODIR=%MEGAMOLDIR%utils\MMPLD\
+
+if a%2a == aa GOTO ERROR
+if /i "%1" == "render" GOTO RENDER
+if /i "%1" == "info" GOTO INFO
+
+GOTO ERROR
+
+:RENDER
+TITLE MMPLD Render - %2
+cd /d %MEGAMOLBINDIR%
+mmconsole.exe -p %MMPLDINFODIR%mmpld.mmprj -i mmpldview inst -v inst::data::filename %2
+GOTO END
+
+:INFO
+TITLE MMPLD Info - %2
+for %%X in (python.exe) do (set FOUND=%%~$PATH:X)
+if not defined FOUND GOTO :PYERROR
+cd /d %MMPLDINFODIR%
+python mmpldinfo.py -v %2
+GOTO END
+
+:ERROR
+echo usage: mmpld.bat (info^|render) ^<filename^>
+GOTO END
+
+:PYERROR
+echo cannot find python.exe in path!
+GOTO END
+
+:END
+pause

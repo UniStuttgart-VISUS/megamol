@@ -8,6 +8,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "vislib/StringConverter.h"
 
 
 megamol::stdplugin::datatools::TrajectoryFactory::TrajectoryFactory()
@@ -114,7 +115,7 @@ bool megamol::stdplugin::datatools::TrajectoryFactory::assertData(megamol::core:
 
     std::vector<char> zero_out_buf(max_line_size, 0);
 
-    std::string filepath = this->filepathSlot.Param<megamol::core::param::FilePathParam>()->Value();
+    std::string filepath = std::string(T2A(this->filepathSlot.Param<megamol::core::param::FilePathParam>()->Value()));
     unsigned int max_frames_in_mem = this->maxFramesInMemSlot.Param<megamol::core::param::IntParam>()->Value();
 
     // init files

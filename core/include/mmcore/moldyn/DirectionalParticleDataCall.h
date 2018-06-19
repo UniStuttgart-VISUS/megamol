@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <type_traits>
+
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
 #include "MultiParticleDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
