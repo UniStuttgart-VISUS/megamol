@@ -521,7 +521,7 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr) {
+void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr, float scaling) {
 
 
     // calculate image parts for e.g. screenshooter
@@ -543,7 +543,19 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
     ospSetf(camera, "aspect", static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
     //ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
-    ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
+
+    // undo scaling
+    auto bc = cr->AccessBoundingBoxes().ObjectSpaceBBox().CalcCenter();
+    auto mmpos = cr->GetCameraParameters()->EyePosition().PeekCoordinates();
+    std::vector<float> ospPos = {
+        mmpos[0] / scaling,   //+bc.GetX() / scaling,
+        mmpos[1] / scaling,   //+bc.GetY() / scaling,
+        mmpos[2] / scaling }; //+bc.GetZ() / scaling
+
+
+    ospSet3fv(camera, "pos", ospPos.data());
+
+    //ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
