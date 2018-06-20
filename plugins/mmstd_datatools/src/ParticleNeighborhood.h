@@ -91,9 +91,13 @@ namespace datatools {
         core::param::ParamSlot numNeighborSlot;
         core::param::ParamSlot searchTypeSlot;
         core::param::ParamSlot particleNumberSlot;
+        core::param::ParamSlot toggleNeighborOutputSlot;
+        core::param::ParamSlot toggleDriftMagOutputSlot;
+
         size_t datahash;
         int lastTime;
         std::vector<float> newColors;
+        std::vector<float> matchData;
         std::vector<size_t> allParts;
         float maxDist;
 

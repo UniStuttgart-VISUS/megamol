@@ -5,8 +5,10 @@ include/**/*
 external/**/*
 share/**/*
 stage/**/*
+stage_intel/**/*
 lib/**/*
 issues/**/*
+mmprjs/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/

@@ -9,13 +9,42 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pbs" OFF)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(pbs)
 
+  if (USE_MPI)
+    find_package(MPI)
+  endif()
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB})
+  set(SNAPPY_VER "1.1.7")
+  if (MSVC)
+    set(SNAPPY_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/snappy.lib" CACHE INTERNAL '')
+    set(SNAPPY_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
+  else()
+    include(GNUInstallDirs)
+    set(SNAPPY_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
+  endif()
+  
+  Include(ExternalProject)
+  ExternalProject_Add(extsnappy
+    GIT_REPOSITORY https://github.com/google/snappy.git
+	GIT_TAG ${SNAPPY_VER}
+    CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DSNAPPY_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+  )
+  message(STATUS "SNAPPY Git Tag: " ${SNAPPY_VER})
+
+  set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB} ${SNAPPY_LIB})
   include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+  if (MPI_C_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
+  endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -40,7 +69,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(DIRECTORY ${SNAPPY_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "snappy*.dll")
   else()
+    file(GLOB SNAPPY_LIB_FILES "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libsnappy.so*")
+    install(FILES ${SNAPPY_LIB_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 

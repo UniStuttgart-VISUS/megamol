@@ -72,6 +72,7 @@
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
+#include "mmcore/view/TransferFunction1D.h"
 
 using namespace megamol::core;
 
@@ -124,6 +125,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<5> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<10> >();
+    instance.RegisterAutoDescription<view::MuxRenderer3D<40> >();
     instance.RegisterAutoDescription<view::special::AnaglyphStereoView>();
     instance.RegisterAutoDescription<view::special::ChronoGraph>();
     instance.RegisterAutoDescription<view::special::DemoRenderer2D>();
@@ -148,4 +150,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
+    instance.RegisterAutoDescription<megamol::core::view::TransferFunction1D>();
 }

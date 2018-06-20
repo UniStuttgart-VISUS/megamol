@@ -38,32 +38,621 @@ namespace geocalls {
          */
         class GEOMETRY_CALLS_API Lines {
         public:
+            class VertexData_Detail {
+            public:
+                virtual float const GetXf() const = 0;
+                virtual float const GetYf() const = 0;
+                virtual float const GetZf() const = 0;
+                virtual double const GetXd() const = 0;
+                virtual double const GetYd() const = 0;
+                virtual double const GetZd() const = 0;
+                virtual void SetBasePtr(void const* ptr) = 0;
+                virtual std::unique_ptr<VertexData_Detail> Clone() const = 0;
+                virtual ~VertexData_Detail() = default;
+            };
+
+            class VertexData_None : public VertexData_Detail {
+            public:
+                VertexData_None() = default;
+
+                VertexData_None(VertexData_None const& rhs) = default;
+
+                virtual float const GetXf() const override {
+                    return 0.0f;
+                }
+
+                virtual float const GetYf() const override {
+                    return 0.0f;
+                }
+
+                virtual float const GetZf() const override {
+                    return 0.0f;
+                }
+
+                virtual double const GetXd() const override {
+                    return 0;
+                }
+
+                virtual double const GetYd() const override {
+                    return 0;
+                }
+
+                virtual double const GetZd() const override {
+                    return 0;
+                }
+
+                virtual void SetBasePtr(void const* ptr) override { };
+
+                virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                    return std::unique_ptr<VertexData_Detail>{new VertexData_None{*this}};
+                }
+            };
+
+            template<class T>
+            class VertexData_Impl : public VertexData_Detail {
+            public:
+                VertexData_Impl() = default;
+
+                VertexData_Impl(VertexData_Impl const& rhs)
+                    : basePtr{rhs.basePtr} { }
+
+                virtual float const GetXf() const override {
+                    return GetX<float>();
+                }
+
+                virtual double const GetXd() const override {
+                    return GetX<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetX() const {
+                    return this->basePtr[0];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetX() const {
+                    return static_cast<R>(this->basePtr[0]);
+                }
+
+                virtual float const GetYf() const override {
+                    return GetY<float>();
+                }
+
+                virtual double const GetYd() const override {
+                    return GetY<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetY() const {
+                    return this->basePtr[1];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetY() const {
+                    return static_cast<R>(this->basePtr[1]);
+                }
+
+                virtual float const GetZf() const override {
+                    return GetZ<float>();
+                }
+
+                virtual double const GetZd() const override {
+                    return GetZ<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetZ() const {
+                    return this->basePtr[2];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetZ() const {
+                    return static_cast<R>(this->basePtr[2]);
+                }
+
+                virtual void SetBasePtr(void const* ptr) override {
+                    this->basePtr = reinterpret_cast<T const*>(ptr);
+                }
+
+                virtual std::unique_ptr<VertexData_Detail> Clone() const override {
+                    return std::unique_ptr<VertexData_Detail>{new VertexData_Impl{*this}};
+                }
+            private:
+                T const* basePtr;
+            };
+
+            class VertexData_Base {
+            public:
+                VertexData_Base(std::unique_ptr<VertexData_Detail>&& impl, void const* basePtr)
+                    : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(impl)} {
+                    pimpl->SetBasePtr(basePtr);
+                }
+
+                VertexData_Base(VertexData_Base const& rhs) = delete;
+
+                VertexData_Base(VertexData_Base&& rhs)
+                    : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(rhs.pimpl)} { }
+
+                VertexData_Base& operator=(VertexData_Base const& rhs) = delete;
+
+                VertexData_Base& operator=(VertexData_Base&& rhs) {
+                    pimpl = std::move(rhs.pimpl);
+                    return *this;
+                }
+
+                float const GetXf() const {
+                    return pimpl->GetXf();
+                }
+
+                float const GetYf() const {
+                    return pimpl->GetYf();
+                }
+
+                float const GetZf() const {
+                    return pimpl->GetZf();
+                }
+
+                double const GetXd() const {
+                    return pimpl->GetXd();
+                }
+
+                double const GetYd() const {
+                    return pimpl->GetYd();
+                }
+
+                double const GetZd() const {
+                    return pimpl->GetZd();
+                }
+            private:
+                std::unique_ptr<VertexData_Detail> pimpl;
+            };
+
+            class IndexData_Detail {
+            public:
+                virtual uint8_t const GetIDXu8() const = 0;
+                virtual uint16_t const GetIDXu16() const = 0;
+                virtual uint32_t const GetIDXu32() const = 0;
+                virtual void SetBasePtr(void const* ptr) = 0;
+                virtual std::unique_ptr<IndexData_Detail> Clone() const = 0;
+                virtual ~IndexData_Detail() = default;
+            };
+
+            class IndexData_None : public IndexData_Detail {
+            public:
+                IndexData_None() = default;
+
+                IndexData_None(IndexData_None const& rhs) = default;
+
+                virtual uint8_t const GetIDXu8() const override {
+                    return 0;
+                }
+
+                virtual uint16_t const GetIDXu16() const override {
+                    return 0;
+                }
+
+                virtual uint32_t const GetIDXu32() const override {
+                    return 0;
+                }
+
+                virtual void SetBasePtr(void const* ptr) override { }
+
+                virtual std::unique_ptr<IndexData_Detail> Clone() const override {
+                    return std::unique_ptr<IndexData_Detail>{new IndexData_None{*this}};
+                }
+            };
+
+            template<class T>
+            class IndexData_Impl : public IndexData_Detail {
+            public:
+                IndexData_Impl() = default;
+
+                IndexData_Impl(IndexData_Impl const& rhs)
+                    : basePtr{rhs.basePtr} { }
+
+                virtual uint8_t const GetIDXu8() const override {
+                    return GetIDX<uint8_t>();
+                }
+
+                virtual uint16_t const GetIDXu16() const override {
+                    return GetIDX<uint16_t>();
+                }
+
+                virtual uint32_t const GetIDXu32() const override {
+                    return GetIDX<uint32_t>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetIDX() const {
+                    return this->basePtr[0];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetIDX() const {
+                    return static_cast<R>(this->basePtr[0]);
+                }
+
+                virtual void SetBasePtr(void const* ptr) override {
+                    this->basePtr = reinterpret_cast<T const*>(ptr);
+                }
+
+                virtual std::unique_ptr<IndexData_Detail> Clone() const override {
+                    return std::unique_ptr<IndexData_Detail>{new IndexData_Impl{*this}};
+                }
+
+            private:
+                T const* basePtr;
+            };
+
+            class IndexData_Base {
+            public:
+                IndexData_Base(std::unique_ptr<IndexData_Detail>&& impl, void const* basePtr)
+                    : pimpl{std::forward<std::unique_ptr<IndexData_Detail>>(impl)} {
+                    pimpl->SetBasePtr(basePtr);
+                }
+
+                IndexData_Base(IndexData_Base const& rhs) = delete;
+
+                IndexData_Base(IndexData_Base&& rhs)
+                    : pimpl{std::forward<std::unique_ptr<IndexData_Detail>>(rhs.pimpl)} {
+
+                }
+
+                IndexData_Base& operator=(IndexData_Base const& rhs) = delete;
+
+                IndexData_Base& operator=(IndexData_Base&& rhs) {
+                    pimpl = std::move(rhs.pimpl);
+                    return *this;
+                }
+
+                uint8_t const GetIDXu8() const {
+                    return pimpl->GetIDXu8();
+                }
+
+                uint16_t const GetIDXu16() const {
+                    return pimpl->GetIDXu16();
+                }
+
+                uint32_t const GetIDXu32() const {
+                    return pimpl->GetIDXu32();
+                }
+
+            private:
+                std::unique_ptr<IndexData_Detail> pimpl;
+            };
+
+            class ColorData_Detail {
+            public:
+                virtual uint8_t const GetRu8() const = 0;
+                virtual uint8_t const GetGu8() const = 0;
+                virtual uint8_t const GetBu8() const = 0;
+                virtual uint8_t const GetAu8() const = 0;
+                virtual float const GetRf() const = 0;
+                virtual float const GetGf() const = 0;
+                virtual float const GetBf() const = 0;
+                virtual float const GetAf() const = 0;
+                virtual double const GetRd() const = 0;
+                virtual double const GetGd() const = 0;
+                virtual double const GetBd() const = 0;
+                virtual double const GetAd() const = 0;
+                virtual void SetBasePtr(void const* ptr) = 0;
+                virtual std::unique_ptr<ColorData_Detail> Clone() const = 0;
+                virtual ~ColorData_Detail() = default;
+            };
+
+            class ColorData_None : public ColorData_Detail {
+            public:
+                ColorData_None() = default;
+
+                ColorData_None(ColorData_None const& rhs) = default;
+
+                virtual uint8_t const GetRu8() const override {
+                    return 0;
+                }
+
+                virtual uint8_t const GetGu8() const override {
+                    return 0;
+                }
+
+                virtual uint8_t const GetBu8() const override {
+                    return 0;
+                }
+
+                virtual uint8_t const GetAu8() const override {
+                    return 0;
+                }
+
+                virtual float const GetRf() const override {
+                    return 0.0f;
+                }
+
+                virtual float const GetGf() const override {
+                    return 0.0f;
+                }
+
+                virtual float const GetBf() const override {
+                    return 0.0f;
+                }
+
+                virtual float const GetAf() const override {
+                    return 0.0f;
+                }
+
+                virtual double const GetRd() const override {
+                    return 0.0;
+                }
+
+                virtual double const GetGd() const override {
+                    return 0.0;
+                }
+
+                virtual double const GetBd() const override {
+                    return 0.0;
+                }
+                virtual double const GetAd() const override {
+                    return 0.0;
+                }
+
+                virtual void SetBasePtr(void const* ptr) override { }
+
+                virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                    return std::unique_ptr<ColorData_Detail>{new ColorData_None{*this}};
+                }
+            };
+
+            template<class T, bool hasAlpha>
+            class ColorData_Impl : public ColorData_Detail {
+            public:
+                virtual uint8_t const GetRu8() const override {
+                    return GetR<uint8_t>();
+                }
+
+                virtual float const GetRf() const override {
+                    return GetR<float>();
+                }
+
+                virtual double const GetRd() const override {
+                    return GetR<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetR() const {
+                    return this->basePtr[0];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetR() const {
+                    return static_cast<R>(this->basePtr[0]);
+                }
+
+                virtual uint8_t const GetGu8() const override {
+                    return GetG<uint8_t>();
+                }
+
+                virtual float const GetGf() const override {
+                    return GetG<float>();
+                }
+
+                virtual double const GetGd() const override {
+                    return GetG<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetG() const {
+                    return this->basePtr[1];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetG() const {
+                    return static_cast<R>(this->basePtr[1]);
+                }
+
+                virtual uint8_t const GetBu8() const override {
+                    return GetB<uint8_t>();
+                }
+
+                virtual float const GetBf() const override {
+                    return GetB<float>();
+                }
+
+                virtual double const GetBd() const override {
+                    return GetB<double>();
+                }
+
+                template<class R>
+                std::enable_if_t<std::is_same<T, R>::value, R> const GetB() const {
+                    return this->basePtr[2];
+                }
+
+                template<class R>
+                std::enable_if_t<!std::is_same<T, R>::value, R> const GetB() const {
+                    return static_cast<R>(this->basePtr[2]);
+                }
+
+                virtual uint8_t const GetAu8() const override {
+                    return GetA<uint8_t, hasAlpha>();
+                }
+
+                virtual float const GetAf() const override {
+                    return GetA<float, hasAlpha>();
+                }
+
+                virtual double const GetAd() const override {
+                    return GetA<double, hasAlpha>();
+                }
+
+                template<class R, bool hasAlpha_v>
+                std::enable_if_t<std::is_same<T, R>::value && hasAlpha_v, R> const GetA() const {
+                    return this->basePtr[3];
+                }
+
+                template<class R, bool hasAlpha_v>
+                std::enable_if_t<!std::is_same<T, R>::value && hasAlpha_v, R> const GetA() const {
+                    return static_cast<R>(this->basePtr[3]);
+                }
+
+                template<class R, bool hasAlpha_v>
+                std::enable_if_t<!hasAlpha_v, R> const GetA() const {
+                    return static_cast<R>(0.0);
+                }
+
+                virtual void SetBasePtr(void const* ptr) override {
+                    this->basePtr = reinterpret_cast<T const*>(ptr);
+                }
+
+                virtual std::unique_ptr<ColorData_Detail> Clone() const override {
+                    return std::unique_ptr<ColorData_Detail>{new ColorData_Impl{*this}};
+                }
+            private:
+                T const* basePtr;
+            };
+
+            class ColorData_Base {
+            public:
+                ColorData_Base(std::unique_ptr<ColorData_Detail>&& impl, void const* basePtr)
+                    : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(impl)} {
+                    pimpl->SetBasePtr(basePtr);
+                }
+
+                ColorData_Base(ColorData_Base const& rhs) = delete;
+
+                ColorData_Base(ColorData_Base&& rhs)
+                    : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(rhs.pimpl)} {
+
+                }
+
+                ColorData_Base& operator=(ColorData_Base const& rhs) = delete;
+
+                ColorData_Base& operator=(ColorData_Base&& rhs) {
+                    pimpl = std::move(rhs.pimpl);
+                    return *this;
+                }
+
+                uint8_t const GetRu8() const {
+                    return pimpl->GetRu8();
+                }
+                uint8_t const GetGu8() const {
+                    return pimpl->GetGu8();
+                }
+                uint8_t const GetBu8() const {
+                    return pimpl->GetBu8();
+                }
+                uint8_t const GetAu8() const {
+                    return pimpl->GetAu8();
+                }
+                float const GetRf() const {
+                    return pimpl->GetRf();
+                }
+                float const GetGf() const {
+                    return pimpl->GetGf();
+                }
+                float const GetBf() const {
+                    return pimpl->GetBf();
+                }
+                float const GetAf() const {
+                    return pimpl->GetAf();
+                }
+                double const GetRd() const {
+                    return pimpl->GetRd();
+                }
+                double const GetGd() const {
+                    return pimpl->GetGd();
+                }
+                double const GetBd() const {
+                    return pimpl->GetBd();
+                }
+                double const GetAd() const {
+                    return pimpl->GetAd();
+                }
+            private:
+                std::unique_ptr<ColorData_Detail> pimpl;
+            };
+
+            /** Struct holding pointers into data streams for a specific vertex */
+            struct vertex_t {
+                vertex_t(VertexData_Base&& v, ColorData_Base&& c)
+                    : vert{std::forward<VertexData_Base>(v)}
+                    , col{std::forward<ColorData_Base>(c)} { }
+
+                vertex_t(vertex_t const& rhs) = delete;
+
+                vertex_t(vertex_t&& rhs)
+                    : vert{std::move(rhs.vert)}
+                    , col{std::move(rhs.col)} { }
+
+                vertex_t& operator=(vertex_t const& rhs) = delete;
+
+                vertex_t& operator=(vertex_t&& rhs) {
+                    vert = std::move(rhs.vert);
+                    col = std::move(rhs.col);
+                    return *this;
+                }
+
+                VertexData_Base vert;
+
+                ColorData_Base col;
+            };
+
+            /** Struct holding a pointer into index stream */
+            struct index_t {
+                index_t(IndexData_Base&& i)
+                    : idx{std::forward<IndexData_Base>(i)} { }
+
+                index_t(index_t const& rhs) = delete;
+
+                index_t(index_t&& rhs)
+                    : idx{std::move(rhs.idx)} { }
+
+                index_t& operator=(index_t const& rhs) = delete;
+
+                index_t& operator=(index_t&& rhs) {
+                    idx = std::move(rhs.idx);
+                    return *this;
+                }
+
+                IndexData_Base idx;
+            };
 
             /** The possible colour data types */
             enum ColourDataType {
-                CDT_NONE,
-                CDT_BYTE_RGB,
-                CDT_BYTE_RGBA,
-                CDT_FLOAT_RGB,
-                CDT_FLOAT_RGBA,
-                CDT_DOUBLE_RGB,
-                CDT_DOUBLE_RGBA
+                CDT_NONE = 0,
+                CDT_BYTE_RGB = 1,
+                CDT_BYTE_RGBA = 2,
+                CDT_FLOAT_RGB = 3,
+                CDT_FLOAT_RGBA = 4,
+                CDT_DOUBLE_RGB = 5,
+                CDT_DOUBLE_RGBA = 6
             };
 
             /** Possible data types */
             enum DataType {
-                DT_NONE,
-                DT_BYTE, // UINT8
-                DT_UINT16,
-                DT_UINT32,
-                DT_FLOAT,
-                DT_DOUBLE
+                DT_NONE = 0,
+                DT_BYTE = 1, // UINT8
+                DT_UINT16 = 2,
+                DT_UINT32 = 3,
+                DT_FLOAT = 4,
+                DT_DOUBLE = 5
+            };
+
+            /** Possible color strides */
+            size_t const ColorDataStride[7] = {
+                0, 3, 4, 12, 16, 24, 32
+            };
+
+            /** Possible data strides */
+            size_t const DataStride[6] = {
+                0, 1, 2, 4, 4, 8
             };
 
             /**
              * Ctor
              */
             Lines(void);
+
+            /**
+             * CCtor
+             */
+            Lines(Lines const& rhs);
 
             /**
              * Dtor
@@ -74,6 +663,7 @@ namespace geocalls {
              * Removes all data
              */
             inline void Clear() {
+                // TODO: Why are only specific data pointers nulled here?
                 this->count = 0;
                 this->vrtDT = DT_NONE;
                 this->vrt.dataFloat = nullptr;
@@ -333,6 +923,36 @@ namespace geocalls {
                 return this->vrt.dataDouble;
             }
 
+            /**
+             * Access vertex at index without range check.
+             * 
+             * @param idx Index of vertex in the streams.
+             * 
+             * @return Struct of pointers to positions of the vertex in the streams.
+             */
+            vertex_t operator[](size_t idx) const noexcept {
+                return vertex_t{
+                    VertexData_Base{this->vertexAccessor->Clone(),
+                    static_cast<char const*>(this->vertPtr) + idx * this->DataStride[this->vrtDT] * 3},
+                    ColorData_Base{this->colorAccessor->Clone(),
+                    static_cast<char const*>(this->colPtr) + idx * this->ColorDataStride[this->colDT]}
+                };
+            }
+
+            /**
+             * Access index array at index without range check.
+             *
+             * @param idx Index of element in index array.
+             *
+             * @return Struct of pointer to position in index array.
+             */
+            index_t GetIdx(size_t idx) const noexcept {
+                return index_t{
+                    IndexData_Base{this->indexAccessor->Clone(),
+                    static_cast<char const*>(this->idxPtr) + idx * this->DataStride[this->idxDT]}
+                };
+            }
+
         private:
 
             /**
@@ -342,8 +962,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(unsigned char *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_BYTE_RGBA : CDT_BYTE_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_BYTE_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<uint8_t, true>{ });
+                } else {
+                    this->colDT = CDT_BYTE_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<uint8_t, false>{ });
+                }
                 this->col.dataByte = data;
+                this->colPtr = data;
             }
 
             /**
@@ -353,8 +980,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(const unsigned char *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_BYTE_RGBA : CDT_BYTE_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_BYTE_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<uint8_t, true>{ });
+                } else {
+                    this->colDT = CDT_BYTE_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<uint8_t, false>{ });
+                }
                 this->col.dataByte = data;
+                this->colPtr = data;
             }
 
             /**
@@ -364,8 +998,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(float *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_FLOAT_RGBA : CDT_FLOAT_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_FLOAT_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<float, true>{ });
+                } else {
+                    this->colDT = CDT_FLOAT_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<float, false>{ });
+                }
                 this->col.dataFloat = data;
+                this->colPtr = data;
             }
 
             /**
@@ -375,8 +1016,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(const float *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_FLOAT_RGBA : CDT_FLOAT_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_FLOAT_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<float, true>{ });
+                } else {
+                    this->colDT = CDT_FLOAT_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<float, false>{ });
+                }
                 this->col.dataFloat = data;
+                this->colPtr = data;
             }
 
             /**
@@ -386,8 +1034,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(double *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_DOUBLE_RGBA : CDT_DOUBLE_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_DOUBLE_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<double, true>{ });
+                } else {
+                    this->colDT = CDT_DOUBLE_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<double, false>{ });
+                }
                 this->col.dataDouble = data;
+                this->colPtr = data;
             }
 
             /**
@@ -397,8 +1052,15 @@ namespace geocalls {
              * @param withAlpha Flag if data contains alpha information
              */
             inline void setColData(const double *data, bool withAlpha) {
-                this->colDT = withAlpha ? CDT_DOUBLE_RGBA : CDT_DOUBLE_RGB;
+                if (withAlpha) {
+                    this->colDT = CDT_DOUBLE_RGBA;
+                    this->colorAccessor.reset(new ColorData_Impl<double, true>{ });
+                } else {
+                    this->colDT = CDT_DOUBLE_RGB;
+                    this->colorAccessor.reset(new ColorData_Impl<double, false>{ });
+                }
                 this->col.dataDouble = data;
+                this->colPtr = data;
             }
 
             /**
@@ -409,9 +1071,11 @@ namespace geocalls {
              */
             template<class Tp>
             inline void setColData(Tp data, bool withAlpha) {
-                ASSERT(data == NULL);
+                ASSERT(data == nullptr);
                 this->colDT = CDT_NONE;
-                this->col.dataByte = NULL;
+                this->col.dataByte = nullptr;
+                this->colorAccessor.reset(new ColorData_None{ });
+                this->colPtr = nullptr;
             }
 
             /**
@@ -422,6 +1086,8 @@ namespace geocalls {
             inline void setIdxData(unsigned char *data) {
                 this->idxDT = DT_BYTE;
                 this->idx.dataByte = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint8_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -432,6 +1098,8 @@ namespace geocalls {
             inline void setIdxData(const unsigned char *data) {
                 this->idxDT = DT_BYTE;
                 this->idx.dataByte = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint8_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -442,6 +1110,8 @@ namespace geocalls {
             inline void setIdxData(unsigned short *data) {
                 this->idxDT = DT_UINT16;
                 this->idx.dataUInt16 = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint16_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -452,6 +1122,8 @@ namespace geocalls {
             inline void setIdxData(const unsigned short *data) {
                 this->idxDT = DT_UINT16;
                 this->idx.dataUInt16 = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint16_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -462,6 +1134,8 @@ namespace geocalls {
             inline void setIdxData(unsigned int *data) {
                 this->idxDT = DT_UINT32;
                 this->idx.dataUInt32 = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint32_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -472,6 +1146,8 @@ namespace geocalls {
             inline void setIdxData(const unsigned int *data) {
                 this->idxDT = DT_UINT32;
                 this->idx.dataUInt32 = data;
+                this->indexAccessor.reset(new IndexData_Impl<uint8_t>{ });
+                this->idxPtr = data;
             }
 
             /**
@@ -481,9 +1157,11 @@ namespace geocalls {
              */
             template<class Tp>
             inline void setIdxData(const Tp data) {
-                ASSERT(data == NULL);
+                ASSERT(data == nullptr);
                 this->idxDT = DT_NONE;
-                this->idx.dataUInt32 = NULL;
+                this->idx.dataUInt32 = nullptr;
+                this->indexAccessor.reset(new IndexData_None{ });
+                this->idxPtr = nullptr;
             }
 
             /**
@@ -494,6 +1172,8 @@ namespace geocalls {
             inline void setVrtData(float *data) {
                 this->vrtDT = DT_FLOAT;
                 this->vrt.dataFloat = data;
+                this->vertexAccessor.reset(new VertexData_Impl<float>{});
+                this->vertPtr = data;
             }
 
             /**
@@ -504,6 +1184,8 @@ namespace geocalls {
             inline void setVrtData(const float *data) {
                 this->vrtDT = DT_FLOAT;
                 this->vrt.dataFloat = data;
+                this->vertexAccessor.reset(new VertexData_Impl<float>{ });
+                this->vertPtr = data;
             }
 
             /**
@@ -514,6 +1196,8 @@ namespace geocalls {
             inline void setVrtData(double *data) {
                 this->vrtDT = DT_DOUBLE;
                 this->vrt.dataDouble = data;
+                this->vertexAccessor.reset(new VertexData_Impl<double>{ });
+                this->vertPtr = data;
             }
 
             /**
@@ -524,6 +1208,8 @@ namespace geocalls {
             inline void setVrtData(const double *data) {
                 this->vrtDT = DT_DOUBLE;
                 this->vrt.dataDouble = data;
+                this->vertexAccessor.reset(new VertexData_Impl<double>{ });
+                this->vertPtr = data;
             }
 
             /**
@@ -533,9 +1219,11 @@ namespace geocalls {
              */
             template<class Tp>
             inline void setVrtData(Tp data) {
-                ASSERT(data == NULL);
+                ASSERT(data == nullptr);
                 this->vrtDT = DT_NONE;
-                this->vrt.dataDouble = NULL;
+                this->vrt.dataDouble = nullptr;
+                this->vertexAccessor.reset(new VertexData_None{ });
+                this->vertPtr = nullptr;
             }
 
             /** The colour data type */
@@ -579,8 +1267,26 @@ namespace geocalls {
                 const double *dataDouble;
             } vrt;
 
-            /** the line ID */
+            /** The line ID */
             size_t id;
+
+            /** Polymorphic vertex data accessor */
+            std::unique_ptr<VertexData_Detail> vertexAccessor;
+
+            /** Polymorphic color data accessor */
+            std::unique_ptr<ColorData_Detail> colorAccessor;
+
+            /** Polymorphic index data accessor */
+            std::unique_ptr<IndexData_Detail> indexAccessor;
+
+            /** Vertex data pointer for dispatch */
+            void const* vertPtr;
+
+            /** Color data pointer for dispatch */
+            void const* colPtr;
+
+            /** Index data pointer for dispatch */
+            void const* idxPtr;
 
         };
 
