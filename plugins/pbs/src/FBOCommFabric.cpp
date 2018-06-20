@@ -94,7 +94,8 @@ bool megamol::pbs::ZMQCommFabric::Recv(std::vector<char>& buf, recv_type const t
 
 
 bool megamol::pbs::ZMQCommFabric::Disconnect() {
-    if (this->socket_.connected()) {
+    //if (this->socket_.connected()) {
+    if (!this->address_.empty()) {
         this->socket_.disconnect(this->address_);
         return !this->socket_.connected();
     }
