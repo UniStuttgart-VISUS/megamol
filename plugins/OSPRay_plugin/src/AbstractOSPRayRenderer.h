@@ -75,7 +75,7 @@ protected:
     * @param OSPRay camera object
     * @param CallRenderer3D object
     */
-    void setupOSPRayCamera(OSPCamera& cam, core::view::CallRender3D* cr);
+    void setupOSPRayCamera(OSPCamera& cam, core::view::CallRender3D* cr, float scaling);
 
 
     /**

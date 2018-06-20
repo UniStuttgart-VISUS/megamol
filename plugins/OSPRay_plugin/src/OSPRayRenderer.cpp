@@ -213,7 +213,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         }
         renderer_has_changed = true;
     }
-    setupOSPRayCamera(camera, cr);
+    setupOSPRayCamera(camera, cr, this->scale);
     ospCommit(camera);
 
     osprayShader.Enable();
@@ -407,37 +407,17 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
         frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
 
     }
-    float scale = 1.0f;
+    scale = 1.0f;
     if (frameCnt == 0) {
         frameCnt = 1;
-        //float scale = 1.0f;
-        //finalBox.Clear();
         scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        //finalBox.MakeScaledWorld(scale);
     } else {
         scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        //finalBox.MakeScaledWorld(scale);
     }
 
     cr->SetTimeFramesCount(frameCnt);
     cr->AccessBoundingBoxes() = finalBox;
     cr->AccessBoundingBoxes().MakeScaledWorld(scale);
-
-    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: bbox = [%f, %f, %f, %f, %f, %f]",
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft(),
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom(),
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetFront(),
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetRight(),
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetTop(),
-        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBack());
-    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: wbox = [%f, %f, %f, %f, %f, %f]",
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetLeft(),
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetBottom(),
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetFront(),
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetRight(),
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetTop(),
-        cr->AccessBoundingBoxes().WorldSpaceBBox().GetBack());
-    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: scaling was %f", scale);
 
     return true;
 }
@@ -533,8 +513,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call,
     const double fovy = cr->GetCameraParameters()->ApertureAngle();
     const double aspect = static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
-    const double zNear = cr->GetCameraParameters()->NearClip();
-    const double zFar = cr->GetCameraParameters()->FarClip();
+    const double zNear = cr->GetCameraParameters()->NearClip() / this->scale;
+    const double zFar = cr->GetCameraParameters()->FarClip()   / this->scale;
 
     float up_x = cr->GetCameraParameters()->Up().GetX();
     float up_y = cr->GetCameraParameters()->Up().GetY();
