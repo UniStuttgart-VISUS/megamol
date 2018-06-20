@@ -38,6 +38,24 @@ else()
         "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif()
 
+option(USE_MPI "enable MPI in build" OFF)
+
+set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
+if(USE_MPI)
+if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
+    message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
+endif()
+find_package(MPI REQUIRED)
+endif()
+
+if(MPI_C_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
+endif()
+
 option(MEGAMOL_INSTALL_DEPENDENCIES "MegaMol dependencies in install" ON)
 mark_as_advanced(MEGAMOL_INSTALL_DEPENDENCIES)
 

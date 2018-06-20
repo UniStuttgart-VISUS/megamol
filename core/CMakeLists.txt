@@ -89,16 +89,6 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  option(USE_MPI "enable MPI in build" OFF)
-
-  set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
-  if(USE_MPI)
-    if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
-      message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
-    endif()
-    find_package(MPI REQUIRED)
-  endif()
-
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
     if(USE_INTERNAL_EXPAT)
@@ -132,13 +122,9 @@ if(BUILD_CORE)
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
   if(MPI_C_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
     set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
   endif()
-
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
