@@ -537,8 +537,8 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
 
-    float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // XXX: param please
-    float labelFontSize = 0.1f;
+    float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
+    float labelFontSize = 0.1f; //XXX: param please
 
     for (size_t i = 0; i < rowCount; ++i) {
         for (const auto& plot : this->plots) {
