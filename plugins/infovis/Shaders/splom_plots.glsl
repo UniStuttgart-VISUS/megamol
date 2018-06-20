@@ -6,11 +6,11 @@ struct Plot {
     float sizeX;
     float sizeY;
     float minX;
-    float maxX;
     float minY;
+    float maxX;
     float maxY;
 };
 
-layout(std430, shared, binding = 2) buffer PlotSSBO {
+layout(std430, binding = 2) buffer PlotSSBO {
     Plot plots[];
 };
