@@ -177,6 +177,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     }
     camParams->CopyFrom(cr->GetCameraParameters());
 
+    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: camera lookat = (%f, %f, %f)", camParams->LookAt().GetX(), camParams->LookAt().GetY(), camParams->LookAt().GetZ());
+
 
     //glDisable(GL_CULL_FACE);
 
@@ -405,20 +407,37 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
         frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
 
     }
+    float scale = 1.0f;
     if (frameCnt == 0) {
         frameCnt = 1;
         //float scale = 1.0f;
         //finalBox.Clear();
-        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        finalBox.MakeScaledWorld(scale);
+        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
+        //finalBox.MakeScaledWorld(scale);
     } else {
-        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        finalBox.MakeScaledWorld(scale);
+        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
+        //finalBox.MakeScaledWorld(scale);
     }
 
     cr->SetTimeFramesCount(frameCnt);
     cr->AccessBoundingBoxes() = finalBox;
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    cr->AccessBoundingBoxes().MakeScaledWorld(scale);
+
+    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: bbox = [%f, %f, %f, %f, %f, %f]",
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft(),
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom(),
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetFront(),
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetRight(),
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetTop(),
+        cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBack());
+    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: wbox = [%f, %f, %f, %f, %f, %f]",
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetLeft(),
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetBottom(),
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetFront(),
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetRight(),
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetTop(),
+        cr->AccessBoundingBoxes().WorldSpaceBBox().GetBack());
+    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: scaling was %f", scale);
 
     return true;
 }

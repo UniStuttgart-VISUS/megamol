@@ -150,7 +150,21 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
             scaling = 1.0f;
         }
         cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
-
+        vislib::sys::Log::DefaultLog.WriteInfo("AbstractSimpleSphereRenderer: bbox = [%f, %f, %f, %f, %f, %f]",
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft(),
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom(),
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetFront(),
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetRight(),
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetTop(),
+            cr->AccessBoundingBoxes().ObjectSpaceBBox().GetBack());
+        vislib::sys::Log::DefaultLog.WriteInfo("AbstractSimpleSphereRenderer: wbox = [%f, %f, %f, %f, %f, %f]",
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetLeft(),
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetBottom(),
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetFront(),
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetRight(),
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetTop(),
+            cr->AccessBoundingBoxes().WorldSpaceBBox().GetBack());
+        vislib::sys::Log::DefaultLog.WriteInfo("AbstractSimpleSphereRenderer: scaling was %f", scaling);
     } else {
         cr->SetTimeFramesCount(1);
         cr->AccessBoundingBoxes().Clear();

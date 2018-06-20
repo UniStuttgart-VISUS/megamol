@@ -826,7 +826,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         colorData = ospNewData(colorFloatsToRead, OSP_FLOAT, &element.colorData->operator[](i*colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
                         ospCommit(colorData);
                         ospSetData(geo.back(), "color", colorData);
-                        ospSet1i(geo.back(), "color_components", 4);
+                        //ospSet1i(geo.back(), "color_components", 4);
+                        ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                     }
                 }
                 // clipPlane setup
@@ -879,10 +880,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         ospSet1i(geo.back(), "color_stride", element.colorStride);
                         ospSetData(geo.back(), "color", vertexData);
                         if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                            ospSet1i(geo.back(), "color_components", 3);
+                            //ospSet1i(geo.back(), "color_components", 3);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
                         }
                         else {
-                            ospSet1i(geo.back(), "color_components", 4);
+                            //ospSet1i(geo.back(), "color_components", 4);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                         }
                     }
                 }
