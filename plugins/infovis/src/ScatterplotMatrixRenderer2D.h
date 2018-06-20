@@ -191,7 +191,7 @@ private:
 
     vislib::math::Rectangle<float> bounds;
 
-    megamol::core::utility::SDFFont font;
+    megamol::core::utility::SDFFont axisFont;
 
     vislib::graphics::gl::GLSLShader axisShader;
 
@@ -202,6 +202,9 @@ private:
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;
     GLsizeiptr plotDstLength;
+
+    megamol::core::utility::SDFFont labelFont;
+    bool labelsValid;
 };
 
 } // end namespace infovis

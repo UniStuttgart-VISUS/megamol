@@ -64,9 +64,11 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , attenuateSubpixelParam("attenuateSubpixel", "Attenuate alpha of points that should have subpixel size")
     , mouse({0, 0, false, false})
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+    , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+    , labelFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , valueSSBO("Values")
-    , plotSSBO("Plots") {
+    , plotSSBO("Plots")
+    , labelsValid(false) {
     this->floatTableInSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -121,11 +123,13 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
 
 bool ScatterplotMatrixRenderer2D::create(void) {
-    if (!this->font.Initialise(this->GetCoreInstance())) return false;
+    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
+    if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
     if (!makeProgram("::splom::axes", this->axisShader)) return false;
     if (!makeProgram("::splom::points", this->pointShader)) return false;
 
-    this->font.EnableBatchDraw();
+    this->axisFont.EnableBatchDraw();
+    this->labelFont.EnableBatchDraw();
 
     return true;
 }
@@ -273,6 +277,8 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
 
     updateColumns();
 
+    this->labelsValid = false;
+
     this->dataHash = this->floatTable->DataHash();
     this->resetDirty();
 
@@ -344,7 +350,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     float columnFontsize = 2.0f;                   // XXX: param please
     float tickFontsize = 0.5f;                     // XXX: param please
 
-    this->font.ClearBatchCache();
+    this->axisFont.ClearBatchCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -354,7 +360,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->font.DrawString(textColor, xyBL, xyTL, size, size, columnFontsize, false, label.c_str(),
+        this->axisFont.DrawString(textColor, xyBL, xyTL, size, size, columnFontsize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         const float tickStart = i * (size + margin);
@@ -366,17 +372,17 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->font.DrawString(textColor, p, xyTL + tickLength, tickFontsize, false, pLabel.c_str(),
+                this->axisFont.DrawString(textColor, p, xyTL + tickLength, tickFontsize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->font.DrawString(textColor, xyBL - margin + tickLength, p, tickFontsize, false, pLabel.c_str(),
+                this->axisFont.DrawString(textColor, xyBL - margin + tickLength, p, tickFontsize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
 
-    this->font.BatchDrawString();
+    this->axisFont.BatchDrawString();
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
@@ -520,8 +526,12 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
 
 
 void ScatterplotMatrixRenderer2D::drawText(void) {
-    this->font.ClearBatchCache();
+    if (this->labelsValid) {
+        this->labelFont.BatchDrawString();
+        return;
+    }
 
+    this->labelFont.ClearBatchCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -537,15 +547,16 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
             const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
             const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
 
-            // XXX: this would be a lot more useful if we had string support! ;-)
+            // XXX: this will be a lot more useful when have support for string-columns!
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
 
-            this->font.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
+            this->labelFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
                 labelFontSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
     }
 
-    this->font.BatchDrawString();
+    this->labelFont.BatchDrawString();
+    this->labelsValid = true;
 }
 
 int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
