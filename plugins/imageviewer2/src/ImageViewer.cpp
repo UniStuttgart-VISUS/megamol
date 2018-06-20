@@ -191,7 +191,7 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
             // generate communicators for each role
             bool useMpi = initMPI();
             MPI_Comm roleComm;
-            int roleRank, roleSize;
+            int roleRank = -1, roleSize = -1;
             mpiRole myRole;
             myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
             if (useMpi) {
@@ -204,62 +204,63 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #endif /* WITH_MPI */
 
             if (!beBlank) {
-                int imgSize[2];
-
+                int fileSize = 0;
+                BYTE *allFile = nullptr;
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == 0) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i) loads an image",
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
-                    if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, filename)) {
-                        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                        imgSize[0] = img.Width();
-                        imgSize[1] = img.Height();
+                    vislib::sys::FastFile in;
+                    if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+                        fileSize = in.GetSize();
+                        allFile = new BYTE[fileSize];
+                        in.Read(allFile, fileSize);
+                        in.Close();
                     } else {
-                        printf("Failed: Load\n");
-                        imgSize[0] = imgSize[1] = 0;
+                        printf("ImageViewer2: failed opening file\n");
+                        fileSize = 0;
                     }
-
 #ifdef WITH_MPI
                 }
-                // cluster nodes broadcast image size
+                // cluster nodes broadcast file size
                 if (useMpi) {
-                    MPI_Bcast(imgSize, 2, MPI_INT, 0, roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) knows imgSize = (%i, %i)",
+                    MPI_Bcast(&fileSize, 1, MPI_INT, 0, roleComm);
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) knows fileSize = %i",
                         roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
-                        imgSize[0], imgSize[1]);
+                        fileSize);
+                    if (roleRank != 0) {
+                        allFile = new BYTE[fileSize];
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) late allocated file storage",
+                            roleRank, roleSize,
+                            myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    }
+                    // everyone gets the compressed file now
+                    MPI_Bcast(allFile, fileSize, MPI_BYTE, 0, roleComm);
                 }
 #endif /* WITH_MPI */
+                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, allFile, fileSize)) {
+                    img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                    this->width = img.Width();
+                    this->height = img.Height();
+                } else {
+                    printf("ImageViewer2 failed decoding file\n");
+                    fileSize = 0;
+                    this->width = this->height = 0;
+                }
+                // now everyone should have a copy of the loaded image
 
-                this->width = imgSize[0];
-                this->height = imgSize[1];
                 this->tiles.Clear();
                 if (this->width > 0 && this->height > 0) {
-                    size_t allImageSize = this->width * this->height * 3;
-                    BYTE *allImage = new BYTE[allImageSize];
-
-#ifdef WITH_MPI
-                    // single node or role boss grabs image data
-                    if (!useMpi || roleRank == 0) {
-                        memcpy(allImage, img.PeekDataAs<BYTE>(), allImageSize);
-                    }
-                    // cluster nodes broadcast image data
-                    if (useMpi) {
-                        MPI_Bcast(allImage, allImageSize, MPI_BYTE, 0, roleComm);
-                    }
-#else /* !WITH_MPI */
-                    // normal code
-                    memcpy(allImage, img.PeekDataAs<BYTE>(), allImageSize);
-#endif /* WITH_MPI */
-
-                    // now everyone should have a copy of the loaded image
                     BYTE *buf = new BYTE[TILE_SIZE * TILE_SIZE * 3];
                     for (unsigned int y = 0; y < this->height; y += TILE_SIZE) {
                         unsigned int h = vislib::math::Min(TILE_SIZE, this->height - y);
                         for (unsigned int x = 0; x < this->width; x += TILE_SIZE) {
                             unsigned int w = vislib::math::Min(TILE_SIZE, this->width - x);
                             for (unsigned int l = 0; l < h; l++) {
-                                ::memcpy(buf + (l * w * 3), allImage + ((y + l) * this->width * 3 + x * 3), w * 3);
+                                ::memcpy(buf + (l * w * 3), img.PeekDataAs<BYTE>() + ((y + l) * this->width * 3 + x * 3), w * 3);
                             }
                             this->tiles.Add(vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> >());
                             this->tiles.Last().First().Set(static_cast<float>(x), static_cast<float>(this->height - y), static_cast<float>(x + w), static_cast<float>(this->height - (y + h)));
@@ -273,16 +274,15 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         }
                     }
                     delete[] buf;
-                    delete[] allImage;
-#ifdef WITH_MPI
-                    if (!useMpi || roleRank == 0) {
-                        img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
-                    }
-#else /* !WITH_MPI*/
-                    // normal code
-                    img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
-#endif /* WITH_MPI */
+                    delete[] allFile;
+                    //img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
                 }
+#ifdef WITH_MPI
+                // we finish this together
+                if (useMpi) {
+                    MPI_Barrier(roleComm);
+                }
+#endif
             }
 
         } catch (vislib::Exception ex) {
