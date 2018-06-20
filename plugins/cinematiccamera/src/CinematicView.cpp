@@ -170,10 +170,6 @@ CinematicView::~CinematicView(void) {
         vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render] pngdata.infoptr is not nullptr.");
     }
 
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
-    }
-
     this->fbo.Release();
 }
 
