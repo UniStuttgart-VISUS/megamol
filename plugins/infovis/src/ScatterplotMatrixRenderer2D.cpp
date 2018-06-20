@@ -295,7 +295,7 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     for (GLuint y = 0; y < columnCount; ++y) {
         for (GLuint x = 0; x < y; ++x) {
             plots.push_back({x, y, x * (size + margin), y * (size + margin), size, size, columnInfos[x].MinimumValue(),
-                columnInfos[x].MaximumValue(), columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue()});
+                columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue()});
         }
     }
 
@@ -538,7 +538,7 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
     const auto rowCount = this->floatTable->GetRowsCount();
 
     float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
-    float labelFontSize = 0.1f; //XXX: param please
+    float labelFontSize = 0.1f;                     // XXX: param please
 
     for (size_t i = 0; i < rowCount; ++i) {
         for (const auto& plot : this->plots) {

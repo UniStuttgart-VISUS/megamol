@@ -99,8 +99,8 @@ private:
         GLfloat sizeX;
         GLfloat sizeY;
         GLfloat minX;
-        GLfloat maxX;
         GLfloat minY;
+        GLfloat maxX;
         GLfloat maxY;
     };
 

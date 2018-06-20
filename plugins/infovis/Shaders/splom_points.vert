@@ -20,7 +20,7 @@ out float vsEffectiveDiameter;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
-    const int rowOffset = gl_VertexID / rowStride * rowStride;
+    const int rowOffset = gl_VertexID * rowStride;
 
     // Map value pair to position.
     const vec2 point = vec2(values[rowOffset + plot.indexX],
@@ -46,5 +46,5 @@ void main(void) {
     }
 
     gl_Position = modelViewProjection * vsPosition;
-    gl_PointSize = kernelWidth;
+    gl_PointSize = kernelWidth; //XXX: this one should be in world space not screen spaace (pixels)
 }
