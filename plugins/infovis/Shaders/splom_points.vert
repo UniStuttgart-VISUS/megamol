@@ -3,7 +3,6 @@ uniform mat4 modelViewProjection;
 
 uniform sampler1D colorTable;
 uniform uvec2 colorConsts;
-uniform vec4 colorFallback;
 
 uniform int rowStride;
 
@@ -32,17 +31,12 @@ void main(void) {
                       unitPoint.y * plot.sizeY + plot.offsetY,
                       0.0f, 1.0f);
 
+    // Fetch color from table.
+    const float colorIndex = values[rowOffset + colorConsts[0]];
     const float colorCount = float(colorConsts[1]);
-    if (colorCount != 0) {
-        // Fetch color from table.
-        const float colorIndex = values[rowOffset + colorConsts[0]];
-        const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
-                                  + 0.5 / colorCount;
-        vsColor = texture(colorTable, colorOffset);
-    } else {
-        // Use fallback color.
-        vsColor = colorFallback;
-    }
+    const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
+                                + 0.5 / colorCount;
+    vsColor = texture(colorTable, colorOffset);
 
     if (attenuateSubpixel) {
         // Attenuate alpha depending on subpixels.

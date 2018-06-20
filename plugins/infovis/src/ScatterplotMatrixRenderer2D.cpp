@@ -12,7 +12,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "vislib/math/ShallowMatrix.h"
 
@@ -52,17 +51,16 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , floatTableInSlot("ftIn", "Float table input")
     , transferFunctionInSlot("tfIn", "Transfer function input")
     , flagStorageInSlot("fsIn", "Flag storage input")
-    , columnsParam("columns", "Sets which columns should be displayed and in which order (empty means all)")
     , colorSelectorParam("colorSelector", "Sets a color column")
     , labelSelectorParam("labelSelector", "Sets a label column")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
-    , axisTicksXParam("axisXTicks", "Number of ticks on the X axis")
-    , axisTicksYParam("axisYTicks", "Number of ticks on the Y axis")
-    , scaleXParam("scaleX", "Aspect ratio scaling x axis length")
-    , scaleYParam("scaleY", "Set the scaling of y axis")
+    , axisTicksParam("axisTicks", "Number of ticks on the axis")
+    , axisTickLengthParam("axisTickLength", "Line length for the ticks")
+    , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
+    , cellMarginParam("cellMargin", "Set the scaling of y axis")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , attenuateSubpixelParam("attenuateSubpixel", "Attenuate alpha of points that should have subpixel size")
     , mouse({0, 0, false, false})
@@ -78,9 +76,6 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->flagStorageInSlot.SetCompatibleCall<FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
-    this->columnsParam << new core::param::StringParam("");
-    this->MakeSlotAvailable(&this->columnsParam);
-
     this->colorSelectorParam << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->colorSelectorParam);
 
@@ -90,29 +85,30 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
+    geometryTypes->SetTypePair(GEOMETRY_TYPE_TEXT, "Text");
     this->geometryTypeParam << geometryTypes;
     this->MakeSlotAvailable(&this->geometryTypeParam);
 
-    this->kernelWidthParam << new core::param::FloatParam(1.0f, 0.0001f);
+    this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
     this->axisColorParam << new core::param::StringParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
 
-    this->axisWidthParam << new core::param::FloatParam(1.0f, 0.0001f, 10000.0f);
+    this->axisWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->axisWidthParam);
 
-    this->axisTicksXParam << new core::param::IntParam(4, 3, 100);
-    this->MakeSlotAvailable(&this->axisTicksXParam);
+    this->axisTicksParam << new core::param::IntParam(5, 2, 100);
+    this->MakeSlotAvailable(&this->axisTicksParam);
 
-    this->axisTicksYParam << new core::param::IntParam(4, 3, 100);
-    this->MakeSlotAvailable(&this->axisTicksYParam);
+    this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.5f);
+    this->MakeSlotAvailable(&this->axisTickLengthParam);
 
-    this->scaleXParam << new core::param::FloatParam(1.0f, 0.0f);
-    this->MakeSlotAvailable(&this->scaleXParam);
+    this->cellSizeParam << new core::param::FloatParam(10.0f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->cellSizeParam);
 
-    this->scaleYParam << new core::param::FloatParam(1.0f, 0.0001f);
-    this->MakeSlotAvailable(&this->scaleYParam);
+    this->cellMarginParam << new core::param::FloatParam(1.0f, 0.0f);
+    this->MakeSlotAvailable(&this->cellMarginParam);
 
     this->alphaScalingParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
@@ -148,7 +144,7 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
     if (this->mouse.selects || this->mouse.inspects) {
         // TODO: Some hit testing might be nice here when clicking transparent areas.
-        // return true;
+        // return itemAt(mouse.x, mouse.y) != -1;
     }
 
     return false;
@@ -167,6 +163,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             break;
         case GEOMETRY_TYPE_LINE:
             this->drawLines();
+            break;
+        case GEOMETRY_TYPE_TEXT:
+            this->drawText();
             break;
         }
     } catch (...) {
@@ -218,20 +217,28 @@ bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphi
 }
 
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
-    return this->kernelWidthParam.IsDirty() || this->columnsParam.IsDirty() || this->colorSelectorParam.IsDirty() ||
-           this->labelSelectorParam.IsDirty();
+    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->axisColorParam.IsDirty() ||
+           this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
 void ScatterplotMatrixRenderer2D::resetDirty(void) {
-    this->kernelWidthParam.ResetDirty();
-    this->columnsParam.ResetDirty();
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
+    this->axisColorParam.ResetDirty();
+    this->cellSizeParam.ResetDirty();
+    this->cellMarginParam.ResetDirty();
 }
 
 bool ScatterplotMatrixRenderer2D::validateData(void) {
     this->floatTable = this->floatTableInSlot.CallAs<floattable::CallFloatTableData>();
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
+
+    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
+
+    // TODO: store selection inside flag storage.
+    this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
+    if (this->flagStorage == nullptr || !(*(this->flagStorage))()) return false;
 
     if (this->dataHash == this->floatTable->DataHash() && !isDirty()) return true;
 
@@ -266,8 +273,6 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
 
     updateColumns();
 
-    // TODO: verify that all parameters are acually used ;)
-
     this->dataHash = this->floatTable->DataHash();
     this->resetDirty();
 
@@ -277,8 +282,8 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
 void ScatterplotMatrixRenderer2D::updateColumns(void) {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
-    const float size = 10.0f;  // XXX: make this guy configurable, i.e., for zooming.
-    const float margin = 1.0f; // XXX: or this guy and normalize the other one? hm.
+    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
 
     plots.clear();
     for (GLuint y = 0; y < columnCount; ++y) {
@@ -309,13 +314,17 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
-    const GLfloat tickSize = 0.5;     // XXX: parameter please.
-    const GLsizei numTicks = 5;       // XXX: parameter please.
-    const bool skipInnerTicks = true; // XXX: true if padding == 0.
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+    const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
+    const bool skipInnerTicks = true; // XXX: true if padding or margin == 0.
     glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1, this->axisColor);
     glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
-    glUniform1f(this->axisShader.ParameterLocation("tickSize"), tickSize);
+    glUniform1f(this->axisShader.ParameterLocation("tickLength"), tickLength);
     glUniform1i(this->axisShader.ParameterLocation("skipInnerTicks"), skipInnerTicks ? 1 : 0);
+
+    // Line width.
+    auto axisWidth = this->axisWidthParam.Param<core::param::FloatParam>()->Value();
+    glLineWidth(axisWidth);
 
     // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
@@ -331,17 +340,17 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     this->axisShader.Disable();
 
-    float textColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    float columnFontsize = 2.0f;
-    float tickFontsize = 0.5f;
+    float textColor[4] = {0.0f, 0.0f, 0.0f, 1.0f}; // XXX: param please
+    float columnFontsize = 2.0f;                   // XXX: param please
+    float tickFontsize = 0.5f;                     // XXX: param please
 
     this->font.ClearBatchCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     for (size_t i = 0; i < columnCount; ++i) {
-        const float size = 10.0f;  // XXX: make this guy configurable, i.e., for zooming.
-        const float margin = 1.0f; // XXX: or this guy and normalize the other one? hm.
+        const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+        const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
@@ -357,48 +366,17 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->font.DrawString(textColor, p, xyTL + tickSize, tickFontsize, false, pLabel.c_str(),
+                this->font.DrawString(textColor, p, xyTL + tickLength, tickFontsize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->font.DrawString(textColor, xyBL - margin + tickSize, p, tickFontsize, false, pLabel.c_str(),
+                this->font.DrawString(textColor, xyBL - margin + tickLength, p, tickFontsize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
 
     this->font.BatchDrawString();
-
-    // auto numXTicks = this->axisTicksXParam.Param<core::param::IntParam>()->Value();
-    // auto aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
-
-    // float minX = this->columnInfos[this->columnIdxs.abcissaIdx].MinimumValue();
-    // float maxX = this->columnInfos[this->columnIdxs.abcissaIdx].MaximumValue();
-
-    // std::vector<std::string> xTickText(numXTicks);
-    // float xTickLabel = (maxX - minX) / (numXTicks - 1);
-    // for (int i = 0; i < numXTicks; i++) {
-    //	xTickText[i] = std::to_string(xTickLabel*i + minX);
-    //}
-
-    // float tickSize = this->nvgRenderInfo.fontSize;
-
-    // float dw = std::get<0>(this->viewport)*aspect;
-    // float dh = std::get<1>(this->viewport);
-    // float mw = dw / 2.0f;
-    // float mh = dh / 2.0f;
-
-    // float xTickOff = 1.0f / (numXTicks - 1);
-    // for (int i = 0; i < numXTicks; i++) {
-    //	nvgBeginPath(ctx);
-    //	nvgMoveTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - dh / 2);
-    //	nvgLineTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - (0.5f + tickSize)*dh);
-    //	nvgStroke(ctx);
-    //}
-
-    // for (int i = 0; i < numXTicks; i++) {
-    //	nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, xTickText[i].c_str(), nullptr);
-    //}
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
@@ -427,20 +405,13 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
-    float colorFallback[] = {0.0f, 0.0f, 0.0f, 1.0f}; // XXX: parameter please.
-
     // Color map uniforms.
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
-    unsigned int colTabSize = 0;
-    auto tf = this->transferFunctionInSlot.CallAs<core::view::CallGetTransferFunction>();
-    if (tf != nullptr && (*tf)()) {
-        glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
-        colTabSize = tf->TextureSize();
-    }
-    glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
+    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
+    unsigned int colTabSize = this->transferFunction->TextureSize();
+    glUniform1i(this->pointShader.ParameterLocation("colorTable"), colTabSize);
     glUniform2ui(this->pointShader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
-    glUniform4fv(this->pointShader.ParameterLocation("colorFallback"), 1, colorFallback);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -478,6 +449,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_1D, 0);
 
     this->pointShader.Disable();
 
@@ -489,7 +461,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
     /*
-    auto aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
+    auto aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
     auto yScaling = this->scaleYParam.Param<core::param::FloatParam>()->Value();
 
     this->drawXAxis();
@@ -501,7 +473,7 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
         this->nvgTrans.GetAt(0, 1), this->nvgTrans.GetAt(1, 1),
         this->nvgTrans.GetAt(0, 2), this->nvgTrans.GetAt(1, 2));
 
-    nvgScale(ctx, this->scaleXParam.Param<core::param::FloatParam>()->Value(), 1.0f);
+    nvgScale(ctx, this->cellSize.Param<core::param::FloatParam>()->Value(), 1.0f);
 
     float width = std::get<0>(this->viewport)*aspect;
     float height = std::get<1>(this->viewport)*yScaling;
@@ -546,7 +518,37 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     */
 }
 
-size_t ScatterplotMatrixRenderer2D::searchAndDispPointAttr(const float x, const float y) {
+
+void ScatterplotMatrixRenderer2D::drawText(void) {
+    this->font.ClearBatchCache();
+
+
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const auto rowCount = this->floatTable->GetRowsCount();
+
+    float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // XXX: param please
+    float labelFontSize = 0.1f;
+
+    for (size_t i = 0; i < rowCount; ++i) {
+        for (const auto& plot : this->plots) {
+            const float xValue = this->floatTable->GetData(plot.indexX, i);
+            const float yValue = this->floatTable->GetData(plot.indexY, i);
+            const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
+            const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+
+            // XXX: this would be a lot more useful if we had string support! ;-)
+            std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
+
+            this->font.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
+                labelFontSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        }
+    }
+
+    this->font.BatchDrawString();
+}
+
+int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
     /*
     if (y >= 0.0f) { //< within scatterplot
         auto trans = this->oglTrans;
@@ -585,7 +587,7 @@ size_t ScatterplotMatrixRenderer2D::searchAndDispPointAttr(const float x, const 
         float yCoord = std::fabsf(y);
         unsigned int depth = std::floorf(yCoord / boxHeight);
         auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
-        float aspect = this->scaleXParam.Param<core::param::FloatParam>()->Value();
+        float aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
         for (auto &r : this->callStack[depth]) {
             // rb / norm*dw
             float rb = std::get<0>(r);
@@ -612,5 +614,5 @@ size_t ScatterplotMatrixRenderer2D::searchAndDispPointAttr(const float x, const 
         }
     }
     */
-    return 0;
+    return -1;
 }

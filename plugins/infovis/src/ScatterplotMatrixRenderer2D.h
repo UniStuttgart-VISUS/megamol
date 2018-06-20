@@ -6,6 +6,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOStreamer.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
@@ -76,7 +77,7 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
-    enum GeometryType { GEOMETRY_TYPE_POINT, GEOMETRY_TYPE_LINE };
+    enum GeometryType { GEOMETRY_TYPE_POINT, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
 
     struct ParamState {
         size_t colorIdx;
@@ -138,15 +139,15 @@ private:
 
     void drawLines(void);
 
-    size_t searchAndDispPointAttr(const float x, const float y);
+    void drawText(void);
+
+    int itemAt(const float x, const float y);
 
     core::CallerSlot floatTableInSlot;
 
     core::CallerSlot transferFunctionInSlot;
 
     core::CallerSlot flagStorageInSlot;
-
-    core::param::ParamSlot columnsParam;
 
     core::param::ParamSlot colorSelectorParam;
 
@@ -160,13 +161,13 @@ private:
 
     core::param::ParamSlot axisWidthParam;
 
-    core::param::ParamSlot axisTicksXParam;
+    core::param::ParamSlot axisTicksParam;
 
-    core::param::ParamSlot axisTicksYParam;
+    core::param::ParamSlot axisTickLengthParam;
 
-    core::param::ParamSlot scaleXParam;
+    core::param::ParamSlot cellSizeParam;
 
-    core::param::ParamSlot scaleYParam;
+    core::param::ParamSlot cellMarginParam;
 
     core::param::ParamSlot alphaScalingParam;
 
@@ -175,6 +176,10 @@ private:
     size_t dataHash;
 
     stdplugin::datatools::floattable::CallFloatTableData* floatTable;
+
+    core::view::CallGetTransferFunction* transferFunction;
+
+    FlagCall* flagStorage;
 
     ParamState map;
 
