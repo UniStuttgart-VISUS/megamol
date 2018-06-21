@@ -100,9 +100,9 @@ bool OSPRayRenderer::create() {
         return false;
     }
 
-    this->initOSPRay(device);
+    //this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, "scivis");
+    //this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -121,10 +121,31 @@ void OSPRayRenderer::release() {
 ospray::OSPRayRenderer::Render
 */
 bool OSPRayRenderer::Render(megamol::core::Call& call) {
+    this->initOSPRay(device);
 
     if (device != ospGetCurrentDevice()) {
         ospSetCurrentDevice(device);
     }
+
+    // if user wants to switch renderer
+    if (this->rd_type.IsDirty()) {
+        ospRelease(camera);
+        ospRelease(world);
+        ospRelease(renderer);
+        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+        case PATHTRACER:
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
+            break;
+        case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+            this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+            break;
+        default:
+            this->setupOSPRay(renderer, camera, world, "scivis");
+        }
+        renderer_has_changed = true;
+        this->rd_type.ResetDirty();
+    }
+
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -177,8 +198,6 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     }
     camParams->CopyFrom(cr->GetCameraParameters());
 
-    vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: camera lookat = (%f, %f, %f)", camParams->LookAt().GetX(), camParams->LookAt().GetY(), camParams->LookAt().GetZ());
-
 
     //glDisable(GL_CULL_FACE);
 
@@ -197,22 +216,23 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospCommit(framebuffer);
     }
 
-
-    // if user wants to switch renderer
-    if (this->rd_type.IsDirty()) {
-        ospRelease(camera);
-        ospRelease(world);
-        ospRelease(renderer);
-        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
-        case SCIVIS:
-            this->setupOSPRay(renderer, camera, world, "scivis");
-            break;
-        case PATHTRACER:
-            this->setupOSPRay(renderer, camera, world, "pathtracer");
-            break;
-        }
-        renderer_has_changed = true;
-    }
+    //// if user wants to switch renderer
+    //if (this->rd_type.IsDirty()) {
+    //    ospRelease(camera);
+    //    ospRelease(world);
+    //    ospRelease(renderer);
+    //    switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+    //    case PATHTRACER:
+    //        this->setupOSPRay(renderer, camera, world, "pathtracer");
+    //        break;
+    //    case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+    //        this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+    //        break;
+    //    default:
+    //        this->setupOSPRay(renderer, camera, world, "scivis");
+    //    }
+    //    renderer_has_changed = true;
+    //}
     setupOSPRayCamera(camera, cr, this->scale);
     ospCommit(camera);
 
@@ -414,7 +434,7 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
     } else {
         scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
     }
-
+    
     cr->SetTimeFramesCount(frameCnt);
     cr->AccessBoundingBoxes() = finalBox;
     cr->AccessBoundingBoxes().MakeScaledWorld(scale);

@@ -43,8 +43,7 @@ public:
     * @return 'true' if the module is available, 'false' otherwise.
     */
     static bool IsAvailable(void) {
-        //return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
-        return true;
+        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
     }
 
     /** Dtor. */
@@ -107,7 +106,7 @@ private:
     vislib::graphics::gl::GLSLShader osprayShader;
     float scale;
 
-    // Interface dirty flag
+   // Interface dirty flag
     bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
