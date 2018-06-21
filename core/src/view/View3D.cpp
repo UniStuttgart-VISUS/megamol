@@ -70,6 +70,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
         overrideCall(NULL),
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
         viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
+        viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
         mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode"),
         viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
@@ -171,6 +172,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
     this->viewKeyMoveStepSlot << new param::FloatParam(0.1f, 0.001f);
     this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
+
+    this->viewKeyRunFactorSlot << new param::FloatParam(2.0f, 0.1f);
+    this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
 
     this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
@@ -1320,6 +1324,10 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
             || (&p == &this->viewKeyMoveDownSlot)) {
         // move
         float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+        const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
+        if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
+            step *= runFactor;
+        }
         vislib::math::Vector<float, 3> move;
 
         if (&p == &this->viewKeyZoomInSlot) {

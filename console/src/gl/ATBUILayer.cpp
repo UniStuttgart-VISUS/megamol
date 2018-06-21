@@ -107,9 +107,25 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
     ::TwSetCurrentWindow(atbWinID);
 
     atbKeyMod = 0;
-    if (mods & Modifiers::KEY_MOD_SHIFT) atbKeyMod |= TW_KMOD_SHIFT;
-    if (mods & Modifiers::KEY_MOD_CTRL) atbKeyMod |= TW_KMOD_CTRL;
-    if (mods & Modifiers::KEY_MOD_ALT) atbKeyMod |= TW_KMOD_ALT;
+    if (mods & Modifiers::KEY_MOD_SHIFT) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, true);
+        atbKeyMod |= TW_KMOD_SHIFT;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, false);
+    }
+    if (mods & Modifiers::KEY_MOD_CTRL) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, true);
+        atbKeyMod |= TW_KMOD_CTRL;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, false);
+    }
+    if (mods & Modifiers::KEY_MOD_ALT) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, true);
+        atbKeyMod |= TW_KMOD_ALT;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, false);
+    }
+
 
     // Process key pressed
     if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {

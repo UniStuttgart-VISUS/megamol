@@ -462,6 +462,8 @@ namespace view {
         /** The move step size in world coordinates */
         param::ParamSlot viewKeyMoveStepSlot;
 
+        param::ParamSlot viewKeyRunFactorSlot;
+
         /** The angle rotate step in degrees */
         param::ParamSlot viewKeyAngleStepSlot;
 
