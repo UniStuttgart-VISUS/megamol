@@ -268,6 +268,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
         glDrawArrays(GL_QUADS, 0, 4);
     }
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(0);
     glUseProgram(0);
 
     glDisable(GL_DEPTH_TEST);
