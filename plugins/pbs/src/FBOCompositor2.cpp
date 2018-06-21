@@ -113,8 +113,10 @@ bool megamol::pbs::FBOCompositor2::create() {
 
 void megamol::pbs::FBOCompositor2::release() {
     close_promise_.set_value(true);
-    collector_thread_.join();
-    registerThread_.join();
+    if (collector_thread_.joinable())
+        collector_thread_.join();
+    if (registerThread_.joinable())
+        registerThread_.join();
 }
 
 
