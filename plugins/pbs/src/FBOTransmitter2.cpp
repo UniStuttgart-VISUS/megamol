@@ -69,7 +69,8 @@ bool megamol::pbs::FBOTransmitter2::create() {
     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
 #endif
 #ifdef WITH_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
+    MPI_Comm_split(MPI_COMM_WORLD, 1, 0, &mpi_comm_);
+    MPI_Comm_rank(mpi_comm_, &rank_);
 #endif // WITH_MPI
     return true;
 }
@@ -176,7 +177,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", rank_);
 #endif
-            icet_comm_ = icetCreateMPICommunicator(MPI_COMM_WORLD);
+            icet_comm_ = icetCreateMPICommunicator(mpi_comm_);
             icet_ctx_ = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);

@@ -103,6 +103,8 @@ private:
     IceTCommunicator icet_comm_;
 
     int rank_;
+
+    MPI_Comm mpi_comm_;
 #endif // WITH_MPI
 
     std::mutex buffer_read_guard_;
