@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "FBOTransmitter2.h"
 
+#include <array>
+
 #include "glad/glad.h"
 
 #include "snappy.h"
@@ -63,13 +65,10 @@ megamol::pbs::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
 
 
 bool megamol::pbs::FBOTransmitter2::create() {
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
+#endif
 #ifdef WITH_MPI
-    icet_comm_ = icetCreateMPICommunicator(MPI_COMM_WORLD);
-    icet_ctx_ = icetCreateContext(icet_comm_);
-    icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
-    icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
-    icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
-    icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
 #endif // WITH_MPI
     return true;
@@ -82,17 +81,26 @@ void megamol::pbs::FBOTransmitter2::release() {
     this->transmitter_thread_.join();
 
 #ifdef WITH_MPI
-    icetDestroyMPICommunicator(icet_comm_);
-    icetDestroyContext(icet_ctx_);
+    if (toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
+        icetDestroyMPICommunicator(icet_comm_);
+        icetDestroyContext(icet_ctx_);
+    }
 #endif // WITH_MPI
 }
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!connected_) {
+#ifdef _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
+#endif
 #ifdef WITH_MPI
-        aggregate_ = this->address_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        if (aggregate_ && rank_ == 0) {
+        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
+
+        if ((aggregate_ && rank_ == 0) || !aggregate_) {
+#ifdef _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", rank_);
+#endif
 #endif // WITH_MPI
             auto const address =
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
@@ -164,15 +172,32 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #ifdef WITH_MPI
         // aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
         // get viewport of current render context
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
+        if (aggregate_) {
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", rank_);
+#endif
+            icet_comm_ = icetCreateMPICommunicator(MPI_COMM_WORLD);
+            icet_ctx_ = icetCreateContext(icet_comm_);
+            icetStrategy(ICET_STRATEGY_SEQUENTIAL);
+            icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
+            icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
+            icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
+            icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
 
-        auto const width = viewport[2] - viewport[0];
-        auto const height = viewport[3] - viewport[1];
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
 
-        icetResetTiles();
-        icetAddTile(viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
-#endif                                                           // WITH_MPI
+            auto const width = viewport[2] - viewport[0];
+            auto const height = viewport[3] - viewport[1];
+
+            icetResetTiles();
+            icetAddTile(
+                viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", rank_);
+#endif
+        }
+#endif // WITH_MPI
     }
 
     // get viewport of current render context
@@ -195,9 +220,9 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     }
 
 #ifdef WITH_MPI
-    if (aggregate_ && rank_ == 0) {
+    if ((aggregate_ && rank_ == 0) || !aggregate_) {
 #endif // WITH_MPI
-        // copy data to read buffer, if possible
+       // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
@@ -227,7 +252,11 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         this->swapBuffers();
 #ifdef WITH_MPI
     } else if (aggregate_) {
-        icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, nullptr);
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", rank_);
+#endif
+        std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
+        icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
     }
 #endif // WITH_MPI
 }
@@ -264,8 +293,15 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
             IceTUByte* icet_col_buf = nullptr;
             IceTFloat* icet_depth_buf = nullptr;
             if (aggregate_) {
-                auto const icet_comp_image = icetCompositeImage(
-                    this->color_buf_send_->data(), this->depth_buf_send_->data(), nullptr, nullptr, nullptr, nullptr);
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Complex IceT commit at rank %d\n", rank_);
+#endif
+                std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
+                auto const icet_comp_image = icetCompositeImage(this->color_buf_send_->data(),
+                    this->depth_buf_send_->data(), nullptr, nullptr, nullptr, backgroundColor.data());
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Recieved IceT image at rank %d\n", rank_);
+#endif
                 icet_col_buf = icetImageGetColorub(icet_comp_image);
                 icet_depth_buf = icetImageGetDepthf(icet_comp_image);
             }
@@ -278,53 +314,50 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
             size_t depth_comp_size = 0;
 
             if (aggregate_) {
-                snappy::RawCompress(
-                    reinterpret_cast<char*>(icet_col_buf), this->color_buf_send_->size(), col_comp_buf.data(), &col_comp_size);
-                snappy::RawCompress(reinterpret_cast<char*>(icet_depth_buf), this->depth_buf_send_->size(), depth_comp_buf.data(),
-                    &depth_comp_size);
-                } else {
+                snappy::RawCompress(reinterpret_cast<char*>(icet_col_buf), this->color_buf_send_->size(),
+                    col_comp_buf.data(), &col_comp_size);
+                snappy::RawCompress(reinterpret_cast<char*>(icet_depth_buf), this->depth_buf_send_->size(),
+                    depth_comp_buf.data(), &depth_comp_size);
+            } else {
                 snappy::RawCompress(
                     this->color_buf_send_->data(), this->color_buf_send_->size(), col_comp_buf.data(), &col_comp_size);
                 snappy::RawCompress(this->depth_buf_send_->data(), this->depth_buf_send_->size(), depth_comp_buf.data(),
                     &depth_comp_size);
-                }
+            }
 
-                fbo_msg_send_->color_buf_size = col_comp_size;
-                fbo_msg_send_->depth_buf_size = depth_comp_size;
-                // compose message from header, color_buf, and depth_buf
-                buf.resize(sizeof(fbo_msg_header_t) + col_comp_size + depth_comp_size);
-                std::copy(reinterpret_cast<char*>(&(*fbo_msg_send_)),
-                    reinterpret_cast<char*>(&(*fbo_msg_send_)) + sizeof(fbo_msg_header_t), buf.data());
-                /*std::copy(
-                    this->color_buf_send_->begin(), this->color_buf_send_->end(), buf.data() +
-                sizeof(fbo_msg_header_t)); std::copy(this->depth_buf_send_->begin(), this->depth_buf_send_->end(),
-                    buf.data() + sizeof(fbo_msg_header_t) + this->color_buf_send_->size());*/
-                std::copy(
-                    col_comp_buf.data(), col_comp_buf.data() + col_comp_size, buf.data() + sizeof(fbo_msg_header_t));
-                std::copy(depth_comp_buf.data(), depth_comp_buf.data() + depth_comp_size,
-                    buf.data() + sizeof(fbo_msg_header_t) + col_comp_size);
+            fbo_msg_send_->color_buf_size = col_comp_size;
+            fbo_msg_send_->depth_buf_size = depth_comp_size;
+            // compose message from header, color_buf, and depth_buf
+            buf.resize(sizeof(fbo_msg_header_t) + col_comp_size + depth_comp_size);
+            std::copy(reinterpret_cast<char*>(&(*fbo_msg_send_)),
+                reinterpret_cast<char*>(&(*fbo_msg_send_)) + sizeof(fbo_msg_header_t), buf.data());
+            /*std::copy(
+                this->color_buf_send_->begin(), this->color_buf_send_->end(), buf.data() +
+            sizeof(fbo_msg_header_t)); std::copy(this->depth_buf_send_->begin(), this->depth_buf_send_->end(),
+                buf.data() + sizeof(fbo_msg_header_t) + this->color_buf_send_->size());*/
+            std::copy(col_comp_buf.data(), col_comp_buf.data() + col_comp_size, buf.data() + sizeof(fbo_msg_header_t));
+            std::copy(depth_comp_buf.data(), depth_comp_buf.data() + depth_comp_size,
+                buf.data() + sizeof(fbo_msg_header_t) + col_comp_size);
 
-                // send data
-                try {
+            // send data
+            try {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending answer\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending answer\n");
 #endif
-                    if (!this->comm_->Send(buf, send_type::SEND)) {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "FBOTransmitter2: Error during send in 'transmitterJob'\n");
-                    }
-#if _DEBUG
-                    else {
-                        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
-                    }
-#endif
-                } catch (zmq::error_t const& e) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "FBOTransmitter2: Exception during send in 'transmitterJob': %s\n", e.what());
-                } catch (...) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "FBOTransmitter2: Exception during send in 'transmitterJob'\n");
+                if (!this->comm_->Send(buf, send_type::SEND)) {
+                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during send in 'transmitterJob'\n");
                 }
+#if _DEBUG
+                else {
+                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Answer sent\n");
+                }
+#endif
+            } catch (zmq::error_t const& e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: Exception during send in 'transmitterJob': %s\n", e.what());
+            } catch (...) {
+                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during send in 'transmitterJob'\n");
+            }
         }
     }
 }
