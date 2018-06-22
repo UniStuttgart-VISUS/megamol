@@ -35,7 +35,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   ExternalProject_Add(exticet
     GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DICET_BUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DICET_BUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME}
   )
 
   set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB} ${SNAPPY_LIB} ${ICET_LIB})
@@ -56,7 +56,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-  add_dependencies(${PROJECT_NAME} vislib core)
+  add_dependencies(${PROJECT_NAME} vislib core extsnappy exticet)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
