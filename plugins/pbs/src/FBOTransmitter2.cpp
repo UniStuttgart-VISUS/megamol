@@ -15,6 +15,9 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
+#include "vislib/sys/SystemInformation.h"
+#include "vislib/Trace.h"
 
 #ifdef __unix__
 #include <limits.h>
@@ -30,11 +33,10 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , target_machine_slot_ {
     "targetMachine", "Name of the target machine"
 }
+    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
 #ifdef WITH_MPI
 , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"},
-    aggregate_{false}, rank_ {
-    -1
-}
+    aggregate_{false}
 #endif // WITH_MPI
 , frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
     color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
@@ -54,6 +56,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->trigger_button_slot_);
     this->target_machine_slot_ << new megamol::core::param::StringParam{"127.0.0.1"};
     this->MakeSlotAvailable(&this->target_machine_slot_);
+    this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
+    this->MakeSlotAvailable(&this->callRequestMpi);
 #ifdef WITH_MPI
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&toggle_aggregate_slot_);
@@ -68,10 +72,6 @@ bool megamol::pbs::FBOTransmitter2::create() {
 #if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
 #endif
-#ifdef WITH_MPI
-    MPI_Comm_split(MPI_COMM_WORLD, 1, 0, &mpi_comm_);
-    MPI_Comm_rank(mpi_comm_, &rank_);
-#endif // WITH_MPI
     return true;
 }
 
@@ -82,7 +82,7 @@ void megamol::pbs::FBOTransmitter2::release() {
     this->transmitter_thread_.join();
 
 #ifdef WITH_MPI
-    if (toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
+    if (useMpi) {
         icetDestroyMPICommunicator(icet_comm_);
         icetDestroyContext(icet_ctx_);
     }
@@ -96,11 +96,17 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
 #endif
 #ifdef WITH_MPI
-        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
 
-        if ((aggregate_ && rank_ == 0) || !aggregate_) {
+        useMpi = initMPI();
+        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
+        if (aggregate_ && !useMpi) {
+            vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!");
+            this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
+        }
+
+        if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", rank_);
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
 #endif
 #endif // WITH_MPI
             auto const address =
@@ -119,8 +125,8 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             hostname.resize(buf_size);
             GetComputerNameA(hostname.data(), &buf_size);
 #else
-        hostname.resize(HOST_NAME_MAX);
-        gethostname(hostname.data(), HOST_NAME_MAX);
+            hostname.resize(HOST_NAME_MAX);
+            gethostname(hostname.data(), HOST_NAME_MAX);
 #endif
             char stuff[1024];
             sprintf(stuff, "tcp://%s:%s", hostname.c_str(), address.c_str());
@@ -175,15 +181,18 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         // get viewport of current render context
         if (aggregate_) {
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", rank_);
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
-            icet_comm_ = icetCreateMPICommunicator(mpi_comm_);
+            //MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
+            //MPI_Comm_dup(MPI_COMM_WORLD, heinz);
+            icet_comm_ = icetCreateMPICommunicator(MPI_COMM_WORLD);
             icet_ctx_ = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
             icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
             icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
             icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
+            icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
@@ -195,7 +204,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             icetAddTile(
                 viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", rank_);
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
 #endif
         }
 #endif // WITH_MPI
@@ -221,7 +230,20 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     }
 
 #ifdef WITH_MPI
-    if ((aggregate_ && rank_ == 0) || !aggregate_) {
+    IceTUByte* icet_col_buf = reinterpret_cast<IceTUByte*>(col_buf.data());
+    IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
+
+    if (aggregate_) {
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
+#endif
+        std::array<IceTFloat, 4> backgroundColor = { 0, 0, 0, 0 };
+        auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
+        icet_col_buf = icetImageGetColorub(icet_comp_image);
+        icet_depth_buf = icetImageGetDepthf(icet_comp_image);
+    }
+
+    if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #endif // WITH_MPI
        // copy data to read buffer, if possible
         {
@@ -243,22 +265,18 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             // this->fbo_msg_read_->cs_bbox = bbox;
 
             this->color_buf_read_->resize(col_buf.size());
-            std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            //std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             this->depth_buf_read_->resize(depth_buf.size());
-            std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
+            //std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
+            memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
         }
 
         this->swapBuffers();
 #ifdef WITH_MPI
-    } else if (aggregate_) {
-#if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", rank_);
-#endif
-        std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
-        icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
-    }
+    } 
 #endif // WITH_MPI
 }
 
@@ -290,23 +308,23 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
         {
             std::lock_guard<std::mutex> send_lock(this->buffer_send_guard_);
 
-#ifdef WITH_MPI
-            IceTUByte* icet_col_buf = nullptr;
-            IceTFloat* icet_depth_buf = nullptr;
-            if (aggregate_) {
-#if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Complex IceT commit at rank %d\n", rank_);
-#endif
-                std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
-                auto const icet_comp_image = icetCompositeImage(this->color_buf_send_->data(),
-                    this->depth_buf_send_->data(), nullptr, nullptr, nullptr, backgroundColor.data());
-#if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Recieved IceT image at rank %d\n", rank_);
-#endif
-                icet_col_buf = icetImageGetColorub(icet_comp_image);
-                icet_depth_buf = icetImageGetDepthf(icet_comp_image);
-            }
-#endif
+//#ifdef WITH_MPI
+//            IceTUByte* icet_col_buf = nullptr;
+//            IceTFloat* icet_depth_buf = nullptr;
+//            if (aggregate_) {
+//#if _DEBUG
+//                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Complex IceT commit at rank %d\n", rank_);
+//#endif
+//                std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
+//                auto const icet_comp_image = icetCompositeImage(this->color_buf_send_->data(),
+//                    this->depth_buf_send_->data(), nullptr, nullptr, nullptr, backgroundColor.data());
+//#if _DEBUG
+//                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Recieved IceT image at rank %d\n", rank_);
+//#endif
+//                icet_col_buf = icetImageGetColorub(icet_comp_image);
+//                icet_depth_buf = icetImageGetDepthf(icet_comp_image);
+//            }
+//#endif
 
             // snappy compression
             std::vector<char> col_comp_buf(snappy::MaxCompressedLength(this->color_buf_send_->size()));
@@ -314,17 +332,17 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
             size_t col_comp_size = 0;
             size_t depth_comp_size = 0;
 
-            if (aggregate_) {
-                snappy::RawCompress(reinterpret_cast<char*>(icet_col_buf), this->color_buf_send_->size(),
-                    col_comp_buf.data(), &col_comp_size);
-                snappy::RawCompress(reinterpret_cast<char*>(icet_depth_buf), this->depth_buf_send_->size(),
-                    depth_comp_buf.data(), &depth_comp_size);
-            } else {
+            //if (aggregate_) {
+            //    snappy::RawCompress(reinterpret_cast<char*>(icet_col_buf), this->color_buf_send_->size(),
+            //        col_comp_buf.data(), &col_comp_size);
+            //    snappy::RawCompress(reinterpret_cast<char*>(icet_depth_buf), this->depth_buf_send_->size(),
+            //        depth_comp_buf.data(), &depth_comp_size);
+            //} else {
                 snappy::RawCompress(
                     this->color_buf_send_->data(), this->color_buf_send_->size(), col_comp_buf.data(), &col_comp_size);
                 snappy::RawCompress(this->depth_buf_send_->data(), this->depth_buf_send_->size(), depth_comp_buf.data(),
                     &depth_comp_size);
-            }
+            //}
 
             fbo_msg_send_->color_buf_size = col_comp_size;
             fbo_msg_send_->depth_buf_size = depth_comp_size;
@@ -414,4 +432,42 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
     }
     this->ModuleGraphLock().UnlockExclusive();
     return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::initMPI() {
+    bool retval = false;
+#ifdef WITH_MPI
+    if (this->mpi_comm_ == MPI_COMM_NULL) {
+        VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: Need to initialize MPI\n");
+        auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
+        if (c != nullptr) {
+            /* New method: let MpiProvider do all the stuff. */
+            if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
+                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                this->mpi_comm_ = c->GetComm();
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
+            }
+        }
+
+        if (this->mpi_comm_ != MPI_COMM_NULL) {
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+                _T("retrieving communicator properties ..."));
+            ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
+            ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+                _T("of %d."),
+                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+                this->mpiRank, this->mpiSize);
+        } /* end if (this->comm != MPI_COMM_NULL) */
+        VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: MPI initialized: %s (%i)\n", this->mpi_comm_ != MPI_COMM_NULL ? "true" : "false", mpi_comm_);
+    } /* end if (this->comm == MPI_COMM_NULL) */
+
+      /* Determine success of the whole operation. */
+    retval = (this->mpi_comm_ != MPI_COMM_NULL);
+#endif /* WITH_MPI */
+    return retval;
 }

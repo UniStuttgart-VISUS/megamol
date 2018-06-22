@@ -13,6 +13,7 @@
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
+#include "mmcore/CallerSlot.h"
 
 #ifdef WITH_MPI
 #include "IceT.h"
@@ -82,6 +83,7 @@ private:
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
     bool extractBoundingBox(float bbox[6]);
+    bool initMPI();
 
     megamol::core::param::ParamSlot address_slot_;
 
@@ -94,17 +96,21 @@ private:
     megamol::core::param::ParamSlot target_machine_slot_;
 
 #ifdef WITH_MPI
+    /** slot for MPIprovider */
+    core::CallerSlot callRequestMpi;
+
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
 
     bool aggregate_;
+
+    bool useMpi = false;
+    int mpiRank = -1, mpiSize = -1;
 
     IceTContext icet_ctx_;
 
     IceTCommunicator icet_comm_;
 
-    int rank_;
-
-    MPI_Comm mpi_comm_;
+    MPI_Comm mpi_comm_ = MPI_COMM_NULL;
 #endif // WITH_MPI
 
     std::mutex buffer_read_guard_;
