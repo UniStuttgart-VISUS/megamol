@@ -239,8 +239,10 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #endif
         std::array<IceTFloat, 4> backgroundColor = { 0, 0, 0, 0 };
         auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
-        icet_col_buf = icetImageGetColorub(icet_comp_image);
-        icet_depth_buf = icetImageGetDepthf(icet_comp_image);
+        if (mpiRank == 0) {
+            icet_col_buf = icetImageGetColorub(icet_comp_image);
+            icet_depth_buf = icetImageGetDepthf(icet_comp_image);
+        }
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
