@@ -617,8 +617,12 @@ void vislib::graphics::CameraParamsStore::SetView(const
     this->lookAt = this->position + dir;
     this->right = this->front.Cross(up);
     this->right.Normalise();
-    this->up = this->right.Cross(this->front);
-    this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
+    // TODO: this was not good, it caused immense drift after only a single rotation, so I just got rid of it.
+    // BUG? might backfire in other situations, but I did not find any yet
+    //this->up = this->right.Cross(this->front);
+    //this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
+    this->up = up;
+    this->up.Normalise();
     if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
         this->right *= static_cast<SceneSpaceType>(-1);
     }

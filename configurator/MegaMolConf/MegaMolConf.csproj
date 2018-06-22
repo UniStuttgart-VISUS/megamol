@@ -61,6 +61,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Io\ProjectFileLua.cs" />
     <Compile Include="StringSelector.cs">
       <SubType>Form</SubType>
     </Compile>

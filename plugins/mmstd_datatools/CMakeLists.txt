@@ -14,6 +14,8 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   
   set(LIBS vislib core glad geometry_calls)
 
+  include_directories("include" "src" "3rd/nanoflann")
+
   if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
@@ -23,13 +25,11 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply --depth 1
+    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.1" --depth 1
     OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeout.txt
     ERROR_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeerr.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix
   )
-
-  include_directories("include" "src" "3rd/nanoflann" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -67,7 +67,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)

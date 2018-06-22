@@ -20,7 +20,7 @@ out float vsEffectiveDiameter;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
-    const int rowOffset = gl_VertexID / rowStride * rowStride;
+    const int rowOffset = gl_VertexID * rowStride;
 
     // Map value pair to position.
     const vec2 point = vec2(values[rowOffset + plot.indexX],
@@ -31,17 +31,12 @@ void main(void) {
                       unitPoint.y * plot.sizeY + plot.offsetY,
                       0.0f, 1.0f);
 
+    // Fetch color from table.
+    const float colorIndex = values[rowOffset + colorConsts[0]];
     const float colorCount = float(colorConsts[1]);
-    if (colorCount != 0) {
-        // Fetch color from table.
-        const float colorIndex = values[rowOffset + colorConsts[0]];
-        const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
-                                  + 0.5 / colorCount;
-        vsColor = texture(colorTable, colorOffset);
-    } else {
-        // Use fallback color.
-        vsColor = vec4(1.0f);
-    }
+    const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
+                                + 0.5 / colorCount;
+    vsColor = texture(colorTable, colorOffset);
 
     if (attenuateSubpixel) {
         // Attenuate alpha depending on subpixels.
@@ -51,5 +46,5 @@ void main(void) {
     }
 
     gl_Position = modelViewProjection * vsPosition;
-    gl_PointSize = kernelWidth;
+    gl_PointSize = kernelWidth; //XXX: this one should be in world space not screen spaace (pixels)
 }

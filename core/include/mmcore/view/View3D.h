@@ -31,7 +31,6 @@
 #include "vislib/graphics/CameraZoom2DMove.h"
 #include "vislib/graphics/CameraZoom2DAngle.h"
 #include "vislib/graphics/CameraMove2D.h"
-#include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/graphics/InputModifiers.h"
@@ -513,14 +512,8 @@ namespace view {
 
         param::ParamSlot toggleSoftCursorSlot;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
         /** The colour of the bounding box */
-        vislib::graphics::ColourRGBAu8 bboxCol;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        float bboxCol[4];
 
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;

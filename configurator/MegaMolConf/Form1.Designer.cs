@@ -751,7 +751,7 @@
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "mmprj";
-            this.saveFileDialog1.Filter = "MegaMol™ Project Files|*.mmprj|All Files|*.*";
+            this.saveFileDialog1.Filter = "MegaMol Project Files|*.mmprj|MegaMol LUA project files|*.lua|All Files|*.*";
             this.saveFileDialog1.Title = "Save MegaMol™ Project ...";
             // 
             // openFileDialog1
