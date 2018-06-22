@@ -14,6 +14,11 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 
+#ifdef WITH_MPI
+#include "IceT.h"
+#include "IceTMPI.h"
+#endif // WITH_MPI
+
 namespace megamol {
 namespace pbs {
 
@@ -87,6 +92,18 @@ private:
     megamol::core::param::ParamSlot trigger_button_slot_;
 
     megamol::core::param::ParamSlot target_machine_slot_;
+
+#ifdef WITH_MPI
+    megamol::core::param::ParamSlot toggle_aggregate_slot_;
+
+    bool aggregate_;
+
+    IceTContext icet_ctx_;
+
+    IceTCommunicator icet_comm_;
+
+    int rank_;
+#endif // WITH_MPI
 
     std::mutex buffer_read_guard_;
 
