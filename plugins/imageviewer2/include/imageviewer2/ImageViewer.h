@@ -158,7 +158,7 @@ private:
     bool onCurrentSet(param::ParamSlot& slot);
 
     /** makes sure the image for the respective eye is loaded. */
-    void assertImage(bool rightEye);
+    bool assertImage(bool rightEye);
 
     bool initMPI();
 
@@ -198,6 +198,9 @@ private:
     /** slot for MPIprovider */
     CallerSlot callRequestMpi;
 
+    /** slot for image data */
+    CallerSlot callRequestImage;
+
 #ifdef WITH_MPI
     /** The communicator that the view uses. */
     MPI_Comm comm;
@@ -230,6 +233,9 @@ private:
 
     /** cache for the local machine name */
     vislib::TString machineName;
+
+    /** hash to check whether image has changed */
+    size_t datahash;
 };
 
 } /* end namespace imageviewer2 */

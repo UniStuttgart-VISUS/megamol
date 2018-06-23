@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "image_calls/Image2DCall.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -56,7 +58,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::image_calls::MyCall2>();
             //   ...
             //
-
+            this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

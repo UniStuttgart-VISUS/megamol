@@ -13,6 +13,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
+#include "image_calls/Image2DCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/ButtonParam.h"
@@ -46,11 +47,13 @@ imageviewer2::ImageViewer::ImageViewer(void)
     , blankMachine("blankMachine", "semicolon-separated list of machines that do not load image")
     , defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line")
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+    , callRequestImage{"requestImage", "Requests an image to display"}
     , width(1)
     , height(1)
     , tiles()
     , leftFiles()
-    , rightFiles() {
+    , rightFiles()
+    , datahash{0} {
 
     this->leftFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->leftFilenameSlot);
@@ -104,6 +107,9 @@ imageviewer2::ImageViewer::ImageViewer(void)
 
     this->callRequestMpi.SetCompatibleCall<cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
+
+    this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
+    this->MakeSlotAvailable(&this->callRequestImage);
 #ifdef WITH_MPI
     this->comm = MPI_COMM_NULL;
 #endif /* WITH_MPI */
@@ -150,7 +156,7 @@ bool imageviewer2::ImageViewer::GetExtents(Call& call) {
 
     if (cr->GetCameraParameters() != NULL) {
         bool rightEye = (cr->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
-        assertImage(rightEye);
+        if (!assertImage(rightEye)) return false;
     }
 
     cr->SetTimeFramesCount(1);
@@ -175,10 +181,16 @@ void imageviewer2::ImageViewer::release(void) {
 /*
  * imageviewer2::ImageViewer::assertImage
  */
-void imageviewer2::ImageViewer::assertImage(bool rightEye) {
+bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
+    bool imgcConnected = false;
+    auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
+    if (imgc != nullptr) imgcConnected = true;
+
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    if (filenameSlot->IsDirty()) {
-        filenameSlot->ResetDirty();
+    if (filenameSlot->IsDirty() || (imgcConnected && imgc->DataHash() != datahash)) { //< imgc has precedence
+        if (!imgcConnected) {
+            filenameSlot->ResetDirty();
+        }
         const vislib::TString& filename = filenameSlot->Param<param::FilePathParam>()->Value();
         static vislib::graphics::BitmapImage img;
         // static ::sg::graphics::PngBitmapCodec codec;
@@ -207,22 +219,33 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
             if (!beBlank) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
+                std::shared_ptr<unsigned char[]> imgc_data_ptr;
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == 0) {
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
-                    vislib::sys::FastFile in;
-                    if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
-                            vislib::sys::File::OPEN_ONLY)) {
-                        fileSize = in.GetSize();
-                        allFile = new BYTE[fileSize];
-                        in.Read(allFile, fileSize);
-                        in.Close();
+                    if (!imgcConnected) {
+                        vislib::sys::FastFile in;
+                        if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
+                                vislib::sys::File::OPEN_ONLY)) {
+                            fileSize = in.GetSize();
+                            allFile = new BYTE[fileSize];
+                            in.Read(allFile, fileSize);
+                            in.Close();
+                        } else {
+                            printf("ImageViewer2: failed opening file\n");
+                            fileSize = 0;
+                        }
                     } else {
-                        printf("ImageViewer2: failed opening file\n");
-                        fileSize = 0;
+                        // retrieve data from call
+                        if (!(*imgc)(0)) return false;
+                        this->width = imgc->GetWidth();
+                        this->height = imgc->GetHeight();
+                        fileSize = imgc->GetFilesize();
+                        imgc_data_ptr = imgc->GetData().lock();
+                        allFile = imgc_data_ptr.get();
                     }
 #ifdef WITH_MPI
                 }
@@ -242,15 +265,39 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
                     MPI_Bcast(allFile, fileSize, MPI_BYTE, 0, roleComm);
                 }
 #endif /* WITH_MPI */
-                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
-                        img, allFile, fileSize)) {
-                    img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                    this->width = img.Width();
-                    this->height = img.Height();
+                BYTE* image_ptr = nullptr;
+                if (!imgcConnected) {
+                    if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                            img, allFile, fileSize)) {
+                        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                        this->width = img.Width();
+                        this->height = img.Height();
+                        image_ptr = img.PeekDataAs<BYTE>();
+                    } else {
+                        printf("ImageViewer2 failed decoding file\n");
+                        fileSize = 0;
+                        this->width = this->height = 0;
+                    }
                 } else {
-                    printf("ImageViewer2 failed decoding file\n");
-                    fileSize = 0;
-                    this->width = this->height = 0;
+                    switch (imgc->GetEncoding()) {
+                    case image_calls::Image2DCall::BMP: {
+                        if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                                img, allFile, fileSize)) {
+                            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                            this->width = img.Width();
+                            this->height = img.Height();
+                            image_ptr = img.PeekDataAs<BYTE>();
+                        } else {
+                            printf("ImageViewer2 failed decoding file\n");
+                            fileSize = 0;
+                            this->width = this->height = 0;
+                        }
+                    } break;
+                    case image_calls::Image2DCall::SNAPPY: {
+                    } break;
+                    case image_calls::Image2DCall::RAW:
+                    default: { image_ptr = allFile; }
+                    }
                 }
                 // now everyone should have a copy of the loaded image
 
@@ -262,8 +309,7 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         for (unsigned int x = 0; x < this->width; x += TILE_SIZE) {
                             unsigned int w = vislib::math::Min(TILE_SIZE, this->width - x);
                             for (unsigned int l = 0; l < h; l++) {
-                                ::memcpy(buf + (l * w * 3),
-                                    img.PeekDataAs<BYTE>() + ((y + l) * this->width * 3 + x * 3), w * 3);
+                                ::memcpy(buf + (l * w * 3), image_ptr + ((y + l) * this->width * 3 + x * 3), w * 3);
                             }
                             this->tiles.Add(vislib::Pair<vislib::math::Rectangle<float>,
                                 vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>>());
@@ -292,10 +338,13 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
 
         } catch (vislib::Exception ex) {
             printf("Failed: %s (%s;%d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+            return false;
         } catch (...) {
             printf("Failed\n");
+            return false;
         }
     }
+    return true;
 }
 
 
@@ -343,7 +392,7 @@ bool imageviewer2::ImageViewer::Render(Call& call) {
     bool rightEye = (cr3d->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
     // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     ::glEnable(GL_TEXTURE_2D);
-    assertImage(rightEye);
+    if (!assertImage(rightEye)) return false;
 
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);

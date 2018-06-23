@@ -38,7 +38,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DICET_BUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME}
   )
 
-  set(LIBS vislib core glad OSPRay_plugin ${ZFP_LIB} ${ZMQ_LIB} ${SNAPPY_LIB} ${ICET_LIB})
+  set(LIBS vislib core glad OSPRay_plugin image_calls ${ZFP_LIB} ${ZMQ_LIB} ${SNAPPY_LIB} ${ICET_LIB})
   include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
