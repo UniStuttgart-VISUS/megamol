@@ -1,8 +1,7 @@
 uniform float alphaScaling;
 
-in vec4 vsPosition;
 in vec4 vsColor;
-in float vsEffectiveDiameter;
+in float vsSize;
 
 out vec4 fsColor;
 
@@ -17,7 +16,7 @@ void main(void) {
     const vec2 distance = gl_PointCoord.xy - vec2(0.5);
 
     float alpha = gauss2(distance * 6);
-    alpha *= pow(vsEffectiveDiameter, 2);
+    alpha *= pow(vsSize, 2);
     alpha *= alphaScaling;
 
     // Blend against white.
