@@ -400,10 +400,6 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glEnable(GL_POINT_SPRITE);
     glPointSize(std::max(viewport[2], viewport[3]));
 
-    // XXX: maybe we should move this before first usage?
-    viewport[2] = 2.0f / std::max(1.0f, viewport[2]);
-    viewport[3] = 2.0f / std::max(1.0f, viewport[3]);
-
     this->pointShader.Enable();
 
     // Transformation uniforms.

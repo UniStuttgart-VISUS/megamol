@@ -14,22 +14,12 @@ layout(std430, binding = 3) buffer ValueSSBO {
     float values[];
 };
 
-out vec4 vsPosition;
 out vec4 vsColor;
-out float vsEffectiveDiameter;
+out float vsSize;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
     const int rowOffset = gl_VertexID * rowStride;
-
-    // Map value pair to position.
-    const vec2 point = vec2(values[rowOffset + plot.indexX],
-                            values[rowOffset + plot.indexY]);
-    const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
-                                (point.y - plot.minY) / (plot.maxY - plot.minY));
-    vsPosition = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
-                      unitPoint.y * plot.sizeY + plot.offsetY,
-                      0.0f, 1.0f);
 
     // Fetch color from table.
     const float colorIndex = values[rowOffset + colorConsts[0]];
@@ -38,13 +28,25 @@ void main(void) {
                                 + 0.5 / colorCount;
     vsColor = texture(colorTable, colorOffset);
 
-    if (attenuateSubpixel) {
-        // Attenuate alpha depending on subpixels.
-        vsEffectiveDiameter = kernelWidth;
-    } else {
-        vsEffectiveDiameter = 1.0;
-    }
+    // Map value pair to position.
+    const vec2 point = vec2(values[rowOffset + plot.indexX],
+                            values[rowOffset + plot.indexY]);
+    const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
+                                (point.y - plot.minY) / (plot.maxY - plot.minY));
+    const vec4 position = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
+                      unitPoint.y * plot.sizeY + plot.offsetY,
+                      0.0, 1.0);
+    gl_Position = modelViewProjection * position;
 
-    gl_Position = modelViewProjection * vsPosition;
-    gl_PointSize = kernelWidth; //XXX: this one should be in world space not screen spaace (pixels)
+     // Transform kernel size to screen space.
+    const vec4 ndcSize = modelViewProjection * vec4(kernelWidth, kernelWidth, 0.0, 0.0);
+    const vec2 screenSize = ndcSize.xy * viewport.zw;
+    vsSize = max(screenSize.x, screenSize.y);
+
+    if (attenuateSubpixel) {
+        // Ensure a minimum pixel size to attenuate alpha depending on subpixels.
+        gl_PointSize = max(vsSize, 1.0);
+    } else {
+        gl_PointSize = vsSize;
+    }
 }
