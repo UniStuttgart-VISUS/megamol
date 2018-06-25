@@ -14,6 +14,10 @@
 
 #include "snappy.h"
 
+#include <exception>
+#include "vislib/Exception.h"
+
+//#define _DEBUG 1
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : commSelectSlot_{"communicator", "Select the communicator to use"}
@@ -113,10 +117,8 @@ bool megamol::pbs::FBOCompositor2::create() {
 
 void megamol::pbs::FBOCompositor2::release() {
     close_promise_.set_value(true);
-    if (collector_thread_.joinable())
-        collector_thread_.join();
-    if (registerThread_.joinable())
-        registerThread_.join();
+    if (collector_thread_.joinable()) collector_thread_.join();
+    if (registerThread_.joinable()) registerThread_.join();
 }
 
 
@@ -140,7 +142,16 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
     auto& out_bbox = cr->AccessBoundingBoxes();
 
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex GetExtent\n");
+#endif
+
     std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
+
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex GetExtent\n");
+#endif
+
     if (!this->fbo_msg_write_->empty()) {
         float bbox[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -212,7 +223,14 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     // if no directly upload
     // it yes resize textures and upload afterward
     if (data_has_changed_.load()) {
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
+#endif
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
+
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
+#endif
 
         auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
                            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
@@ -280,151 +298,199 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 
 void megamol::pbs::FBOCompositor2::receiverJob(
     FBOCommFabric& comm, core::utility::sys::FutureReset<fbo_msg_t>* fbo_msg_future, std::future<bool>&& close) {
-    while (true) {
-        auto const status = close.wait_for(std::chrono::milliseconds(1));
-        if (status == std::future_status::ready) break;
+    try {
+        while (true) {
+            auto const status = close.wait_for(std::chrono::milliseconds(1));
+            if (status == std::future_status::ready) break;
 
-        // send a request for data
-        std::vector<char> buf{'r', 'e', 'q'};
-        try {
+            // send a request for data
+            std::vector<char> buf{'r', 'e', 'q'};
+            try {
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending request\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending request\n");
 #endif
-            if (!comm.Send(buf, send_type::SEND)) {
+                if (!comm.Send(buf, send_type::SEND)) {
+                    vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
+                }
+#if _DEBUG
+                else {
+                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Request sent\n");
+                }
+#endif
+            } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
             }
-#if _DEBUG
-            else {
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Request sent\n");
-            }
-#endif
-        } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
-        }
 
-        // receive requested frame info
-        try {
+            // receive requested frame info
+            try {
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Waiting for answer\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Waiting for answer\n");
 #endif
-            if (!comm.Recv(buf, recv_type::RECV)) {
+                if (!comm.Recv(buf, recv_type::RECV)) {
+                    vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
+                }
+#if _DEBUG
+                else {
+                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
+                }
+#endif
+            } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
             }
-#if _DEBUG
-            else {
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
-            }
+
+            fbo_msg_header_t header;
+            char* buf_ptr = buf.data();
+            std::copy(buf_ptr, buf_ptr + sizeof(fbo_msg_header_t), reinterpret_cast<char*>(&header));
+            buf_ptr += sizeof(fbo_msg_header_t);
+            size_t fbo_depth_size;
+            auto vol =
+                (header.updated_area[2] - header.updated_area[0]) * (header.updated_area[3] - header.updated_area[1]);
+            size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
+            fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
+            fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+
+            std::vector<char> col_buf(fbo_col_size);
+            std::vector<char> col_comp_buf(header.color_buf_size);
+            std::copy(buf_ptr, buf_ptr + header.color_buf_size, col_comp_buf.begin());
+            buf_ptr += header.color_buf_size;
+            std::vector<char> depth_buf(fbo_depth_size);
+            std::vector<char> depth_comp_buf(header.depth_buf_size);
+            std::copy(buf_ptr, buf_ptr + header.depth_buf_size, depth_comp_buf.begin());
+
+            // snappy uncompress
+            snappy::RawUncompress(col_comp_buf.data(), col_comp_buf.size(), col_buf.data());
+            snappy::RawUncompress(depth_comp_buf.data(), depth_comp_buf.size(), depth_buf.data());
+
+            /*std::vector<char> col_buf(fbo_col_size);
+            std::copy(buf_ptr, buf_ptr + fbo_col_size, col_buf.begin());
+            buf_ptr += fbo_col_size;
+            std::vector<char> depth_buf(fbo_depth_size);
+            std::copy(buf_ptr, buf_ptr + fbo_depth_size, depth_buf.begin());*/
+
+#ifdef _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "FBOCompositor2: Got message with col_buf size %d and depth_buf size %d\n", col_buf.size(),
+                depth_buf.size());
 #endif
-        } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
-        }
 
-        fbo_msg_header_t header;
-        char* buf_ptr = buf.data();
-        std::copy(buf_ptr, buf_ptr + sizeof(fbo_msg_header_t), reinterpret_cast<char*>(&header));
-        buf_ptr += sizeof(fbo_msg_header_t);
-        size_t fbo_depth_size;
-        auto vol =
-            (header.updated_area[2] - header.updated_area[0]) * (header.updated_area[3] - header.updated_area[1]);
-        size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
-        fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
-        fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+            auto const msg = fbo_msg{std::move(header), std::move(col_buf), std::move(depth_buf)};
 
-        std::vector<char> col_buf(fbo_col_size);
-        std::vector<char> col_comp_buf(header.color_buf_size);
-        std::copy(buf_ptr, buf_ptr + header.color_buf_size, col_comp_buf.begin());
-        buf_ptr += header.color_buf_size;
-        std::vector<char> depth_buf(fbo_depth_size);
-        std::vector<char> depth_comp_buf(header.depth_buf_size);
-        std::copy(buf_ptr, buf_ptr + header.depth_buf_size, depth_comp_buf.begin());
-
-        // snappy uncompress
-        snappy::RawUncompress(col_comp_buf.data(), col_comp_buf.size(), col_buf.data());
-        snappy::RawUncompress(depth_comp_buf.data(), depth_comp_buf.size(), depth_buf.data());
-
-        /*std::vector<char> col_buf(fbo_col_size);
-        std::copy(buf_ptr, buf_ptr + fbo_col_size, col_buf.begin());
-        buf_ptr += fbo_col_size;
-        std::vector<char> depth_buf(fbo_depth_size);
-        std::copy(buf_ptr, buf_ptr + fbo_depth_size, depth_buf.begin());*/
-
-        auto const msg = fbo_msg{std::move(header), std::move(col_buf), std::move(depth_buf)};
-
-        while (true) {
-            try {
-                fbo_msg_future->SetPromise(msg);
-                break;
-            } catch (std::future_error const& e) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            while (true) {
+                try {
+                    fbo_msg_future->SetPromise(msg);
+                    break;
+                } catch (std::future_error const& e) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
             }
-        }
 
+#if 0
         {
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex receiverJob Heartbeat\n");
+#endif
             std::shared_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
+
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex receiverJob Heartbeat\n");
+#endif
             heartbeat_.wait(heartbeat_guard);
         }
+#endif
+        }
+        vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
+    } catch (std::exception& e) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.what());
+    } catch (vislib::Exception& e) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.GetMsgA());
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n");
     }
-    vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing receiverJob\n");
 }
 
 
 void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& comms) {
-    auto const num_jobs = comms.size();
-    // initialize threads
-    std::vector<std::thread> jobs;
-    std::vector<core::utility::sys::FutureReset<fbo_msg_t>> fbo_msg_futures(num_jobs);
-    std::vector<std::promise<bool>> recv_close_sig;
-    size_t i = 0;
-    for (auto& comm : comms) {
-        std::promise<bool> close_sig;
-        auto close_sig_fut = close_sig.get_future();
-        recv_close_sig.emplace_back(std::move(close_sig));
-        // fbo_msg_futures.emplace_back();
-        jobs.emplace_back(
-            &FBOCompositor2::receiverJob, this, std::ref(comm), fbo_msg_futures[i].GetPtr(), std::move(close_sig_fut));
-        i += 1;
-    }
-
-    {
-        std::scoped_lock<std::mutex, std::mutex> guard(buffer_recv_guard_, buffer_write_guard_);
-        this->fbo_msg_write_.reset(new std::vector<fbo_msg_t>);
-        this->fbo_msg_write_->resize(jobs.size());
-        this->fbo_msg_recv_.reset(new std::vector<fbo_msg_t>);
-        this->fbo_msg_recv_->resize(jobs.size());
-        this->width_ = 1;
-        this->height_ = 1;
-        this->initTextures(jobs.size(), this->width_, this->height_);
-    }
-
-    // collector loop
-    std::vector<bool> fbo_gate(jobs.size());
-    while (true) {
-        auto const status = close_future_.wait_for(std::chrono::milliseconds(1));
-        if (status == std::future_status::ready) break;
-
-        auto const start = std::chrono::high_resolution_clock::now();
-
-        std::fill(fbo_gate.begin(), fbo_gate.end(), false);
-        while (!std::all_of(fbo_gate.begin(), fbo_gate.end(), [](bool const& a) { return a; })) {
-            // promise_exchange_.notify_all();
-            for (size_t i = 0; i < fbo_gate.size(); ++i) {
-                if (!fbo_gate[i]) {
-                    auto const status = fbo_msg_futures[i].WaitFor(std::chrono::milliseconds(1));
-                    if (status == std::future_status::ready) {
-                        fbo_gate[i] = true;
-                    }
-                }
-            }
+    try {
+        auto const num_jobs = comms.size();
+        // initialize threads
+        std::vector<std::thread> jobs;
+        std::vector<core::utility::sys::FutureReset<fbo_msg_t>> fbo_msg_futures(num_jobs);
+        std::vector<std::promise<bool>> recv_close_sig;
+        size_t i = 0;
+        for (auto& comm : comms) {
+            std::promise<bool> close_sig;
+            auto close_sig_fut = close_sig.get_future();
+            recv_close_sig.emplace_back(std::move(close_sig));
+            // fbo_msg_futures.emplace_back();
+            jobs.emplace_back(&FBOCompositor2::receiverJob, this, std::ref(comm), fbo_msg_futures[i].GetPtr(),
+                std::move(close_sig_fut));
+            i += 1;
         }
 
         {
-            std::lock_guard<std::mutex> fbo_recv_guard(this->buffer_recv_guard_);
 
-            for (size_t i = 0; i < fbo_msg_futures.size(); ++i) {
-                (*this->fbo_msg_recv_)[i] = fbo_msg_futures[i].GetAndReset();
-            }
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob\n");
+#endif
+
+            std::scoped_lock<std::mutex, std::mutex> guard(buffer_recv_guard_, buffer_write_guard_);
+
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob\n");
+#endif
+            this->fbo_msg_write_.reset(new std::vector<fbo_msg_t>);
+            this->fbo_msg_write_->resize(jobs.size());
+            this->fbo_msg_recv_.reset(new std::vector<fbo_msg_t>);
+            this->fbo_msg_recv_->resize(jobs.size());
+            this->width_ = 1;
+            this->height_ = 1;
+            this->initTextures(jobs.size(), this->width_, this->height_);
         }
 
+        // collector loop
+        std::vector<bool> fbo_gate(jobs.size());
+        while (true) {
+            auto const status = close_future_.wait_for(std::chrono::milliseconds(1));
+            if (status == std::future_status::ready) break;
+
+            auto const start = std::chrono::high_resolution_clock::now();
+
+            std::fill(fbo_gate.begin(), fbo_gate.end(), false);
+            while (!std::all_of(fbo_gate.begin(), fbo_gate.end(), [](bool const& a) { return a; })) {
+                // promise_exchange_.notify_all();
+                for (size_t i = 0; i < fbo_gate.size(); ++i) {
+                    if (!fbo_gate[i]) {
+                        auto const status = fbo_msg_futures[i].WaitFor(std::chrono::milliseconds(1));
+                        if (status == std::future_status::ready) {
+                            fbo_gate[i] = true;
+                        }
+                    }
+                }
+            }
+
+            {
+
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob collect\n");
+#endif
+
+                std::lock_guard<std::mutex> fbo_recv_guard(this->buffer_recv_guard_);
+
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex colectorJob collect\n");
+#endif
+
+#ifdef _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Got all messages ... comitting\n");
+#endif
+
+                for (size_t i = 0; i < fbo_msg_futures.size(); ++i) {
+                    (*this->fbo_msg_recv_)[i] = fbo_msg_futures[i].GetAndReset();
+                }
+            }
+
+
+#if 0
         auto const end = std::chrono::high_resolution_clock::now();
 
         // calculate heartbeat timer
@@ -442,67 +508,85 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
 #endif
         {
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collector Job heartbeat\n");
+#endif
             std::unique_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
+
+#if _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob heartbeat\n");
+#endif
+
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<size_t>(1000.0f / target_fps)));
             heartbeat_.notify_all();
         }
+#endif
 
-        this->swapBuffers();
-    }
+            this->swapBuffers();
+        }
 
-    // deinitialization
-    for (auto& sig : recv_close_sig) {
-        sig.set_value(true);
+        // deinitialization
+        for (auto& sig : recv_close_sig) {
+            sig.set_value(true);
+        }
+        for (auto& job : jobs) {
+            job.join();
+        }
+        vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n");
     }
-    for (auto& job : jobs) {
-        job.join();
-    }
-    vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
 }
 
 
 void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& addresses) {
-    int const numNodes = this->numRendernodesSlot_.Param<megamol::core::param::IntParam>()->Value();
+    try {
+        int const numNodes = this->numRendernodesSlot_.Param<megamol::core::param::IntParam>()->Value();
 
-    std::vector<char> buf;
+        std::vector<char> buf;
 
 #if _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting client registration of %d clients\n", numNodes);
+        vislib::sys::Log::DefaultLog.WriteInfo(
+            "FBOCompositor2: Starting client registration of %d clients\n", numNodes);
 #endif
 
-    do {
-        try {
+        do {
+            try {
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
-            registerComm_.Recv(buf);
+                registerComm_.Recv(buf);
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
 #endif
-        } catch (zmq::error_t const& e) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Failed to recv on register socket %s\n", e.what());
-        }
-        std::string str{buf.begin(), buf.end()};
+            } catch (zmq::error_t const& e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "FBOCompositor2: Failed to recv on register socket %s\n", e.what());
+            }
+            std::string str{buf.begin(), buf.end()};
 #if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
 #endif
-        addresses.push_back(str);
+            addresses.push_back(str);
 
-        try {
+            try {
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending client ack\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending client ack\n");
 #endif
-            registerComm_.Send(buf);
+                registerComm_.Send(buf);
 #if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sent client ack\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Sent client ack\n");
 #endif
-        } catch (zmq::error_t const& e) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "FBOCompositor2: Failed to send  on register socket %s\n", e.what());
-        }
-    } while (addresses.size() < numNodes);
+            } catch (zmq::error_t const& e) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "FBOCompositor2: Failed to send  on register socket %s\n", e.what());
+            }
+        } while (addresses.size() < numNodes);
 
-    this->isRegistered_.store(true);
+        this->isRegistered_.store(true);
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
+    }
 }
 
 
