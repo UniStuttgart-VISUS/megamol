@@ -53,7 +53,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
     , tiles()
     , leftFiles()
     , rightFiles()
-    , datahash{0} {
+    , datahash{std::numeric_limits<size_t>::max()} {
 
     this->leftFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->leftFilenameSlot);
@@ -187,7 +187,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     if (imgc != nullptr) imgcConnected = true;
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    if (filenameSlot->IsDirty() || (imgcConnected && imgc->DataHash() != datahash)) { //< imgc has precedence
+    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/)) { //< imgc has precedence
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         }
@@ -219,7 +219,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
             if (!beBlank) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
-                std::shared_ptr<unsigned char[]> imgc_data_ptr;
+                BYTE* imgc_data_ptr = nullptr;
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == 0) {
@@ -244,8 +244,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         this->width = imgc->GetWidth();
                         this->height = imgc->GetHeight();
                         fileSize = imgc->GetFilesize();
-                        imgc_data_ptr = imgc->GetData().lock();
-                        allFile = imgc_data_ptr.get();
+                        allFile = reinterpret_cast<BYTE*>(imgc->GetData());
                     }
 #ifdef WITH_MPI
                 }
@@ -302,7 +301,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 // now everyone should have a copy of the loaded image
 
                 this->tiles.Clear();
-                if (this->width > 0 && this->height > 0) {
+                if (this->width > 0 && this->height > 0 && image_ptr != nullptr) {
                     BYTE* buf = new BYTE[TILE_SIZE * TILE_SIZE * 3];
                     for (unsigned int y = 0; y < this->height; y += TILE_SIZE) {
                         unsigned int h = vislib::math::Min(TILE_SIZE, this->height - y);
@@ -325,7 +324,9 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         }
                     }
                     delete[] buf;
-                    delete[] allFile;
+                    if (!imgcConnected) {
+                        delete[] allFile;
+                    }
                     // img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
                 }
 #ifdef WITH_MPI

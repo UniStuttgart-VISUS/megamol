@@ -16,7 +16,8 @@
 
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
-    : commSelectSlot_{"communicator", "Select the communicator to use"}
+    : provide_img_slot_{"getImg", "Provides received images"}
+    , commSelectSlot_{"communicator", "Select the communicator to use"}
     // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
@@ -26,9 +27,14 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , data_has_changed_{false}
     , col_buf_el_size_{4}
     , depth_buf_el_size_{4}
+    , width_{0}
+    , height_{0}
     , connected_{false}
     , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
     , isRegistered_{false} {
+    provide_img_slot_.SetCallback(megamol::image_calls::Image2DCall::ClassName(),
+        megamol::image_calls::Image2DCall::FunctionName(0), &FBOCompositor2::getImageCallback);
+    this->MakeSlotAvailable(&provide_img_slot_);
     // addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
     // this->MakeSlotAvailable(&addressesSlot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
@@ -113,10 +119,8 @@ bool megamol::pbs::FBOCompositor2::create() {
 
 void megamol::pbs::FBOCompositor2::release() {
     close_promise_.set_value(true);
-    if (collector_thread_.joinable())
-        collector_thread_.join();
-    if (registerThread_.joinable())
-        registerThread_.join();
+    if (collector_thread_.joinable()) collector_thread_.join();
+    if (registerThread_.joinable()) registerThread_.join();
 }
 
 
@@ -186,27 +190,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    static bool register_done = false;
-    if (!register_done) {
-        registerThread_ = std::thread{&FBOCompositor2::registerJob, this, std::ref(addresses_)};
-        register_done = true;
-    }
-
-    if (!connected_ && isRegistered_.load()) {
-        // close_future_ = close_promise_.get_future();
-
-#if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting collector thread\n");
-#endif
-        /*auto const addresses =
-            std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};*/
-
-        // auto comms = this->connectComms(this->getAddresses(addresses));
-        auto comms = this->connectComms(addresses_);
-        this->collector_thread_ = std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
-
-        connected_ = true;
-    }
+    initThreads();
 
     // if data changed check is size has changed
     // if no directly upload
@@ -273,6 +257,79 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     glUseProgram(0);
 
     glDisable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+
+bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
+    initThreads();
+
+    auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
+    if (imgc == nullptr) return false;
+
+    if (data_has_changed_.load()) {
+        std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
+
+        this->width_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
+                       (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
+        this->height_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
+                        (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
+
+        // TODO For now, we only provide FBO 0
+        auto const& fbo = (*this->fbo_msg_write_)[0];
+
+        RGBAtoRGB(fbo.color_buf, this->img_data_);
+
+        ++hash_;
+
+        data_has_changed_.store(false);
+    }
+
+    // img_data_ptr_ = std::make_shared<unsigned char[]>(this->img_data_.data());
+    imgc->SetData(megamol::image_calls::Image2DCall::RAW, megamol::image_calls::Image2DCall::RGB, width_, height_,
+        this->img_data_.size(), this->img_data_.data());
+
+    imgc->SetDataHash(hash_);
+
+    return true;
+}
+
+
+void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb) {
+    auto const num_pixels = rgba.size() / 4;
+    rgb.resize(num_pixels * 3);
+
+    for (size_t pidx = 0; pidx < num_pixels; ++pidx) {
+        rgb[pidx * 3] = rgba[pidx * 4];
+        rgb[pidx * 3 + 1] = rgba[pidx * 4 + 1];
+        rgb[pidx * 3 + 2] = rgba[pidx * 4 + 2];
+    }
+}
+
+
+bool megamol::pbs::FBOCompositor2::initThreads() {
+    static bool register_done = false;
+    if (!register_done) {
+        registerThread_ = std::thread{&FBOCompositor2::registerJob, this, std::ref(addresses_)};
+        register_done = true;
+    }
+
+    if (!connected_ && isRegistered_.load()) {
+        // close_future_ = close_promise_.get_future();
+
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Starting collector thread\n");
+#endif
+        /*auto const addresses =
+            std::string{T2A(this->addressesSlot_.Param<megamol::core::param::StringParam>()->Value())};*/
+
+        // auto comms = this->connectComms(this->getAddresses(addresses));
+        auto comms = this->connectComms(addresses_);
+        this->collector_thread_ = std::thread{&FBOCompositor2::collectorJob, this, std::move(comms)};
+
+        connected_ = true;
+    }
 
     return true;
 }

@@ -56,7 +56,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-  add_dependencies(${PROJECT_NAME} vislib core extsnappy exticet)
+  add_dependencies(${PROJECT_NAME} vislib core image_calls extsnappy exticet)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.

@@ -56,7 +56,7 @@ public:
 
     virtual ~Image2DCall() = default;
 
-    std::weak_ptr<unsigned char[]> GetData() const { return this->data_; }
+    void* GetData() const { return this->data_; }
 
     Encoding GetEncoding() const { return this->enc_; }
 
@@ -69,7 +69,7 @@ public:
     size_t GetFilesize() const { return this->filesize_; }
 
     void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize,
-        std::weak_ptr<unsigned char[]> const& data) {
+        void* data) {
         this->enc_ = enc;
         this->format_ = format;
         this->width_ = width;
@@ -85,7 +85,7 @@ private:
 
     Format format_;
 
-    std::weak_ptr<unsigned char[]> data_;
+    void* data_;
 
 }; // end class Image2DCall
 

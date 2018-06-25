@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <atomic>
 #include <future>
 #include <mutex>
@@ -17,6 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/sys/FutureReset.h"
 
+#include "image_calls/Image2DCall.h"
 
 namespace megamol {
 namespace pbs {
@@ -78,6 +80,14 @@ private:
     void initTextures(size_t n, GLsizei width, GLsizei heigth);
 
     void resize(size_t n, GLsizei width, GLsizei height);
+
+    bool initThreads();
+
+    bool getImageCallback(megamol::core::Call& c);
+
+    static void RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb);
+
+    megamol::core::CalleeSlot provide_img_slot_;
 
     std::vector<std::string> getAddresses(std::string const& str) const noexcept;
 
@@ -168,6 +178,12 @@ private:
     std::atomic<bool> isRegistered_;
 
     std::vector<std::string> addresses_;
+
+    std::vector<unsigned char> img_data_;
+
+    // std::shared_ptr<unsigned char[]> img_data_ptr_;
+
+    size_t hash_;
 }; // end class FBOCompositor2
 
 } // end namespace pbs
