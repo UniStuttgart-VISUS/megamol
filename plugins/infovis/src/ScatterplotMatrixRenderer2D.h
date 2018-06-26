@@ -153,6 +153,8 @@ private:
 
     core::param::ParamSlot labelSelectorParam;
 
+    core::param::ParamSlot labelSizeParam;
+
     core::param::ParamSlot geometryTypeParam;
 
     core::param::ParamSlot kernelWidthParam;
@@ -163,15 +165,21 @@ private:
 
     core::param::ParamSlot axisTicksParam;
 
+    core::param::ParamSlot axisTicksRedundantParam;
+
     core::param::ParamSlot axisTickLengthParam;
+
+    core::param::ParamSlot axisTickSizeParam;
 
     core::param::ParamSlot cellSizeParam;
 
     core::param::ParamSlot cellMarginParam;
 
+    core::param::ParamSlot cellNameSizeParam;
+
     core::param::ParamSlot alphaScalingParam;
 
-    core::param::ParamSlot attenuateSubpixelParam;
+    core::param::ParamSlot alphaAttenuateSubpixelParam;
 
     size_t dataHash;
 
