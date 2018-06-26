@@ -2,7 +2,7 @@ uniform mat4 modelViewProjection;
 uniform vec4 axisColor;
 uniform uint numTicks;
 uniform float tickSize;
-uniform bool skipInnerTicks;
+uniform bool redundantTicks;
 
 out vec4 vsColor;
 
@@ -42,7 +42,7 @@ vec2 tick(const Plot plot, const uint vertexIndex) {
             isHorizontal ? -tickSize : 0
         );
     }
-    if (!skipInnerTicks || isNextToDiagnoal) {
+    if (redundantTicks || isNextToDiagnoal) {
         return offset + mix(
             corner(plot, isHorizontal ? CORNER_BL : CORNER_BR), 
             corner(plot, isHorizontal ? CORNER_BR : CORNER_TR),

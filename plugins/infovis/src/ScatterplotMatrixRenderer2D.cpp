@@ -52,17 +52,21 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , transferFunctionInSlot("tfIn", "Transfer function input")
     , flagStorageInSlot("fsIn", "Flag storage input")
     , colorSelectorParam("colorSelector", "Sets a color column")
-    , labelSelectorParam("labelSelector", "Sets a label column")
+    , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
+    , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksParam("axisTicks", "Number of ticks on the axis")
+    , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
     , axisTickLengthParam("axisTickLength", "Line length for the ticks")
+    , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
     , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
     , cellMarginParam("cellMargin", "Set the scaling of y axis")
+    , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
-    , attenuateSubpixelParam("attenuateSubpixel", "Attenuate alpha of points that should have subpixel size")
+    , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
     , mouse({0, 0, false, false})
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , labelFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
@@ -84,6 +88,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->labelSelectorParam << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->labelSelectorParam);
 
+    this->labelSizeParam << new core::param::FloatParam(0.1f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->labelSizeParam);
+
     core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
@@ -103,8 +110,14 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->axisTicksParam << new core::param::IntParam(5, 2, 100);
     this->MakeSlotAvailable(&this->axisTicksParam);
 
+    this->axisTicksRedundantParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->axisTicksRedundantParam);
+
     this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.5f);
     this->MakeSlotAvailable(&this->axisTickLengthParam);
+
+    this->axisTickSizeParam << new core::param::FloatParam(0.5f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->axisTickSizeParam);
 
     this->cellSizeParam << new core::param::FloatParam(10.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->cellSizeParam);
@@ -112,11 +125,14 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->cellMarginParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->cellMarginParam);
 
+    this->cellNameSizeParam << new core::param::FloatParam(2.0f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->cellNameSizeParam);
+
     this->alphaScalingParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
-    this->attenuateSubpixelParam << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->attenuateSubpixelParam);
+    this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
 }
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
@@ -221,13 +237,14 @@ bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphi
 }
 
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
-    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->axisColorParam.IsDirty() ||
-           this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
+    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
+           this->axisColorParam.IsDirty() || this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
 void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
+    this->labelSizeParam.ResetDirty();
     this->axisColorParam.ResetDirty();
     this->cellSizeParam.ResetDirty();
     this->cellMarginParam.ResetDirty();
@@ -322,11 +339,11 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     // Other uniforms.
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
-    const bool skipInnerTicks = true; // XXX: true if padding or margin == 0.
     glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1, this->axisColor);
     glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
     glUniform1f(this->axisShader.ParameterLocation("tickLength"), tickLength);
-    glUniform1i(this->axisShader.ParameterLocation("skipInnerTicks"), skipInnerTicks ? 1 : 0);
+    glUniform1i(this->axisShader.ParameterLocation("redundantTicks"),
+        this->axisTicksRedundantParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Line width.
     auto axisWidth = this->axisWidthParam.Param<core::param::FloatParam>()->Value();
@@ -346,21 +363,20 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     this->axisShader.Disable();
 
-    float textColor[4] = {0.0f, 0.0f, 0.0f, 1.0f}; // XXX: param please
-    float columnFontsize = 2.0f;                   // XXX: param please
-    float tickFontsize = 0.5f;                     // XXX: param please
 
     this->axisFont.ClearBatchCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
     for (size_t i = 0; i < columnCount; ++i) {
-        const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
-        const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(textColor, xyBL, xyTL, size, size, columnFontsize, false, label.c_str(),
+        this->axisFont.DrawString(this->axisColor, xyBL, xyTL, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         const float tickStart = i * (size + margin);
@@ -372,12 +388,12 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(textColor, p, xyTL + tickLength, tickFontsize, false, pLabel.c_str(),
+                this->axisFont.DrawString(this->axisColor, p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->axisFont.DrawString(textColor, xyBL - margin + tickLength, p, tickFontsize, false, pLabel.c_str(),
-                    core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+                this->axisFont.DrawString(this->axisColor, xyBL - margin + tickLength, p, tickSize, false,
+                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -423,7 +439,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
-        this->attenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+        this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -533,8 +549,8 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
 
-    float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
-    float labelFontSize = 0.1f;                     // XXX: param please
+    const float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
+    const float labelSize = this->labelSizeParam.Param<core::param::FloatParam>()->Value();
 
     for (size_t i = 0; i < rowCount; ++i) {
         for (const auto& plot : this->plots) {
@@ -547,7 +563,7 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
 
             this->labelFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
-                labelFontSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                labelSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
     }
 
