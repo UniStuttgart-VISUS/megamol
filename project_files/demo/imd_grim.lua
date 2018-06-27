@@ -3,7 +3,7 @@ headNode = mmGetConfigValue("headNode")
 renderHead = mmGetConfigValue("renderHead")
 machine = mmGetMachineName()
 role = mmGetConfigValue("role")
-useGrim = "false"
+useGrim = "true"
 
 print("I am a " .. role .. " running on " .. machine)
 
