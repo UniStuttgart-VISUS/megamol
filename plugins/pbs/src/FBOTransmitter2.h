@@ -95,6 +95,8 @@ private:
 
     megamol::core::param::ParamSlot target_machine_slot_;
 
+    megamol::core::param::ParamSlot force_localhost_slot_;
+
 #ifdef WITH_MPI
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;

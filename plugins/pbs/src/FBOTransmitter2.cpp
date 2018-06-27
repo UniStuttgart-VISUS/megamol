@@ -32,6 +32,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , view_name_slot_{"view", "The name of the view instance to be used"}
     , trigger_button_slot_{"trigger", "Triggers transmission"}
     , target_machine_slot_{"targetMachine", "Name of the target machine"}
+    , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -57,6 +58,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->trigger_button_slot_);
     this->target_machine_slot_ << new megamol::core::param::StringParam{"127.0.0.1"};
     this->MakeSlotAvailable(&this->target_machine_slot_);
+    this->force_localhost_slot_ << new megamol::core::param::BoolParam{false};
+    this->MakeSlotAvailable(&this->force_localhost_slot_);
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
 #ifdef WITH_MPI
@@ -120,15 +123,18 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             printf("FBOTransmitter2: registerAddress: %s", registerAddress.c_str());
             registerComm.Connect(registerAddress);
 
-            std::string hostname;
+            std::string hostname = std::string{"127.0.0.1"};
+            if (!this->force_localhost_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
+                hostname.clear();
 #if _WIN32
-            DWORD buf_size = 32767;
-            hostname.resize(buf_size);
-            GetComputerNameA(hostname.data(), &buf_size);
+                DWORD buf_size = 32767;
+                hostname.resize(buf_size);
+                GetComputerNameA(hostname.data(), &buf_size);
 #else
-        hostname.resize(HOST_NAME_MAX);
-        gethostname(hostname.data(), HOST_NAME_MAX);
+                hostname.resize(HOST_NAME_MAX);
+                gethostname(hostname.data(), HOST_NAME_MAX);
 #endif
+            }
             char stuff[1024];
             sprintf(stuff, "tcp://%s:%s", hostname.c_str(), address.c_str());
             auto name = std::string{stuff};

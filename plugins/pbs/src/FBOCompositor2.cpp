@@ -18,6 +18,7 @@
 #include "vislib/Exception.h"
 
 //#define _DEBUG 1
+//#define VERBOSE 1
 
 megamol::pbs::FBOCompositor2::FBOCompositor2()
     : provide_img_slot_{"getImg", "Provides received images"}
@@ -148,13 +149,13 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
     auto& out_bbox = cr->AccessBoundingBoxes();
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex GetExtent\n");
 #endif
 
     std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex GetExtent\n");
 #endif
 
@@ -209,12 +210,12 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     // if no directly upload
     // it yes resize textures and upload afterward
     if (data_has_changed_.load()) {
-#if _DEBUG
+#if _DEBUG && VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
 #endif
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
 
@@ -488,13 +489,13 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
 
         {
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob\n");
 #endif
 
             std::scoped_lock<std::mutex, std::mutex> guard(buffer_recv_guard_, buffer_write_guard_);
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob\n");
 #endif
             this->fbo_msg_write_.reset(new std::vector<fbo_msg_t>);
@@ -529,13 +530,13 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
 
             {
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob collect\n");
 #endif
 
                 std::lock_guard<std::mutex> fbo_recv_guard(this->buffer_recv_guard_);
 
-#if _DEBUG
+#if _DEBUG && VERBOSE
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex colectorJob collect\n");
 #endif
 
