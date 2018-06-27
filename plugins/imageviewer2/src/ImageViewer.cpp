@@ -182,12 +182,33 @@ void imageviewer2::ImageViewer::release(void) {
  * imageviewer2::ImageViewer::assertImage
  */
 bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
+    static bool registered = false;
+
+    bool beBlank = this->blankMachines.Contains(this->machineName);
+
+#ifdef WITH_MPI
+    // generate communicators for each role
+    bool useMpi = initMPI();
+    if (useMpi && !registered) {
+        myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_split(MPI_COMM_WORLD, myRole, 0, &roleComm);
+        MPI_Comm_rank(roleComm, &roleRank);
+        MPI_Comm_size(roleComm, &roleSize);
+        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i)",
+            myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
+        registered = true;
+    }
+#endif /* WITH_MPI */
+
+
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) imgcConnected = true;
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/)) { //< imgc has precedence
+    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) ||
+        useMpi) { //< imgc has precedence
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         }
@@ -198,23 +219,38 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
-            bool beBlank = this->blankMachines.Contains(this->machineName);
-
+            int remoteness = 0;
+            int roleImgcRank = -1;
 #ifdef WITH_MPI
-            // generate communicators for each role
-            bool useMpi = initMPI();
-            MPI_Comm roleComm;
-            int roleRank = -1, roleSize = -1;
-            mpiRole myRole;
-            myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
             if (useMpi) {
-                MPI_Comm_split(MPI_COMM_WORLD, myRole, 0, &roleComm);
-                MPI_Comm_rank(roleComm, &roleRank);
-                MPI_Comm_size(roleComm, &roleSize);
-                vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i)",
-                    myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
+                vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: IMGC Handshake\n");
+                // handshake who has imgc
+                int* imgcRes = nullptr;
+                if (roleRank == 0) {
+                    imgcRes = new int[roleSize];
+                }
+
+                int imgcCon = imgcConnected ? 1 : 0;
+                MPI_Gather(&imgcCon, 1, MPI_INT, imgcRes, roleSize, MPI_INT, 0, roleComm);
+
+                if (roleRank == 0) {
+                    for (int i = 0; i < roleSize; ++i) {
+                        if (imgcRes[i] == 1) {
+                            roleImgcRank = i;
+                        }
+                    }
+                    delete[] imgcRes;
+                }
+
+                MPI_Bcast(&roleImgcRank, 1, MPI_INT, 0, roleComm);
+                if (roleImgcRank != -1) {
+                    remoteness = 1;
+                }
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "ImageViewer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
             }
 #endif /* WITH_MPI */
+
 
             if (!beBlank) {
                 int fileSize = 0;
@@ -222,11 +258,12 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 BYTE* imgc_data_ptr = nullptr;
 #ifdef WITH_MPI
                 // single node or role boss loads the image
-                if (!useMpi || roleRank == 0) {
+                if (!useMpi || roleRank == 0 || roleRank == roleImgcRank) {
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
-                    if (!imgcConnected) {
+                    if (!imgcConnected && remoteness == 0) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Loading file from disk\n");
                         vislib::sys::FastFile in;
                         if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
                                 vislib::sys::File::OPEN_ONLY)) {
@@ -238,7 +275,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                             printf("ImageViewer2: failed opening file\n");
                             fileSize = 0;
                         }
-                    } else {
+                    } else if (remoteness == 0 || (remoteness == 1 && roleRank == roleImgcRank)) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Retrieving image from call\n");
                         // retrieve data from call
                         if (!(*imgc)(0)) return false;
                         this->width = imgc->GetWidth();
@@ -249,8 +287,17 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 }
                 // cluster nodes broadcast file size
+                uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
+                if (imgcConnected) {
+                    imgc_enc = imgc->GetEncoding();
+                }
                 if (useMpi) {
-                    MPI_Bcast(&fileSize, 1, MPI_INT, 0, roleComm);
+                    int bcastRoot = 0;
+                    if (remoteness == 1) {
+                        bcastRoot = roleImgcRank;
+                    }
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Broadcast root = %d\n", bcastRoot);
+                    MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) knows fileSize = %i",
                         roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
                         fileSize);
@@ -261,11 +308,17 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                             myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     }
                     // everyone gets the compressed file now
-                    MPI_Bcast(allFile, fileSize, MPI_BYTE, 0, roleComm);
+                    MPI_Bcast(allFile, fileSize, MPI_BYTE, bcastRoot, roleComm);
+                    if (remoteness == 1) {
+                        MPI_Bcast(&this->width, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
+                        MPI_Bcast(&this->height, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
+                        MPI_Bcast(&imgc_enc, 1, MPI_UNSIGNED_CHAR, roleImgcRank, roleComm);
+                    }
                 }
 #endif /* WITH_MPI */
                 BYTE* image_ptr = nullptr;
-                if (!imgcConnected) {
+                if (!imgcConnected && remoteness == 0) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Decoding BMP\n");
                     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                             img, allFile, fileSize)) {
                         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
@@ -278,7 +331,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         this->width = this->height = 0;
                     }
                 } else {
-                    switch (imgc->GetEncoding()) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Decoding IMGC at rank %d\n", roleRank);
+                    switch (imgc_enc) {
                     case image_calls::Image2DCall::BMP: {
                         if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                                 img, allFile, fileSize)) {
@@ -298,6 +352,16 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                     default: { image_ptr = allFile; }
                     }
                 }
+                //#ifdef WITH_MPI
+                //                if (useMpi && remoteness == 1) {
+                //                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Broadcasting meta data in
+                //                    remoteness case\n"); MPI_Bcast(&this->width, 1, MPI_UNSIGNED, roleImgcRank,
+                //                    roleComm); MPI_Bcast(&this->height, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
+                //                    vislib::sys::Log::DefaultLog.WriteInfo(
+                //                        "ImageViewer: Meta data width = %d height = %d\n", this->width, this->height);
+                //                    image_ptr = allFile; //< TODO HACK
+                //                }
+                //#endif /* WITH_MPI */
                 // now everyone should have a copy of the loaded image
 
                 this->tiles.Clear();

@@ -210,7 +210,12 @@ private:
 
     int mpiSize = 0;
 
-    enum mpiRole { IMG_BLANK, IMG_LEFT, IMG_RIGHT };
+    enum mpiRole { IMG_BLANK, IMG_LEFT, IMG_RIGHT};
+
+    MPI_Comm roleComm;
+    int roleRank = -1, roleSize = -1;
+    int rank = -1;
+    mpiRole myRole;
 
     /** The width of the image */
     unsigned int width;
