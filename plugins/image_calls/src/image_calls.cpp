@@ -1,28 +1,18 @@
 /*
- * pbs.cpp
+ * image_calls.cpp
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "pbs/pbs.h"
+#include "image_calls/image_calls.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-// Modules
-#include "PBSDataSource.h"
-#include "PBSRenderer.h"
-#include "FBOTransmitter.h"
-#include "FBOCompositor.h"
-#include "OSPRayPBSGeometry.h"
-#include "FBOTransmitter2.h"
-#include "FBOCompositor2.h"
-
-// Calls
-#include "pbs/PBSDataCall.h"
+#include "image_calls/Image2DCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -35,10 +25,10 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "pbs", // TODO: Change this!
+                "image_calls", // TODO: Change this!
 
                 /* human-readable plugin description */
-                "Describing pbs (TODO: Change this!)") {
+                "Describing image_calls (TODO: Change this!)") {
 
             // here we could perform addition initialization
         };
@@ -50,31 +40,25 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor>();
-            this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPBSGeometry>();
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter2>();
-            this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor2>();
+
             //
             // TODO: Register your plugin's modules here
             // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::pbs::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::pbs::MyModule2>();
+            //   this->module_descriptions.RegisterAutoDescription<megamol::image_calls::MyModule1>();
+            //   this->module_descriptions.RegisterAutoDescription<megamol::image_calls::MyModule2>();
             //   ...
             //
 
             // register calls here:
-            this->call_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataCall>();
+
             //
             // TODO: Register your plugin's calls here
             // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::pbs::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::pbs::MyCall2>();
+            //   this->call_descriptions.RegisterAutoDescription<megamol::image_calls::MyCall1>();
+            //   this->call_descriptions.RegisterAutoDescription<megamol::image_calls::MyCall2>();
             //   ...
             //
-
+            this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
@@ -84,7 +68,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-PBS_API int mmplgPluginAPIVersion(void) {
+image_calls_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -92,7 +76,7 @@ PBS_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-PBS_API
+image_calls_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -134,7 +118,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-PBS_API
+image_calls_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -145,7 +129,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-PBS_API
+image_calls_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -156,7 +140,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-PBS_API
+image_calls_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)

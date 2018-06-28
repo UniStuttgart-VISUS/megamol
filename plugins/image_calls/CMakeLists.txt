@@ -1,30 +1,20 @@
 #
-# MegaMol™ imageviewer2 Plugin
+# MegaMol™ image_calls Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-string(TOUPPER imageviewer2 EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build imageviewer2 plugin" OFF)
+string(TOUPPER image_calls EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build image_calls" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(imageviewer2)
+  project(image_calls)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
-  
-  if(UNIX)
-    find_package(JPEG REQUIRED)
-    add_definitions(-DXMD_H) # prevents typedef conflict
-  endif()
 
-  set(LIBS vislib core glad image_calls ${JPEG_LIBRARIES})
-  include_directories("include" "src" ${JPEG_INCLUDE_DIR})
-
-  if(MPI_C_FOUND)
-    include_directories(${MPI_C_INCLUDE_PATH})
-    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-  endif()
+  set(LIBS vislib core glad)
+  include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -34,7 +24,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glad core image_calls)
+  add_dependencies(${PROJECT_NAME} vislib core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
