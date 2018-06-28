@@ -427,9 +427,9 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
-    unsigned int colTabSize = this->transferFunction->TextureSize();
-    glUniform1i(this->pointShader.ParameterLocation("colorTable"), colTabSize);
-    glUniform2ui(this->pointShader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
+    glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
+    glUniform1i(this->pointShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+    glUniform1i(this->pointShader.ParameterLocation("colorColumn"), map.colorIdx);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -478,6 +478,13 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 }
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
+
+    this->axisFont.ClearBatchCache();
+    const float errorColor[4] = {1, 0, 0, 1};
+    const auto center = this->bounds.CalcCenter();
+    this->axisFont.DrawString(errorColor, center.X(), center.Y(), 10, false, "Not Yet Implemented",
+        core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+    this->axisFont.BatchDrawString();
     /*
     auto aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
     auto yScaling = this->scaleYParam.Param<core::param::FloatParam>()->Value();
@@ -549,15 +556,17 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
 
-    const float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
     const float labelSize = this->labelSizeParam.Param<core::param::FloatParam>()->Value();
-
     for (size_t i = 0; i < rowCount; ++i) {
         for (const auto& plot : this->plots) {
             const float xValue = this->floatTable->GetData(plot.indexX, i);
             const float yValue = this->floatTable->GetData(plot.indexY, i);
             const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
             const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+
+            const size_t colorIndex = this->floatTable->GetData(this->map.colorIdx, i);
+            float labelColor[4];
+            this->transferFunction->CopyColor(colorIndex, labelColor, sizeof(labelColor));
 
             // XXX: this will be a lot more useful when have support for string-columns!
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
