@@ -2,7 +2,8 @@ uniform vec4 viewport;
 uniform mat4 modelViewProjection;
 
 uniform sampler1D colorTable;
-uniform uvec2 colorConsts;
+uniform uint colorCount;
+uniform uint colorColumn;
 
 uniform int rowStride;
 
@@ -23,10 +24,8 @@ void main(void) {
     const int rowOffset = gl_VertexID * rowStride;
 
     // Fetch color from table.
-    const float colorIndex = values[rowOffset + colorConsts[0]];
-    const float colorCount = float(colorConsts[1]);
-    const float colorOffset = clamp(colorIndex, 0.0, 1.0) * (1.0 - 1.0 / colorCount)
-                                + 0.5 / colorCount;
+    const float colorIndex = values[rowOffset + colorColumn];
+    const float colorOffset = clamp(colorIndex / float(colorCount - 1), 0.0, 1.0) + 0.5 / float(colorCount);
     vsColor = texture(colorTable, colorOffset);
 
     // Map value pair to position.
