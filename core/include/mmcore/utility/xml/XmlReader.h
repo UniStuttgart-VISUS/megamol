@@ -15,6 +15,7 @@
 #ifndef XMLCALL
 #define XMLCALL
 #endif /* XMLCALL */
+#include <vislib/sys/Path.h>
 
 #ifndef XMLCHAR
 #ifdef _WIN32
@@ -174,6 +175,7 @@ namespace xml {
                 return false;
             }
             try {
+                this->inputPath = vislib::sys::Path::GetDirectoryName(filename);
                 return this->SetFile(f);
             } catch(...) {
                 delete f;
@@ -198,6 +200,7 @@ namespace xml {
                 return false;
             }
             try {
+                this->inputPath = vislib::sys::Path::GetDirectoryName(filename);
                 return this->SetFile(f);
             } catch(...) {
                 delete f;
@@ -228,6 +231,10 @@ namespace xml {
          *         opened.
          */
         bool SetFile(vislib::sys::File* file);
+        
+        vislib::StringA GetPath() const {
+            return this->inputPath;
+        }
 
         /**
          * Answer the line within the xml file, if possible.
@@ -301,6 +308,8 @@ namespace xml {
 
         /** The input file */
         vislib::sys::File *inputFile;
+
+        vislib::StringA inputPath;
 
         /** The state of the reader state machine */
         unsigned int readerState;

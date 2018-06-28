@@ -25,6 +25,10 @@
 
 using namespace megamol::ospray;
 
+void ospErrorCallback(OSPError err, const char* details) {
+    vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+}
+
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     core::view::Renderer3DModule(),
     extraSamles("extraSamples", "Extra sampling when camera is not moved"),
@@ -217,6 +221,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
     if (dvce == NULL) {
         ospLoadModule("ispc");
         dvce = ospNewDevice("default");
+        ospDeviceSetErrorFunc(dvce, ospErrorCallback);
         ospDeviceCommit(dvce);
     }
     ospSetCurrentDevice(dvce);
@@ -821,6 +826,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         colorData = ospNewData(colorFloatsToRead, OSP_FLOAT, &element.colorData->operator[](i*colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
                         ospCommit(colorData);
                         ospSetData(geo.back(), "color", colorData);
+                        ospSet1i(geo.back(), "color_components", 4);
                     }
                 }
                 // clipPlane setup
@@ -869,9 +875,15 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
                         element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                        ospSet1i(geo.back(), "color_offset", element.vertexLength * sizeof(float));
+                        ospSet1i(geo.back(), "color_offset", element.vertexLength * sizeof(float)); // TODO: This won't work if there are radii in the array
                         ospSet1i(geo.back(), "color_stride", element.colorStride);
                         ospSetData(geo.back(), "color", vertexData);
+                        if (element.mmpldColor == core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                            ospSet1i(geo.back(), "color_components", 3);
+                        }
+                        else {
+                            ospSet1i(geo.back(), "color_components", 4);
+                        }
                     }
                 }
                 break;

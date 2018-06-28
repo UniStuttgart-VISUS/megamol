@@ -212,7 +212,8 @@ namespace utility {
             enum SnippetType {
                 EMPTY_SNIPPET,
                 STRING_SNIPPET,
-                VERSION_SNIPPET
+                VERSION_SNIPPET,
+                FILE_SNIPPET
             };
 
             /**

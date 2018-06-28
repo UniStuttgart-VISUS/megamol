@@ -71,6 +71,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
         viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
+        mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode"),
         viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
         viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
         viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)"),
@@ -87,7 +88,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
         toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
-        bboxCol(192, 192, 192, 255),
+        bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse"),
         showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
@@ -174,6 +175,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
 
+    this->mouseSensitivitySlot << new param::FloatParam(3.0f, 0.001f, 10.0f);
+    this->mouseSensitivitySlot.SetUpdateCallback(&View3D::mouseSensitivityChanged);
+    this->MakeSlotAvailable(&this->mouseSensitivitySlot);
+
     param::EnumParam *vrpsev = new param::EnumParam(1);
     vrpsev->SetTypePair(0, "Position");
     vrpsev->SetTypePair(1, "Look-At");
@@ -245,10 +250,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
     this->bboxColSlot << new param::StringParam(
-        utility::ColourParser::ToString(
-            static_cast<float>(this->bboxCol.R()) / 255.0f,
-            static_cast<float>(this->bboxCol.G()) / 255.0f,
-            static_cast<float>(this->bboxCol.B()) / 255.0f));
+        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot << new param::BoolParam(true);
@@ -309,6 +311,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    cr3d->SetMouseSelection(this->toggleMouseSelection);
+
     AbstractRenderingView::beginFrame();
 
     // Conditionally synchronise camera from somewhere else.
@@ -437,20 +441,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (this->bboxColSlot.IsDirty()) {
-        float r, g, b;
+	if (this->bboxColSlot.IsDirty()) {
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
         this->bboxColSlot.ResetDirty();
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), r, g, b);
-        int ir = static_cast<int>(r * 255.0f);
-        if (ir < 0) ir = 0; else if (ir > 255) ir = 255;
-        int ig = static_cast<int>(g * 255.0f);
-        if (ig < 0) ig = 0; else if (ig > 255) ig = 255;
-        int ib = static_cast<int>(b * 255.0f);
-        if (ib < 0) ib = 0; else if (ib > 255) ib = 255;
-        this->bboxCol.Set(static_cast<unsigned char>(ir),
-            static_cast<unsigned char>(ig),
-            static_cast<unsigned char>(ib),
-            255);
     }
 
     // set light parameters
@@ -788,6 +781,25 @@ void view::View3D::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::View3D::create(void) {
     
+    bool wasd = false;
+    bool invertX = true;
+    bool invertY = true;
+    try {
+        wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
+    } catch (...) {
+        
+    }
+    try {
+        invertX = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertX"));
+    } catch (...) {
+
+    }
+    try {
+        invertY = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertY"));
+    } catch (...) {
+
+    }
+
     this->cursor2d.SetButtonCount(3); /* This could be configurable. */
     this->modkeys.SetModifierCount(3);
 
@@ -797,17 +809,25 @@ bool view::View3D::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator1.SetModifierTestCount(2);
     this->rotator1.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, wasd);
     this->rotator1.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
+    if (wasd) {
+        this->rotator2.SetInvertX(invertX);
+        this->rotator2.SetInvertY(invertY);
+        this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKeyCode('w');
+        this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKeyCode('s');
+        this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKeyCode('a');
+        this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetKeyCode('d');
+    }
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
     this->rotator2.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator2.SetModifierTestCount(2);
     this->rotator2.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, !wasd);
     this->rotator2.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
@@ -868,6 +888,12 @@ void view::View3D::release(void) {
     this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
     this->cursor2d.UnregisterCursorEvent(&this->mover);
     SAFE_DELETE(this->frozenValues);
+}
+
+
+bool view::View3D::mouseSensitivityChanged(param::ParamSlot& p) {
+    this->rotator2.SetMouseSensitivity(p.Param<param::FloatParam>()->Value());
+    return true;
 }
 
 
@@ -978,7 +1004,8 @@ void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_BACK, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 160);
+	// XXX: Note that historically, we had a hard-coded alpha of 0.625f, but just for the backside.
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     //::glPolygonMode(GL_BACK, GL_FILL);
@@ -1007,7 +1034,7 @@ void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_FRONT, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 255);
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     ::glDepthFunc(GL_LESS);

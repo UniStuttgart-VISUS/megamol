@@ -94,15 +94,8 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
             auto secondColumnInfos = secondInCall->GetColumnsInfos();
             auto secondData = secondInCall->GetData();
 
-            // assert equal row count
-            if (firstRowsCount != secondRowsCount) {
-                vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Cannot join float tables. ")
-                    _T("They are required to have equal row count\n"), ModuleName.c_str());
-                return false;
-            }
-
             // concatenate
-            this->rows_count = firstRowsCount;
+            this->rows_count = std::max(firstRowsCount, secondRowsCount);
             this->column_count = firstColumnCount + secondColumnCount;
             this->column_info.clear();
             this->column_info.reserve(this->column_count);
@@ -111,10 +104,11 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
             memcpy(&(this->column_info.data()[firstColumnCount]), secondColumnInfos,
                 sizeof(CallFloatTableData::ColumnInfo)*secondColumnCount);
             this->data.clear();
-            this->data.resize(this->rows_count);
+            this->data.resize(this->rows_count * this->column_count);
 
-            this->concatenate(this->data.data(), firstData, secondData, this->rows_count, this->column_count,
-                firstColumnCount, secondColumnCount);
+            this->concatenate(this->data.data(), this->rows_count, this->column_count,
+				firstData, firstRowsCount, firstColumnCount,
+				secondData, secondRowsCount, secondColumnCount);
         }
 
         outCall->SetFrameCount(firstInCall->GetFrameCount());
@@ -130,16 +124,30 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
     return true;
 }
 
-void megamol::stdplugin::datatools::floattable::FloatTableJoin::concatenate(float * const out,
-    const float * const first, const float * const second, const size_t rowsCount, const size_t columnCount,
-    const size_t firstColumnCount, const size_t secondColumnCount) {
-    for (size_t row = 0; row < rowsCount; row++) {
+void megamol::stdplugin::datatools::floattable::FloatTableJoin::concatenate(
+	float* const out, const size_t rowCount, const size_t columnCount,
+	const float* const first, const size_t firstRowCount, const size_t firstColumnCount, 
+    const float* const second,  const size_t secondRowCount, const size_t secondColumnCount) {
+    assert(rowCount >= firstRowCount && rowCount >= secondRowCount && "Not enough rows");
+    assert(columnCount >= firstColumnCount + secondColumnCount && "Not enough columns");
+    for (size_t row = 0; row < firstRowCount; row++) {
+        float* outR = &out[row * columnCount];
+        memcpy(outR, &first[row * firstColumnCount], sizeof(float) * firstColumnCount);
+	}
+    for (size_t row = firstRowCount; row < rowCount; row++) {
         for (size_t col = 0; col < firstColumnCount; col++) {
-            memcpy(&out[col + row*columnCount], &first[col + row*firstColumnCount], sizeof(float)*firstColumnCount);
+            out[col + row * columnCount] = NAN;
+		}
+	}
+    for (size_t row = 0; row < secondRowCount; row++) {
+        for (size_t col = 0; col < secondColumnCount; col++) {
+            float* outR = &out[(col + firstColumnCount) + row * columnCount];
+            memcpy(outR, &second[col + row * secondColumnCount], sizeof(float) * secondColumnCount);
         }
-        for (size_t col = firstColumnCount; col < firstColumnCount + secondColumnCount; col++) {
-            memcpy(&out[col + row*columnCount], &second[col - firstColumnCount + row*secondColumnCount],
-                sizeof(float)*secondColumnCount);
+    }
+    for (size_t row = secondRowCount; row < rowCount; row++) {
+        for (size_t col = 0; col < secondColumnCount; col++) {
+            out[(col + firstColumnCount) + row * columnCount] = NAN;
         }
     }
 }

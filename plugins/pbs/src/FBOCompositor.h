@@ -9,9 +9,9 @@
 #define MEGAMOL_PBS_FBOCOMPOSITOR_H_INCLUDED
 
 #include <atomic>
+#include <mutex>
 #include <thread>
 #include <vector>
-#include <mutex>
 
 #include "mmcore/Call.h"
 #include "mmcore/param/ParamSlot.h"
@@ -24,49 +24,52 @@
 namespace megamol {
 namespace pbs {
 
+/*
+ * Module receiving FBO contents from FBOTransmitters.
+ * Uses depth-compositing.
+ */
 class FBOCompositor : public core::view::Renderer3DModule {
 public:
     /**
-    * Answer the name of this module.
-    *
-    * @return The name of this module.
-    */
-    static const char *ClassName(void) {
-        return "FBOCompositor";
-    }
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "FBOCompositor"; }
 
     /**
-    * Answer a human readable description of this module.
-    *
-    * @return A human readable description of this module.
-    */
-    static const char *Description(void) {
-        return "Composits images from socket into a rendering.";
-    }
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Composits images from socket into a rendering."; }
 
     /**
-    * Answers whether this module is available on the current system.
-    *
-    * @return 'true' if the module is available, 'false' otherwise.
-    */
-    static bool IsAvailable(void) {
-        return gladLoadGL();
-    }
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return gladLoadGL(); }
 
     FBOCompositor(void);
 
     ~FBOCompositor(void);
+
 protected:
     virtual bool create(void) override;
 
     virtual void release(void) override;
 
-    virtual bool GetCapabilities(core::Call &call) override;
+    virtual bool GetCapabilities(core::Call& call) override;
 
-    virtual bool GetExtents(core::Call &call) override;
+    virtual bool GetExtents(core::Call& call) override;
 
-    virtual bool Render(core::Call &call) override;
+    virtual bool Render(core::Call& call) override;
+
 private:
+    /*
+     * Struct holding the parsed messafe from an FBOTransmitter.
+     */
     typedef struct _fbo_data {
         uint32_t fid;
         int viewport[4];
@@ -79,10 +82,13 @@ private:
 
     bool printProgramInfoLog(GLuint shaderProg) const;
 
-    bool connectSocketCallback(core::param::ParamSlot &p);
+    bool connectSocketCallback(core::param::ParamSlot& p);
 
-    void connectSocket(std::string &address);
+    void connectSocket(std::string& address);
 
+    /*
+     * Callback that is listening for FBO messages
+     */
     void receiverCallback(void);
 
     void resizeBuffers(void);
@@ -105,13 +111,19 @@ private:
 
     std::thread receiverThread;
 
-    std::vector<fbo_data> *receiverData;
+    /** storage for parsed messages from the receiver (pointer to single vector for simpler swapping) */
+    std::vector<fbo_data>* receiverData;
 
-    std::vector<fbo_data> *renderData;
+    /** storage for parsed messages for rendering (pointer to single vector for simpler swapping) */
+    std::vector<fbo_data>* renderData;
 
+    /** lock to synchronize swapping with rendering */
     std::mutex swap_guard;
 
+    /** atomic flag signalling that new data is available */
     std::atomic<bool> is_new_data;
+
+    bool stopRequested = false;
 
     int num_render_nodes = 0;
 
@@ -119,9 +131,11 @@ private:
 
     int fbo_height;
 
-    GLuint *color_textures;
+    int max_viewport[4];
 
-    GLuint *depth_textures;
+    GLuint* color_textures;
+
+    GLuint* depth_textures;
 
     GLuint shader;
 
@@ -129,7 +143,7 @@ private:
 
     bool is_connected = false;
 
-    //int viewport[4];
+    // int viewport[4];
 }; /* end class FBOCompositor */
 
 } /* end namespace pbs */
