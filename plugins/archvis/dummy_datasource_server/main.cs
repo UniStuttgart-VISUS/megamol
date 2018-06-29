@@ -50,15 +50,15 @@ public class TcpSrvrSample
     {
         //float[] y_q_t = parseFloatValues("y_q_t_uncon.dat");
         //float[] y_f = parseFloatValues("y_f_uncon.dat");
-        float[] y_q_t = Util.parseFloatValues("y_q_t.dat");
-        float[] y_f = Util.parseFloatValues("y_f.dat");
-        float[] timesteps = Util.parseFloatValues("t.dat");
+        float[] y_q_t = Util.parseFloatValues("2018_06_27_2/y_q_t.dat");
+        float[] y_f = Util.parseFloatValues("2018_06_27_2/y_f.dat");
+        float[] timesteps = Util.parseFloatValues("2018_06_27_2//t.dat");
 
         Console.WriteLine("Number of displacement values: " + y_q_t.Length.ToString());
         Console.WriteLine("Number of force values: " + y_f.Length.ToString());
         
         byte[] data = new byte[1024];
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("141.58.24.204"), 11000);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("141.58.24.247"), 11000);
         TcpListener server = new TcpListener(ipep);
 
         server.Start();
