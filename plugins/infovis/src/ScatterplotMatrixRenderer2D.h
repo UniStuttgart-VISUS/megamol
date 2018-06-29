@@ -11,6 +11,7 @@
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
@@ -125,6 +126,8 @@ private:
 
     bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 
+    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program);
+
     bool isDirty(void) const;
 
     void resetDirty(void);
@@ -204,6 +207,8 @@ private:
     vislib::graphics::gl::GLSLShader axisShader;
 
     vislib::graphics::gl::GLSLShader pointShader;
+
+    vislib::graphics::gl::GLSLGeometryShader lineShader;
 
     core::utility::SSBOStreamer valueSSBO;
 

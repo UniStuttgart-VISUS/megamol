@@ -17,7 +17,7 @@ layout(std430, binding = 3) buffer ValueSSBO {
 
 out vec4 vsColor;
 out float vsSize;
-out float vsPointSize;
+out float vsPixelSize;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
@@ -45,10 +45,9 @@ void main(void) {
 
     if (attenuateSubpixel) {
         // Ensure a minimum pixel size to attenuate alpha depending on subpixels.
-        vsPointSize = max(vsSize, 1.0);
-        gl_PointSize = vsPointSize;
+        vsPixelSize = max(vsSize, 1.0);
     } else {
-        vsPointSize = vsSize;
-        gl_PointSize = vsPointSize;
+        vsPixelSize = vsSize;
     }
+    gl_PointSize = vsPixelSize;
 }

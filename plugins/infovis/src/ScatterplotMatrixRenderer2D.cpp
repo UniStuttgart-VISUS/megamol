@@ -141,8 +141,9 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 bool ScatterplotMatrixRenderer2D::create(void) {
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
     if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
-    if (!makeProgram("::splom::axes", this->axisShader)) return false;
-    if (!makeProgram("::splom::points", this->pointShader)) return false;
+    if (!makeProgram("::splom::axis", this->axisShader)) return false;
+    if (!makeProgram("::splom::point", this->pointShader)) return false;
+    if (!makeProgram("::splom::line", this->lineShader)) return false;
 
     this->axisFont.EnableBatchDraw();
     this->labelFont.EnableBatchDraw();
@@ -215,6 +216,48 @@ bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphi
         if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            return false;
+        }
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+            pref.PeekBuffer(),
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            ce.GetMsgA());
+        return false;
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
+        return false;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
+        return false;
+    }
+
+    return true;
+}
+
+bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program) {
+    vislib::graphics::gl::ShaderSource vert, geom, frag;
+
+    vislib::StringA vertname((prefix + "::vert").c_str());
+    vislib::StringA geomname((prefix + "::geom").c_str());
+    vislib::StringA fragname((prefix + "::frag").c_str());
+    vislib::StringA pref(prefix.c_str());
+
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
+
+    try {
+        if (!program.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
+            return false;
+        }
+        if (!program.Link()) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
@@ -478,69 +521,73 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 }
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
+    GLfloat viewport[4];
+    glGetFloatv(GL_VIEWPORT, viewport);
 
-    this->axisFont.ClearBatchCache();
-    const float errorColor[4] = {1, 0, 0, 1};
-    const auto center = this->bounds.CalcCenter();
-    this->axisFont.DrawString(errorColor, center.X(), center.Y(), 10, false, "Not Yet Implemented",
-        core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-    this->axisFont.BatchDrawString();
-    /*
-    auto aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
-    auto yScaling = this->scaleYParam.Param<core::param::FloatParam>()->Value();
+    // Blending.
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
 
-    this->drawXAxis();
-    this->drawYAxis();
+    this->lineShader.Enable();
 
-    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtx);
-    nvgSave(ctx);
-    nvgTransform(ctx, this->nvgTrans.GetAt(0, 0), this->nvgTrans.GetAt(1, 0),
-        this->nvgTrans.GetAt(0, 1), this->nvgTrans.GetAt(1, 1),
-        this->nvgTrans.GetAt(0, 2), this->nvgTrans.GetAt(1, 2));
+    // Transformation uniforms.
+    glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        getModelViewProjection().PeekComponents());
 
-    nvgScale(ctx, this->cellSize.Param<core::param::FloatParam>()->Value(), 1.0f);
+    // Color map uniforms.
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
+    glUniform1i(this->lineShader.ParameterLocation("colorTable"), 0);
+    glUniform1i(this->lineShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+    glUniform1i(this->lineShader.ParameterLocation("colorColumn"), map.colorIdx);
 
-    float width = std::get<0>(this->viewport)*aspect;
-    float height = std::get<1>(this->viewport)*yScaling;
-    float midX = width / 2.0f;
-    float midY = height / 2.0f;
+    // Other uniforms.
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    glUniform1i(this->lineShader.ParameterLocation("rowStride"), columnCount);
+    glUniform1f(this->lineShader.ParameterLocation("kernelWidth"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
+        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
+        this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
-    for (size_t s = 0; s < this->series.size(); s++) {
-        if (this->series[s].size() < 8 || !this->selectedSeries[s]) {
-            continue;
-        }
+    // Setup streaming.
+    const GLuint numBuffers = 3;
+    const GLuint bufferSize = 32 * 1024 * 1024;
+    const float* data = this->floatTable->GetData();
+    const GLuint dataStride = columnCount * sizeof(float);
+    const GLuint dataItems = this->floatTable->GetRowsCount();
+    const GLuint numChunks =
+        this->valueSSBO.SetDataWithSize(data, dataStride, dataStride, dataItems, numBuffers, bufferSize);
 
-        auto color = std::get<4>(this->columnSelectors[s]);
-
-        nvgStrokeWidth(ctx, this->axisWidthParam.Param<core::param::FloatParam>()->Value());
-        nvgStrokeColor(ctx, nvgRGBf(color[0], color[1], color[2]));
-        nvgBeginPath(ctx);
-
-        {
-            float valX = this->series[s][0] - 0.5f;
-            valX *= width;
-            valX += midX;
-            float valY = this->series[s][1] - 0.5f;
-            valY *= height;
-            valY += midY;
-            nvgMoveTo(ctx, valX, valY);
-        }
-
-        for (size_t i = 1; i < this->series[s].size() / 4; i++) {
-            float valX = this->series[s][i * 4] - 0.5f;
-            valX *= width;
-            valX += midX;
-            float valY = this->series[s][i * 4 + 1] - 0.5f;
-            valY *= height;
-            valY += midY;
-            nvgLineTo(ctx, valX, valY);
-        }
-
-        nvgStroke(ctx);
+    // For each chunk of values, render all points in the lower half of the scatterplot matrix at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset,
+        this->plotDstLength);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle());
+    for (GLuint chunk = 0; chunk < numChunks; ++chunk) {
+        GLuint numItems, sync;
+        GLsizeiptr dstOffset, dstLength;
+        valueSSBO.UploadChunk(chunk, numItems, sync, dstOffset, dstLength);
+        glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(), dstOffset, dstLength);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(numItems), this->plots.size());
+        valueSSBO.SignalCompletion(sync);
     }
 
-    nvgRestore(ctx);
-    */
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_1D, 0);
+
+    this->lineShader.Disable();
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 
