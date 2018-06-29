@@ -24,6 +24,7 @@ function doRendering(id, pfile, xfile)
     elseif id == "cartoon" then
 
         mmCreateModule("MoleculeCartoonRenderer", "::cellmem_demo::cartoonren")
+        mmSetParamValue("::cellmem_demo::cartoonren::renderingMode", "Cartoon Hybrid")
         mmCreateCall("CallRender3D", "::cellmem_demo::v::rendering", "::cellmem_demo::cartoonren::rendering")
         mmCreateCall("MolecularDataCall", "::cellmem_demo::cartoonren::getdata", "::cellmem_demo::pdbdata::dataout")
     
