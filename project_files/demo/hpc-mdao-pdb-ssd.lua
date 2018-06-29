@@ -1,5 +1,5 @@
-﻿pdbFile = "Z:\\megamol-data\\ccmv_morph_movie_06102010-2.pdb"
-xtcFile = "Z:\\megamol-data\\ccmv_morph_movie_06102010-2.xtc"
+﻿pdbFile = "\\\\vestastore\\Demos\\megamol-data\\ccmv_morph_movie_06102010-2.pdb"
+xtcFile = "\\\\vestastore\\Demos\\megamol-data\\ccmv_morph_movie_06102010-2.xtc"
 headNode = mmGetConfigValue("headNode")
 renderHead = mmGetConfigValue("renderHead")
 machine = mmGetMachineName()
