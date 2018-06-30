@@ -12,12 +12,31 @@
 #include <fstream>
 #include <string>
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
 
 using namespace megamol;
+using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 using namespace megamol::stdplugin::datatools;
 
-bool icompare_pred(unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); }
+/*
+ * Checks whether two chars are equal, regardless of their case.
+ * 
+ * @param a The first char.
+ * @param b The second char.
+ * @return True if the two chars are equal, false otherwise.
+ */
+bool icompare_pred(unsigned char a, unsigned char b) { 
+    return std::tolower(a) == std::tolower(b); 
+}
 
+/*
+ * Checks two strings for equality, regardless of the letters case.
+ * 
+ * @param a The first string.
+ * @param b The second string.
+ * @return True if the two strings are equal, false otherwise.
+ */
 bool icompare(std::string const& a, std::string const& b) {
     if (a.length() == b.length()) {
         return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
@@ -26,8 +45,14 @@ bool icompare(std::string const& a, std::string const& b) {
     }
 }
 
+/*
+ * io::PLYDataSource::theUndef
+ */
 const char theUndef[] = "undef";
 
+/*
+ * io::PLYDataSource::PLYDataSource
+ */
 io::PLYDataSource::PLYDataSource(void) : core::Module(),
         filename("filename", "The path to the PLY file to load."),
         vertElemSlot("vertex element", "which element to get the vertex info from"),
@@ -43,7 +68,8 @@ io::PLYDataSource::PLYDataSource(void) : core::Module(),
         bPropSlot("b property", "which property to get the blue component from"),
         iPropSlot("i property", "which property to get the intensity from"),
         indexPropSlot("index property", "which property to get the vertex indices from"),
-        getData("getdata", "Slot to request data from this data source."),
+        getData("getspheredata", "Slot to request data from this data source."),
+        getMeshData("getmeshdata", "Slot to request mesh data from this data source."),
         file(nullptr), data_hash(0) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
@@ -91,23 +117,35 @@ io::PLYDataSource::PLYDataSource(void) : core::Module(),
     this->indexPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->indexPropSlot);
 
-    this->getData.SetCallback("MultiParticleDataCall", "GetData", &PLYDataSource::getDataCallback);
-    this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &PLYDataSource::getExtentCallback);
+    this->getData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(0), &PLYDataSource::getSphereDataCallback);
+    this->getData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &PLYDataSource::getSphereExtentCallback);
     this->MakeSlotAvailable(&this->getData);
+
+    this->getMeshData.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &PLYDataSource::getMeshDataCallback);
+    this->getMeshData.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &PLYDataSource::getMeshExtentCallback);
 
     //this->setFrameCount(1);
     //this->initFrameCache(1);
 }
 
+/*
+ * io::PLYDataSource::~PLYDataSource
+ */
 io::PLYDataSource::~PLYDataSource(void) {
-    Release();
+    this->Release();
 }
 
+/*
+ * io::PLYDataSource::create
+ */
 bool io::PLYDataSource::create(void) {
     // intentionally empty
     return true;
 }
 
+/*
+ * io::PLYDataSource::release
+ */
 void io::PLYDataSource::release(void) {
     //this->resetFrameCache();
     //if (file != nullptr) {
@@ -119,6 +157,9 @@ void io::PLYDataSource::release(void) {
     //frameIdx.clear();
 }
 
+/*
+ * io::PLYDataSource::assertData
+ */
 bool io::PLYDataSource::assertData() {
 
     if (!instream.is_open()) return false;
@@ -178,8 +219,12 @@ bool io::PLYDataSource::assertData() {
         }
     }
     plf.read(instream);
+    return true;
 }
 
+/*
+ * io::PLYDataSource::filenameChanged
+ */
 bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
@@ -362,14 +407,21 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 //#undef _ERROR_OUT
 //
 //    return true;
+    return true;
 }
 
+/*
+ * io::PLYDataSource::anyEnumChanged
+ */
 bool io::PLYDataSource::anyEnumChanged(core::param::ParamSlot& slot) {
     this->vertices = nullptr;
     return false;
 }
 
-bool io::PLYDataSource::getDataCallback(core::Call& caller) {
+/*
+ * io::PLYDataSource::getSphereDataCallback
+ */
+bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
     auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
@@ -387,7 +439,10 @@ bool io::PLYDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool io::PLYDataSource::getExtentCallback(core::Call& caller) {
+/*
+ * io::PLYDataSource::getSphereExtentCallback
+ */
+bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
 
     if (!assertData()) return false;
@@ -397,6 +452,22 @@ bool io::PLYDataSource::getExtentCallback(core::Call& caller) {
         c2->SetDataHash(this->data_hash);
         return true;
     }
+
+    return true;
+}
+
+/*
+ * io::PLYDataSource::getMeshDataCallback
+ */
+bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
+
+    return true;
+}
+
+/*
+ * io::PLYDataSource::getMeshExtentCallback
+ */
+bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
 
     return true;
 }
