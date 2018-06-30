@@ -52,7 +52,9 @@ public class TcpSrvrSample
         //float[] y_f = parseFloatValues("y_f_uncon.dat");
         float[] y_q_t = Util.parseFloatValues("2018_06_27_2/y_q_t.dat");
         float[] y_f = Util.parseFloatValues("2018_06_27_2/y_f.dat");
-        float[] timesteps = Util.parseFloatValues("2018_06_27_2//t.dat");
+        float[] y_q_t_uncon = Util.parseFloatValues("2018_06_27_2/y_q_t_uncon.dat");
+        float[] y_f_uncon = Util.parseFloatValues("2018_06_27_2/y_funcon.dat");
+        float[] timesteps = Util.parseFloatValues("2018_06_27_2/t.dat");
 
         Console.WriteLine("Number of displacement values: " + y_q_t.Length.ToString());
         Console.WriteLine("Number of force values: " + y_f.Length.ToString());
@@ -90,6 +92,7 @@ public class TcpSrvrSample
         int simulation_frame = 0;
 
         DataPackage simulation_data = new DataPackage(24, 60);
+        DataPackage simulation_data_uncon = new DataPackage(24, 60);
 
         while (true)
         {
@@ -108,6 +111,8 @@ public class TcpSrvrSample
                 }
             }
 
+            /////////////////
+            // Simulation con
             Buffer.BlockCopy(timesteps, simulation_frame * 4, simulation_data.raw_storage, 0, 4);
 
             Buffer.BlockCopy(y_f, simulation_frame * 60 * 4, simulation_data.raw_storage, 4 + 24 * 3 * 4, 60 * 4);
@@ -125,6 +130,27 @@ public class TcpSrvrSample
                 }
             }
 
+            ///////////////////
+            // Simulation uncon
+
+            Buffer.BlockCopy(timesteps, simulation_frame * 4, simulation_data_uncon.raw_storage, 0, 4);
+
+            Buffer.BlockCopy(y_f_uncon, simulation_frame * 60 * 4, simulation_data_uncon.raw_storage, 4 + 24 * 3 * 4, 60 * 4);
+
+            for (int i = 0; i < 60; ++i)
+            {
+                Buffer.BlockCopy(y_f_uncon, simulation_frame * 4 + i * simulation_frame_cnt * 4, simulation_data_uncon.raw_storage, 4 + 24 * 3 * 4 + i * 4, 4);
+            }
+
+            for (int i = 0; i < 24; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    Buffer.BlockCopy(y_q_t_uncon, simulation_frame * 4 + j * simulation_frame_cnt * 4 + i * 3 * 4 * simulation_frame_cnt, simulation_data_uncon.raw_storage, 4 + j * 4 + i * 3 * 4, 4);
+                }
+            }
+
+
             Console.WriteLine(timesteps[simulation_frame]);
             //for (int i = 0; i < 24; ++i)
             //{
@@ -136,7 +162,9 @@ public class TcpSrvrSample
             //}
 
             //newsock.Send(simulation_data.raw_storage, simulation_data.raw_storage.Length, sender);
-            stream.Write(simulation_data.raw_storage, 0, simulation_data.raw_storage.Length); 
+            stream.Write(simulation_data.raw_storage, 0, simulation_data.raw_storage.Length);
+
+            stream.Write(simulation_data_uncon.raw_storage, 0, simulation_data_uncon.raw_storage.Length);
         }
     }
 }
