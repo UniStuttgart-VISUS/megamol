@@ -10,6 +10,7 @@ out vec2 gsLineCoord;
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
 
+//TODO: rewrite
 void main(void) {
     const vec2 p0 = gl_in[0].gl_Position.xy;
     const vec2 p1 = gl_in[1].gl_Position.xy;
