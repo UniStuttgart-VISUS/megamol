@@ -37,6 +37,7 @@ moldyn::MMPLDWriter::MMPLDWriter(void) : AbstractDataWriter(),
     verPar->SetTypePair(101, "1.1");
 #endif
     verPar->SetTypePair(102, "1.2");
+    verPar->SetTypePair(102, "1.3");
     this->versionSlot.SetParameter(verPar);
     this->MakeSlotAvailable(&this->versionSlot);
 
@@ -254,6 +255,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; vs = 12; break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; vs = 16; break;
             case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; vs = 6; break;
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ: vt = 4; vs = 24; break;
             default: vt = 0; vs = 0; break;
         }
         if (vt != 0) {
@@ -300,6 +302,11 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         UINT64 cnt = points.GetCount();
         if (vt == 0) cnt = 0;
         ASSERT_WRITEOUT(&cnt, 8);
+
+        if (ver == 103) {
+            ASSERT_WRITEOUT(points.GetBBox().PeekBounds(), 24);
+        }
+
         if (vt == 0) continue;
         const unsigned char *vp = static_cast<const unsigned char *>(points.GetVertexData());
         const unsigned char *cp = static_cast<const unsigned char *>(points.GetColourData());
