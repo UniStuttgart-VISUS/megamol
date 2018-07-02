@@ -178,6 +178,7 @@ MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 "  next = next,"
 "  pairs = pairs,"
 "  pcall = pcall,"
+"  require = require,"
 "  tonumber = tonumber,"
 "  tostring = tostring,"
 "  type = type,"
@@ -367,7 +368,7 @@ void megamol::core::LuaState::commonInit() {
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
-        //luaL_openlibs(L);
+        luaL_openlibs(L);
 #else
         // load parts of the environment
         luaL_requiref(L, "_G", luaopen_base, 1);
@@ -381,6 +382,8 @@ void megamol::core::LuaState::commonInit() {
         luaL_requiref(L, LUA_MATHLIBNAME, luaopen_math, 1);
         lua_pop(L, 1);
         luaL_requiref(L, LUA_OSLIBNAME, luaopen_os, 1);
+        lua_pop(L, 1);
+        luaL_requiref(L, LUA_LOADLIBNAME, luaopen_package, 1);
         lua_pop(L, 1);
 #endif
 
