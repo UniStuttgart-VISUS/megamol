@@ -11,6 +11,7 @@
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
@@ -125,6 +126,8 @@ private:
 
     bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 
+    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program);
+
     bool isDirty(void) const;
 
     void resetDirty(void);
@@ -153,6 +156,8 @@ private:
 
     core::param::ParamSlot labelSelectorParam;
 
+    core::param::ParamSlot labelSizeParam;
+
     core::param::ParamSlot geometryTypeParam;
 
     core::param::ParamSlot kernelWidthParam;
@@ -163,15 +168,21 @@ private:
 
     core::param::ParamSlot axisTicksParam;
 
+    core::param::ParamSlot axisTicksRedundantParam;
+
     core::param::ParamSlot axisTickLengthParam;
+
+    core::param::ParamSlot axisTickSizeParam;
 
     core::param::ParamSlot cellSizeParam;
 
     core::param::ParamSlot cellMarginParam;
 
+    core::param::ParamSlot cellNameSizeParam;
+
     core::param::ParamSlot alphaScalingParam;
 
-    core::param::ParamSlot attenuateSubpixelParam;
+    core::param::ParamSlot alphaAttenuateSubpixelParam;
 
     size_t dataHash;
 
@@ -196,6 +207,8 @@ private:
     vislib::graphics::gl::GLSLShader axisShader;
 
     vislib::graphics::gl::GLSLShader pointShader;
+
+    vislib::graphics::gl::GLSLGeometryShader lineShader;
 
     core::utility::SSBOStreamer valueSSBO;
 
