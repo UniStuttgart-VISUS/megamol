@@ -1,8 +1,8 @@
 uniform float alphaScaling;
 
 in vec4 vsColor;
-in float vsSize;
-in float vsPixelSize;
+in float vsKernelSize;
+in float vsPixelKernelSize;
 
 out vec4 fsColor;
 
@@ -15,7 +15,7 @@ float gauss2(vec2 p) {
 
 void main(void) {
     const vec2 distance = gl_PointCoord.xy - vec2(0.5);
-    const float attenuation = vsPixelSize - vsSize;
+    const float attenuation = vsPixelKernelSize - vsKernelSize;
     float alpha = gauss2(distance * 6);
     alpha *= pow(1.0 - attenuation, 2);
     alpha *= alphaScaling;

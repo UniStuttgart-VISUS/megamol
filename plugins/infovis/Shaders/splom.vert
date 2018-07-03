@@ -16,8 +16,8 @@ layout(std430, binding = 3) buffer ValueSSBO {
 };
 
 out vec4 vsColor;
-out float vsSize;
-out float vsPixelSize;
+out float vsKernelSize;
+out float vsPixelKernelSize;
 
 void main(void) {
     const Plot plot = plots[gl_InstanceID];
@@ -39,15 +39,15 @@ void main(void) {
     gl_Position = modelViewProjection * position;
 
      // Transform kernel size to screen space.
-    const vec4 ndcSize = modelViewProjection * vec4(kernelWidth, kernelWidth, 0.0, 0.0);
-    const vec2 screenSize = ndcSize.xy * viewport.zw;
-    vsSize = max(screenSize.x, screenSize.y);
+    const vec4 ndcKernelSize = modelViewProjection * vec4(kernelWidth, kernelWidth, 0.0, 0.0);
+    const vec2 screenKernelSize = ndcKernelSize.xy * viewport.zw;
+    vsKernelSize = max(screenKernelSize.x, screenKernelSize.y);
 
     if (attenuateSubpixel) {
         // Ensure a minimum pixel size to attenuate alpha depending on subpixels.
-        vsPixelSize = max(vsSize, 1.0);
+        vsPixelKernelSize = max(vsKernelSize, 1.0);
     } else {
-        vsPixelSize = vsSize;
+        vsPixelKernelSize = vsKernelSize;
     }
-    gl_PointSize = vsPixelSize;
+    gl_PointSize = vsPixelKernelSize;
 }
