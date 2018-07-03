@@ -227,7 +227,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 // handshake who has imgc
                 int* imgcRes = nullptr;
                 if (roleRank == 0) {
-                    imgcRes = new int[roleSize];
+                    imgcRes = new int[roleSize + 1];
                 }
 
                 int imgcCon = imgcConnected ? 1 : 0;
