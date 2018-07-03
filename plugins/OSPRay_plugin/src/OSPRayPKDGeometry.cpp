@@ -91,8 +91,12 @@ bool OSPRayPKDGeometry::readData(megamol::core::Call& call) {
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
 
+    const auto listIdx = this->particleList.Param<core::param::IntParam>()->Value();
+    if (listIdx >= cd->GetParticleListCount()) {
+        return false;
+    }
     core::moldyn::MultiParticleDataCall::Particles& parts =
-        cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+        cd->AccessParticles(listIdx);
 
     unsigned int partCount = parts.GetCount();
     float globalRadius = parts.GetGlobalRadius();

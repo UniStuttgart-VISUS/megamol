@@ -210,7 +210,7 @@ private:
 
     int mpiSize = 0;
 
-    enum mpiRole { IMG_BLANK, IMG_LEFT, IMG_RIGHT};
+    enum mpiRole { IMG_BLANK = 10, IMG_LEFT = 11, IMG_RIGHT = 12};
 
     MPI_Comm roleComm;
     int roleRank = -1, roleSize = -1;

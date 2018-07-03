@@ -613,7 +613,8 @@ namespace moldyn {
             VERTDATA_NONE = 0, //< indicates that this object is void
             VERTDATA_FLOAT_XYZ = 1, //< use global radius
             VERTDATA_FLOAT_XYZR = 2,
-            VERTDATA_SHORT_XYZ = 3 //< quantized positions and global radius
+            VERTDATA_SHORT_XYZ = 3, //< quantized positions and global radius
+            VERTDATA_DOUBLE_XYZ = 4
         };
 
         /** possible values for the colour data */
@@ -1096,6 +1097,15 @@ namespace moldyn {
             cb = this->glCB;
         }
 
+        /** Gets the world-space minmax bounding box of the list data */
+        vislib::math::Cuboid<float> GetBBox() const {
+            return this->wsBBox;
+        }
+
+        void SetBBox(vislib::math::Cuboid<float> const &bbox) {
+            this->wsBBox = bbox;
+        }
+
     private:
 
         /** The global colour */
@@ -1124,6 +1134,9 @@ namespace moldyn {
 
         /** The global type of particles in the list */
         unsigned int particleType;
+
+        /** the world-space minmax bounding box of the list data */
+        vislib::math::Cuboid<float> wsBBox;
 
         /** The vertex data type */
         VertexDataType vertDataType;

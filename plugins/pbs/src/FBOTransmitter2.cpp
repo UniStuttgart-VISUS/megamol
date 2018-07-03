@@ -27,7 +27,7 @@
 //#define _DEBUG 1
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
-    : address_slot_{"address", "The address the transmitter should connect to"}
+    : address_slot_{"port", "The port the transmitter should connect to"}
     , commSelectSlot_{"communicator", "Select the communicator to use"}
     , view_name_slot_{"view", "The name of the view instance to be used"}
     , trigger_button_slot_{"trigger", "Triggers transmission"}
@@ -44,7 +44,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
     color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
     depth_buf_el_size_{4}, connected_{false} {
-    this->address_slot_ << new megamol::core::param::StringParam{"tcp://*:34242"};
+    this->address_slot_ << new megamol::core::param::StringParam{"34242"};
     this->MakeSlotAvailable(&this->address_slot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
