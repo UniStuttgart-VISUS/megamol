@@ -359,7 +359,7 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
         }
     }
 
-    this->bounds.Set(0, 0, columnCount * (size + margin), columnCount * (size + margin));
+    this->bounds.Set(0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin);
 
     const GLuint plotItems = core::utility::SSBOStreamer::GetNumItemsPerChunkAligned(plots.size(), true);
     const GLuint bufferSize = plotItems * sizeof(PlotInfo);
