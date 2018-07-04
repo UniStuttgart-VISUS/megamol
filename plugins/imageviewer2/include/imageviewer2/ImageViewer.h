@@ -216,6 +216,8 @@ private:
     int roleRank = -1, roleSize = -1;
     int rank = -1;
     mpiRole myRole;
+    bool remoteness = false;
+    int roleImgcRank = -1;
 
     vislib::TString loadedFile = "";
 
