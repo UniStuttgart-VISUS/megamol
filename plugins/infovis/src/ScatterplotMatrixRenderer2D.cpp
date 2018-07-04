@@ -44,7 +44,7 @@ inline std::string to_string(float x) {
 }
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
-    : core::view::Renderer2DModule()
+    : Renderer2D()
     , floatTableInSlot("ftIn", "Float table input")
     , transferFunctionInSlot("tfIn", "Transfer function input")
     , flagStorageInSlot("fsIn", "Flag storage input")
@@ -196,83 +196,6 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
     this->validateData();
     call.SetBoundingBox(this->bounds);
-    return true;
-}
-
-bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) {
-    vislib::graphics::gl::ShaderSource vert, frag;
-
-    vislib::StringA vertname((prefix + "::vert").c_str());
-    vislib::StringA fragname((prefix + "::frag").c_str());
-    vislib::StringA pref(prefix.c_str());
-
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
-
-    try {
-        if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
-        return false;
-    }
-
-    return true;
-}
-
-bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program) {
-    vislib::graphics::gl::ShaderSource vert, geom, frag;
-
-    vislib::StringA vertname((prefix + "::vert").c_str());
-    vislib::StringA geomname((prefix + "::geom").c_str());
-    vislib::StringA fragname((prefix + "::frag").c_str());
-    vislib::StringA pref(prefix.c_str());
-
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
-
-    try {
-        if (!program.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
-            return false;
-        }
-        if (!program.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", pref.PeekBuffer());
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
-        return false;
-    }
-
     return true;
 }
 

@@ -12,17 +12,13 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/math/Matrix.h"
-
-#include "DiagramSeriesCall.h"
 #include "FlagCall.h"
+#include "Renderer2D.h"
 
 namespace megamol {
 namespace infovis {
 
-class ScatterplotMatrixRenderer2D : public core::view::Renderer2DModule {
+class ScatterplotMatrixRenderer2D : public Renderer2D {
 public:
     /**
      * Answer the name of this module.
@@ -123,10 +119,6 @@ private:
      * @return The return value of the function.
      */
     virtual bool GetExtents(core::view::CallRender2D& call);
-
-    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
-
-    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program);
 
     bool isDirty(void) const;
 

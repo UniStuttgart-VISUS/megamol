@@ -11,16 +11,15 @@
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLTesselationShader.h"
+
+#include "Renderer2D.h"
 
 #include <map>
 
 namespace megamol {
 namespace infovis {
 
-class ParallelCoordinatesRenderer2D : public core::view::Renderer2DModule {
+class ParallelCoordinatesRenderer2D : public Renderer2D {
 public:
     /**
      * Answer the name of this module.
@@ -133,10 +132,6 @@ private:
     void drawParcos(void);
 
     int mouseXtoAxis(float x);
-
-    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
-    bool makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program);
-    bool makeTessellationProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program);
 
     bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
 
