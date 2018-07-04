@@ -218,7 +218,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
-            bool remoteness = false;
+            remoteness = false;
             int roleImgcRank = -1;
 #ifdef WITH_MPI
             if (useMpi) {
@@ -474,13 +474,13 @@ bool imageviewer2::ImageViewer::Render(Call& call) {
     for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
         this->tiles[i].Second()->Bind();
         ::glBegin(GL_QUADS);
-        ::glTexCoord2i(0, 0);
+        ::glTexCoord2i(0, remoteness ? 1 : 0);
         ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Bottom());
-        ::glTexCoord2i(0, 1);
+        ::glTexCoord2i(0, remoteness ? 0 : 1);
         ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, 1);
+        ::glTexCoord2i(1, remoteness ? 0 : 1);
         ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, 0);
+        ::glTexCoord2i(1, remoteness ? 1 : 0);
         ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Bottom());
         ::glEnd();
     }
