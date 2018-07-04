@@ -1,6 +1,8 @@
 /*
 * CallCinematicCamera.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CALLCINCAM_H_INCLUDED
@@ -19,6 +21,13 @@
 #include "vislib/math/Point.h"
 
 #include "Keyframe.h"
+
+
+// GLOBAL CC DEFINES
+#ifndef CC_MENU_HEIGHT
+    #define CC_MENU_HEIGHT (25.0f)
+#endif
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -111,7 +120,7 @@ namespace megamol {
 
             // SELECTED KEYFRAME 
             inline void setSelectedKeyframeTime(float t) { 
-                this->selectedKeyframe.setAnimTime(t);
+                this->selectedKeyframe.SetAnimTime(t);
             }
             inline void setSelectedKeyframe(Keyframe k) {
                 this->selectedKeyframe = k;

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "FloattableToLines.h"
+#include "FloatTableToLines.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -489,7 +489,7 @@ bool FloatTableToLines::getLineData(core::Call& call) {
                 core::utility::ColourParser::FromString(this->slotGlobalColor.Param<core::param::StringParam>()->Value(), 3, rgb);
                 lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), vislib::graphics::ColourRGBAu8(rgb[0], rgb[1], rgb[2], 255));
             } else {
-                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), lineColor[loop].data(), FALSE);
+                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), lineColor[loop].data(), false);
             }
         }
 

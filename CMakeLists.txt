@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+if(POLICY CMP0054)
+    cmake_policy(SET CMP0054 NEW)
+endif()
+
 project(megamol)
 
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "default install path" FORCE)
 endif()
 
@@ -36,6 +40,12 @@ include(megamol_options)
 
 # MEGAMOL MAKROS
 include(check_mmdep)
+
+# Clang-format
+include(ClangFormat)
+
+# NUGET SETTINGS
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config NuGet.Config COPYONLY)
 
 
 ###############################
@@ -71,6 +81,11 @@ endif()
 # Plugins
 ###############################
 add_subdirectory(plugins)
+
+###############################
+# utils
+###############################
+add_subdirectory(utils)
 
 # Check dependencies and throw error
 foreach(d ${DEP_LIST})

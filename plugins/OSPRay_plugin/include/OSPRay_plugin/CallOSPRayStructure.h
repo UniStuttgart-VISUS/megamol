@@ -30,13 +30,15 @@ enum geometryTypeEnum {
     TRIANGLES,
     STREAMLINES,
     CYLINDERS,
-    PBS
+    PBS,
+    OSPRAY_API_GEOMETRY
 };
 
 enum volumeTypeEnum {
     STRUCTUREDVOLUME,
     BLOCKBRICKEDVOLUME,
-    GHOSTBLOCKBRICKEDVOLUME
+    GHOSTBLOCKBRICKEDVOLUME,
+    OSPRAY_API_VOLUME
 };
 
 enum volumeRepresentationType {
@@ -76,6 +78,7 @@ public:
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
     std::shared_ptr<std::pair<float, float>> valueRange;
+    void* ospstructure;
 
     unsigned int voxelCount;
     unsigned int maxDim;

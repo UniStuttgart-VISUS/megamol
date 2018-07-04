@@ -25,7 +25,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.0" --depth 1
+    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.1" --depth 1
     OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeout.txt
     ERROR_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeerr.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix

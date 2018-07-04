@@ -158,6 +158,28 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
+        // Propagate viewport changes to connected views.
+        CallRenderView* crv = this->render1();
+        if (crv != NULL) {
+            // der ganz ganz dicke "because-i-know"-Knüppel
+            AbstractView* crvView = const_cast<AbstractView*>(
+                dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+            if (crvView != NULL) {
+                crvView->Resize(static_cast<unsigned int>(this->client1Area.Width()),
+                    static_cast<unsigned int>(this->client1Area.Height()));
+            }
+        }
+        crv = this->render2();
+        if (crv != NULL) {
+            // der ganz ganz dicke "because-i-know"-Knüppel
+            AbstractView* crvView = const_cast<AbstractView*>(
+                dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+            if (crvView != NULL) {
+                crvView->Resize(static_cast<unsigned int>(this->client2Area.Width()),
+                    static_cast<unsigned int>(this->client2Area.Height()));
+            }
+        }
+
         if (this->overrideCall != NULL) {
             this->overrideCall->EnableOutputBuffer();
         }

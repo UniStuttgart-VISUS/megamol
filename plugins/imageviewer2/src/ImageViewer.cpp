@@ -23,6 +23,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/AbstractView3D.h"
 #include "vislib/sys/SystemInformation.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -41,8 +42,9 @@ imageviewer2::ImageViewer::ImageViewer(void) : Renderer3DModule(),
         currentSlot("current", "current slideshow image index"),
         nextSlot("next", "go to next image in slideshow"),
         lastSlot("last", "go to last image in slideshow"),
-        defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line"),
         blankMachine("blankMachine", "semicolon-separated list of machines that do not load image"),
+        defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line"),
+        callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view."),
         width(1), height(1), tiles(), leftFiles(), rightFiles() {
 
     this->leftFilenameSlot << new param::FilePathParam("");
@@ -94,6 +96,12 @@ imageviewer2::ImageViewer::ImageViewer(void) : Renderer3DModule(),
 
     vislib::sys::SystemInformation::ComputerName(this->machineName);
     this->machineName.ToLowerCase();
+
+    this->callRequestMpi.SetCompatibleCall<cluster::mpi::MpiCallDescription>();
+    this->MakeSlotAvailable(&this->callRequestMpi);
+#ifdef WITH_MPI
+    this->comm = MPI_COMM_NULL;
+#endif /* WITH_MPI */
 }
 
 
@@ -177,13 +185,75 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
-            //if (codec.Load(filename)) {
-            if (!this->blankMachines.Contains(this->machineName)) {
-                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, filename)) {
+            bool beBlank = this->blankMachines.Contains(this->machineName);
+
+#ifdef WITH_MPI
+            // generate communicators for each role
+            bool useMpi = initMPI();
+            MPI_Comm roleComm;
+            int roleRank = -1, roleSize = -1;
+            mpiRole myRole;
+            myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
+            if (useMpi) {
+                MPI_Comm_split(MPI_COMM_WORLD, myRole, 0, &roleComm);
+                MPI_Comm_rank(roleComm, &roleRank);
+                MPI_Comm_size(roleComm, &roleSize);
+                vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i)",
+                    myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
+            }
+#endif /* WITH_MPI */
+
+            if (!beBlank) {
+                int fileSize = 0;
+                BYTE *allFile = nullptr;
+#ifdef WITH_MPI
+                // single node or role boss loads the image
+                if (!useMpi || roleRank == 0) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i) loads an image",
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
+#endif /* WITH_MPI */
+                    vislib::sys::FastFile in;
+                    if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+                        fileSize = in.GetSize();
+                        allFile = new BYTE[fileSize];
+                        in.Read(allFile, fileSize);
+                        in.Close();
+                    } else {
+                        printf("ImageViewer2: failed opening file\n");
+                        fileSize = 0;
+                    }
+#ifdef WITH_MPI
+                }
+                // cluster nodes broadcast file size
+                if (useMpi) {
+                    MPI_Bcast(&fileSize, 1, MPI_INT, 0, roleComm);
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) knows fileSize = %i",
+                        roleRank, roleSize,
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
+                        fileSize);
+                    if (roleRank != 0) {
+                        allFile = new BYTE[fileSize];
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) late allocated file storage",
+                            roleRank, roleSize,
+                            myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    }
+                    // everyone gets the compressed file now
+                    MPI_Bcast(allFile, fileSize, MPI_BYTE, 0, roleComm);
+                }
+#endif /* WITH_MPI */
+                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, allFile, fileSize)) {
                     img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
                     this->width = img.Width();
                     this->height = img.Height();
-                    this->tiles.Clear();
+                } else {
+                    printf("ImageViewer2 failed decoding file\n");
+                    fileSize = 0;
+                    this->width = this->height = 0;
+                }
+                // now everyone should have a copy of the loaded image
+
+                this->tiles.Clear();
+                if (this->width > 0 && this->height > 0) {
                     BYTE *buf = new BYTE[TILE_SIZE * TILE_SIZE * 3];
                     for (unsigned int y = 0; y < this->height; y += TILE_SIZE) {
                         unsigned int h = vislib::math::Min(TILE_SIZE, this->height - y);
@@ -204,17 +274,59 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         }
                     }
                     delete[] buf;
-                    img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
-                } else {
-                    printf("Failed: Load\n");
+                    delete[] allFile;
+                    //img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
                 }
+#ifdef WITH_MPI
+                // we finish this together
+                if (useMpi) {
+                    MPI_Barrier(roleComm);
+                }
+#endif
             }
-        } catch(vislib::Exception ex) {
+
+        } catch (vislib::Exception ex) {
             printf("Failed: %s (%s;%d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch(...) {
+        } catch (...) {
             printf("Failed\n");
         }
     }
+}
+
+
+bool imageviewer2::ImageViewer::initMPI() {
+    bool retval = false;
+#ifdef WITH_MPI
+    if (this->comm == MPI_COMM_NULL) {
+        auto c = this->callRequestMpi.CallAs<cluster::mpi::MpiCall>();
+        if (c != nullptr) {
+            /* New method: let MpiProvider do all the stuff. */
+            if ((*c)(cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
+                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                this->comm = c->GetComm();
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
+            }
+        }
+
+        if (this->comm != MPI_COMM_NULL) {
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+                _T("retrieving communicator properties ..."));
+            ::MPI_Comm_rank(this->comm, &this->mpiRank);
+            ::MPI_Comm_size(this->comm, &this->mpiSize);
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+                _T("of %d."),
+                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+                this->mpiRank, this->mpiSize);
+        } /* end if (this->comm != MPI_COMM_NULL) */
+    } /* end if (this->comm == MPI_COMM_NULL) */
+
+      /* Determine success of the whole operation. */
+    retval = (this->comm != MPI_COMM_NULL);
+#endif /* WITH_MPI */
+    return retval;
 }
 
 

@@ -18,11 +18,16 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib/SmartPtr.h"
 
+#ifdef WITH_MPI
+#include "mpi.h"
+#endif /* WITH_MPI */
+
 /*
  * Copyright (C) 2010 by Sebastian Grottel.
  */
 #include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
+#include "mmcore/CallerSlot.h"
 
 using namespace megamol::core;
 
@@ -165,6 +170,8 @@ namespace imageviewer2 {
         /** makes sure the image for the respective eye is loaded. */
         void assertImage(bool rightEye);
 
+        bool initMPI();
+
         /** The image file path slot */
         param::ParamSlot leftFilenameSlot;
 
@@ -197,6 +204,20 @@ namespace imageviewer2 {
 
         /** if only one image per pair is defined: where it should go */
         param::ParamSlot defaultEye;
+
+        /** slot for MPIprovider */
+        CallerSlot callRequestMpi;
+
+#ifdef WITH_MPI
+        /** The communicator that the view uses. */
+        MPI_Comm comm;
+#endif /* WITH_MPI */
+
+        int mpiRank = 0;
+
+        int mpiSize = 0;
+
+        enum mpiRole { IMG_BLANK, IMG_LEFT, IMG_RIGHT };
 
         /** The width of the image */
         unsigned int width;
