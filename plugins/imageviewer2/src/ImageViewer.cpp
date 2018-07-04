@@ -218,24 +218,25 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
-            remoteness = false;
-            int roleImgcRank = -1;
+            static bool handIsShaken = false;
 #ifdef WITH_MPI
-            if (useMpi) {
+            if (useMpi && !handIsShaken) {
+                handIsShaken = true;
                 vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: IMGC Handshake\n");
                 // handshake who has imgc
                 int* imgcRes = nullptr;
                 if (roleRank == 0) {
-                    imgcRes = new int[roleSize + 1];
+                    imgcRes = new int[roleSize];
                 }
 
                 int imgcCon = imgcConnected ? 1 : 0;
-                MPI_Gather(&imgcCon, 1, MPI_INT, imgcRes, roleSize, MPI_INT, 0, roleComm);
+                MPI_Gather(&imgcCon, 1, MPI_INT, imgcRes, 1, MPI_INT, 0, roleComm);
 
                 if (roleRank == 0) {
                     for (int i = 0; i < roleSize; ++i) {
                         if (imgcRes[i] == 1) {
                             roleImgcRank = i;
+                            break;
                         }
                     }
                     delete[] imgcRes;
@@ -246,9 +247,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                     remoteness = true;
                 } else {
                     roleImgcRank = 0;
-                    if (loadedFile == filename) {
-                        return true;
-                    }
                 }
                 vislib::sys::Log::DefaultLog.WriteInfo(
                     "ImageViewer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
@@ -256,7 +254,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #endif /* WITH_MPI */
 
 
-            if (!beBlank) {
+            if (!beBlank && ((loadedFile != filename) || remoteness)) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
                 BYTE* imgc_data_ptr = nullptr;
