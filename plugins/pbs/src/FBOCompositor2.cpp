@@ -24,6 +24,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
+    , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -35,6 +36,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , isRegistered_{false} {
     // addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
     // this->MakeSlotAvailable(&addressesSlot_);
+    handshakePortSlot_ << new megamol::core::param::StringParam("42000");
+    this->MakeSlotAvailable(&handshakePortSlot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
@@ -108,8 +111,8 @@ bool megamol::pbs::FBOCompositor2::create() {
     glDeleteShader(vert_shader);
     glDeleteShader(frag_shader);
 
-
-    registerComm_.Bind(std::string{"tcp://*:42000"});
+    auto const bind_str = std::string("tcp://*:") + std::string(T2A(this->handshakePortSlot_.Param<megamol::core::param::StringParam>()->Value()));
+    registerComm_.Bind(bind_str);
 
     return true;
 }

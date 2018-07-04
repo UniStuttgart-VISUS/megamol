@@ -97,6 +97,8 @@ private:
 
     megamol::core::param::ParamSlot numRendernodesSlot_;
 
+    megamol::core::param::ParamSlot handshakePortSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;

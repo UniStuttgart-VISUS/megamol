@@ -32,6 +32,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , view_name_slot_{"view", "The name of the view instance to be used"}
     , trigger_button_slot_{"trigger", "Triggers transmission"}
     , target_machine_slot_{"targetMachine", "Name of the target machine"}
+    , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -44,6 +45,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
     depth_buf_el_size_{4}, connected_{false} {
     this->address_slot_ << new megamol::core::param::StringParam{"tcp://*:34242"};
+    this->MakeSlotAvailable(&this->address_slot_);
+    this->handshake_port_slot_ << new megamol::core::param::StringParam{"42000"};
     this->MakeSlotAvailable(&this->address_slot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
@@ -114,9 +117,12 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
             auto const target =
                 std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
+	    auto const handshake = 
+	      std::string(T2A(this->handshake_port_slot_.Param<megamol::core::param::StringParam>()->Value()));
+
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
-            std::string const registerAddress = std::string("tcp://") + target + std::string(":42000");
+            std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
             printf("FBOTransmitter2: registerAddress: %s", registerAddress.c_str());
             registerComm.Connect(registerAddress);
 
