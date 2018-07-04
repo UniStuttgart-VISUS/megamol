@@ -396,7 +396,13 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // we finish this together
                 if (useMpi) {
+                    vislib::sys::Log::DefaultLog.WriteInfo(
+                        "ImageViewer2: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
+                    vislib::sys::Log::DefaultLog.WriteInfo(
+                        "ImageViewer2: rank %i of %i (role %s) leaving sync barrier", roleRank, roleSize,
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
 #endif
             }
