@@ -217,6 +217,8 @@ private:
     int rank = -1;
     mpiRole myRole;
 
+    vislib::TString loadedFile = "";
+
     /** The width of the image */
     unsigned int width;
 
