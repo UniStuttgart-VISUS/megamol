@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
-#include <array>
-#include <iostream>
+
 #include "FlagCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -14,6 +13,9 @@
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
+
+#include <array>
+#include <iostream>
 //#include "debug.h"
 
 //#define FUCK_THE_PIPELINE
@@ -38,10 +40,11 @@
 
 using namespace megamol;
 using namespace megamol::infovis;
+using namespace megamol::stdplugin::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     : Renderer2DModule()
-    , getDataSlot("getdata", "connects to the float table data")
+    , getDataSlot("getdata", "Float table input")
     , getTFSlot("getTF", "connects to the transfer function")
     , getFlagsSlot("getFlags", "connects to the flag storage")
     , densityFBO()
@@ -102,114 +105,114 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , pickedIndicatorIndex(-1)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
-    this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+    this->getDataSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
     this->MakeSlotAvailable(&this->getFlagsSlot);
 
-    auto drawModes = new ::megamol::core::param::EnumParam(DRAW_DISCRETE);
+    auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
     drawModes->SetTypePair(DRAW_CONTINUOUS, "Continuous");
     drawModes->SetTypePair(DRAW_HISTOGRAM, "Histogram");
     drawModeSlot.SetParameter(drawModes);
     this->MakeSlotAvailable(&drawModeSlot);
 
-    drawSelectedItemsSlot << new ::megamol::core::param::BoolParam(true);
+    drawSelectedItemsSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawSelectedItemsSlot);
 
-    selectedItemsColorSlot << new ::megamol::core::param::StringParam("red");
+    selectedItemsColorSlot << new core::param::StringParam("red");
     selectedItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
     this->MakeSlotAvailable(&selectedItemsColorSlot);
-    selectedItemsAlphaSlot << new param::FloatParam(1.0f, 0.0f, 1.0f);
+    selectedItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
     selectedItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback);
     this->MakeSlotAvailable(&selectedItemsAlphaSlot);
     selectedItemsColorSlotCallback(selectedItemsColorSlot);
 
-    drawOtherItemsSlot << new ::megamol::core::param::BoolParam(true);
+    drawOtherItemsSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawOtherItemsSlot);
 
-    otherItemsColorSlot << new ::megamol::core::param::StringParam("gray");
+    otherItemsColorSlot << new core::param::StringParam("gray");
     otherItemsColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsColorSlot);
-    otherItemsAlphaSlot << new param::FloatParam(1.0f, 0.0f, 1.0f);
+    otherItemsAlphaSlot << new core::param::FloatParam(1.0f, 0.0f, 1.0f);
     otherItemsAlphaSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback);
     this->MakeSlotAvailable(&otherItemsAlphaSlot);
     otherItemsColorSlotCallback(otherItemsColorSlot);
 
-    drawAxesSlot << new ::megamol::core::param::BoolParam(true);
+    drawAxesSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawAxesSlot);
 
-    axesColorSlot << new ::megamol::core::param::StringParam("white");
+    axesColorSlot << new core::param::StringParam("white");
     axesColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::axesColorSlotCallback);
     this->MakeSlotAvailable(&axesColorSlot);
     axesColorSlotCallback(axesColorSlot);
 
-    filterIndicatorColorSlot << new ::megamol::core::param::StringParam("orange");
+    filterIndicatorColorSlot << new core::param::StringParam("orange");
     filterIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback);
     this->MakeSlotAvailable(&filterIndicatorColorSlot);
     filterIndicatorColorSlotCallback(filterIndicatorColorSlot);
 
-    drawSelectionIndicatorSlot << new ::megamol::core::param::BoolParam(true);
+    drawSelectionIndicatorSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&drawSelectionIndicatorSlot);
 
-    selectionIndicatorColorSlot << new ::megamol::core::param::StringParam("MegaMolBlue");
+    selectionIndicatorColorSlot << new core::param::StringParam("MegaMolBlue");
     selectionIndicatorColorSlot.SetUpdateCallback(&ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback);
     this->MakeSlotAvailable(&selectionIndicatorColorSlot);
     selectionIndicatorColorSlotCallback(selectionIndicatorColorSlot);
 
-    auto pickModes = new ::megamol::core::param::EnumParam(SELECT_PICK);
+    auto pickModes = new core::param::EnumParam(SELECT_PICK);
     pickModes->SetTypePair(SELECT_PICK, "Pick");
     pickModes->SetTypePair(SELECT_STROKE, "Stroke");
     selectionModeSlot.SetParameter(pickModes);
     this->MakeSlotAvailable(&selectionModeSlot);
 
-    pickRadiusSlot << new ::megamol::core::param::FloatParam(0.1f, 0.01f, 1.0f);
+    pickRadiusSlot << new core::param::FloatParam(0.1f, 0.01f, 1.0f);
     this->MakeSlotAvailable(&pickRadiusSlot);
 
-    // scalingFactorSlot << new ::megamol::core::param::Vector2fParam(::vislib::math::Vector< float, 2 >(1.0, 1.0));
+    // scalingFactorSlot << new core::param::Vector2fParam(::vislib::math::Vector< float, 2 >(1.0, 1.0));
     // this->MakeSlotAvailable(&scalingFactorSlot);
     //
-    // scaleFullscreenSlot_ << new ::megamol::core::param::BoolParam(false);
+    // scaleFullscreenSlot_ << new core::param::BoolParam(false);
     // this->MakeSlotAvailable(&scaleFullscreenSlot_);
 
-    scaleToFitSlot << new param::BoolParam(false);
+    scaleToFitSlot << new core::param::BoolParam(false);
     scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
     this->MakeSlotAvailable(&scaleToFitSlot);
 
-    // projectionMatrixSlot_ << new ::megamol::core::param::StringParam("");
+    // projectionMatrixSlot_ << new core::param::StringParam("");
     // this->MakeSlotAvailable(&projectionMatrixSlot_);
 
-    // viewMatrixSlot_ << new ::megamol::core::param::StringParam("");
+    // viewMatrixSlot_ << new core::param::StringParam("");
     // this->MakeSlotAvailable(&viewMatrixSlot_);
 
-    // useCustomMatricesSlot_ << new ::megamol::core::param::BoolParam(false);
+    // useCustomMatricesSlot_ << new core::param::BoolParam(false);
     // this->MakeSlotAvailable(&useCustomMatricesSlot_);
 
-    // storeCamSlot_ << new ::megamol::core::param::ButtonParam();
+    // storeCamSlot_ << new core::param::ButtonParam();
     // storeCamSlot_.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::storeCamSlotCallback);
     // this->MakeSlotAvailable(&storeCamSlot_);
 
-    glDepthTestSlot << new ::megamol::core::param::BoolParam(false);
+    glDepthTestSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&glDepthTestSlot);
 
-    glLineSmoothSlot << new ::megamol::core::param::BoolParam(false);
+    glLineSmoothSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&glLineSmoothSlot);
 
-    glLineWidthSlot << new ::megamol::core::param::FloatParam(1.0f, 0.1f);
+    glLineWidthSlot << new core::param::FloatParam(1.0f, 0.1f);
     this->MakeSlotAvailable(&glLineWidthSlot);
 
-    sqrtDensitySlot << new ::megamol::core::param::BoolParam(true);
+    sqrtDensitySlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&sqrtDensitySlot);
 
-    resetFlagsSlot << new ::megamol::core::param::ButtonParam();
+    resetFlagsSlot << new core::param::ButtonParam();
     resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
     this->MakeSlotAvailable(&resetFlagsSlot);
 
-    resetFiltersSlot << new ::megamol::core::param::ButtonParam();
+    resetFiltersSlot << new core::param::ButtonParam();
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
 
@@ -426,7 +429,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     if (!makeProgram("::fragment_count", this->drawItemContinuousProgram)) return false;
     if (!makeComputeProgram("::fragment_count", this->minMaxProgram)) return false;
 
-    // if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
+    if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
 
     if (!makeComputeProgram("::pc_item_filter", this->filterProgram)) return false;
     if (!makeComputeProgram("::pc_item_pick", this->pickProgram)) return false;
@@ -489,12 +492,12 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     }
 }
 
-bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags) {
-    if (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_CTRL_DOWN) {
+bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+    if (flags & core::view::MOUSEFLAG_MODKEY_CTRL_DOWN) {
         return false;
     }
 
-    if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN > 0) {
+    if (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN > 0) {
         if (mouseFlags != 0) {
             mouseReleasedX = x;
             mouseReleasedY = y;
@@ -503,7 +506,7 @@ bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core
             mousePressedX = x;
             mousePressedY = y;
         }
-    } else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
+    } else if (flags & core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
         mouseFlags = 0;
         if (!this->dragging && !this->filtering) {
             // I guess we stopped picking / brushing
@@ -511,31 +514,28 @@ bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core
         }
     }
     if (pickedAxis != -1 && (fabs(mousePressedX - x) > this->axisDistance * 0.5f) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
+        (flags & core::view::MOUSEFLAG_MODKEY_ALT_DOWN) && (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
         this->dragging = true;
     } else {
         this->dragging = false;
     }
-    if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) &&
-        !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
+    if ((flags & core::view::MOUSEFLAG_MODKEY_ALT_DOWN) && (flags & core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) &&
+        !(flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
         pickedAxis = mouseXtoAxis(mouseReleasedX);
     }
 
-    if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) &&
-        !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
+    if ((flags & core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) && (flags & core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) &&
+        !(flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
         pickIndicator(mouseReleasedX, mouseReleasedY, pickedIndicatorAxis, pickedIndicatorIndex);
     }
-    if ((pickedIndicatorAxis != -1) && (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
+    if ((pickedIndicatorAxis != -1) && (flags & core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) &&
+        (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !dragging) {
         this->filtering = true;
     } else {
         this->filtering = false;
     }
-    if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) &&
-        (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) && filtering) {
+    if ((flags & core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN) && (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) &&
+        filtering) {
         int checkAxis, checkIndex;
         pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
         if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
@@ -561,42 +561,43 @@ bool ParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot& caller) {
-    utility::ColourParser::FromString(
-        this->selectedItemsColorSlot.Param<param::StringParam>()->Value(), 4, selectedItemsColor);
-    selectedItemsColor[3] = this->selectedItemsAlphaSlot.Param<param::FloatParam>()->Value();
+bool ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(core::param::ParamSlot& caller) {
+    core::utility::ColourParser::FromString(
+        this->selectedItemsColorSlot.Param<core::param::StringParam>()->Value(), 4, selectedItemsColor);
+    selectedItemsColor[3] = this->selectedItemsAlphaSlot.Param<core::param::FloatParam>()->Value();
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(::megamol::core::param::ParamSlot& caller) {
-    utility::ColourParser::FromString(
-        this->otherItemsColorSlot.Param<param::StringParam>()->Value(), 4, otherItemsColor);
-    otherItemsColor[3] = this->otherItemsAlphaSlot.Param<param::FloatParam>()->Value();
+bool ParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(core::param::ParamSlot& caller) {
+    core::utility::ColourParser::FromString(
+        this->otherItemsColorSlot.Param<core::param::StringParam>()->Value(), 4, otherItemsColor);
+    otherItemsColor[3] = this->otherItemsAlphaSlot.Param<core::param::FloatParam>()->Value();
     return true;
 }
-bool ParallelCoordinatesRenderer2D::axesColorSlotCallback(::megamol::core::param::ParamSlot& caller) {
-    utility::ColourParser::FromString(this->axesColorSlot.Param<param::StringParam>()->Value(), 4, axesColor);
+bool ParallelCoordinatesRenderer2D::axesColorSlotCallback(core::param::ParamSlot& caller) {
+    core::utility::ColourParser::FromString(
+        this->axesColorSlot.Param<core::param::StringParam>()->Value(), 4, axesColor);
     return true;
 }
-bool ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot& caller) {
-    utility::ColourParser::FromString(
-        this->filterIndicatorColorSlot.Param<param::StringParam>()->Value(), 4, filterIndicatorColor);
+bool ParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(core::param::ParamSlot& caller) {
+    core::utility::ColourParser::FromString(
+        this->filterIndicatorColorSlot.Param<core::param::StringParam>()->Value(), 4, filterIndicatorColor);
     return true;
 }
-bool ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot& caller) {
-    utility::ColourParser::FromString(
-        this->selectionIndicatorColorSlot.Param<param::StringParam>()->Value(), 4, selectionIndicatorColor);
+bool ParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(core::param::ParamSlot& caller) {
+    core::utility::ColourParser::FromString(
+        this->selectionIndicatorColorSlot.Param<core::param::StringParam>()->Value(), 4, selectionIndicatorColor);
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::scalingChangedCallback(::megamol::core::param::ParamSlot& caller) {
+bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlot& caller) {
     this->computeScaling();
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::param::ParamSlot& caller) { return true; }
+bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
 
-bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::param::ParamSlot& caller) {
+bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
         this->filters[i].lower = 0.0f;
         this->filters[i].upper = 1.0f;
@@ -699,7 +700,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
     this->bounds.SetLeft(0.0f);
     this->bounds.SetRight(2.0f * marginX + this->axisDistance * (fc->GetColumnsCount() - 1));
 
-    if (this->scaleToFitSlot.Param<param::BoolParam>()->Value()) {
+    if (this->scaleToFitSlot.Param<core::param::BoolParam>()->Value()) {
         // scale to fit
         float requiredHeight = this->bounds.Width() / windowAspect;
         this->axisHeight = requiredHeight - 3.0f * marginY;
@@ -724,8 +725,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
     PUSH_DEBUG_GROUP(1, "drawAxes");
     if (this->columnCount > 0) {
 
-        // if ((mouseFlags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
-        //	&& (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
+        // if ((mouseFlags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+        //	&& (mouseFlags & core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
         //	&& pickedAxis != -1) {
         if (dragging) {
             // we are dragging an axis!
@@ -812,11 +813,11 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
 
 void ParallelCoordinatesRenderer2D::drawDiscrete(
     const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
-    if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
+    if (this->drawOtherItemsSlot.Param<core::param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED,
             FlagStorage::ENABLED, otherColor, tfColorFactor);
     }
-    if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+    if (this->drawSelectedItemsSlot.Param<core::param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED,
             FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
     }
@@ -1020,7 +1021,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     const float red[] = {1.0f, 0.0f, 0.0f, 1.0};
     const float moreRed[] = {10.0f, 0.0f, 0.0f, 1.0};
 
-    auto drawmode = this->drawModeSlot.Param<param::EnumParam>()->Value();
+    auto drawmode = this->drawModeSlot.Param<core::param::EnumParam>()->Value();
 
     switch (drawmode) {
     case DRAW_DISCRETE:

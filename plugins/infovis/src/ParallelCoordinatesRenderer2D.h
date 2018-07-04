@@ -1,47 +1,27 @@
-#ifndef MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
+#define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
+
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
-//#include "vislib/graphics/gl/SimpleFont.h"
+
 #include <map>
-#include "mmcore/utility/SDFFont.h"
 
 namespace megamol {
 namespace infovis {
 
-using namespace megamol::core;
-
-class ParallelCoordinatesRenderer2D : public view::Renderer2DModule {
+class ParallelCoordinatesRenderer2D : public core::view::Renderer2DModule {
 public:
-    enum // draw mode
-    { DRAW_DISCRETE = 0,
-        DRAW_CONTINUOUS,
-        DRAW_HISTOGRAM };
-
-    enum // selection mode
-    { SELECT_PICK = 0,
-        SELECT_STROKE };
-
-    struct DimensionFilter {
-        uint32_t dimension; // useless but good padding
-        float lower;
-        float upper;
-        uint32_t flags;
-    };
-
     /**
      * Answer the name of this module.
      *
@@ -61,10 +41,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
-        // TODO unknown yet
-        return true;
-    }
+    static inline bool IsAvailable(void) { return true; }
 
     /**
      * Initialises a new instance.
@@ -100,18 +77,29 @@ protected:
 
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    virtual bool MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags);
+    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
-    bool selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool otherItemsColorSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool axesColorSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool scalingChangedCallback(::megamol::core::param::ParamSlot& caller);
-    bool resetFlagsSlotCallback(::megamol::core::param::ParamSlot& caller);
-    bool resetFiltersSlotCallback(::megamol::core::param::ParamSlot& caller);
+    bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
+    bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
+    bool axesColorSlotCallback(core::param::ParamSlot& caller);
+    bool filterIndicatorColorSlotCallback(core::param::ParamSlot& caller);
+    bool selectionIndicatorColorSlotCallback(core::param::ParamSlot& caller);
+    bool scalingChangedCallback(core::param::ParamSlot& caller);
+    bool resetFlagsSlotCallback(core::param::ParamSlot& caller);
+    bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
 private:
+    enum DrawMode { DRAW_DISCRETE = 0, DRAW_CONTINUOUS, DRAW_HISTOGRAM };
+
+    enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
+
+    struct DimensionFilter {
+        uint32_t dimension; // useless but good padding
+        float lower;
+        float upper;
+        uint32_t flags;
+    };
+
     inline float relToAbsValue(int axis, float val) {
         return (val * (this->maximums[axis] - this->minimums[axis])) + this->minimums[axis];
     }
@@ -152,11 +140,11 @@ private:
 
     bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
 
-    CallerSlot getDataSlot;
+    core::CallerSlot getDataSlot;
 
-    CallerSlot getTFSlot;
+    core::CallerSlot getTFSlot;
 
-    CallerSlot getFlagsSlot;
+    core::CallerSlot getFlagsSlot;
 
     size_t currentHash;
 
@@ -168,52 +156,52 @@ private:
     float mouseReleasedY;
     float mouseX;
     float mouseY;
-    ::megamol::core::view::MouseFlags mouseFlags;
+    core::view::MouseFlags mouseFlags;
 
-    ::megamol::core::param::ParamSlot drawModeSlot;
+    core::param::ParamSlot drawModeSlot;
 
-    ::megamol::core::param::ParamSlot drawSelectedItemsSlot;
-    ::megamol::core::param::ParamSlot selectedItemsColorSlot;
-    ::megamol::core::param::ParamSlot selectedItemsAlphaSlot;
+    core::param::ParamSlot drawSelectedItemsSlot;
+    core::param::ParamSlot selectedItemsColorSlot;
+    core::param::ParamSlot selectedItemsAlphaSlot;
     float selectedItemsColor[4];
 
-    ::megamol::core::param::ParamSlot drawOtherItemsSlot;
-    ::megamol::core::param::ParamSlot otherItemsColorSlot;
-    ::megamol::core::param::ParamSlot otherItemsAlphaSlot;
+    core::param::ParamSlot drawOtherItemsSlot;
+    core::param::ParamSlot otherItemsColorSlot;
+    core::param::ParamSlot otherItemsAlphaSlot;
     float otherItemsColor[4];
 
-    ::megamol::core::param::ParamSlot drawAxesSlot;
-    ::megamol::core::param::ParamSlot axesColorSlot;
+    core::param::ParamSlot drawAxesSlot;
+    core::param::ParamSlot axesColorSlot;
     float axesColor[4];
 
-    ::megamol::core::param::ParamSlot filterIndicatorColorSlot;
+    core::param::ParamSlot filterIndicatorColorSlot;
     float filterIndicatorColor[4];
 
 
-    ::megamol::core::param::ParamSlot selectionModeSlot;
-    ::megamol::core::param::ParamSlot drawSelectionIndicatorSlot;
-    ::megamol::core::param::ParamSlot selectionIndicatorColorSlot;
+    core::param::ParamSlot selectionModeSlot;
+    core::param::ParamSlot drawSelectionIndicatorSlot;
+    core::param::ParamSlot selectionIndicatorColorSlot;
     float selectionIndicatorColor[4];
 
-    ::megamol::core::param::ParamSlot pickRadiusSlot;
+    core::param::ParamSlot pickRadiusSlot;
 
-    ::megamol::core::param::ParamSlot scaleToFitSlot;
-    //::megamol::core::param::ParamSlot scalingFactorSlot;
-    //::megamol::core::param::ParamSlot scaleFullscreenSlot;
-    //::megamol::core::param::ParamSlot projectionMatrixSlot;
-    //::megamol::core::param::ParamSlot viewMatrixSlot;
-    //::megamol::core::param::ParamSlot useCustomMatricesSlot;
+    core::param::ParamSlot scaleToFitSlot;
+    // core::param::ParamSlot scalingFactorSlot;
+    // core::param::ParamSlot scaleFullscreenSlot;
+    // core::param::ParamSlot projectionMatrixSlot;
+    // core::param::ParamSlot viewMatrixSlot;
+    // core::param::ParamSlot useCustomMatricesSlot;
 
-    //::megamol::core::param::ParamSlot storeCamSlot;
-    // bool storeCamSlotCallback(::megamol::core::param::ParamSlot & caller);
+    // core::param::ParamSlot storeCamSlot;
+    // bool storeCamSlotCallback(core::param::ParamSlot & caller);
 
-    ::megamol::core::param::ParamSlot glDepthTestSlot;
-    ::megamol::core::param::ParamSlot glLineSmoothSlot;
-    ::megamol::core::param::ParamSlot glLineWidthSlot;
-    ::megamol::core::param::ParamSlot sqrtDensitySlot;
+    core::param::ParamSlot glDepthTestSlot;
+    core::param::ParamSlot glLineSmoothSlot;
+    core::param::ParamSlot glLineWidthSlot;
+    core::param::ParamSlot sqrtDensitySlot;
 
-    ::megamol::core::param::ParamSlot resetFlagsSlot;
-    ::megamol::core::param::ParamSlot resetFiltersSlot;
+    core::param::ParamSlot resetFlagsSlot;
+    core::param::ParamSlot resetFiltersSlot;
 
     float marginX, marginY;
     float axisDistance;
@@ -280,4 +268,4 @@ private:
 } /* end namespace infovis */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_INFOVIS_PARCORENDERER2D_H_INCLUDED */
+#endif /* MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED */

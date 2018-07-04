@@ -10,14 +10,14 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmstd_datatools/floattable/CallFloatTableData.h"
 
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
-
 #include "DiagramSeriesCall.h"
+#include "FlagCall.h"
 
 namespace megamol {
 namespace infovis {
@@ -78,7 +78,7 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
-    enum GeometryType { GEOMETRY_TYPE_POINT, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
+    enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
 
     struct ParamState {
         size_t colorIdx;

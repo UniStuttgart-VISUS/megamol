@@ -1,6 +1,4 @@
 #include "stdafx.h"
-
-#include "FlagCall.h"
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
@@ -12,7 +10,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-
 #include "vislib/math/ShallowMatrix.h"
 
 #include <sstream>
