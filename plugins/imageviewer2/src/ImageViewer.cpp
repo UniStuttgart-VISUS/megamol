@@ -191,8 +191,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     bool useMpi = initMPI();
     if (useMpi && !registered) {
         myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Comm_split(MPI_COMM_WORLD, myRole, 0, &roleComm);
+        MPI_Comm_rank(this->comm, &rank);
+        MPI_Comm_split(this->comm, myRole, 0, &roleComm);
         MPI_Comm_rank(roleComm, &roleRank);
         MPI_Comm_size(roleComm, &roleSize);
         vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i)",
