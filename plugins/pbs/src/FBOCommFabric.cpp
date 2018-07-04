@@ -9,6 +9,7 @@ megamol::pbs::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
     , target_rank_{target_rank}
     , source_rank_{source_rank}
     , recv_count_{1} {
+    // TODO this is wrong. mpiprovider gives you the correct comm
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_);
 }
 
@@ -20,6 +21,7 @@ bool megamol::pbs::MPICommFabric::Bind(std::string const &address) { return true
 
 
 bool megamol::pbs::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
+    // TODO this is wrong. mpiprovider gives you the correct comm
     auto status = MPI_Send(buf.data(), buf.size(), MPI_CHAR, target_rank_, 0, MPI_COMM_WORLD);
     return status == MPI_SUCCESS;
 }
@@ -28,6 +30,7 @@ bool megamol::pbs::MPICommFabric::Send(std::vector<char> const& buf, send_type c
 bool megamol::pbs::MPICommFabric::Recv(std::vector<char> &buf, recv_type const type) {
     MPI_Status stat;
     buf.resize(recv_count_);
+    // TODO this is wrong. mpiprovider gives you the correct comm
     auto status = MPI_Recv(buf.data(), recv_count_, MPI_CHAR, source_rank_, 0, MPI_COMM_WORLD, &stat);
     MPI_Get_count(&stat, MPI_CHAR, &recv_count_);
     return status == MPI_SUCCESS;

@@ -192,7 +192,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #endif
             // MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
             // MPI_Comm_dup(MPI_COMM_WORLD, heinz);
-            icet_comm_ = icetCreateMPICommunicator(MPI_COMM_WORLD);
+            icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
             icet_ctx_ = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
