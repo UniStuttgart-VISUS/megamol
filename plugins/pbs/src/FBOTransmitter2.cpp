@@ -15,6 +15,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
@@ -47,8 +48,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     depth_buf_el_size_{4}, connected_{false} {
     this->address_slot_ << new megamol::core::param::StringParam{"34242"};
     this->MakeSlotAvailable(&this->address_slot_);
-    this->handshake_port_slot_ << new megamol::core::param::StringParam{"42000"};
-    this->MakeSlotAvailable(&this->address_slot_);
+    this->handshake_port_slot_ << new megamol::core::param::IntParam(42000);
+    this->MakeSlotAvailable(&this->handshake_port_slot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
@@ -120,8 +121,8 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
             auto const target =
                 std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
-	    auto const handshake = 
-	      std::string(T2A(this->handshake_port_slot_.Param<megamol::core::param::StringParam>()->Value()));
+	        auto const handshake = 
+	            std::to_string(this->handshake_port_slot_.Param<megamol::core::param::IntParam>()->Value());
 
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};

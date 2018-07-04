@@ -43,7 +43,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     this->MakeSlotAvailable(&provide_img_slot_);
     // addressesSlot_ << new megamol::core::param::StringParam("tcp://127.0.0.1:34242");
     // this->MakeSlotAvailable(&addressesSlot_);
-    handshakePortSlot_ << new megamol::core::param::StringParam("42000");
+    handshakePortSlot_ << new megamol::core::param::IntParam(42000);
     this->MakeSlotAvailable(&handshakePortSlot_);
     auto ep = new megamol::core::param::EnumParam(FBOCommFabric::ZMQ_COMM);
     ep->SetTypePair(FBOCommFabric::ZMQ_COMM, "ZMQ");
@@ -117,9 +117,6 @@ bool megamol::pbs::FBOCompositor2::create() {
 
     glDeleteShader(vert_shader);
     glDeleteShader(frag_shader);
-
-    auto const bind_str = std::string("tcp://*:") + std::string(T2A(this->handshakePortSlot_.Param<megamol::core::param::StringParam>()->Value()));
-    registerComm_.Bind(bind_str);
 
     return true;
 }
@@ -335,6 +332,9 @@ void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std:
 bool megamol::pbs::FBOCompositor2::initThreads() {
     static bool register_done = false;
     if (!register_done) {
+        auto const bind_str = std::string("tcp://*:") + std::to_string(this->handshakePortSlot_.Param<megamol::core::param::IntParam>()->Value());
+        registerComm_.Bind(bind_str);
+
         registerThread_ = std::thread{&FBOCompositor2::registerJob, this, std::ref(addresses_)};
         register_done = true;
     }
