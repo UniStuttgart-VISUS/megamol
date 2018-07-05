@@ -35,6 +35,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , target_machine_slot_{"targetMachine", "Name of the target machine"}
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
+    , reconnect_slot_{"reconnect", "Reconnect comm threads"}
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -70,6 +71,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&toggle_aggregate_slot_);
 #endif // WITH_MPI
+    reconnect_slot_ << new megamol::core::param::ButtonParam{};
+    reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
+    this->MakeSlotAvailable(&reconnect_slot_);
 }
 
 
@@ -85,144 +89,12 @@ bool megamol::pbs::FBOTransmitter2::create() {
 
 
 void megamol::pbs::FBOTransmitter2::release() {
-    this->thread_stop_ = true;
-
-    this->transmitter_thread_.join();
-
-#ifdef WITH_MPI
-    if (useMpi) {
-        icetDestroyMPICommunicator(icet_comm_);
-        icetDestroyContext(icet_ctx_);
-    }
-#endif // WITH_MPI
+    shutdownThreads();
 }
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
-    if (!connected_) {
-#ifdef _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
-#endif
-#ifdef WITH_MPI
-
-        useMpi = initMPI();
-        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        if (aggregate_ && !useMpi) {
-            vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!");
-            this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
-        }
-
-        if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-#ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
-#endif
-#endif // WITH_MPI
-            auto const address =
-                std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
-            auto const target =
-                std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
-	        auto const handshake = 
-	            std::to_string(this->handshake_port_slot_.Param<megamol::core::param::IntParam>()->Value());
-
-
-            FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
-            std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
-            printf("FBOTransmitter2: registerAddress: %s", registerAddress.c_str());
-            registerComm.Connect(registerAddress);
-
-            std::string hostname = std::string{"127.0.0.1"};
-            if (!this->force_localhost_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
-                hostname.clear();
-#if _WIN32
-                DWORD buf_size = 32767;
-                hostname.resize(buf_size);
-                GetComputerNameA(hostname.data(), &buf_size);
-#else
-                hostname.resize(HOST_NAME_MAX);
-                gethostname(hostname.data(), HOST_NAME_MAX);
-#endif
-            }
-            char stuff[1024];
-            sprintf(stuff, "tcp://%s:%s", hostname.c_str(), address.c_str());
-            auto name = std::string{stuff};
-            std::vector<char> buf(name.begin(), name.end()); //<TODO there should be a better way
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
-#endif
-            registerComm.Send(buf);
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
-#endif
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
-#endif
-            registerComm.Recv(buf);
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
-#endif
-
-
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
-#endif
-
-            auto const comm_type = static_cast<FBOCommFabric::commtype>(
-                this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
-            // auto const address =
-            // std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
-            switch (comm_type) {
-            case FBOCommFabric::MPI_COMM: {
-                int const rank = atoi(address.c_str());
-                this->comm_.reset(new FBOCommFabric{std::make_unique<MPICommFabric>(rank, rank)});
-            } break;
-            case FBOCommFabric::ZMQ_COMM:
-            default:
-                this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
-            }
-
-            this->comm_->Bind(std::string{"tcp://*:"} + address);
-
-            this->thread_stop_ = false;
-
-            this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
-
-#ifdef WITH_MPI
-        }
-#endif // WITH_MPI
-        connected_ = true;
-#ifdef WITH_MPI
-        // aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        // get viewport of current render context
-        if (aggregate_) {
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
-#endif
-            // MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
-            // MPI_Comm_dup(MPI_COMM_WORLD, heinz);
-            icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
-            icet_ctx_ = icetCreateContext(icet_comm_);
-            icetStrategy(ICET_STRATEGY_SEQUENTIAL);
-            icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
-            icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
-            icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
-            icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
-            icetDisable(ICET_COMPOSITE_ONE_BUFFER);
-
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            auto const width = viewport[2] - viewport[0];
-            auto const height = viewport[3] - viewport[1];
-
-            icetResetTiles();
-            icetAddTile(
-                viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
-#if _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#endif
-        }
-#endif // WITH_MPI
-    }
+    initThreads();
 
     // get viewport of current render context
     GLint viewport[4];
@@ -240,7 +112,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
     float bbox[6];
     if (!this->extractBoundingBox(bbox)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box");
+        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
     }
 
 #ifdef WITH_MPI
@@ -307,14 +179,17 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Waiting for request\n");
 #endif
-                if (!this->comm_->Recv(buf, recv_type::RECV)) {
+                /*if (!this->comm_->Recv(buf, recv_type::RECV)) {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
+                }*/
+                while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
+                    vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
                 }
-#if _DEBUG
+                /*#if _DEBUG
                 else {
                     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
                 }
-#endif
+#endif*/
             } catch (zmq::error_t const& e) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
@@ -496,4 +371,173 @@ bool megamol::pbs::FBOTransmitter2::initMPI() {
     retval = (this->mpi_comm_ != MPI_COMM_NULL);
 #endif /* WITH_MPI */
     return retval;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot &p) {
+    shutdownThreads();
+    initThreads();
+
+    return true;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::initThreads() {
+    if (!connected_) {
+#ifdef _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
+#endif
+#ifdef WITH_MPI
+
+        useMpi = initMPI();
+        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
+        if (aggregate_ && !useMpi) {
+            vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!\n");
+            this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
+        }
+
+        if ((aggregate_ && mpiRank == 0) || !aggregate_) {
+#ifdef _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
+#endif
+#endif // WITH_MPI
+            auto const address =
+                std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+            auto const target =
+                std::string(T2A(this->target_machine_slot_.Param<megamol::core::param::StringParam>()->Value()));
+            auto const handshake =
+                std::to_string(this->handshake_port_slot_.Param<megamol::core::param::IntParam>()->Value());
+
+
+            FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
+            std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
+            printf("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+            registerComm.Connect(registerAddress);
+
+            std::string hostname = std::string{"127.0.0.1"};
+            if (!this->force_localhost_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
+                hostname.clear();
+#if _WIN32
+                DWORD buf_size = 32767;
+                hostname.resize(buf_size);
+                GetComputerNameA(hostname.data(), &buf_size);
+#else
+            hostname.resize(HOST_NAME_MAX);
+            gethostname(hostname.data(), HOST_NAME_MAX);
+#endif
+            }
+            char stuff[1024];
+            sprintf(stuff, "tcp://%s:%s", hostname.c_str(), address.c_str());
+            auto name = std::string{stuff};
+            std::vector<char> buf(name.begin(), name.end()); //<TODO there should be a better way
+            try {
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
+#endif
+                if (!registerComm.Send(buf)) {
+                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Send on 'registerComm' failed\n");
+                }
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
+#endif
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
+#endif
+                while (!registerComm.Recv(buf)) {
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+                }
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
+#endif
+
+
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
+#endif
+            } catch (std::exception& e) {
+                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.what());
+            } catch (vislib::Exception& e) {
+                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.GetMsgA());
+            } catch (...) {
+                vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Register died\n");
+            }
+
+            auto const comm_type = static_cast<FBOCommFabric::commtype>(
+                this->commSelectSlot_.Param<megamol::core::param::EnumParam>()->Value());
+            // auto const address =
+            // std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
+            switch (comm_type) {
+            case FBOCommFabric::MPI_COMM: {
+                int const rank = atoi(address.c_str());
+                this->comm_.reset(new FBOCommFabric{std::make_unique<MPICommFabric>(rank, rank)});
+            } break;
+            case FBOCommFabric::ZMQ_COMM:
+            default:
+                this->comm_.reset(new FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)));
+            }
+
+            this->comm_->Bind(std::string{"tcp://*:"} + address);
+
+            this->thread_stop_ = false;
+
+            this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
+
+#ifdef WITH_MPI
+        }
+#endif // WITH_MPI
+        connected_ = true;
+#ifdef WITH_MPI
+        // aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
+        // get viewport of current render context
+        if (aggregate_) {
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
+#endif
+            // MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
+            // MPI_Comm_dup(MPI_COMM_WORLD, heinz);
+            icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
+            icet_ctx_ = icetCreateContext(icet_comm_);
+            icetStrategy(ICET_STRATEGY_SEQUENTIAL);
+            icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
+            icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
+            icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
+            icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
+            icetDisable(ICET_COMPOSITE_ONE_BUFFER);
+
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            auto const width = viewport[2] - viewport[0];
+            auto const height = viewport[3] - viewport[1];
+
+            icetResetTiles();
+            icetAddTile(
+                viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
+#endif
+        }
+#endif // WITH_MPI
+    }
+
+    return true;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
+    this->thread_stop_ = true;
+    // shutdown_ = true;
+
+    if (this->transmitter_thread_.joinable()) this->transmitter_thread_.join();
+
+    #ifdef WITH_MPI
+    if (useMpi) {
+        icetDestroyMPICommunicator(icet_comm_);
+        icetDestroyContext(icet_ctx_);
+    }
+#endif // WITH_MPI
+
+    connected_ = false;
+    return true;
 }

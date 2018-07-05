@@ -32,7 +32,7 @@ if(BUILD_CORE)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
   
-  set(ZMQ_VER "4_2_2")
+  set(ZMQ_VER "4_2_3")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
   if(MSVC)

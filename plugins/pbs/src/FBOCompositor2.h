@@ -83,7 +83,11 @@ private:
 
     bool initThreads();
 
+    bool shutdownThreads();
+
     bool getImageCallback(megamol::core::Call& c);
+
+    bool restartCallback(megamol::core::param::ParamSlot& p);
 
     static void RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb);
 
@@ -108,6 +112,8 @@ private:
     megamol::core::param::ParamSlot numRendernodesSlot_;
 
     megamol::core::param::ParamSlot handshakePortSlot_;
+
+    megamol::core::param::ParamSlot restartSlot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
@@ -186,6 +192,10 @@ private:
     // std::shared_ptr<unsigned char[]> img_data_ptr_;
 
     size_t hash_;
+
+    bool shutdown_ = false;
+
+    bool register_done_ = false;
 }; // end class FBOCompositor2
 
 } // end namespace pbs

@@ -70,6 +70,7 @@ private:
     zmq::socket_t socket_;
     /** endpoint address to which the socket is connected to */
     std::string address_;
+    bool bound_ = false;
 };
 
 

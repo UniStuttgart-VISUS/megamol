@@ -5,19 +5,16 @@
 
 
 megamol::pbs::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
-    : my_rank_{0}
-    , target_rank_{target_rank}
-    , source_rank_{source_rank}
-    , recv_count_{1} {
+    : my_rank_{0}, target_rank_{target_rank}, source_rank_{source_rank}, recv_count_{1} {
     // TODO this is wrong. mpiprovider gives you the correct comm
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_);
 }
 
 
-bool megamol::pbs::MPICommFabric::Connect(std::string const &address) { return true; }
+bool megamol::pbs::MPICommFabric::Connect(std::string const& address) { return true; }
 
 
-bool megamol::pbs::MPICommFabric::Bind(std::string const &address) { return true; }
+bool megamol::pbs::MPICommFabric::Bind(std::string const& address) { return true; }
 
 
 bool megamol::pbs::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
@@ -27,7 +24,7 @@ bool megamol::pbs::MPICommFabric::Send(std::vector<char> const& buf, send_type c
 }
 
 
-bool megamol::pbs::MPICommFabric::Recv(std::vector<char> &buf, recv_type const type) {
+bool megamol::pbs::MPICommFabric::Recv(std::vector<char>& buf, recv_type const type) {
     MPI_Status stat;
     buf.resize(recv_count_);
     // TODO this is wrong. mpiprovider gives you the correct comm
@@ -40,7 +37,7 @@ bool megamol::pbs::MPICommFabric::Recv(std::vector<char> &buf, recv_type const t
 bool megamol::pbs::MPICommFabric::Disconnect() { return true; }
 
 
-megamol::pbs::MPICommFabric::~MPICommFabric() {  }
+megamol::pbs::MPICommFabric::~MPICommFabric() {}
 
 
 megamol::pbs::ZMQCommFabric::ZMQCommFabric(zmq::socket_type const& type) : ctx_{1}, socket_{ctx_, type} {}
@@ -66,6 +63,8 @@ bool megamol::pbs::ZMQCommFabric::Connect(std::string const& address) {
     return true;*/
     this->address_ = address;
     this->socket_.connect(address);
+    // this->socket_.setsockopt(ZMQ_CONFLATE, true);
+    this->socket_.setsockopt(ZMQ_LINGER, 0);
     return this->socket_.connected();
 }
 
@@ -74,6 +73,9 @@ bool megamol::pbs::ZMQCommFabric::Bind(std::string const& address) {
     this->address_ = address;
     try {
         this->socket_.bind(address);
+        bound_ = true;
+        // this->socket_.setsockopt(ZMQ_CONFLATE, true);
+        this->socket_.setsockopt(ZMQ_LINGER, 0);
     } catch (zmq::error_t const& e) {
         printf("ZMQ ERROR: %s", e.what());
     }
@@ -88,7 +90,7 @@ bool megamol::pbs::ZMQCommFabric::Send(std::vector<char> const& buf, send_type c
 
 bool megamol::pbs::ZMQCommFabric::Recv(std::vector<char>& buf, recv_type const type) {
     zmq::message_t msg;
-    auto const ret = this->socket_.recv(&msg);
+    auto const ret = this->socket_.recv(&msg, ZMQ_DONTWAIT);
     if (!ret) return false;
     buf.resize(msg.size());
     std::copy(static_cast<char*>(msg.data()), static_cast<char*>(msg.data()) + msg.size(), buf.begin());
@@ -97,16 +99,20 @@ bool megamol::pbs::ZMQCommFabric::Recv(std::vector<char>& buf, recv_type const t
 
 
 bool megamol::pbs::ZMQCommFabric::Disconnect() {
-    //if (this->socket_.connected()) {
+    // if (this->socket_.connected()) {
     if (!this->address_.empty()) {
-        this->socket_.disconnect(this->address_);
+        if (bound_) {
+            this->socket_.unbind(this->address_);
+        } else {
+            this->socket_.disconnect(this->address_);
+        }
         return !this->socket_.connected();
     }
     return true;
 }
 
 
-megamol::pbs::ZMQCommFabric::~ZMQCommFabric() { this->Disconnect(); }
+megamol::pbs::ZMQCommFabric::~ZMQCommFabric() { /* this->Disconnect(); */ }
 
 
 megamol::pbs::FBOCommFabric::FBOCommFabric(std::unique_ptr<AbstractCommFabric>&& pimpl)

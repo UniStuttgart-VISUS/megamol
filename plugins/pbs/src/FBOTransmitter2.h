@@ -85,6 +85,12 @@ private:
     bool extractBoundingBox(float bbox[6]);
     bool initMPI();
 
+    bool reconnectCallback(megamol::core::param::ParamSlot& p);
+
+    bool initThreads();
+
+    bool shutdownThreads();
+
     megamol::core::param::ParamSlot address_slot_;
 
     megamol::core::param::ParamSlot commSelectSlot_;
@@ -98,6 +104,8 @@ private:
     megamol::core::param::ParamSlot force_localhost_slot_;
     
     megamol::core::param::ParamSlot handshake_port_slot_;
+
+    megamol::core::param::ParamSlot reconnect_slot_;
 
 #ifdef WITH_MPI
     /** slot for MPIprovider */
@@ -148,6 +156,8 @@ private:
     int depth_buf_el_size_;
 
     bool connected_;
+
+    //bool shutdown_ = false;
 };
 
 } // end namespace pbs
