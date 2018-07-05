@@ -523,8 +523,8 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
         // collector loop
         std::vector<bool> fbo_gate(jobs.size());
         while (!shutdown_) {
-            auto const status = close_future_.wait_for(std::chrono::milliseconds(1));
-            if (status == std::future_status::ready) break;
+            /*auto const status = close_future_.wait_for(std::chrono::milliseconds(1));
+            if (status == std::future_status::ready) break;*/
 
             auto const start = std::chrono::high_resolution_clock::now();
 
@@ -811,6 +811,8 @@ bool megamol::pbs::FBOCompositor2::shutdownThreads() {
 
     connected_ = false;
     isRegistered_.store(false);
+    shutdown_ = false;
+    register_done_ = false;
 
     return true;
 }
