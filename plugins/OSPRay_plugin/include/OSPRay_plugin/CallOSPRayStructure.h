@@ -77,8 +77,8 @@ public:
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
-    std::shared_ptr<std::pair<float, float>> valueRange;
     void* ospstructure;
+
 
     unsigned int voxelCount;
     unsigned int maxDim;

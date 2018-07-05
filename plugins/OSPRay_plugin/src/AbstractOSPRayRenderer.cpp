@@ -1063,11 +1063,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
                 }
 
-            OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
-            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
-            ospSetData(tf, "colors", tf_rgb);
-            ospSetData(tf, "opacities", tf_opa);
-            ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
                 OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
                 OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
