@@ -49,8 +49,8 @@ namespace MegaMolConf.Communication {
                 case ParameterTypeCode.MMVC3F: return ParameterType.Vector3fParam;
                 case ParameterTypeCode.MMVC4F: return ParameterType.Vector4fParam;
                 case ParameterTypeCode.MMFENU: return ParameterType.FlexEnumParam;
-                case ParameterTypeCode.MMTF1W: return ParameterType.TransferFunc1DParam;
-                case ParameterTypeCode.MMTF1A: return ParameterType.TransferFunc1DParam;
+                case ParameterTypeCode.MMCOLW: return ParameterType.ColorParam;
+                case ParameterTypeCode.MMCOLA: return ParameterType.ColorParam;
             }
             return ParameterType.Unknown;
         }

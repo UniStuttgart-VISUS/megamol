@@ -72,7 +72,7 @@
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
-#include "mmcore/view/TransferFunction1D.h"
+#include "mmcore/view/ColorToTransferFunction.h"
 
 using namespace megamol::core;
 
@@ -149,5 +149,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
-    instance.RegisterAutoDescription<megamol::core::view::TransferFunction1D>();
+    instance.RegisterAutoDescription<megamol::core::view::ColorToTransferFunction>();
 }

@@ -121,8 +121,8 @@ namespace MegaMolConf {
             if (p.Type is Data.ParamType.FilePath) {
                 return new System.Windows.Forms.Design.FileNameEditor();
             }
-            if (p.Type is Data.ParamType.TransferFunc1D) {
-                return new TransferFunc1DEditor((Data.ParamType.TransferFunc1D)p.Type);
+            if (p.Type is Data.ParamType.Color) {
+                return new ColorEditor((Data.ParamType.Color)p.Type);
             }
             return base.GetEditor(editorBaseType);
         }

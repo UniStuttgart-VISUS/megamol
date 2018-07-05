@@ -1,12 +1,12 @@
 /*
- * TransferFunc1DParam.h
+ * ColorParam.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNC1DPARAM_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNC1DPARAM_H_INCLUDED
+#ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED
+#define MEGAMOLCORE_COLORPARAM_H_INCLUDED
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
@@ -18,7 +18,7 @@ namespace param {
 /**
  * class for transferfunction (1D) parameter objects
  */
-class MEGAMOLCORE_API TransferFunc1DParam : public AbstractParam {
+class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
     /**
      * Ctor.
@@ -26,7 +26,7 @@ public:
      * @param initVal The initial value
      * @param visible If 'true' the parameter is visible in the gui.
      */
-    TransferFunc1DParam(const vislib::StringA& initVal);
+    ColorParam(const vislib::StringA& initVal);
 
     /**
      * Ctor.
@@ -34,26 +34,26 @@ public:
      * @param initVal The initial value
      * @param visible If 'true' the parameter is visible in the gui.
      */
-    TransferFunc1DParam(const vislib::StringW& initVal);
+    ColorParam(const vislib::StringW& initVal);
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    TransferFunc1DParam(const char *initVal);
+    ColorParam(const char *initVal);
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    TransferFunc1DParam(const wchar_t *initVal);
+    ColorParam(const wchar_t *initVal);
 
     /**
      * Dtor.
      */
-    virtual ~TransferFunc1DParam(void);
+    virtual ~ColorParam(void);
 
     /**
      * Returns a machine-readable definition of the parameter.
@@ -141,10 +141,10 @@ public:
 private:
     /** The value of the parameter */
     vislib::TString val;
-}; /* end class TransferFunc1DParam */
+}; /* end class ColorParam */
 
 } /* end namespace param */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNC1DPARAM_H_INCLUDED */
+#endif /* end ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED */

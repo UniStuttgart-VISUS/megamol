@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MegaMolConf.Data.ParamType {
 
-    public sealed class TransferFunc1D : ParamTypeValueBase {
+    public sealed class Color : ParamTypeValueBase {
         public string DefaultValue { get; set; }
         public override void ParseDefaultValue(string v) {
             this.DefaultValue = v;

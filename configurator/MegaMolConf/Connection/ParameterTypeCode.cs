@@ -61,13 +61,13 @@
         /// </summary>
         MMFENU = 93794658045261,
         /// <summary>
-        /// TransferFunc1DParam
+        /// ColorParam
         /// </summary>
-        MMTF1W = 95869144943949,
+        MMCOLW = 95869144943949,
         /// <summary>
-        /// TransferFunc1DParam
+        /// ColorParam
         /// </summary>
-        MMTF1A = 71679889132877
+        MMCOLA = 71679889132877
     }
 
 }

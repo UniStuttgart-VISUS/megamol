@@ -65,7 +65,7 @@ namespace MegaMolConf.Data {
             } else if (typeName == "MMFILW" || typeName == "MMFILA") {
                 ptb = new ParamType.FilePath();
             } else if (typeName == "MMTF1W" || typeName == "MMTF1A") {
-                ptb = new ParamType.TransferFunc1D();
+                ptb = new ParamType.Color();
             } else {
                 ptb = new ParamType.String();
             }

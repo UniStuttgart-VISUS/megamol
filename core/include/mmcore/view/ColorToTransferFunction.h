@@ -1,5 +1,5 @@
-#ifndef MEGAMOLCORE_TRANSFERFUNCTION1D_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTION1D_H_INCLUDED
+#ifndef MEGAMOLCORE_COLORTOTRANSFERFUNCTION_H_INCLUDED
+#define MEGAMOLCORE_COLORTOTRANSFERFUNCTION_H_INCLUDED
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,16 +17,16 @@ namespace core {
 namespace view {
 
 /**
- * Module defining a linear transfer function which can be manipulated by the configurator.
+ * Module that exposes a color parameter as transfer function.
  */
-class TransferFunction1D : public megamol::core::Module, megamol::core::LuaInterpreter<TransferFunction1D> {
+class ColorToTransferFunction : public megamol::core::Module, megamol::core::LuaInterpreter<ColorToTransferFunction> {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static char const* ClassName(void) { return "TransferFunction1D"; }
+    static char const* ClassName(void) { return "ColorToTransferFunction"; }
 
     /**
      * Answer a human readable description of this module.
@@ -34,7 +34,7 @@ public:
      * @return A human readable description of this module.
      */
     static char const* Description(void) {
-        return "Module exposing linear transfer function defined by the configurator";
+        return "Module that exposes a color parameter as transfer function";
     }
 
     /**
@@ -45,40 +45,38 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    TransferFunction1D(void);
+    ColorToTransferFunction(void);
 
     /** Dtor. */
-    virtual ~TransferFunction1D(void);
+    virtual ~ColorToTransferFunction(void);
 
 protected:
     /** Lazy initialization */
-    virtual bool create(void);
+    virtual bool create(void) override { return true; }
 
     /** Deferred destruction */
-    virtual void release(void);
+    virtual void release(void) override { }
 
 private:
     bool getTFCallback(megamol::core::Call& c);
 
-    bool tfUpdated(megamol::core::param::ParamSlot& p);
+    bool colorUpdated(megamol::core::param::ParamSlot& p);
 
     int parseTF(lua_State* L);
 
-    //LuaInterpreter<TransferFunction1D> lua;
-
     megamol::core::CalleeSlot getTFSlot;
 
-    megamol::core::param::ParamSlot tfParamSlot;
+    megamol::core::param::ParamSlot colorSlot;
 
     std::vector<float> tf;
 
     unsigned int texID;
 
-    bool tfChanged = false;
-}; /* end class TransferFunction1D */
+    bool tfInvalidated = false;
+}; /* end class ColorToTransferFunction */
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNCTION1D_H_INCLUDED */
+#endif /* end ifndef MEGAMOLCORE_COLORTOTRANSFERFUNCTION_H_INCLUDED */

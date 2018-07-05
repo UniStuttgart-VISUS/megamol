@@ -17,7 +17,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/TransferFunc1DParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"

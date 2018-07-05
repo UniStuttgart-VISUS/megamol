@@ -78,7 +78,7 @@
     <Compile Include="Connection\Response.cs" />
     <Compile Include="Connection\ZeroMQContext.cs" />
     <Compile Include="Data\ParamType\FlexEnum.cs" />
-    <Compile Include="Data\ParamType\TransferFunc1D.cs" />
+    <Compile Include="Data\ParamType\Color.cs" />
     <Compile Include="FlexEnumParamEditor.cs" />
     <Compile Include="ImportParamfileForm.cs">
       <SubType>Form</SubType>
@@ -88,13 +88,13 @@
     </Compile>
     <Compile Include="Io\Paramfile.cs" />
     <Compile Include="MegaMolInstanceInfo.cs" />
-    <Compile Include="TransferFunc1DDialog.cs">
+    <Compile Include="ColorDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TransferFunc1DDialog.Designer.cs">
-      <DependentUpon>TransferFunc1DDialog.cs</DependentUpon>
+    <Compile Include="ColorDialog.Designer.cs">
+      <DependentUpon>ColorDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="TransferFunc1DEditor.cs" />
+    <Compile Include="ColorEditor.cs" />
     <Compile Include="ObservingDict.cs" />
     <Compile Include="Util\AboutBox.cs">
       <SubType>Form</SubType>
@@ -187,8 +187,8 @@
       <DependentUpon>ImportParamfileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="TransferFunc1DDialog.resx">
-      <DependentUpon>TransferFunc1DDialog.cs</DependentUpon>
+    <EmbeddedResource Include="ColorDialog.resx">
+      <DependentUpon>ColorDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Util\AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
