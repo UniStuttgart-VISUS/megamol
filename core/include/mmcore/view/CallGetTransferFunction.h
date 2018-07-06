@@ -174,14 +174,14 @@ namespace view {
             assert(colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float) && "Not a RGB(A) color");
             memcpy(color, &this->texData[index * 4], colorSize);
         }
-		
-		bool IsDirty() const {
-			return this->dirty;
-		}
+        
+        bool IsDirty() const {
+            return this->dirty;
+        }
 
-		void ResetDirty() {
-			this->dirty = false;
-		}
+        void ResetDirty() {
+            this->dirty = false;
+        }
 
     private:
 
@@ -197,8 +197,8 @@ namespace view {
         /** The texture format */
         TextureFormat texFormat;
 
-		/** Has changed */
-		bool dirty;
+        /** Has changed */
+        bool dirty;
     };
 
 
