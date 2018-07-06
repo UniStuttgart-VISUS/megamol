@@ -175,12 +175,12 @@ namespace view {
             memcpy(color, &this->texData[index * 4], colorSize);
         }
 		
-        bool IsDirty() const {
-            return this->dirty;
-        }
+		bool IsDirty() const {
+			return this->dirty;
+		}
 
-        void ResetDirty() {
-            this->dirty = false;
+		void ResetDirty() {
+			this->dirty = false;
 		}
 
     private:
@@ -197,8 +197,8 @@ namespace view {
         /** The texture format */
         TextureFormat texFormat;
 
-        /** Has changed */
-        bool dirty = false;
+		/** Has changed */
+		bool dirty;
     };
 
 
