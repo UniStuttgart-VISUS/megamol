@@ -142,8 +142,8 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     if (!makeProgram("::splom::point", this->pointShader)) return false;
     if (!makeProgram("::splom::line", this->lineShader)) return false;
 
-    this->axisFont.EnableBatchDraw();
-    this->labelFont.EnableBatchDraw();
+    this->axisFont.SetBatchDrawMode(true);
+    this->labelFont.SetBatchDrawMode(true);
 
     return true;
 }
@@ -327,7 +327,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     this->axisShader.Disable();
 
 
-    this->axisFont.ClearBatchCache();
+    this->axisFont.ClearBatchDrawCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -517,7 +517,7 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
         return;
     }
 
-    this->labelFont.ClearBatchCache();
+    this->labelFont.ClearBatchDrawCache();
 
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
