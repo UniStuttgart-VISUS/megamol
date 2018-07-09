@@ -231,6 +231,12 @@ namespace view {
         /** Shows/hides the bounding box */
         param::ParamSlot showBBoxSlot;
 
+        /** The colour of the bounding box */
+        float bboxCol[4];
+
+		/** Parameter slot for the bounding box colour */
+        param::ParamSlot bboxColSlot;
+
         /** The view focus x coordinate */
         float viewX;
 

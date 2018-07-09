@@ -14,7 +14,6 @@ set(VISLIB_MINOR 2)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/VISlibVersionInfo.cpp.input ${CMAKE_BINARY_DIR}/version/VISlibVersionInfo.cpp @ONLY)
 
 
-
 # MEGAMOL CORE VERSION
 set(MEGAMOL_MAJOR 1)
 set(MEGAMOL_MINOR 2)
