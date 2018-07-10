@@ -20,6 +20,7 @@
 #include "OSPRayPBSGeometry.h"
 #include "FBOTransmitter2.h"
 #include "FBOCompositor2.h"
+#include "CPERAWDataSource.h"
 
 // Calls
 #include "pbs/PBSDataCall.h"
@@ -57,6 +58,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPBSGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter2>();
             this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor2>();
+            this->module_descriptions.RegisterAutoDescription<megamol::pbs::CPERAWDataSource>();
             //
             // TODO: Register your plugin's modules here
             // like:
