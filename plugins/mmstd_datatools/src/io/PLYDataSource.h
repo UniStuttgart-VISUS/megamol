@@ -14,11 +14,12 @@
 #include "mmcore/CalleeSlot.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
+#include "vislib/math/Cuboid.h"
 #include "tinyply.h"
 #include <cstdint>
 #include <vector>
 #include <fstream>
-
+#include <map>
 
 namespace megamol {
 namespace stdplugin {
@@ -90,28 +91,10 @@ namespace io {
          */
         bool assertData(void);
 
-        ///**
-        // * Helper class to unlock frame data when 'CallSimpleSphereData' is
-        // * used.
-        // */
-        //class Unlocker : public GraphDataCall::Unlocker {
-        //public:
-        //    Unlocker(Frame& frame) : GraphDataCall::Unlocker(), frame(&frame) {
-        //        // intentionally empty
-        //    }
-        //    virtual ~Unlocker(void) {
-        //        this->Unlock();
-        //        ASSERT(this->frame == nullptr);
-        //    }
-        //    virtual void Unlock(void) {
-        //        if (this->frame != nullptr) {
-        //            this->frame->Unlock();
-        //            this->frame = nullptr;
-        //        }
-        //    }
-        //private:
-        //    Frame *frame;
-        //};
+        /** 
+         * Clears all allocated fields.
+         */
+        void clearAllFields(void);
 
         /**
          * Callback that is called when the filename is changed.
@@ -203,6 +186,9 @@ namespace io {
         /** Slot for the index property name */
         core::param::ParamSlot indexPropSlot;
 
+        /** Slot for the uniform sphere radius */
+        core::param::ParamSlot radiusSlot;
+
         /** Guessed name of the position properties */
         std::vector<std::string> guessedPos;
 
@@ -221,21 +207,17 @@ namespace io {
         /** Guessed name of the face property */
         std::string guessedFaces;
 
-        /// this also guards data availability and consistency with element/property selection!
-        /** Pointer to the tinyply vertex data */
-        std::shared_ptr<tinyply::PlyData> vertices;
+        /** Sizes in byte for each element of the read ply file */
+        std::vector<uint32_t> elementSizes;
 
-        /** Pointer ot the tinyply normal data */
-        std::shared_ptr<tinyply::PlyData> normals;
+        /** Count of data points for each element */
+        std::vector<uint32_t> elementCount;
 
-        /** Pointer to the tinyply color data */
-        std::shared_ptr<tinyply::PlyData> colors;
-
-        /** Pointer to the tinyply face data */
-        std::shared_ptr<tinyply::PlyData> faces;
+        /** Sizes in byte for each property of the read ply file */
+        std::vector<std::vector<uint32_t>> propertySizes;
 
         /** Slot offering the sphere data. */
-        core::CalleeSlot getData;
+        core::CalleeSlot getSphereData;
 
         /** Slot offering the mesh data. */
         core::CalleeSlot getMeshData;
@@ -246,8 +228,55 @@ namespace io {
         /** The tinyply file handle. */
         tinyply::PlyFile plf;
 
-        /** Pointer to the opened file. */
-        vislib::sys::File *file;
+        /** Struct for the different possible position types */
+        struct pos_type {
+            double * pos_double = nullptr;
+            float * pos_float = nullptr;
+        } posPointers;
+
+        /** Struct for the different possible color types */
+        struct col_type {
+            unsigned char * col_uchar = nullptr;
+            float * col_float = nullptr;
+            double * col_double = nullptr;
+        } colorPointers;
+
+        /** Struct for the different possible normal types */
+        struct normal_type {
+            double * norm_double = nullptr;
+            float * norm_float = nullptr;
+        } normalPointers;
+
+        /** Struct for the different possible face types */
+        struct face_type {
+            uint8_t * face_uchar = nullptr;
+            uint16_t * face_u16 = nullptr;
+            uint32_t * face_u32 = nullptr;
+        } facePointers;
+
+        /** Map for the element names to their indices*/
+        std::map<std::string, std::pair<uint32_t, uint32_t>> elementIndexMap;
+
+        /** Flag determining the file format of the read file */
+        bool hasBinaryFormat;
+
+        /** Flag determining the endianness if the read file has binary format */
+        bool isLittleEndian;
+
+        /** The bounding box of the vertices */
+        vislib::math::Cuboid<float> boundingBox;
+
+        /** The bounding box including sphere radii */
+        vislib::math::Cuboid<float> sphereBoundingBox;
+
+        /** The number of vertices */
+        size_t vertex_count;
+        
+        /** The number of faces */
+        size_t face_count;
+
+        /** The offset the first data point has from the start of the read file */
+        size_t data_offset;
 
         /** The current data hash. */
         size_t data_hash;
