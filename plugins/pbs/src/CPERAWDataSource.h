@@ -92,13 +92,13 @@ private:
     void resetDirty(void);
 
     /**
-     * Callback receiving the update of the file name parameter.
+     * Callback receiving the update of the radius parameter.
      *
      * @param slot The updated ParamSlot.
      *
      * @return Always 'true' to reset the dirty flag.
      */
-    bool filenameChanged(core::param::ParamSlot& slot);
+    bool radiusChanged(core::param::ParamSlot& slot);
 
     /**
      * Gets the data from the source.
@@ -138,7 +138,7 @@ private:
     size_t numPoints;
 
     size_t const headerLen = 48;
-    size_t const pointStride = 28;
+    size_t const pointStride = 27;
 
     std::array<float, 6> localBBox, globalBBox, globalCBox;
 };

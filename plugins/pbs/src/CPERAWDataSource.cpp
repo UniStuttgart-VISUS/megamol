@@ -40,6 +40,7 @@ CPERAWDataSource::CPERAWDataSource(void) : core::Module(),
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->radiusSlot << new core::param::FloatParam(0.1f, 0.0001f, 10.0f);
+    this->radiusSlot.SetUpdateCallback(&CPERAWDataSource::radiusChanged);
     this->MakeSlotAvailable(&this->radiusSlot);
 }
 
@@ -139,8 +140,9 @@ void CPERAWDataSource::resetDirty(void) {
 }
 
 
-bool CPERAWDataSource::filenameChanged(core::param::ParamSlot &slot) {
-    return this->assertData();
+bool CPERAWDataSource::radiusChanged(core::param::ParamSlot &slot) {
+    //this->dataHash++;
+    return true;
 }
 
 
@@ -159,17 +161,18 @@ bool CPERAWDataSource::getDataCallback(core::Call &c) {
                 mdc->SetFrameID(0);
                 mdc->SetDataHash(this->dataHash);
                 // TODO Unlocker
-                auto pl = mdc->AccessParticles(0);
+                auto &pl = mdc->AccessParticles(0);
+                pl.SetGlobalRadius(this->radiusSlot.Param<core::param::FloatParam>()->Value());
                 pl.SetBBox(vislib::math::Cuboid<float>(localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]));
                 pl.SetCount(numPoints);
-                pl.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, this->data.data() + 24, this->pointStride);
                 pl.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, this->data.data() + 0, this->pointStride);
-                pl.SetGlobalRadius(this->radiusSlot.Param<core::param::FloatParam>()->Value());
+                pl.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB, this->data.data() + 24, this->pointStride);
                 newFile = false;
             } else {
                 // just update radius, if necessary
                 if (mdc->GetParticleListCount() == 1) {
                     mdc->AccessParticles(0).SetGlobalRadius(this->radiusSlot.Param<core::param::FloatParam>()->Value());
+                    //mdc->SetDataHash(this->dataHash);
                 }
             }
         } else {
