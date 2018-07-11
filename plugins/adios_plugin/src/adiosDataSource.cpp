@@ -7,13 +7,13 @@
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
 
-#include <adios2.h>
+
 
 namespace megamol {
 namespace adios {
 
 adiosDataSource::adiosDataSource(void) : 
-  core::view::AnimDataModule(),
+  core::Module(),
   filename("filename", "The path to the ADIOS-based file to load."),
   getData("getdata", "Slot to request data from this data source."),
   callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view."),
@@ -32,9 +32,6 @@ adiosDataSource::adiosDataSource(void) :
 
 	this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
 	this->MakeSlotAvailable(&this->callRequestMpi);
-
-    this->setFrameCount(1);
-
 }
 
   adiosDataSource::~adiosDataSource(void) {
@@ -104,7 +101,7 @@ bool adiosDataSource::getExtentCallback(core::Call& caller) {
 	this->getDataCallback(caller);
 
     if (c2 != NULL) {
-        c2->SetFrameCount(this->FrameCount());
+        c2->SetFrameCount(this->frameCount);
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
         c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
@@ -131,7 +128,7 @@ bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
 	this-> first_step = true;
 
 
-	this->setFrameCount(1);
+	this->frameCount = 1;
 
 
 	return true;
@@ -183,7 +180,8 @@ bool adiosDataSource::adiosRead() {
 
 		io.SetEngine("InSituMPI");
 		io.SetParameter("verbose", "5");
-		adios2::Engine reader = io.Open(this->filename.Param<core::param::FilePathParam>()->Value(), adios2::Mode::Read);
+		const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+		adios2::Engine reader = io.Open(fname, adios2::Mode::Read);
 
 		this->first_step = false;
 	//}

@@ -10,11 +10,12 @@
 #include <mpi.h>
 #endif
 
+#include <adios2.h>
 
 namespace megamol {
 namespace adios {
 
-class adiosDataSource : public core::view::AnimDataModule {
+class adiosDataSource : public core::Module {
 public:
 	/**
 	 * Answer the name of this module.
@@ -90,7 +91,7 @@ private:
 
 	void setData(core::Call& c);
 
-	bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot);
+	bool filenameChanged(core::param::ParamSlot& slot);
 
 	/** The slot for requesting data */
 	core::CalleeSlot getData;
@@ -107,10 +108,6 @@ private:
 	/** The file name */
 	core::param::ParamSlot filename;
 
-	/** The data set bounding box */
-	vislib::math::Cuboid<float> bbox;
-
-
 	std::vector<float> X;
 	std::vector<float> Y;
 	std::vector<float> Z;
@@ -125,6 +122,8 @@ private:
 	int particleCount = 0;
 
 	bool first_step;
+
+	int frameCount = 0;
 
 };
 
