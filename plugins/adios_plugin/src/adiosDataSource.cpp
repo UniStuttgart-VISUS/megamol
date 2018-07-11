@@ -64,14 +64,32 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == NULL) return false;
 
-    Frame *f = NULL;
     if (c2 != NULL) {
         // TODO: adios load data
-        if (f == NULL) return false;
 
-        c2->SetFrameID(f->FrameNumber());
+		if (!this->adiosRead()) {
+			vislib::sys::Log::DefaultLog.WriteError("Error while reading with ADIOS");
+			return false;
+		}
+
+
+        c2->SetFrameID(0);
         c2->SetDataHash(this->data_hash);
-        this->setData(*c2);
+		c2->SetParticleListCount(1);
+		c2->AccessParticles(0).SetGlobalRadius(1.0f);
+		c2->AccessParticles(0).SetCount(this->particleCount);
+
+		std::vector<float> mix;
+		mix.resize(this->particleCount*3);
+
+		for (int i = 0; i < this->particleCount; i++) {
+			mix[3 * i + 0] = X[i];
+			mix[3 * i + 1] = Y[i];
+			mix[3 * i + 2] = Z[i];
+		}
+
+		c2->AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, mix.data(), 3*sizeof(float));
+		c2->AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
     }
 
     return true;
@@ -83,7 +101,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 bool adiosDataSource::getExtentCallback(core::Call& caller) {
 	core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
 
-	// TODO: adios get extends
+	this->getDataCallback(caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(this->FrameCount());
@@ -112,12 +130,12 @@ bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
 	// TODO: (re)initialize adios
 	
-	adios(this->mpi_comm_, true);
+	adios(this->mpi_comm_, adios2::DebugON);
 	io = adios.DeclareIO("dummy");
 
 	io.SetEngine("InSituMPI");
 	io.SetParameter("verbose", "5");
-	rStream = io.Open(this->filename.Param<core::param::FilePathParam>()->Value(), adios2::Mode::Read);
+	reader = io.Open(this->filename.Param<core::param::FilePathParam>()->Value(), adios2::Mode::Read);
 
 	this->setFrameCount(1);
 
@@ -165,8 +183,41 @@ bool adiosDataSource::initMPI() {
 
 bool adiosDataSource::adiosRead() {
 
+	adios2::StepStatus status = reader.BeginStep(adios2::StepMode::NextAvailable, 0.0f);
+	if (status != adios2::StepStatus::OK) {
+		vislib::sys::Log::DefaultLog.WriteError("ADIOS2 ERROR: BeginStep returned an error.");
+		return false;
+	}
 
+	vBox = io.InquireVariable<float>("box");
+	vX = io.InquireVariable<float>("x");
+	vY = io.InquireVariable<float>("y");
+	vZ = io.InquireVariable<float>("z");
 
+	if (!vBox || !vX || !vY || !vZ) {
+		vislib::sys::Log::DefaultLog.WriteError("Error: One or alle variables not found. Unable to proceed.");
+		return false;
+	}
+
+	if ((vX.Shape()[0] != vY.Shape()[0]) && (vX.Shape()[0] != vZ.Shape()[0])) {
+		vislib::sys::Log::DefaultLog.WriteError("Error: Position lists are of different shape.");
+		return false;
+	}
+
+	this->particleCount = vX.Shape()[0];
+
+	box.resize(vBox.Shape()[0]);
+	X.resize(vX.Shape()[0]);
+	Y.resize(vY.Shape()[0]);
+	Z.resize(vZ.Shape()[0]);
+
+	reader.Get<float>(vBox, box.data());
+	reader.Get<float>(vX, X.data());
+	reader.Get<float>(vY, Y.data());
+	reader.Get<float>(vZ, Z.data());
+
+	reader.EndStep();
+	this->data_hash++;
 
 	return true;
 }

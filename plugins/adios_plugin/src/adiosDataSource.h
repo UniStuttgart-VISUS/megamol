@@ -113,7 +113,20 @@ private:
 
 	adios2::ADIOS adios;
 	adios2::IO io;
-	adios2::Engine rStream;
+	adios2::Engine reader;
+
+	std::vector<float> X;
+	std::vector<float> Y;
+	std::vector<float> Z;
+	std::vector<float> box;
+	adios2::Variable<float> vX;
+	adios2::Variable<float> vY;
+	adios2::Variable<float> vZ;
+	adios2::Variable<float> vBox;
+
+	int step = 0;
+
+	int particleCount = 0;
 
 };
 
