@@ -156,48 +156,15 @@ void main(void) {
     cpj2 *= p.y;
     cpm2 *= h.y;
 
-    vec4 p5;
-
-    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
-    testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
-    mins = projPos;
-    maxs = projPos;
-    projPos /= projPos.w;
-    projMins = projPos.xy;
-    projMaxs = projPos.xy;
-
-    testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
-    mins = min(mins, projPos);
-    maxs = max(maxs, projPos);
-    projPos /= projPos.w;
-    projMins = min(projMins, projPos.xy);
-    projMaxs = max(projMaxs, projPos.xy);
-
-    testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
-    mins = min(mins, projPos);
-    maxs = max(maxs, projPos);
-    projPos /= projPos.w;
-    projMins = min(projMins, projPos.xy);
-    projMaxs = max(projMaxs, projPos.xy);
-
-    testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
-    mins = min(mins, projPos);
-    maxs = max(maxs, projPos);
-    projPos /= projPos.w;
-    projMins = min(projMins, projPos.xy);
-    projMaxs = max(projMaxs, projPos.xy);
-
-    vec4 left, right, top, bottom;
+    vec4 left, right, top, bottom, front;
 
     vec4 oP = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1, 1.0);
     right = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1 + cpm1, 1.0);
     top = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj2 + cpm2, 1.0);
     left = - (right - oP) + oP;
     bottom = - (top - oP) + oP;
+
+    front = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + normalize(camPos.xyz) * rad, 1.0);
 
 ]]>
         </snippet>
@@ -207,15 +174,10 @@ void main(void) {
     vec2 screen = vec2(right.x / right.w - left.x / left.w, top.y / top.w - bottom.y / bottom.w) * 0.5 * winHalf;
     gl_PointSize = max(screen.x, screen.y) + 0.5;
     
-    //vec3 mid = (mins.xyw + maxs.xyw) * 0.5;
-    //vec3 mid = vec3(right.x + left.x, top.y + bottom.y, (right.w + left.w) * 0.5 + (top.w + bottom.w) * 0.5) * 0.5;
-    vec3 mid = vec3(right.x / right.w + left.x / left.w, top.y / top.w + bottom.y / bottom.w, 2.0) * 0.5;
-    //vec3 mid = vec3(projMins + projMaxs, 2.0) * 0.5;
-    gl_Position = vec4(mid.xy, 0.0, (od > clipDat.w) ? 0.0 : mid.z);
-    //maxs.xy = (projMaxs - projMins) * 0.5 * winHalf;
-    //gl_PointSize = max(maxs.x, maxs.y) + 0.5;
-    
-    //gl_PointSize = 64.0;
+    vec3 mid = vec3(right.x / right.w + left.x / left.w, top.y / top.w + bottom.y / bottom.w, oP.w);
+    mid.xy *= 0.5 * oP.w;
+    gl_Position = vec4(mid.xy, (front.z / front.w) * oP.w , (od > clipDat.w) ? 0.0 : oP.w);
+
 #ifdef DEFERRED_SHADING
     pointSize = gl_PointSize;
 #endif
