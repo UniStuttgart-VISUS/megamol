@@ -120,7 +120,8 @@ void main(void) {
     camUp = cross(camIn, camRight);
 #endif // CALC_CAM_SYS
 
-    vec2 mins, maxs;
+    vec4 mins, maxs;
+    vec2 projMins, projMaxs;
     vec3 testPos;
     vec4 projPos;
 
@@ -135,6 +136,10 @@ void main(void) {
     
     d.x = length(cpj1);
     d.y = length(cpj2);
+    
+    if (d.x < rad || d.y < rad) {
+      od = clipDat.w + 1.0;
+    }
 
     dd = vec2(1.0) / d;
 
@@ -151,37 +156,66 @@ void main(void) {
     cpj2 *= p.y;
     cpm2 *= h.y;
 
+    vec4 p5;
+
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
     projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    mins = projPos;
+    maxs = projPos;
     projPos /= projPos.w;
-    mins = projPos.xy;
-    maxs = projPos.xy;
+    projMins = projPos.xy;
+    projMaxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
     projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    mins = min(mins, projPos);
+    maxs = max(maxs, projPos);
     projPos /= projPos.w;
-    mins = min(mins, projPos.xy);
-    maxs = max(maxs, projPos.xy);
+    projMins = min(projMins, projPos.xy);
+    projMaxs = max(projMaxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
     projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    mins = min(mins, projPos);
+    maxs = max(maxs, projPos);
     projPos /= projPos.w;
-    mins = min(mins, projPos.xy);
-    maxs = max(maxs, projPos.xy);
+    projMins = min(projMins, projPos.xy);
+    projMaxs = max(projMaxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
     projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    mins = min(mins, projPos);
+    maxs = max(maxs, projPos);
     projPos /= projPos.w;
-    mins = min(mins, projPos.xy);
-    maxs = max(maxs, projPos.xy);
+    projMins = min(projMins, projPos.xy);
+    projMaxs = max(projMaxs, projPos.xy);
+
+    vec4 left, right, top, bottom;
+
+    vec4 oP = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1, 1.0);
+    right = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1 + cpm1, 1.0);
+    top = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj2 + cpm2, 1.0);
+    left = - (right - oP) + oP;
+    bottom = - (top - oP) + oP;
+
 ]]>
         </snippet>
         <snippet name="Output" type="string">
         <![CDATA[
-    gl_Position = vec4((mins + maxs) * 0.5, 0.0, (od > clipDat.w) ? 0.0 : 1.0);
-    maxs = (maxs - mins) * 0.5 * winHalf;
-    gl_PointSize = max(maxs.x, maxs.y) + 0.5;
+
+    vec2 screen = vec2(right.x / right.w - left.x / left.w, top.y / top.w - bottom.y / bottom.w) * 0.5 * winHalf;
+    gl_PointSize = max(screen.x, screen.y) + 0.5;
+    
+    //vec3 mid = (mins.xyw + maxs.xyw) * 0.5;
+    //vec3 mid = vec3(right.x + left.x, top.y + bottom.y, (right.w + left.w) * 0.5 + (top.w + bottom.w) * 0.5) * 0.5;
+    vec3 mid = vec3(right.x / right.w + left.x / left.w, top.y / top.w + bottom.y / bottom.w, 2.0) * 0.5;
+    //vec3 mid = vec3(projMins + projMaxs, 2.0) * 0.5;
+    gl_Position = vec4(mid.xy, 0.0, (od > clipDat.w) ? 0.0 : mid.z);
+    //maxs.xy = (projMaxs - projMins) * 0.5 * winHalf;
+    //gl_PointSize = max(maxs.x, maxs.y) + 0.5;
+    
+    //gl_PointSize = 64.0;
 #ifdef DEFERRED_SHADING
     pointSize = gl_PointSize;
 #endif
@@ -264,7 +298,7 @@ void main(void) {
 #ifdef CLIP
     if (radicand < 0.0) { 
 #ifdef DISCARD_COLOR_MARKER
-        color = vec3(1.0, 0.0, 0.0);       
+        color = vec4(1.0, 0.0, 0.0, 1.0);       
 #else // DISCARD_COLOR_MARKER
         discard; 
 #endif // DISCARD_COLOR_MARKER
