@@ -111,7 +111,7 @@ private:
 	vislib::math::Cuboid<float> bbox;
 
 
-	adios2::ADIOS adios;
+	adios2::ADIOS adiosInst;
 	adios2::IO io;
 	adios2::Engine reader;
 

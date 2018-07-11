@@ -5,6 +5,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "vislib/Trace.h"
+#include "vislib/sys/SystemInformation.h"
 
 #include <adios_plugin/adios2.h>
 
@@ -130,8 +131,8 @@ bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
 	// TODO: (re)initialize adios
 	
-	adios(this->mpi_comm_, adios2::DebugON);
-	io = adios.DeclareIO("dummy");
+	adiosInst(this->mpi_comm_, adios2::DebugON);
+	io = adiosInst.DeclareIO("dummy");
 
 	io.SetEngine("InSituMPI");
 	io.SetParameter("verbose", "5");
