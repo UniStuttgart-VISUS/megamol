@@ -13,9 +13,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  find_package(ADIOS2 REQUIRED)
+  #find_package(ADIOS2 REQUIRED)
 
-  set(LIBS vislib core glad adios2::adios2)
+  #set(LIBS vislib core glad adios2::adios2)
+  set(LIBS vislib core glad)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")

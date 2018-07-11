@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "adiosDataSource.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -39,13 +41,7 @@ namespace {
 
             // register modules here:
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::adios_plugin::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::adios_plugin::MyModule2>();
-            //   ...
-            //
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosDataSource>();
 
             // register calls here:
 
