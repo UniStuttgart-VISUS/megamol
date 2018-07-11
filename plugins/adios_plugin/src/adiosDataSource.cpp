@@ -7,8 +7,7 @@
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
 
-#include <adios_plugin/adios2.h>
-
+#include <adios2.h>
 
 namespace megamol {
 namespace adios {
@@ -129,14 +128,8 @@ bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
 	this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
 	this->data_hash++;
 
-	// TODO: (re)initialize adios
-	
-	adiosInst(this->mpi_comm_, adios2::DebugON);
-	io = adiosInst.DeclareIO("dummy");
+	this-> first_step = true;
 
-	io.SetEngine("InSituMPI");
-	io.SetParameter("verbose", "5");
-	reader = io.Open(this->filename.Param<core::param::FilePathParam>()->Value(), adios2::Mode::Read);
 
 	this->setFrameCount(1);
 
@@ -183,6 +176,17 @@ bool adiosDataSource::initMPI() {
 }
 
 bool adiosDataSource::adiosRead() {
+
+	//if (this->first_step) {
+		adios2::ADIOS adiosInst(this->mpi_comm_, true);
+		adios2::IO io = adiosInst.DeclareIO("dummy");
+
+		io.SetEngine("InSituMPI");
+		io.SetParameter("verbose", "5");
+		adios2::Engine reader = io.Open(this->filename.Param<core::param::FilePathParam>()->Value(), adios2::Mode::Read);
+
+		this->first_step = false;
+	//}
 
 	adios2::StepStatus status = reader.BeginStep(adios2::StepMode::NextAvailable, 0.0f);
 	if (status != adios2::StepStatus::OK) {

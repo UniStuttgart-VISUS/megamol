@@ -111,10 +111,6 @@ private:
 	vislib::math::Cuboid<float> bbox;
 
 
-	adios2::ADIOS adiosInst;
-	adios2::IO io;
-	adios2::Engine reader;
-
 	std::vector<float> X;
 	std::vector<float> Y;
 	std::vector<float> Z;
@@ -127,6 +123,8 @@ private:
 	int step = 0;
 
 	int particleCount = 0;
+
+	bool first_step;
 
 };
 
