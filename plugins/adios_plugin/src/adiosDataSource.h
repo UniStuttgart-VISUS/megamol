@@ -89,8 +89,6 @@ private:
 	int mpiRank = -1, mpiSize = -1;
 #endif
 
-	void setData(core::Call& c);
-
 	bool filenameChanged(core::param::ParamSlot& slot);
 
 	/** The slot for requesting data */

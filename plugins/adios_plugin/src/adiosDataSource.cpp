@@ -10,220 +10,215 @@
 
 
 namespace megamol {
-namespace adios {
+  namespace adios {
 
-adiosDataSource::adiosDataSource(void) : 
-  core::Module(),
-  filename("filename", "The path to the ADIOS-based file to load."),
-  getData("getdata", "Slot to request data from this data source."),
-  callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view."),
-  bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-  data_hash(0)
- {
+    adiosDataSource::adiosDataSource(void) : 
+      core::Module(),
+      filename("filename", "The path to the ADIOS-based file to load."),
+      getData("getdata", "Slot to request data from this data source."),
+      callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view."),
+      bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+      data_hash(0)
+    {
 
-    this->filename.SetParameter(new core::param::FilePathParam(""));
-    this->filename.SetUpdateCallback(&adiosDataSource::filenameChanged);
-    this->MakeSlotAvailable(&this->filename);
-
-
-    this->getData.SetCallback("MultiParticleDataCall", "GetData", &adiosDataSource::getDataCallback);
-    this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &adiosDataSource::getExtentCallback);
-    this->MakeSlotAvailable(&this->getData);
-
-	this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
-	this->MakeSlotAvailable(&this->callRequestMpi);
-}
-
-  adiosDataSource::~adiosDataSource(void) {
-    this->Release();
-  }
-
-/*
- * adiosDataSource::create
- */
-bool adiosDataSource::create(void) {
-    return true;
-}
+      this->filename.SetParameter(new core::param::FilePathParam(""));
+      this->filename.SetUpdateCallback(&adiosDataSource::filenameChanged);
+      this->MakeSlotAvailable(&this->filename);
 
 
-/*
- * adiosDDataSource::release
- */
-void adiosDataSource::release(void) {
-    /* empty */
-}
+      this->getData.SetCallback("MultiParticleDataCall", "GetData", &adiosDataSource::getDataCallback);
+      this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &adiosDataSource::getExtentCallback);
+      this->MakeSlotAvailable(&this->getData);
 
-
-/*
- * adiosDataSource::getDataCallback
- */
-bool adiosDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
-
-    if (c2 != NULL) {
-        // TODO: adios load data
-
-		if (!this->adiosRead()) {
-			vislib::sys::Log::DefaultLog.WriteError("Error while reading with ADIOS");
-			return false;
-		}
-
-
-        c2->SetFrameID(0);
-        c2->SetDataHash(this->data_hash);
-		c2->SetParticleListCount(1);
-		c2->AccessParticles(0).SetGlobalRadius(1.0f);
-		c2->AccessParticles(0).SetCount(this->particleCount);
-
-		std::vector<float> mix;
-		mix.resize(this->particleCount*3);
-
-		for (int i = 0; i < this->particleCount; i++) {
-			mix[3 * i + 0] = X[i];
-			mix[3 * i + 1] = Y[i];
-			mix[3 * i + 2] = Z[i];
-		}
-
-		c2->AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, mix.data(), 3*sizeof(float));
-		c2->AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+      this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
+      this->MakeSlotAvailable(&this->callRequestMpi);
     }
 
-    return true;
-}
+    adiosDataSource::~adiosDataSource(void) {
+      this->Release();
+    }
 
-/*
- * adiosDataSource::getExtentCallback
- */
-bool adiosDataSource::getExtentCallback(core::Call& caller) {
-	core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    /*
+     * adiosDataSource::create
+     */
+    bool adiosDataSource::create(void) {
+      return true;
+    }
 
+
+    /*
+     * adiosDDataSource::release
+     */
+    void adiosDataSource::release(void) {
+      /* empty */
+    }
+
+
+    /*
+     * adiosDataSource::getDataCallback
+     */
+    bool adiosDataSource::getDataCallback(core::Call& caller) {
+      core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+      if (c2 == NULL) return false;
+
+      // TODO: adios load data
+
+      if (!this->adiosRead()) {
+	vislib::sys::Log::DefaultLog.WriteError("Error while reading with ADIOS");
+	return false;
+      }
+
+
+      c2->SetFrameID(0);
+      c2->SetDataHash(this->data_hash);
+      c2->SetParticleListCount(1);
+      c2->AccessParticles(0).SetGlobalRadius(1.0f);
+      c2->AccessParticles(0).SetCount(this->particleCount);
+
+      std::vector<float> mix;
+      mix.resize(this->particleCount*3);
+
+      for (int i = 0; i < this->particleCount; i++) {
+	mix[3 * i + 0] = X[i];
+	mix[3 * i + 1] = Y[i];
+	mix[3 * i + 2] = Z[i];
+      }
+
+      c2->AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, mix.data(), 3*sizeof(float));
+      c2->AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+
+      return true;
+    }
+
+    /*
+     * adiosDataSource::getExtentCallback
+     */
+    bool adiosDataSource::getExtentCallback(core::Call& caller) {
+      core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+
+      if (c2 != NULL) {
 	this->getDataCallback(caller);
 
-    if (c2 != NULL) {
-        c2->SetFrameCount(this->frameCount);
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
         c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-        c2->SetDataHash(this->data_hash);
         return true;
+      }
+
+      return false;
     }
 
-    return false;
-}
+    /*
+     * adiosDataSource::filenameChanged
+     */
+    bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
+      using vislib::sys::Log;
+      this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+      this->data_hash++;
 
-void adiosDataSource::setData(core::Call & c) {
-	// TODO: set data into call
+      this-> first_step = true;
+      this->frameCount = 1;
 
-}
-
-/*
-* adiosDataSource::filenameChanged
-*/
-bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
-	using vislib::sys::Log;
-	this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-	this->data_hash++;
-
-	this-> first_step = true;
+      return true;
+    }
 
 
-	this->frameCount = 1;
-
-
-	return true;
-}
-
-
-bool adiosDataSource::initMPI() {
-	bool retval = false;
+    bool adiosDataSource::initMPI() {
+      bool retval = false;
 #ifdef WITH_MPI
-	if (this->mpi_comm_ == MPI_COMM_NULL) {
-		VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: Need to initialize MPI\n");
-		auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
-		if (c != nullptr) {
-			/* New method: let MpiProvider do all the stuff. */
-			if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-				vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
-				this->mpi_comm_ = c->GetComm();
-			} else {
-				vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
-														_T("retrieve MPI communicator for the MPI-based view ")
-														_T("from the registered provider module."));
-			}
-		}
+      if (this->mpi_comm_ == MPI_COMM_NULL) {
+	VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: Need to initialize MPI\n");
+	auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
+	if (c != nullptr) {
+	  /* New method: let MpiProvider do all the stuff. */
+	  if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
+	    vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+	    this->mpi_comm_ = c->GetComm();
+	  } else {
+	    vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+						    _T("retrieve MPI communicator for the MPI-based view ")
+						    _T("from the registered provider module."));
+	  }
+	}
 
-		if (this->mpi_comm_ != MPI_COMM_NULL) {
-			vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
-												   _T("retrieving communicator properties ..."));
-			::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
-			::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
-			vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
-												   _T("of %d."),
-												   vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
-		} /* end if (this->comm != MPI_COMM_NULL) */
-		VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: MPI initialized: %s (%i)\n",
-				this->mpi_comm_ != MPI_COMM_NULL ? "true" : "false", mpi_comm_);
-	} /* end if (this->comm == MPI_COMM_NULL) */
+	if (this->mpi_comm_ != MPI_COMM_NULL) {
+	  vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+						 _T("retrieving communicator properties ..."));
+	  ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
+	  ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
+	  vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+						 _T("of %d."),
+						 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
+	} /* end if (this->comm != MPI_COMM_NULL) */
+	VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: MPI initialized: %s (%i)\n",
+		this->mpi_comm_ != MPI_COMM_NULL ? "true" : "false", mpi_comm_);
+      } /* end if (this->comm == MPI_COMM_NULL) */
 
-	  /* Determine success of the whole operation. */
-	retval = (this->mpi_comm_ != MPI_COMM_NULL);
+      /* Determine success of the whole operation. */
+      retval = (this->mpi_comm_ != MPI_COMM_NULL);
 #endif /* WITH_MPI */
-	return retval;
-}
+      return retval;
+    }
 
-bool adiosDataSource::adiosRead() {
+    bool adiosDataSource::adiosRead() {
 
-	//if (this->first_step) {
-		adios2::ADIOS adiosInst(this->mpi_comm_, true);
-		adios2::IO io = adiosInst.DeclareIO("dummy");
+      adios2::ADIOS adiosInst;
+      adios2::Engine reader;
 
-		io.SetEngine("InSituMPI");
-		io.SetParameter("verbose", "5");
-		const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
-		adios2::Engine reader = io.Open(fname, adios2::Mode::Read);
+      //      if (this->first_step) {
+#ifdef WITH_MPI
+	adiosInst = adios2::ADIOS(this->mpi_comm_, adios2::DebugON);
+#else
+	adiosInst = adios2::ADIOS(adios2::DebugON);
+#endif
+	adios2::IO io = adiosInst.DeclareIO("dummy");
 
-		this->first_step = false;
-	//}
+	//io.SetEngine("InSituMPI");
+	io.SetEngine("BPFile");
+	io.SetParameter("verbose", "5");
+	const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+	reader = io.Open(fname, adios2::Mode::Read);
 
-	adios2::StepStatus status = reader.BeginStep(adios2::StepMode::NextAvailable, 0.0f);
-	if (status != adios2::StepStatus::OK) {
-		vislib::sys::Log::DefaultLog.WriteError("ADIOS2 ERROR: BeginStep returned an error.");
-		return false;
-	}
+	this->first_step = false;
+	//      }
 
-	vBox = io.InquireVariable<float>("box");
-	vX = io.InquireVariable<float>("x");
-	vY = io.InquireVariable<float>("y");
-	vZ = io.InquireVariable<float>("z");
+      adios2::StepStatus status = reader.BeginStep(adios2::StepMode::NextAvailable, 0.0f);
+      if (status != adios2::StepStatus::OK) {
+	vislib::sys::Log::DefaultLog.WriteError("ADIOS2 ERROR: BeginStep returned an error.");
+	return false;
+      }
 
-	if (!vBox || !vX || !vY || !vZ) {
-		vislib::sys::Log::DefaultLog.WriteError("Error: One or alle variables not found. Unable to proceed.");
-		return false;
-	}
+      vBox = io.InquireVariable<float>("box");
+      vX = io.InquireVariable<float>("x");
+      vY = io.InquireVariable<float>("y");
+      vZ = io.InquireVariable<float>("z");
 
-	if ((vX.Shape()[0] != vY.Shape()[0]) && (vX.Shape()[0] != vZ.Shape()[0])) {
-		vislib::sys::Log::DefaultLog.WriteError("Error: Position lists are of different shape.");
-		return false;
-	}
+      if (!vBox || !vX || !vY || !vZ) {
+	vislib::sys::Log::DefaultLog.WriteError("Error: One or all variables not found. Unable to proceed.");
+	return false;
+      }
 
-	this->particleCount = vX.Shape()[0];
+      if ((vX.Shape()[0] != vY.Shape()[0]) && (vX.Shape()[0] != vZ.Shape()[0])) {
+	vislib::sys::Log::DefaultLog.WriteError("Error: Position lists are of different shape.");
+	return false;
+      }
 
-	box.resize(vBox.Shape()[0]);
-	X.resize(vX.Shape()[0]);
-	Y.resize(vY.Shape()[0]);
-	Z.resize(vZ.Shape()[0]);
+      this->particleCount = vX.Shape()[0];
 
-	reader.Get<float>(vBox, box.data());
-	reader.Get<float>(vX, X.data());
-	reader.Get<float>(vY, Y.data());
-	reader.Get<float>(vZ, Z.data());
+      box.resize(vBox.Shape()[0]);
+      X.resize(vX.Shape()[0]);
+      Y.resize(vY.Shape()[0]);
+      Z.resize(vZ.Shape()[0]);
 
-	reader.EndStep();
-	this->data_hash++;
+      reader.Get<float>(vBox, box.data());
+      reader.Get<float>(vX, X.data());
+      reader.Get<float>(vY, Y.data());
+      reader.Get<float>(vZ, Z.data());
 
-	return true;
-}
+      reader.EndStep();
+      this->data_hash++;
 
-} /* end namespace megamol */
+      return true;
+    }
+  } /* end namespace megamol */
 } /* end namespace adios */
