@@ -166,6 +166,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
             code = "";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+            vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
             ret = false;
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
@@ -230,6 +231,20 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         declaration = "    float posX; float posY; float posZ;\n";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        } else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
@@ -447,6 +462,11 @@ void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLui
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
             glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
             break;
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+            glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), vertPtr);
+            break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             glEnableClientState(GL_VERTEX_ARRAY);
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
@@ -493,6 +513,9 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
             break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
             vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            vertBytes = vislib::math::Max(vertBytes, 3 * 8U);
             break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
@@ -627,6 +650,7 @@ bool NGSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
                 glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
