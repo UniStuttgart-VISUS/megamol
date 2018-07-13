@@ -37,7 +37,7 @@ moldyn::MMPLDWriter::MMPLDWriter(void) : AbstractDataWriter(),
     verPar->SetTypePair(101, "1.1");
 #endif
     verPar->SetTypePair(102, "1.2");
-    verPar->SetTypePair(102, "1.3");
+    verPar->SetTypePair(103, "1.3");
     this->versionSlot.SetParameter(verPar);
     this->MakeSlotAvailable(&this->versionSlot);
 
@@ -236,6 +236,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         return false; \
     }
     using vislib::sys::Log;
+    uint8_t const alpha = 255;
     int ver = this->versionSlot.Param<param::EnumParam>()->Value();
 
     if (ver == 102) {
@@ -272,6 +273,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             ct = 0;
         }
         ASSERT_WRITEOUT(&vt, 1);
+        if (ct == 1) ct = 2; // UINT8_RGB is unaligned and will never be written again.
         ASSERT_WRITEOUT(&ct, 1);
 
         if (points.GetVertexDataStride() > vs) {
@@ -315,6 +317,9 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             vp += vo;
             if (ct != 0) {
                 ASSERT_WRITEOUT(cp, cs);
+                if (cs == 3) { // the unaligned ct == 1, UINT8_RGB, will be silently upgraded to ct 2 / cs 4
+                    ASSERT_WRITEOUT(&alpha, 1);
+                }
                 cp += co;
             }
         }
