@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="splom" type="MegaMolGLSLShader" version="1.0">
+  <namespace name="axis">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom_axis.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_axis.frag</snippet>
+    </shader>
+  </namespace>
+  <namespace name="point">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_point.frag</snippet>
+    </shader>
+  </namespace>
+  <namespace name="line">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_plots.glsl</snippet>
+      <snippet type="file">splom.vert</snippet>
+    </shader>
+    <shader name="geom">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_line.geom</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_line.frag</snippet>
+    </shader>
+  </namespace>
+</btf>

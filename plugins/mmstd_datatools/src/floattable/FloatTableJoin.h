@@ -87,9 +87,9 @@ private:
     bool getExtent(core::Call &c);
 
     /** concatenates two float tables */
-    void concatenate(float * const out, const float * const first, const float * const second,
-        const size_t rowsCount, const size_t columnCount, const size_t firstColumnCount,
-        const size_t secondColumnCount);
+    static void concatenate(float* const out, const size_t rowCount, const size_t columnCount,
+        const float* const first, const size_t firstRowCount, const size_t firstColumnCount, const float* const second,
+        const size_t secondRowCount, const size_t secondColumnCount);
 
     /** input slot of first float table */
     core::CallerSlot firstFloatTableInSlot;

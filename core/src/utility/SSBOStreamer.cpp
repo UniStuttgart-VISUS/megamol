@@ -14,10 +14,9 @@
 
 using namespace megamol::core::utility;
 
-SSBOStreamer::SSBOStreamer() : theSSBO(0),
-        bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
-        mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()) {
-    
+SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
+    : theSSBO(0), bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
+      mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()), debugLabel(debugLabel) {
 }
 
 SSBOStreamer::~SSBOStreamer() {
@@ -49,22 +48,30 @@ GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint 
     this->srcStride = dstStride;
     this->numItems = numItems;
     this->theData = data;
-    this->numItemsPerChunk = bufferSize / dstStride;
-    // evil hack: if you synchronize this with another buffer that has tiny items (4 bytes, like color)
-    // make sure we will not get chunks with numItems that result in non-aligned (modern GPUs: 32bytes seems a safe bet)
-    // pointers. that is, we need to upload multiples of at least 8 things to come out at 8 * 4 = 32
-    const int multiRound = 8;
-    this->numItemsPerChunk = ((this->numItemsPerChunk) / multiRound) * multiRound;
+    this->numItemsPerChunk = GetNumItemsPerChunkAligned(bufferSize / dstStride);
     this->numChunks = (numItems + numItemsPerChunk - 1) / numItemsPerChunk; // round up int division!
     this->fences.resize(numBuffers, nullptr);
     return numChunks;
+}
+
+GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) {
+	// Rounding the number of items per chunk is important for alignment and thus performance.
+	// That means, if we synchronize with another buffer that has tiny items, we have to make 
+	// sure that we do not get non-aligned chunks with due to the number of items.
+	// For modern GPUs, 32bytes seems like a safe bet, i.e., we upload in multiples of eight
+	// to get 8 * 4 = 32.
+    const GLuint multiRound = 8;
+    return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound; 
 }
 
 void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
     if (this->theSSBO == 0) {
         glGenBuffers(1, &this->theSSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+#if _DEBUG
+        glObjectLabel(GL_BUFFER, this->theSSBO, debugLabel.length(), debugLabel.c_str());
+#endif
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     if (bufferSize != this->bufferSize || numBuffers != this->numBuffers) {
         if (this->mappedMem != nullptr && this->theSSBO != 0) {
@@ -153,6 +160,7 @@ void SSBOStreamer::queueSignal(GLsync& syncObj) {
 
 void SSBOStreamer::waitSignal(GLsync& syncObj) {
     if (syncObj) {
+        //XXX: Spinlocks in user code are a really bad idea.
         while (true) {
             const GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
             if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
