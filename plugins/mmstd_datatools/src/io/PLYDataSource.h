@@ -15,6 +15,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Cuboid.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "tinyply.h"
 #include <cstdint>
 #include <vector>
@@ -268,6 +269,9 @@ namespace io {
 
         /** The bounding box including sphere radii */
         vislib::math::Cuboid<float> sphereBoundingBox;
+
+        /** The mesh data for the triangle data call */
+        geocalls::CallTriMeshData::Mesh mesh;
 
         /** The number of vertices */
         size_t vertex_count;

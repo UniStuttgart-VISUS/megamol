@@ -579,8 +579,6 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
     auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
-    if (!assertData()) return false;
-
     c2->SetParticleListCount(1);
     MultiParticleDataCall::Particles& p = c2->AccessParticles(0);
     p.SetCount(this->vertex_count);
@@ -631,6 +629,16 @@ bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
 bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
     auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
     if (c2 == nullptr) return false;
+
+    // stupid if-cascade...
+    // if you come up with something more beautiful, just do it
+    if (posPointers.pos_float != nullptr) {
+        
+    } else if (posPointers.pos_double != nullptr) {
+
+    } else {
+        this->mesh.SetVertexData(0, nullptr, nullptr, nullptr, nullptr, false);
+    }
 
     return true;
 }
