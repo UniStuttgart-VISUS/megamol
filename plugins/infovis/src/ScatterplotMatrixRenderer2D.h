@@ -10,18 +10,15 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
-
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/math/Matrix.h"
-
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
-#include "DiagramSeriesCall.h"
+#include "FlagCall.h"
+#include "Renderer2D.h"
 
 namespace megamol {
 namespace infovis {
 
-class ScatterplotMatrixRenderer2D : public core::view::Renderer2DModule {
+class ScatterplotMatrixRenderer2D : public Renderer2D {
 public:
     /**
      * Answer the name of this module.
@@ -77,7 +74,7 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
-    enum GeometryType { GEOMETRY_TYPE_POINT, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
+    enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
 
     struct ParamState {
         size_t colorIdx;
@@ -123,8 +120,6 @@ private:
      */
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
-
     bool isDirty(void) const;
 
     void resetDirty(void);
@@ -153,6 +148,8 @@ private:
 
     core::param::ParamSlot labelSelectorParam;
 
+    core::param::ParamSlot labelSizeParam;
+
     core::param::ParamSlot geometryTypeParam;
 
     core::param::ParamSlot kernelWidthParam;
@@ -163,15 +160,21 @@ private:
 
     core::param::ParamSlot axisTicksParam;
 
+    core::param::ParamSlot axisTicksRedundantParam;
+
     core::param::ParamSlot axisTickLengthParam;
+
+    core::param::ParamSlot axisTickSizeParam;
 
     core::param::ParamSlot cellSizeParam;
 
     core::param::ParamSlot cellMarginParam;
 
+    core::param::ParamSlot cellNameSizeParam;
+
     core::param::ParamSlot alphaScalingParam;
 
-    core::param::ParamSlot attenuateSubpixelParam;
+    core::param::ParamSlot alphaAttenuateSubpixelParam;
 
     size_t dataHash;
 
@@ -196,6 +199,8 @@ private:
     vislib::graphics::gl::GLSLShader axisShader;
 
     vislib::graphics::gl::GLSLShader pointShader;
+
+    vislib::graphics::gl::GLSLGeometryShader lineShader;
 
     core::utility::SSBOStreamer valueSSBO;
 
