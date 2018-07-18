@@ -13,7 +13,7 @@ using namespace megamol::core;
 
 /****************************************************************************/
 
-unsigned int megamol::core::moldyn::SimpleSphericalParticles::VertexDataSize[] = {0, 12, 16, 6};
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::VertexDataSize[] = {0, 12, 16, 6, 24};
 
 unsigned int megamol::core::moldyn::SimpleSphericalParticles::ColorDataSize[] = {0, 3, 4, 12, 16, 4};
 

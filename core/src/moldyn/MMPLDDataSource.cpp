@@ -110,7 +110,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         }
         unsigned int stride = static_cast<unsigned int>(vrtSize + colSize);
 
-        if ((vrtType == 1) || (vrtType == 3)) {
+        if ((vrtType == 1) || (vrtType == 3) || (vrtType == 4)) {
             pts.SetGlobalRadius(*this->dat.AsAt<float>(p)); p += 4;
         } else {
             pts.SetGlobalRadius(0.05f);

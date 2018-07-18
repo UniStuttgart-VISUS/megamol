@@ -635,7 +635,7 @@ namespace moldyn {
         };
 
         /** possible values of accumulated data sizes over all vertex coordinates */
-        static unsigned int VertexDataSize[4];
+        static unsigned int VertexDataSize[5];
 
         /** possible values of accumulated data sizes over all color elements */
         static unsigned int ColorDataSize[6];

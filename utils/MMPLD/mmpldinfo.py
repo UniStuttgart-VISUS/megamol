@@ -173,7 +173,7 @@ for filename in parseResult.inputfiles:
                 listFramedata(parseResult, fi) and print("        %u byte%s per particle" % pluralTuple(stride))
             
                 globalRad = 0.05
-                if (vertType == 1 or vertType == 3):
+                if (vertType == 1 or vertType == 3 or vertType == 4):
                     globalRad = getFloat(f)
                     listFramedata(parseResult, fi) and print("        global radius: %f" % (globalRad))
 
