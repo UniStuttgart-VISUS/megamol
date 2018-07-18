@@ -136,10 +136,17 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 	if (cr == NULL) return false;
 
-	//TODO get extents from data
+	CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 
-	cr->SetTimeFramesCount(1);
-	cr->AccessBoundingBoxes().SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0, 1.0);
+	if (render_batch_call == NULL)
+		return false;
+
+	if (!(*render_batch_call)(1))
+		return false;
+	
+	cr->SetTimeFramesCount(render_batch_call->FrameCount());
+	cr->AccessBoundingBoxes() = render_batch_call->GetBoundingBoxes();
+	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
 }
@@ -426,6 +433,10 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 
 	// loop through render batches data, update GPU render batches if necessary
 	auto render_batches = render_batch_call->getRenderBatches();
+
+	if (render_batches == nullptr)
+		return true;
+
 	for (size_t batch_idx = 0; batch_idx < render_batches->getBatchCount(); ++batch_idx)
 	{
 		if (render_batches->getUpdateFlags(batch_idx) > 0) // check if at least a single flag is set to 1
