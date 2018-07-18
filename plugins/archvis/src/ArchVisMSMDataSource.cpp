@@ -480,7 +480,7 @@ void ArchVisMSMDataSource::updateMSMTransform()
 		float c[4] = { particle.color.X(), particle.color.Y(), particle.color.Z(), 1.0 };
 		
 		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		font.SetBillboard(true);
+		//font.SetBillboard(true);
 		font.DrawString(c, x, y, z, 0.03f, false, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
 	}
 }
