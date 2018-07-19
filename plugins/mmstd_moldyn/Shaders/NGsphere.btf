@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">130</snippet>
+        <snippet type="version">400</snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="file">ngsphere/attributes.glsl</snippet>
         <snippet name="MainParams" type="file">ngsphere/vert_mainparams.glsl</snippet>

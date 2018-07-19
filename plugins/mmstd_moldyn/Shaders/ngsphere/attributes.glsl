@@ -4,6 +4,7 @@
 uniform vec4 viewAttr;
 
 uniform float scaling;
+uniform vec4 lpos;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
