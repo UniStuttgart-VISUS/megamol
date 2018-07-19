@@ -1,18 +1,15 @@
 #include "stdafx.h"
-
-#include "FlagCall.h"
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-
 #include "vislib/math/ShallowMatrix.h"
 
 #include <sstream>
@@ -47,22 +44,26 @@ inline std::string to_string(float x) {
 }
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
-    : core::view::Renderer2DModule()
+    : Renderer2D()
     , floatTableInSlot("ftIn", "Float table input")
     , transferFunctionInSlot("tfIn", "Transfer function input")
     , flagStorageInSlot("fsIn", "Flag storage input")
     , colorSelectorParam("colorSelector", "Sets a color column")
-    , labelSelectorParam("labelSelector", "Sets a label column")
+    , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
+    , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksParam("axisTicks", "Number of ticks on the axis")
+    , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
     , axisTickLengthParam("axisTickLength", "Line length for the ticks")
+    , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
     , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
     , cellMarginParam("cellMargin", "Set the scaling of y axis")
+    , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
-    , attenuateSubpixelParam("attenuateSubpixel", "Attenuate alpha of points that should have subpixel size")
+    , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
     , mouse({0, 0, false, false})
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , labelFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
@@ -84,6 +85,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->labelSelectorParam << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->labelSelectorParam);
 
+    this->labelSizeParam << new core::param::FloatParam(0.1f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->labelSizeParam);
+
     core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
@@ -94,7 +98,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
-    this->axisColorParam << new core::param::StringParam("white");
+    this->axisColorParam << new core::param::ColorParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
 
     this->axisWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
@@ -103,8 +107,14 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->axisTicksParam << new core::param::IntParam(5, 2, 100);
     this->MakeSlotAvailable(&this->axisTicksParam);
 
+    this->axisTicksRedundantParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->axisTicksRedundantParam);
+
     this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.5f);
     this->MakeSlotAvailable(&this->axisTickLengthParam);
+
+    this->axisTickSizeParam << new core::param::FloatParam(0.5f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->axisTickSizeParam);
 
     this->cellSizeParam << new core::param::FloatParam(10.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->cellSizeParam);
@@ -112,11 +122,14 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->cellMarginParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->cellMarginParam);
 
+    this->cellNameSizeParam << new core::param::FloatParam(2.0f, std::numeric_limits<float>::epsilon());
+    this->MakeSlotAvailable(&this->cellNameSizeParam);
+
     this->alphaScalingParam << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
-    this->attenuateSubpixelParam << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->attenuateSubpixelParam);
+    this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
 }
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
@@ -125,8 +138,9 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 bool ScatterplotMatrixRenderer2D::create(void) {
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
     if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
-    if (!makeProgram("::splom::axes", this->axisShader)) return false;
-    if (!makeProgram("::splom::points", this->pointShader)) return false;
+    if (!makeProgram("::splom::axis", this->axisShader)) return false;
+    if (!makeProgram("::splom::point", this->pointShader)) return false;
+    if (!makeProgram("::splom::line", this->lineShader)) return false;
 
     this->axisFont.EnableBatchDraw();
     this->labelFont.EnableBatchDraw();
@@ -185,50 +199,15 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) {
-    vislib::graphics::gl::ShaderSource vert, frag;
-
-    vislib::StringA vertname((prefix + "::vert").c_str());
-    vislib::StringA fragname((prefix + "::frag").c_str());
-    vislib::StringA pref(prefix.c_str());
-
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
-
-    try {
-        if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            pref.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", pref.PeekBuffer(), e.GetMsgA());
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
-        return false;
-    }
-
-    return true;
-}
-
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
-    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->axisColorParam.IsDirty() ||
+    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
            this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
 void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
-    this->axisColorParam.ResetDirty();
+    this->labelSizeParam.ResetDirty();
     this->cellSizeParam.ResetDirty();
     this->cellMarginParam.ResetDirty();
 }
@@ -271,10 +250,6 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
     map.colorIdx = nameToIndex(this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
     map.labelIdx = nameToIndex(this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
 
-    // Axis parameters.
-    core::utility::ColourParser::FromString(
-        this->axisColorParam.Param<core::param::StringParam>()->Value(), 4, this->axisColor);
-
     updateColumns();
 
     this->labelsValid = false;
@@ -299,7 +274,7 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
         }
     }
 
-    this->bounds.Set(0, 0, columnCount * (size + margin), columnCount * (size + margin));
+    this->bounds.Set(0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin);
 
     const GLuint plotItems = core::utility::SSBOStreamer::GetNumItemsPerChunkAligned(plots.size(), true);
     const GLuint bufferSize = plotItems * sizeof(PlotInfo);
@@ -322,11 +297,12 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     // Other uniforms.
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
-    const bool skipInnerTicks = true; // XXX: true if padding or margin == 0.
-    glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1, this->axisColor);
+    glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1,
+        this->axisColorParam.Param<core::param::ColorParam>()->Value());
     glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
     glUniform1f(this->axisShader.ParameterLocation("tickLength"), tickLength);
-    glUniform1i(this->axisShader.ParameterLocation("skipInnerTicks"), skipInnerTicks ? 1 : 0);
+    glUniform1i(this->axisShader.ParameterLocation("redundantTicks"),
+        this->axisTicksRedundantParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Line width.
     auto axisWidth = this->axisWidthParam.Param<core::param::FloatParam>()->Value();
@@ -346,21 +322,21 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     this->axisShader.Disable();
 
-    float textColor[4] = {0.0f, 0.0f, 0.0f, 1.0f}; // XXX: param please
-    float columnFontsize = 2.0f;                   // XXX: param please
-    float tickFontsize = 0.5f;                     // XXX: param please
 
     this->axisFont.ClearBatchCache();
 
+    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
     for (size_t i = 0; i < columnCount; ++i) {
-        const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
-        const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(textColor, xyBL, xyTL, size, size, columnFontsize, false, label.c_str(),
+        this->axisFont.DrawString(axisColor, xyBL, xyTL, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         const float tickStart = i * (size + margin);
@@ -372,11 +348,11 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(textColor, p, xyTL + tickLength, tickFontsize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor, p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->axisFont.DrawString(textColor, xyBL - margin + tickLength, p, tickFontsize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor, xyBL - margin + tickLength, p, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
@@ -400,10 +376,6 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glEnable(GL_POINT_SPRITE);
     glPointSize(std::max(viewport[2], viewport[3]));
 
-    // XXX: maybe we should move this before first usage?
-    viewport[2] = 2.0f / std::max(1.0f, viewport[2]);
-    viewport[3] = 2.0f / std::max(1.0f, viewport[3]);
-
     this->pointShader.Enable();
 
     // Transformation uniforms.
@@ -415,9 +387,9 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
-    unsigned int colTabSize = this->transferFunction->TextureSize();
-    glUniform1i(this->pointShader.ParameterLocation("colorTable"), colTabSize);
-    glUniform2ui(this->pointShader.ParameterLocation("colorConsts"), map.colorIdx, colTabSize);
+    glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
+    glUniform1i(this->pointShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+    glUniform1i(this->pointShader.ParameterLocation("colorColumn"), map.colorIdx);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -427,7 +399,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
-        this->attenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+        this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -466,62 +438,73 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 }
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
-    /*
-    auto aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
-    auto yScaling = this->scaleYParam.Param<core::param::FloatParam>()->Value();
+    GLfloat viewport[4];
+    glGetFloatv(GL_VIEWPORT, viewport);
 
-    this->drawXAxis();
-    this->drawYAxis();
+    // Blending.
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
 
-    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtx);
-    nvgSave(ctx);
-    nvgTransform(ctx, this->nvgTrans.GetAt(0, 0), this->nvgTrans.GetAt(1, 0),
-        this->nvgTrans.GetAt(0, 1), this->nvgTrans.GetAt(1, 1),
-        this->nvgTrans.GetAt(0, 2), this->nvgTrans.GetAt(1, 2));
+    this->lineShader.Enable();
 
-    nvgScale(ctx, this->cellSize.Param<core::param::FloatParam>()->Value(), 1.0f);
+    // Transformation uniforms.
+    glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        getModelViewProjection().PeekComponents());
 
-    float width = std::get<0>(this->viewport)*aspect;
-    float height = std::get<1>(this->viewport)*yScaling;
-    float midX = width / 2.0f;
-    float midY = height / 2.0f;
+    // Color map uniforms.
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
+    glUniform1i(this->lineShader.ParameterLocation("colorTable"), 0);
+    glUniform1i(this->lineShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+    glUniform1i(this->lineShader.ParameterLocation("colorColumn"), map.colorIdx);
 
-    for (size_t s = 0; s < this->series.size(); s++) {
-        if (this->series[s].size() < 8 || !this->selectedSeries[s]) {
-            continue;
-        }
+    // Other uniforms.
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    glUniform1i(this->lineShader.ParameterLocation("rowStride"), columnCount);
+    glUniform1f(this->lineShader.ParameterLocation("kernelWidth"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
+        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
+        this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
-        auto color = std::get<4>(this->columnSelectors[s]);
+    // Setup streaming.
+    const GLuint numBuffers = 3;
+    const GLuint bufferSize = 32 * 1024 * 1024;
+    const float* data = this->floatTable->GetData();
+    const GLuint dataStride = columnCount * sizeof(float);
+    const GLuint dataItems = this->floatTable->GetRowsCount();
+    const GLuint numChunks =
+        this->valueSSBO.SetDataWithSize(data, dataStride, dataStride, dataItems, numBuffers, bufferSize);
 
-        nvgStrokeWidth(ctx, this->axisWidthParam.Param<core::param::FloatParam>()->Value());
-        nvgStrokeColor(ctx, nvgRGBf(color[0], color[1], color[2]));
-        nvgBeginPath(ctx);
-
-        {
-            float valX = this->series[s][0] - 0.5f;
-            valX *= width;
-            valX += midX;
-            float valY = this->series[s][1] - 0.5f;
-            valY *= height;
-            valY += midY;
-            nvgMoveTo(ctx, valX, valY);
-        }
-
-        for (size_t i = 1; i < this->series[s].size() / 4; i++) {
-            float valX = this->series[s][i * 4] - 0.5f;
-            valX *= width;
-            valX += midX;
-            float valY = this->series[s][i * 4 + 1] - 0.5f;
-            valY *= height;
-            valY += midY;
-            nvgLineTo(ctx, valX, valY);
-        }
-
-        nvgStroke(ctx);
+    // For each chunk of values, render all points in the lower half of the scatterplot matrix at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset,
+        this->plotDstLength);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle());
+    for (GLuint chunk = 0; chunk < numChunks; ++chunk) {
+        GLuint numItems, sync;
+        GLsizeiptr dstOffset, dstLength;
+        valueSSBO.UploadChunk(chunk, numItems, sync, dstOffset, dstLength);
+        glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(), dstOffset, dstLength);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(numItems), this->plots.size());
+        valueSSBO.SignalCompletion(sync);
     }
 
-    nvgRestore(ctx);
-    */
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_1D, 0);
+
+    this->lineShader.Disable();
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -537,9 +520,7 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
 
-    float labelColor[4] = {1.0f, 0.0f, 0.0f, 1.0f}; // TODO: use transfer function
-    float labelFontSize = 0.1f;                     // XXX: param please
-
+    const float labelSize = this->labelSizeParam.Param<core::param::FloatParam>()->Value();
     for (size_t i = 0; i < rowCount; ++i) {
         for (const auto& plot : this->plots) {
             const float xValue = this->floatTable->GetData(plot.indexX, i);
@@ -547,11 +528,15 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
             const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
             const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
 
+            const size_t colorIndex = this->floatTable->GetData(this->map.colorIdx, i);
+            float labelColor[4];
+            this->transferFunction->CopyColor(colorIndex, labelColor, sizeof(labelColor));
+
             // XXX: this will be a lot more useful when have support for string-columns!
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
 
             this->labelFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
-                labelFontSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                labelSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
     }
 
