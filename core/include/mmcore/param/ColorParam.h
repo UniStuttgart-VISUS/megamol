@@ -17,18 +17,11 @@ namespace param {
 
 
 /**
- * class for transferfunction (1D) parameter objects
+ * Class for 32bit RGBA color parameters with each channel between 0.0 and 1.0.
  */
 class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
-	typedef float Type[4];
-
-	/**
-     * Ctor.
-     *
-     * @param initVal The initial value
-     */
-    ColorParam(const vislib::TString& initVal);
+    typedef float Type[4];
 
     /**
      * Ctor.
@@ -36,6 +29,13 @@ public:
      * @param initVal The initial value
      */
     ColorParam(const Type& initVal);
+
+    /**
+     * Ctor.
+     *
+     * @param initVal The initial value
+     */
+    ColorParam(const vislib::TString& initVal);
 
     /**
      * Dtor.
@@ -61,7 +61,7 @@ public:
      */
     virtual bool ParseValue(const vislib::TString& v) override;
 
-	/**
+    /**
     * Returns the value of the parameter as string.
     *
     * @return The value of the parameter as string.
@@ -84,14 +84,14 @@ public:
     * @return The value of the parameter
     */
     inline const ColorParam::Type& ColorParam::Value(void) const {
-		return this->val;
-	}
+        return this->val;
+    }
 
-	/**
-	 * Returns a 32bit RGBA color.
-	 */
-	inline operator const float*(void) const { 
-		return this->val;
+    /**
+     * Returns a 32bit RGBA color.
+     */
+    inline operator const float*(void) const { 
+        return this->val;
     }
 
 private:
