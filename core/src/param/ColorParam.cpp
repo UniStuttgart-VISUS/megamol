@@ -23,11 +23,7 @@ ColorParam::~ColorParam(void) {}
 
 void ColorParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
-#if defined(UNICODE) || defined(_UNICODE)
-    memcpy(outDef.AsAt<char>(0), "MMCOLW", 6);
-#else  /* defined(UNICODE) || defined(_UNICODE) */
-    memcpy(outDef.AsAt<char>(0), "MMCOLA", 6);
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+    memcpy(outDef.AsAt<char>(0), "MMCOLO", 6);
 }
 
 bool ColorParam::ParseValue(vislib::TString const& v) {

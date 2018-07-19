@@ -63,11 +63,7 @@
         /// <summary>
         /// ColorParam
         /// </summary>
-        MMCOLW = 95869144943949,
-        /// <summary>
-        /// ColorParam
-        /// </summary>
-        MMCOLA = 71679889132877
+        MMCOLO = 95869144943949
     }
 
 }

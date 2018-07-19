@@ -404,7 +404,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     const param::IntParam            * p5 = dynamic_cast<const param::IntParam           *>(param);
     const param::FilePathParam       * p6 = dynamic_cast<const param::FilePathParam      *>(param);
     const param::FlexEnumParam       * p7 = dynamic_cast<const param::FlexEnumParam      *>(param);
-    const param::ColorParam * p8 = dynamic_cast<const param::ColorParam*>(param);
+    const param::ColorParam          * p8 = dynamic_cast<const param::ColorParam         *>(param);
     if (p1 != nullptr) { WriteParamInfo(file, p1); return; }
     if (p2 != nullptr) { WriteParamInfo(file, p2); return; }
     if (p3 != nullptr) { WriteParamInfo(file, p3); return; }

@@ -135,7 +135,7 @@ namespace job {
         void WriteParamInfo(std::ofstream& file, const param::FloatParam         * param) const;
         void WriteParamInfo(std::ofstream& file, const param::IntParam           * param) const;
         void WriteParamInfo(std::ofstream& file, const param::FilePathParam      * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::ColorParam* param) const;
+        void WriteParamInfo(std::ofstream& file, const param::ColorParam         * param) const;
 
         /** The file name to store the data in */
         param::ParamSlot fileNameSlot;
