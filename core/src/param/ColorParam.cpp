@@ -7,28 +7,21 @@
 
 #include "stdafx.h"
 #include "mmcore/param/ColorParam.h"
+
+#include "mmcore/utility/ColourParser.h"
+
 #include "vislib/StringConverter.h"
 
 
-megamol::core::param::ColorParam::ColorParam(vislib::StringA const& initVal) {
-}
+using namespace megamol::core::param;
 
-megamol::core::param::ColorParam::ColorParam(vislib::StringW const& initVal) {
+ColorParam::ColorParam(const Type& initVal) { std::memcpy(val, initVal, sizeof(Type)); }
 
-}
+ColorParam::ColorParam(const vislib::TString& initVal) { ParseValue(initVal); }
 
-megamol::core::param::ColorParam::ColorParam(char const* initVal) {
+ColorParam::~ColorParam(void) {}
 
-}
-
-megamol::core::param::ColorParam::ColorParam(wchar_t const* initVal) {
-}
-
-megamol::core::param::ColorParam::~ColorParam(void) {
-
-}
-
-void megamol::core::param::ColorParam::Definition(vislib::RawStorage& outDef) const {
+void ColorParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
 #if defined(UNICODE) || defined(_UNICODE)
     memcpy(outDef.AsAt<char>(0), "MMCOLW", 6);
@@ -37,43 +30,25 @@ void megamol::core::param::ColorParam::Definition(vislib::RawStorage& outDef) co
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 }
 
-bool megamol::core::param::ColorParam::ParseValue(vislib::TString const& v) {
+bool ColorParam::ParseValue(vislib::TString const& v) {
     try {
-        this->SetValue(v);
-        return true;
+        float vParsed[4];
+        if (core::utility::ColourParser::FromString(v, 4, vParsed)) {
+            this->SetValue(vParsed);
+            return true;
+        }
     } catch (...) {
     }
     return false;
 }
 
-void megamol::core::param::ColorParam::SetValue(vislib::StringA const& v, bool setDirty) {
-    if (this->val != v) {
-        this->val = v;
-        if (setDirty) this->setDirty();
-    }
+vislib::TString ColorParam::ValueString(void) const {
+    return core::utility::ColourParser::ToString(this->val[0], this->val[1], this->val[2], this->val[3]);
 }
 
-void megamol::core::param::ColorParam::SetValue(vislib::StringW const& v, bool setDirty) {
-    if (this->val != v) {
-        this->val = v;
+void ColorParam::SetValue(const Type& v, bool setDirty) {
+    if (std::memcmp(this->val, v, sizeof(Type))) {
+        std::memcpy(this->val, v, sizeof(Type));
         if (setDirty) this->setDirty();
     }
-}
-
-void megamol::core::param::ColorParam::SetValue(char const* v, bool setDirty) {
-    if (!this->val.Equals(A2T(v))) {
-        this->val = v;
-        if (setDirty) this->setDirty();
-    }
-}
-
-void megamol::core::param::ColorParam::SetValue(wchar_t const* v, bool setDirty) {
-    if (!this->val.Equals(W2T(v))) {
-        this->val = v;
-        if (setDirty) this->setDirty();
-    }
-}
-
-vislib::TString megamol::core::param::ColorParam::ValueString(void) const {
-    return this->val;
 }

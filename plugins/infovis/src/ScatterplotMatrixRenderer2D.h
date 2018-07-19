@@ -188,8 +188,6 @@ private:
 
     MouseState mouse;
 
-    float axisColor[4];
-
     std::vector<PlotInfo> plots;
 
     vislib::math::Rectangle<float> bounds;

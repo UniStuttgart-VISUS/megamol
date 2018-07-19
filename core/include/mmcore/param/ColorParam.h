@@ -15,40 +15,27 @@ namespace megamol {
 namespace core {
 namespace param {
 
+
 /**
  * class for transferfunction (1D) parameter objects
  */
 class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
-    /**
-     * Ctor.
-     *
-     * @param initVal The initial value
-     * @param visible If 'true' the parameter is visible in the gui.
-     */
-    ColorParam(const vislib::StringA& initVal);
+	typedef float Type[4];
 
-    /**
+	/**
      * Ctor.
      *
      * @param initVal The initial value
-     * @param visible If 'true' the parameter is visible in the gui.
      */
-    ColorParam(const vislib::StringW& initVal);
+    ColorParam(const vislib::TString& initVal);
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    ColorParam(const char *initVal);
-
-    /**
-     * Ctor.
-     *
-     * @param initVal The initial value
-     */
-    ColorParam(const wchar_t *initVal);
+    ColorParam(const Type& initVal);
 
     /**
      * Dtor.
@@ -74,56 +61,7 @@ public:
      */
     virtual bool ParseValue(const vislib::TString& v) override;
 
-    /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
-    void SetValue(const vislib::StringA& v, bool setDirty = true);
-
-    /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
-    void SetValue(const vislib::StringW& v, bool setDirty = true);
-
-    /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
-    void SetValue(const char *v, bool setDirty = true);
-
-    /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
-    void SetValue(const wchar_t *v, bool setDirty = true);
-
-    /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
-    inline const vislib::TString& Value(void) const {
-        return this->val;
-    }
-
-    /**
+	/**
     * Returns the value of the parameter as string.
     *
     * @return The value of the parameter as string.
@@ -131,16 +69,34 @@ public:
     virtual vislib::TString ValueString(void) const override;
 
     /**
+    * Sets the value of the parameter and optionally sets the dirty flag
+    * of the owning parameter slot.
+    *
+    * @param v the new value for the parameter
+    * @param setDirty If 'true' the dirty flag of the owning parameter
+    *                 slot is set and the update callback might be called.
+    */
+    void SetValue(const Type& v, bool setDirty = true);
+
+    /**
     * Gets the value of the parameter
     *
     * @return The value of the parameter
     */
-    inline operator const vislib::TString&(void) const {
-        return this->val;
+    inline const ColorParam::Type& ColorParam::Value(void) const {
+		return this->val;
+	}
+
+	/**
+	 * Returns a 32bit RGBA color.
+	 */
+	inline operator const float*(void) const { 
+		return this->val;
     }
+
 private:
     /** The value of the parameter */
-    vislib::TString val;
+    Type val;
 }; /* end class ColorParam */
 
 } /* end namespace param */
