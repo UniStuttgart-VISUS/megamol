@@ -104,6 +104,7 @@ private:
 
     /** The texture shader */
     vislib::graphics::gl::GLSLShader osprayShader;
+    float scale;
 
    // Interface dirty flag
     bool InterfaceIsDirty();

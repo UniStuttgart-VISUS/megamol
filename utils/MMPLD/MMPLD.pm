@@ -8,7 +8,7 @@ use Readonly;
 use POSIX;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT);
+our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT);
 
 Readonly my $NOTHINGGOES => 0;
 Readonly my $CANADDFRAME => 1;
@@ -19,6 +19,7 @@ Readonly my $CLOSED => 5;
 
 Readonly our $VERTEX_XYZ_FLOAT => 0;
 Readonly our $VERTEX_XYZR_FLOAT => 1;
+Readonly our $VERTEX_XYZ_DOUBLE => 2;
 
 Readonly our $COLOR_NONE => 0;
 Readonly our $COLOR_INTENSITY_FLOAT => 1;
@@ -167,6 +168,8 @@ sub StartList() {
         $self->AppendUBytes(1);
     } elsif ($vertextype == $VERTEX_XYZR_FLOAT) {
         $self->AppendUBytes(2);
+    } elsif ($vertextype == $VERTEX_XYZ_DOUBLE) {
+        $self->AppendUBytes(4);
     } else {
         die "illegal vertex type $vertextype";
     }
@@ -186,7 +189,7 @@ sub StartList() {
         die "illegal color type $colortype";
     }
     
-    if ($vertextype == $VERTEX_XYZ_FLOAT) {
+    if ($vertextype == $VERTEX_XYZ_FLOAT || $vertextype == $VERTEX_XYZ_DOUBLE) {
         if (!defined $globalradius ||  (0 + $globalradius) != $globalradius || $globalradius == 0) {
             die qq{global radius "$globalradius" is weird.};
         }
@@ -242,7 +245,11 @@ sub AddParticle {
     if (!defined $x || !defined $y || !defined $z) {
         die "need xyz coordinates in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}";
     }
-    $self->AppendFloats($x, $y, $z);
+    if ($self->{currvertextype} == $VERTEX_XYZ_DOUBLE) {
+        $self->AppendDoubles($x, $y, $z);
+    } else {
+        $self->AppendFloats($x, $y, $z);
+    }
     $self->_adjustBounds($x, $y, $z);
     if ($self->{currvertextype} == $VERTEX_XYZR_FLOAT) {
         if (!defined $rad) {

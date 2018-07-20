@@ -1,6 +1,6 @@
-#version 430
+#version 130
 
-layout(location=0) out vec4 outCol;
+//layout(location=0) out vec4 outCol;
 
 uniform sampler2D color;
 
@@ -13,6 +13,7 @@ void main() {
 
     gl_FragDepth = texture(depth, coord).r;
 
-    outCol = texture(color, coord);
+    gl_FragColor = texture(color, coord);
+    //outCol = texture(color, coord);
     //outCol = vec4(1.0);
 }

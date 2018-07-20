@@ -139,7 +139,7 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
     memcpy(dst, src, itemsThisTime * this->srcStride);
 
     glFlushMappedNamedBufferRange(this->theSSBO, 
-        this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);
+        dstOffset, itemsThisTime * this->dstStride);
     numItems = itemsThisTime;
 
     sync = currIdx;

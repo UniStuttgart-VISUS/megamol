@@ -150,7 +150,6 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
             scaling = 1.0f;
         }
         cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
-
     } else {
         cr->SetTimeFramesCount(1);
         cr->AccessBoundingBoxes().Clear();

@@ -123,13 +123,15 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     //        }
     //    }
     //}
+    outData = inData; // also transfers the unlocker to 'outData'
+        
     bool doX = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     bool doY = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     bool doZ = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     int samples = this->autocomputeSamplesSlot.Param<core::param::IntParam>()->Value();
 
-    float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
-    float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
+    float minX = std::numeric_limits<float>::max(), minY = std::numeric_limits<float>::max(), minZ = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest(), maxY = std::numeric_limits<float>::lowest(), maxZ = std::numeric_limits<float>::lowest();
     if (this->overrideBBoxSlot.Param<core::param::BoolParam>()->Value() && (doX || doY || doZ)) {
         size_t step;
 
@@ -137,6 +139,10 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
             if (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
                 || inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 posFromSomethingFunc getPoint;
+
+                float localMinX = std::numeric_limits<float>::max(), localMinY = std::numeric_limits<float>::max(), localMinZ = std::numeric_limits<float>::max();
+                float localMaxX = std::numeric_limits<float>::lowest(), localMaxY = std::numeric_limits<float>::lowest(), localMaxZ = std::numeric_limits<float>::lowest();
+
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                     case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         getPoint = posFromXYZ;
@@ -175,7 +181,27 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                     if (sp.GetZ() > maxZ) {
                         maxZ = sp.GetZ();
                     }
+                    // local bbox
+                    if (sp.GetX() < localMinX) {
+                        localMinX = sp.GetX();
+                    }
+                    if (sp.GetX() > localMaxX) {
+                        localMaxX = sp.GetX();
+                    }
+                    if (sp.GetY() < localMinY) {
+                        localMinY = sp.GetY();
+                    }
+                    if (sp.GetY() > localMaxY) {
+                        localMaxY = sp.GetY();
+                    }
+                    if (sp.GetZ() < localMinZ) {
+                        localMinZ = sp.GetZ();
+                    }
+                    if (sp.GetZ() > localMaxZ) {
+                        localMaxZ = sp.GetZ();
+                    }
                 }
+                outData.AccessParticles(l).SetBBox(vislib::math::Cuboid<float>(localMinX, localMinY, localMinZ, localMaxX, localMaxY, localMaxZ));
             } else {
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                     case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
@@ -190,7 +216,6 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         }
     }
 
-    outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 

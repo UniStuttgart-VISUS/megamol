@@ -166,6 +166,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
             code = "";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+            vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
             ret = false;
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
@@ -230,6 +231,20 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         declaration = "    float posX; float posY; float posZ;\n";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        } else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
@@ -447,6 +462,11 @@ void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLui
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
             glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
             break;
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+            glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), vertPtr);
+            break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             glEnableClientState(GL_VERTEX_ARRAY);
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
@@ -493,6 +513,9 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
             break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
             vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            vertBytes = vislib::math::Max(vertBytes, 3 * 8U);
             break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
@@ -550,6 +573,8 @@ bool NGSphereRenderer::Render(Call& call) {
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
+    GLfloat lpos[4];
+    glGetLightfv(GL_LIGHT0, GL_POSITION, lpos);
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
@@ -590,6 +615,7 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform4fv(newShader->ParameterLocation("lpos"), 1, lpos);
         glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
@@ -627,6 +653,7 @@ bool NGSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
                 glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -658,10 +685,11 @@ bool NGSphereRenderer::Render(Call& call) {
                 streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                 //streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                 //    numItems, sync, dstOff, dstLen);
+                vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
                     this->streamer.GetHandle(), dstOff, dstLen);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
                 streamer.SignalCompletion(sync);
             }
@@ -677,16 +705,17 @@ bool NGSphereRenderer::Render(Call& call) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colStreamer.GetHandle());
 
             for (GLuint x = 0; x < numChunks; ++x) {
-                GLuint numItems, sync, sync2;
+                GLuint numItems, numItems2, sync, sync2;
                 GLsizeiptr dstOff, dstLen, dstOff2, dstLen2;
                 streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
-                colStreamer.UploadChunk(x, numItems, sync2, dstOff2, dstLen2);
+                colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
+                ASSERT(numItems == numItems2);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
                     this->streamer.GetHandle(), dstOff, dstLen);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint,
                     this->colStreamer.GetHandle(), dstOff2, dstLen2);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
                 streamer.SignalCompletion(sync);
                 streamer.SignalCompletion(sync2);
