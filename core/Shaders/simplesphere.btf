@@ -117,7 +117,7 @@ void main(void) {
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
-    camUp = cross(camIn, camRight);
+    camUp = normalize(cross(camIn, camRight));
 #endif // CALC_CAM_SYS
 
     vec4 mins, maxs;
@@ -158,14 +158,16 @@ void main(void) {
 
     vec4 left, right, top, bottom, front;
 
-    vec4 oP = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1, 1.0);
+    //vec4 oP = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1, 1.0);
     right = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1 + cpm1, 1.0);
     top = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj2 + cpm2, 1.0);
-    left = - (right - oP) + oP;
-    bottom = - (top - oP) + oP;
+    // TODO apparently, this is just wishful thinking. not sure why.
+    //left = - (right - oP) + oP;
+    //bottom = - (top - oP) + oP;
+    left = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj1 - cpm1, 1.0);
+    bottom = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + cpj2 - cpm2, 1.0);
 
     front = gl_ModelViewProjectionMatrix * vec4(objPos.xyz + normalize(camPos.xyz) * rad, 1.0);
-
 ]]>
         </snippet>
         <snippet name="Output" type="string">
@@ -174,9 +176,9 @@ void main(void) {
     vec2 screen = vec2(right.x / right.w - left.x / left.w, top.y / top.w - bottom.y / bottom.w) * 0.5 * winHalf;
     gl_PointSize = max(screen.x, screen.y) + 0.5;
     
-    vec3 mid = vec3(right.x / right.w + left.x / left.w, top.y / top.w + bottom.y / bottom.w, oP.w);
-    mid.xy *= 0.5 * oP.w;
-    gl_Position = vec4(mid.xy, (front.z / front.w) * oP.w , (od > clipDat.w) ? 0.0 : oP.w);
+    vec2 mid = vec2(right.x / right.w + left.x / left.w, top.y / top.w + bottom.y / bottom.w);
+    mid.xy *= 0.5;
+    gl_Position = vec4(mid.xy, (front.z / front.w), (od > clipDat.w) ? 0.0 : 1.0);
 
 #ifdef DEFERRED_SHADING
     pointSize = gl_PointSize;
