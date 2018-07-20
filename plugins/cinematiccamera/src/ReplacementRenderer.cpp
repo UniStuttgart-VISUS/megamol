@@ -1,6 +1,8 @@
 /*
  * ReplacementRenderer.cpp
  *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -34,6 +36,7 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     alphaParam(                     "04_alpha", "The alpha value of the replacement rendering.")
     {
 
+    // init variables
     this->alpha = 0.75f;
     this->toggleReplacementRendering = false;
     this->bbox.SetNull();
@@ -51,15 +54,13 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     this->MakeSlotAvailable(&this->alphaParam);
 
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(keyAssignment::KEY_ASSIGN_NONE));
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_NONE, "Choose button key assignment once.");
+    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_NONE, "Choose key assignment for button.");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_O, "o");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_P, "p");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_J, "j");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_K, "k");
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_B, "b");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_X, "x");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_Y, "y");
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_Z, "z");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
 
@@ -168,10 +169,8 @@ bool ReplacementRenderer::Render(Call& call) {
             case(keyAssignment::KEY_ASSIGN_P): newKeyWord = 'p'; break;
             case(keyAssignment::KEY_ASSIGN_J): newKeyWord = 'j'; break;
             case(keyAssignment::KEY_ASSIGN_K): newKeyWord = 'k'; break;
-            case(keyAssignment::KEY_ASSIGN_B): newKeyWord = 'b'; break;
             case(keyAssignment::KEY_ASSIGN_X): newKeyWord = 'x'; break;
             case(keyAssignment::KEY_ASSIGN_Y): newKeyWord = 'y'; break;
-            case(keyAssignment::KEY_ASSIGN_Z): newKeyWord = 'z'; break;
             default: break;
         }
 
@@ -180,26 +179,17 @@ bool ReplacementRenderer::Render(Call& call) {
         this->MakeSlotAvailable(&this->toggleReplacementRenderingParam);
         // Remove Enum param ...
         this->replacementKeyParam.ResetDirty();
-        this->replacementKeyParam.MakeUnavailable();
+        this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->replacementKeyParam));
     }
 
     // Render ...
     if (this->toggleReplacementRendering) {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
         glDisable(GL_LIGHTING);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_TEXTURE_1D);
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_POLYGON_SMOOTH);
-
-        glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
-
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         // Draw bounding box
         glEnable(GL_CULL_FACE);

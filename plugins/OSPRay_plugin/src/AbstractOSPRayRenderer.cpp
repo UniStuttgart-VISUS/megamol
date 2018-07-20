@@ -1,25 +1,26 @@
 /*
-* OSPRayRenderer.cpp
-* Copyright (C) 2009-2015 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * AbstractOSPRayRenderer.cpp
+ * Copyright (C) 2009-2015 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
-#include "vislib/sys/Path.h"
-#include "vislib/sys/Log.h"
 #include "AbstractOSPRayRenderer.h"
-#include "ospray/ospray.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
-
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "ospray/ospray.h"
+#include "ospcommon/box.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 
 
 #include <stdio.h>
@@ -27,23 +28,35 @@
 
 using namespace megamol::ospray;
 
+void ospErrorCallback(OSPError err, const char* details) {
+    vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+}
+
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     core::view::Renderer3DModule(),
     extraSamles("extraSamples", "Extra sampling when camera is not moved"),
     // general renderer parameters
-    rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections"),
-    rd_spp("SamplesPerPixel", "Samples per pixel"),
-    rd_maxRecursion("maxRecursion", "Maximum ray recursion depth"),
-    rd_type("Type", "Select between SciVis and PathTracer"),
-    shadows("SciVis::Shadows", "Enables/Disables computation of hard shadows (scivis)"),
+    rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
+    , rd_spp("SamplesPerPixel", "Samples per pixel")
+    , rd_maxRecursion("maxRecursion", "Maximum ray recursion depth")
+    , rd_type("Type", "Select between SciVis and PathTracer")
+    , shadows("SciVis::Shadows", "Enables/Disables computation of hard shadows (scivis)")
+    ,
     // scivis renderer parameters
-    AOtransparencyEnabled("SciVis::AOtransparencyEnabled", "Enables or disables AO transparency"),
-    AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion"),
-    AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion"),
+    AOtransparencyEnabled("SciVis::AOtransparencyEnabled", "Enables or disables AO transparency")
+    , AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion")
+    , AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion")
+    ,
     // pathtracer renderer parameters
-    rd_ptBackground("PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity"),
-    // Call lights 
-    getLightSlot("getLight", "Connects to a light source") {
+    rd_ptBackground(
+        "PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity")
+    ,
+    // Call lights
+    getLightSlot("getLight", "Connects to a light source")
+    ,
+    // Use depth buffer component
+    useDB("useDBcomponent", "activates depth composition with OpenGL content")
+    , deviceTypeSlot("device", "Set the type of the OSPRay device") {
 
     // ospray lights
     lightsToRender = NULL;
@@ -52,11 +65,12 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     // ospray device and framebuffer
     device = NULL;
     framebufferIsDirty = true;
+    maxDepthTexture = NULL;
 
-
-    core::param::EnumParam *rdt = new core::param::EnumParam(SCIVIS);
+    core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
     rdt->SetTypePair(SCIVIS, "SciVis");
     rdt->SetTypePair(PATHTRACER, "PathTracer");
+    rdt->SetTypePair(MPI_RAYCAST, "MPI_Raycast");
 
     // Ambient parameters
     this->AOtransparencyEnabled << new core::param::BoolParam(false);
@@ -67,7 +81,6 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     this->MakeSlotAvailable(&this->AOsamples);
     this->MakeSlotAvailable(&this->AOdistance);
     this->MakeSlotAvailable(&this->extraSamles);
-
 
 
     // General Renderer
@@ -82,42 +95,120 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
     this->shadows << new core::param::BoolParam(0);
     this->MakeSlotAvailable(&this->shadows);
 
-    //PathTracer
+    this->rd_type.ForceSetDirty(); //< TODO HAZARD Dirty hack
+
+    // PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
 
+    // Depth
+    this->useDB << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useDB);
+
+    // Device
+    auto deviceEp = new megamol::core::param::EnumParam(deviceType::DEFAULT);
+    deviceEp->SetTypePair(deviceType::DEFAULT, "default");
+    deviceEp->SetTypePair(deviceType::MPI_DISTRIBUTED, "mpi_distributed");
+    this->deviceTypeSlot << deviceEp;
+    this->MakeSlotAvailable(&this->deviceTypeSlot);
 }
 
-void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height) {
+void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
+    const float* db, int& width, int& height, megamol::core::view::CallRender3D& cr) {
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+    auto fbo = cr.FrameBufferObject();
+    if (fbo != NULL) {
 
-    glUniform1i(shader.ParameterLocation("tex"), 0);
-    glBindVertexArray(this->vaScreen);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        if (fbo->IsValid()) {
+            if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
+                fbo->Release();
+            }
+        }
+        if (!fbo->IsValid()) {
+            fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+        }
+        if (fbo->IsValid() && !fbo->IsEnabled()) {
+            fbo->Enable();
+        }
+
+        fbo->BindColourTexture();
+        glClear(GL_COLOR_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        fbo->BindDepthTexture();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        if (fbo->IsValid()) {
+            fbo->Disable();
+            // fbo->DrawColourTexture();
+            // fbo->DrawDepthTexture();
+        }
+    } else {
+        /*
+        if (this->new_fbo.IsValid()) {
+            if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
+                this->new_fbo.Release();
+            }
+        }
+        if (!this->new_fbo.IsValid()) {
+            this->new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+        }
+        if (this->new_fbo.IsValid() && !this->new_fbo.IsEnabled()) {
+            this->new_fbo.Enable();
+        }
+
+        this->new_fbo.BindColourTexture();
+        glClear(GL_COLOR_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        this->new_fbo.BindDepthTexture();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+
+        glBlitNamedFramebuffer(this->new_fbo.GetID(), 0, 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT |
+        GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+        this->new_fbo.Disable();
+        */
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glEnable(GL_DEPTH_TEST);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glUniform1i(shader.ParameterLocation("tex"), 0);
+
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glUniform1i(shader.ParameterLocation("depth"), 1);
+
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glDisable(GL_DEPTH_TEST);
+    }
 }
+
 
 void AbstractOSPRayRenderer::setupTextureScreen() {
-
-    // setup vertexarray
-    float screenVertices[] = { 0.0f,0.0f, 1.0f,0.0f, 0.0f,1.0f, 1.0f,1.0f };
-
-    glGenVertexArrays(1, &this->vaScreen);
-    glGenBuffers(1, &this->vbo);
-
-    glBindVertexArray(this->vaScreen);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    glEnableVertexAttribArray(0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // setup texture
+    // setup color texture
     glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
@@ -125,28 +216,49 @@ void AbstractOSPRayRenderer::setupTextureScreen() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    //// setup depth texture
+    glGenTextures(1, &this->depth);
+    glBindTexture(GL_TEXTURE_2D, this->depth);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
 
 void AbstractOSPRayRenderer::releaseTextureScreen() {
     glDeleteTextures(1, &this->tex);
-    glDeleteBuffers(1, &this->vbo);
-    glDeleteVertexArrays(1, &vaScreen);
+    glDeleteTextures(1, &this->depth);
 }
 
-void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
-    if (dvce == NULL) {
-        dvce = ospNewDevice("default");
+void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
+    if (dvce == nullptr) {
+        ospLoadModule("ispc");
+        switch (this->deviceTypeSlot.Param<megamol::core::param::EnumParam>()->Value()) {
+        case deviceType::MPI_DISTRIBUTED: {
+            ospLoadModule("mpi");
+            dvce = ospNewDevice("mpi_distributed");
+            ospDeviceSet1i(dvce, "masterRank", 0);
+        } break;
+        default: {
+            dvce = ospNewDevice("default");
+            ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+        }
+        }
+        ospDeviceSetErrorFunc(dvce, ospErrorCallback);
         ospDeviceCommit(dvce);
+        ospSetCurrentDevice(dvce);
     }
-    ospSetCurrentDevice(dvce);
+    //this->deviceTypeSlot.MakeUnavailable(); //< TODO: Make sure you can set a device only once
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, const char * renderer_name) {
+void AbstractOSPRayRenderer::setupOSPRay(
+    OSPRenderer& renderer, OSPCamera& camera, OSPModel& world, const char* renderer_name) {
     // create and setup renderer
     renderer = ospNewRenderer(renderer_name);
     camera = ospNewCamera("perspective");
@@ -162,12 +274,10 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 
     vislib::TString ext = vislib::TString("");
     size_t pos = fileName.FindLast('.');
-    if (pos != std::string::npos)
-        ext = fileName.Substring(pos + 1);
+    if (pos != std::string::npos) ext = fileName.Substring(pos + 1);
 
-    FILE *file = fopen(vislib::StringA(fileName).PeekBuffer(), "rb");
-    if (!file)
-        throw std::runtime_error("Could not read file");
+    FILE* file = fopen(vislib::StringA(fileName).PeekBuffer(), "rb");
+    if (!file) throw std::runtime_error("Could not read file");
 
 
     if (ext == vislib::TString("ppm")) {
@@ -180,8 +290,7 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
             // read format specifier:
             int format = 0;
             rc = fscanf(file, "P%i\n", &format);
-            if (format != 6)
-                throw std::runtime_error("Wrong PPM format.");
+            if (format != 6) throw std::runtime_error("Wrong PPM format.");
 
             // skip all comment lines
             peekchar = getc(file);
@@ -189,13 +298,13 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
                 auto tmp = fgets(lineBuf, LINESZ, file);
                 (void)tmp;
                 peekchar = getc(file);
-            } ungetc(peekchar, file);
+            }
+            ungetc(peekchar, file);
 
             // read width and height from first non-comment line
             int width = -1, height = -1;
             rc = fscanf(file, "%i %i\n", &width, &height);
-            if (rc != 2)
-                throw std::runtime_error("Could not read PPM width and height.");
+            if (rc != 2) throw std::runtime_error("Could not read PPM width and height.");
 
             // skip all comment lines
             peekchar = getc(file);
@@ -203,7 +312,8 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
                 auto tmp = fgets(lineBuf, LINESZ, file);
                 (void)tmp;
                 peekchar = getc(file);
-            } ungetc(peekchar, file);
+            }
+            ungetc(peekchar, file);
 
             // read maxval
             int maxVal = -1;
@@ -212,17 +322,16 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 
             unsigned char* data;
             data = new unsigned char[width * height * 3];
-            rc = fread(data, width*height * 3, 1, file);
+            rc = fread(data, width * height * 3, 1, file);
             // flip in y, because OSPRay's textures have the origin at the lower left corner
-            unsigned char *texels = (unsigned char *)data;
+            unsigned char* texels = (unsigned char*)data;
             for (int y = 0; y < height / 2; y++)
                 for (int x = 0; x < width * 3; x++)
-                    std::swap(texels[y*width * 3 + x], texels[(height - 1 - y)*width * 3 + x]);
+                    std::swap(texels[y * width * 3 + x], texels[(height - 1 - y) * width * 3 + x]);
 
-            OSPTexture2D ret_tex = ospNewTexture2D({ width, height }, OSP_TEXTURE_RGB8, texels);
+            OSPTexture2D ret_tex = ospNewTexture2D({width, height}, OSP_TEXTURE_RGB8, texels);
             return ret_tex;
-        }
-        catch (std::runtime_error e) {
+        } catch (std::runtime_error e) {
             std::cerr << e.what() << std::endl;
         }
 
@@ -236,9 +345,8 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
             // read format specifier:
             // PF: color floating point image
             // Pf: grayscae floating point image
-            char format[2] = { 0 };
-            if (fscanf(file, "%c%c\n", &format[0], &format[1]) != 2)
-                throw std::runtime_error("could not fscanf");
+            char format[2] = {0};
+            if (fscanf(file, "%c%c\n", &format[0], &format[1]) != 2) throw std::runtime_error("could not fscanf");
 
             if (format[0] != 'P' || (format[1] != 'F' && format[1] != 'f')) {
                 throw std::runtime_error("Invalid pfm texture file, header is not PF or Pf");
@@ -278,12 +386,13 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
                 throw std::runtime_error("could not fread");
             }
             // flip in y, because OSPRay's textures have the origin at the lower left corner
-            float *texels = (float *)data;
+            float* texels = (float*)data;
             for (int y = 0; y < height / 2; ++y) {
                 for (int x = 0; x < width * numChannels; ++x) {
                     // Scale the pixels by the scale factor
                     texels[y * width * numChannels + x] = texels[y * width * numChannels + x] * scaleFactor;
-                    texels[(height - 1 - y) * width * numChannels + x] = texels[(height - 1 - y) * width * numChannels + x] * scaleFactor;
+                    texels[(height - 1 - y) * width * numChannels + x] =
+                        texels[(height - 1 - y) * width * numChannels + x] * scaleFactor;
                     std::swap(texels[y * width * numChannels + x], texels[(height - 1 - y) * width * numChannels + x]);
                 }
             }
@@ -293,10 +402,9 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
             if (numChannels == 3) type = OSP_TEXTURE_RGB32F;
             if (numChannels == 4) type = OSP_TEXTURE_RGBA32F;
 
-            OSPTexture2D ret_tex = ospNewTexture2D({ width, height }, type, texels);
+            OSPTexture2D ret_tex = ospNewTexture2D({width, height}, type, texels);
             return ret_tex;
-        }
-        catch (std::runtime_error e) {
+        } catch (std::runtime_error e) {
             std::cerr << e.what() << std::endl;
         }
     } else {
@@ -305,17 +413,10 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 }
 
 bool AbstractOSPRayRenderer::AbstractIsDirty() {
-    if (this->AOsamples.IsDirty() ||
-        this->AOtransparencyEnabled.IsDirty() ||
-        this->AOdistance.IsDirty() ||
-        this->extraSamles.IsDirty() ||
-        this->shadows.IsDirty() ||
-        this->rd_type.IsDirty() ||
-        this->rd_epsilon.IsDirty() ||
-        this->rd_spp.IsDirty() ||
-        this->rd_maxRecursion.IsDirty() ||
-        this->rd_ptBackground.IsDirty() ||
-        this->framebufferIsDirty) {
+    if (this->AOsamples.IsDirty() || this->AOtransparencyEnabled.IsDirty() || this->AOdistance.IsDirty() ||
+        this->extraSamles.IsDirty() || this->shadows.IsDirty() || this->rd_type.IsDirty() ||
+        this->rd_epsilon.IsDirty() || this->rd_spp.IsDirty() || this->rd_maxRecursion.IsDirty() ||
+        this->rd_ptBackground.IsDirty() || this->useDB.IsDirty() || this->framebufferIsDirty) {
         return true;
     } else {
         return false;
@@ -333,19 +434,20 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
     this->rd_ptBackground.ResetDirty();
+    this->useDB.ResetDirty();
     this->framebufferIsDirty = false;
 }
 
 
-void AbstractOSPRayRenderer::fillLightArray(float * eyeDir) {
+void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
 
     // create custom ospray light
     OSPLight light;
 
     this->lightArray.clear();
 
-    for (auto const &entry : this->lightMap) {
-        auto const &lc = entry.second;
+    for (auto const& entry : this->lightMap) {
+        auto const& lc = entry.second;
 
         switch (lc.lightType) {
         case ospray::lightenum::NONE:
@@ -402,74 +504,91 @@ void AbstractOSPRayRenderer::fillLightArray(float * eyeDir) {
 }
 
 
-void AbstractOSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
+void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
     // general renderer settings
     ospSet1f(renderer, "epsilon", this->rd_epsilon.Param<core::param::FloatParam>()->Value());
     ospSet1i(renderer, "spp", this->rd_spp.Param<core::param::IntParam>()->Value());
     ospSet1i(renderer, "maxDepth", this->rd_maxRecursion.Param<core::param::IntParam>()->Value());
+    ospSetObject(renderer, "maxDepthTexture", this->maxDepthTexture);
 
     switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
     case SCIVIS:
         // scivis renderer settings
-        ospSet1f(renderer, "aoTransparencyEnabled", this->AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
+        ospSet1f(
+            renderer, "aoTransparencyEnabled", this->AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
         ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
         ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
         ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
+        ospSet1i(renderer, "backgroundEnabled", 0);
+        /* Not implemented
         GLfloat bgcolor[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
         ospSet3fv(renderer, "bgColor", bgcolor);
-        /* Not implemented
         ospSet1i(renderer, "oneSidedLighting", 0);
-        ospSet1i(renderer, "backgroundEnabled", 0);
         */
         break;
     case PATHTRACER:
         if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
-            OSPTexture2D bkgnd_tex = this->TextureFromFile(this->rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+            OSPTexture2D bkgnd_tex =
+                this->TextureFromFile(this->rd_ptBackground.Param<core::param::FilePathParam>()->Value());
             ospSetObject(renderer, "backplate", bkgnd_tex);
+        } else {
+            ospSet1i(renderer, "backgroundEnabled", 0);
         }
         break;
     }
-
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr) {
+void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr, float scaling) {
 
 
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / 
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / 
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() /
+                  static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() /
+                  static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
-    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) / 
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) / 
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) /
+                static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
+    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) /
+                static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
 
     // setup camera
-    ospSet2fv(camera, "image_start", imgStart.data());
-    ospSet2fv(camera, "image_end", imgEnd.data());
-    ospSetf(camera, "aspect", static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
-    //ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
-    ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
+    ospSet2fv(camera, "imageStart", imgStart.data());
+    ospSet2fv(camera, "imageEnd", imgEnd.data());
+    ospSetf(camera, "aspect",
+        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
+            static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
+    // ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
+
+    // undo scaling
+    auto bc = cr->AccessBoundingBoxes().ObjectSpaceBBox().CalcCenter();
+    auto mmpos = cr->GetCameraParameters()->EyePosition().PeekCoordinates();
+    std::vector<float> ospPos = {
+        mmpos[0] / scaling,   //+bc.GetX() / scaling,
+        mmpos[1] / scaling,   //+bc.GetY() / scaling,
+        mmpos[2] / scaling }; //+bc.GetZ() / scaling
+
+
+    ospSet3fv(camera, "pos", ospPos.data());
+
+    //ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
 
-    //ospSet1i(camera, "architectural", 1);
-    //ospSet1f(camera, "nearClip", cr->GetCameraParameters()->NearClip());
-    //ospSet1f(camera, "farClip", cr->GetCameraParameters()->FarClip());
-    //ospSet1f(camera, "apertureRadius", cr->GetCameraParameters()->ApertureAngle);
-    //ospSet1f(camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
-
+    // ospSet1i(camera, "architectural", 1);
+    // ospSet1f(camera, "nearClip", cr->GetCameraParameters()->NearClip());
+    // ospSet1f(camera, "farClip", cr->GetCameraParameters()->FarClip());
+    // ospSet1f(camera, "apertureRadius", cr->GetCameraParameters()->ApertureAngle);
+    // ospSet1f(camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
 }
 
-OSPFrameBuffer AbstractOSPRayRenderer::newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format, const uint32_t frameBufferChannels) {
+OSPFrameBuffer AbstractOSPRayRenderer::newFrameBuffer(
+    osp::vec2i& imgSize, const OSPFrameBufferFormat format, const uint32_t frameBufferChannels) {
     OSPFrameBuffer frmbuff = ospNewFrameBuffer(imgSize, format, frameBufferChannels);
     this->framebufferIsDirty = true;
     return frmbuff;
@@ -482,14 +601,14 @@ AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {
 }
 
 // helper function to write the rendered image as PPM file
-void AbstractOSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel) {
-    //std::ofstream file;
-    //file << "P6\n" << size.x << " " << size.y << "\n255\n";
-    FILE *file = fopen(fileName, "wb");
+void AbstractOSPRayRenderer::writePPM(const char* fileName, const osp::vec2i& size, const uint32_t* pixel) {
+    // std::ofstream file;
+    // file << "P6\n" << size.x << " " << size.y << "\n255\n";
+    FILE* file = fopen(fileName, "wb");
     fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
-    unsigned char *out = (unsigned char *)alloca(3 * size.x);
+    unsigned char* out = (unsigned char*)alloca(3 * size.x);
     for (int y = 0; y < size.y; y++) {
-        const unsigned char *in = (const unsigned char *)&pixel[(size.y - 1 - y)*size.x];
+        const unsigned char* in = (const unsigned char*)&pixel[(size.y - 1 - y) * size.x];
         for (int x = 0; x < size.x; x++) {
             out[3 * x + 0] = in[4 * x + 0];
             out[3 * x + 1] = in[4 * x + 1];
@@ -505,7 +624,7 @@ void AbstractOSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &si
 void AbstractOSPRayRenderer::changeMaterial() {
 
     for (auto entry : this->structureMap) {
-        auto const &element = entry.second;
+        auto const& element = entry.second;
 
         // custom material settings
         OSPMaterial material;
@@ -530,8 +649,10 @@ void AbstractOSPRayRenderer::changeMaterial() {
                 material = ospNewMaterial(renderer, "Glass");
                 ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
                 ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
-                ospSet3fv(material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
-                ospSet3fv(material, "attenuationColorOutside", element.materialContainer->glassAttenuationColorOutside.data());
+                ospSet3fv(
+                    material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
+                ospSet3fv(material, "attenuationColorOutside",
+                    element.materialContainer->glassAttenuationColorOutside.data());
                 ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
                 break;
             case MATTE:
@@ -568,9 +689,11 @@ void AbstractOSPRayRenderer::changeMaterial() {
             case VELVET:
                 material = ospNewMaterial(renderer, "Velvet");
                 ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
-                ospSet3fv(material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
+                ospSet3fv(
+                    material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
                 ospSet1f(material, "backScattering", element.materialContainer->velvetBackScattering);
-                ospSet1f(material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
+                ospSet1f(
+                    material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
                 break;
             }
             ospCommit(material);
@@ -580,7 +703,6 @@ void AbstractOSPRayRenderer::changeMaterial() {
             ospSetMaterial(geo.back(), material);
         }
         ospCommit(geo.back());
-
     }
 }
 
@@ -601,17 +723,22 @@ bool AbstractOSPRayRenderer::fillWorld() {
         }
         this->vol.clear();
     }
-    //ospRelease(this->world);
+    // ospRelease(this->world);
 
+
+    ospcommon::box3f worldBounds;
+    std::vector<ospcommon::box3f> ghostRegions;
+    std::vector<ospcommon::box3f> regions;
 
     for (auto entry : this->structureMap) {
 
-        auto const &element = entry.second;
+        numCreateGeo = 1;
+        auto const& element = entry.second;
 
         // custom material settings
         OSPMaterial material;
         material = NULL;
-        if (element.materialContainer != NULL) {
+        if (element.materialContainer != NULL && this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
                 material = ospNewMaterial(renderer, "OBJMaterial");
@@ -631,8 +758,10 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 material = ospNewMaterial(renderer, "Glass");
                 ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
                 ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
-                ospSet3fv(material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
-                ospSet3fv(material, "attenuationColorOutside", element.materialContainer->glassAttenuationColorOutside.data());
+                ospSet3fv(
+                    material, "attenuationColorInside", element.materialContainer->glassAttenuationColorInside.data());
+                ospSet3fv(material, "attenuationColorOutside",
+                    element.materialContainer->glassAttenuationColorOutside.data());
                 ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
                 break;
             case MATTE:
@@ -669,61 +798,130 @@ bool AbstractOSPRayRenderer::fillWorld() {
             case VELVET:
                 material = ospNewMaterial(renderer, "Velvet");
                 ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
-                ospSet3fv(material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
+                ospSet3fv(
+                    material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
                 ospSet1f(material, "backScattering", element.materialContainer->velvetBackScattering);
-                ospSet1f(material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
+                ospSet1f(
+                    material, "horizonScatteringFallOff", element.materialContainer->velvetHorizonScatteringFallOff);
                 break;
             }
             ospCommit(material);
         }
 
         OSPData vertexData = NULL;
-        OSPData colorData  = NULL;
+        OSPData colorData = NULL;
         OSPData normalData = NULL;
-        OSPData texData    = NULL;
-        OSPData indexData  = NULL;
-        OSPData voxels     = NULL;
-        OSPData isovalues  = NULL;
-        OSPData planes     = NULL;
-        //OSPPlane pln       = NULL; //TEMPORARILY DISABLED
+        OSPData texData = NULL;
+        OSPData indexData = NULL;
+        OSPData voxels = NULL;
+        OSPData isovalues = NULL;
+        OSPData planes = NULL;
+        OSPData xData = NULL;
+        OSPData yData = NULL;
+        OSPData zData = NULL;
+        OSPData bboxData = nullptr;
+        OSPError error;
+
+        // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
+            case geometryTypeEnum::OSPRAY_API_GEOMETRY:
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
+            case geometryTypeEnum::PKD: {
+                if (element.raw == NULL) {
+                    returnValue = false;
+                    break;
+                }
+
+                error = ospLoadModule("pkd");
+                if (error != OSPError::OSP_NO_ERROR) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
+                }
+
+                geo.push_back(ospNewGeometry("pkd_geometry"));
+
+                vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                ospCommit(vertexData);
+
+                // set bbox
+                bboxData = ospNewData(
+                    6, OSP_FLOAT, element.boundingBox->ObjectSpaceBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(bboxData);
+
+                ospSet1f(geo.back(), "radius", element.globalRadius);
+                ospSet1i(geo.back(), "colorType", element.colorType);
+                ospSetData(geo.back(), "position", vertexData);
+                ospSetData(geo.back(), "bbox", bboxData);
+
+                if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
+                    auto const half_radius = element.globalRadius*0.5f;
+
+                    auto const bbox = element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
+                    ospcommon::vec3f lower{bbox[0]-half_radius, bbox[1]-half_radius, bbox[2]-half_radius}; //< TODO The bbox needs to include complete sphere bound
+                    ospcommon::vec3f upper{bbox[3]+half_radius, bbox[4]+half_radius, bbox[5]+half_radius};
+                    //ghostRegions.emplace_back(lower, upper);
+                    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
+                    regions.emplace_back(lower, upper);
+                }
+            }
+
+            break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     returnValue = false;
                     break;
                 }
-                geo.push_back(ospNewGeometry("spheres"));
 
-                vertexData = ospNewData(element.partCount * element.vertexLength, OSP_FLOAT, element.vertexData->data(), OSP_DATA_SHARED_BUFFER);
+                numCreateGeo = element.partCount * element.vertexLength * sizeof(float) / ispcLimit + 1;
 
-                ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
+                for (unsigned int i = 0; i < numCreateGeo; i++) {
+                    geo.push_back(ospNewGeometry("spheres"));
 
-                if (element.vertexLength > 3) {
-                    //ospRemoveParam(geo.back(), "radius");
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                    // TODO: HACK
-                    ospSet1f(geo.back(), "radius", 1);
-                } else {
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                    long long int vertexFloatsToRead = element.partCount * element.vertexLength / numCreateGeo;
+                    vertexFloatsToRead -= vertexFloatsToRead % element.vertexLength;
+                    if (vertexData != NULL) ospRelease(vertexData);
+                    vertexData = ospNewData(vertexFloatsToRead, OSP_FLOAT,
+                        &element.vertexData->operator[](i* vertexFloatsToRead), OSP_DATA_SHARED_BUFFER);
+
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
+
+                    if (element.vertexLength > 3) {
+                        // ospRemoveParam(geo.back(), "radius");
+                        ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                        // TODO: HACK
+                        ospSet1f(geo.back(), "radius", 1);
+                    } else {
+                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                    }
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "spheres", vertexData);
+
+                    if (element.colorLength == 4) {
+                        long long int colorFloatsToRead = element.partCount * element.colorLength / numCreateGeo;
+                        colorFloatsToRead -= colorFloatsToRead % element.colorLength;
+                        if (colorData != NULL) ospRelease(colorData);
+                        colorData = ospNewData(colorFloatsToRead, OSP_FLOAT,
+                            &element.colorData->operator[](i* colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
+                        ospCommit(colorData);
+                        ospSetData(geo.back(), "color", colorData);
+                        //ospSet1i(geo.back(), "color_components", 4);
+                        ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                        //ospSet1i(geo.back(), "color_offset", 0);
+                        //ospSet1i(geo.back(), "color_stride", 4 * sizeof(float));
+                    }
                 }
-                ospCommit(vertexData);
-                ospSetData(geo.back(), "spheres", vertexData);
-
-                if (element.colorLength == 4) {
-                    colorData = ospNewData(element.partCount * element.colorLength, OSP_FLOAT, element.colorData->data(), OSP_DATA_SHARED_BUFFER);
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
                 // clipPlane setup
                 /* TEMPORARILY DISABLED
-                if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) { return i == 0; })) {
-                pln = ospNewPlane("clipPlane");
-                ospSet1f(pln, "dist", element.clipPlaneData->data()[3]);
+                if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) { return
+                i == 0; })) { pln = ospNewPlane("clipPlane"); ospSet1f(pln, "dist", element.clipPlaneData->data()[3]);
                 ospSet3fv(pln, "normal", element.clipPlaneData->data());
                 ospSet4fv(pln, "color", element.clipPlaneColor->data());
                 ospCommit(pln);
@@ -740,26 +938,80 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     break;
                 }
 
-                geo.push_back(ospNewGeometry("spheres"));
+                numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
 
-                if (element.vertexLength > 3) {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float) + element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                } else {
-                    vertexData = ospNewData(element.partCount * (element.vertexLength + element.colorLength), OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float)+ element.colorLength * sizeof(float));
-                    ospSet1f(geo.back(), "radius", element.globalRadius);
-                    //colorData = ospNewData(element.partCount * 4, OSP_FLOAT, *element.raw, OSP_DATA_SHARED_BUFFER);
-                    //ospSet1i(geo, "color_offset", element.vertexLength + element.colorLength);
-                    //ospSet1i(geo, "color_stride", element.vertexLength + element.colorLength);
+                for (unsigned int i = 0; i < numCreateGeo; i++) {
+                    geo.push_back(ospNewGeometry("spheres"));
 
+
+                    long long int floatsToRead =
+                        element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
+                    floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
+
+                    if (vertexData != NULL) ospRelease(vertexData);
+                    vertexData = ospNewData(floatsToRead, OSP_FLOAT,
+                        &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                    ospCommit(vertexData);
+                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
+                    ospSetData(geo.back(), "spheres", vertexData);
+                    ospSetData(geo.back(), "color", NULL);
+
+                    if (element.vertexLength > 3) {
+                        ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                    } else {
+                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                    }
+                    if (element.mmpldColor ==
+                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                        element.mmpldColor ==
+                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+
+                        ospSet1i(geo.back(), "color_offset",
+                            element.vertexLength *
+                                sizeof(float)); // TODO: This won't work if there are radii in the array
+                        ospSet1i(geo.back(), "color_stride", element.colorStride);
+                        ospSetData(geo.back(), "color", vertexData);
+                        if (element.mmpldColor ==
+                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                            //ospSet1i(geo.back(), "color_components", 3);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
+                        } else {
+                            //ospSet1i(geo.back(), "color_components", 4);
+                            ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                        }
+                    }
                 }
-                ospCommit(vertexData);
-                //ospCommit(colorData);
-                ospSetData(geo.back(), "spheres", vertexData);
-                ospSetData(geo.back(), "colorData", NULL);
+                break;
+            case geometryTypeEnum::PBS:
+                if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                {
+                    auto ret = ospLoadModule("ngpf_spheres");
+                    if (ret != OSP_NO_ERROR) {
+                        vislib::sys::Log::DefaultLog.WriteError("Could not load ngpfSpheres module of OSPRay");
+                        throw std::runtime_error("Could not load ngpfSpheres module of OSPRay");
+                    }
+                }
+                geo.push_back(ospNewGeometry("ngpf_spheres"));
 
+                {
+
+                    xData = ospNewData(element.partCount, OSP_FLOAT, element.xData->data());
+                    yData = ospNewData(element.partCount, OSP_FLOAT, element.yData->data());
+                    zData = ospNewData(element.partCount, OSP_FLOAT, element.zData->data());
+
+                    ospCommit(xData);
+                    ospCommit(yData);
+                    ospCommit(zData);
+
+                    ospSetData(geo.back(), "x_data", xData);
+                    ospSetData(geo.back(), "y_data", yData);
+                    ospSetData(geo.back(), "z_data", zData);
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                }
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {
@@ -810,50 +1062,53 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     returnValue = false;
                     break;
                 }
+                {
+                    geo.push_back(ospNewGeometry("streamlines"));
 
-                geo.push_back(ospNewGeometry("streamlines"));
+                    osp::vec3fa* data = new osp::vec3fa[element.vertexData->size() / 3];
 
-                osp::vec3fa* data;
-                data = new osp::vec3fa[element.vertexData->size() / 3];
+                    // fill aligned array with vertex data
+                    for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
+                        data[i].x = element.vertexData->data()[3 * i + 0];
+                        data[i].y = element.vertexData->data()[3 * i + 1];
+                        data[i].z = element.vertexData->data()[3 * i + 2];
+                    }
 
-                // fill aligned array with vertex data
-                for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
-                    data[i].x = element.vertexData->data()[3 * i + 0];
-                    data[i].y = element.vertexData->data()[3 * i + 1];
-                    data[i].z = element.vertexData->data()[3 * i + 2];
-                    data[i].a = 64;
-                    data[i].w = 0;
-                    data[i].u = 16;
+
+                    vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data, OSP_DATA_SHARED_BUFFER);
+                    ospCommit(vertexData);
+                    ospSetData(geo.back(), "vertex", vertexData);
+
+                    indexData = ospNewData(
+                        element.indexData->size(), OSP_INT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
+                    ospCommit(indexData);
+                    ospSetData(geo.back(), "index", indexData);
+
+                    if (element.colorData->size() > 0) {
+                        colorData = ospNewData(element.colorData->size() / element.colorLength, OSP_FLOAT4,
+                            element.colorData->data(), OSP_DATA_SHARED_BUFFER);
+                        ospCommit(colorData);
+                        ospSetData(geo.back(), "vertex.color", colorData);
+                    }
+
+                    ospSet1f(geo.back(), "radius", element.globalRadius);
+                    ospSet1i(geo.back(), "smooth", element.smooth);
                 }
-
-                vertexData = ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data);
-                ospCommit(vertexData);
-                ospSetData(geo.back(), "vertex", vertexData);
-
-                indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data());
-                ospCommit(indexData);
-                ospSetData(geo.back(), "index", indexData);
-
-                if (element.colorData->size() > 0) {
-                    colorData = ospNewData(element.colorData->size() / 4, OSP_FLOAT4, element.colorData->data());
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "color", colorData);
-                }
-
-                ospSet1f(geo.back(), "radius", element.globalRadius);
-
                 break;
             case geometryTypeEnum::CYLINDERS:
                 break;
             }
 
-            if (material != NULL && geo.size() > 0) {
-                ospSetMaterial(geo.back(), material);
-            }
+            // General geometry execution
+            for (unsigned int i = 0; i < this->numCreateGeo; i++) {
+                if (material != NULL && geo.size() > 0) {
+                    ospSetMaterial(geo.rbegin()[i], material);
+                }
 
-            if (geo.size() > 0) {
-                ospCommit(geo.back());
-                ospAddGeometry(world, geo.back());
+                if (geo.size() > 0) {
+                    ospCommit(geo.rbegin()[i]);
+                    ospAddGeometry(world, geo.rbegin()[i]);
+                }
             }
 
             if (vertexData != NULL) ospRelease(vertexData);
@@ -861,52 +1116,65 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (normalData != NULL) ospRelease(normalData);
             if (texData != NULL) ospRelease(texData);
             if (indexData != NULL) ospRelease(indexData);
+            if (xData != NULL) ospRelease(xData);
+            if (yData != NULL) ospRelease(yData);
+            if (zData != NULL) ospRelease(zData);
+            if (bboxData != NULL) ospRelease(bboxData);
 
             break;
 
         case structureTypeEnum::VOLUME:
-            if (element.voxels == NULL) {
-                returnValue = false;
+
+            if (element.volumeType == volumeTypeEnum::OSPRAY_API_VOLUME) {
+                if (element.ospstructure == NULL) {
+                    returnValue = false;
+                    break;
+                }
+                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
                 break;
-            }
-
-            vol.push_back(ospNewVolume("shared_structured_volume"));
-
-            ospSetString(vol.back(), "voxelType", "float");
-            // scaling properties of the volume
-            ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
-            ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-            ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
-
-            // add data 
-            voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
-            ospCommit(voxels);
-            ospSetData(vol.back(), "voxelData", voxels);
-
-            // ClippingBox
-
-            if (element.clippingBoxActive) {
-                ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
-                ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
             } else {
-                ospSetVec3f(vol.back(), "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
-                ospSetVec3f(vol.back(), "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+
+                if (element.voxels == NULL) {
+                    returnValue = false;
+                    break;
+                }
+
+                vol.push_back(ospNewVolume("shared_structured_volume"));
+
+                ospSetString(vol.back(), "voxelType", "float");
+                // scaling properties of the volume
+                ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
+                ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+
+                // add data
+                voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(vol.back(), "voxelData", voxels);
+
+                // ClippingBox
+
+                if (element.clippingBoxActive) {
+                    ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
+                    ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
+                } else {
+                    ospSetVec3f(vol.back(), "volumeClippingBoxLower", {0.0f, 0.0f, 0.0f});
+                    ospSetVec3f(vol.back(), "volumeClippingBoxUpper", {0.0f, 0.0f, 0.0f});
+                }
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+                OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+                ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
+
+                ospCommit(tf);
+
+                ospSetObject(vol.back(), "transferFunction", tf);
+                ospCommit(vol.back());
             }
-
-            OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-            std::vector<float> rgb = { 0.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f };
-            std::vector<float> opa = { 0.01f, 0.05f };
-            OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, rgb.data());
-            OSPData tf_opa = ospNewData(2, OSP_FLOAT, opa.data());
-            ospSetData(tf, "colors", tf_rgb);
-            ospSetData(tf, "opacities", tf_opa);
-
-            ospCommit(tf);
-
-            ospSetObject(vol.back(), "transferFunction", tf);
-            ospCommit(vol.back());
-
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());
@@ -943,20 +1211,28 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 ospCommit(geo.back());
 
-                ospAddGeometry(world, geo.back());  // Show slice
+                ospAddGeometry(world, geo.back()); // Show slice
 
                 break;
             }
             break;
         }
 
-
     } // for element loop
+
+    if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size()>0 && regions.size()>0) {
+        for (auto const& el : regions) {
+            ghostRegions.push_back(worldBounds);
+        }
+        auto ghostRegionData = ospNewData(2 * ghostRegions.size(), OSP_FLOAT3, ghostRegions.data());
+        auto regionData = ospNewData(2 * regions.size(), OSP_FLOAT3, ghostRegions.data());
+        ospCommit(ghostRegionData);
+        ospCommit(regionData);
+        ospSetData(world, "ghostRegions", ghostRegionData);
+        ospSetData(world, "regions", ghostRegionData);
+    }
 
     return returnValue;
 }
 
-void AbstractOSPRayRenderer::releaseOSPRayStuff() {
-
-}
-
+void AbstractOSPRayRenderer::releaseOSPRayStuff() {}

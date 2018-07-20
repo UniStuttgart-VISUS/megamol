@@ -109,6 +109,7 @@ namespace factories {
         virtual Module::ptr_type createModuleImpl(void) const {
             try {
                 Module::ptr_type m = std::make_shared<C>();
+                m->SetClassName(this->ClassName());
                 return m;
             } catch (vislib::Exception& ex) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,

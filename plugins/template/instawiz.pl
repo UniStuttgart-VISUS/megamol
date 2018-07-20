@@ -168,7 +168,8 @@ writeFile($fn, $temp);
 # Completed
 print("\n== Instantiation complete ==\n\n");
 print("You should do now:\n");
-print("  * delete instawiz.pl\n");
+print("  * Delete instawiz.pl\n");
+print("  * Delete instawiz.ps1\n");
 print("  * Commit changes to git\n");
 print("  * Start implementing\n");
 print("\n");

@@ -81,6 +81,13 @@ namespace param {
          */
         virtual vislib::TString ValueString(void) const;
 
+        inline void SetKeyCode(const vislib::sys::KeyCode& code) {
+            this->key = code;
+        }
+        inline void SetKeyCode(WORD code) {
+            this->key = code;
+        }
+
     private:
 
 #ifdef _WIN32

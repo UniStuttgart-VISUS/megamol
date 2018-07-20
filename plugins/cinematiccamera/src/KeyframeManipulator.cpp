@@ -1,6 +1,8 @@
 /**
 * KeyframeManipulator.cpp
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #include "stdafx.h"
@@ -19,11 +21,10 @@ using namespace megamol::cinematiccamera;
 /*
 * KeyframeManipulator::KeyframeManipulator
 */
-KeyframeManipulator::KeyframeManipulator(void) :
-    selectedKf()
-    {
+KeyframeManipulator::KeyframeManipulator(void) {
 
     // init variables
+    this->selectedKf          = Keyframe();
     this->activeType          = manipType::NONE;
     this->lastMousePos        = vislib::math::Vector<float, 2>();
     this->sKfSsPos            = vislib::math::Vector<float, 2>();
@@ -31,8 +32,14 @@ KeyframeManipulator::KeyframeManipulator(void) :
     this->sKfInArray          = false;;
     this->modelViewProjMatrix = vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>();
     this->viewportSize        = vislib::math::Dimension<int, 2>();
-    this->worldCamDir         = vislib::math::Vector<float, 3>();
+    this->worldCamLaDir       = vislib::math::Vector<float, 3>();
+    this->worldCamModDir      = vislib::math::Vector<float, 3>();
+    this->firstCtrllPos       = vislib::math::Vector<float, 3>();
+    this->lastCtrllPos        = vislib::math::Vector<float, 3>();
+    this->selectedIsFirst     = false;
+    this->selectedIsLast      = false;
     this->isDataDirty         = true;
+    this->manipOusideBbox     = false;
     this->kfArray.Clear();
     this->manipArray.Clear();
     this->circleVertices.Clear();
@@ -51,25 +58,30 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 
 
 /*
-* KeyframeManipulator::KeyframeManipulator
+* KeyframeManipulator::Update
 */
-bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wcd) {
+bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob,
+    vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp) {
 
     if (kfa == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
         return false;
     }
 
+    // ...
+    this->manipOusideBbox = mob;
+
     // Update ModelViewPorjectionMatrix ---------------------------------------
     // and position of world camera 
     bool recalcKf = false;
-    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamDir != wcd)) {
+    if ((this->modelViewProjMatrix != mvpm) || (this->worldCamLaDir != wclad) || (this->worldCamModDir != wcmd)) {
         this->calculateCircleVertices();
         recalcKf = true;
     }
     this->modelViewProjMatrix = mvpm;
-    this->worldCamDir         = wcd;
+    this->worldCamLaDir       = wclad;
+    this->worldCamModDir      = wcmd;
 
     // Update viewport --------------------------------------------------------
     this->viewportSize.SetHeight(static_cast<int>(vph));
@@ -87,6 +99,11 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
             this->sKfInArray = true;
         }
 
+        this->selectedIsFirst = (this->selectedKf == kfa->First())?(true):(false);
+        this->selectedIsLast  = (this->selectedKf == kfa->Last())?(true):(false);
+        this->firstCtrllPos   = fcp;
+        this->lastCtrllPos    = lcp;
+
         this->updateManipulators();
     }
 
@@ -98,7 +115,7 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
         this->kfArray.AssertCapacity(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
             manipPosData tmpkfA;
-            tmpkfA.wsPos = (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+            tmpkfA.wsPos = (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
             tmpkfA.ssPos = this->getScreenSpace(tmpkfA.wsPos);
             tmpkfA.offset = (this->getScreenSpace(tmpkfA.wsPos + this->circleVertices[1]) - tmpkfA.ssPos).Norm(); // ...
             this->kfArray.Add(tmpkfA);
@@ -106,8 +123,8 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
     }
     else { // Update only different positions
         for (unsigned int i = 0; i < kfACnt; i++) {
-            if (this->kfArray[i].wsPos != (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) { 
-                this->kfArray[i].wsPos  = (*kfa)[i].getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+            if (this->kfArray[i].wsPos != (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) { 
+                this->kfArray[i].wsPos  = (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
                 this->kfArray[i].ssPos  = this->getScreenSpace(this->kfArray[i].wsPos);
                 this->kfArray[i].offset = (this->getScreenSpace(this->kfArray[i].wsPos + this->circleVertices[1]) - this->kfArray[i].ssPos).Norm(); 
             }
@@ -116,7 +133,6 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
 
     // Reset and update available manipulators
     if (this->kfArray.Count() > 0) {
-        this->kfArray[0].available = false;
         this->kfArray[0].available = am.Contains(manipType::KEYFRAME_POS);
     }
     for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
@@ -138,12 +154,12 @@ bool KeyframeManipulator::updateRendering(vislib::Array<KeyframeManipulator::man
 
 
 /*
-* KeyframeManipulator::updateSKfManipulators
+* KeyframeManipulator::updateManipulators
 */
 bool KeyframeManipulator::updateManipulators() {
 
-    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
-    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.GetCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
     // Update screen space positions
     this->sKfSsPos    = this->getScreenSpace(skfPosV);
     this->sKfSsLookAt = this->getScreenSpace(skfLaV);
@@ -159,53 +175,89 @@ bool KeyframeManipulator::updateManipulators() {
 
     // Adaptive axis length of manipulators
     float radius = this->circleVertices[1].Length();
-    float length = vislib::math::Max((this->worldCamDir.Length() * this->axisLengthFac), 1.0f);
+    float length = vislib::math::Max((this->worldCamModDir.Length() * this->axisLengthFac), 0.1f);
     vislib::math::Vector<float, 3> tmpV;
     float len;
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         switch (static_cast<manipType>(i)) {
+            case (manipType::CTRL_POINT_POS_X):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(length*0.5f, 0.0f, 0.0f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right() + radius);
+                }
+             break;
+            case (manipType::CTRL_POINT_POS_Y):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, length*0.5f, 0.0f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top() + radius);
+                }
+                break;
+            case (manipType::CTRL_POINT_POS_Z):
+                if (this->selectedIsFirst) {
+                    tmpV = this->firstCtrllPos;
+                }
+                else if (this->selectedIsLast) {
+                    tmpV = this->lastCtrllPos;
+                }
+                tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length*0.5f);
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front() + radius);
+                }
+                break;
             case (manipType::SELECTED_KF_POS_X):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f); 
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right() + radius);
                 }
                break;
             case (manipType::SELECTED_KF_POS_Y):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f); 
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top() + radius);
                 }
                 break;
             case (manipType::SELECTED_KF_POS_Z):      
                 tmpkfS.wsPos = skfPosV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length); 
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front() + radius);
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_X):  
                 tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(length, 0.0f, 0.0f);
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetX(this->modelBbox.Right());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetX(this->modelBbox.Right() + radius);
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_Y):   
                 tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, length, 0.0f);
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetY(this->modelBbox.Top());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetY(this->modelBbox.Top() + radius);
                 }
                 break;
             case (manipType::SELECTED_KF_LOOKAT_Z):   
                 tmpkfS.wsPos = skfLaV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length);
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
-                    tmpkfS.wsPos.SetZ(this->modelBbox.Front());
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                    tmpkfS.wsPos.SetZ(this->modelBbox.Front() + radius);
                 }
                 break;
             case (manipType::SELECTED_KF_UP):         
-                tmpV = this->selectedKf.getCamUp();
+                tmpV = this->selectedKf.GetCamUp();
                 tmpV.ScaleToLength(length);
                 tmpkfS.wsPos = skfPosV + tmpV;
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
                     len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
                     tmpV.ScaleToLength(len);
                     tmpkfS.wsPos = skfPosV + tmpV;
@@ -223,7 +275,7 @@ bool KeyframeManipulator::updateManipulators() {
                 tmpV = skfPosV - skfLaV;
                 tmpV.ScaleToLength(length);
                 tmpkfS.wsPos = skfPosV + tmpV;
-                if (this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
+                if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
                     len = (this->modelBbox.GetRightTopFront() - this->modelBbox.GetLeftBottomBack()).Length() / 3.0f;
                     tmpV.ScaleToLength(len);
                     tmpkfS.wsPos = skfPosV + tmpV;
@@ -251,11 +303,11 @@ bool KeyframeManipulator::updateManipulators() {
 
 
 /*
-* KeyframeManipulator::growBbox
+* KeyframeManipulator::SetExtents
 */
-void KeyframeManipulator::updateExtents(vislib::math::Cuboid<float> *bb) {
+void KeyframeManipulator::SetExtents(vislib::math::Cuboid<float> *bb) {
 
-    // Store current bounding box of model
+    // Store hard copy current bounding box of model
     this->modelBbox = *bb;
 
     // Grow bounding box of model to manipulators
@@ -270,9 +322,9 @@ void KeyframeManipulator::updateExtents(vislib::math::Cuboid<float> *bb) {
 
 
 /*
-* KeyframeManipulator::checkKfPosHit
+* KeyframeManipulator::CheckKeyframePositionHit
 */
-int KeyframeManipulator::checkKfPosHit(float x, float y) {
+int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
 
     if (!isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
@@ -299,9 +351,9 @@ int KeyframeManipulator::checkKfPosHit(float x, float y) {
 
 
 /*
-* KeyframeManipulator::checkManipHit
+* KeyframeManipulator::CheckManipulatorHit
 */
-bool KeyframeManipulator::checkManipHit(float x, float y) {
+bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
 
     if (!isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
@@ -328,9 +380,9 @@ bool KeyframeManipulator::checkManipHit(float x, float y) {
 }
 
 /*
-* KeyframeManipulator::ProcessManipHit
+* KeyframeManipulator::ProcessManipulatorHit
 */
-bool KeyframeManipulator::processManipHit(float x, float y) {
+bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
 
     if (!isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [processManipHit] Data is not set. Please call 'update' first.");
@@ -351,15 +403,26 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     float lineDiff = 0.0f;
 
     // Local copies as vectors
-    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
-    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
-    vislib::math::Vector<float, 3> skfUpV  = this->selectedKf.getCamUp();
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.GetCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfUpV  = this->selectedKf.GetCamUp();
 
     vislib::math::Vector<float, 2> ssVec = this->manipArray[index].ssPos - this->sKfSsPos;
     if ((this->activeType == manipType::SELECTED_KF_LOOKAT_X) || 
         (this->activeType == manipType::SELECTED_KF_LOOKAT_Y) || 
         (this->activeType == manipType::SELECTED_KF_LOOKAT_Z)) {
         ssVec = this->manipArray[index].ssPos - this->sKfSsLookAt;
+    }
+    if ((this->activeType == manipType::CTRL_POINT_POS_X) ||
+        (this->activeType == manipType::CTRL_POINT_POS_Y) ||
+        (this->activeType == manipType::CTRL_POINT_POS_Z)) {
+
+        if (this->selectedIsFirst) {
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->firstCtrllPos);
+        }
+        else if (this->selectedIsLast) {
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->lastCtrllPos);
+        }
     }
 
     // Select manipulator axis with greatest contribution
@@ -375,11 +438,35 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
             lineDiff *= -1.0f;
         }
     }
-    lineDiff *= ((this->worldCamDir.Length() * this->axisLengthFac));
+    lineDiff *= ((this->worldCamModDir.Length() * this->axisLengthFac));
 
 
     vislib::math::Vector<float, 3> tmpVec;
     switch (this->activeType) {
+        case (manipType::CTRL_POINT_POS_X):                  
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetX(this->firstCtrllPos.X() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+               this->lastCtrllPos.SetX(this->lastCtrllPos.X() + lineDiff);
+            }
+            break;
+        case (manipType::CTRL_POINT_POS_Y):      
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetY(this->firstCtrllPos.Y() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+                this->lastCtrllPos.SetY(this->lastCtrllPos.Y() + lineDiff);
+            }
+            break;
+        case (manipType::CTRL_POINT_POS_Z):      
+            if (this->selectedIsFirst) {
+                this->firstCtrllPos.SetZ(this->firstCtrllPos.Z() + lineDiff);
+            }
+            else if (this->selectedIsLast) {
+                this->lastCtrllPos.SetZ(this->lastCtrllPos.Z() + lineDiff);
+            }
+            break;
         case (manipType::SELECTED_KF_POS_X):      skfPosV.SetX(skfPosV.X() + lineDiff); break;
         case (manipType::SELECTED_KF_POS_Y):      skfPosV.SetY(skfPosV.Y() + lineDiff); break;
         case (manipType::SELECTED_KF_POS_Z):      skfPosV.SetZ(skfPosV.Z() + lineDiff); break;
@@ -390,10 +477,11 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
                                                   tmpVec.ScaleToLength(lineDiff);
                                                   skfPosV += tmpVec;
                                                   break;
+	default: break;
     }
 
     if (this->activeType == manipType::SELECTED_KF_UP) {
-        bool cwRot = ((this->worldCamDir - skfLaV).Norm() > (this->worldCamDir - skfPosV).Norm());
+        bool cwRot = ((this->worldCamLaDir - skfLaV).Norm() > (this->worldCamLaDir - skfPosV).Norm());
         vislib::math::Vector<float, 3> tmpSsUp = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f); // up vector for screen space
         if (!cwRot) {
             tmpSsUp.SetZ(-1.0f);
@@ -408,7 +496,7 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
         if (tmpSsRight.Dot(tmpSsMani + tmpDeltaMouse) < 0.0f) {
             lineDiff *= -1.0f;
         }
-        lineDiff /= ((this->worldCamDir.Length() * this->axisLengthFac));
+        lineDiff /= ((this->worldCamModDir.Length() * this->axisLengthFac));
 
         // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula"
         vislib::math::Vector<float, 3> k = (skfPosV - skfLaV); // => rotation axis = camera lookat
@@ -416,10 +504,10 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
     }
 
     // Apply changes to selected keyframe
-    this->selectedKf.setCameraPosition(this->V2P(skfPosV));
-    this->selectedKf.setCameraLookAt(this->V2P(skfLaV));
+    this->selectedKf.SetCameraPosition(this->V2P(skfPosV));
+    this->selectedKf.SetCameraLookAt(this->V2P(skfLaV));
     skfUpV.Normalise();
-    this->selectedKf.setCameraUp(skfUpV);
+    this->selectedKf.SetCameraUp(skfUpV);
 
     // Update manipulators
     this->updateManipulators();
@@ -432,11 +520,29 @@ bool KeyframeManipulator::processManipHit(float x, float y) {
 
 
 /*
-* KeyframeManipulator::getManipulatedKeyframe
+* KeyframeManipulator::GetManipulatedKeyframe
 */
-Keyframe KeyframeManipulator::getManipulatedKeyframe(void) {
+Keyframe KeyframeManipulator::GetManipulatedKeyframe(void) {
 
     return this->selectedKf;
+}
+
+
+/*
+* KeyframeManipulator::GetFirstControlPointPosition
+*/
+vislib::math::Vector<float, 3> KeyframeManipulator::GetFirstControlPointPosition() {
+
+    return this->firstCtrllPos;
+}
+
+
+/*
+* KeyframeManipulator::GetLastControlPointPosition
+*/
+vislib::math::Vector<float, 3> KeyframeManipulator::GetLastControlPointPosition() {
+
+    return this->lastCtrllPos;
 }
 
 
@@ -471,7 +577,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     this->circleVertices.AssertCapacity(this->circleSubDiv);
 
     // Get normal for plane the cirlce lies on
-    vislib::math::Vector<float, 3> normal = this->worldCamDir;
+    vislib::math::Vector<float, 3> normal = this->worldCamLaDir;
     // Check if world camera direction is zero ...
     if (normal.IsNull()) {
         normal.SetZ(1.0f);
@@ -479,7 +585,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     }
     normal.Normalise();
     // Size of radius depends on the length of the lookat direction vector
-    float radius = vislib::math::Max((this->worldCamDir.Length() * this->circleRadiusFac), 0.15f);
+    float radius = vislib::math::Max((this->worldCamModDir.Length() * this->circleRadiusFac), 0.02f);
     // Get arbitary vector vertical to normal
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
     rot.ScaleToLength(radius);
@@ -498,22 +604,19 @@ void KeyframeManipulator::calculateCircleVertices(void) {
 /*
 * KeyframeManipulator::Draw
 */
-bool KeyframeManipulator::draw(void) {
+bool KeyframeManipulator::Draw(void) {
 
     if (!isDataSet) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [draw] Data is not set. Please call 'update' first.");
         return false;
     }
 
-    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.getCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
-    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.getCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfPosV = this->selectedKf.GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
+    vislib::math::Vector<float, 3> skfLaV  = this->selectedKf.GetCamLookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.0f);
-
-    glEnable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
 
     // Rest of necessary OpenGl settings are already done in CinematicRenderer ...
 
@@ -559,15 +662,47 @@ bool KeyframeManipulator::draw(void) {
         }
     }
 
+    vislib::math::Vector<float, 3> tmpCtrlPos;
+    if (this->selectedIsFirst) {
+        tmpCtrlPos = this->firstCtrllPos;
+    }
+    else if (this->selectedIsLast) {
+        tmpCtrlPos = this->lastCtrllPos;
+    }
+
     // Draw manipulators
     if (this->sKfInArray) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
             if (this->manipArray[i].available) {
                 switch (static_cast<manipType>(i)) {
-                case (manipType::SELECTED_KF_POS_X):      glColor4fv(mxColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos);    break;
-                case (manipType::SELECTED_KF_POS_Y):      glColor4fv(myColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos);    break;
-                case (manipType::SELECTED_KF_POS_Z):      glColor4fv(mzColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos);    break;
-                case (manipType::SELECTED_KF_UP):         glColor4fv(muColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos);    break;
+                case (manipType::CTRL_POINT_POS_X):  
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                        // Draw additional line only once
+                        glBegin(GL_LINES);
+                        glColor4fv(mlaColor);
+                            glVertex3fv(skfPosV.PeekComponents());
+                            glVertex3fv(tmpCtrlPos.PeekComponents());
+                        glEnd();
+                    }
+                    break;
+                case (manipType::CTRL_POINT_POS_Y):    
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                    }
+                    break;
+                case (manipType::CTRL_POINT_POS_Z):     
+                    if ((this->selectedIsFirst) || (this->selectedIsLast)) {
+                        glColor4fv(mlaColor);
+                        this->drawManipulator(tmpCtrlPos, this->manipArray[i].wsPos);
+                    }
+                    break;
+                case (manipType::SELECTED_KF_POS_X):      glColor4fv(mxColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
+                case (manipType::SELECTED_KF_POS_Y):      glColor4fv(myColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
+                case (manipType::SELECTED_KF_POS_Z):      glColor4fv(mzColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
+                case (manipType::SELECTED_KF_UP):         glColor4fv(muColor);  this->drawManipulator(skfPosV, this->manipArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_POS_LOOKAT): glColor4fv(mlaColor); this->drawManipulator(skfLaV, this->manipArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_LOOKAT_X):   glColor4fv(mxColor);  this->drawManipulator(skfLaV, this->manipArray[i].wsPos); break;
                 case (manipType::SELECTED_KF_LOOKAT_Y):   glColor4fv(myColor);  this->drawManipulator(skfLaV, this->manipArray[i].wsPos); break;
@@ -595,7 +730,6 @@ bool KeyframeManipulator::draw(void) {
 
     // Reset opengl
     glLineWidth(tmpLw);
-    glDisable(GL_LINE_SMOOTH);
 
     return true;
 }

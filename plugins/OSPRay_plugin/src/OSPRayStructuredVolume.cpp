@@ -13,6 +13,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/Call.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 
 using namespace megamol::ospray;
@@ -28,6 +29,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
     sliceNormal("Slice::sliceNormal", "Direction of the slice normal"),
     sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector"),
     IsoValue("Isosurface::Isovalue","Sets the isovalue of the isosurface"),
+    getTFSlot("gettransferfunction", "Connects to a color transfer function module"),
 
     getDataSlot("getdata", "Connects to the data source")
  {
@@ -56,8 +58,10 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
     this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    //this->SetSlotUnavailable(&this->getMaterialSlot);
+    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->MakeSlotAvailable(&this->getTFSlot);
 
+    //this->SetSlotUnavailable(&this->getMaterialSlot);
 }
 
 
@@ -101,6 +105,30 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     std::vector<float> voxels(voxelCount);
     voxels.assign(cd->VoxelMap(), cd->VoxelMap() + voxelCount);
 
+    // get color transfer function
+    std::vector<float> rgb;
+    std::vector<float> a;
+    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (cgtf != NULL && ((*cgtf)())) {
+        if (cgtf->OpenGLTextureFormat() == megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
+            auto numColors = cgtf->TextureSize() / 4;
+            rgb.resize(3 * numColors);
+            a.resize(numColors);
+            auto texture = cgtf->GetTextureData();
+
+            for (unsigned int i = 0; i < numColors; i++) {
+                rgb[i + 0] = texture[i + 0];
+                rgb[i + 1] = texture[i + 1];
+                rgb[i + 2] = texture[i + 2];
+                a[i]       = texture[i + 3];
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("No color transfer function connected to OSPRayStructuredVolume module");
+            return false;
+        }
+    }
+
+
 
     // Write stuff into the structureContainer
 
@@ -113,6 +141,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(std::move(dimensions));
     this->structureContainer.voxelCount = voxelCount;
     this->structureContainer.maxDim = maxDim;
+    this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
+    this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
+
 
     this->structureContainer.clippingBoxActive = this->clippingBoxActive.Param<core::param::BoolParam>()->Value();
     std::vector<float> cbl = { this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetX(), this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetY(), this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetZ() };

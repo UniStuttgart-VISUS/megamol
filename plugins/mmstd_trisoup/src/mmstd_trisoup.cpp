@@ -26,8 +26,6 @@
 #include "CallVolumetricData.h"
 #include "ScreenSpaceEdgeRenderer.h"
 #include "vislib/Trace.h"
-#include "mmstd_trisoup/CallTriMeshData.h"
-#include "mmstd_trisoup/LinesDataCall.h"
 #include "LinesRenderer.h"
 
 
@@ -73,8 +71,6 @@ namespace {
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallTriMeshData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::LinesDataCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
@@ -116,7 +112,7 @@ mmplgGetPluginCompatibilityInfo(
         );
 
     SetLibraryVersionInfo(ci->libs[1], "vislib",
-        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, 0
+        vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR, vislib::VISLIB_VERSION_REVISION, 0
 #if defined(DEBUG) || defined(_DEBUG)
         | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif

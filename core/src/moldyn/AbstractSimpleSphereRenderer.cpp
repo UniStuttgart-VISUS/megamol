@@ -137,8 +137,9 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
     if (cr == NULL) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->isTimeForced());
-    if ((c2 != NULL) && ((*c2)(1))) {
+    if ((c2 != NULL)) {
+        c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->isTimeForced());
+        if (!(*c2)(1)) return false;
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
@@ -149,7 +150,6 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
             scaling = 1.0f;
         }
         cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
-
     } else {
         cr->SetTimeFramesCount(1);
         cr->AccessBoundingBoxes().Clear();

@@ -1,6 +1,8 @@
 /*
  * ReplacementRenderer.h
  *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_REPLACEMENTRENDERER_H_INCLUDED
@@ -120,9 +122,7 @@ namespace megamol {
             KEY_ASSIGN_J = 3,
             KEY_ASSIGN_K = 4,
             KEY_ASSIGN_X = 5,
-            KEY_ASSIGN_Y = 6,
-            KEY_ASSIGN_Z = 7,
-            KEY_ASSIGN_B = 8
+            KEY_ASSIGN_Y = 6
         };
 
         float alpha;

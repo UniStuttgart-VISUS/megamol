@@ -31,12 +31,12 @@
 #include "vislib/graphics/CameraZoom2DMove.h"
 #include "vislib/graphics/CameraZoom2DAngle.h"
 #include "vislib/graphics/CameraMove2D.h"
-#include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/PerformanceCounter.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
 
 
 namespace megamol {
@@ -276,6 +276,8 @@ namespace view {
          */
         void renderSoftCursor(void);
 
+        bool mouseSensitivityChanged(param::ParamSlot &p);
+
         /**
          * Handles a request for the camera parameters used by the view.
          *
@@ -460,8 +462,13 @@ namespace view {
         /** The move step size in world coordinates */
         param::ParamSlot viewKeyMoveStepSlot;
 
+        param::ParamSlot viewKeyRunFactorSlot;
+
         /** The angle rotate step in degrees */
         param::ParamSlot viewKeyAngleStepSlot;
+
+        /** sensitivity for mouse rotation in WASD mode */
+        param::ParamSlot mouseSensitivitySlot;
 
         /** The point around which the view will be roateted */
         param::ParamSlot viewKeyRotPointSlot;
@@ -508,14 +515,8 @@ namespace view {
 
         param::ParamSlot toggleSoftCursorSlot;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
         /** The colour of the bounding box */
-        vislib::graphics::ColourRGBAu8 bboxCol;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        float bboxCol[4];
 
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;
@@ -543,6 +544,65 @@ namespace view {
 
         /** Flag whether mouse control is to be handed over to the renderer */
         bool toggleMouseSelection;
+        
+        private:
+
+        /**********************************************************************
+        * variables
+        **********************************************************************/
+
+        enum corner {
+            TOP_LEFT = 0,
+            TOP_RIGHT = 1,
+            BOTTOM_LEFT = 2,
+            BOTTOM_RIGHT = 3,
+        };
+
+        vislib::graphics::gl::OpenGLTexture2D textureTopLeft;
+        vislib::graphics::gl::OpenGLTexture2D textureTopRight;
+        vislib::graphics::gl::OpenGLTexture2D textureBottomLeft;
+        vislib::graphics::gl::OpenGLTexture2D textureBottomRight;
+
+        vislib::math::Vector<float, 2> sizeTopLeft;
+        vislib::math::Vector<float, 2> sizeTopRight;
+        vislib::math::Vector<float, 2> sizeBottomLeft;
+        vislib::math::Vector<float, 2> sizeBottomRight;
+
+        float lastScaleAll;
+        bool  firstParamChange;
+
+        /**********************************************************************
+        * functions
+        **********************************************************************/
+
+        /*   */
+        SIZE_T loadFile(vislib::StringA name, void **outData);
+
+        /**  */
+        bool loadTexture(View3D::corner cor, vislib::StringA filename);
+
+        /**  */
+        bool renderWatermark(View3D::corner cor, float vpH, float vpW);
+
+        /**********************************************************************
+        * parameters
+        **********************************************************************/
+
+        /**  */
+        core::param::ParamSlot paramImgTopLeft;
+        core::param::ParamSlot paramImgTopRight;
+        core::param::ParamSlot paramImgBottomLeft;
+        core::param::ParamSlot paramImgBottomRight;
+
+        /**  */
+        core::param::ParamSlot paramScaleAll;
+        core::param::ParamSlot paramScaleTopLeft;
+        core::param::ParamSlot paramScaleTopRight;
+        core::param::ParamSlot paramScaleBottomLeft;
+        core::param::ParamSlot paramScaleBottomRight;
+
+        /**  */
+        core::param::ParamSlot paramAlpha;
 
     };
 

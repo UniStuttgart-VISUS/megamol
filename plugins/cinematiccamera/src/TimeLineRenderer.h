@@ -1,6 +1,8 @@
 /*
 * TimeLineRenderer.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED
@@ -15,16 +17,13 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/SDFFont.h"
 
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -118,19 +117,14 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
+
             // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
             vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
 
-            bool                           redoAdaptation;     // indicates if the segment size/value should be recalculated
-
-            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of naimation axis
+            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
             float                          animAxisLen;        // length of the animation axis
             float                          animTotalTime;      // the total animation time
             float                          animSegmSize;       // the world space size of one segment of the animation time ruler
@@ -165,18 +159,20 @@ namespace megamol {
             float                          keyfMarkSize;
             float                          rulerMarkSize;
             unsigned int                   fps;
-
+            vislib::math::Vector<float, 2> viewport;
 
             /**********************************************************************
             * functions
             **********************************************************************/
 
             /** Loading texture for keyframe marker. */
-            bool LoadTexture(vislib::StringA filename);
+            bool loadTexture(vislib::StringA filename);
 
             /** Draw the keyframe marker. */
-            void DrawKeyframeMarker(float posX, float posY);
+            void drawKeyframeMarker(float posX, float posY);
 
+            /** Adapt axis scaling. */
+            void axisAdaptation(void);
 
             /**********************************************************************
             * callback stuff
@@ -191,6 +187,10 @@ namespace megamol {
 
             /**  */
             megamol::core::param::ParamSlot rulerFontParam;
+            /**  */
+            megamol::core::param::ParamSlot moveRightFrame;
+            /**  */
+            megamol::core::param::ParamSlot moveLeftFrame;
 		};
 
 	} /* end namespace cinematiccamera */

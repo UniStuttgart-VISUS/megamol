@@ -22,12 +22,12 @@ AbstractTriMeshDataSource::AbstractTriMeshDataSource(void) : core::Module(),
         getDataSlot("getdata", "The slot publishing the loaded data"),
         getLinesDataSlot("getLinesData", "The slot publishing loaded lines data") {
 
-    this->getDataSlot.SetCallback(trisoup::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(trisoup::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback(megamol::geocalls::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(megamol::geocalls::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getLinesDataSlot.SetCallback(trisoup::LinesDataCall::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
-    this->getLinesDataSlot.SetCallback(trisoup::LinesDataCall::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
+    this->getLinesDataSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
+    this->getLinesDataSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getLinesDataSlot);
 }
 
@@ -64,8 +64,8 @@ void AbstractTriMeshDataSource::release(void) {
  * AbstractTriMeshDataSource::getDataCallback
  */
 bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
-    trisoup::CallTriMeshData *ctmd = dynamic_cast<trisoup::CallTriMeshData *>(&caller);
-    trisoup::LinesDataCall *ldc = dynamic_cast<trisoup::LinesDataCall *>(&caller);
+    megamol::geocalls::CallTriMeshData *ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData *>(&caller);
+    megamol::geocalls::LinesDataCall *ldc = dynamic_cast<megamol::geocalls::LinesDataCall *>(&caller);
     if (ctmd == NULL && ldc == NULL) return false;
     this->assertData();
 
@@ -87,8 +87,8 @@ bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
  * AbstractTriMeshDataSource::getExtentCallback
  */
 bool AbstractTriMeshDataSource::getExtentCallback(core::Call& caller) {
-    trisoup::CallTriMeshData *ctmd = dynamic_cast<trisoup::CallTriMeshData *>(&caller);
-    trisoup::LinesDataCall *ldc = dynamic_cast<trisoup::LinesDataCall *>(&caller);
+    megamol::geocalls::CallTriMeshData *ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData *>(&caller);
+    megamol::geocalls::LinesDataCall *ldc = dynamic_cast<megamol::geocalls::LinesDataCall *>(&caller);
     if (ctmd == NULL && ldc == NULL) return false;
     this->assertData();
 

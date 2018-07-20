@@ -37,6 +37,9 @@
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 #include "vislib/Trace.h"
 #include "vislib/math/Vector.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/param/FilePathParam.h"
 //#define ROTATOR_HACK
 #ifdef ROTATOR_HACK
 #include "vislib/math/Matrix.h"
@@ -70,7 +73,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
         overrideCall(NULL),
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
         viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
+        viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
+        mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode"),
         viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
         viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
         viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)"),
@@ -87,14 +92,25 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
         toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
-        bboxCol(192, 192, 192, 255),
+        bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse"),
         showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
         resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
         mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
         timeCtrl(),
-        toggleMouseSelection(false) {
+        toggleMouseSelection(false),
+        paramAlpha("watermark::01_alpha", "The alpha value for the watermarks."),
+        paramScaleAll("watermark::02_scaleAll", "The scale factor for all images."),
+        paramImgTopLeft("watermark::03_imageTopLeft", "The image file name for the top left watermark."),
+        paramScaleTopLeft("watermark::04_scaleTopLeft", "The scale factor for the top left watermark."),
+        paramImgTopRight("watermark::05_imageTopRight", "The image file name for the top right watermark."),
+        paramScaleTopRight("watermark::06_scaleTopRight", "The scale factor for the top right watermark."),
+        paramImgBottomLeft("watermark::07_imageBottomLeft", "The image file name for the bottom left watermark."),
+        paramScaleBottomLeft("watermark::08_scaleBottomLeft", "The scale factor for the botttom left watermark."),
+        paramImgBottomRight("watermark::09_imageBottomRight", "The image file name for the bottom right watermark."),
+        paramScaleBottomRight("watermark::10_scaleBottomRight", "The scale factor for the bottom right watermark."),
+        textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight() {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -171,8 +187,15 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->viewKeyMoveStepSlot << new param::FloatParam(0.1f, 0.001f);
     this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
 
+    this->viewKeyRunFactorSlot << new param::FloatParam(2.0f, 0.1f);
+    this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
+
     this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    this->mouseSensitivitySlot << new param::FloatParam(3.0f, 0.001f, 10.0f);
+    this->mouseSensitivitySlot.SetUpdateCallback(&View3D::mouseSensitivityChanged);
+    this->MakeSlotAvailable(&this->mouseSensitivitySlot);
 
     param::EnumParam *vrpsev = new param::EnumParam(1);
     vrpsev->SetTypePair(0, "Position");
@@ -245,10 +268,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
     this->bboxColSlot << new param::StringParam(
-        utility::ColourParser::ToString(
-            static_cast<float>(this->bboxCol.R()) / 255.0f,
-            static_cast<float>(this->bboxCol.G()) / 255.0f,
-            static_cast<float>(this->bboxCol.B()) / 255.0f));
+        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot << new param::BoolParam(true);
@@ -260,6 +280,43 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
 
     this->MakeSlotAvailable(&this->slotGetCamParams);
     this->MakeSlotAvailable(&this->slotSetCamParams);
+
+    /* Init image file name params */
+    this->paramImgTopLeft.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->paramImgTopLeft);
+
+    this->paramImgTopRight.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->paramImgTopRight);
+
+    this->paramImgBottomLeft.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->paramImgBottomLeft);
+
+    this->paramImgBottomRight.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->paramImgBottomRight);
+
+    /* Init scale params */
+    this->paramScaleAll.SetParameter(new param::FloatParam(1.0));
+    this->MakeSlotAvailable(&this->paramScaleAll);
+
+    this->paramScaleTopLeft.SetParameter(new param::FloatParam(1.0, 0.0000001f));
+    this->MakeSlotAvailable(&this->paramScaleTopLeft);
+
+    this->paramScaleTopRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
+    this->MakeSlotAvailable(&this->paramScaleTopRight);
+
+    this->paramScaleBottomLeft.SetParameter(new param::FloatParam(1.0, 0.0000001f));
+    this->MakeSlotAvailable(&this->paramScaleBottomLeft);
+
+    this->paramScaleBottomRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
+    this->MakeSlotAvailable(&this->paramScaleBottomRight);
+
+    /* Init alpha param */
+    this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->paramAlpha);
+
+    /* Init variables */
+    this->lastScaleAll = 1.0f;
+    this->firstParamChange = false;
 }
 
 
@@ -309,6 +366,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    cr3d->SetMouseSelection(this->toggleMouseSelection);
+
     AbstractRenderingView::beginFrame();
 
     // Conditionally synchronise camera from somewhere else.
@@ -437,20 +496,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (this->bboxColSlot.IsDirty()) {
-        float r, g, b;
+	if (this->bboxColSlot.IsDirty()) {
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
         this->bboxColSlot.ResetDirty();
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), r, g, b);
-        int ir = static_cast<int>(r * 255.0f);
-        if (ir < 0) ir = 0; else if (ir > 255) ir = 255;
-        int ig = static_cast<int>(g * 255.0f);
-        if (ig < 0) ig = 0; else if (ig > 255) ig = 255;
-        int ib = static_cast<int>(b * 255.0f);
-        if (ib < 0) ib = 0; else if (ib > 255) ib = 255;
-        this->bboxCol.Set(static_cast<unsigned char>(ir),
-            static_cast<unsigned char>(ig),
-            static_cast<unsigned char>(ib),
-            255);
     }
 
     // set light parameters
@@ -553,12 +601,101 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->renderSoftCursor();
     }
 
+    /* Watermarks*/
+    /* Update parameters */
+    if (this->paramImgTopLeft.IsDirty()) {
+        this->paramImgTopLeft.ResetDirty();
+        this->loadTexture(view::View3D::TOP_LEFT, static_cast<vislib::StringA>(this->paramImgTopLeft.Param<param::FilePathParam>()->Value()));
+    }
+    if (this->paramImgTopRight.IsDirty()) {
+        this->paramImgTopRight.ResetDirty();
+        this->loadTexture(view::View3D::TOP_RIGHT, static_cast<vislib::StringA>(this->paramImgTopRight.Param<param::FilePathParam>()->Value()));
+    }
+    if (this->paramImgBottomLeft.IsDirty()) {
+        this->paramImgBottomLeft.ResetDirty();
+        this->loadTexture(view::View3D::BOTTOM_LEFT, static_cast<vislib::StringA>(this->paramImgBottomLeft.Param<param::FilePathParam>()->Value()));
+    }
+    if (this->paramImgBottomRight.IsDirty()) {
+        this->paramImgBottomRight.ResetDirty();
+        this->loadTexture(view::View3D::BOTTOM_RIGHT, static_cast<vislib::StringA>(this->paramImgBottomRight.Param<param::FilePathParam>()->Value()));
+    }
+    if (this->paramScaleAll.IsDirty()) {
+        this->paramScaleAll.ResetDirty();
+        float scaleAll = this->paramScaleAll.Param<param::FloatParam>()->Value();
+
+        // Ignore first usage of scaleAll to set lastScaleAll when parameter value is loaded
+        if (this->firstParamChange) {
+            this->paramScaleTopLeft.Param<param::FloatParam>()->SetValue(this->paramScaleTopLeft.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
+            this->paramScaleTopRight.Param<param::FloatParam>()->SetValue(this->paramScaleTopRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
+            this->paramScaleBottomLeft.Param<param::FloatParam>()->SetValue(this->paramScaleBottomLeft.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
+            this->paramScaleBottomRight.Param<param::FloatParam>()->SetValue(this->paramScaleBottomRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
+        }
+        else {
+            this->firstParamChange = true;
+        }
+        this->lastScaleAll = scaleAll;
+    }
+
+    // Get current viewport
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    float vpWidth  = static_cast<float>(vp[2] - vp[0]);
+    float vpHeight = static_cast<float>(vp[3] - vp[1]);
+
+    // OpenGl states
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
+    // Set matrices
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0f, vpWidth, 0.0f, vpHeight, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    // Draw help text in front of all
+    //glTranslatef(0.0f, 0.0f, 1.0f);
+
+    // Render watermarks ...
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
+    this->renderWatermark(view::View3D::TOP_LEFT, vpHeight, vpWidth);
+    this->renderWatermark(view::View3D::TOP_RIGHT, vpHeight, vpWidth);
+    this->renderWatermark(view::View3D::BOTTOM_LEFT, vpHeight, vpWidth);
+    this->renderWatermark(view::View3D::BOTTOM_RIGHT, vpHeight, vpWidth);
+    glDisable(GL_TEXTURE_2D);
+
+    // Reset matrices
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    // Reset OpenGl states
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+
 #ifdef ROTATOR_HACK
     this->cam.Parameters()->SetView(c_e_p, c_l_p, c_u_v);
 #endif
 
     AbstractRenderingView::endFrame();
 
+    if (this->doHookCode()) {
+        this->doAfterRenderHook();
+    }
 }
 
 
@@ -785,6 +922,25 @@ void view::View3D::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::View3D::create(void) {
     
+    bool wasd = false;
+    bool invertX = true;
+    bool invertY = true;
+    try {
+        wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
+    } catch (...) {
+        
+    }
+    try {
+        invertX = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertX"));
+    } catch (...) {
+
+    }
+    try {
+        invertY = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertY"));
+    } catch (...) {
+
+    }
+
     this->cursor2d.SetButtonCount(3); /* This could be configurable. */
     this->modkeys.SetModifierCount(3);
 
@@ -794,17 +950,25 @@ bool view::View3D::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator1.SetModifierTestCount(2);
     this->rotator1.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, wasd);
     this->rotator1.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
+    if (wasd) {
+        this->rotator2.SetInvertX(invertX);
+        this->rotator2.SetInvertY(invertY);
+        this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKeyCode('w');
+        this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKeyCode('s');
+        this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKeyCode('a');
+        this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetKeyCode('d');
+    }
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
     this->rotator2.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
     this->rotator2.SetModifierTestCount(2);
     this->rotator2.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, !wasd);
     this->rotator2.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
@@ -865,6 +1029,12 @@ void view::View3D::release(void) {
     this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
     this->cursor2d.UnregisterCursorEvent(&this->mover);
     SAFE_DELETE(this->frozenValues);
+}
+
+
+bool view::View3D::mouseSensitivityChanged(param::ParamSlot& p) {
+    this->rotator2.SetMouseSensitivity(p.Param<param::FloatParam>()->Value());
+    return true;
 }
 
 
@@ -975,7 +1145,8 @@ void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_BACK, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 160);
+	// XXX: Note that historically, we had a hard-coded alpha of 0.625f, but just for the backside.
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     //::glPolygonMode(GL_BACK, GL_FILL);
@@ -1004,7 +1175,7 @@ void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_FRONT, GL_LINE);
 
-    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 255);
+    ::glColor4fv(this->bboxCol);
     this->renderBBox();
 
     ::glDepthFunc(GL_LESS);
@@ -1277,6 +1448,10 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
             || (&p == &this->viewKeyMoveDownSlot)) {
         // move
         float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+        const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
+        if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
+            step *= runFactor;
+        }
         vislib::math::Vector<float, 3> move;
 
         if (&p == &this->viewKeyZoomInSlot) {
@@ -1437,4 +1612,212 @@ void view::View3D::renderViewCube(void) {
     ::glColor4ub(0, 0, 255, 192);
     ::glVertex3i(0, 0, 0); ::glVertex3i(0, 0, 1);
     ::glEnd();
+}
+
+
+/*
+* WatermarkRenderer::renderWatermark
+*/
+bool view::View3D::renderWatermark(view::View3D::corner cor, float vpH, float vpW) {
+
+    // Set watermark dimensions
+    float imageWidth, imageHeight;
+    float left, top, bottom, right;
+    float scale;
+    vislib::graphics::gl::OpenGLTexture2D *tex = NULL;
+    float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
+    float fixImgWidth = vpW * 1.0f;
+
+    switch (cor) {
+        case(view::View3D::TOP_LEFT):
+            tex = &this->textureTopLeft;
+            scale = this->paramScaleTopLeft.Param<param::FloatParam>()->Value();
+            imageWidth = fixImgWidth * scale;
+            imageHeight = fixImgWidth * (this->sizeTopLeft.Y() / this->sizeTopLeft.X()) * scale;
+            left = 0.0f;
+            right = imageWidth;
+            top = vpH;
+            bottom = vpH - imageHeight;
+            break;
+        case(view::View3D::TOP_RIGHT):
+            tex = &this->textureTopRight;
+            scale = this->paramScaleTopRight.Param<param::FloatParam>()->Value();
+            imageWidth = fixImgWidth * scale;
+            imageHeight = fixImgWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X()) * scale;
+            left = vpW - imageWidth;
+            right = vpW;
+            top = vpH;
+            bottom = vpH - imageHeight;
+            break;
+        case(view::View3D::BOTTOM_LEFT):
+            tex = &this->textureBottomLeft;
+            scale = this->paramScaleBottomLeft.Param<param::FloatParam>()->Value();
+            imageWidth = fixImgWidth * scale;
+            imageHeight = fixImgWidth * (this->sizeBottomLeft.Y() / this->sizeBottomLeft.X()) * scale;
+            left = 0.0f;
+            right = imageWidth;
+            top = imageHeight;
+            bottom = 0.0f;
+            break;
+        case(view::View3D::BOTTOM_RIGHT):
+            tex = &this->textureBottomRight;
+            scale = this->paramScaleBottomRight.Param<param::FloatParam>()->Value();
+            imageWidth = fixImgWidth * scale;
+            imageHeight = fixImgWidth * (this->sizeBottomRight.Y() / this->sizeBottomRight.X()) * scale;
+            left = vpW - imageWidth;
+            right = vpW;
+            top = imageHeight;
+            bottom = 0.0f;
+            break;
+        default: vislib::sys::Log::DefaultLog.WriteError("[View3D] [renderWatermark] Unknown corner - BUG.");
+            break;
+    }
+
+    // Draw watermark texture
+    if (tex->IsValid()) {
+        glActiveTexture(GL_TEXTURE0);
+        tex->Bind();
+        glColor4f(1.0f, 1.0f, 1.0f, alpha);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(left, top);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(right, top);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(right, bottom);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(left, bottom);
+        glEnd();
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+* WatermarkRenderer::loadTexture
+*/
+bool view::View3D::loadTexture(view::View3D::corner cor, vislib::StringA filename) {
+
+    if (!filename.IsEmpty()) {
+
+        vislib::graphics::gl::OpenGLTexture2D *tex = NULL;
+        vislib::math::Vector<float, 2>        *texSize = NULL;
+
+        switch (cor) {
+            case(view::View3D::TOP_LEFT):
+                tex = &this->textureTopLeft;
+                texSize = &this->sizeTopLeft;
+                break;
+            case(view::View3D::TOP_RIGHT):
+                tex = &this->textureTopRight;
+                texSize = &this->sizeTopRight;
+                break;
+            case(view::View3D::BOTTOM_LEFT):
+                tex = &this->textureBottomLeft;
+                texSize = &this->sizeBottomLeft;
+                break;
+            case(view::View3D::BOTTOM_RIGHT):
+                tex = &this->textureBottomRight;
+                texSize = &this->sizeBottomRight;
+                break;
+            default: vislib::sys::Log::DefaultLog.WriteError("[View3D] [renderWatermark] Unknown corner - BUG.");
+                break;
+        }
+
+        if (tex->IsValid()) {
+            tex->Release();
+        }
+
+        static vislib::graphics::BitmapImage img;
+        static sg::graphics::PngBitmapCodec  pbc;
+        pbc.Image() = &img;
+        ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        void *buf = NULL;
+        SIZE_T size = 0;
+
+        //if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+        if ((size = this->loadFile(filename, &buf)) > 0) {
+            if (pbc.Load(buf, size)) {
+                img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
+                texSize->SetX(static_cast<float>(img.Width()));
+                texSize->SetY(static_cast<float>(img.Height()));
+                //for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
+                //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
+                //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
+                //    BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
+                //    if (r + g + b > 0) {
+                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
+                //    }
+                //    else {
+                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
+                //    }
+                //}
+                if (tex->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+                    vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
+                    ARY_SAFE_DELETE(buf);
+                    return false;
+                }
+                tex->Bind();
+                glGenerateMipmap(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                tex->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+                tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+                ARY_SAFE_DELETE(buf);
+                return true;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
+            }
+        } else {
+            // Error is already catch by loadFile function ...
+            //vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
+        }
+        return false;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [loadTexture] Unable to load file: No filename given\n");
+    }
+
+    return true;
+}
+
+
+/*
+* WatermarkRenderer::loadTexture
+*
+* Based on: megamol::core::utility::ResourceWrapper::LoadResource() but without the lookup in the resource folder(s)
+*/
+SIZE_T view::View3D::loadFile(vislib::StringA name, void **outData) {
+
+    *outData = NULL;
+
+    vislib::StringW filename = static_cast<vislib::StringW>(name);
+    if (filename.IsEmpty()) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file: No filename given\n");
+        return 0;
+    }
+
+    if (!vislib::sys::File::Exists(filename)) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
+        return 0;
+    }
+
+    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
+    if (size < 1) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
+        return 0;
+    }
+
+    vislib::sys::FastFile f;
+    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
+        return 0;
+    }
+
+    *outData = new BYTE[size];
+    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
+    if (num != size) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
+        ARY_SAFE_DELETE(*outData);
+        return 0;
+    }
+
+    return num;
 }

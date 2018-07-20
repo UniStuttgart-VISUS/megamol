@@ -13,36 +13,37 @@ using namespace megamol::stdplugin::datatools;
 /*
  * DiagramSeries::DiagramSeries
  */
-DiagramSeries::DiagramSeries(void) : core::Module(),
-    seriesInSlot("seriesIn", "Input of series for passthrough"),
-    seriesOutSlot("seriesOut", "Output of owned series"),
-    ftInSlot("ftIn", "Input of FloatTable to select series from"),
-    columnSelectorParam("columnSelector", "Param to select specific column from FloatTable"),
-    scalingParam("scaling", "Param to set a scaling factor for selected column"),
-    colorParam("color", "Selecto color for series"),
-    myHash(0), inputHash((std::numeric_limits<size_t>::max)()) {
+DiagramSeries::DiagramSeries(void)
+    : core::Module()
+    , seriesInSlot("seriesIn", "Input of series for passthrough")
+    , seriesOutSlot("seriesOut", "Output of owned series")
+    , ftInSlot("ftIn", "Input of FloatTable to select series from")
+    , columnSelectorParam("columnSelector", "Param to select specific column from FloatTable")
+    , scalingParam("scaling", "Param to set a scaling factor for selected column")
+    , colorParam("color", "Selecto color for series")
+    , myHash(0)
+    , inputHash((std::numeric_limits<size_t>::max)()) {
     this->color = {1.0f, 1.0f, 1.0f};
 
     this->seriesInSlot.SetCompatibleCall<DiagramSeriesCallDescription>();
     this->MakeSlotAvailable(&this->seriesInSlot);
 
     this->seriesOutSlot.SetCallback(DiagramSeriesCall::ClassName(),
-        DiagramSeriesCall::FunctionName(DiagramSeriesCall::CallForGetSeries),
-        &DiagramSeries::seriesSelectionCB);
+        DiagramSeriesCall::FunctionName(DiagramSeriesCall::CallForGetSeries), &DiagramSeries::seriesSelectionCB);
     this->MakeSlotAvailable(&this->seriesOutSlot);
 
     this->ftInSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->ftInSlot);
 
-    core::param::FlexEnumParam *columnSelectorEP = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* columnSelectorEP = new core::param::FlexEnumParam("undef");
     this->columnSelectorParam << columnSelectorEP;
     this->MakeSlotAvailable(&this->columnSelectorParam);
 
     this->scalingParam << new core::param::FloatParam(1.0f, (std::numeric_limits<float>::min)());
     this->MakeSlotAvailable(&this->scalingParam);
 
-    this->colorParam << new core::param::StringParam(core::utility::ColourParser::ToString(
-        this->color[0], this->color[1], this->color[2]));
+    this->colorParam << new core::param::StringParam(
+        core::utility::ColourParser::ToString(this->color[0], this->color[1], this->color[2]));
     this->MakeSlotAvailable(&this->colorParam);
 }
 
@@ -50,38 +51,32 @@ DiagramSeries::DiagramSeries(void) : core::Module(),
 /*
  * DiagramSeries::~DiagramSeries
  */
-DiagramSeries::~DiagramSeries(void) {
-    this->Release();
-}
+DiagramSeries::~DiagramSeries(void) { this->Release(); }
 
 
 /*
  * DiagramSeries::create
  */
-bool DiagramSeries::create(void) {
-    return true;
-}
+bool DiagramSeries::create(void) { return true; }
 
 
 /*
  * DiagramSeries::release
  */
-void DiagramSeries::release(void) {
-
-}
+void DiagramSeries::release(void) {}
 
 
 /*
  * DiagramSeries::seriesSelectionCB
  */
-bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call &c) {
+bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
     try {
-        DiagramSeriesCall *outSeries = dynamic_cast<DiagramSeriesCall *>(&c);
+        DiagramSeriesCall* outSeries = dynamic_cast<DiagramSeriesCall*>(&c);
         if (outSeries == NULL) return false;
 
-        DiagramSeriesCall *inSeries = this->seriesInSlot.CallAs<DiagramSeriesCall>();
+        DiagramSeriesCall* inSeries = this->seriesInSlot.CallAs<DiagramSeriesCall>();
 
-        floattable::CallFloatTableData *ft = this->ftInSlot.CallAs<floattable::CallFloatTableData>();
+        floattable::CallFloatTableData* ft = this->ftInSlot.CallAs<floattable::CallFloatTableData>();
         if (ft == NULL) return false;
         if (!(*ft)(1)) return false;
         if (!(*ft)(0)) return false;
@@ -109,7 +104,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call &c) {
 /*
  * DiagramSeries::assertData
  */
-bool DiagramSeries::assertData(const floattable::CallFloatTableData *const ft) {
+bool DiagramSeries::assertData(const floattable::CallFloatTableData* const ft) {
     if (this->inputHash == ft->DataHash() && !isAnythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
@@ -128,10 +123,10 @@ bool DiagramSeries::assertData(const floattable::CallFloatTableData *const ft) {
     if (!this->getColumnIdx(colIdx, colname, ft)) return false;
 
     core::utility::ColourParser::FromString(
-        this->colorParam.Param<core::param::StringParam>()->Value(),
-        this->color[0], this->color[1], this->color[2]);
+        this->colorParam.Param<core::param::StringParam>()->Value(), this->color[0], this->color[1], this->color[2]);
 
-    this->series = std::make_tuple(0, colIdx, std::string(T2A(colname)), this->scalingParam.Param<core::param::FloatParam>()->Value(), this->color);
+    this->series = std::make_tuple(0, colIdx, std::string(T2A(colname)),
+        this->scalingParam.Param<core::param::FloatParam>()->Value(), this->color);
 
     /*this->series.col = colIdx;
     this->series.name = std::string(T2A(colname));
@@ -149,9 +144,7 @@ bool DiagramSeries::assertData(const floattable::CallFloatTableData *const ft) {
  * DiagramSeries::isAnythingDirty
  */
 bool DiagramSeries::isAnythingDirty(void) const {
-    return this->columnSelectorParam.IsDirty() ||
-        this->scalingParam.IsDirty() ||
-        this->colorParam.IsDirty();
+    return this->columnSelectorParam.IsDirty() || this->scalingParam.IsDirty() || this->colorParam.IsDirty();
 }
 
 /*
@@ -167,8 +160,8 @@ void DiagramSeries::resetDirtyFlags(void) {
 /*
  * DiagramSeries::getColumnIdx
  */
-bool DiagramSeries::getColumnIdx(uint32_t &colIdx, const vislib::TString &columnName,
-    const floattable::CallFloatTableData *const ft) const {
+bool DiagramSeries::getColumnIdx(
+    uint32_t& colIdx, const vislib::TString& columnName, const floattable::CallFloatTableData* const ft) const {
     std::string name = std::string(T2A(columnName));
 
     for (size_t i = 0; i < ft->GetColumnsCount(); i++) {

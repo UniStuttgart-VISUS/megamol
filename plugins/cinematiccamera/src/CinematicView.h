@@ -1,11 +1,12 @@
 /*
 *CinematicView.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
+*
+* DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
 */
 
-///////////////////////////////////////////////////////////////////////////////
-///// DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp" /////
-///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
@@ -18,6 +19,7 @@
 #include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
@@ -25,14 +27,10 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 
 #include "Keyframe.h"
 #include "png.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -40,16 +38,6 @@ namespace megamol {
 		class CinematicView : public core::view::View3D {
 
 		public:
-
-			enum SkyboxSides {
-				SKYBOX_NONE  = 0,
-				SKYBOX_FRONT = 1,
-				SKYBOX_BACK  = 2,
-				SKYBOX_LEFT  = 4,
-				SKYBOX_RIGHT = 8, 
-				SKYBOX_UP    = 16,
-				SKYBOX_DOWN  = 32
-			};
 
 			typedef core::view::View3D Base;
 
@@ -109,22 +97,27 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
+
+            enum SkyboxSides {
+                SKYBOX_NONE = 0,
+                SKYBOX_FRONT = 1,
+                SKYBOX_BACK = 2,
+                SKYBOX_LEFT = 4,
+                SKYBOX_RIGHT = 8,
+                SKYBOX_UP = 16,
+                SKYBOX_DOWN = 32
+            };
 
             clock_t                                 deltaAnimTime;
-            clock_t                                 deltaRipPrompt; // Rip = rendering in progress
 
             Keyframe                                shownKeyframe;
             bool                                    playAnim;
 
             int                                     cineWidth;
             int                                     cineHeight;
-            int                                     vpH;
-            int                                     vpW;
+            int                                     vpHLast;
+            int                                     vpWLast;
 
             CinematicView::SkyboxSides              sbSide;
 
@@ -224,18 +217,24 @@ namespace megamol {
             /**********************************************************************
             * parameters
             **********************************************************************/
-            /** */
-			core::param::ParamSlot selectedSkyboxSideParam;
-            /** */
-            core::param::ParamSlot resHeightParam;
-            /** */
-            core::param::ParamSlot resWidthParam;
-            /** */
-            core::param::ParamSlot fpsParam;
+
             /** */
             core::param::ParamSlot renderParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
+            /** */
+			core::param::ParamSlot selectedSkyboxSideParam;
+            /** */
+            core::param::ParamSlot resWidthParam;
+            /** */
+            core::param::ParamSlot resHeightParam;
+            /** */
+            core::param::ParamSlot fpsParam;
+
+            /** */
+            core::param::ParamSlot eyeParam;
+            /** */
+            core::param::ParamSlot projectionParam;
 		};
 
 	} /* end namespace cinematiccamera */

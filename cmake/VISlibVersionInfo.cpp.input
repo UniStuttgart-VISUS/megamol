@@ -1,0 +1,5 @@
+#include "vislib/vislibversion.h"
+
+int const vislib::VISLIB_VERSION_MAJOR = @VISLIB_MAJOR@;
+int const vislib::VISLIB_VERSION_MINOR = @VISLIB_MINOR@;
+char const* vislib::VISLIB_VERSION_REVISION = "@GIT_HASH@";

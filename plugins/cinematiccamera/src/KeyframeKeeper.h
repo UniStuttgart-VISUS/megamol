@@ -1,6 +1,8 @@
 /*
 * KeyframeKeeper.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED
@@ -81,10 +83,12 @@ namespace megamol {
             vislib::math::Cuboid<float>          boundingBox;
             Keyframe                             selectedKeyframe;
             Keyframe                             dragDropKeyframe;
+            vislib::math::Vector<float, 3>       firstCtrllPos;
+            vislib::math::Vector<float, 3>       lastCtrllPos;
             float                                totalAnimTime;
             float                                totalSimTime;
             unsigned int                         interpolSteps;
-            vislib::math::Point<float, 3>        bboxCenter;
+            vislib::math::Point<float, 3>        modelBboxCenter;
             unsigned int                         fps;
 
             vislib::math::Vector<float, 3>       camViewUp;
@@ -95,7 +99,48 @@ namespace megamol {
             // Variables only used in keyframe keeper
             vislib::StringA                      filename;
             bool                                 simTangentStatus;
-            Keyframe                             simTangentKf;
+            float                                tl; // Global interpolation spline tangent length of keyframes
+
+            // undo queue stuff -----------------------------------------------
+
+            enum UndoActionEnum {
+                UNDO_NONE   = 0,
+                UNDO_ADD    = 1,
+                UNDO_DELETE = 2,
+                UNDO_MODIFY = 3
+            };
+
+            class UndoAction {  
+                public:
+                    /** functions **/
+                    UndoAction() {
+                        this->action       = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
+                        this->keyframe     = Keyframe();
+                        this->prevKeyframe = Keyframe();
+                    }
+                    UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf) {
+                        this->action       = act;
+                        this->keyframe     = kf;
+                        this->prevKeyframe = prevkf;
+                    }
+                    ~UndoAction() { }
+                    inline bool operator==(UndoAction const& rhs) {
+                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prevKeyframe == rhs.prevKeyframe));
+                    }
+                    inline bool operator!=(UndoAction const& rhs) {
+                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prevKeyframe != rhs.prevKeyframe));
+                    }
+                    /** variables **/
+                   UndoActionEnum action;
+                   Keyframe       keyframe;
+                   Keyframe       prevKeyframe;
+            };
+
+            /** */
+            vislib::Array<UndoAction> undoQueue;
+
+            /** */
+            int undoQueueIndex;
 
             /**********************************************************************
             * functions
@@ -105,13 +150,13 @@ namespace megamol {
             Keyframe interpolateKeyframe(float time);
 
             /** Add new keyframe to keyframe array. */
-            bool addKeyframe(Keyframe kf);
+            bool addKeyframe(Keyframe kf, bool undo);
 
-            /** change existing keyframe in keyframe array.*/
-            bool changeKeyframe(Keyframe kf);
+            /** replace existing keyframe in keyframe array.*/
+            bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo);
 
             /** Delete keyframe from keyframe array.*/
-            bool deleteKeyframe(Keyframe kf);
+            bool deleteKeyframe(Keyframe kf, bool undo);
 
             /** Load keyframes from file.*/
             void loadKeyframes(void);
@@ -123,7 +168,7 @@ namespace megamol {
             void refreshInterpolCamPos(unsigned int s);
 
             /** Updating edit parameters without setting them dirty.*/
-            void updateEditParameters(Keyframe kf, bool setDirty);
+            void updateEditParameters(Keyframe kf);
 
             /** Set speed between all keyframes to same speed 
              *  Uses interpolSteps for approximation of path between keyframe positions 
@@ -131,10 +176,26 @@ namespace megamol {
             void setSameSpeed(void);
 
             /** */
+            void linearizeSimTangent(Keyframe stkf);
+
+            /** */
             void snapKeyframe2AnimFrame(Keyframe *kf);
 
             /** */
             void snapKeyframe2SimFrame(Keyframe *kf);
+
+            /**   */
+            bool undo();
+
+            /**   */
+            bool redo();
+
+            /**   */
+            bool addNewUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf);
+
+            /** */
+            vislib::math::Vector<float, 3> interpolation(float u, vislib::math::Vector<float, 3> v0, vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3);
+            float interpolation(float u, float f0, float f1, float f2, float f3);
 
             /**********************************************************************
             * callback stuff
@@ -158,20 +219,33 @@ namespace megamol {
             bool CallForSetDragKeyframe(core::Call& c); 
             /** Callback for dropping selected keyframe */
             bool CallForSetDropKeyframe(core::Call& c);
-
+            /** Callback for getting new control point positions */
+            bool CallForSetCtrlPoints(core::Call& c);
 
             /**********************************************************************
             * parameters
             **********************************************************************/
 
             /** */
-            core::param::ParamSlot addKeyframeParam;
+            core::param::ParamSlot applyKeyframeParam;
             /** */
-            core::param::ParamSlot changeKeyframeParam;
+            core::param::ParamSlot undoChangesParam;
+            /** */
+            core::param::ParamSlot redoChangesParam;
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
-            core::param::ParamSlot setKeyframesToSameSpeed;
+            core::param::ParamSlot setTotalAnimTimeParam;
+            /** */
+            core::param::ParamSlot  snapAnimFramesParam;
+            /** */
+            core::param::ParamSlot  snapSimFramesParam;
+            /** */
+            core::param::ParamSlot  simTangentParam;
+            /** */
+            core::param::ParamSlot  interpolTangentParam;
+            /** */
+            //UNUSED core::param::ParamSlot setKeyframesToSameSpeed;
 			/**param for current keyframe aniamtion time */
 			core::param::ParamSlot editCurrentAnimTimeParam;
             /**param for current keyframe simulation time */
@@ -180,31 +254,18 @@ namespace megamol {
 			core::param::ParamSlot editCurrentPosParam;
 			/**param for current keyframe LookAt */
 			core::param::ParamSlot editCurrentLookAtParam;
+            /** */
+            core::param::ParamSlot  resetLookAtParam;
 			/**param for current keyframe Up */
 			core::param::ParamSlot editCurrentUpParam;
             /** */
-            core::param::ParamSlot setTotalAnimTimeParam;
+            core::param::ParamSlot  editCurrentApertureParam;
+            /** */
+            core::param::ParamSlot fileNameParam;
             /** */
             core::param::ParamSlot saveKeyframesParam;
             /** */
             core::param::ParamSlot loadKeyframesParam;
-            /** */
-            core::param::ParamSlot fileNameParam;
-            /** */
-            core::param::ParamSlot  editCurrentApertureParam;
-            /** */
-            core::param::ParamSlot  resetLookAtParam;
-            /** */
-            core::param::ParamSlot  snapAnimFramesParam;
-            /** */
-            core::param::ParamSlot  snapSimFramesParam;
-            /** */
-            core::param::ParamSlot  simTangentParam;
-
-            /** */
-            core::param::ParamSlot  addFixedAnimTimeParam;
-            /** */
-            core::param::ParamSlot  addFixedSimTimeParam;
 		};
 
 		/** Description class typedef */
