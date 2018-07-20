@@ -9,10 +9,10 @@
         <snippet name="MainParams" type="file">ngsphere/vert_mainparams.glsl</snippet>
         <snippet name="MainRest" type="file">ngsphere/vert_mainstart.glsl</snippet>
         <snippet name="posTrans" type="file">ngsphere/vert_postrans.glsl</snippet>
-        <snippet name="clippingPlane" type="file">ngsphere/vert_clipping.glsl</snippet>
+        <snippet name="clippingPlane" type="file">simplesphere/vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">ngsphere/vert_spheretouchplane.glsl</snippet>
         <snippet name="Output" type="file">ngsphere/vert_output.glsl</snippet>
-        <snippet name="MainEnd" type="file">ngsphere/vert_mainend.glsl</snippet>
+        <snippet name="MainEnd" type="file">simplesphere/vert_mainend.glsl</snippet>
     </shader>
 
     <shader name="fragment">
