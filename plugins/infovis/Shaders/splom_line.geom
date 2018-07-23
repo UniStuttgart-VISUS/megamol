@@ -20,7 +20,7 @@ void main(void) {
     const vec2 lineNormal = vec2(-lineTangent.y, lineTangent.x);
     const float lineLength = length(p1 - p0);
 
-    //TODO: keep this, as it might become a vertex attribute.
+    //XXX: keep this, as it might become a vertex attribute.
     const float ndcKernelWidth0 = kernelWidth;
     const float ndcKernelWidth1 = kernelWidth;
 
