@@ -200,9 +200,18 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
                 ::glEnableVertexAttribArray(vertexColor);
                 ::glVertexAttribPointer(vertexColor, 4, GL_FLOAT, GL_TRUE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA:
                 ::glEnableVertexAttribArray(vertexColor);
-                ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                ::glVertexAttribPointer(vertexColor, 4, GL_SHORT, GL_TRUE, parts.GetColourDataStride(), parts.GetColourData());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+                ::glEnableVertexAttribArray(vertexColor);
+                if (MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                    ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                } else {
+                    glVertexAttribPointer(vertexColor, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                }
 
                 glEnable(GL_TEXTURE_1D);
 
@@ -231,6 +240,11 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 ::glEnableVertexAttribArray(vertexPos);
                 ::glVertexAttribPointer(vertexPos, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
+                ::glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                break;
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+                ::glEnableVertexAttribArray(vertexPos);
+                ::glVertexAttribPointer(vertexPos, 3, GL_DOUBLE, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
                 ::glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
