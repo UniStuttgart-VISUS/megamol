@@ -34,6 +34,7 @@ const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
+#define NGS_THE_ALIGNMENT "packed"
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
@@ -355,7 +356,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             }
             decl += "};\n";
 
-            decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
                 "    SphereParams theBuffer[];\n"
                 // flat float version
                 //"    float theBuffer[];\n"
@@ -367,10 +368,12 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
             decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
 
-            decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+                    ") buffer shader_data {\n"
                 "    SpherePosParams thePosBuffer[];\n"
                 "};\n";
-            decl += "layout(packed, binding = " + std::to_string(SSBOcolorBindingPoint) + ") buffer shader_data2 {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
+                    ") buffer shader_data2 {\n"
                 "    SphereColParams theColBuffer[];\n"
                 "};\n";
         }
