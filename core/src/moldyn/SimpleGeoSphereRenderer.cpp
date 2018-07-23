@@ -207,7 +207,7 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
             case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
                 ::glEnableVertexAttribArray(vertexColor);
-                if (MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                     ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
                 } else {
                     glVertexAttribPointer(vertexColor, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
