@@ -228,6 +228,21 @@ AddEdgeLists();
 $m->OverrideBBox(-2,-2,-2,2,2,2);
 $m->Close();
 
+$outfile = "test_xyz_double_int_double.mmpld";
+print "writing $outfile\n";
+push @outfiles, $outfile;
+$m = MMPLD->new({filename=>$outfile, numframes=>1});
+$m->StartFrame({frametime=>1.23, numlists=>$numLists});
+
+$m->StartList({
+            vertextype=>$VERTEX_XYZ_DOUBLE, colortype=>$COLOR_INTENSITY_DOUBLE, globalradius=>0.1,
+            minintensity=>0.0, maxintensity=>255, particlecount=>$numPoints
+            });
+AddParticles(1.0);
+AddEdgeLists();
+$m->OverrideBBox(-2,-2,-2,2,2,2);
+$m->Close();
+
 $outfile = "test_xyzr_float_int_float.mmpld";
 print "writing $outfile\n";
 push @outfiles, $outfile;
@@ -254,6 +269,21 @@ $m->StartList({
             minintensity=>0.0, maxintensity=>255, particlecount=>$numPoints, globalcolor=>"255 255 0 255"
             });
 AddParticles(1.0);
+AddEdgeLists();
+$m->OverrideBBox(-2,-2,-2,2,2,2);
+$m->Close();
+
+$outfile = "test_xyz_double_rgba_short.mmpld";
+print "writing $outfile\n";
+push @outfiles, $outfile;
+$m = MMPLD->new({filename=>$outfile, numframes=>1});
+$m->StartFrame({frametime=>1.23, numlists=>$numLists});
+
+$m->StartList({
+            vertextype=>$VERTEX_XYZ_DOUBLE, colortype=>$COLOR_RGBA_SHORT, globalradius=>0.1,
+            minintensity=>0.0, maxintensity=>255, particlecount=>$numPoints
+            });
+AddParticles(65535.0);
 AddEdgeLists();
 $m->OverrideBBox(-2,-2,-2,2,2,2);
 $m->Close();

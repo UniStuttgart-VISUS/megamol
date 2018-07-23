@@ -17,6 +17,7 @@ using namespace megamol::core::utility;
 SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
     : theSSBO(0), bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
       mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()), debugLabel(debugLabel) {
+    glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &this->offsetAlignment);
 }
 
 SSBOStreamer::~SSBOStreamer() {
@@ -54,13 +55,13 @@ GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint 
     return numChunks;
 }
 
-GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) {
+GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) const {
 	// Rounding the number of items per chunk is important for alignment and thus performance.
 	// That means, if we synchronize with another buffer that has tiny items, we have to make 
 	// sure that we do not get non-aligned chunks with due to the number of items.
-	// For modern GPUs, 32bytes seems like a safe bet, i.e., we upload in multiples of eight
-	// to get 8 * 4 = 32.
-    const GLuint multiRound = 8;
+	// For modern GPUs, we use GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT (which for NVidia results in 32),
+    // i.e., we upload in multiples of eight to get 8 * 4 = 32 (no data shorter than uint32_t is allowed).
+    const GLuint multiRound = this->offsetAlignment / 4;
     return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound; 
 }
 

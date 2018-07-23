@@ -624,7 +624,9 @@ namespace moldyn {
             COLDATA_UINT8_RGBA = 2,
             COLDATA_FLOAT_RGB = 3,
             COLDATA_FLOAT_RGBA = 4,
-            COLDATA_FLOAT_I = 5 //< single float value to be mapped by a transfer function
+            COLDATA_FLOAT_I = 5, //< single float value to be mapped by a transfer function
+            COLDATA_SHORT_RGBA = 6,
+            COLDATA_DOUBLE_I = 7
         };
 
         /** possible values for the id data */
@@ -638,7 +640,7 @@ namespace moldyn {
         static unsigned int VertexDataSize[5];
 
         /** possible values of accumulated data sizes over all color elements */
-        static unsigned int ColorDataSize[6];
+        static unsigned int ColorDataSize[8];
 
         /** possible values of data sizes of the id */
         static unsigned int IDDataSize[3];
