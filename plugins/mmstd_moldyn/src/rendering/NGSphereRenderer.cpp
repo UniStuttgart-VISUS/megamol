@@ -40,7 +40,7 @@ const GLuint SSBOcolorBindingPoint = 3;
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar* message, const GLvoid* userParam) {
         const char *sourceText, *typeText, *severityText;
-        switch(source) {
+        switch(source) { 
             case GL_DEBUG_SOURCE_API:
                 sourceText = "API";
                 break;
@@ -210,6 +210,24 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
                 code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
             } else {
                 code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            }
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+            declaration = "    double colorIndex;\n";
+            if (interleaved) {
+                code = "    theColIdx = float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            } else {
+                code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            }
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA: {
+            declaration = "    uint col1; uint col2;\n";
+            if (interleaved) {
+                code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                       "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+            } else {
+                code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                       "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
             }
         } break;
         default:
@@ -405,81 +423,6 @@ void NGSphereRenderer::release(void) {
 }
 
 
-void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
-    float minC = 0.0f, maxC = 0.0f;
-    unsigned int colTabSize = 0;
-
-    // colour
-    glBindBuffer(GL_ARRAY_BUFFER, colBuf);
-    switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            glColor3ubv(parts.GetGlobalColour());
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            glEnableVertexAttribArrayARB(colIdxAttribLoc);
-            glVertexAttribPointerARB(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
-
-            glEnable(GL_TEXTURE_1D);
-
-            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            } else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
-
-            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-            glColor3ub(127, 127, 127);
-        } break;
-        default:
-            glColor3ub(127, 127, 127);
-            break;
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, vertBuf);
-    // radius and position
-    switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-            glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-            glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), vertPtr);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-            glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        default:
-            break;
-    }
-}
-
 void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
     unsigned int &colStride, unsigned int &vertStride, bool &interleaved) {
     vertBytes = 0; colBytes = 0;
@@ -501,9 +444,14 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
             colBytes = vislib::math::Max(colBytes, 1 * 4U);
-            // nothing else
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+            colBytes = vislib::math::Max(colBytes, 1 * 8U);
         }
-            break;
+        break;
+        case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA: {
+            colBytes = vislib::math::Max(colBytes, 4 * 2U);
+        } break;
         default:
             // nothing
             break;
@@ -635,7 +583,8 @@ bool NGSphereRenderer::Render(Call& call) {
                     static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
                     1.0f);
             } break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
                 glEnable(GL_TEXTURE_1D);
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                 if ((cgtf != NULL) && ((*cgtf)())) {

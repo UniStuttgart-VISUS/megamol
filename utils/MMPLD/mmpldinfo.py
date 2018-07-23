@@ -63,11 +63,11 @@ def listFramedata(parseResult, frame):
 
 vertexSizes = [0, 12, 16, 5, 24]
 vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
-colorSizes = [0, 3, 4, 4, 12, 16]
-colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA"]
+colorSizes = [0, 3, 4, 4, 12, 16, 8, 8]
+colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_SHORT_RGBA", "COLDATA_DOUBLE_I"]
 
 print("")
-print("MMPLDinfo (v.: 1.3) - MegaMol Particle List Data File Information Utility")
+print("MMPLDinfo (v.: 1.3.1) - MegaMol Particle List Data File Information Utility")
 print("Copyright 2014-2018 (C) by")
 print("S. Grottel, TU Dresden, Germany and G. Reina, University of Stuttgart")
 print("All rights reserved. Alle Rechte vorbehalten.")

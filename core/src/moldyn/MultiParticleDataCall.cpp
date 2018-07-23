@@ -15,7 +15,7 @@ using namespace megamol::core;
 
 unsigned int megamol::core::moldyn::SimpleSphericalParticles::VertexDataSize[] = {0, 12, 16, 6, 24};
 
-unsigned int megamol::core::moldyn::SimpleSphericalParticles::ColorDataSize[] = {0, 3, 4, 12, 16, 4};
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::ColorDataSize[] = {0, 3, 4, 12, 16, 4, 8, 8};
 
 unsigned int megamol::core::moldyn::SimpleSphericalParticles::IDDataSize[] = {0, 4, 8};
 

@@ -162,10 +162,16 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 glEnableClientState(GL_COLOR_ARRAY);
                 glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
                 break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
                 glEnableVertexAttribArrayARB(cial);
-                glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
-
+                if (parts.GetColourDataType() == SimpleSphericalParticles::COLDATA_FLOAT_I) {
+                    glVertexAttribPointerARB(
+                        cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                } else {
+                    glVertexAttribPointerARB(
+                        cial, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                }
                 glEnable(GL_TEXTURE_1D);
 
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -182,6 +188,10 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 maxC = parts.GetMaxColourIndexValue();
                 glColor3ub(127, 127, 127);
             } break;
+            case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(4, GL_UNSIGNED_SHORT, parts.GetColourDataStride(), parts.GetColourData());
+                break;
             default:
                 glColor3ub(127, 127, 127);
                 break;
