@@ -325,7 +325,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
 
     this->axisFont.ClearBatchCache();
 
-    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto* axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
