@@ -8,6 +8,7 @@ share/**/*
 stage/**/*
 lib/**/*
 issues/**/*
+mmprjs/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/

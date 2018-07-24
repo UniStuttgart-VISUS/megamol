@@ -102,7 +102,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
                 case 3: colSize = 4; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_I; break;
                 case 4: colSize = 12; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB; break;
                 case 5: colSize = 16; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA; break;
-                case 6: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA; break;
+                case 6: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA; break;
                 case 7: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_DOUBLE_I; break;
                 default: colSize = 0; colDatType = MultiParticleDataCall::Particles::COLDATA_NONE; break;
             }

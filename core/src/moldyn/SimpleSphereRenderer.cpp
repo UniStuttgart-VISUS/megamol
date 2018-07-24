@@ -188,7 +188,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 maxC = parts.GetMaxColourIndexValue();
                 glColor3ub(127, 127, 127);
             } break;
-            case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA:
+            case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
                 glEnableClientState(GL_COLOR_ARRAY);
                 glColorPointer(4, GL_UNSIGNED_SHORT, parts.GetColourDataStride(), parts.GetColourData());
                 break;

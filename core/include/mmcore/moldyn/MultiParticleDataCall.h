@@ -625,7 +625,7 @@ namespace moldyn {
             COLDATA_FLOAT_RGB = 3,
             COLDATA_FLOAT_RGBA = 4,
             COLDATA_FLOAT_I = 5, //< single float value to be mapped by a transfer function
-            COLDATA_SHORT_RGBA = 6,
+            COLDATA_USHORT_RGBA = 6,
             COLDATA_DOUBLE_I = 7
         };
 
