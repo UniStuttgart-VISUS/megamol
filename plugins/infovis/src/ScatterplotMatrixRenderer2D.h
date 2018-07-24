@@ -75,6 +75,7 @@ protected:
 
 private:
     enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
+    enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
 
     struct ParamState {
         size_t colorIdx;
@@ -153,6 +154,8 @@ private:
     core::param::ParamSlot geometryTypeParam;
 
     core::param::ParamSlot kernelWidthParam;
+
+    core::param::ParamSlot kernelTypeParam;
 
     core::param::ParamSlot axisColorParam;
 

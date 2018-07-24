@@ -53,6 +53,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
+    , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksParam("axisTicks", "Number of ticks on the axis")
@@ -97,6 +98,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
+
+    core::param::EnumParam* kernelTypes = new core::param::EnumParam(0);
+    kernelTypes->SetTypePair(KERNEL_TYPE_BOX, "Box");
+    kernelTypes->SetTypePair(KERNEL_TYPE_GAUSSIAN, "Gaussian");
+    this->kernelTypeParam << kernelTypes;
+    this->MakeSlotAvailable(&this->kernelTypeParam);
 
     this->axisColorParam << new core::param::ColorParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
@@ -396,6 +403,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniform1i(this->pointShader.ParameterLocation("rowStride"), columnCount);
     glUniform1f(this->pointShader.ParameterLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->pointShader.ParameterLocation("kernelType"),
+        this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
@@ -467,6 +476,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     glUniform1i(this->lineShader.ParameterLocation("rowStride"), columnCount);
     glUniform1f(this->lineShader.ParameterLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->lineShader.ParameterLocation("kernelType"),
+        this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
