@@ -338,7 +338,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             co = cs;
         }
 
-        if ((vt == 1) || (vt == 3)) {
+        if ((vt == 1) || (vt == 3) || (vt == 4)) {
             float f = points.GetGlobalRadius();
             ASSERT_WRITEOUT(&f, 4);
         }
