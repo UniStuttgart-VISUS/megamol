@@ -8,7 +8,7 @@ use Readonly;
 use POSIX;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT $COLOR_RGBA_SHORT $COLOR_INTENSITY_DOUBLE);
+our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT $COLOR_RGBA_USHORT $COLOR_INTENSITY_DOUBLE);
 
 Readonly my $NOTHINGGOES => 0;
 Readonly my $CANADDFRAME => 1;
@@ -26,7 +26,7 @@ Readonly our $COLOR_INTENSITY_FLOAT => 1;
 Readonly our $COLOR_RGBA_BYTE => 2;
 Readonly our $COLOR_RGB_FLOAT => 3;
 Readonly our $COLOR_RGBA_FLOAT => 4;
-Readonly our $COLOR_RGBA_SHORT => 5;
+Readonly our $COLOR_RGBA_USHORT => 5;
 Readonly our $COLOR_INTENSITY_DOUBLE => 6;
 
 sub _closeAndDie {
@@ -187,7 +187,7 @@ sub StartList() {
         $self->AppendUBytes(4);
     } elsif ($colortype == $COLOR_RGBA_FLOAT) {
         $self->AppendUBytes(5);
-    } elsif ($colortype == $COLOR_RGBA_SHORT) {
+    } elsif ($colortype == $COLOR_RGBA_USHORT) {
         $self->AppendUBytes(6);
     } elsif ($colortype == $COLOR_INTENSITY_DOUBLE) {
         $self->AppendUBytes(7);
@@ -297,7 +297,7 @@ sub AddParticle {
             die qq{color "$r, $g, $b, $a" is weird in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}.};
         }
         $self->AppendFloats($r, $g, $b, $a);
-    } elsif ($self->{currcolortype} == $COLOR_RGBA_SHORT) {
+    } elsif ($self->{currcolortype} == $COLOR_RGBA_USHORT) {
         my @gc = ($r, $g, $b, $a);
         my $ok = _checkUShortColor(@gc);
         if ($ok == 0) {
