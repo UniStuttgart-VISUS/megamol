@@ -220,7 +220,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
                 code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
             }
         } break;
-        case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA: {
+        case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
             declaration = "    uint col1; uint col2;\n";
             if (interleaved) {
                 code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
@@ -449,7 +449,7 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
             colBytes = vislib::math::Max(colBytes, 1 * 8U);
         }
         break;
-        case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA: {
+        case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
             colBytes = vislib::math::Max(colBytes, 4 * 2U);
         } break;
         default:

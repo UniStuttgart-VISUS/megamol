@@ -200,7 +200,7 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
                 ::glEnableVertexAttribArray(vertexColor);
                 ::glVertexAttribPointer(vertexColor, 4, GL_FLOAT, GL_TRUE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
-            case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA:
+            case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
                 ::glEnableVertexAttribArray(vertexColor);
                 ::glVertexAttribPointer(vertexColor, 4, GL_SHORT, GL_TRUE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
