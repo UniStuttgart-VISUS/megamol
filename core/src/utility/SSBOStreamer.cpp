@@ -17,7 +17,6 @@ using namespace megamol::core::utility;
 SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
     : theSSBO(0), bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
       mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()), debugLabel(debugLabel) {
-    glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &this->offsetAlignment);
 }
 
 SSBOStreamer::~SSBOStreamer() {
@@ -56,6 +55,10 @@ GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint 
 }
 
 GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) const {
+    // Lazy initialisation of offset alignment because OGl context must be available.
+    if (this->offsetAlignment == 0) {
+        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*)&this->offsetAlignment);
+    }
 	// Rounding the number of items per chunk is important for alignment and thus performance.
 	// That means, if we synchronize with another buffer that has tiny items, we have to make 
 	// sure that we do not get non-aligned chunks with due to the number of items.
