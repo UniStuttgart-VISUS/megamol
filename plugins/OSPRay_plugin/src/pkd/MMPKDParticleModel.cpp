@@ -14,10 +14,20 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         throw std::runtime_error("MMPKDParticleModel does not support FLOAT_XYZR or SHORT_XYZ");
     }
 
+    auto mmbbox = parts.GetBBox();
+    bbox.lower.x = mmbbox.GetLeft();
+    bbox.lower.y = mmbbox.GetBottom();
+    bbox.lower.z = mmbbox.GetBack();
+    bbox.upper.x = mmbbox.GetRight();
+    bbox.upper.y = mmbbox.GetTop();
+    bbox.upper.z = mmbbox.GetFront();
+
     if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
         if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
             vislib::sys::Log::DefaultLog.WriteWarn("MMPKDParticleModel only supports UINT8_RGBA for FLOAT_XYZ, falling back to UINT8_RGBA");
         }
+
+        doublePrecision = false;
 
         // in this case use positionf
         auto const pcount = parts.GetCount();
@@ -44,10 +54,14 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
 
             this->positionf.emplace_back(pos, color);
         }
+
+        numParticles = this->positionf.size();
     } else if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
-        if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA) {
+        if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA) {
             vislib::sys::Log::DefaultLog.WriteWarn("MMPKDParticleModel only supports SHORT_RGBA for FLOAT_XYZ, falling back to SHORT_RGBA");
         }
+
+        doublePrecision = true;
 
         // in this case use positiond
         auto const pcount = parts.GetCount();
@@ -74,5 +88,7 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
 
             this->positiond.emplace_back(pos, color);
         }
+
+        numParticles = this->positiond.size();
     }
 }

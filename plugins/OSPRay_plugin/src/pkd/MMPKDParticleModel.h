@@ -26,7 +26,21 @@ struct MMPKDParticleModel {
 
     void fill(megamol::core::moldyn::SimpleSphericalParticles const& parts);
 
+    double GetCoord(size_t const idx, size_t const dim) { if (doublePrecision) return positiond[idx][dim]; else return static_cast<double>(positionf[idx][dim]); }
+
+    bool IsDoublePrecision() const { return doublePrecision; }
+
+    ospcommon::box3f getBounds() const { return bbox; }
+
+    size_t GetNumParticles() const { return numParticles; }
+
     float radius; //!< radius to use (0 if not specified)
+
+    bool doublePrecision;
+
+    ospcommon::box3f bbox;
+
+    size_t numParticles;
 };
 
 } /* end namespace ospray */
