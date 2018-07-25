@@ -874,6 +874,51 @@ bool AbstractOSPRayRenderer::fillWorld() {
             }
 
             break;
+            case geometryTypeEnum::MMPKD:
+            {
+                if (element.raw == nullptr) {
+                    returnValue = false;
+                    break;
+                }
+
+                error = ospLoadModule("mmpkd");
+                if (error != OSPError::OSP_NO_ERROR) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unable to load OSPRay module: MMPKD. Error occured in %s:%d", __FILE__, __LINE__);
+                }
+
+                geo.push_back(ospNewGeometry("mmpkd_geometry"));
+
+                if (element.doublePrecision) {
+                    vertexData = ospNewData(element.partCount * 4, OSP_DOUBLE, *element.raw, OSP_DATA_SHARED_BUFFER);
+                } else {
+                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                }
+                ospCommit(vertexData);
+
+                // set bbox
+                bboxData = ospNewData(
+                    6, OSP_FLOAT, element.boundingBox->ObjectSpaceBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(bboxData);
+
+                ospSet1f(geo.back(), "radius", element.globalRadius);
+                ospSet1i(geo.back(), "doublePrecision", element.doublePrecision);
+                ospSetData(geo.back(), "position", vertexData);
+                ospSetData(geo.back(), "bbox", bboxData);
+
+                if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
+                    auto const half_radius = element.globalRadius*0.5f;
+
+                    auto const bbox = element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
+                    ospcommon::vec3f lower{bbox[0] - half_radius, bbox[1] - half_radius, bbox[2] - half_radius}; //< TODO The bbox needs to include complete sphere bound
+                    ospcommon::vec3f upper{bbox[3] + half_radius, bbox[4] + half_radius, bbox[5] + half_radius};
+                    //ghostRegions.emplace_back(lower, upper);
+                    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
+                    regions.emplace_back(lower, upper);
+                }
+            }
+
+            break;
             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     returnValue = false;

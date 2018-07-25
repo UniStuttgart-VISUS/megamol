@@ -32,7 +32,8 @@ enum geometryTypeEnum {
     CYLINDERS,
     PBS,
     OSPRAY_API_GEOMETRY,
-    PKD
+    PKD,
+    MMPKD
 };
 
 enum volumeTypeEnum {
@@ -101,6 +102,7 @@ public:
     bool materialChanged;
     bool isValid;
     bool smooth; //< valid for lines
+    bool doublePrecision;
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

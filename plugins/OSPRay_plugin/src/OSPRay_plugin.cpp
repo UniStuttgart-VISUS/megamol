@@ -44,6 +44,7 @@
 #include "Pkd.h"
 #include "OSPRayPKDGeometry.h"
 #include "MMPKDBuilder.h"
+#include "OSPRayMMPKDGeometry.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -101,6 +102,7 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::PkdBuilder>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPKDGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::MMPKDBuilder>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMMPKDGeometry>();
 
 
             // register calls here:
