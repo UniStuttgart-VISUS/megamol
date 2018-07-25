@@ -12,15 +12,15 @@
 namespace megamol {
 namespace ospray {
 
-static __forceinline size_t leftChildOf(const size_t nodeID) { return 2 * nodeID + 1; }
-static __forceinline size_t rightChildOf(const size_t nodeID) { return 2 * nodeID + 2; }
-static __forceinline size_t parentOf(const size_t nodeID) { return (nodeID - 1) / 2; }
-
-
 
 
 class MMPKDBuilder : public megamol::stdplugin::datatools::AbstractParticleManipulator {
 public:
+
+    static __forceinline size_t leftChildOf(const size_t nodeID) { return 2 * nodeID + 1; }
+    static __forceinline size_t rightChildOf(const size_t nodeID) { return 2 * nodeID + 2; }
+    static __forceinline size_t parentOf(const size_t nodeID) { return (nodeID - 1) / 2; }
+
     static const char* ClassName(void) { return "MMPKDBuilder"; }
     static const char* Description(void) { return "Converts MMPLD files to MegaMol-specific PkD sorted MMPLD files."; }
     static bool IsAvailable(void) { return true; }
@@ -69,12 +69,16 @@ private:
 };
 
 
-struct SubtreeIterator {
+struct MMPKDSubtreeIterator {
+    static __forceinline size_t leftChildOf(const size_t nodeID) { return 2 * nodeID + 1; }
+    static __forceinline size_t rightChildOf(const size_t nodeID) { return 2 * nodeID + 2; }
+    static __forceinline size_t parentOf(const size_t nodeID) { return (nodeID - 1) / 2; }
+
     size_t curInLevel;
     size_t maxInLevel;
     size_t current;
 
-    __forceinline SubtreeIterator(size_t root) : curInLevel(0), maxInLevel(1), current(root) {}
+    __forceinline MMPKDSubtreeIterator(size_t root) : curInLevel(0), maxInLevel(1), current(root) {}
 
     __forceinline operator size_t() const { return current; }
 
@@ -88,7 +92,7 @@ struct SubtreeIterator {
         }
     }
 
-    __forceinline SubtreeIterator& operator=(const SubtreeIterator& other) {
+    __forceinline MMPKDSubtreeIterator& operator=(const MMPKDSubtreeIterator& other) {
         curInLevel = other.curInLevel;
         maxInLevel = other.maxInLevel;
         current = other.current;
@@ -96,17 +100,17 @@ struct SubtreeIterator {
     }
 };
 
-struct PKDBuildJob {
+struct MMPKDBuildJob {
     const MMPKDBuilder* const pkd;
     const size_t nodeID;
     const ospcommon::box3f bounds;
     const size_t depth;
-    __forceinline PKDBuildJob(const MMPKDBuilder* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
+    __forceinline MMPKDBuildJob(const MMPKDBuilder* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
         : pkd(pkd), nodeID(nodeID), bounds(bounds), depth(depth){};
 };
 
-static void pkdBuildThread(void* arg) {
-    PKDBuildJob* job = (PKDBuildJob*)arg;
+static void mmpkdBuildThread(void* arg) {
+    MMPKDBuildJob* job = (MMPKDBuildJob*)arg;
     job->pkd->buildRec(job->nodeID, job->bounds, job->depth);
     delete job;
 }

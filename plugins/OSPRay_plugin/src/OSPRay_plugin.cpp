@@ -43,6 +43,7 @@
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
 #include "Pkd.h"
 #include "OSPRayPKDGeometry.h"
+#include "MMPKDBuilder.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -99,6 +100,7 @@ namespace {
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::PkdBuilder>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPKDGeometry>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::MMPKDBuilder>();
 
 
             // register calls here:

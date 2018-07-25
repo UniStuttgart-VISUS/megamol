@@ -35,16 +35,16 @@ bool ospray::MMPKDBuilder::manipulateData(
     outData.SetFrameID(frameID);
     outData.SetDataHash(outDataHash);
 
-    for (unsigned int i = 0; i < inData.GetParticleListCount(); i++) {
+    for (unsigned int i = 0; i < inData.GetParticleListCount(); ++i) {
         auto& parts = inData.AccessParticles(i);
         auto& out = outData.AccessParticles(i);
 
-        // empty the model
-        if (this->model->IsDoublePrecision()) {
-            this->model->positiond.clear();
-        } else {
-            this->model->positionf.clear();
-        }
+        //// empty the model
+        //if (this->model->IsDoublePrecision()) {
+        //    this->model->positiond.clear();
+        //} else {
+        //    this->model->positionf.clear();
+        //}
 
         // put data the data into the model
         // and build the pkd tree
@@ -60,6 +60,8 @@ bool ospray::MMPKDBuilder::manipulateData(
                 megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &this->model->positionf[0].x, 16);
             out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &this->model->positionf[0].w, 16);
         }
+        auto const lbbox = this->model->GetLocalBBox();
+        out.SetBBox(vislib::math::Cuboid<float>(lbbox.lower.x, lbbox.lower.y, lbbox.lower.z, lbbox.upper.x, lbbox.upper.y, lbbox.upper.z));
     }
 
     return true;
@@ -120,7 +122,7 @@ void ospray::MMPKDBuilder::build() {
     }
     // PRINT(numLevels);
 
-    const ospcommon::box3f& bounds = model->getBounds();
+    const ospcommon::box3f& bounds = model->GetLocalBBox();
     std::cout << "#osp:pkd: bounds of model " << bounds << std::endl;
     std::cout << "#osp:pkd: number of input particles " << numParticles << std::endl;
     this->buildRec(0, bounds, 0);
@@ -153,11 +155,11 @@ void ospray::MMPKDBuilder::buildRec(const size_t nodeID, const ospcommon::box3f&
     {
 
         // we have a left and a right subtree, each of at least 1 node.
-        SubtreeIterator l0(leftChildOf(nodeID));
-        SubtreeIterator r0(rightChildOf(nodeID));
+        MMPKDSubtreeIterator l0(leftChildOf(nodeID));
+        MMPKDSubtreeIterator r0(rightChildOf(nodeID));
 
-        SubtreeIterator l((size_t)l0); //(leftChildOf(nodeID));
-        SubtreeIterator r((size_t)r0); //(rightChildOf(nodeID));
+        MMPKDSubtreeIterator l((size_t)l0); //(leftChildOf(nodeID));
+        MMPKDSubtreeIterator r((size_t)r0); //(rightChildOf(nodeID));
 
         // size_t numSwaps = 0, numComps = 0;
         float rootPos = POS(nodeID, dim);
@@ -229,7 +231,7 @@ void ospray::MMPKDBuilder::buildRec(const size_t nodeID, const ospcommon::box3f&
     lBounds.upper[dim] = rBounds.lower[dim] = pos(nodeID, dim);
 
     if ((numLevels - depth) > 20) {
-        std::thread lThread(&pkdBuildThread, new PKDBuildJob(this, leftChildOf(nodeID), lBounds, depth + 1));
+        std::thread lThread(&mmpkdBuildThread, new MMPKDBuildJob(this, leftChildOf(nodeID), lBounds, depth + 1));
         buildRec(rightChildOf(nodeID), rBounds, depth + 1);
         lThread.join();
     } else {

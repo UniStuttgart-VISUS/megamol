@@ -15,12 +15,12 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
     }
 
     auto mmbbox = parts.GetBBox();
-    bbox.lower.x = mmbbox.GetLeft();
-    bbox.lower.y = mmbbox.GetBottom();
-    bbox.lower.z = mmbbox.GetBack();
-    bbox.upper.x = mmbbox.GetRight();
-    bbox.upper.y = mmbbox.GetTop();
-    bbox.upper.z = mmbbox.GetFront();
+    lbbox.lower.x = mmbbox.GetLeft();
+    lbbox.lower.y = mmbbox.GetBottom();
+    lbbox.lower.z = mmbbox.GetBack();
+    lbbox.upper.x = mmbbox.GetRight();
+    lbbox.upper.y = mmbbox.GetTop();
+    lbbox.upper.z = mmbbox.GetFront();
 
     if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
         if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
@@ -28,6 +28,7 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         }
 
         doublePrecision = false;
+        this->positionf.clear();
 
         // in this case use positionf
         auto const pcount = parts.GetCount();
@@ -62,6 +63,7 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         }
 
         doublePrecision = true;
+        this->positiond.clear();
 
         // in this case use positiond
         auto const pcount = parts.GetCount();
@@ -69,15 +71,15 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
             auto part = parts[pidx];
 
             ospcommon::vec3d pos;
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = part.vert.GetXd();
+            pos.y = part.vert.GetYd();
+            pos.z = part.vert.GetZd();
 
-            ospcommon::vec4uc col;
-            col.x = part.col.GetRu8();
-            col.y = part.col.GetGu8();
-            col.z = part.col.GetBu8();
-            col.w = part.col.GetAu8();
+            ospcommon::vec4ui col;
+            col.x = part.col.GetRu16();
+            col.y = part.col.GetGu16();
+            col.z = part.col.GetBu16();
+            col.w = part.col.GetAu16();
 
             double color = 0.0;
             auto const ptr = reinterpret_cast<unsigned short*>(&color);
@@ -91,4 +93,6 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
 
         numParticles = this->positiond.size();
     }
+
+    radius = parts.GetGlobalRadius();
 }

@@ -19,12 +19,10 @@ struct MMPKDParticleModel {
 
     MMPKDParticleModel() : radius(0) { }
 
-    ~MMPKDParticleModel() {}
+    ~MMPKDParticleModel() { }
 
-    union {
-        std::vector<ospcommon::vec4f> positionf; //!< particle position in float + color encoded in 'w'
-        std::vector<ospcommon::vec4d> positiond; //!< particle position in double + color encoded in 'w'
-    };
+    std::vector<ospcommon::vec4f> positionf; //!< particle position in float + color encoded in 'w'
+    std::vector<ospcommon::vec4d> positiond; //!< particle position in double + color encoded in 'w'
 
     void fill(megamol::core::moldyn::SimpleSphericalParticles const& parts);
 
@@ -32,7 +30,7 @@ struct MMPKDParticleModel {
 
     bool IsDoublePrecision() const { return doublePrecision; }
 
-    ospcommon::box3f getBounds() const { return bbox; }
+    ospcommon::box3f GetLocalBBox() const { return lbbox; }
 
     size_t GetNumParticles() const { return numParticles; }
 
@@ -40,7 +38,7 @@ struct MMPKDParticleModel {
 
     bool doublePrecision;
 
-    ospcommon::box3f bbox;
+    ospcommon::box3f lbbox;
 
     size_t numParticles;
 };
