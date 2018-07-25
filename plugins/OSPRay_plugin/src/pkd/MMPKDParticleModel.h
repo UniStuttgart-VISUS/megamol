@@ -19,6 +19,8 @@ struct MMPKDParticleModel {
 
     MMPKDParticleModel() : radius(0) { }
 
+    ~MMPKDParticleModel() {}
+
     union {
         std::vector<ospcommon::vec4f> positionf; //!< particle position in float + color encoded in 'w'
         std::vector<ospcommon::vec4d> positiond; //!< particle position in double + color encoded in 'w'
