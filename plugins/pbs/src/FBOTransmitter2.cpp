@@ -39,6 +39,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
+    , toggle_frame_sync_slot_{"frameSync", "Toggle whether threads should be synced with rendered frames"}
     , aggregate_ {
     false
 }
@@ -74,6 +75,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
+    toggle_frame_sync_slot_ << new megamol::core::param::BoolParam{false};
+    this->MakeSlotAvailable(&toggle_frame_sync_slot_);
 }
 
 
@@ -95,6 +98,8 @@ void megamol::pbs::FBOTransmitter2::release() {
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
+
+    do_frame_sync_ = this->toggle_frame_sync_slot_.Param<megamol::core::param::BoolParam>()->Value();
 
     // get viewport of current render context
     GLint viewport[4];
@@ -195,6 +200,11 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
             } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
+            }
+
+            {
+                std::unique_lock<std::mutex> comm_block_guard_lock(comm_block_guard_);
+                cv_comm_block_.wait(comm_block_guard_lock, [&] {return (!this->do_frame_sync_) || this->thread_stop_; });
             }
 
             // wait for request

@@ -72,10 +72,13 @@ protected:
 
 private:
     void swapBuffers(void) {
-        std::scoped_lock<std::mutex, std::mutex> guard{this->buffer_send_guard_, this->buffer_read_guard_};
-        swap(fbo_msg_read_, fbo_msg_send_);
-        swap(color_buf_read_, color_buf_send_);
-        swap(depth_buf_read_, depth_buf_send_);
+        {
+            std::scoped_lock<std::mutex, std::mutex> guard{this->buffer_send_guard_, this->buffer_read_guard_};
+            swap(fbo_msg_read_, fbo_msg_send_);
+            swap(color_buf_read_, color_buf_send_);
+            swap(depth_buf_read_, depth_buf_send_);
+        }
+        cv_comm_block_.notify_all();
     }
 
     void transmitterJob();
@@ -112,6 +115,8 @@ private:
     core::CallerSlot callRequestMpi;
 
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
+
+    megamol::core::param::ParamSlot toggle_frame_sync_slot_;
 
     bool aggregate_;
 
@@ -150,6 +155,12 @@ private:
     std::unique_ptr<AbstractCommFabric> comm_impl_;
 
     std::unique_ptr<FBOCommFabric> comm_;
+
+    std::mutex comm_block_guard_;
+
+    std::condition_variable cv_comm_block_;
+
+    bool do_frame_sync_;
 
     int col_buf_el_size_;
 
