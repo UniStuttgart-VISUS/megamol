@@ -17,6 +17,7 @@
 
 #include <exception>
 #include "vislib/Exception.h"
+#include "mmcore/param/BoolParam.h"
 
 //#define _DEBUG 1
 //#define VERBOSE 1
@@ -29,6 +30,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , restartSlot_{"restart", "Restart compositor to wait for incomming connections"}
+    , toggle_frame_sync_slot_("frameSync", "Toggle whether threads should be synced with rendered frames")
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -59,6 +61,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     restartSlot_ << new megamol::core::param::ButtonParam();
     restartSlot_.SetUpdateCallback(&FBOCompositor2::restartCallback);
     this->MakeSlotAvailable(&restartSlot_);
+    toggle_frame_sync_slot_ << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&toggle_frame_sync_slot_);
 }
 
 
@@ -208,6 +212,11 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     initThreads();
+
+    {
+        std::unique_lock<std::mutex> render_block_guard_lock(render_block_guard_);
+        cv_render_block_guard_.wait(render_block_guard_lock, [&] {return !shutdown_; });
+    }
 
     // if data changed check is size has changed
     // if no directly upload

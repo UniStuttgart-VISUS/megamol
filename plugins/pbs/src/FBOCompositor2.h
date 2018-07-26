@@ -63,11 +63,14 @@ private:
     bool Render(core::Call& call) override;
 
     void swapBuffers(void) {
-        std::scoped_lock<std::mutex, std::mutex> guard{buffer_write_guard_, buffer_recv_guard_};
-        swap(fbo_msg_recv_, fbo_msg_write_);
-        /*swap(color_buf_recv_, color_buf_write_);
-        swap(depth_buf_recv_, depth_buf_write_);*/
-        data_has_changed_.store(true);
+        {
+            std::scoped_lock<std::mutex, std::mutex> guard{buffer_write_guard_, buffer_recv_guard_};
+            swap(fbo_msg_recv_, fbo_msg_write_);
+            /*swap(color_buf_recv_, color_buf_write_);
+            swap(depth_buf_recv_, depth_buf_write_);*/
+            data_has_changed_.store(true);
+        }
+        cv_render_block_guard_.notify_all();
     }
 
     void receiverJob(
@@ -114,6 +117,8 @@ private:
     megamol::core::param::ParamSlot handshakePortSlot_;
 
     megamol::core::param::ParamSlot restartSlot_;
+
+    megamol::core::param::ParamSlot toggle_frame_sync_slot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
@@ -196,6 +201,10 @@ private:
     bool shutdown_ = false;
 
     bool register_done_ = false;
+
+    std::mutex render_block_guard_;
+
+    std::condition_variable cv_render_block_guard_;
 }; // end class FBOCompositor2
 
 } // end namespace pbs
