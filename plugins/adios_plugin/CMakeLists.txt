@@ -13,10 +13,12 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  find_package(ADIOS2 REQUIRED)
+  set(LIBS vislib core glad)
+  if(UNIX)
+    find_package(ADIOS2 REQUIRED)
+    set(LIBS ${LIBS} adios2::adios2)
+  endif()
 
-  set(LIBS vislib core glad adios2::adios2)
-  #set(LIBS vislib core glad)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -39,13 +41,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 
-  include(GNUInstallDirs)
-  get_target_property(adios_lib adios2::adios2 IMPORTED_LOCATION_RELEASE)
-  get_filename_component(dir ${adios_lib} DIRECTORY)
-  file(GLOB ADIOS_LIB_FILES "${dir}/lib*")
-  install(FILES ${ADIOS_LIB_FILES} DESTINATION ${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR})
+  if(UNIX)
+    include(GNUInstallDirs)
+    get_target_property(adios_lib adios2::adios2 IMPORTED_LOCATION_RELEASE)
+    get_filename_component(dir ${adios_lib} DIRECTORY)
+    file(GLOB ADIOS_LIB_FILES "${dir}/lib*")
+    install(FILES ${ADIOS_LIB_FILES} DESTINATION ${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR})
+  endif()
 
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")

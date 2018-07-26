@@ -10,7 +10,9 @@
 #include <mpi.h>
 #endif
 
+#ifdef WITH_ADIOS
 #include <adios2.h>
+#endif
 
 namespace megamol {
 namespace adios {
@@ -110,10 +112,12 @@ private:
 	std::vector<float> Y;
 	std::vector<float> Z;
 	std::vector<float> box;
+#ifdef WITH_ADIOS
 	adios2::Variable<float> vX;
 	adios2::Variable<float> vY;
 	adios2::Variable<float> vZ;
 	adios2::Variable<float> vBox;
+#endif
 
 	int step = 0;
 
