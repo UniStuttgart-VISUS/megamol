@@ -1012,7 +1012,7 @@ namespace moldyn {
          *
          * @throws std::out_of_range if idx is larger than particle count.
          */
-        inline particle_t const& At(size_t idx) const {
+        inline particle_t At(size_t idx) const {
             if (idx < this->count) {
                 return this->operator[](idx);
             } else {
