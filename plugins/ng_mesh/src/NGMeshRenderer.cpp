@@ -184,15 +184,15 @@ void NGMeshRenderer::addRenderBatch(
 		);
 	}
 
-	if (mesh_data.vertex_data.buffer_cnt > 1 && mesh_data.vertex_data.buffer_cnt == mesh_data.vertex_descriptor.attribute_cnt)
+	if (mesh_data.vertex_data.buffer_cnt > 0 && mesh_data.vertex_data.buffer_cnt == mesh_data.vertex_descriptor.attribute_cnt)
 	{
 		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
 		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
-		uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+
 		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
 		{
-			vertex_data_ptrs[i] = mesh_data.vertex_data.raw_data + uint32_view[i]; //da fuck...
-			vertex_data_sizes[i] = (i < mesh_data.vertex_data.buffer_cnt - 1) ? uint32_view[i + 1] - uint32_view[i] : mesh_data.vertex_data.byte_size - uint32_view[i];
+			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
+			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
 
 			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
 			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
@@ -208,22 +208,10 @@ void NGMeshRenderer::addRenderBatch(
 			mesh_data.usage,
 			mesh_data.primitive_type
 			);
-			
 	}
 	else
 	{
-		uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
-
-		m_render_batches.back().mesh = std::make_unique<Mesh>(
-			mesh_data.vertex_data.raw_data + uint32_view[0],
-			mesh_data.vertex_data.byte_size - uint32_view[0],
-			mesh_data.index_data.raw_data,
-			mesh_data.index_data.byte_size,
-			layout,
-			mesh_data.index_data.index_type,
-			mesh_data.usage,
-			mesh_data.primitive_type
-			);
+		//fail?
 	}
 
 	// Create GPU buffer for draw commands
@@ -311,9 +299,22 @@ void NGMeshRenderer::updateRenderBatch(
 				mesh_data.vertex_descriptor.attributes[i].offset)
 			);
 		}
+
+		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
+		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
+
+		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
+		{
+			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
+			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
+
+			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
+		}
+
 		m_render_batches[idx].mesh = std::make_unique<Mesh>(
-			mesh_data.vertex_data.raw_data,
-			mesh_data.vertex_data.byte_size,
+			vertex_data_ptrs,
+			vertex_data_sizes,
 			mesh_data.index_data.raw_data,
 			mesh_data.index_data.byte_size,
 			layout,

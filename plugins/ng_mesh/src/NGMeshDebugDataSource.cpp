@@ -78,14 +78,16 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
 	mesh_data.vertex_data.buffer_cnt = 2;
-	mesh_data.vertex_data.byte_size = 3 * 6 * 4 + (4 * mesh_data.vertex_data.buffer_cnt);
-	mesh_data.vertex_data.raw_data = new uint8_t[mesh_data.vertex_data.byte_size]; // 3 triangles * 6 float entries * bytesize
-	uint32_t* uint32_view = reinterpret_cast<uint32_t*>(mesh_data.vertex_data.raw_data);
+	std::vector<MeshDataAccessor::VertexData::Buffer> buffers(mesh_data.vertex_data.buffer_cnt);
+	mesh_data.vertex_data.buffers = buffers.data();
 
-	uint32_view[0] = 8;
-	uint32_view[1] = 8 + 9*4;
+	std::vector<uint8_t> vertex_data(3 * 6 * 4); // 3 triangles * 6 float entries * bytesize
+	mesh_data.vertex_data.buffers[0].raw_data = vertex_data.data();
+	mesh_data.vertex_data.buffers[0].byte_size = 3 * 3 * 4; // 3 triangles * 3 float entries for position * bytesize
+	mesh_data.vertex_data.buffers[1].raw_data = vertex_data.data() + (3 * 3 * 4);
+	mesh_data.vertex_data.buffers[1].byte_size = 3 * 3 * 4; // 3 triangles * 3 float entries for normal * bytesize
 
-	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.raw_data + 8);
+	float* float_view = reinterpret_cast<float*>(vertex_data.data());
 	// position attribute
 	float_view[0] = -0.5f;
 	float_view[1] = 0.0f;

@@ -48,10 +48,13 @@ namespace ngmesh {
 		 */
 		struct VertexData
 		{
-			uint8_t*	raw_data;
-			size_t		byte_size;
-
+			struct Buffer {
+				uint8_t*	raw_data;
+				size_t		byte_size;
+			};
+			
 			size_t		buffer_cnt;
+			Buffer*		buffers;
 		};
 
 		struct IndexData
@@ -234,10 +237,18 @@ namespace ngmesh {
 						m_head.shader_prgms[i].raw_string = reinterpret_cast<char*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(char) + m_head.shader_prgms[i].char_cnt;
 
-						m_head.meshes[i].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
-						offset += m_head.meshes[i].vertex_data.byte_size;
+						m_head.meshes[i].vertex_data.buffers = reinterpret_cast<MeshDataAccessor::VertexData::Buffer*>(m_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].vertex_data.buffer_cnt * sizeof(MeshDataAccessor::VertexData::Buffer);
+
+						for (int j = 0; j < m_head.meshes[j].vertex_data.buffer_cnt; ++j)
+						{
+							m_head.meshes[i].vertex_data.buffers[j].raw_data = (m_data.raw_buffer + base_offset + offset);
+							offset += m_head.meshes[i].vertex_data.buffers[j].byte_size;
+						}
+
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
+
 						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(MeshDataAccessor::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
@@ -324,10 +335,18 @@ namespace ngmesh {
 						m_head.shader_prgms[i].raw_string = reinterpret_cast<char*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(char) + m_head.shader_prgms[i].char_cnt;
 
-						m_head.meshes[i].vertex_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
-						offset += m_head.meshes[i].vertex_data.byte_size;
+						m_head.meshes[i].vertex_data.buffers = reinterpret_cast<MeshDataAccessor::VertexData::Buffer*>(new_data.raw_buffer + base_offset + offset);
+						offset += m_head.meshes[i].vertex_data.buffer_cnt * sizeof(MeshDataAccessor::VertexData::Buffer);
+
+						for (int j = 0; j < m_head.meshes[j].vertex_data.buffer_cnt; ++j)
+						{
+							m_head.meshes[i].vertex_data.buffers[j].raw_data = (new_data.raw_buffer + base_offset + offset);
+							offset += m_head.meshes[i].vertex_data.buffers[j].byte_size;
+						}
+
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
+
 						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(MeshDataAccessor::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
@@ -358,18 +377,34 @@ namespace ngmesh {
 					if (m_head.used_batch_cnt == m_head.available_batch_cnt)
 						reallocateHeadBuffer(m_head.available_batch_cnt + 5);
 
+					////////////////////////////////////
 					// calculate byte size of batch data
-					size_t byte_size = shader_prgm.char_cnt + 1
-						+ mesh_data.index_data.byte_size + mesh_data.vertex_data.byte_size
+					size_t byte_size =
+						// size required for storing shader program name
+						shader_prgm.char_cnt + 1 
+						// size required for storing index buffer object data
+						+ mesh_data.index_data.byte_size
+						// size required for storing vertex buffer meta data, i.e. pointer to actual vertex buffer data and byte size of that buffer
+						+ mesh_data.vertex_data.buffer_cnt * sizeof(MeshDataAccessor::VertexData::Buffer)
+						// size required for storing actual vertex data of each vertex buffer
+						+ [mesh_data]()->size_t {
+							size_t vb_byte_size = 0;
+							for (int i = 0; i < mesh_data.vertex_data.buffer_cnt; ++i)
+								vb_byte_size += mesh_data.vertex_data.buffers[i].byte_size;
+							return vb_byte_size;
+						}()
+						// size required for storing the attribute descriptions
 						+ mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute)
+						// size required for storing draw command data
 						+ draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand)
+						// size required for storing additional per object data, e.g. model-matrix
 						+ obj_shader_params.byte_size
+						// size required for storing additional per program data, e.g. global texture addresses
 						+ mtl_shader_params.elements_cnt * sizeof(MaterialParameters);
 
 					// check if allocated size fits old data + new data
 					if ((m_data.used_byte_size + byte_size) > m_data.allocated_byte_size)
 						reallocateDataBuffer(m_data.used_byte_size + 2 * byte_size);
-
 
 					// add new render batch
 					++m_head.used_batch_cnt;
@@ -383,37 +418,54 @@ namespace ngmesh {
 					//std::memcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string, shader_prgm.char_cnt);
 					std::strcpy(m_head.shader_prgms[idx].raw_string, shader_prgm.raw_string);
 
+
+					//////////////////////////////////////////
+					// Set mesh information and copy mesh data
+
+					// Set mesh usage and primitice type
 					m_head.meshes[idx].usage = mesh_data.usage;
 					m_head.meshes[idx].primitive_type = mesh_data.primitive_type;
 
-					m_head.meshes[idx].vertex_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
-					m_head.meshes[idx].vertex_data.byte_size = mesh_data.vertex_data.byte_size;
+					// Set mesh vertex data information, i.e. buffer count and pointer to buffer meta information
 					m_head.meshes[idx].vertex_data.buffer_cnt = mesh_data.vertex_data.buffer_cnt;
-					offset += m_head.meshes[idx].vertex_data.byte_size;
-					std::memcpy(m_head.meshes[idx].vertex_data.raw_data, mesh_data.vertex_data.raw_data, mesh_data.vertex_data.byte_size);
+					m_head.meshes[idx].vertex_data.buffers = reinterpret_cast<MeshDataAccessor::VertexData::Buffer*>(m_data.raw_buffer + offset);
+					offset += m_head.meshes[idx].vertex_data.buffer_cnt * sizeof(MeshDataAccessor::VertexData::Buffer);
+					// Set and copy individual vertex buffers
+					for (int i = 0; i < m_head.meshes[idx].vertex_data.buffer_cnt; ++i)
+					{
+						m_head.meshes[idx].vertex_data.buffers[i].byte_size = mesh_data.vertex_data.buffers[i].byte_size;
+						m_head.meshes[idx].vertex_data.buffers[i].raw_data = m_data.raw_buffer + offset;
+						offset += m_head.meshes[idx].vertex_data.buffers[i].byte_size;
+						std::memcpy(m_head.meshes[idx].vertex_data.buffers[i].raw_data, mesh_data.vertex_data.buffers[i].raw_data, mesh_data.vertex_data.buffers[i].byte_size);
+					}
 
-					m_head.meshes[idx].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset);
+					// Set and copy mesh index buffer data
+					m_head.meshes[idx].index_data.raw_data = (m_data.raw_buffer + offset);
 					m_head.meshes[idx].index_data.byte_size = mesh_data.index_data.byte_size;
 					m_head.meshes[idx].index_data.index_type = mesh_data.index_data.index_type;
 					offset += m_head.meshes[idx].index_data.byte_size;
 					std::memcpy(m_head.meshes[idx].index_data.raw_data, mesh_data.index_data.raw_data, mesh_data.index_data.byte_size);
 
+					// Set and copy mesh vertex layout data
 					m_head.meshes[idx].vertex_descriptor.stride = mesh_data.vertex_descriptor.stride;
 					m_head.meshes[idx].vertex_descriptor.attribute_cnt = mesh_data.vertex_descriptor.attribute_cnt;
 					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(m_data.raw_buffer + offset);
 					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute);
 					std::memcpy(m_head.meshes[idx].vertex_descriptor.attributes, mesh_data.vertex_descriptor.attributes, mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute));
 
+					// Set and copy draw command data
 					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + offset);
 					m_head.draw_commands[idx].draw_cnt = draw_commands.draw_cnt;
 					offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
 					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand));
 
-					m_head.obj_shader_params[idx].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + offset); 
+					// Set and copy per object data
+					m_head.obj_shader_params[idx].raw_data = (m_data.raw_buffer + offset); 
 					m_head.obj_shader_params[idx].byte_size = obj_shader_params.byte_size;
 					offset += m_head.obj_shader_params[idx].byte_size;
 					std::memcpy(m_head.obj_shader_params[idx].raw_data, obj_shader_params.raw_data, obj_shader_params.byte_size);
 
+					// Set and copy per program data
 					m_head.mtl_shader_params[idx].data = reinterpret_cast<MaterialParameters*>(m_data.raw_buffer + offset);
 					m_head.mtl_shader_params[idx].elements_cnt = mtl_shader_params.elements_cnt;
 					offset += sizeof(MaterialParameters) * m_head.mtl_shader_params[idx].elements_cnt;

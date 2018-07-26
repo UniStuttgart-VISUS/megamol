@@ -169,7 +169,7 @@ namespace archvis {
 		* @param geometry_filename The geometry file to load
 		*/
 		void createRenderBatches(
-			std::string const& shader_filename,
+			std::string const& shader_btf_namespace,
 			std::string const& partsList_filename);
 
 		void spawnAndUpdateTextLabels();
