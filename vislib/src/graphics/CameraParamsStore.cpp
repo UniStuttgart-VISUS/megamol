@@ -77,14 +77,14 @@ vislib::graphics::CameraParamsStore::~CameraParamsStore(void) {
 /*
  * vislib::graphics::CameraParamsStore::ApplyLimits
  */
-void vislib::graphics::CameraParamsStore::ApplyLimits(void) {
+void vislib::graphics::CameraParamsStore::ApplyLimits(bool autoFocus) {
     // copy parameters to avoid aliasing
     math::AngleRad aa = this->ApertureAngle();
     SceneSpaceType nc = this->NearClip();
     SceneSpaceType fc = this->FarClip();
     SceneSpaceType sd = this->StereoDisparity();
     StereoEye e = this->Eye();
-    SceneSpaceType fd = this->FocalDistance();
+    SceneSpaceType fd = this->FocalDistance(autoFocus);
     math::Point<SceneSpaceType, 3> p = this->Position();
     math::Point<SceneSpaceType, 3> la = this->LookAt();
     math::Vector<SceneSpaceType, 3> up = this->Up();
@@ -452,10 +452,11 @@ void vislib::graphics::CameraParamsStore::SetFocalDistance(
  * vislib::graphics::CameraParamsStore::SetLimits
  */
 void vislib::graphics::CameraParamsStore::SetLimits(
-        const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& limits) {
+        const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& limits,
+        bool autoFocus) {
     if (!limits.IsNull()) {
         this->limits = limits;
-        this->ApplyLimits(); // this will also increase syncNumber
+        this->ApplyLimits(autoFocus); // this will also increase syncNumber
     }
 }
 
