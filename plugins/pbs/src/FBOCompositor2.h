@@ -87,7 +87,7 @@ private:
 
     bool getImageCallback(megamol::core::Call& c);
 
-    bool restartCallback(megamol::core::param::ParamSlot& p);
+    bool startCallback(megamol::core::param::ParamSlot& p);
 
     static void RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb);
 
@@ -112,6 +112,8 @@ private:
     megamol::core::param::ParamSlot numRendernodesSlot_;
 
     megamol::core::param::ParamSlot handshakePortSlot_;
+
+    megamol::core::param::ParamSlot startSlot_;
 
     megamol::core::param::ParamSlot restartSlot_;
 
@@ -182,6 +184,8 @@ private:
     FBOCommFabric registerComm_;
 
     std::thread registerThread_;
+
+    std::thread initThreadsThread_;
 
     std::atomic<bool> isRegistered_;
 
