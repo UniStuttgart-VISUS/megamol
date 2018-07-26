@@ -61,6 +61,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColorEditor.cs" />
     <Compile Include="Io\ProjectFileLua.cs" />
     <Compile Include="StringSelector.cs">
       <SubType>Form</SubType>
@@ -78,6 +79,7 @@
     <Compile Include="Connection\Response.cs" />
     <Compile Include="Connection\ZeroMQContext.cs" />
     <Compile Include="Data\ParamType\FlexEnum.cs" />
+    <Compile Include="Data\ParamType\Color.cs" />
     <Compile Include="FlexEnumParamEditor.cs" />
     <Compile Include="ImportParamfileForm.cs">
       <SubType>Form</SubType>

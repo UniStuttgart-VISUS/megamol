@@ -8,8 +8,7 @@
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;
 #endif // RETICLE
-    //gl_Position = MVP * vec4(inPos.xyz, 1.0);
-    //gl_Position /= gl_Position.w;
-    //gl_PointSize = 8.0;
+
+    // gl_PointSize = 32.0;
 
 }

@@ -3,12 +3,12 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -53,6 +53,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
+    , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksParam("axisTicks", "Number of ticks on the axis")
@@ -98,7 +99,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
-    this->axisColorParam << new core::param::StringParam("white");
+    core::param::EnumParam* kernelTypes = new core::param::EnumParam(0);
+    kernelTypes->SetTypePair(KERNEL_TYPE_BOX, "Box");
+    kernelTypes->SetTypePair(KERNEL_TYPE_GAUSSIAN, "Gaussian");
+    this->kernelTypeParam << kernelTypes;
+    this->MakeSlotAvailable(&this->kernelTypeParam);
+
+    this->axisColorParam << new core::param::ColorParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
 
     this->axisWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
@@ -201,14 +208,13 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
 
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
     return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
-           this->axisColorParam.IsDirty() || this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
+           this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
 void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
     this->labelSizeParam.ResetDirty();
-    this->axisColorParam.ResetDirty();
     this->cellSizeParam.ResetDirty();
     this->cellMarginParam.ResetDirty();
 }
@@ -251,10 +257,6 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
     map.colorIdx = nameToIndex(this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
     map.labelIdx = nameToIndex(this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
 
-    // Axis parameters.
-    core::utility::ColourParser::FromString(
-        this->axisColorParam.Param<core::param::StringParam>()->Value(), 4, this->axisColor);
-
     updateColumns();
 
     this->labelsValid = false;
@@ -281,7 +283,7 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
 
     this->bounds.Set(0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin);
 
-    const GLuint plotItems = core::utility::SSBOStreamer::GetNumItemsPerChunkAligned(plots.size(), true);
+    const GLuint plotItems = plotSSBO.GetNumItemsPerChunkAligned(plots.size(), true);
     const GLuint bufferSize = plotItems * sizeof(PlotInfo);
     const GLuint numChunks =
         this->plotSSBO.SetDataWithSize(plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size(), 1, bufferSize);
@@ -302,7 +304,8 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     // Other uniforms.
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
-    glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1, this->axisColor);
+    glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1,
+        this->axisColorParam.Param<core::param::ColorParam>()->Value());
     glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
     glUniform1f(this->axisShader.ParameterLocation("tickLength"), tickLength);
     glUniform1i(this->axisShader.ParameterLocation("redundantTicks"),
@@ -329,6 +332,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
 
     this->axisFont.ClearBatchCache();
 
+    const auto* axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
@@ -339,7 +343,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(this->axisColor, xyBL, xyTL, size, size, nameSize, false, label.c_str(),
+        this->axisFont.DrawString(axisColor, xyBL, xyTL, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         const float tickStart = i * (size + margin);
@@ -351,12 +355,12 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(this->axisColor, p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor, p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->axisFont.DrawString(this->axisColor, xyBL - margin + tickLength, p, tickSize, false,
-                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+                this->axisFont.DrawString(axisColor, xyBL - margin + tickLength, p, tickSize, false, pLabel.c_str(),
+                    core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -399,6 +403,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glUniform1i(this->pointShader.ParameterLocation("rowStride"), columnCount);
     glUniform1f(this->pointShader.ParameterLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->pointShader.ParameterLocation("kernelType"),
+        this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
@@ -470,6 +476,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     glUniform1i(this->lineShader.ParameterLocation("rowStride"), columnCount);
     glUniform1f(this->lineShader.ParameterLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->lineShader.ParameterLocation("kernelType"),
+        this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
         this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
