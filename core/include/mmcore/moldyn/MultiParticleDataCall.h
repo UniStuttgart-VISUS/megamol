@@ -91,10 +91,10 @@ namespace moldyn {
         template<class T, bool hasRad>
         class VertexData_Impl : public VertexData_Detail {
         public:
-            VertexData_Impl() = default;
+            VertexData_Impl(SimpleSphericalParticles& parent) : parent_(parent) {}
 
             VertexData_Impl(VertexData_Impl const& rhs)
-                : basePtr{rhs.basePtr} { }
+                : basePtr{rhs.basePtr}, parent_(rhs.parent_)  { }
 
             virtual float const GetXf() const override {
                 return GetX<float>();
@@ -161,7 +161,7 @@ namespace moldyn {
 
             template<bool hasRad_v>
             std::enable_if_t<!hasRad_v, float> const GetR() const {
-                return 0.0f;
+                return parent_.GetGlobalRadius();
             }
 
             virtual void SetBasePtr(void const* ptr) override {
@@ -173,6 +173,7 @@ namespace moldyn {
             }
         private:
             T const* basePtr;
+            SimpleSphericalParticles& parent_;
         };
 
         class VertexData_Base {
@@ -916,13 +917,13 @@ namespace moldyn {
 
             switch (t) {
             case VERTDATA_FLOAT_XYZ:
-                this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
+                this->vertexAccessor.reset(new VertexData_Impl<float, false>(*this));
                 break;
             case VERTDATA_FLOAT_XYZR:
-                this->vertexAccessor.reset(new VertexData_Impl<float, true>{});
+                this->vertexAccessor.reset(new VertexData_Impl<float, true>(*this));
                 break;
             case VERTDATA_SHORT_XYZ:
-                this->vertexAccessor.reset(new VertexData_Impl<short, false>{});
+                this->vertexAccessor.reset(new VertexData_Impl<short, false>(*this));
                 break;
             case VERTDATA_NONE:
             default:
