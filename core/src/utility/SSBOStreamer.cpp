@@ -54,13 +54,17 @@ GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint 
     return numChunks;
 }
 
-GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) {
+GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) const {
+    // Lazy initialisation of offset alignment because OGl context must be available.
+    if (this->offsetAlignment == 0) {
+        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*)&this->offsetAlignment);
+    }
 	// Rounding the number of items per chunk is important for alignment and thus performance.
 	// That means, if we synchronize with another buffer that has tiny items, we have to make 
 	// sure that we do not get non-aligned chunks with due to the number of items.
-	// For modern GPUs, 32bytes seems like a safe bet, i.e., we upload in multiples of eight
-	// to get 8 * 4 = 32.
-    const GLuint multiRound = 8;
+	// For modern GPUs, we use GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT (which for NVidia results in 32),
+    // i.e., we upload in multiples of eight to get 8 * 4 = 32 (no data shorter than uint32_t is allowed).
+    const GLuint multiRound = this->offsetAlignment / 4;
     return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound; 
 }
 
@@ -139,7 +143,7 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
     memcpy(dst, src, itemsThisTime * this->srcStride);
 
     glFlushMappedNamedBufferRange(this->theSSBO, 
-        this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);
+        dstOffset, itemsThisTime * this->dstStride);
     numItems = itemsThisTime;
 
     sync = currIdx;

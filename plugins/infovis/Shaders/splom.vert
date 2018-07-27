@@ -16,6 +16,7 @@ layout(std430, binding = 3) buffer ValueSSBO {
 };
 
 out vec4 vsColor;
+out vec4 vsPosition;
 out float vsKernelSize;
 out float vsPixelKernelSize;
 
@@ -33,10 +34,10 @@ void main(void) {
                             values[rowOffset + plot.indexY]);
     const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
                                 (point.y - plot.minY) / (plot.maxY - plot.minY));
-    const vec4 position = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
+    vsPosition = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
                       unitPoint.y * plot.sizeY + plot.offsetY,
                       0.0, 1.0);
-    gl_Position = modelViewProjection * position;
+    gl_Position = modelViewProjection * vsPosition;
 
      // Transform kernel size to screen space.
     const vec4 ndcKernelSize = modelViewProjection * vec4(kernelWidth, kernelWidth, 0.0, 0.0);

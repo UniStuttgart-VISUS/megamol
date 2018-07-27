@@ -79,6 +79,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMCREATEMODULE "mmCreateModule"
 #define MMC_LUA_MMDELETEMODULE "mmDeleteModule"
 #define MMC_LUA_MMCREATECALL "mmCreateCall"
+#define MMC_LUA_MMCREATECHAINCALL "mmCreateChainCall"
 #define MMC_LUA_MMDELETECALL "mmDeleteCall"
 #define MMC_LUA_MMCREATEVIEW "mmCreateView"
 #define MMC_LUA_MMDELETEVIEW "mmDeleteView"
@@ -100,38 +101,41 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMGETOS, MMC_LUA_MMGETOS"()\n\tReturns the operating system ('windows', 'linux', or 'unknown')."},
     { MMC_LUA_MMGETPROCESSID, MMC_LUA_MMGETPROCESSID"()\n\tReturns the process id of the running MegaMol." },
     { MMC_LUA_MMGETMACHINENAME, MMC_LUA_MMGETMACHINENAME"()\n\tReturns the machine name." },
-    { MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR"(string dir)\n\tSets the path where the mmconsole.exe is located." },
-    { MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR"(string dir)\n\tAdds a shader/btf search path." },
-    { MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR"(string dir)\n\tAdds a resource search path." },
+    {MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR "(string dir)\n\tSets the path where the mmconsole.exe is located."},
+    {MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR "(string dir)\n\tAdds a shader/btf search path."},
+    {MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR "(string dir)\n\tAdds a resource search path."},
     { MMC_LUA_MMPLUGINLOADERINFO, MMC_LUA_MMPLUGINLOADERINFO"(string glob, string action)\n\tTell the core how to load plugins. Glob a path and ('include' | 'exclude') it." },
-    { MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE"(string path)\n\tSets the full path of the log file." },
+    {MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE "(string path)\n\tSets the full path of the log file."},
     { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR." },
     { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"(int level)\n\tSets the level of log events to output to the console (see above)." },
     { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"(string name, string value)\n\tSets the config value <name> to <value>." },
-    { MMC_LUA_MMGETCONFIGVALUE, MMC_LUA_MMGETCONFIGVALUE"(string name)\n\tGets the value of config value <name>." },
+    {MMC_LUA_MMGETCONFIGVALUE, MMC_LUA_MMGETCONFIGVALUE "(string name)\n\tGets the value of config value <name>."},
     { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
-    "\n\tFor each parameter the name, description, definition, and value are returned." },
+                                  "\n\tFor each parameter the name, description, definition, and value are returned."},
     { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"(string name)\n\tReturn the HEX type descriptor of a parameter slot." },
     { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"(string name)\n\tReturn the description of a parameter slot." },
-    { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE"(string name)\n\tReturn the value of a parameter slot." },
+    {MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE "(string name)\n\tReturn the value of a parameter slot."},
     { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"(string name, string value)\n\tSet the value of a parameter slot." },
     { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>." },
-    { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE"(string name)\n\tDelete the module called <name>." },
+    {MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE "(string name)\n\tDelete the module called <name>."},
     { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
     { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>." },
-    { MMC_LUA_MMQUERYMODULEGRAPH, MMC_LUA_MMQUERYMODULEGRAPH"()\n\tShow the instantiated modules and their children." },
-    { MMC_LUA_MMHELP, MMC_LUA_MMHELP"()\n\tShow this help." },
+    {MMC_LUA_MMCREATECHAINCALL, MMC_LUA_MMCREATECHAINCALL
+        "(string className, string chainStart, string to)\n\tAppend a call of type "
+        "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>."},
+    {MMC_LUA_MMQUERYMODULEGRAPH, MMC_LUA_MMQUERYMODULEGRAPH "()\n\tShow the instantiated modules and their children."},
+    {MMC_LUA_MMHELP, MMC_LUA_MMHELP "()\n\tShow this help."},
     { MMC_LUA_MMCREATEVIEW, MMC_LUA_MMCREATEVIEW"(string viewName, string viewModuleClass, string viewModuleName)"
-    "\n\tCreate a new window/view and the according namespace <viewName> alongside it."
-    "\n\tAlso, instantiate a view module called <viewModuleName> of <viewModuleClass> inside that window." },
-    { MMC_LUA_MMDELETEVIEW, MMC_LUA_MMDELETEVIEW"TODO" },
+        "\n\tCreate a new window/view and the according namespace <viewName> alongside it."
+        "\n\tAlso, instantiate a view module called <viewModuleName> of <viewModuleClass> inside that window."},
+    {MMC_LUA_MMDELETEVIEW, MMC_LUA_MMDELETEVIEW "TODO"},
     { MMC_LUA_MMCREATEJOB, MMC_LUA_MMCREATEJOB"(string jobName, string jobModuleClass, string jobModuleName)"
-    "\n\tCreate a new background job and the according namespace <jobName> alongside it."
-    "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window." },
-    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB"TODO" },
-    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE"(string name)\n\tReturn the value of env variable <name>." },
+        "\n\tCreate a new background job and the according namespace <jobName> alongside it."
+        "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window."},
+    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB "TODO"},
+    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE "(string name)\n\tReturn the value of env variable <name>."},
     {MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
-    {MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS"()\n\tReturn a list of instantiation names"},
+    {MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
     {MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."}
 };
 
@@ -163,6 +167,7 @@ MMC_LUA_MMSETPARAMVALUE "=" MMC_LUA_MMSETPARAMVALUE ","
 MMC_LUA_MMCREATEMODULE "=" MMC_LUA_MMCREATEMODULE ","
 MMC_LUA_MMDELETEMODULE "=" MMC_LUA_MMDELETEMODULE ","
 MMC_LUA_MMCREATECALL "=" MMC_LUA_MMCREATECALL ","
+MMC_LUA_MMCREATECHAINCALL "=" MMC_LUA_MMCREATECHAINCALL ","
 MMC_LUA_MMDELETECALL "=" MMC_LUA_MMDELETECALL ","
 MMC_LUA_MMQUERYMODULEGRAPH "=" MMC_LUA_MMQUERYMODULEGRAPH ","
 MMC_LUA_MMHELP "=" MMC_LUA_MMHELP ","
@@ -178,6 +183,7 @@ MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 "  next = next,"
 "  pairs = pairs,"
 "  pcall = pcall,"
+"  require = require,"
 "  tonumber = tonumber,"
 "  tostring = tostring,"
 "  type = type,"
@@ -347,6 +353,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMCREATEMODULE, &dispatch<&LuaState::CreateModule>);
         lua_register(L, MMC_LUA_MMDELETEMODULE, &dispatch<&LuaState::DeleteModule>);
         lua_register(L, MMC_LUA_MMCREATECALL, &dispatch<&LuaState::CreateCall>);
+        lua_register(L, MMC_LUA_MMCREATECHAINCALL, &dispatch<&LuaState::CreateChainCall>);
         lua_register(L, MMC_LUA_MMDELETECALL, &dispatch<&LuaState::DeleteCall>);
 
         lua_register(L, MMC_LUA_MMCREATEVIEW, &dispatch<&LuaState::CreateView>);
@@ -367,7 +374,7 @@ void megamol::core::LuaState::commonInit() {
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
-        //luaL_openlibs(L);
+        luaL_openlibs(L);
 #else
         // load parts of the environment
         luaL_requiref(L, "_G", luaopen_base, 1);
@@ -381,6 +388,8 @@ void megamol::core::LuaState::commonInit() {
         luaL_requiref(L, LUA_MATHLIBNAME, luaopen_math, 1);
         lua_pop(L, 1);
         luaL_requiref(L, LUA_OSLIBNAME, luaopen_os, 1);
+        lua_pop(L, 1);
+        luaL_requiref(L, LUA_LOADLIBNAME, luaopen_package, 1);
         lua_pop(L, 1);
 #endif
 
@@ -1140,6 +1149,102 @@ int megamol::core::LuaState::CreateCall(lua_State *L) {
         auto to = luaL_checkstring(L, 3);
 
         if(!this->coreInst->RequestCallInstantiation(className, from, to)) {
+            std::stringstream out;
+            out << "could not create \"";
+            out << className;
+            out << "\" call (check MegaMol log)";
+            lua_pushstring(L, out.str().c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::CreateChainCall(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMCREATECHAINCALL)) {
+        auto className = luaL_checkstring(L, 1);
+        std::string chainStart = luaL_checkstring(L, 2);
+        std::string to = luaL_checkstring(L, 3);
+
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        // vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        auto pos = chainStart.find_last_of("::");
+        if (pos < 4 || chainStart.length() < pos + 2) {
+            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chainStart module/slot name weird");
+            lua_error(L);
+            return 0;
+        }
+        auto moduleName = chainStart.substr(0, pos-1);
+        auto slotName = chainStart.substr(pos + 1, -1);
+
+        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
+        AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+        if (!anoc) {
+            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": no root");
+            lua_error(L);
+            return 0;
+        }
+        //Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
+
+        //auto se = mod->ChildList_End();
+        //bool foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CallerSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
+
+
+        //pos = to.find_last_of("::");
+        //if (pos < 4 || to.length() < pos + 2) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
+        //    lua_error(L);
+        //    return 0;
+        //}
+        //moduleName = to.substr(0, pos - 1);
+        //slotName = to.substr(pos + 1, -1);
+
+        //mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
+
+        //se = mod->ChildList_End();
+        //foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
+
+        if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
             std::stringstream out;
             out << "could not create \"";
             out << className;

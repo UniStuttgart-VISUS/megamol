@@ -207,6 +207,7 @@ bool WatermarkRenderer::Render(Call& call) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
 
     // Set matrices
     glMatrixMode(GL_PROJECTION);
@@ -236,6 +237,7 @@ bool WatermarkRenderer::Render(Call& call) {
 
     // Reset OpenGl states
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 
     return true;
 }

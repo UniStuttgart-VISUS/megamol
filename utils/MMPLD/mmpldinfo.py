@@ -61,13 +61,13 @@ def pluralTuple(thingy):
 def listFramedata(parseResult, frame):
     return parseResult.v and (parseResult.v > 1) or (parseResult.v == 1 and frame == 0)
 
-vertexSizes = [0, 12, 16, 5]
-vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ"]
-colorSizes = [0, 3, 4, 4, 12, 16]
-colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA"]
+vertexSizes = [0, 12, 16, 5, 24]
+vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
+colorSizes = [0, 3, 4, 4, 12, 16, 8, 8]
+colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_USHORT_RGBA", "COLDATA_DOUBLE_I"]
 
 print("")
-print("MMPLDinfo (v.: 1.2) - MegaMol Particle List Data File Information Utility")
+print("MMPLDinfo (v.: 1.3.1) - MegaMol Particle List Data File Information Utility")
 print("Copyright 2014-2018 (C) by")
 print("S. Grottel, TU Dresden, Germany and G. Reina, University of Stuttgart")
 print("All rights reserved. Alle Rechte vorbehalten.")
@@ -99,6 +99,8 @@ for filename in parseResult.inputfiles:
             print("mmpld version 1.1")
         elif (version == 102):
             print("mmpld version 1.2")
+        elif (version == 103):
+            print("mmpld version 1.3")
         else:
             print("unsupported mmpld version " + str(version / 100) + "." + str(version % 100))
             exit(1)
@@ -171,7 +173,7 @@ for filename in parseResult.inputfiles:
                 listFramedata(parseResult, fi) and print("        %u byte%s per particle" % pluralTuple(stride))
             
                 globalRad = 0.05
-                if (vertType == 1 or vertType == 3):
+                if (vertType == 1 or vertType == 3 or vertType == 4):
                     globalRad = getFloat(f)
                     listFramedata(parseResult, fi) and print("        global radius: %f" % (globalRad))
 
@@ -186,6 +188,10 @@ for filename in parseResult.inputfiles:
                 #listFramedata and print("        %Q particle%s" % countPlural(listNumParts))
                 listFramedata(parseResult, fi) and print("        {0} particle{1}".format(*pluralTuple(listNumParts)))
                 frameNumParts += listNumParts
+
+                if (version == 103):
+                    box = [getFloat(f) for x in range(6)]
+                    listFramedata(parseResult, fi) and print("list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
 
                 f.seek(listNumParts * stride, os.SEEK_CUR)
 
