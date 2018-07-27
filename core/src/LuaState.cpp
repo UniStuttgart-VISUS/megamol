@@ -1186,63 +1186,63 @@ int megamol::core::LuaState::CreateChainCall(lua_State* L) {
             lua_error(L);
             return 0;
         }
-        Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
-            lua_error(L);
-            return 0;
-        }
+        //Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
-        auto se = mod->ChildList_End();
-        bool foundSlot = false;
-        for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-            auto *slot = dynamic_cast<CallerSlot*>((*si).get());
-            if (slot != NULL) {
-                if (slot->Name() == slotName.c_str()) {
-                    foundSlot = true;
-                    break;
-                }
-            }
-        }
-        if (!foundSlot) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
-            lua_error(L);
-            return 0;
-        }
+        //auto se = mod->ChildList_End();
+        //bool foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CallerSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
 
-        pos = to.find_last_of("::");
-        if (pos < 4 || to.length() < pos + 2) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
-            lua_error(L);
-            return 0;
-        }
-        moduleName = to.substr(0, pos - 1);
-        slotName = to.substr(pos + 1, -1);
+        //pos = to.find_last_of("::");
+        //if (pos < 4 || to.length() < pos + 2) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
+        //    lua_error(L);
+        //    return 0;
+        //}
+        //moduleName = to.substr(0, pos - 1);
+        //slotName = to.substr(pos + 1, -1);
 
-        mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
-            lua_error(L);
-            return 0;
-        }
+        //mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
-        se = mod->ChildList_End();
-        foundSlot = false;
-        for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-            auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
-            if (slot != NULL) {
-                if (slot->Name() == slotName.c_str()) {
-                    foundSlot = true;
-                    break;
-                }
-            }
-        }
-        if (!foundSlot) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
-            lua_error(L);
-            return 0;
-        }
+        //se = mod->ChildList_End();
+        //foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
         if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
             std::stringstream out;
