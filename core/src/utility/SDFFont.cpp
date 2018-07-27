@@ -1275,6 +1275,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (1) Load buffers --------------------------------------------------------
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading OGL BUFFERS ... \n");
     if (!this->loadFontBuffers()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
         return false;
@@ -1283,24 +1284,27 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     // (2) Load font information -----------------------------------------------
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT INFO ... \n");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
-    
+
     // (3) Load font texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT TEXTURE ... \n");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }
 
     // (4) Load shaders --------------------------------------------------------
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading SHADERS ... \n");
     if (!this->loadFontShader(core)) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
-    }  
+    }
 
     this->initialised = true;
     return true;
@@ -1564,12 +1568,11 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
         return false;
     }
 
-    if (pbc.Load((void *)buf, size)) {
-        // (Using template with minimum channels containing alpha)
-        img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); 
+    if (pbc.Load((void*)buf, size)) {
 
-        // (Red channel is Gray value - Green channel is alpha value from png)
-        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) {
+        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
+
+        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
             return false;
