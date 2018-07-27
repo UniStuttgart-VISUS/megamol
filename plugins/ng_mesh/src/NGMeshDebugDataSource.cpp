@@ -77,17 +77,20 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
 	std::strcpy(shader_prgm_data.raw_string, shader_filename.c_str());
 
+	mesh_data.usage = GL_STATIC_DRAW;
+	mesh_data.primitive_type = GL_TRIANGLES;
+
 	mesh_data.vertex_data.buffer_cnt = 2;
 	std::vector<MeshDataAccessor::VertexData::Buffer> buffers(mesh_data.vertex_data.buffer_cnt);
 	mesh_data.vertex_data.buffers = buffers.data();
 
-	std::vector<uint8_t> vertex_data(3 * 6 * 4); // 3 triangles * 6 float entries * bytesize
+	std::vector<uint8_t> vertex_data(3 * 6 * 4); // 3 vertices * 6 float entries * bytesize
 	mesh_data.vertex_data.buffers[0].raw_data = vertex_data.data();
-	mesh_data.vertex_data.buffers[0].byte_size = 3 * 3 * 4; // 3 triangles * 3 float entries for position * bytesize
+	mesh_data.vertex_data.buffers[0].byte_size = 3 * 3 * 4; // 3 vertices * 3 float entries for position * bytesize
 	mesh_data.vertex_data.buffers[1].raw_data = vertex_data.data() + (3 * 3 * 4);
-	mesh_data.vertex_data.buffers[1].byte_size = 3 * 3 * 4; // 3 triangles * 3 float entries for normal * bytesize
+	mesh_data.vertex_data.buffers[1].byte_size = 3 * 3 * 4; // 3 vertices * 3 float entries for normal * bytesize
 
-	float* float_view = reinterpret_cast<float*>(vertex_data.data());
+	float* float_view = reinterpret_cast<float*>(mesh_data.vertex_data.buffers[0].raw_data);
 	// position attribute
 	float_view[0] = -0.5f;
 	float_view[1] = 0.0f;
@@ -129,13 +132,13 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 	mesh_data.vertex_descriptor.attributes[1].type = GL_FLOAT;
 	mesh_data.vertex_descriptor.attributes[1].size = 3;
 	mesh_data.vertex_descriptor.attributes[1].normalized = GL_FALSE;
-	mesh_data.vertex_descriptor.attributes[1].offset = 12;
+	mesh_data.vertex_descriptor.attributes[1].offset = 0;
 
 	std::mt19937 generator(4215);
 	std::uniform_real_distribution<float> distr(0.01f, 0.03f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
-	draw_command_data.draw_cnt = 1000000;
+	draw_command_data.draw_cnt = 100;
 	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
@@ -152,6 +155,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_filename, std::string
 
 		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
 		GLfloat scale = distr(generator);
+		scale = 1.0f;
 		object_transform.SetAt(0, 0, scale);
 		object_transform.SetAt(1, 1, scale);
 		object_transform.SetAt(2, 2, scale);

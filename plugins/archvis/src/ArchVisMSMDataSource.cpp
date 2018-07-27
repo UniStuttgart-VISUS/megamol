@@ -564,6 +564,10 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 	std::vector<MeshDataAccessor::VertexData::Buffer> buffers(mesh_data.vertex_data.buffer_cnt);
 	mesh_data.vertex_data.buffers = buffers.data();
 
+	mesh_data.index_data.byte_size = 0;
+	for (auto& buff : buffers)
+		buff.byte_size = 0;
+
 	std::vector<uint32_t> first_indices; // index of the first index of the different meshes stored in the buffer
 	std::vector<uint32_t> indices_cnt;
 	std::vector<uint32_t> base_vertices; // base vertices of the different meshes stored in the buffer
@@ -609,12 +613,14 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 	{
 		mesh_data.vertex_data.buffers[i].raw_data = vertex_data.data() + bytes_copied;
 
+		bytes_copied = 0;
+
 		for (auto& model : models)
 		{
 			auto& accessor = model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names[i])];
 			auto& bufferView = model.bufferViews[accessor.bufferView];
 
-			auto tgt = mesh_data.vertex_data.buffers[i].raw_data;
+			auto tgt = mesh_data.vertex_data.buffers[i].raw_data + bytes_copied;
 			auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
 			auto size = bufferView.byteLength;
 
