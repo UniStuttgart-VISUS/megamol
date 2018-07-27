@@ -110,9 +110,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
 
     this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->callRequestImage);
-#ifdef WITH_MPI
-    this->comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+
 }
 
 

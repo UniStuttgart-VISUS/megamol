@@ -203,7 +203,7 @@ private:
 
 #ifdef WITH_MPI
     /** The communicator that the view uses. */
-    MPI_Comm comm;
+    MPI_Comm comm = MPI_COMM_NULL;
 #endif /* WITH_MPI */
 
     int mpiRank = 0;
