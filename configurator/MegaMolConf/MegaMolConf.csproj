@@ -79,7 +79,6 @@
     <Compile Include="Connection\Response.cs" />
     <Compile Include="Connection\ZeroMQContext.cs" />
     <Compile Include="Data\ParamType\FlexEnum.cs" />
-    <Compile Include="Data\ParamType\TransferFunc1D.cs" />
     <Compile Include="Data\ParamType\Color.cs" />
     <Compile Include="FlexEnumParamEditor.cs" />
     <Compile Include="ImportParamfileForm.cs">
@@ -335,12 +334,6 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets'))" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
