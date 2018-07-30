@@ -214,7 +214,7 @@ namespace io {
         /** Count of data points for each element */
         std::vector<uint32_t> elementCount;
 
-        /** Sizes in byte for each property of the read ply file */
+        /** Sizes in byte for each property of the read ply file. The size is splitted into the sizes of each separate element */
         std::vector<std::vector<uint32_t>> propertySizes;
 
         /** Slot offering the sphere data. */

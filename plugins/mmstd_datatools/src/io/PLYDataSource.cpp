@@ -305,17 +305,36 @@ bool io::PLYDataSource::assertData() {
         }
     }
 
-    if (this->hasBinaryFormat) {
-        if (this->isLittleEndian) { // binary little endian
+	this->boundingBox.Set(FLT_MAX, FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+	float* bbPointer = const_cast<float*>(boundingBox.PeekBounds()); // hackedihack
 
-        } else { // binary big endian
-        }
+    if (this->hasBinaryFormat) {
+		// vector storing the read data seperately
+		std::vector<std::vector<char>> readData(this->elementCount.size());
+		for (size_t i = 0; i < readData.size(); i++) {
+			// TODO skip unnecessary elements
+			readData[i].resize(elementCount[i] * elementSizes[i]);
+			instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * elementSizes[i]);
+		}
+ 
+        // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always the case)
+		for (size_t i = 0; i < guessedPos.size(); i++) {
+			if (elementIndexMap.count(guessedPos[i]) > 0) {
+				auto idx = elementIndexMap[guessedPos[i]];
+				if (posPointers.pos_float != nullptr) {
+					//posPointers.pos_float = ;
+				}
+				if (posPointers.pos_double != nullptr) {
+					//posPointers.pos_double = ;
+				}
+
+				// TODO BB
+			}
+		}
+
     } else { // ascii format
         std::string line;
         // TODO check order of the values (these here only work with normal ordered files
-
-        this->boundingBox.Set(FLT_MAX, FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-        float* bbPointer = const_cast<float*>(boundingBox.PeekBounds()); // hackedihack
 
         // parse vertices
         for (size_t i = 0; i < vertexCount; i++) {
@@ -762,11 +781,11 @@ bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
     if (c2 == nullptr) return false;
 
-	if (!assertData()) return false;
+    if (!assertData()) return false;
 
-	c2->AccessBoundingBoxes().Clear();
-	c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
-	c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
+    c2->AccessBoundingBoxes().Clear();
+    c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+    c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
     c2->SetFrameCount(1);
     c2->SetDataHash(this->data_hash);
 
