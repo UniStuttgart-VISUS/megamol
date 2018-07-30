@@ -120,6 +120,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     auto* outVol = dynamic_cast<core::moldyn::VolumeDataCall*>(&c);
     if (outVol == nullptr) return false;
 
+    if (!(*inMpdc)(0)) {
+        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+        return false;
+    }
     if (this->time != outVol->FrameID() || this->datahash != inMpdc->DataHash()) {
         if (!this->createVolumeCPU(inMpdc)) return false;
         this->time = outVol->FrameID();
