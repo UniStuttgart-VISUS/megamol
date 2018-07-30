@@ -209,6 +209,19 @@ void NGMeshRenderer::addRenderBatch(
 			mesh_data.primitive_type
 			);
 	}
+	else if (mesh_data.vertex_data.buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
+	{
+		m_render_batches.back().mesh = std::make_unique<Mesh>(
+			mesh_data.vertex_data.buffers[0].raw_data,
+			mesh_data.vertex_data.buffers[0].byte_size,
+			mesh_data.index_data.raw_data,
+			mesh_data.index_data.byte_size,
+			layout,
+			mesh_data.index_data.index_type,
+			mesh_data.usage,
+			mesh_data.primitive_type
+			);
+	}
 	else
 	{
 		//fail?

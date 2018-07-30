@@ -72,6 +72,10 @@ namespace ngmesh {
 				GLenum		type;
 				GLboolean	normalized;
 				GLsizei		offset;
+
+				Attribute() {}
+				Attribute(GLint size, GLenum type, GLenum normlized, GLsizei offset)
+					: size(size), type(type), normalized(normalized), offset(offset) {}
 			};
 			
 			GLsizei		stride;

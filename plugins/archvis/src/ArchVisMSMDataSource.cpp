@@ -23,6 +23,8 @@
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
 
+#include "ng_mesh/NGMeshRenderBatchBakery.h"
+
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "tiny_gltf.h"
@@ -491,7 +493,6 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
 
 	ShaderPrgmDataAccessor				shader_prgm_data;
-	MeshDataAccessor					mesh_data;
 	DrawCommandDataAccessor				draw_command_data;
 	ObjectShaderParamsDataAccessor		mesh_shader_params;
 	MaterialShaderParamsDataAccessor	mtl_shader_params;
@@ -522,77 +523,49 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 		}
 	}
 
-	// set mesh usage and primtive type
-	mesh_data.usage = GL_STATIC_DRAW;
-	mesh_data.primitive_type = GL_TRIANGLES;
-
-	// set vertex attribute layout
-	std::vector<std::string> attribute_names;
-	mesh_data.vertex_descriptor.attribute_cnt = models.front().meshes.front().primitives.front().attributes.size();
-	mesh_data.vertex_descriptor.attributes = new MeshDataAccessor::VertexLayoutData::Attribute[mesh_data.vertex_descriptor.attribute_cnt];
-	mesh_data.vertex_descriptor.stride = 0; //we currently cannot handle a different stride per attribute buffer, assuming data to be tightly packed
-	size_t attribute_counter = 0;
-	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
-	{
-		//std::cout << "Attribute " << attribute.first << std::endl;
-
-		attribute_names.push_back(attribute.first);
-
-		//std::cout << models.front().accessors[attribute.second].type << std::endl;
-		//std::cout << models.front().accessors[attribute.second].componentType << std::endl;
-		//std::cout << models.front().accessors[attribute.second].count << std::endl;
-		//std::cout << models.front().accessors[attribute.second].byteOffset << std::endl;
-		//std::cout << models.front().accessors[attribute.second].normalized << std::endl;
-
-		//auto& bufferView = models.front().bufferViews[models.front().accessors[attribute.second].bufferView];
-
-		mesh_data.vertex_descriptor.attributes[attribute_counter].type = models.front().accessors[attribute.second].componentType;
-		mesh_data.vertex_descriptor.attributes[attribute_counter].size = models.front().accessors[attribute.second].type;
-		mesh_data.vertex_descriptor.attributes[attribute_counter].normalized = models.front().accessors[attribute.second].normalized;
-		// we use a seperated VBO per vertex attribute, therefore offset should always be zero...
-		mesh_data.vertex_descriptor.attributes[attribute_counter].offset = 0;
-
-		++attribute_counter;
-	}
-
 	// Create mesh data that holds all models
 	// For now, assume glTF will supply non-interleaved data (this seems to be mostly the case,..how do I even identify interleaved data?)
 	// Also assume that all glTF files contain a single mesh and all meshes use the same vertex format (i.e. go into a single render batch)
-	//mesh_data.index_data.byte_size = 0;
-	//mesh_data.vertex_data.byte_size = 0;
-	mesh_data.vertex_data.buffer_cnt = mesh_data.vertex_descriptor.attribute_cnt;
-	std::vector<MeshDataAccessor::VertexData::Buffer> buffers(mesh_data.vertex_data.buffer_cnt);
-	mesh_data.vertex_data.buffers = buffers.data();
 
-	mesh_data.index_data.byte_size = 0;
-	for (auto& buff : buffers)
-		buff.byte_size = 0;
+	// Create std-container holding vertex attribute descriptions
+	std::vector<std::string> attribute_names;
+	std::vector<MeshDataAccessor::VertexLayoutData::Attribute> attribs;
+	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
+	{
+		attribute_names.push_back(attribute.first);
+			attribs.push_back(MeshDataAccessor::VertexLayoutData::Attribute(
+				models.front().accessors[attribute.second].type,
+				models.front().accessors[attribute.second].componentType,
+				models.front().accessors[attribute.second].normalized,
+				0)); // a seperated VBO is used per vertex attribute, therefore offset should always be zero...
+	}
 
-	std::vector<uint32_t> first_indices; // index of the first index of the different meshes stored in the buffer
+	// Create intermediate information storage for index data
+	size_t index_buffer_byteSize = 0;
+	std::vector<uint32_t> first_indices = { 0 }; // index of the first index of the different meshes stored in the buffer
 	std::vector<uint32_t> indices_cnt;
-	std::vector<uint32_t> base_vertices; // base vertices of the different meshes stored in the buffer
-	first_indices.push_back(0);
-	base_vertices.push_back(0);
+	GLenum index_type = GL_UNSIGNED_INT;
 
-	size_t vertex_buffer_total_byte_size = 0;
+	// Create intermediate information storage for vertex data
+	std::vector<size_t> vertex_buffers_byteSize(attribs.size(),0);
+	std::vector<uint32_t> base_vertices = { 0 }; // base vertices of the different meshes stored in the buffer
 
-	// Sum up required storage for index and vertex data
+	// Scan all models to sum up required storage for index and vertex data
 	for (auto& model : models)
 	{
 		auto index_buffer_accessor = model.accessors[model.meshes.front().primitives.front().indices];
 		auto index_bufferView = model.bufferViews[index_buffer_accessor.bufferView];
-		mesh_data.index_data.index_type = index_buffer_accessor.componentType;
-		mesh_data.index_data.byte_size += index_bufferView.byteLength;
+		index_type = index_buffer_accessor.componentType; // TODO: detect different index types and throw error?
+		index_buffer_byteSize += index_bufferView.byteLength;
 
-		int buffer_counter = 0;
+		int attrib_counter = 0;
 		for (auto& attrib : model.meshes.front().primitives.front().attributes)
 		{
 			auto& accessor = model.accessors[attrib.second];
 			auto& bufferView = model.bufferViews[accessor.bufferView];
 
-			mesh_data.vertex_data.buffers[buffer_counter].byte_size += bufferView.byteLength;
-			vertex_buffer_total_byte_size += bufferView.byteLength;
-			++buffer_counter;
+			vertex_buffers_byteSize[attrib_counter] += bufferView.byteLength;
+			++attrib_counter;
 		}
 
 		// log first index and base vertex for each model
@@ -605,22 +578,23 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 		indices_cnt.push_back(index_buffer_accessor.count);
 	}
 
-	// Allocate shared buffer for vertex data and copy data from gltf to buffer
-	std::vector<uint8_t> vertex_data(vertex_buffer_total_byte_size);
-	uint32_t bytes_copied = 0;
+	// Create intermediate data storage for index and vertex buffers (size are know after first scan of all models)
+	std::vector<uint8_t> index_data(index_buffer_byteSize); // index data storage, index data from all models is gathered here (yes, this requires some copying)
+	std::vector<std::vector<uint8_t>> vertex_buffers; // vertex data storage, vertex data from all models is gathered per attribute (yes, this requires some copying)
+	for (auto& size : vertex_buffers_byteSize)
+		vertex_buffers.push_back(std::vector<uint8_t>(size));
 
-	for (int i = 0; i < mesh_data.vertex_data.buffer_cnt; ++i)
+	// Copy vertex data from gltf models to intermediate buffer
+	for (int i=0; i < vertex_buffers.size(); ++i)
 	{
-		mesh_data.vertex_data.buffers[i].raw_data = vertex_data.data() + bytes_copied;
-
-		bytes_copied = 0;
+		uint32_t bytes_copied = 0;
 
 		for (auto& model : models)
 		{
 			auto& accessor = model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names[i])];
 			auto& bufferView = model.bufferViews[accessor.bufferView];
 
-			auto tgt = mesh_data.vertex_data.buffers[i].raw_data + bytes_copied;
+			auto tgt = vertex_buffers[i].data() + bytes_copied;
 			auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
 			auto size = bufferView.byteLength;
 
@@ -630,16 +604,14 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 		}
 	}
 
-	// Allocate shared buffer for index data and copy data from gltf to buffer
-	mesh_data.index_data.raw_data = new uint8_t[mesh_data.index_data.byte_size];
-
-	bytes_copied = 0;
+	// Copy index data from gltf models to intermediate buffer
+	uint32_t bytes_copied = 0;
 	for (auto& model : models)
 	{
 		auto& accessor = model.accessors[model.meshes.front().primitives.front().indices];
 		auto& bufferView = model.bufferViews[accessor.bufferView];
 
-		auto tgt = mesh_data.index_data.raw_data + bytes_copied;
+		auto tgt = index_data.data() + bytes_copied;
 		auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
 		auto size = bufferView.byteLength;
 
@@ -648,7 +620,19 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 		bytes_copied += size;
 	}
 
-	assert(bytes_copied == mesh_data.index_data.byte_size);
+	//assert(bytes_copied == mesh_data.index_data.byte_size);
+
+	// Build vertex buffer accessor block for vertex buffers
+	auto vb_accs = buildVertexBufferAccessors(vertex_buffers);
+	// Build mesh accessor from available data + additional info on mesh
+	auto mesh_acc = buildMeshDataAccessor(
+		vb_accs,
+		attribs,
+		0,
+		index_data,
+		index_type,
+		GL_STATIC_DRAW,
+		GL_TRIANGLES);
 
 
 	int element_cnt = m_scale_model.getElementCount();
@@ -681,7 +665,7 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 
 	m_render_batches.addBatch(
 		shader_prgm_data,
-		mesh_data,
+		mesh_acc,
 		draw_command_data,
 		mesh_shader_params,
 		mtl_shader_params);
