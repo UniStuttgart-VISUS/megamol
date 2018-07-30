@@ -167,6 +167,7 @@ io::PLYDataSource::PLYDataSource(void) : core::Module(),
 
     this->radiusSlot.SetParameter(new core::param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->radiusSlot);
+	this->radiusSlot.ForceSetDirty(); // this forces the program to recompute the sphere bounding box
 
     this->getSphereData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(0), &PLYDataSource::getSphereDataCallback);
     this->getSphereData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &PLYDataSource::getSphereExtentCallback);
@@ -362,21 +363,22 @@ bool io::PLYDataSource::assertData() {
         for (size_t i = 0; i < faceCount; i++) {
             if (std::getline(instream, line)) {
                 auto split = isplit(line);
-                if (elementIndexMap.count(guessedFaces)) {
+                if (elementIndexMap.count(guessedIndices)) {
                     uint32_t faceSize = static_cast<uint32_t>(std::stoul(split[0]));
                     if (faceSize != 3) {
                         vislib::sys::Log::DefaultLog.WriteError("The PlyDataSource is currently only able to handle triangular faces");
                         return false;
                     }
                     for (size_t j = 1; j < faceSize + 1; j++) {
+						unsigned long bla = std::stoul(split[j]);
                         if (facePointers.face_uchar != nullptr) {
-                            facePointers.face_uchar[3 * i + j] = static_cast<unsigned char>(std::stoul(split[j]));
+                            facePointers.face_uchar[3 * i + j - 1] = static_cast<unsigned char>(bla);
                         }
                         if (facePointers.face_u16 != nullptr) {
-                            facePointers.face_u16[3 * i + j] = static_cast<uint16_t>(std::stoul(split[j]));
+                            facePointers.face_u16[3 * i + j - 1] = static_cast<uint16_t>(bla);
                         }
                         if (facePointers.face_u32 != nullptr) {
-                            facePointers.face_u32[3 * i + j] = static_cast<uint32_t>(std::stoul(split[j]));
+                            facePointers.face_u32[3 * i + j - 1] = static_cast<uint32_t>(bla);
                         }
                     }
                 }
