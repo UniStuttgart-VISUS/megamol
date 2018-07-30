@@ -1091,7 +1091,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 if (c != nullptr) {
                     if (c->ClassName() == chainClass) {
                         conn theConn = {
-                            c->ClassName(), c->PeekCallerSlot()->FullName(), c->PeekCalleeSlot()->FullName()};
+                            c->ClassName(), c->PeekCallerSlot()->FullName().PeekBuffer(), c->PeekCalleeSlot()->FullName().PeekBuffer()};
                         connections.push_back(theConn);
                     }
                     // answer << c->ClassName() << ";" << c->PeekCallerSlot()->Parent()->Name() << ","
@@ -1110,7 +1110,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
         vislib::sys::Log::DefaultLog.WriteInfo("chain call: trying to find slot for appending %s at the end of %s",
             cir.Description()->ClassName(), cir.From().PeekBuffer());
-        std::string currFrom = cir.From();
+        std::string currFrom = cir.From().PeekBuffer();
 
         std::string currTo = "";
         std::string modFull;
