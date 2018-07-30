@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
-    public partial class TransferFunc1DDialog : Form {
-        public TransferFunc1DDialog(string old_tf) {
+    public partial class TransferFunctionDialog : Form {
+        public TransferFunctionDialog(string old_tf) {
             InitializeComponent();
 
             //selected_channel = Selected_Channel_Enum.A;

@@ -1,5 +1,5 @@
 ﻿namespace MegaMolConf {
-    partial class TransferFunc1DDialog {
+    partial class TransferFunctionDialog {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -23,10 +23,9 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransferFunc1DDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransferFunctionDialog));
             this.lbl_Res = new System.Windows.Forms.Label();
             this.nUD_Res = new System.Windows.Forms.NumericUpDown();
-            this.panel_Canvas = new MegaMolConf.NoflickerPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pb_TransferFunc = new System.Windows.Forms.PictureBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -39,6 +38,7 @@
             this.b_None = new System.Windows.Forms.ToolStripButton();
             this.b_Ramp = new System.Windows.Forms.ToolStripButton();
             this.b_Zero = new System.Windows.Forms.ToolStripButton();
+            this.panel_Canvas = new MegaMolConf.NoflickerPanel();
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
@@ -73,32 +73,15 @@
             0});
             this.nUD_Res.ValueChanged += new System.EventHandler(this.NUDRes_ValChanged);
             // 
-            // panel_Canvas
-            // 
-            this.panel_Canvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel_Canvas.BackColor = System.Drawing.Color.White;
-            this.panel_Canvas.Location = new System.Drawing.Point(12, 29);
-            this.panel_Canvas.Name = "panel_Canvas";
-            this.panel_Canvas.Size = new System.Drawing.Size(536, 340);
-            this.panel_Canvas.TabIndex = 5;
-            this.panel_Canvas.Click += new System.EventHandler(this.PanelCanvas_Click);
-            this.panel_Canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelCanvas_Paint);
-            this.panel_Canvas.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseDown);
-            this.panel_Canvas.MouseMove += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseMove);
-            this.panel_Canvas.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseUp);
-            this.panel_Canvas.Resize += new System.EventHandler(this.PanelCanvas_Resize);
-            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.Color.Black;
             this.panel1.Controls.Add(this.pb_TransferFunc);
-            this.panel1.Location = new System.Drawing.Point(12, 375);
+            this.panel1.Location = new System.Drawing.Point(12, 426);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(536, 63);
+            this.panel1.Size = new System.Drawing.Size(920, 63);
             this.panel1.TabIndex = 10;
             // 
             // pb_TransferFunc
@@ -107,7 +90,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pb_TransferFunc.Location = new System.Drawing.Point(0, 1);
             this.pb_TransferFunc.Name = "pb_TransferFunc";
-            this.pb_TransferFunc.Size = new System.Drawing.Size(539, 125);
+            this.pb_TransferFunc.Size = new System.Drawing.Size(923, 125);
             this.pb_TransferFunc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pb_TransferFunc.TabIndex = 10;
             this.pb_TransferFunc.TabStop = false;
@@ -126,7 +109,7 @@
             this.b_Zero});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(560, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(944, 25);
             this.toolStrip1.TabIndex = 13;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -217,18 +200,35 @@
             this.b_Zero.Text = "Zero";
             this.b_Zero.Click += new System.EventHandler(this.btn_Zero_Click);
             // 
-            // TransferFunc1DDialog
+            // panel_Canvas
+            // 
+            this.panel_Canvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel_Canvas.BackColor = System.Drawing.Color.White;
+            this.panel_Canvas.Location = new System.Drawing.Point(12, 29);
+            this.panel_Canvas.Name = "panel_Canvas";
+            this.panel_Canvas.Size = new System.Drawing.Size(920, 391);
+            this.panel_Canvas.TabIndex = 5;
+            this.panel_Canvas.Click += new System.EventHandler(this.PanelCanvas_Click);
+            this.panel_Canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelCanvas_Paint);
+            this.panel_Canvas.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseDown);
+            this.panel_Canvas.MouseMove += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseMove);
+            this.panel_Canvas.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseUp);
+            this.panel_Canvas.Resize += new System.EventHandler(this.PanelCanvas_Resize);
+            // 
+            // TransferFunctionDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(560, 450);
+            this.ClientSize = new System.Drawing.Size(944, 501);
             this.Controls.Add(this.nUD_Res);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.lbl_Res);
             this.Controls.Add(this.panel_Canvas);
-            this.Name = "TransferFunc1DDialog";
-            this.Text = "TransferFunc1DDialog";
+            this.Name = "TransferFunctionDialog";
+            this.Text = "Transfer Function";
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).EndInit();
