@@ -9,7 +9,7 @@ namespace MegaMolConf.Data {
     XmlInclude(typeof(ParamType.Float)),
     XmlInclude(typeof(ParamType.Int)),
     XmlInclude(typeof(ParamType.FilePath)),
-    XmlInclude(typeof(ParamType.TransferFunc1D)),
+    XmlInclude(typeof(ParamType.Color)),
     XmlInclude(typeof(ParamType.String))]
     public abstract class ParamTypeBase {
         public string TypeName { get; set; }

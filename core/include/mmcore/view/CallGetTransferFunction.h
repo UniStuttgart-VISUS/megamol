@@ -134,7 +134,6 @@ namespace view {
             this->texSize = size;
             this->texFormat = format;
             this->texData = nullptr;
-            this->dirty = true;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
@@ -156,18 +155,22 @@ namespace view {
             this->texSize = size;
             this->texFormat = format;
             this->texData = tex;
-            this->dirty = true;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
         }
 
-        bool IsDirty() const {
-            return this->dirty;
-        }
-
-        void ResetDirty() {
-            this->dirty = false;
+        /**
+         * Copies a color from the transfer function..
+         *
+         * @param index The n-th color to copy.
+         * @param color A pointer to copy the color to.
+         * @param colorSize The size of the color in bytes.
+         */
+        inline void CopyColor(size_t index, float* color, size_t colorSize) {
+            assert(index > 0 && index < this->texSize && "Invalid index");
+            assert(colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float) && "Not a RGB(A) color");
+            memcpy(color, &this->texData[index * 4], colorSize);
         }
 
     private:
@@ -183,9 +186,6 @@ namespace view {
 
         /** The texture format */
         TextureFormat texFormat;
-
-        /** Has changed */
-        bool dirty = false;
 
     };
 

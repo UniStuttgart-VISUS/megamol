@@ -284,6 +284,13 @@ namespace plugins {
             const vislib::StringA& from, const vislib::StringA& to);
 
         /**
+         * Request instantiation of a call at the end of a chain of calls of
+         * type className. See Daisy-Chaining Paradigm.
+         */
+        bool RequestChainCallInstantiation(
+            const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
+
+        /**
          * Request setting the parameter id to the value.
          */
         bool RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
@@ -321,6 +328,7 @@ namespace plugins {
                 || !this->pendingJobInstRequests.IsEmpty()
                 || !this->pendingCallDelRequests.IsEmpty()
                 || !this->pendingCallInstRequests.IsEmpty()
+                || !this->pendingChainCallInstRequests.IsEmpty()
                 || !this->pendingModuleDelRequests.IsEmpty()
                 || !this->pendingModuleInstRequests.IsEmpty()
                 || !this->pendingParamSetRequests.IsEmpty();
@@ -1037,6 +1045,9 @@ namespace plugins {
 
         /** the list of calls to be instantiated: (class,(from,to))* */
         vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingCallInstRequests;
+
+        /** the list of calls to be instantiated: (class,(from == chainStart,to))* */
+        vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingChainCallInstRequests;
 
         /** the list of modules to be instantiated: (class, id)* */
         vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> pendingModuleInstRequests;

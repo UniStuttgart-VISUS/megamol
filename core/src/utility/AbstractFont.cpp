@@ -9,8 +9,13 @@
 
 #include "mmcore/utility/AbstractFont.h"
 
-#include "vislib/assert.h"
-#include "vislib/IllegalParamException.h"
+
+ /*
+ * megamol::core::utility::AbstractFont::AbstractFont
+ */
+megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
+    // nothing to do here ...
+}
 
 
 /*
@@ -19,17 +24,6 @@
 megamol::core::utility::AbstractFont::~AbstractFont(void) {
     // Deinitialise must be called from the dtor of the implementing class.
     ASSERT(this->initialised == false);
-}
-
-
-/*
- * megamol::core::utility::AbstractFont::Deinitialise
- */
-void megamol::core::utility::AbstractFont::Deinitialise(void) {
-    if (this->initialised) {
-        this->deinitialise();
-        this->initialised = false;
-    }
 }
 
 
@@ -44,6 +38,17 @@ bool megamol::core::utility::AbstractFont::Initialise(megamol::core::CoreInstanc
         this->initialised = true;
     }
     return true;
+}
+
+
+/*
+* megamol::core::utility::AbstractFont::Deinitialise
+*/
+void megamol::core::utility::AbstractFont::Deinitialise(void) {
+    if (this->initialised) {
+        this->deinitialise();
+        this->initialised = false;
+    }
 }
 
 
@@ -74,9 +79,3 @@ void megamol::core::utility::AbstractFont::SetSize(float size) {
 }
 
 
-/*
- * megamol::core::utility::AbstractFont::AbstractFont
- */
-megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
-    // intentionally empty
-}

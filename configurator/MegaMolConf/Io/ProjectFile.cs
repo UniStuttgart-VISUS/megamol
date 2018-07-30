@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 
 namespace MegaMolConf.Io {
 
@@ -39,33 +41,45 @@ namespace MegaMolConf.Io {
 
         public static ProjectFile Load(string filename) {
 
-            // Load as ProjectFile1
+            string ext = Path.GetExtension(filename);
+            if (ext == ".lua") {
+                MessageBox.Show("Loading Lua projects is not implemented yet!");
+                return null;
+            } else {
 
-            System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
-            doc.Load(filename);
+                // Load as ProjectFile1
 
-            if (doc.DocumentElement.Name != "MegaMol") {
-                throw new Exception("Document root element must be \"MegaMol\"");
-            }
-            if (!doc.DocumentElement.HasAttribute("type")) {
-                throw new Exception("Root element must specify type");
-            }
-            if (doc.DocumentElement.Attributes["type"].Value != "project") {
-                throw new Exception("Document type must be project");
-            }
-            if (!doc.DocumentElement.HasAttribute("version")) {
-                throw new Exception("Root element must specify version");
-            }
-            if (new Version(doc.DocumentElement.Attributes["version"].Value) != new Version(1, 0)) {
-                throw new Exception("Document version must be 1.0");
-            }
+                System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
+                doc.Load(filename);
 
-            ProjectFile1 p = new ProjectFile1();
-            p.LoadFromXml(doc);
+                if (doc.DocumentElement.Name != "MegaMol") {
+                    throw new Exception("Document root element must be \"MegaMol\"");
+                }
 
-            return p;
+                if (!doc.DocumentElement.HasAttribute("type")) {
+                    throw new Exception("Root element must specify type");
+                }
 
+                if (doc.DocumentElement.Attributes["type"].Value != "project") {
+                    throw new Exception("Document type must be project");
+                }
+
+                if (!doc.DocumentElement.HasAttribute("version")) {
+                    throw new Exception("Root element must specify version");
+                }
+
+                if (new Version(doc.DocumentElement.Attributes["version"].Value) != new Version(1, 0)) {
+                    throw new Exception("Document version must be 1.0");
+                }
+
+                ProjectFile1 p = new ProjectFile1();
+                p.LoadFromXml(doc);
+
+                return p;
+            }
         }
+
+        public abstract void Save(string filename);
 
     }
 

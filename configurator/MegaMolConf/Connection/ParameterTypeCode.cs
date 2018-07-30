@@ -61,13 +61,9 @@
         /// </summary>
         MMFENU = 93794658045261,
         /// <summary>
-        /// TransferFunc1DParam
+        /// ColorParam
         /// </summary>
-        MMTF1W = 95869144943949,
-        /// <summary>
-        /// TransferFunc1DParam
-        /// </summary>
-        MMTF1A = 71679889132877
+        MMCOLO = 95869144943949
     }
 
 }

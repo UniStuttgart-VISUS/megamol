@@ -30,7 +30,9 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
         mouseMode(0), mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
-        showBBoxSlot("showBBox", "Shows/hides the bounding box"),
+        showBBoxSlot("showBBox", "Shows/hides the bounding box"), 
+		bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
+		bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
         resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
         viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
         width(1.0f), incomingCall(NULL), overrideViewTile(NULL), timeCtrl() {
@@ -44,6 +46,10 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
 
     this->showBBoxSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBoxSlot);
+
+    this->bboxColSlot << new param::StringParam(utility::ColourParser::ToString(
+		this->bboxCol[0],this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
+    this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
@@ -224,6 +230,11 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     }
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
+	if (this->bboxColSlot.IsDirty()) {
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
+        this->bboxColSlot.ResetDirty();
+    }
+
     if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
         ::glEnable(GL_BLEND);
         ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -231,7 +242,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glLineWidth(1.2f);
         ::glDisable(GL_LIGHTING);
 
-        ::glColor3ub(255, 255, 255);
+        ::glColor4fv(this->bboxCol);
         ::glBegin(GL_LINE_LOOP);
         ::glVertex2f(bbox.Left(), bbox.Top());
         ::glVertex2f(bbox.Left(), bbox.Bottom());

@@ -22,7 +22,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/TransferFunc1DParam.h"
+#include "mmcore/param/ColorParam.h"
 
 
 namespace megamol {
@@ -135,7 +135,7 @@ namespace job {
         void WriteParamInfo(std::ofstream& file, const param::FloatParam         * param) const;
         void WriteParamInfo(std::ofstream& file, const param::IntParam           * param) const;
         void WriteParamInfo(std::ofstream& file, const param::FilePathParam      * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::TransferFunc1DParam* param) const;
+        void WriteParamInfo(std::ofstream& file, const param::ColorParam         * param) const;
 
         /** The file name to store the data in */
         param::ParamSlot fileNameSlot;

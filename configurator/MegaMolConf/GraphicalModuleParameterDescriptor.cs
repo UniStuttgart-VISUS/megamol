@@ -111,18 +111,19 @@ namespace MegaMolConf {
             set { useInCmdLine = value; }
         }
 
-        public override object GetEditor(Type editorBaseType) {
+        public override object GetEditor(Type editorBaseType)
+        {
             if (p.Type is Data.ParamType.Enum) {
                 return new EnumParamEditor((Data.ParamType.Enum)p.Type);
             }
-            if (p.Type is Data.ParamType.FlexEnum) {
+            else if (p.Type is Data.ParamType.FlexEnum) {
                 return new FlexEnumParamEditor((Data.ParamType.FlexEnum)p.Type);
             }
-            if (p.Type is Data.ParamType.FilePath) {
+            else if (p.Type is Data.ParamType.FilePath) {
                 return new System.Windows.Forms.Design.FileNameEditor();
             }
-            if (p.Type is Data.ParamType.TransferFunc1D) {
-                return new TransferFunc1DEditor((Data.ParamType.TransferFunc1D)p.Type);
+            else if (p.Type is Data.ParamType.Color) {
+                return new ColorEditor();
             }
             return base.GetEditor(editorBaseType);
         }

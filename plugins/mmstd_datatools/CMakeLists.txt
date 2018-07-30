@@ -14,6 +14,11 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   
   set(LIBS vislib core glad geometry_calls)
 
+  if(MPI_C_FOUND)
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+  endif()
+
   include_directories("include" "src" "3rd/nanoflann")
 
   if (OPENMP_FOUND OR WIN32)
@@ -25,7 +30,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.0" --depth 1
+    COMMAND ${GIT_EXECUTABLE} clone https://github.com/ddiakopoulos/tinyply.git tinyply -b "2.1" --depth 1
     OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeout.txt
     ERROR_FILE ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/cmakeerr.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix

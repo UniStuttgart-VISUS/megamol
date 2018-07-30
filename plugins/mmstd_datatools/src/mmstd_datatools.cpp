@@ -58,6 +58,7 @@
 #include "ErosionField.h"
 #include "io/MMGDDWriter.h"
 #include "io/MMGDDDataSource.h"
+#include "io/PlyWriter.h"
 #include "floattable/FloatTableColumnScaler.h"
 #include "floattable/FloatTableObserverPlane.h"
 #include "floattable/FloatTableJoin.h"
@@ -66,7 +67,7 @@
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
 #include "floattable/FloatTableToLines.h"
-
+#include "MPIParticleCollector.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -195,6 +196,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

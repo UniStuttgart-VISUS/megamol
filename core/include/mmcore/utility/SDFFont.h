@@ -7,7 +7,6 @@
  * This implementation is based on "vislib/graphics/OutlinetFont.h"
  */
 
-
 #ifndef MEGAMOL_SDFFONT_H_INCLUDED
 #define MEGAMOL_SDFFONT_H_INCLUDED
 
@@ -17,9 +16,29 @@
 
 
 #include "mmcore/utility/AbstractFont.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/utility/ResourceWrapper.h"
 
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+
+#include "vislib/CharTraits.h"
+#include "vislib/UTF8Encoder.h"
+
+#include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Matrix.h"
+
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
+#include "vislib/Trace.h"
+
+#include <float.h>
 
 
 namespace megamol {
@@ -32,24 +51,41 @@ namespace utility {
      * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Usage example:
+     * >>> USAGE example (for megamol modules):
+     *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS)
-     *                           or this->sdfFont("MY-OWN-FONT");
-     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance())
-     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE)
-     *     - Draw:               this->sdfFont.DrawString(x, y, w, h, size, true, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP)
+     *
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS);
+     *                       OR: this->sdfFont("filename-of-own-font");
+     *
+     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
+     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
+     *
+     *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+     *
+     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE);
+     *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
+     *     - Billboard:          this->sdfFont.SetBillboard(true);
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Available predefined fonts (free for commercial use) -  Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     * >>> Predefined FONTS: (free for commercial use) 
+     *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+     *
      *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
      *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
      *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
      *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> Path the fonts are stored: <megamol>/share/resource/<fontname>(.fnt/.png)
+     * >>> PATH the fonts are stored: 
+     *
+     *     - <megamol>/share/resource/<fontname>(.fnt/.png)
+     *
      * -----------------------------------------------------------------------------------------------------------------
-     * >>> SDF font generation using "Hiero": https://github.com/libgdx/libgdx/wiki/Hiero
-     *     Optimal Settings:   
+     * >>> SDF font GENERATION using "Hiero":
+     *     https://github.com/libgdx/libgdx/wiki/Hiero
+     *
+     *     Use followings SETTINGS:   
      *     - Padding - Top,Right,Bottom,Left:   10
      *     - Padding - X,Y:                    -20
      *     - Bold,Italic:                       false
@@ -59,12 +95,14 @@ namespace utility {
      *     - Size:                             ~90 (glyphs must fit on !one! page)
      *     - Distance Field - Spread:           10 
      *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
+     *
      * -----------------------------------------------------------------------------------------------------------------
      */
+
     class MEGAMOLCORE_API SDFFont : public AbstractFont {
     public:
 
-        /** Available fonts. */
+        /** Available predefined fonts. */
         enum FontName {
             EVOLVENTA_SANS,
             ROBOTO_SANS,
@@ -78,7 +116,6 @@ namespace utility {
             RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
             RENDERTYPE_OUTLINE = 2      // Render the outline 
         };
-
 
         /**
         * Ctor.
@@ -301,11 +338,8 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
-
-        // float c[4], 
-
+        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
          * Draws a text at the specified position.
@@ -318,8 +352,8 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Draws a text at the specified position.
@@ -333,8 +367,8 @@ namespace utility {
         * @param txt   The zero-terminated string to draw.
         * @param align The alignment of the text.
         */
-        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(float c[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -361,8 +395,10 @@ namespace utility {
         virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
         virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
 
+        // --- Global font settings -------------------------------------------
+
         /**
-         * Answers the render type of the font
+         * Answers the globally used render type of the font.
          *
          * @return The render type of the font
          */
@@ -371,13 +407,117 @@ namespace utility {
         }
 
         /**
-         * Sets the render type of the font
+         * Sets the render type of the font globally.
          *
          * @param t The render type for the font
          */
         inline void SetRenderType(RenderType t) {
             this->renderType = t;           
         }
+
+        /**
+         * Enables billboard mode.
+         */
+        inline void EnableBillboard(void) { 
+            this->billboard = true; 
+        }
+
+        /**
+         * Disbales billboard mode.
+         */
+        inline void DisableBillboard(void) { 
+            this->billboard = false; 
+        }
+
+        /**
+        * Answers the globally used status of billboard mode.
+        *
+        * @return True if billboard mode is enabled, false otherwise.
+        */
+        inline bool IsBillboardEnabled(void) const {
+            return this->billboard;
+        }
+
+        /**
+        * Set font rotation globally.
+        *
+        * @param a The rotation angle in degrees.
+        * @param v The rotation axis.
+        */
+        inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
+            this->rotation.Set((a * 3.141592653589f / 180.0f), v);
+        }
+
+        inline void SetRotation(float a, float x, float y, float z) {
+            this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
+        }
+
+        /**
+        * Reset font rotation globally.
+        * (Facing in direction of positive z-Axis)
+        */
+        inline void ResetRotation(void) {
+            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+        }
+
+        /**
+        * Get the globally used rotation.
+        *
+        * @param a The returned angle in degrees.
+        * @param v The returned rotation axis.
+        */
+        inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
+            this->rotation.AngleAndAxis(a, v);
+            a = (a / 3.141592653589f * 180.0f);
+        }
+
+        /**
+         * Enable batch draw. 
+         * Determines that all DrawString() calls are cached for later batch draw.
+         */
+        inline void EnableBatchDraw(void) { 
+            this->useBatchDraw = true;
+        }
+
+        /**
+         * Disable batch draw.
+         * Determines that all DrawString() calls are rendered instantly (default).
+         */
+        inline void DisableBatchDraw(void) { 
+            this->useBatchDraw = false;
+        }
+
+        /**
+         * Answer status of batch draw.
+         * 
+         * @return True if batch draw is enabled, false otherwise.
+         */
+        inline bool IsBatchDrawEnabled(void) const { 
+            return this->useBatchDraw;
+        }
+
+        /**
+         * Clears the batch draw caches.
+         */
+        inline void ClearBatchCache(void) {
+            this->posBatchCache.clear();
+            this->texBatchCache.clear();
+            this->colBatchCache.clear();
+        }
+
+        /**
+         * Renders all cached string data at once.
+         * Given color is used for all cached DrawString() calls (-> Faster version).
+         * 
+         * @param col The color.
+         */
+        void BatchDrawString(const float col[4]) const;
+
+        /**
+         * Renders all cached string data at once.
+         * Color data from individual DrawString() calls are used in additional vbo (-> Slower version).
+         */
+         void BatchDrawString() const;
 
     protected:
 
@@ -386,7 +526,7 @@ namespace utility {
          * Instead call 'Initialise'. You must call 'Initialise' before the
          * object can be used.
          *
-         * @param conf The megamol core isntance, neeeded for being able to load shader/resource files.
+         * @param conf The megamol core isntance. Needed for being able to load files from 'share/shaders' and 'share/resources' folders.
          *
          * @return 'true' on success, 'false' on failure.
          */
@@ -405,7 +545,7 @@ namespace utility {
         * variables
         **********************************************************************/
 
-/** Disable dll export warning for not exported classes in ::vislib and ::std */
+// Disable dll export warning for not exported classes in ::vislib and ::std 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -416,11 +556,18 @@ namespace utility {
         /** The render type used. */
         RenderType renderType;
 
+        /** Billboard mode. */
+        bool billboard;
+
+        /** Quaternion for rotation. */
+        vislib::math::Quaternion<float> rotation;
+
         /** Inidcating if font could be loaded successfully. */
         bool initialised;
 
         /** The shader of the font. */
         vislib::graphics::gl::GLSLShader shader;
+        vislib::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
         vislib::graphics::gl::OpenGLTexture2D texture;
@@ -428,7 +575,8 @@ namespace utility {
         /** Vertex buffer object attributes. */
         enum VBOAttrib {
             POSITION = 0,
-            TEXTURE = 1
+            TEXTURE  = 1,
+            COLOR    = 2  
         };
 
         /** Vertex buffer object info. */
@@ -442,6 +590,14 @@ namespace utility {
         GLuint vaoHandle;
         /** Vertex buffer objects. */
         std::vector<SDFVBO> vbos;
+
+        /** String batch cache status. */
+        bool useBatchDraw;
+
+        /** Position, texture and color data cache for batch draw. */
+        mutable std::vector<float> posBatchCache;
+        mutable std::vector<float> texBatchCache;
+        mutable std::vector<float> colBatchCache;
 
 
         /** The glyph kernings. */
@@ -469,43 +625,11 @@ namespace utility {
 
         // Regular font -------------------------------------------------------
         /** The glyphs. */
-        std::vector<SDFGlyphInfo> glyphs;
+        std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
-        SDFGlyphInfo **glyphIdx;
-        /** Numbner of indices in index array. */
-        unsigned int   idxCnt;
+        std::vector<SDFGlyphInfo*>   glyphIdcs;
         /** The glyph kernings. */
-        std::vector<SDFGlyphKerning> kernings;
-
-        // Bold font ----------------------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsBold;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxBold;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntBold;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsBold;
-
-        // Oblique font -------------------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsOblique;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxOblique;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntOblique;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsOblique;
-
-        // Bold and Oblique font ----------------------------------------------
-        /** The glyphs. */
-        //std::vector<SDFGlyphInfo> glyphsBoldOblique;
-        /** The glyphs sorted by index. */
-        //SDFGlyphInfo **glyphIdxBoldOblique;
-        /** Numbner of indices in index array. */
-        //unsigned int   idxCntBoldOblique;
-        /** The glyph kernings. */
-        //std::vector<SDFGlyphKerning> kerningsBoldOblique;
+        std::vector<SDFGlyphKerning> glyphKrns;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
@@ -528,10 +652,10 @@ namespace utility {
         bool loadFontTexture(vislib::StringA filename);
 
         /** Load shaders from files. */
-        bool loadFontShader(megamol::core::CoreInstance *core, vislib::StringA vert, vislib::StringA frag);
+        bool loadFontShader(megamol::core::CoreInstance *core);
 
         /** Load file into outData buffer and return size. */
-        SIZE_T loadFile(vislib::StringA filename, void **outData);
+        size_t loadFile(vislib::StringA filename, BYTE **outData);
 
         /**
         * Answer the number of lines in the glyph run
@@ -579,7 +703,7 @@ namespace utility {
         /**
         * Draw font glyphs.
         *
-        * @param c     The color as RGBA.
+        * @param col   The color as RGBA.
         * @param run   The glyph run
         * @param x     The reference x coordinate
         * @param y     The reference y coordinate
@@ -588,7 +712,15 @@ namespace utility {
         * @param flipY The flag controlling the direction of the y-axis
         * @param align The alignment
         */
-        void draw(float c[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+        void drawGlyphs(const float col[4], int *run, float x, float y, float z, float size, bool flipY, Alignment align) const;
+
+        /** 
+        * Renders buffer data. 
+        * 
+        * @param gc   The total glyph count to render.
+        * @param col  Pointer to the color array. If col is nullptr, per vertex color is used.
+        */
+        void render(unsigned int gc, const float *col[4]) const;
 
         /**
         * Translate enum font name into font file name.
