@@ -183,10 +183,9 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
-
+    bool useMpi = initMPI();
 #ifdef WITH_MPI
     // generate communicators for each role
-    bool useMpi = initMPI();
     if (useMpi && !registered) {
         myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
         MPI_Comm_rank(this->comm, &rank);
