@@ -59,7 +59,11 @@
         /// <summary>
         /// FlexEnumParam
         /// </summary>
-        MMFENU = 93794658045261
+        MMFENU = 93794658045261,
+        /// <summary>
+        /// ColorParam
+        /// </summary>
+        MMCOLO = 95869144943949
     }
 
 }

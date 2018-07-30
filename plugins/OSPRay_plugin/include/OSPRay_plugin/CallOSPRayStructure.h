@@ -31,7 +31,8 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
-    OSPRAY_API_GEOMETRY
+    OSPRAY_API_GEOMETRY,
+    PKD
 };
 
 enum volumeTypeEnum {
@@ -74,9 +75,11 @@ public:
     std::shared_ptr<const void*> raw;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
+    std::shared_ptr<std::pair<float, float>> valueRange;
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
+    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however, this makes access more concise in the renderer
     void* ospstructure;
 
 
@@ -88,6 +91,7 @@ public:
     unsigned int vertexStride;
     unsigned int colorLength;
     unsigned int colorStride;
+    int colorType;
     long long int partCount;
     float globalRadius;
     core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
@@ -96,6 +100,7 @@ public:
     bool dataChanged;
     bool materialChanged;
     bool isValid;
+    bool smooth; //< valid for lines
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

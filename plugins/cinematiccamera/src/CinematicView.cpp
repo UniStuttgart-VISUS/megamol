@@ -679,7 +679,7 @@ bool CinematicView::rtf_setup() {
     this->rendering = true;
     this->resetFbo  = true;
 
-    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendnering of complete animation.");
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
     return true;
 }
 

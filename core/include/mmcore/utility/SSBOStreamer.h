@@ -92,7 +92,7 @@ namespace utility {
 		/// @param numItemsPerChunk the minimum number of items per chunk
 		/// @param up rounds up if true, otherwise rounds down.
 		/// @returns the alignment-friendly (rounded) number of items per chunk
-        static GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false);
+        GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
 
         GLuint GetHandle(void) const {
             return theSSBO;
@@ -127,6 +127,7 @@ namespace utility {
         std::vector<GLsync> fences;
         int numThr;
         std::string debugLabel;
+        int offsetAlignment = 0;
     };
 
     template<class fun>

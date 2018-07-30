@@ -328,7 +328,7 @@ cluster::simple::Server::Server(void) : Module(),
     this->serverPortSlot.SetUpdateCallback(&Server::onServerEndPointChanged);
     this->MakeSlotAvailable(&this->serverPortSlot);
 
-    this->serverReconnectSlot << new param::ButtonParam();
+    this->serverReconnectSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_F6);
     this->serverReconnectSlot.SetUpdateCallback(&Server::onServerReconnectClicked);
     this->MakeSlotAvailable(&this->serverReconnectSlot);
 
@@ -336,7 +336,7 @@ cluster::simple::Server::Server(void) : Module(),
     this->serverRestartSlot.SetUpdateCallback(&Server::onServerRestartClicked);
     this->MakeSlotAvailable(&this->serverRestartSlot);
 
-    this->serverStartSlot << new param::ButtonParam();
+    this->serverStartSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
     this->serverStartSlot.SetUpdateCallback(&Server::onServerStartStopClicked);
     this->MakeSlotAvailable(&this->serverStartSlot);
 
