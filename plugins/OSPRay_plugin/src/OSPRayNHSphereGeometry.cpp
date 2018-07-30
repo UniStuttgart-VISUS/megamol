@@ -61,12 +61,13 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() >(cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
-    }
-
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
+    if (cd->GetParticleListCount() == 0) return false;
+
+    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    }
 
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 
@@ -96,13 +97,22 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         colorLength = 0;
     }
 
+    int vstride;
+    if (parts.GetVertexDataStride() == 0) {
+        vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+    }
+
+    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE || 
+        parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+    }
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
     this->structureContainer.raw = std::make_shared<const void*>(std::move(parts.GetVertexData()));
     this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.vertexStride = parts.GetVertexDataStride();
+    this->structureContainer.vertexStride = vstride;
     this->structureContainer.colorLength = colorLength;
     this->structureContainer.colorStride = parts.GetColourDataStride();
     this->structureContainer.partCount = partCount;

@@ -183,10 +183,9 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
-
+    bool useMpi = initMPI();
 #ifdef WITH_MPI
     // generate communicators for each role
-    bool useMpi = initMPI();
     if (useMpi && !registered) {
         myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
         MPI_Comm_rank(this->comm, &rank);
@@ -203,6 +202,10 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) imgcConnected = true;
+    uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
+    if (imgcConnected) {
+        imgc_enc = imgc->GetEncoding();
+    }
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) || useMpi) { //< imgc has precedence
@@ -251,7 +254,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
             }
 #endif /* WITH_MPI */
 
-
             if (!beBlank && ((loadedFile != filename) || remoteness)) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
@@ -287,10 +289,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 }
                 // cluster nodes broadcast file size
-                uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
-                if (imgcConnected) {
-                    imgc_enc = imgc->GetEncoding();
-                }
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Broadcast root = %d\n", bcastRoot);
