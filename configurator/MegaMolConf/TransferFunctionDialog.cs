@@ -5,11 +5,13 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace MegaMolConf {
-    public partial class TransferFunctionDialog : Form {
-        public TransferFunctionDialog(string old_tf) {
+    partial class TransferFunctionDialog : Form {
+        public TransferFunctionDialog(GraphicalModule gm) {
             InitializeComponent();
 
             //selected_channel = Selected_Channel_Enum.A;
+
+            string old_tf = ""; //TODO: replace all this parsing stuff
 
             if (String.IsNullOrEmpty(old_tf)) {
                 res = (uint) nUD_Res.Value;

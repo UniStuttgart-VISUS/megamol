@@ -97,6 +97,7 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.b_R,
             this.b_G,
@@ -227,8 +228,11 @@
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.lbl_Res);
             this.Controls.Add(this.panel_Canvas);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "TransferFunctionDialog";
-            this.Text = "Transfer Function";
+            this.ShowIcon = false;
+            this.Text = "Transfer function";
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).EndInit();
