@@ -123,9 +123,13 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
                 a[i]       = texture[i + 3];
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("No color transfer function connected to OSPRayStructuredVolume module");
+            vislib::sys::Log::DefaultLog.WriteError("No alpha channel in transfer function connected to OSPRayStructuredVolume module");
             return false;
         }
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "No transfer function connected to OSPRayStructuredVolume module");
+        return false;
     }
 
 
@@ -141,6 +145,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(std::move(dimensions));
     this->structureContainer.voxelCount = voxelCount;
     this->structureContainer.maxDim = maxDim;
+    this->structureContainer.valueRange = std::make_shared<std::pair<float, float>>(cd->MinimumDensity(), cd->MaximumDensity());
     this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
     this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
 
