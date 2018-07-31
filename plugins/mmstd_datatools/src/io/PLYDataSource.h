@@ -217,6 +217,21 @@ namespace io {
         /** Sizes in byte for each property of the read ply file. The size is splitted into the sizes of each separate element */
         std::vector<std::vector<uint32_t>> propertySizes;
 
+		/** Signs of the property values. True if the value is signed, false if it is unsigned*/
+		std::vector<std::vector<bool>> propertySigns;
+
+		/** The strides of each property element */
+		std::vector<std::vector<uint32_t>> propertyStrides;
+
+		/** Flags showing whether a property is a list of values */
+		std::vector<std::vector<bool>> listFlags;
+
+		/** Size of the list headers, if present */
+		std::vector<std::vector<uint32_t>> listSizes;
+
+		/** Signs of the list header sizes, if present */
+		std::vector<std::vector<bool>> listSigns;
+
         /** Slot offering the sphere data. */
         core::CalleeSlot getSphereData;
 
