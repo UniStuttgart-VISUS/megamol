@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #include "io/PLYDataSource.h"
+#include <array>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <array>
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
@@ -93,25 +93,25 @@ uint32_t tinyTypeSize(tinyply::Type tinyplyType) {
 
 /**
  * Returns whether the given tinyply type is a signed or unsigned one.
- * 
+ *
  * @param tinyplyType The type of the tinyply variable.
  * @return True if the type is a signed type. False otherwise.
  */
 bool tinyIsSigned(tinyply::Type tinyplyType) {
-	switch (tinyplyType) {
-	case tinyply::Type::INT8:
-	case tinyply::Type::INT16:
-	case tinyply::Type::INT32:
-	case tinyply::Type::FLOAT32:
-	case tinyply::Type::FLOAT64:
-		return true;
-	case tinyply::Type::UINT8:
-	case tinyply::Type::UINT16:
-	case tinyply::Type::UINT32:
-	case tinyply::Type::INVALID:
-	default:
-		return false;
-	}
+    switch (tinyplyType) {
+    case tinyply::Type::INT8:
+    case tinyply::Type::INT16:
+    case tinyply::Type::INT32:
+    case tinyply::Type::FLOAT32:
+    case tinyply::Type::FLOAT64:
+        return true;
+    case tinyply::Type::UINT8:
+    case tinyply::Type::UINT16:
+    case tinyply::Type::UINT32:
+    case tinyply::Type::INVALID:
+    default:
+        return false;
+    }
 }
 
 /*
@@ -235,12 +235,18 @@ void io::PLYDataSource::release(void) {
  */
 bool io::PLYDataSource::assertData() {
 
-    if (!instream.is_open()) return false;
+    instream.close();
+    instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
+    if (instream.fail()) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+            vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        return true;
+    }
     // if one of these pointers is not null, we already have read the data
     if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
 
     // jump to the data in the file
-    instream.seekg(this->data_offset, std::ios::beg);
+    instream.seekg(this->data_offset, instream.beg);
     size_t vertexCount = 0;
     size_t faceCount = 0;
 
@@ -342,7 +348,14 @@ bool io::PLYDataSource::assertData() {
                 mult = 4;
             }
             readData[i].resize(elementCount[i] * elementSizes[i] * mult);
+
+            if (instream.fail()) {
+                vislib::sys::Log::DefaultLog.WriteError("HrgHrgHrg");
+            }
             instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * elementSizes[i] * mult);
+            if (instream.fail()) {
+                vislib::sys::Log::DefaultLog.WriteError("ShitShitShit");
+            }
         }
 
         // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always
@@ -428,7 +441,7 @@ bool io::PLYDataSource::assertData() {
             }
         }
 #endif
-		/*
+        /*
         if (elementIndexMap.count(guessedIndices) > 0) {
             auto idx = elementIndexMap[guessedIndices];
             auto elemSize = elementSizes[idx.first];
@@ -448,22 +461,20 @@ bool io::PLYDataSource::assertData() {
             }
             if (facePointers.face_u32 != nullptr) {
                 unsigned char val;
-				std::array<int32_t, 3> values;
+                std::array<int32_t, 3> values;
                 for (size_t f = 0; f < face_count; f++) {
                     std::memcpy(&val, &readData[idx.first][f * elemSize + stride], 1);
                     if (val == 3) {
-						std::memcpy(&values[0], &readData[idx.first][f * (4 * elemSize) + stride + size],
-							3 * size);
-                        std::memcpy(&facePointers.face_u32[f * 3], &readData[idx.first][f * (4 * elemSize) + stride + size],
+                        std::memcpy(&values[0], &readData[idx.first][f * (4 * elemSize) + stride + size],
                             3 * size);
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError("We currently do only support triangular faces!");
-                        return false;
+                        std::memcpy(&facePointers.face_u32[f * 3], &readData[idx.first][f * (4 * elemSize) + stride +
+        size], 3 * size); } else { vislib::sys::Log::DefaultLog.WriteError("We currently do only support triangular
+        faces!"); return false;
                     }
                 }
             }
         }
-		*/
+        */
     } else { // ascii format
         std::string line;
         // TODO check order of the values (these here only work with normal ordered files
@@ -550,7 +561,7 @@ bool io::PLYDataSource::assertData() {
             }
         }
     }
-
+	instream.close();
     return true;
 }
 
@@ -561,6 +572,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
 
+    instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
@@ -595,10 +607,10 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->elementCount.clear();
     this->propertySizes.clear();
     this->propertyStrides.clear();
-	this->propertySigns.clear();
-	this->listFlags.clear();
-	this->listSigns.clear();
-	this->listSizes.clear();
+    this->propertySigns.clear();
+    this->listFlags.clear();
+    this->listSigns.clear();
+    this->listSizes.clear();
     this->hasBinaryFormat = false;
     this->isLittleEndian = true;
     this->data_offset = 0;
@@ -621,10 +633,10 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         this->elementCount.push_back(static_cast<uint32_t>(e.size));
         this->propertySizes.push_back(std::vector<uint32_t>());
         this->propertyStrides.push_back(std::vector<uint32_t>());
-		this->propertySigns.push_back(std::vector<bool>());
-		this->listFlags.push_back(std::vector<bool>());
-		this->listSigns.push_back(std::vector<bool>());
-		this->listSizes.push_back(std::vector<uint32_t>());
+        this->propertySigns.push_back(std::vector<bool>());
+        this->listFlags.push_back(std::vector<bool>());
+        this->listSigns.push_back(std::vector<bool>());
+        this->listSizes.push_back(std::vector<uint32_t>());
 
         property_index = 0;
         element_size = 0;
@@ -678,12 +690,12 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             propertyStrides[propertyStrides.size() - 1].push_back(element_size);
             element_size += tinyTypeSize(p.propertyType);
             propertySizes[propertySizes.size() - 1].push_back(tinyTypeSize(p.propertyType));
-			propertySigns[propertySigns.size() - 1].push_back(tinyIsSigned(p.propertyType));
+            propertySigns[propertySigns.size() - 1].push_back(tinyIsSigned(p.propertyType));
             property_index++;
 
-			listFlags[listFlags.size() - 1].push_back(p.isList);
-			listSizes[listSizes.size() - 1].push_back(tinyTypeSize(p.listType));
-			listSigns[listSigns.size() - 1].push_back(tinyIsSigned(p.listType));
+            listFlags[listFlags.size() - 1].push_back(p.isList);
+            listSizes[listSizes.size() - 1].push_back(tinyTypeSize(p.listType));
+            listSigns[listSigns.size() - 1].push_back(tinyIsSigned(p.listType));
         }
         elementSizes.push_back(element_size);
         element_index++;
@@ -743,7 +755,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             done = true;
         }
     }
-
+	instream.close();
     return true;
 }
 
