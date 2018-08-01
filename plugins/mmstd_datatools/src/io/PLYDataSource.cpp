@@ -114,6 +114,16 @@ bool tinyIsSigned(tinyply::Type tinyplyType) {
     }
 }
 
+/**
+ * Changes the endianness of a given variable by reversing all bits in the field.
+ *
+ * @param obj Reference to the variable of which the endianness is changed.
+ */
+template <class T> void changeEndianness(T& obj) {
+    unsigned char* mem = reinterpret_cast<unsigned char*>(&obj);
+    std::reverse(mem, mem + sizeof(T));
+}
+
 /*
  * io::PLYDataSource::theUndef
  */
@@ -356,8 +366,6 @@ bool io::PLYDataSource::assertData() {
             if (instream.fail()) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "Reading of the field with index %i failed", static_cast<int>(i));
-                this->vertex_count = 0;
-                this->face_count = 0;
                 this->clearAllFields();
                 return false;
             }
@@ -365,6 +373,7 @@ bool io::PLYDataSource::assertData() {
 
         // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always
         // the case)
+		// this could be done partially in parallel
         for (size_t i = 0; i < guessedPos.size(); i++) {
             if (elementIndexMap.count(guessedPos[i]) > 0) {
                 auto idx = elementIndexMap[guessedPos[i]];
@@ -473,6 +482,80 @@ bool io::PLYDataSource::assertData() {
                 }
             }
         }
+        // change endianness if necessary
+        if (!isLittleEndian) {
+			// this could be done in parallel
+			if (posPointers.pos_float != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(posPointers.pos_float[3 * v + 0]);
+					changeEndianness(posPointers.pos_float[3 * v + 1]);
+					changeEndianness(posPointers.pos_float[3 * v + 2]);
+				}
+			}
+			if (posPointers.pos_double != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(posPointers.pos_double[3 * v + 0]);
+					changeEndianness(posPointers.pos_double[3 * v + 1]);
+					changeEndianness(posPointers.pos_double[3 * v + 2]);
+				}
+			}
+			if (normalPointers.norm_float != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(normalPointers.norm_float[3 * v + 0]);
+					changeEndianness(normalPointers.norm_float[3 * v + 1]);
+					changeEndianness(normalPointers.norm_float[3 * v + 2]);
+				}
+			}
+			if (normalPointers.norm_double != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(normalPointers.norm_double[3 * v + 0]);
+					changeEndianness(normalPointers.norm_double[3 * v + 1]);
+					changeEndianness(normalPointers.norm_double[3 * v + 2]);
+				}
+			}
+			if (colorPointers.col_uchar != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(colorPointers.col_uchar[3 * v + 0]);
+					changeEndianness(colorPointers.col_uchar[3 * v + 1]);
+					changeEndianness(colorPointers.col_uchar[3 * v + 2]);
+				}
+			}
+			if (colorPointers.col_float != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(colorPointers.col_float[3 * v + 0]);
+					changeEndianness(colorPointers.col_float[3 * v + 1]);
+					changeEndianness(colorPointers.col_float[3 * v + 2]);
+				}
+			}
+			if (colorPointers.col_double != nullptr) {
+				for (size_t v = 0; v < vertex_count; v++) {
+					changeEndianness(colorPointers.col_double[3 * v + 0]);
+					changeEndianness(colorPointers.col_double[3 * v + 1]);
+					changeEndianness(colorPointers.col_double[3 * v + 2]);
+				}
+			}
+			if (facePointers.face_uchar != nullptr) {
+				for (size_t f = 0; f < face_count; f++) {
+					changeEndianness(facePointers.face_uchar[3 * f + 0]);
+					changeEndianness(facePointers.face_uchar[3 * f + 1]);
+					changeEndianness(facePointers.face_uchar[3 * f + 2]);
+				}
+			}
+			if (facePointers.face_u16 != nullptr) {
+				for (size_t f = 0; f < face_count; f++) {
+					changeEndianness(facePointers.face_u16[3 * f + 0]);
+					changeEndianness(facePointers.face_u16[3 * f + 1]);
+					changeEndianness(facePointers.face_u16[3 * f + 2]);
+				}
+			}
+			if (facePointers.face_u32 != nullptr) {
+				for (size_t f = 0; f < face_count; f++) {
+					changeEndianness(facePointers.face_u32[3 * f + 0]);
+					changeEndianness(facePointers.face_u32[3 * f + 1]);
+					changeEndianness(facePointers.face_u32[3 * f + 2]);
+				}
+			}
+        }
     } else { // ascii format
         std::string line;
         // TODO check order of the values (these here only work with normal ordered files
@@ -575,7 +658,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (instream.fail()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
             vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
-        // TODO ?
+        this->clearAllFields();
         return true;
     }
 
