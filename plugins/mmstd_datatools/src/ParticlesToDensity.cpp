@@ -214,14 +214,21 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
     }
 
-    std::vector<float> localMax(omp_get_max_threads());
+    std::vector<float> localMax(omp_get_max_threads(), 0.0f);
 
-#pragma omp parallel for
-    for (j = 0; j < sx * sy * sz; j++) {
-        for (int i = 1; i < omp_get_max_threads(); i++) {
+    int i = 0;
+#pragma omp parallel for private(i)
+    for (j = 0; j < sx * sy * sz; ++j) {
+        for (i = 1; i < omp_get_max_threads(); ++i) {
             vol[0][j] += vol[i][j];
+            /*if (vol[i][j] > 0.0f) {
+                vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in vol[%d][%d]\n", omp_get_thread_num(), i, j);
+            }*/
         }
-        if (vol[0][j] > localMax[omp_get_thread_num()]) localMax[omp_get_thread_num()] = vol[0][j];
+        if (vol[0][j] > localMax[omp_get_thread_num()]) {
+            localMax[omp_get_thread_num()] = vol[0][j];
+            //vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n", omp_get_thread_num(), vol[0][j]);
+        }
     }
 
     maxDens = *std::max_element(localMax.begin(), localMax.end());
