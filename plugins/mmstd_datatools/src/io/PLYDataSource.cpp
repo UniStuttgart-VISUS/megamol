@@ -343,18 +343,23 @@ bool io::PLYDataSource::assertData() {
         std::vector<std::vector<char>> readData(this->elementCount.size());
         for (size_t i = 0; i < readData.size(); i++) {
             // maybe TODO: skip unnecessary elements
-            int mult = 1;
-            if (elementIndexMap.count(guessedIndices) > 0 && elementIndexMap[guessedIndices].first == i) {
-                mult = 4;
+            uint32_t readsize = elementSizes[i];
+            if (elementIndexMap.count(guessedIndices) > 0) {
+                auto idx = elementIndexMap[guessedIndices];
+                if (idx.first == i && listFlags[idx.first][idx.second]) {
+                    // we assume that faces are always triangular
+                    readsize = listSizes[idx.first][idx.second] + 3 * propertySizes[idx.first][idx.second];
+                }
             }
-            readData[i].resize(elementCount[i] * elementSizes[i] * mult);
-
+            readData[i].resize(elementCount[i] * readsize);
+            instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * readsize);
             if (instream.fail()) {
-                vislib::sys::Log::DefaultLog.WriteError("HrgHrgHrg");
-            }
-            instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * elementSizes[i] * mult);
-            if (instream.fail()) {
-                vislib::sys::Log::DefaultLog.WriteError("ShitShitShit");
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Reading of the field with index %i failed", static_cast<int>(i));
+                this->vertex_count = 0;
+                this->face_count = 0;
+                this->clearAllFields();
+                return false;
             }
         }
 
@@ -392,7 +397,7 @@ bool io::PLYDataSource::assertData() {
                 }
             }
         }
-#if 0
+
         for (size_t i = 0; i < guessedNormal.size(); i++) {
             if (elementIndexMap.count(guessedNormal[i]) > 0) {
                 auto idx = elementIndexMap[guessedNormal[i]];
@@ -413,6 +418,7 @@ bool io::PLYDataSource::assertData() {
                 }
             }
         }
+
         for (size_t i = 0; i < guessedColor.size(); i++) {
             if (i > 2) break;
             if (elementIndexMap.count(guessedColor[i]) > 0) {
@@ -440,41 +446,33 @@ bool io::PLYDataSource::assertData() {
                 }
             }
         }
-#endif
-        /*
+
         if (elementIndexMap.count(guessedIndices) > 0) {
             auto idx = elementIndexMap[guessedIndices];
             auto elemSize = elementSizes[idx.first];
             auto size = propertySizes[idx.first][idx.second];
             auto stride = propertyStrides[idx.first][idx.second];
+            auto listStartSize = listSizes[idx.first][idx.second];
+            auto totSize = listStartSize + 3 * size;
             if (facePointers.face_uchar != nullptr) {
-                uint8_t val;
                 for (size_t f = 0; f < face_count; f++) {
-                    std::memcpy(&val, &readData[idx.first][f * elemSize + stride], size);
-                    std::memcpy(&facePointers.face_uchar[f], &readData[idx.first][f * elemSize + stride], size);
+                    std::memcpy(&facePointers.face_uchar[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
                 }
             }
             if (facePointers.face_u16 != nullptr) {
                 for (size_t f = 0; f < face_count; f++) {
-                    std::memcpy(&facePointers.face_u16[f], &readData[idx.first][f * elemSize + stride], size);
+                    std::memcpy(&facePointers.face_u16[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
                 }
             }
             if (facePointers.face_u32 != nullptr) {
-                unsigned char val;
-                std::array<int32_t, 3> values;
                 for (size_t f = 0; f < face_count; f++) {
-                    std::memcpy(&val, &readData[idx.first][f * elemSize + stride], 1);
-                    if (val == 3) {
-                        std::memcpy(&values[0], &readData[idx.first][f * (4 * elemSize) + stride + size],
-                            3 * size);
-                        std::memcpy(&facePointers.face_u32[f * 3], &readData[idx.first][f * (4 * elemSize) + stride +
-        size], 3 * size); } else { vislib::sys::Log::DefaultLog.WriteError("We currently do only support triangular
-        faces!"); return false;
-                    }
+                    std::memcpy(&facePointers.face_u32[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
                 }
             }
         }
-        */
     } else { // ascii format
         std::string line;
         // TODO check order of the values (these here only work with normal ordered files
@@ -561,7 +559,7 @@ bool io::PLYDataSource::assertData() {
             }
         }
     }
-	instream.close();
+    instream.close();
     return true;
 }
 
@@ -755,7 +753,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             done = true;
         }
     }
-	instream.close();
+    instream.close();
     return true;
 }
 
