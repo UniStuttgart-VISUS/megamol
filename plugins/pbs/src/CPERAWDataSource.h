@@ -13,6 +13,7 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <sys/stat.h>
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
