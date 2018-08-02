@@ -992,6 +992,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     break;
                 }
 
+                error = ospLoadModule("aovspheres");
+                if (error != OSP_NO_ERROR) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
+                }
+
                 numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
 
                 for (unsigned int i = 0; i < numCreateGeo; i++) {
