@@ -995,7 +995,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
 
                 for (unsigned int i = 0; i < numCreateGeo; i++) {
-                    geo.push_back(ospNewGeometry("spheres"));
+                    geo.push_back(ospNewGeometry("aovspheres"));
 
 
                     long long int floatsToRead =
