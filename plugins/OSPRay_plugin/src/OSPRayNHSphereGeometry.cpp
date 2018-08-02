@@ -97,7 +97,7 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         colorLength = 0;
     }
 
-    int vstride;
+    int vstride = parts.GetVertexDataStride();
     if (parts.GetVertexDataStride() == 0) {
         vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
     }
