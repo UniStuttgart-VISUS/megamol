@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayStructuredVolume.h"
 #include "mmcore/Call.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -52,7 +52,9 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->IsoValue << new core::param::FloatParam(0.0f);
     this->MakeSlotAvailable(&this->IsoValue);
 
-    this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
+    /*this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
+    this->MakeSlotAvailable(&this->getDataSlot);*/
+    this->getDataSlot.SetCompatibleCall<core::misc::VolumeticDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -68,11 +70,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->processMaterial();
 
     // read Data, calculate  shape parameters, fill data vectors
-    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::core::moldyn::VolumeDataCall* cd = this->getDataSlot.CallAs<megamol::core::moldyn::VolumeDataCall>();
+    auto os = dynamic_cast<CallOSPRayStructure*>(&call);
+    auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
 
     this->structureContainer.dataChanged = false;
-    if (cd == NULL) return false;
+    if (cd == nullptr) return false;
     if (os->getTime() > cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
@@ -90,20 +92,45 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
 
+    auto const metadata = cd->GetMetadata();
 
-    unsigned int voxelCount =
-        cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();
-    unsigned int maxDim = vislib::math::Max<unsigned int>(cd->VolumeDimension().Depth(),
-        vislib::math::Max<unsigned int>(cd->VolumeDimension().Height(), cd->VolumeDimension().Width()));
-    float scale = 2.0f;
-    std::vector<float> gridOrigin = {-0.5f * scale, -0.5f * scale, -0.5f * scale};
+    if (metadata->ScalarType != core::misc::FLOATING_POINT) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "OSPRayStructuredVolume: Currently supports only float as voxel type\n");
+        return false;
+    }
+    if (metadata->Components != 1) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "OSPRayStructuredVolume: Currently supports only a single voxel component\n");
+        return false;
+    }
+
+    /*unsigned int voxelCount =
+        cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/
+    unsigned int const voxelCount = metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2];
+
+    /*unsigned int maxDim = vislib::math::Max<unsigned int>(cd->VolumeDimension().Depth(),
+        vislib::math::Max<unsigned int>(cd->VolumeDimension().Height(), cd->VolumeDimension().Width()));*/
+
+    // float scale = 2.0f;
+    /*std::vector<float> gridOrigin = {-0.5f * scale, -0.5f * scale, -0.5f * scale};
     std::vector<float> gridSpacing = {scale / (float)maxDim, scale / (float)maxDim, scale / (float)maxDim};
     std::vector<int> dimensions = {(int)cd->VolumeDimension().GetWidth(), (int)cd->VolumeDimension().GetHeight(),
-        (int)cd->VolumeDimension().GetDepth()};
+        (int)cd->VolumeDimension().GetDepth()};*/
+
+    std::vector<float> gridOrigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
+    std::vector<float> gridSpacing = {
+        metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
+    std::vector<int> dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
+        static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explicit narrowing
+
+    unsigned int const maxDim =
+        std::max<size_t>(metadata->Resolution[0], std::max<size_t>(metadata->Resolution[1], metadata->Resolution[2]));
 
 
     std::vector<float> voxels(voxelCount);
-    voxels.assign(cd->VoxelMap(), cd->VoxelMap() + voxelCount);
+    std::copy(reinterpret_cast<float const*>(cd->GetData()), reinterpret_cast<float const*>(cd->GetData()) + voxelCount,
+        voxels.begin()); //< TODO this should not be necessary
 
     // get color transfer function
     std::vector<float> rgb;
@@ -147,7 +174,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.voxelCount = voxelCount;
     this->structureContainer.maxDim = maxDim;
     this->structureContainer.valueRange =
-        std::make_shared<std::pair<float, float>>(cd->MinimumDensity(), cd->MaximumDensity());
+        std::make_shared<std::pair<float, float>>(metadata->MinValues[0], metadata->MaxValues[0]);
     this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
     this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
 
@@ -203,10 +230,10 @@ bool OSPRayStructuredVolume::InterfaceIsDirty() {
 
 
 bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
-    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::core::moldyn::VolumeDataCall* cd = this->getDataSlot.CallAs<megamol::core::moldyn::VolumeDataCall>();
+    auto os = dynamic_cast<CallOSPRayStructure*>(&call);
+    auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
 
-    if (cd == NULL) return false;
+    if (cd == nullptr) return false;
     if (os->getTime() > cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {

@@ -153,7 +153,7 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     float const maxV = metadata->MaxValues[0];
     this->valuerange = std::make_pair(minV, maxV);
     this->gridorigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
-    this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[0][1], metadata->SliceDists[0][2]};
+    this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
     this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
         static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
 
