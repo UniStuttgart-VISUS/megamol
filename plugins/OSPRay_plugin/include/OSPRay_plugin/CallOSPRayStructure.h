@@ -32,7 +32,8 @@ enum geometryTypeEnum {
     CYLINDERS,
     PBS,
     OSPRAY_API_GEOMETRY,
-    PKD
+    PKD,
+    AOVSPHERES
 };
 
 enum volumeTypeEnum {
@@ -47,6 +48,16 @@ enum volumeRepresentationType {
     ISOSURFACE,
     SLICE
 };
+
+enum class voxelDataType : uint8_t {
+    UCHAR = 0,
+    SHORT = 1,
+    USHORT = 2,
+    FLOAT = 3,
+    DOUBLE = 4
+};
+
+static std::string voxelDataTypeS[] = {"uchar", "short", "ushort", "float", "double"};
 
 
 class OSPRayStructureContainer {
@@ -73,6 +84,7 @@ public:
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
     std::shared_ptr<const void*> raw;
+    std::shared_ptr<void const*> raw2;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
     std::shared_ptr<std::pair<float, float>> valueRange;
@@ -101,6 +113,11 @@ public:
     bool materialChanged;
     bool isValid;
     bool smooth; //< valid for lines
+
+    voxelDataType voxelDType;
+
+    float samplingRate;
+    float aoThreshold;
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();
