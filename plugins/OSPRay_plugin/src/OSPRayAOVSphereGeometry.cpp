@@ -119,7 +119,7 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
         vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
     }
 
-    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE ||
+    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
         parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
         vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
     }
