@@ -114,8 +114,8 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
         colorLength = 0;
     }
 
-    int vstride;
-    if (parts.GetVertexDataStride() == 0) {
+    int vstride = parts.GetVertexDataStride();
+    if (vstride == 0) {
         vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
     }
 

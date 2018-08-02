@@ -1042,7 +1042,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                 }
                 // aovol
-                auto const aovol = ospNewVolume("block_bricked_volume");
+                //auto const aovol = ospNewVolume("block_bricked_volume");
+                auto const aovol = ospNewVolume("shared_structured_volume");
                 ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
                 ospSet1f(aovol, "samplingRate", element.samplingRate);
                 ospSet1f(geo.back(), "samplingRate", element.samplingRate);
@@ -1051,6 +1052,28 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
                 ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
                 ospSet1f(geo.back(), "aoThreshold", element.aoThreshold);
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                std::vector<float> faketf = {
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                };
+                std::vector<float> fakeopa = {1.0f, 1.0f};
+
+                OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
+                OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+                ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+
+                ospCommit(tf);
+
+                ospSetObject(aovol, "transferFunction", tf);
 
                 // add data
                 voxels = ospNewData(element.voxelCount,
