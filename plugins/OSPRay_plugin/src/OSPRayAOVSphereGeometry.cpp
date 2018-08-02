@@ -178,6 +178,7 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.voxelDType = voxelDataType::FLOAT;
     this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
 
     return true;
 }

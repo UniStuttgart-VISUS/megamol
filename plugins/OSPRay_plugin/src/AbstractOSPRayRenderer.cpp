@@ -1046,6 +1046,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
                 ospSet1f(geo.back(), "aoThreshold", element.aoThreshold);
 
+                // add data
+                voxels = ospNewData(element.voxelCount,
+                    static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]), *element.raw2,
+                    OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(aovol, "voxelData", voxels);
+
                 ospCommit(aovol);
                 ospSetObject(geo.back(), "aovol", aovol);
             } break;
