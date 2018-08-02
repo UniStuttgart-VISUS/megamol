@@ -373,7 +373,7 @@ bool io::PLYDataSource::assertData() {
 
         // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always
         // the case)
-		// this could be done partially in parallel
+        // this could be done partially in parallel
         for (size_t i = 0; i < guessedPos.size(); i++) {
             if (elementIndexMap.count(guessedPos[i]) > 0) {
                 auto idx = elementIndexMap[guessedPos[i]];
@@ -484,164 +484,169 @@ bool io::PLYDataSource::assertData() {
         }
         // change endianness if necessary
         if (!isLittleEndian) {
-			// this could be done in parallel
-			if (posPointers.pos_float != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(posPointers.pos_float[3 * v + 0]);
-					changeEndianness(posPointers.pos_float[3 * v + 1]);
-					changeEndianness(posPointers.pos_float[3 * v + 2]);
-				}
-			}
-			if (posPointers.pos_double != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(posPointers.pos_double[3 * v + 0]);
-					changeEndianness(posPointers.pos_double[3 * v + 1]);
-					changeEndianness(posPointers.pos_double[3 * v + 2]);
-				}
-			}
-			if (normalPointers.norm_float != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(normalPointers.norm_float[3 * v + 0]);
-					changeEndianness(normalPointers.norm_float[3 * v + 1]);
-					changeEndianness(normalPointers.norm_float[3 * v + 2]);
-				}
-			}
-			if (normalPointers.norm_double != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(normalPointers.norm_double[3 * v + 0]);
-					changeEndianness(normalPointers.norm_double[3 * v + 1]);
-					changeEndianness(normalPointers.norm_double[3 * v + 2]);
-				}
-			}
-			if (colorPointers.col_uchar != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(colorPointers.col_uchar[3 * v + 0]);
-					changeEndianness(colorPointers.col_uchar[3 * v + 1]);
-					changeEndianness(colorPointers.col_uchar[3 * v + 2]);
-				}
-			}
-			if (colorPointers.col_float != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(colorPointers.col_float[3 * v + 0]);
-					changeEndianness(colorPointers.col_float[3 * v + 1]);
-					changeEndianness(colorPointers.col_float[3 * v + 2]);
-				}
-			}
-			if (colorPointers.col_double != nullptr) {
-				for (size_t v = 0; v < vertex_count; v++) {
-					changeEndianness(colorPointers.col_double[3 * v + 0]);
-					changeEndianness(colorPointers.col_double[3 * v + 1]);
-					changeEndianness(colorPointers.col_double[3 * v + 2]);
-				}
-			}
-			if (facePointers.face_uchar != nullptr) {
-				for (size_t f = 0; f < face_count; f++) {
-					changeEndianness(facePointers.face_uchar[3 * f + 0]);
-					changeEndianness(facePointers.face_uchar[3 * f + 1]);
-					changeEndianness(facePointers.face_uchar[3 * f + 2]);
-				}
-			}
-			if (facePointers.face_u16 != nullptr) {
-				for (size_t f = 0; f < face_count; f++) {
-					changeEndianness(facePointers.face_u16[3 * f + 0]);
-					changeEndianness(facePointers.face_u16[3 * f + 1]);
-					changeEndianness(facePointers.face_u16[3 * f + 2]);
-				}
-			}
-			if (facePointers.face_u32 != nullptr) {
-				for (size_t f = 0; f < face_count; f++) {
-					changeEndianness(facePointers.face_u32[3 * f + 0]);
-					changeEndianness(facePointers.face_u32[3 * f + 1]);
-					changeEndianness(facePointers.face_u32[3 * f + 2]);
-				}
-			}
+            // this could be done in parallel
+            if (posPointers.pos_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(posPointers.pos_float[3 * v + 0]);
+                    changeEndianness(posPointers.pos_float[3 * v + 1]);
+                    changeEndianness(posPointers.pos_float[3 * v + 2]);
+                }
+            }
+            if (posPointers.pos_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(posPointers.pos_double[3 * v + 0]);
+                    changeEndianness(posPointers.pos_double[3 * v + 1]);
+                    changeEndianness(posPointers.pos_double[3 * v + 2]);
+                }
+            }
+            if (normalPointers.norm_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(normalPointers.norm_float[3 * v + 0]);
+                    changeEndianness(normalPointers.norm_float[3 * v + 1]);
+                    changeEndianness(normalPointers.norm_float[3 * v + 2]);
+                }
+            }
+            if (normalPointers.norm_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(normalPointers.norm_double[3 * v + 0]);
+                    changeEndianness(normalPointers.norm_double[3 * v + 1]);
+                    changeEndianness(normalPointers.norm_double[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_uchar != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_uchar[3 * v + 0]);
+                    changeEndianness(colorPointers.col_uchar[3 * v + 1]);
+                    changeEndianness(colorPointers.col_uchar[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_float[3 * v + 0]);
+                    changeEndianness(colorPointers.col_float[3 * v + 1]);
+                    changeEndianness(colorPointers.col_float[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_double[3 * v + 0]);
+                    changeEndianness(colorPointers.col_double[3 * v + 1]);
+                    changeEndianness(colorPointers.col_double[3 * v + 2]);
+                }
+            }
+            if (facePointers.face_uchar != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_uchar[3 * f + 0]);
+                    changeEndianness(facePointers.face_uchar[3 * f + 1]);
+                    changeEndianness(facePointers.face_uchar[3 * f + 2]);
+                }
+            }
+            if (facePointers.face_u16 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_u16[3 * f + 0]);
+                    changeEndianness(facePointers.face_u16[3 * f + 1]);
+                    changeEndianness(facePointers.face_u16[3 * f + 2]);
+                }
+            }
+            if (facePointers.face_u32 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_u32[3 * f + 0]);
+                    changeEndianness(facePointers.face_u32[3 * f + 1]);
+                    changeEndianness(facePointers.face_u32[3 * f + 2]);
+                }
+            }
         }
     } else { // ascii format
         std::string line;
-        // TODO check order of the values (these here only work with normal ordered files
-
-        // parse vertices
-        for (size_t i = 0; i < vertexCount; i++) {
-            if (std::getline(instream, line)) {
-                auto split = isplit(line);
-                for (size_t j = 0; j < guessedPos.size(); j++) {
-                    if (elementIndexMap.count(guessedPos[j]) > 0) {
-                        auto idx = elementIndexMap[guessedPos[j]];
-                        if (posPointers.pos_float != nullptr) {
-                            posPointers.pos_float[3 * i + j] = std::stof(split[idx.second]);
+        for (size_t elm = 0; elm < this->elementCount.size(); elm++) {
+            // parse vertices
+            if (icompare(elementNames[elm], guessedVertices)) {
+                for (size_t i = 0; i < vertexCount; i++) {
+                    if (std::getline(instream, line)) {
+                        auto split = isplit(line);
+                        for (size_t j = 0; j < guessedPos.size(); j++) {
+                            if (elementIndexMap.count(guessedPos[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (posPointers.pos_float != nullptr) {
+                                    posPointers.pos_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (posPointers.pos_double != nullptr) {
+                                    posPointers.pos_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                                if (std::stof(split[idx.second]) < bbPointer[j]) {
+                                    bbPointer[j] = std::stof(split[idx.second]);
+                                }
+                                if (std::stof(split[idx.second]) > bbPointer[j + 3]) {
+                                    bbPointer[j + 3] = std::stof(split[idx.second]);
+                                }
+                            }
                         }
-                        if (posPointers.pos_double != nullptr) {
-                            posPointers.pos_double[3 * i + j] = std::stod(split[idx.second]);
+                        for (size_t j = 0; j < guessedNormal.size(); j++) {
+                            if (elementIndexMap.count(guessedNormal[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (normalPointers.norm_float != nullptr) {
+                                    normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (normalPointers.norm_double != nullptr) {
+                                    normalPointers.norm_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                            }
                         }
-                        if (std::stof(split[idx.second]) < bbPointer[j]) {
-                            bbPointer[j] = std::stof(split[idx.second]);
+                        for (size_t j = 0; j < guessedColor.size(); j++) {
+                            if (elementIndexMap.count(guessedColor[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (colorPointers.col_uchar != nullptr) {
+                                    colorPointers.col_uchar[3 * i + j] =
+                                        static_cast<unsigned char>(std::stoul(split[idx.second]));
+                                }
+                                if (colorPointers.col_float != nullptr) {
+                                    colorPointers.col_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (colorPointers.col_double != nullptr) {
+                                    colorPointers.col_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                            }
                         }
-                        if (std::stof(split[idx.second]) > bbPointer[j + 3]) {
-                            bbPointer[j + 3] = std::stof(split[idx.second]);
-                        }
-                    }
-                }
-                for (size_t j = 0; j < guessedNormal.size(); j++) {
-                    if (elementIndexMap.count(guessedNormal[j]) > 0) {
-                        auto idx = elementIndexMap[guessedPos[j]];
-                        if (normalPointers.norm_float != nullptr) {
-                            normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
-                        }
-                        if (normalPointers.norm_double != nullptr) {
-                            normalPointers.norm_double[3 * i + j] = std::stod(split[idx.second]);
-                        }
-                    }
-                }
-                for (size_t j = 0; j < guessedColor.size(); j++) {
-                    if (elementIndexMap.count(guessedColor[j]) > 0) {
-                        auto idx = elementIndexMap[guessedPos[j]];
-                        if (colorPointers.col_uchar != nullptr) {
-                            colorPointers.col_uchar[3 * i + j] =
-                                static_cast<unsigned char>(std::stoul(split[idx.second]));
-                        }
-                        if (colorPointers.col_float != nullptr) {
-                            colorPointers.col_float[3 * i + j] = std::stof(split[idx.second]);
-                        }
-                        if (colorPointers.col_double != nullptr) {
-                            colorPointers.col_double[3 * i + j] = std::stod(split[idx.second]);
-                        }
-                    }
-                }
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
-                return false;
-            }
-        }
-        // parse faces
-        for (size_t i = 0; i < faceCount; i++) {
-            if (std::getline(instream, line)) {
-                auto split = isplit(line);
-                if (elementIndexMap.count(guessedIndices)) {
-                    uint32_t faceSize = static_cast<uint32_t>(std::stoul(split[0]));
-                    if (faceSize != 3) {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "The PlyDataSource is currently only able to handle triangular faces");
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
                         return false;
                     }
-                    for (size_t j = 1; j < faceSize + 1; j++) {
-                        unsigned long bla = std::stoul(split[j]);
-                        if (facePointers.face_uchar != nullptr) {
-                            facePointers.face_uchar[3 * i + j - 1] = static_cast<unsigned char>(bla);
+                }
+            }
+            // parse faces
+            if (icompare(elementNames[elm], guessedFaces)) {
+                for (size_t i = 0; i < faceCount; i++) {
+                    if (std::getline(instream, line)) {
+                        auto split = isplit(line);
+                        if (elementIndexMap.count(guessedIndices)) {
+                            uint32_t faceSize = static_cast<uint32_t>(std::stoul(split[0]));
+                            if (faceSize != 3) {
+                                vislib::sys::Log::DefaultLog.WriteError(
+                                    "The PlyDataSource is currently only able to handle triangular faces");
+                                return false;
+                            }
+                            for (size_t j = 1; j < faceSize + 1; j++) {
+                                unsigned long bla = std::stoul(split[j]);
+                                if (facePointers.face_uchar != nullptr) {
+                                    facePointers.face_uchar[3 * i + j - 1] = static_cast<unsigned char>(bla);
+                                }
+                                if (facePointers.face_u16 != nullptr) {
+                                    facePointers.face_u16[3 * i + j - 1] = static_cast<uint16_t>(bla);
+                                }
+                                if (facePointers.face_u32 != nullptr) {
+                                    facePointers.face_u32[3 * i + j - 1] = static_cast<uint32_t>(bla);
+                                }
+                            }
                         }
-                        if (facePointers.face_u16 != nullptr) {
-                            facePointers.face_u16[3 * i + j - 1] = static_cast<uint16_t>(bla);
-                        }
-                        if (facePointers.face_u32 != nullptr) {
-                            facePointers.face_u32[3 * i + j - 1] = static_cast<uint32_t>(bla);
-                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
+                        return false;
                     }
                 }
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
-                return false;
             }
         }
     }
+
     instream.close();
     return true;
 }
@@ -686,6 +691,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->elementIndexMap.clear();
     this->elementSizes.clear();
     this->elementCount.clear();
+    this->elementNames.clear();
     this->propertySizes.clear();
     this->propertyStrides.clear();
     this->propertySigns.clear();
@@ -712,6 +718,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             guessedFaces = e.name;
         }
         this->elementCount.push_back(static_cast<uint32_t>(e.size));
+        this->elementNames.push_back(e.name);
         this->propertySizes.push_back(std::vector<uint32_t>());
         this->propertyStrides.push_back(std::vector<uint32_t>());
         this->propertySigns.push_back(std::vector<bool>());
