@@ -27,7 +27,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Creator for OSPRay no overhead sphere geometries with volume-based ao approximation."; }
+    static const char* Description(void) {
+        return "Creator for OSPRay no overhead sphere geometries with volume-based ao approximation.";
+    }
 
     /**
      * Answers whether this module is available on the current system.

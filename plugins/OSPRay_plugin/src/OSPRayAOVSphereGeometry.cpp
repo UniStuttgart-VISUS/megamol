@@ -9,15 +9,10 @@
 #include "mmcore/Call.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "vislib/forceinline.h"
 #include "vislib/sys/Log.h"
 
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
 
 using namespace megamol::ospray;
 
@@ -30,7 +25,8 @@ typedef unsigned char (*byteFromArrayFunc)(
 OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     : particleList("ParticleList", "Switches between particle lists")
     , samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
-    , aoThresholdSlot("aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
+    , aoThresholdSlot(
+          "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
     , getDataSlot("getdata", "Connects to the data source")
     , getVolSlot("getVol", "Connects to the density volume provider") {
 
@@ -158,7 +154,8 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->valuerange = std::make_pair(minV, maxV);
     this->gridorigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
     this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[0][1], metadata->SliceDists[0][2]};
-    this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]), static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
+    this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
+        static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
@@ -173,10 +170,11 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.mmpldColor = parts.GetColourDataType();
 
     this->structureContainer.raw2 = std::make_shared<void const*>(vd->GetData());
-    this->structureContainer.valueRange = std::make_shared<std::pair<float, float>>(this->valuerange); //< TODO HAZARD potential dangling shared pointer
-    this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(this->gridorigin);      //<
-    this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(this->gridspacing);    //<
-    this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);        //<
+    this->structureContainer.valueRange =
+        std::make_shared<std::pair<float, float>>(this->valuerange); //< TODO HAZARD potential dangling shared pointer
+    this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(this->gridorigin);   //<
+    this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(this->gridspacing); //<
+    this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);     //<
     this->structureContainer.voxelDType = voxelDataType::FLOAT;
     this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();

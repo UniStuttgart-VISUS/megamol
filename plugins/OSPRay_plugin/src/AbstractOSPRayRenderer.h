@@ -131,10 +131,10 @@ protected:
     megamol::core::param::ParamSlot deviceTypeSlot;
 
     // device type
-    enum deviceType {DEFAULT, MPI_DISTRIBUTED};
+    enum deviceType { DEFAULT, MPI_DISTRIBUTED };
 
     // renderer type
-    enum rdenum {SCIVIS, PATHTRACER, MPI_RAYCAST};
+    enum rdenum { SCIVIS, PATHTRACER, MPI_RAYCAST };
 
     // light
     std::vector<OSPLight> lightArray;
