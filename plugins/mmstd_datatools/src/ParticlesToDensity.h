@@ -18,6 +18,7 @@
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <vector>
 #include <map>
+#include "mmcore/misc/VolumetricDataCall.h"
 
 
 namespace megamol {
@@ -71,6 +72,8 @@ class ParticlesToDensity : public megamol::core::Module {
          * @return True on success
          */
         bool getDataCallback(megamol::core::Call& c);
+
+        bool dummyCallback(megamol::core::Call& c);
         
         bool createVolumeCPU(megamol::core::moldyn::MultiParticleDataCall* c2);
 
@@ -100,7 +103,8 @@ class ParticlesToDensity : public megamol::core::Module {
 
         /** The slot accessing the original data */
         megamol::core::CallerSlot inDataSlot;
-        
+
+        core::misc::VolumetricDataCall::Metadata metadata;
     };
 
 } /* end namespace datatools */

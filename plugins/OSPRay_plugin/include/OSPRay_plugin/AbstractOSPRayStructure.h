@@ -1,18 +1,16 @@
 /*
-* AbstractOSPRayStructure.h
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * AbstractOSPRayStructure.h
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
-#include "mmcore/Module.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
-
-
+#include "mmcore/Module.h"
 
 
 namespace megamol {
@@ -28,9 +26,9 @@ protected:
 
     virtual bool create() { return true; }
     virtual void release() { this->Release(); }
-    virtual bool readData(megamol::core::Call &call) { return true; }
-    virtual bool getExtends(megamol::core::Call &call) { return true; }
-    bool getExtendsCallback(megamol::core::Call &call);
+    virtual bool readData(megamol::core::Call& call) { return true; }
+    virtual bool getExtends(megamol::core::Call& call) { return true; }
+    bool getExtendsCallback(megamol::core::Call& call);
     bool getStructureCallback(core::Call& call);
     void processMaterial();
 
@@ -48,7 +46,6 @@ protected:
 
     OSPRayStructureContainer structureContainer;
     OSPRayExtendContainer extendContainer;
-
 };
 
 
