@@ -79,12 +79,13 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() >(cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
-    }
-
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
+    if (cd->GetParticleListCount() == 0) return false;
+
+    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    }
 
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 

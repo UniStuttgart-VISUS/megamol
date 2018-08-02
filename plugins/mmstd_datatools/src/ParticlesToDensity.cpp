@@ -5,18 +5,18 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "ParticlesToDensity.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
-#include <cstdint>
 #include <algorithm>
-#include <cfloat>
 #include <cassert>
+#include <cfloat>
+#include <cstdint>
+#include "ParticlesToDensity.h"
+#include "mmcore/misc/VolumetricDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "omp.h"
+#include "vislib/sys/Log.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -24,16 +24,14 @@ using namespace megamol;
 using namespace megamol::stdplugin;
 
 /*
-* datatools::ParticlesToDensity::create
-*/
-bool datatools::ParticlesToDensity::create(void) {
-    return true;
-}
+ * datatools::ParticlesToDensity::create
+ */
+bool datatools::ParticlesToDensity::create(void) { return true; }
 
 
 /*
-* datatools::ParticlesToDensity::release
-*/
+ * datatools::ParticlesToDensity::release
+ */
 void datatools::ParticlesToDensity::release(void) {}
 
 
@@ -43,7 +41,7 @@ void datatools::ParticlesToDensity::release(void) {}
 datatools::ParticlesToDensity::ParticlesToDensity(void)
     : aggregatorSlot("aggregator", "algorithm for the aggregation")
     , outDataSlot("outData", "Provides a density volume for the particles")
-    , inDataSlot("inData", "takes the particle data") 
+    , inDataSlot("inData", "takes the particle data")
     , xResSlot("sizex", "The size of the volume in numbers of voxels")
     , yResSlot("sizey", "The size of the volume in numbers of voxels")
     , zResSlot("sizez", "The size of the volume in numbers of voxels")
@@ -56,12 +54,32 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
 
-    this->outDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(),
+    /*this->outDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(),
         core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetData),
         &ParticlesToDensity::getDataCallback);
     this->outDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(),
         core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetExtent),
         &ParticlesToDensity::getExtentCallback);
+    this->MakeSlotAvailable(&this->outDataSlot);*/
+
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
+        &ParticlesToDensity::getDataCallback);
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_EXTENTS),
+        &ParticlesToDensity::getExtentCallback);
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
+        &ParticlesToDensity::dummyCallback);
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
+        &ParticlesToDensity::dummyCallback);
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_STOP_ASYNC),
+        &ParticlesToDensity::dummyCallback);
+    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
+        &ParticlesToDensity::dummyCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->xResSlot << new core::param::IntParam(16);
@@ -81,45 +99,52 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
 /*
  * datatools::ParticlesToDensity::~ParticlesToDensity
  */
-datatools::ParticlesToDensity::~ParticlesToDensity(void) {
-    this->Release();
-}
+datatools::ParticlesToDensity::~ParticlesToDensity(void) { this->Release(); }
 
 
 bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
     using megamol::core::moldyn::DirectionalParticleDataCall;
+    using megamol::core::moldyn::MultiParticleDataCall;
 
-    auto* out = dynamic_cast<core::moldyn::VolumeDataCall*>(&c);
+    auto* out = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     if (out == nullptr) return false;
 
-    auto *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
+    auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    //if (!this->assertData(inMpdc, outDpdc)) return false;
+    // if (!this->assertData(inMpdc, outDpdc)) return false;
     inMpdc->SetFrameID(out->FrameID(), true);
     if (!(*inMpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: could not get current frame extents (%u)", time - 1);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "ParticlesToDensity: could not get current frame extents (%u)", time - 1);
         return false;
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
     out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
     out->SetFrameCount(inMpdc->FrameCount());
     // TODO: what am I actually doing here
-    //inMpdc->SetUnlocker(nullptr, false);
-    //inMpdc->Unlock();
+    // inMpdc->SetUnlocker(nullptr, false);
+    // inMpdc->Unlock();
 
     return true;
 }
 
 bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
-    auto *inMpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto* inMpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    auto* outVol = dynamic_cast<core::moldyn::VolumeDataCall*>(&c);
+    auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     if (outVol == nullptr) return false;
 
+    if (!(*inMpdc)(1)) {
+        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
+        return false;
+    }
+    if (!(*inMpdc)(0)) {
+        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+        return false;
+    }
     if (this->time != outVol->FrameID() || this->datahash != inMpdc->DataHash()) {
         if (!this->createVolumeCPU(inMpdc)) return false;
         this->time = outVol->FrameID();
@@ -127,15 +152,43 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     }
 
     // TODO set data
-    outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
+    outVol->SetData(this->vol[0].data());
+    metadata.Components = 1;
+    metadata.GridType = core::misc::GridType_t::RECTILINEAR;
+    metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
+    metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
+    metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
+    metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
+    metadata.ScalarLength = sizeof(float);
+    metadata.MinValues = new double;
+    metadata.MinValues[0] = 0.0f;
+    metadata.MaxValues = new double;
+    metadata.MaxValues[0] = this->maxDens;
+    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
+    metadata.Extents[0] = bbox.Width();
+    metadata.Extents[1] = bbox.Height();
+    metadata.Extents[2] = bbox.Depth();
+    metadata.NumberOfFrames = 1;
+    metadata.SliceDists[0] = new float;
+    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0]);
+    metadata.SliceDists[1] = new float;
+    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1]);
+    metadata.SliceDists[2] = new float;
+    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2]);
+    metadata.IsUniform[0] = true;
+    metadata.IsUniform[1] = true;
+    metadata.IsUniform[2] = true;
+    outVol->SetMetadata(&metadata);
+
+    /*outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
         this->yResSlot.Param<core::param::IntParam>()->Value(), this->zResSlot.Param<core::param::IntParam>()->Value());
     outVol->SetComponents(1);
     outVol->SetMinimumDensity(0.0f);
     outVol->SetMaximumDensity(this->maxDens);
-    outVol->SetVoxelMapPointer(this->vol[0].data());
-    //inMpdc->Unlock();
+    outVol->SetVoxelMapPointer(this->vol[0].data());*/
+    // inMpdc->Unlock();
 
-    return true;
+return true;
 }
 
 
@@ -168,13 +221,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     //        * (rangeOSy / static_cast<float>(sy))
     //        * (rangeOSz / static_cast<float>(sz));
     const float voxelVol = (rangeOSx / static_cast<float>(sx - 1)) * (rangeOSy / static_cast<float>(sy - 1)) *
-                     (rangeOSz / static_cast<float>(sz - 1));
+                           (rangeOSz / static_cast<float>(sz - 1));
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
         const bool useGlobRad =
-            (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
+            (parts.GetVertexDataType() ==
+                megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
             (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ);
         if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
@@ -184,7 +238,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
 #pragma omp parallel for
         for (j = 0; j < parts.GetCount(); j++) {
-            //const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
+            // const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
             auto ppos = parts[j];
             int x = static_cast<int>(((ppos.vert.GetXf() - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
             if (x < 0)
@@ -210,14 +264,23 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
     }
 
-    std::vector<float> localMax(omp_get_max_threads());
+    std::vector<float> localMax(omp_get_max_threads(), 0.0f);
 
-#pragma omp parallel for
-    for (j = 0; j < sx * sy * sz; j++) {
-        for (int i = 1; i < omp_get_max_threads(); i++) {
+    int i = 0;
+#pragma omp parallel for private(i)
+    for (j = 0; j < sx * sy * sz; ++j) {
+        for (i = 1; i < omp_get_max_threads(); ++i) {
             vol[0][j] += vol[i][j];
+            /*if (vol[i][j] > 0.0f) {
+                vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in
+            vol[%d][%d]\n", omp_get_thread_num(), i, j);
+            }*/
         }
-        if (vol[0][j] > localMax[omp_get_thread_num()]) localMax[omp_get_thread_num()] = vol[0][j];
+        if (vol[0][j] > localMax[omp_get_thread_num()]) {
+            localMax[omp_get_thread_num()] = vol[0][j];
+            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
+            // omp_get_thread_num(), vol[0][j]);
+        }
     }
 
     maxDens = *std::max_element(localMax.begin(), localMax.end());
@@ -227,3 +290,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     return true;
 }
+
+
+bool datatools::ParticlesToDensity::dummyCallback(megamol::core::Call &c) { return true; }
+
