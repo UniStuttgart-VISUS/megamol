@@ -168,6 +168,9 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.Extents[0] = bbox.Width();
     metadata.Extents[1] = bbox.Height();
     metadata.Extents[2] = bbox.Depth();
+    metadata.Origin[0] = bbox.Left();
+    metadata.Origin[1] = bbox.Bottom();
+    metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
     metadata.SliceDists[0] = new float;
     metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0]);
