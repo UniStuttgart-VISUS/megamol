@@ -1001,7 +1001,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
 
                 for (unsigned int i = 0; i < numCreateGeo; i++) {
-                    geo.push_back(ospNewGeometry("aovspheres"));
+                    geo.push_back(ospNewGeometry("aovspheres_geometry"));
 
 
                     long long int floatsToRead =
@@ -1042,8 +1042,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                 }
                 // aovol
-                //auto const aovol = ospNewVolume("block_bricked_volume");
-                auto const aovol = ospNewVolume("shared_structured_volume");
+                auto const aovol = ospNewVolume("block_bricked_volume");
+                //auto const aovol = ospNewVolume("shared_structured_volume");
                 ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
                 ospSet1f(aovol, "samplingRate", element.samplingRate);
                 ospSet1f(geo.back(), "samplingRate", element.samplingRate);
@@ -1076,11 +1076,15 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSetObject(aovol, "transferFunction", tf);
 
                 // add data
-                voxels = ospNewData(element.voxelCount,
+                /*voxels = ospNewData(element.voxelCount,
                     static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]), *element.raw2,
                     OSP_DATA_SHARED_BUFFER);
                 ospCommit(voxels);
-                ospSetData(aovol, "voxelData", voxels);
+                ospSetData(aovol, "voxelData", voxels);*/
+
+                auto ptr = element.raw2.get();
+                ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
+                    osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});
 
                 ospCommit(aovol);
                 ospSetObject(geo.back(), "aovol", aovol);
