@@ -71,7 +71,7 @@ std::vector<std::string> isplit(std::string const& s, char delim = ' ') {
  * @param tinyplyType The type of the tinyply variable.
  * @return The size of the given type in bytes.
  */
-uint32_t tinyTypeSize(tinyply::Type tinyplyType) {
+uint64_t tinyTypeSize(tinyply::Type tinyplyType) {
     switch (tinyplyType) {
     case tinyply::Type::INT8:
     case tinyply::Type::UINT8:
@@ -264,8 +264,8 @@ bool io::PLYDataSource::assertData() {
     if (std::none_of(guessedPos.begin(), guessedPos.end(), [](std::string s) { return s.empty(); })) {
         if (std::any_of(
                 guessedPos.begin(), guessedPos.end(), [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
-            uint32_t maxSize = 0;
-            uint32_t elemCount = 0;
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
             for (auto s : guessedPos) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
@@ -286,8 +286,8 @@ bool io::PLYDataSource::assertData() {
     if (std::none_of(guessedNormal.begin(), guessedNormal.end(), [](std::string s) { return s.empty(); })) {
         if (std::any_of(guessedNormal.begin(), guessedNormal.end(),
                 [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
-            uint32_t maxSize = 0;
-            uint32_t elemCount = 0;
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
             for (auto s : guessedNormal) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
@@ -306,8 +306,8 @@ bool io::PLYDataSource::assertData() {
     if (std::none_of(guessedColor.begin(), guessedColor.end(), [](std::string s) { return s.empty(); })) {
         if (std::any_of(guessedColor.begin(), guessedColor.end(),
                 [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
-            uint32_t maxSize = 0;
-            uint32_t elemCount = 0;
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
             for (auto s : guessedColor) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
@@ -353,7 +353,7 @@ bool io::PLYDataSource::assertData() {
         std::vector<std::vector<char>> readData(this->elementCount.size());
         for (size_t i = 0; i < readData.size(); i++) {
             // maybe TODO: skip unnecessary elements
-            uint32_t readsize = elementSizes[i];
+            uint64_t readsize = elementSizes[i];
             if (elementIndexMap.count(guessedIndices) > 0) {
                 auto idx = elementIndexMap[guessedIndices];
                 if (idx.first == i && listFlags[idx.first][idx.second]) {
@@ -362,6 +362,7 @@ bool io::PLYDataSource::assertData() {
                 }
             }
             readData[i].resize(elementCount[i] * readsize);
+            auto ms = readData[i].max_size();
             instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * readsize);
             if (instream.fail()) {
                 vislib::sys::Log::DefaultLog.WriteError(
@@ -619,7 +620,7 @@ bool io::PLYDataSource::assertData() {
                     if (std::getline(instream, line)) {
                         auto split = isplit(line);
                         if (elementIndexMap.count(guessedIndices)) {
-                            uint32_t faceSize = static_cast<uint32_t>(std::stoul(split[0]));
+                            uint64_t faceSize = static_cast<uint64_t>(std::stoul(split[0]));
                             if (faceSize != 3) {
                                 vislib::sys::Log::DefaultLog.WriteError(
                                     "The PlyDataSource is currently only able to handle triangular faces");
@@ -704,9 +705,9 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     plf.parse_header(instream);
 
-    uint32_t element_index = 0;
-    uint32_t property_index = 0;
-    uint32_t element_size = 0;
+    uint64_t element_index = 0;
+    uint64_t property_index = 0;
+    uint64_t element_size = 0;
 
     for (auto e : plf.get_elements()) {
         this->vertElemSlot.Param<core::param::FlexEnumParam>()->AddValue(e.name);
@@ -717,14 +718,14 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         if (icompare(e.name, "face")) {
             guessedFaces = e.name;
         }
-        this->elementCount.push_back(static_cast<uint32_t>(e.size));
+        this->elementCount.push_back(static_cast<uint64_t>(e.size));
         this->elementNames.push_back(e.name);
-        this->propertySizes.push_back(std::vector<uint32_t>());
-        this->propertyStrides.push_back(std::vector<uint32_t>());
+        this->propertySizes.push_back(std::vector<uint64_t>());
+        this->propertyStrides.push_back(std::vector<uint64_t>());
         this->propertySigns.push_back(std::vector<bool>());
         this->listFlags.push_back(std::vector<bool>());
         this->listSigns.push_back(std::vector<bool>());
-        this->listSizes.push_back(std::vector<uint32_t>());
+        this->listSizes.push_back(std::vector<uint64_t>());
 
         property_index = 0;
         element_size = 0;
@@ -867,7 +868,11 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
     p.SetCount(this->vertex_count);
     // TODO always write data in the float pointer, since sphere data is only possible with float
     if (p.GetCount() > 0) {
-        p.SetVertexData(SimpleSphericalParticles::VertexDataType::VERTDATA_FLOAT_XYZ, this->posPointers.pos_float);
+        if (this->posPointers.pos_float != nullptr) {
+            p.SetVertexData(SimpleSphericalParticles::VertexDataType::VERTDATA_FLOAT_XYZ, this->posPointers.pos_float);
+        } else {
+            p.SetCount(0);
+        }
         if (colorPointers.col_uchar != nullptr) {
             p.SetColourData(SimpleSphericalParticles::ColourDataType::COLDATA_UINT8_RGB, this->colorPointers.col_uchar);
         } else if (colorPointers.col_float != nullptr) {

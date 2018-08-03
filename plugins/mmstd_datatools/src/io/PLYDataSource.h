@@ -201,29 +201,29 @@ protected:
     std::string guessedFaces;
 
     /** Sizes in byte for each element of the read ply file */
-    std::vector<uint32_t> elementSizes;
+    std::vector<uint64_t> elementSizes;
 
     /** Count of data points for each element */
-    std::vector<uint32_t> elementCount;
+    std::vector<uint64_t> elementCount;
 
 	/** The names for each element */
 	std::vector<std::string> elementNames;
 
     /** Sizes in byte for each property of the read ply file. The size is splitted into the sizes of each separate
      * element */
-    std::vector<std::vector<uint32_t>> propertySizes;
+    std::vector<std::vector<uint64_t>> propertySizes;
 
     /** Signs of the property values. True if the value is signed, false if it is unsigned*/
     std::vector<std::vector<bool>> propertySigns;
 
     /** The strides of each property element */
-    std::vector<std::vector<uint32_t>> propertyStrides;
+    std::vector<std::vector<uint64_t>> propertyStrides;
 
     /** Flags showing whether a property is a list of values */
     std::vector<std::vector<bool>> listFlags;
 
     /** Size of the list headers, if present */
-    std::vector<std::vector<uint32_t>> listSizes;
+    std::vector<std::vector<uint64_t>> listSizes;
 
     /** Signs of the list header sizes, if present */
     std::vector<std::vector<bool>> listSigns;
@@ -267,7 +267,7 @@ protected:
     } facePointers;
 
     /** Map for the element names to their indices*/
-    std::map<std::string, std::pair<uint32_t, uint32_t>> elementIndexMap;
+    std::map<std::string, std::pair<uint64_t, uint64_t>> elementIndexMap;
 
     /** Flag determining the file format of the read file */
     bool hasBinaryFormat;
