@@ -28,76 +28,76 @@ using namespace megamol;
 using namespace megamol::stdplugin;
 
 enum class DecimalSeparator : int {
-	Unknown = 0,
-	US = 1,
-	DE = 2
+    Unknown = 0,
+    US = 1,
+    DE = 2
 };
 
 template <char C>
 std::istream& expect(std::istream& is) {
-	if ((is >> std::ws).peek() == C) {
-		is.ignore();
-	} else {
-		is.setstate(std::ios_base::failbit);
-	}
-	return is;
+    if ((is >> std::ws).peek() == C) {
+        is.ignore();
+    } else {
+        is.setstate(std::ios_base::failbit);
+    }
+    return is;
 }
 
 double parseValue(const char* tokenStart, const char* tokenEnd) {
-	std::string token(tokenStart, tokenEnd - tokenStart);
+    std::string token(tokenStart, tokenEnd - tokenStart);
 
-	std::istringstream iss(token);
-	iss.imbue(std::locale::classic());
-	if (iss.rdbuf()->in_avail() == 0) {
-		return NAN;
-	}
-	
-	// Try to parse as number.
-	double number;
-	iss >> number;
-	if (!iss.fail() && iss.eof()) {
-		return number;
-	}
+    std::istringstream iss(token);
+    iss.imbue(std::locale::classic());
+    if (iss.rdbuf()->in_avail() == 0) {
+        return NAN;
+    }
 
-	// Reset stream.
-	iss.str(token);
+    // Try to parse as number.
+    double number;
+    iss >> number;
+    if (!iss.fail() && iss.eof()) {
+        return number;
+    }
 
-	// Timestamp fractions (to be converted to milliseconds).
-	unsigned short fractions[4];
-	
-	// Try to parse as timestamp (HH:mm:ss)
-	iss >> fractions[0] >> expect<':'> >> fractions[1] >> expect<':'> >> fractions[2];
-	if (!iss.fail() && iss.eof()) {
-		return  fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000;
-	}
+    // Reset stream.
+    iss.str(token);
 
-	// Try to parse as timestamp (HH:mm:ss.SSS)
-	iss >> expect<'.'> >> fractions[3];
-	if (!iss.fail() && iss.eof()) {
-		return fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000 + fractions[3];
-	}
+    // Timestamp fractions (to be converted to milliseconds).
+    unsigned short fractions[4];
 
-	// Bail out.
-	return NAN;
+    // Try to parse as timestamp (HH:mm:ss)
+    iss >> fractions[0] >> expect<':'> >> fractions[1] >> expect<':'> >> fractions[2];
+    if (!iss.fail() && iss.eof()) {
+        return  fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000;
+    }
+
+    // Try to parse as timestamp (HH:mm:ss.SSS)
+    iss >> expect<'.'> >> fractions[3];
+    if (!iss.fail() && iss.eof()) {
+        return fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000 + fractions[3];
+    }
+
+    // Bail out.
+    return NAN;
 }
 
 datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
-        filenameSlot("filename", "Filename to read from"),
-		skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing"),
-        headerNamesSlot("headerNames", "Interpret the first data row as column names"),
-        headerTypesSlot("headerTypes", "Interpret the second data row as column types (quantitative or categorical)"),
-		commentPrefixSlot("commentPrefix", "Prefix that indicates a line-comment"),
-        clearSlot("clear", "Clears the data"),
-        colSepSlot("colSep", "The column separator (detected if empty)"),
-        decSepSlot("decSep", "The decimal point parser format type"),
-        shuffleSlot("shuffle", "Shuffle data points"),
-        getDataSlot("getData", "Slot providing the data"),
-        dataHash(0), columns(), values() {
+filenameSlot("filename", "Filename to read from"),
+skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing"),
+headerNamesSlot("headerNames", "Interpret the first data row as column names"),
+headerTypesSlot("headerTypes", "Interpret the second data row as column types (quantitative or categorical)"),
+commentPrefixSlot("commentPrefix", "Prefix that indicates a line-comment"),
+clearSlot("clear", "Clears the data"),
+colSepSlot("colSep", "The column separator (detected if empty)"),
+decSepSlot("decSep", "The decimal point parser format type"),
+shuffleSlot("shuffle", "Shuffle data points"),
+getDataSlot("getData", "Slot providing the data"),
+dataHash(0), columns(), values() {
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-	this->skipPrefaceSlot.SetParameter(new core::param::IntParam(0));
-	this->MakeSlotAvailable(&this->skipPrefaceSlot);
+    this->skipPrefaceSlot.SetParameter(new core::param::IntParam(0));
+    this->MakeSlotAvailable(&this->skipPrefaceSlot);
 
     this->headerNamesSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->headerNamesSlot);
@@ -105,8 +105,8 @@ datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
     this->headerTypesSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->headerTypesSlot);
 
-	this->commentPrefixSlot.SetParameter(new core::param::StringParam(""));
-	this->MakeSlotAvailable(&this->commentPrefixSlot);
+    this->commentPrefixSlot.SetParameter(new core::param::StringParam(""));
+    this->MakeSlotAvailable(&this->commentPrefixSlot);
 
     this->clearSlot << new core::param::ButtonParam();
     this->clearSlot.SetUpdateCallback(&CSVDataSource::clearData);
@@ -121,7 +121,7 @@ datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
     ep->SetTypePair(static_cast<int>(DecimalSeparator::DE), "DE (3,141)");
     this->decSepSlot << ep;
     this->MakeSlotAvailable(&this->decSepSlot);
-    
+
     this->shuffleSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->shuffleSlot);
 
@@ -146,13 +146,12 @@ void datatools::floattable::CSVDataSource::release(void) {
 
 void datatools::floattable::CSVDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()
-		&& !this->skipPrefaceSlot.IsDirty()
+        && !this->skipPrefaceSlot.IsDirty()
         && !this->headerNamesSlot.IsDirty()
         && !this->headerTypesSlot.IsDirty()
-		&& !this->commentPrefixSlot.IsDirty()
+        && !this->commentPrefixSlot.IsDirty()
         && !this->colSepSlot.IsDirty()
-        && !this->decSepSlot.IsDirty()) 
-    {
+        && !this->decSepSlot.IsDirty()) {
         if (this->shuffleSlot.IsDirty()) {
             shuffleData();
             this->shuffleSlot.ResetDirty();
@@ -160,12 +159,12 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         }
         return; // nothing to do
     }
-    
+
     this->filenameSlot.ResetDirty();
-	this->skipPrefaceSlot.ResetDirty();
+    this->skipPrefaceSlot.ResetDirty();
     this->headerNamesSlot.ResetDirty();
     this->headerTypesSlot.ResetDirty();
-	this->commentPrefixSlot.ResetDirty();
+    this->commentPrefixSlot.ResetDirty();
     this->colSepSlot.ResetDirty();
     this->decSepSlot.ResetDirty();
     this->shuffleSlot.ResetDirty();
@@ -173,52 +172,54 @@ void datatools::floattable::CSVDataSource::assertData(void) {
     this->columns.clear();
     this->values.clear();
 
+	auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+
     try {
         vislib::sys::ASCIIFileBuffer file;
 
         // 1. Load the whole file into memory (FAST!)
         //////////////////////////////////////////////////////////////////////
-        if (!file.LoadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!file.LoadFile(filename, vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
         if (file.Count() < 2) throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
 
         // 2. Determine the first row, column separator, and decimal point
         //////////////////////////////////////////////////////////////////////
-		int firstHeaRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
-		int firstDatRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
-		if (headerNamesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
-		if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
+        int firstHeaRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
+        int firstDatRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
+        if (headerNamesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
+        if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
 
-		auto comment = this->commentPrefixSlot.Param<core::param::StringParam>()->Value();
-		if (!comment.IsEmpty()) {
-			// Skip comments at the beginning of the file.
-			while (firstHeaRow < file.Count()) {
-				if (!vislib::StringA(file[firstHeaRow]).StartsWith(comment)) {
-					break;
-				}
-				firstHeaRow++;
-				firstDatRow++;
-			}
-		}
+        auto comment = this->commentPrefixSlot.Param<core::param::StringParam>()->Value();
+        if (!comment.IsEmpty()) {
+                // Skip comments at the beginning of the file.
+            while (firstHeaRow < file.Count()) {
+                if (!vislib::StringA(file[firstHeaRow]).StartsWith(comment)) {
+                    break;
+                }
+                firstHeaRow++;
+                firstDatRow++;
+            }
+        }
 
         vislib::StringA colSep(this->colSepSlot.Param<core::param::StringParam>()->Value());
         if (colSep.IsEmpty()) {
             // Detect column separator
-			const char ColSepCanidates[] = { '\t', ';', ',', '|' };
-			vislib::StringA l1(file[firstHeaRow]);
+            const char ColSepCanidates[] = { '\t', ';', ',', '|' };
+            vislib::StringA l1(file[firstHeaRow]);
             vislib::StringA l2(file[firstHeaRow]);
-			for (int i = 0; i < sizeof(ColSepCanidates) / sizeof(char); ++i) {
-				SIZE_T c1 = l1.Count(ColSepCanidates[i]);
-				if ((c1 > 0) && (c1 == l2.Count(ColSepCanidates[i]))) {
-					colSep.Append(ColSepCanidates[i]);
-					break;
-				}
-			}
+            for (int i = 0; i < sizeof(ColSepCanidates) / sizeof(char); ++i) {
+                SIZE_T c1 = l1.Count(ColSepCanidates[i]);
+                if ((c1 > 0) && (c1 == l2.Count(ColSepCanidates[i]))) {
+                    colSep.Append(ColSepCanidates[i]);
+                    break;
+                }
+            }
             if (colSep.IsEmpty()) {
-				throw vislib::Exception("Failed to detect column separator", __FILE__, __LINE__);
-			}
+                throw vislib::Exception("Failed to detect column separator", __FILE__, __LINE__);
+            }
         }
 
-		DecimalSeparator decType = static_cast<DecimalSeparator>(this->decSepSlot.Param<core::param::EnumParam>()->Value());
+        DecimalSeparator decType = static_cast<DecimalSeparator>(this->decSepSlot.Param<core::param::EnumParam>()->Value());
         if (decType == DecimalSeparator::Unknown) {
             // Detect decimal type
             vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(file[firstDatRow], colSep, false));
@@ -234,7 +235,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                 }
             }
             if (decType == DecimalSeparator::Unknown) {
-				// Assume US format if detection failed.
+                                // Assume US format if detection failed.
                 decType = DecimalSeparator::US;
             }
         }
@@ -244,7 +245,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         vislib::Array<vislib::StringA> dimNames;
         if (headerNamesSlot.Param<core::param::BoolParam>()->Value()) {
             dimNames = vislib::StringTokeniserA::Split(file[firstHeaRow], colSep, false);
-			firstHeaRow++;
+            firstHeaRow++;
         } else {
             dimNames = vislib::StringTokeniserA::Split(file[firstHeaRow], colSep, false);
             for (SIZE_T i = 0; i < dimNames.Count(); ++i) {
@@ -260,7 +261,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
                 CallFloatTableData::ColumnType type = CallFloatTableData::ColumnType::QUANTITATIVE;
                 if (tokens.Count() > i && tokens[i].Equals("CATEGORICAL", true)) {
-					type = CallFloatTableData::ColumnType::CATEGORICAL;
+                    type = CallFloatTableData::ColumnType::CATEGORICAL;
                     hasCatDims = true;
                 }
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
@@ -269,8 +270,8 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                     .SetMaximumValue(1.0f);
             }
         } else {
-			for (SIZE_T i = 0; i < dimNames.Count(); i++) {
-				this->columns[i].SetName(dimNames[i].PeekBuffer())
+            for (SIZE_T i = 0; i < dimNames.Count(); i++) {
+                this->columns[i].SetName(dimNames[i].PeekBuffer())
                     .SetType(CallFloatTableData::ColumnType::QUANTITATIVE)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
@@ -299,14 +300,14 @@ void datatools::floattable::CSVDataSource::assertData(void) {
             if (col >= colCnt) break; // we found the last line containing a full data set
         }
 
-		// Parse in parallel, assuming all lines will work
+        // Parse in parallel, assuming all lines will work
         std::vector<std::map<std::string, float>> catMaps;
         int thCnt = omp_get_max_threads();
         catMaps.resize(colCnt * thCnt);
         values.resize(colCnt * rowCnt);
         bool hasInvalids = false;
 
-		#pragma omp parallel for
+#pragma omp parallel for
         for (long long idx = 0; idx < static_cast<long long>(rowCnt); ++idx) {
             int thId = omp_get_thread_num();
             const char *start = file[static_cast<size_t>(firstDatRow + idx)];
@@ -320,20 +321,16 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                     ++end;
                 }
 
-                char *ez = const_cast<char*>(end - colSepEnd);
-                ez = '\0';
-
                 if (this->columns[col].Type() == CallFloatTableData::ColumnType::QUANTITATIVE) {
-					if (decType == DecimalSeparator::DE) {
-						for (ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
-					}
-					double value = parseValue(start, end);
-					values[static_cast<size_t>(idx * colCnt + col)] = static_cast<float>(value);
-					if (std::isnan(value)) {
-						hasInvalids = true;
-					}
-                }
-                else if (this->columns[col].Type() == CallFloatTableData::ColumnType::CATEGORICAL) {
+                    if (decType == DecimalSeparator::DE) {
+                        for (char *ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
+                    }
+                    double value = parseValue(start, end);
+                    values[static_cast<size_t>(idx * colCnt + col)] = static_cast<float>(value);
+                    if (std::isnan(value)) {
+                        hasInvalids = true;
+                    }
+                } else if (this->columns[col].Type() == CallFloatTableData::ColumnType::CATEGORICAL) {
                     assert(hasCatDims);
                     std::map<std::string, float>::iterator cmi = catMap.find(start);
                     if (cmi == catMap.end()) {
@@ -350,7 +347,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                     end = start;
                 }
             }
-            for (;col < colCnt; ++col) {
+            for (; col < colCnt; ++col) {
                 values[static_cast<size_t>(idx * colCnt + col)] = std::numeric_limits<float>::quiet_NaN();
                 hasInvalids = true;
             }
@@ -360,23 +357,23 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         if (hasInvalids) {
             this->GetCoreInstance()->Log().WriteWarn("CSV file contains invalid data:");
             for (size_t c = 0; c < colCnt; ++c) {
-				std::stringstream ss;
-				bool invalidColumn = true;
-				for (size_t r = 0; r < rowCnt; ++r) {
-					float value = values[r * colCnt + c];
+                std::stringstream ss;
+                bool invalidColumn = true;
+                for (size_t r = 0; r < rowCnt; ++r) {
+                    float value = values[r * colCnt + c];
                     if (std::isnan(value)) {
-						size_t line = 1 + firstDatRow + r;
-						ss << line << " ";
-					} else {
-						invalidColumn = false;
-					}
+                        size_t line = 1 + firstDatRow + r;
+                        ss << line << " ";
+                    } else {
+                        invalidColumn = false;
+                    }
                 }
-				std::string lines = ss.str();
-				if (invalidColumn) {
-					this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: all", 1 + c);
-				} else if (!lines.empty()) {
-					this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: %s", 1 + c, lines.c_str());
-				}
+                std::string lines = ss.str();
+                if (invalidColumn) {
+                    this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: all", 1 + c);
+                } else if (!lines.empty()) {
+                    this->GetCoreInstance()->Log().WriteWarn("  lines in column %d: %s", 1 + c, lines.c_str());
+                }
             }
         }
 
@@ -426,25 +423,25 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         this->GetCoreInstance()->Log().WriteInfo("Tabular data loaded: %u dimensions; %u samples\n",
             static_cast<unsigned int>(colCnt), static_cast<unsigned int>(rowCnt));
 
-    } catch(const vislib::Exception& ex) {
-        this->GetCoreInstance()->Log().WriteError("Could not load tabular data: %s [%s, &d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch (const vislib::Exception& ex) {
+        this->GetCoreInstance()->Log().WriteError("Could not load \"%s\": %s [%s, %d]", filename.PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
-    } catch(...) {
+    } catch (...) {
         this->columns.clear();
         this->values.clear();
     }
 
     shuffleData();
-    
+
     this->dataHash++;
 }
 
 void datatools::floattable::CSVDataSource::shuffleData() {
     if (!this->shuffleSlot.Param<core::param::BoolParam>()->Value()) {
-		// Do not shuffle, unless requested
-		return;
-	}
+                // Do not shuffle, unless requested
+        return;
+    }
 
     std::default_random_engine eng(static_cast<unsigned int>(dataHash));
     size_t numCols = columns.size();
@@ -454,7 +451,7 @@ void datatools::floattable::CSVDataSource::shuffleData() {
         size_t idx2 = dist(eng);
         for (size_t j = 0; j < numCols; ++j) {
             std::swap(values[j + i * numCols], values[j + idx2 * numCols]);
-		}
+        }
     }
 }
 

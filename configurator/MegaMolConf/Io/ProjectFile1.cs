@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,7 +22,7 @@ namespace MegaMolConf.Io {
             return p.Replace("&", "&amp;").Replace("\"", "&quot;");
         }
 
-        public void Save(string filename) {
+        public override void Save(string filename) {
             using (StreamWriter w = new StreamWriter(filename, false, Encoding.UTF8)) {
                 w.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 w.WriteLine("<MegaMol type=\"project\" version=\"1.0\">");

@@ -7,8 +7,13 @@ using System.Threading.Tasks;
 namespace MegaMolConf.Communication {
 
     /// <summary>
-    /// Known parameter types in MegaMol
+    /// Known parameter types in MegaMol.
     /// </summary>
+    /// <remark>
+    /// Please make sure that the number values match the parameter type 
+    /// memory footprint (AKA the 6CC interpreted as uint64_t). 
+    /// Example: struct.unpack('q', b'MMCOLO\0\0') => (87189165919565,)
+    /// </remark>
     public enum ParameterTypeCode : ulong {
         /// <summary>
         /// ButtonParam
@@ -73,7 +78,11 @@ namespace MegaMolConf.Communication {
         /// <summary>
         /// TransferFunc1DParam
         /// </summary>
-        MMTF1A = 71679889132877
+        MMTF1A = 71679889132877,
+	    /// <summary>
+        /// ColorParam
+        /// </summary>
+        MMCOLO = 87189165919565
     }
 
 }

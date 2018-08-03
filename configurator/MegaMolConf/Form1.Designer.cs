@@ -44,6 +44,10 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
             this.forCmdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forPowershellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripDropDownButton5 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.attachToMegaMolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hostToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.portToolStripTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripDropDownButton3 = new System.Windows.Forms.ToolStripDropDownButton();
             this.importParamfileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -143,6 +147,7 @@
             this.btnLoadProject,
             this.btnSaveProject,
             this.toolStripDropDownButton4,
+            this.toolStripDropDownButton5,
             this.toolStripSeparator2,
             this.toolStripDropDownButton3,
             this.toolStripSeparator5,
@@ -251,6 +256,38 @@
             this.forPowershellToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
             this.forPowershellToolStripMenuItem.Text = "Copy Command Line for Powershell";
             this.forPowershellToolStripMenuItem.Click += new System.EventHandler(this.forPowershellToolStripMenuItem_Click);
+            // 
+            // toolStripDropDownButton5
+            // 
+            this.toolStripDropDownButton5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.attachToMegaMolToolStripMenuItem,
+            this.hostToolStripTextBox,
+            this.portToolStripTextBox});
+            this.toolStripDropDownButton5.Image = global::MegaMolConf.Properties.Resources.Process_16x;
+            this.toolStripDropDownButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton5.Name = "toolStripDropDownButton5";
+            this.toolStripDropDownButton5.Size = new System.Drawing.Size(71, 22);
+            this.toolStripDropDownButton5.Text = "Attach";
+            // 
+            // attachToMegaMolToolStripMenuItem
+            // 
+            this.attachToMegaMolToolStripMenuItem.Name = "attachToMegaMolToolStripMenuItem";
+            this.attachToMegaMolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
+            this.attachToMegaMolToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
+            this.attachToMegaMolToolStripMenuItem.Text = "Attach to MegaMol";
+            this.attachToMegaMolToolStripMenuItem.Click += new System.EventHandler(this.attachToMegaMolToolStripMenuItem_Click);
+            // 
+            // hostToolStripTextBox
+            // 
+            this.hostToolStripTextBox.Name = "hostToolStripTextBox";
+            this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
+            this.hostToolStripTextBox.Text = "localhost";
+            // 
+            // portToolStripTextBox
+            // 
+            this.portToolStripTextBox.Name = "portToolStripTextBox";
+            this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
+            this.portToolStripTextBox.Text = "33333";
             // 
             // toolStripSeparator2
             // 
@@ -691,7 +728,6 @@
             this.tabViews.Size = new System.Drawing.Size(800, 506);
             this.tabViews.TabIndex = 0;
             this.tabViews.SelectedIndexChanged += new System.EventHandler(this.tabViews_SelectedIndexChanged);
-            this.tabViews.Selected += new System.Windows.Forms.TabControlEventHandler(this.tabViews_Selected);
             this.tabViews.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tabViews_MouseClick);
             // 
             // imageList1
@@ -715,7 +751,7 @@
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "mmprj";
-            this.saveFileDialog1.Filter = "MegaMol™ Project Files|*.mmprj|All Files|*.*";
+            this.saveFileDialog1.Filter = "MegaMol Project Files|*.mmprj|MegaMol LUA project files|*.lua|All Files|*.*";
             this.saveFileDialog1.Title = "Save MegaMol™ Project ...";
             // 
             // openFileDialog1
@@ -851,6 +887,10 @@
         private System.Windows.Forms.ToolStripButton btnEyeDrop;
         private System.Windows.Forms.SplitContainer splitContainer4;
         private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton5;
+        private System.Windows.Forms.ToolStripMenuItem attachToMegaMolToolStripMenuItem;
+        private System.Windows.Forms.ToolStripTextBox hostToolStripTextBox;
+        private System.Windows.Forms.ToolStripTextBox portToolStripTextBox;
     }
 }
 

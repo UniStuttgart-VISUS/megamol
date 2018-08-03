@@ -9,6 +9,7 @@
 #include "mmstd_volume/mmstd_volume.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "DatRawDataSource.h"
@@ -52,7 +53,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
-        VISLIB_VERSION_REVISION
+        vislib::VISLIB_VERSION_REVISION
     };
     return &compRev;
 }

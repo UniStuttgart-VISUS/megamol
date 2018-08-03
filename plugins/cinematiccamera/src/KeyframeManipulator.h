@@ -1,6 +1,8 @@
 /*
 * KeyframeManipulator.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
 */
 
 #ifndef MEGAMOL_CINEMATICCAMERA_KEYFRAME_MANIP_H_INCLUDED
@@ -68,7 +70,7 @@ namespace megamol {
             * @return True if data was updated successfully.
             *
             */
-            bool updateRendering(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
+            bool Update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
                         float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
                         vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob, 
                         vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp);
@@ -79,27 +81,27 @@ namespace megamol {
             *   Get bounding box of model to determine minimum length of manipulator axes.
             *
             */
-            void updateExtents(vislib::math::Cuboid<float> *bb);
+            void SetExtents(vislib::math::Cuboid<float> *bb);
 
             /** */
-            bool draw(void);
+            bool Draw(void);
 
             /** */
-            int checkKfPosHit(float x, float y);
+            int CheckKeyframePositionHit(float x, float y);
 
             /** */
-            bool checkManipHit(float x, float y);
+            bool CheckManipulatorHit(float x, float y);
 
             /** */
-            bool processManipHit(float x, float y);
+            bool ProcessManipulatorHit(float x, float y);
 
             /** */
-            Keyframe getManipulatedKeyframe(void);
+            Keyframe GetManipulatedKeyframe(void);
 
             /** */
-            vislib::math::Vector<float, 3> getFirstControlPointPosition();
+            vislib::math::Vector<float, 3> GetFirstControlPointPosition();
             /** */
-            vislib::math::Vector<float, 3> getLastControlPointPosition();
+            vislib::math::Vector<float, 3> GetLastControlPointPosition();
 
         private:
 

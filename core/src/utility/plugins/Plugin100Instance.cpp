@@ -8,6 +8,7 @@
 #include "utility/plugins/Plugin100Instance.h"
 #include <cassert>
 #include "mmcore/CoreInstance.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/functioncast.h"
 #include "vislib/vislibversion.h"
 #include "vislib/Trace.h"
@@ -38,10 +39,10 @@ PluginManager::collection_type Plugin100Instance::ContinueLoad(
         throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
     }
     // test vislib version (which is currently broken!)
-    if (std::strcmp(compVal->vislibRev, VISLIB_VERSION_REVISION) != 0) {
+    if (std::strcmp(compVal->vislibRev, vislib::VISLIB_VERSION_REVISION) != 0) {
         const char* rev = compVal->vislibRev;
         vislib::StringA msg;
-        msg.Format("vislib version mismatch (%s from Core; %s from Plugin)", VISLIB_VERSION_REVISION, rev);
+        msg.Format("vislib version mismatch (%s from Core; %s from Plugin)", vislib::VISLIB_VERSION_REVISION, rev);
         throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
     }
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace MegaMolConf.Data {
 
@@ -13,6 +9,7 @@ namespace MegaMolConf.Data {
     XmlInclude(typeof(ParamType.Float)),
     XmlInclude(typeof(ParamType.Int)),
     XmlInclude(typeof(ParamType.FilePath)),
+    XmlInclude(typeof(ParamType.Color)),
     XmlInclude(typeof(ParamType.TransferFunc1D)),
     XmlInclude(typeof(ParamType.String))]
     public abstract class ParamTypeBase {

@@ -21,16 +21,6 @@
 using namespace megamol::ospray;
 
 
-VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    //const float* parts = static_cast<const float*>(p.GetVertexData());
-    //return parts[index * stride + offset];
-    return static_cast<const float*>(p.GetVertexData())[index];
-}
-
-VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    return static_cast<const unsigned char*>(p.GetVertexData())[index];
-}
-
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
@@ -71,12 +61,13 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() >(cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
-    }
-
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
+    if (cd->GetParticleListCount() == 0) return false;
+
+    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    }
 
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 
@@ -95,26 +86,38 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     // Color data type check
     if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-        colorLength = 4 * sizeof(float);
+        colorLength = 4;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-        colorLength = 1 * sizeof(float);
+        colorLength = 1;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-        colorLength = 3 * sizeof(float);
+        colorLength = 3;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-        colorLength = 4 * sizeof(uint8_t);
+        colorLength = 4;
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
         colorLength = 0;
     }
 
+    int vstride = parts.GetVertexDataStride();
+    if (parts.GetVertexDataStride() == 0) {
+        vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+    }
+
+    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
+        parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+    }
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
     this->structureContainer.raw = std::make_shared<const void*>(std::move(parts.GetVertexData()));
     this->structureContainer.vertexLength = vertexLength;
+    this->structureContainer.vertexStride = vstride;
     this->structureContainer.colorLength = colorLength;
+    this->structureContainer.colorStride = parts.GetColourDataStride();
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
+    this->structureContainer.mmpldColor = parts.GetColourDataType();
 
     return true;
 }

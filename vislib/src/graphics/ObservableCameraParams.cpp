@@ -69,9 +69,9 @@ void vislib::graphics::ObservableCameraParams::AddCameraParameterObserver(
 /*
  * vislib::graphics::ObservableCameraParams::ApplyLimits
  */
-void vislib::graphics::ObservableCameraParams::ApplyLimits(void) {
+void vislib::graphics::ObservableCameraParams::ApplyLimits(bool autoFocus) {
     this->suspendFire();
-    this->observed->ApplyLimits();
+    this->observed->ApplyLimits(autoFocus);
     this->resumeFire();
     this->fireChanged();
 }
@@ -407,8 +407,9 @@ void vislib::graphics::ObservableCameraParams::SetFocalDistance(
  * vislib::graphics::ObservableCameraParams::SetLimits
  */
 void vislib::graphics::ObservableCameraParams::SetLimits(
-        const SmartPtr<CameraParameterLimits>& limits) {
-    this->observed->SetLimits(limits);
+        const SmartPtr<CameraParameterLimits>& limits,
+        bool autoFocus) {
+    this->observed->SetLimits(limits, autoFocus);
 }
 
 

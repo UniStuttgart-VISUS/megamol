@@ -1,8 +1,9 @@
 /*
  * dllmain.cpp
- * Copyright (C) 2010-2015 by MegaMol Team
+ * Copyright (C) 2010-2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
+
 #include "stdafx.h"
 
 /*

@@ -103,7 +103,7 @@ mmplgGetPluginCompatibilityInfo(
         );
 
     SetLibraryVersionInfo(ci->libs[1], "vislib",
-        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, 0
+        vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR, vislib::VISLIB_VERSION_REVISION, 0
 #if defined(DEBUG) || defined(_DEBUG)
         | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif

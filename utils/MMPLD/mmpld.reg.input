@@ -1,0 +1,22 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld]
+@="MegaMol Particle List Data"
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\DefaultIcon]
+@="@CURSRC@MegaMol_File.ico"
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\shell]
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\info]
+@="Show Data Info"
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\info\command]
+@="\"@CURSRC@mmpld.bat\" info \"%1\""
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\view]
+@="Render in MegaMol"
+
+[HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\view\command]
+@="\"@CURSRC@mmpld.bat\" render \"%1\""
+

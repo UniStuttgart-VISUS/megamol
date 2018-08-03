@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * Call::Call
  */
-Call::Call(void) : callee(NULL), caller(NULL), funcMap(NULL) {
+Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {
     // intentionally empty
 }
 
@@ -25,14 +25,14 @@ Call::Call(void) : callee(NULL), caller(NULL), funcMap(NULL) {
  * Call::~Call
  */
 Call::~Call(void) {
-    if (this->caller != NULL) {
+    if (this->caller != nullptr) {
         CallerSlot *cr = this->caller;
-        this->caller = NULL; // DO NOT DELETE
-        cr->ConnectCall(NULL);
+        this->caller = nullptr; // DO NOT DELETE
+        cr->ConnectCall(nullptr);
     }
-    if (this->callee != NULL) {
-        this->callee->ConnectCall(NULL);
-        this->callee = NULL; // DO NOT DELETE
+    if (this->callee != nullptr) {
+        this->callee->ConnectCall(nullptr);
+        this->callee = nullptr; // DO NOT DELETE
     }
     ARY_SAFE_DELETE(this->funcMap);
 }
@@ -42,7 +42,7 @@ Call::~Call(void) {
  * Call::operator()
  */
 bool Call::operator()(unsigned int func) {
-    if (this->callee != NULL) {
+    if (this->callee != nullptr) {
         return this->callee->InCall(this->funcMap[func], *this);
     }
     return false;

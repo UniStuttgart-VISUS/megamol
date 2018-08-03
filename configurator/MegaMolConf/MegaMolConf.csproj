@@ -57,11 +57,18 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="ZeroMQ, Version=4.1.0.25, Culture=neutral, PublicKeyToken=4a9630883fd6c563, processorArchitecture=MSIL">
-      <HintPath>..\..\build\packages\ZeroMQ.4.1.0.25\lib\net40\ZeroMQ.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\external\nuget\ZeroMQ.4.1.0.26\lib\net40\ZeroMQ.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColorEditor.cs" />
+    <Compile Include="Io\ProjectFileLua.cs" />
+    <Compile Include="StringSelector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StringSelector.Designer.cs">
+      <DependentUpon>StringSelector.cs</DependentUpon>
+    </Compile>
     <Compile Include="Connection\Connection.cs" />
     <Compile Include="Connection\GenericRequest.cs" />
     <Compile Include="Connection\ParameterType.cs" />
@@ -72,6 +79,7 @@
     <Compile Include="Connection\Response.cs" />
     <Compile Include="Connection\ZeroMQContext.cs" />
     <Compile Include="Data\ParamType\FlexEnum.cs" />
+    <Compile Include="Data\ParamType\Color.cs" />
     <Compile Include="Data\ParamType\TransferFunc1D.cs" />
     <Compile Include="FlexEnumParamEditor.cs" />
     <Compile Include="ImportParamfileForm.cs">
@@ -82,6 +90,7 @@
     </Compile>
     <Compile Include="Io\Paramfile.cs" />
     <Compile Include="MegaMolInstanceInfo.cs" />
+    <Compile Include="ObservingDict.cs" />
     <Compile Include="TransferFunc1DDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -100,12 +109,6 @@
     </Compile>
     <Compile Include="Analyze\AnalyzerDialog.Designer.cs">
       <DependentUpon>AnalyzerDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CallSelector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CallSelector.Designer.cs">
-      <DependentUpon>CallSelector.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\Call.cs" />
     <Compile Include="Data\CalleeSlot.cs" />
@@ -179,6 +182,9 @@
     <Compile Include="Util\StartupCheckForm.Designer.cs">
       <DependentUpon>StartupCheckForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="StringSelector.resx">
+      <DependentUpon>StringSelector.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ImportParamfileForm.resx">
       <DependentUpon>ImportParamfileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -191,9 +197,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Analyze\AnalyzerDialog.resx">
       <DependentUpon>AnalyzerDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CallSelector.resx">
-      <DependentUpon>CallSelector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
@@ -222,9 +225,7 @@
       <DependentUpon>StartupCheckForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="packages.config" />
     <None Include="Resources\megamol.cfg" />
     <None Include="Resources\mmconfig.manifest" />
     <None Include="Resources\mmconfig.rc.input" />
@@ -314,6 +315,7 @@
     <Content Include="Resources\eyedropper.cur" />
     <Content Include="Resources\eyedropper.png" />
     <Content Include="Resources\Paste_6520.png" />
+    <Content Include="Resources\Process_16x.png" />
     <None Include="Resources\StatusAnnotations_Required_32xLG_color.png" />
     <None Include="Resources\StatusAnnotations_Complete_and_ok_32xLG_color.png" />
     <None Include="Resources\mmconfig.rc">
@@ -327,12 +329,12 @@
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
-  <Import Project="..\..\build\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets" Condition="Exists('..\..\build\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets')" />
+  <Import Project="..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets" Condition="Exists('..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\build\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\build\packages\ZeroMQ.4.1.0.25\build\net40\ZeroMQ.targets'))" />
+    <Error Condition="!Exists('..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\external\nuget\ZeroMQ.4.1.0.26\build\net40\ZeroMQ.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

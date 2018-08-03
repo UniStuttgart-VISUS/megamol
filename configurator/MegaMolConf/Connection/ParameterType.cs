@@ -23,7 +23,8 @@ namespace MegaMolConf.Communication {
         Vector3fParam,
         Vector4fParam,
         FlexEnumParam,
-        TransferFunc1DParam
+        ColorParam,
+	TransferFunc1DParam
     }
 
 }
