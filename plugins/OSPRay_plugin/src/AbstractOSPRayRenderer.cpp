@@ -1000,6 +1000,52 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
 
+                // aovol
+                // auto const aovol = ospNewVolume("block_bricked_volume");
+                auto const aovol = ospNewVolume("shared_structured_volume");
+                ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
+                ospSet1f(aovol, "samplingRate", element.samplingRate);
+                ospSet1b(aovol, "adaptiveSampling", false);
+                ospSet3iv(aovol, "dimensions", element.dimensions->data());
+                ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
+                ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
+                ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                std::vector<float> faketf = {
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                };
+                std::vector<float> fakeopa = {1.0f, 1.0f};
+
+                OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
+                OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+                ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+
+                ospCommit(tf);
+
+                ospSetObject(aovol, "transferFunction", tf);
+
+                // add data
+                voxels = ospNewData(element.voxelCount,
+                    static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]), *element.raw2,
+                    OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(aovol, "voxelData", voxels);
+
+                /*auto ptr = element.raw2.get();
+                ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
+                    osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
+
+                ospCommit(aovol);
+
                 for (unsigned int i = 0; i < numCreateGeo; i++) {
                     geo.push_back(ospNewGeometry("aovspheres_geometry"));
 
@@ -1040,54 +1086,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                         }
                     }
+
+                    ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
+                    ospSet1f(geo.back(), "samplingrate", element.samplingRate);
+                    ospSetObject(geo.back(), "aovol", aovol);
                 }
-                // aovol
-                //auto const aovol = ospNewVolume("block_bricked_volume");
-                auto const aovol = ospNewVolume("shared_structured_volume");
-                ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
-                ospSet1f(aovol, "samplingRate", element.samplingRate);
-                ospSet1f(geo.back(), "samplingrate", element.samplingRate);
-                ospSet3iv(aovol, "dimensions", element.dimensions->data());
-                ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
-                ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
-                ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
-
-                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-                std::vector<float> faketf = {
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                };
-                std::vector<float> fakeopa = {1.0f, 1.0f};
-
-                OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
-                OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
-                ospSetData(tf, "colors", tf_rgb);
-                ospSetData(tf, "opacities", tf_opa);
-                ospSet2f(tf, "valueRange", 0.0f, 1.0f);
-
-                ospCommit(tf);
-
-                ospSetObject(aovol, "transferFunction", tf);
-
-                // add data
-                voxels = ospNewData(element.voxelCount,
-                    static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]), *element.raw2,
-                    OSP_DATA_SHARED_BUFFER);
-                ospCommit(voxels);
-                ospSetData(aovol, "voxelData", voxels);
-
-                /*auto ptr = element.raw2.get();
-                ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
-                    osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
-
-                ospCommit(aovol);
-                ospSetObject(geo.back(), "aovol", aovol);
             } break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
