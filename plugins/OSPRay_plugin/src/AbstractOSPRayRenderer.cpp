@@ -822,6 +822,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData yData = NULL;
         OSPData zData = NULL;
         OSPData bboxData = nullptr;
+        OSPVolume aovol = nullptr;
         OSPError error;
 
         // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
@@ -1002,10 +1003,10 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 // aovol
                 // auto const aovol = ospNewVolume("block_bricked_volume");
-                auto const aovol = ospNewVolume("shared_structured_volume");
+                aovol = ospNewVolume("shared_structured_volume");
                 ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
                 ospSet1f(aovol, "samplingRate", element.samplingRate);
-                ospSet1b(aovol, "adaptiveSampling", false);
+                //ospSet1b(aovol, "adaptiveSampling", false);
                 ospSet3iv(aovol, "dimensions", element.dimensions->data());
                 ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
                 ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
@@ -1088,7 +1089,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
 
                     ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
-                    ospSet1f(geo.back(), "samplingrate", element.samplingRate);
                     ospSetObject(geo.back(), "aovol", aovol);
                 }
             } break;
@@ -1230,6 +1230,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (yData != NULL) ospRelease(yData);
             if (zData != NULL) ospRelease(zData);
             if (bboxData != NULL) ospRelease(bboxData);
+            if (aovol != nullptr) ospRelease(aovol);
 
             break;
 
