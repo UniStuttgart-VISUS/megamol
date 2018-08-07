@@ -763,13 +763,13 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             if (icompare(p.name, "nz")) {
                 guessedNormal[2] = p.name;
             }
-            if (icompare(p.name, "r")) {
+            if (icompare(p.name, "r") || icompare(p.name, "red") || icompare(p.name, "diffuse_red")) {
                 guessedColor[0] = p.name;
             }
-            if (icompare(p.name, "g")) {
+            if (icompare(p.name, "g") || icompare(p.name, "green") || icompare(p.name, "diffuse_green")) {
                 guessedColor[1] = p.name;
             }
-            if (icompare(p.name, "b")) {
+            if (icompare(p.name, "b") || icompare(p.name, "blue") || icompare(p.name, "diffuse_blue")) {
                 guessedColor[2] = p.name;
             }
             if (icompare(p.name, "indices") || icompare(p.name, "vertex_indices")) {
