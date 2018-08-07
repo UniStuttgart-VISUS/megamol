@@ -405,8 +405,10 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
                     // status = close.wait_for(std::chrono::milliseconds(1));
                     // if (status == std::future_status::ready) break;
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+#endif
                 }
                 if (shutdown_) break;
                 /*#if _DEBUG
@@ -641,8 +643,10 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed on 'registerComm', trying again\n");
+#endif
                 }
 #if _DEBUG
                 if (!shutdown_) {

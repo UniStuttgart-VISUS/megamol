@@ -39,10 +39,11 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     this->particleList << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->particleList);
 
-    this->samplingRateSlot << new core::param::FloatParam(0.125f, 0.0f, std::numeric_limits<float>::max());
+    this->samplingRateSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->samplingRateSlot);
 
-    this->aoThresholdSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
+    //this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
+    this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->aoThresholdSlot);
 }
 
@@ -157,6 +158,9 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
         static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
 
+    float cellVol = metadata->SliceDists[0][0] * metadata->SliceDists[1][0] * metadata->SliceDists[2][0];
+    float valRange = maxV - minV;
+
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::AOVSPHERES;
@@ -177,7 +181,9 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);     //<
     this->structureContainer.voxelDType = voxelDataType::FLOAT;
     this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
-    this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    //this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.aoThreshold = valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    //this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
 
     return true;
