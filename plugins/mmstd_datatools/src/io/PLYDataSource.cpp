@@ -867,17 +867,20 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
     MultiParticleDataCall::Particles& p = c2->AccessParticles(0);
     p.SetCount(this->vertex_count);
     // Always write data in the float pointer, since sphere data is only possible with float
-	if (this->posPointers.pos_double != nullptr && this->posPointers.pos_float == nullptr) {
-		this->posPointers.pos_float = new float[this->vertex_count * 3];
-		for (size_t i = 0; i < this->vertex_count * 3; i++) {
-			this->posPointers.pos_float[i] = static_cast<float>(this->posPointers.pos_double[i]);
-		}
-	}
-
+    bool copyfloat = false;
+    if (copyfloat && this->posPointers.pos_double != nullptr && this->posPointers.pos_float == nullptr) {
+        this->posPointers.pos_float = new float[this->vertex_count * 3];
+        for (size_t i = 0; i < this->vertex_count * 3; i++) {
+            this->posPointers.pos_float[i] = static_cast<float>(this->posPointers.pos_double[i]);
+        }
+    }
 
     if (p.GetCount() > 0) {
         if (this->posPointers.pos_float != nullptr) {
             p.SetVertexData(SimpleSphericalParticles::VertexDataType::VERTDATA_FLOAT_XYZ, this->posPointers.pos_float);
+        } else if (this->posPointers.pos_double != nullptr) {
+            p.SetVertexData(
+                SimpleSphericalParticles::VertexDataType::VERTDATA_DOUBLE_XYZ, this->posPointers.pos_double);
         } else {
             p.SetCount(0);
         }
@@ -1025,8 +1028,8 @@ bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
     } else if (facePointers.face_u16 != nullptr) {
         this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_u16, false);
     } else if (facePointers.face_u32 != nullptr) {
-		this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_u32, false);
-		//this->mesh.SetTriangleData(0, facePointers.face_uchar, false);
+        this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_u32, false);
+        // this->mesh.SetTriangleData(0, facePointers.face_uchar, false);
     } else {
         this->mesh.SetTriangleData(0, facePointers.face_uchar, false);
     }
