@@ -54,7 +54,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
 
     /*this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);*/
-    this->getDataSlot.SetCompatibleCall<core::misc::VolumeticDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();

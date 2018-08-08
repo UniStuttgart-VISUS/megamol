@@ -33,7 +33,7 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getVolSlot.SetCompatibleCall<core::misc::VolumeticDataCallDescription>();
+    this->getVolSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
 
     this->particleList << new core::param::IntParam(0);
@@ -78,6 +78,7 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     if (!(*cd)(0)) return false;
 
     if (!(*vd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*vd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
     if (!(*vd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     if (cd->GetParticleListCount() == 0) return false;
