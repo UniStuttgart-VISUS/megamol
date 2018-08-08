@@ -24,7 +24,8 @@ namespace MegaMolConf.Data {
                     || Name.Equals("QuadBufferStereoView")
                     || Name.Equals("AnaglyphStereoView")
                     || Name.Equals("TileView3D")
-                    || Name.Equals("RemoteTileView");
+                    || Name.Equals("RemoteTileView")
+                    || Name.Equals("View3D2000GT");
             }
         }
     }

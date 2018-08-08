@@ -3224,7 +3224,8 @@ bool megamol::core::CoreInstance::quickConnectUp(megamol::core::ViewDescription&
         if (to == NULL) {
             for (SIZE_T i = 0; i < connInfo.Count(); i++) {
                 if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false)
-                        || vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false)) {
+                        || vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false)
+						|| vislib::StringA("View3D2000GT").Equals(connInfo[i].nextMod->ClassName(), false)) {
 
                     vislib::StringA prevModName(from);
                     for (SIZE_T j = 1; j < list.Count(); j++) {
