@@ -159,28 +159,38 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if (cgtf != NULL && ((*cgtf)())) {
+    auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (cgtf != nullptr && ((*cgtf)())) {
         if (cgtf->OpenGLTextureFormat() ==
             megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
-            auto numColors = cgtf->TextureSize() / 4;
+            auto const numColors = cgtf->TextureSize() / 4;
             rgb.resize(3 * numColors);
             a.resize(numColors);
-            auto texture = cgtf->GetTextureData();
+            auto const texture = cgtf->GetTextureData();
 
-            for (unsigned int i = 0; i < numColors; i++) {
+            for (unsigned int i = 0; i < numColors; ++i) {
                 rgb[i + 0] = texture[i + 0];
                 rgb[i + 1] = texture[i + 1];
                 rgb[i + 2] = texture[i + 2];
                 a[i] = texture[i + 3];
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "No alpha channel in transfer function connected to OSPRayStructuredVolume module");
-            return false;
+            auto const numColors = cgtf->TextureSize() / 3;
+            rgb.resize(3 * numColors);
+            a.resize(numColors);
+            auto const texture = cgtf->GetTextureData();
+
+            for (unsigned int i = 0; i < numColors; ++i) {
+                rgb[i + 0] = texture[i + 0];
+                rgb[i + 1] = texture[i + 1];
+                rgb[i + 2] = texture[i + 2];
+                a[i] = i / (numColors - 1.0f);
+            }
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "OSPRayStructuredVolume: No alpha channel in transfer function connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("No transfer function connected to OSPRayStructuredVolume module");
+        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
 
