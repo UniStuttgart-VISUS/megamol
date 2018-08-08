@@ -1,7 +1,7 @@
 /*
  * VolumetricDataSource.cpp
  *
- * Copyright (C) 2014 by Visualisierungsinstitut der Universität Stuttgart.
+ * Copyright (C) 2014 by Visualisierungsinstitut der Universitï¿½t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
