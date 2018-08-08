@@ -146,9 +146,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     case core::misc::FLOATING_POINT:
         if (metadata->ScalarLength == 4) {
             voxelType = voxelDataType::FLOAT;
-            } else {
+        } else {
             voxelType = voxelDataType::DOUBLE;
-                }
+        }
         break;
     case core::misc::UNSIGNED_INTEGER:
         if (metadata->ScalarLength == 1) {
@@ -158,7 +158,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         } else {
             vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
             return false;
-            }
+        }
         break;
     case core::misc::SIGNED_INTEGER:
         if (metadata->ScalarLength == 2) {
@@ -181,31 +181,31 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     if (cgtf != nullptr && ((*cgtf)())) {
         if (cgtf->OpenGLTextureFormat() ==
             megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
-            auto const numColors = cgtf->TextureSize() / 4;
+            auto const numColors = cgtf->TextureSize();
             rgb.resize(3 * numColors);
             a.resize(numColors);
             auto const texture = cgtf->GetTextureData();
 
             for (unsigned int i = 0; i < numColors; ++i) {
-                rgb[i + 0] = texture[i + 0];
-                rgb[i + 1] = texture[i + 1];
-                rgb[i + 2] = texture[i + 2];
-                a[i] = texture[i + 3];
+                rgb[i * 3 + 0] = texture[i * 4 + 0];
+                rgb[i * 3 + 1] = texture[i * 4 + 1];
+                rgb[i * 3 + 2] = texture[i * 4 + 2];
+                a[i] = texture[i * 4 + 3];
             }
         } else {
-            auto const numColors = cgtf->TextureSize() / 3;
+            auto const numColors = cgtf->TextureSize();
             rgb.resize(3 * numColors);
             a.resize(numColors);
             auto const texture = cgtf->GetTextureData();
 
             for (unsigned int i = 0; i < numColors; ++i) {
-                rgb[i + 0] = texture[i + 0];
-                rgb[i + 1] = texture[i + 1];
-                rgb[i + 2] = texture[i + 2];
+                rgb[i * 3 + 0] = texture[i * 4 + 0];
+                rgb[i * 3 + 1] = texture[i * 4 + 1];
+                rgb[i * 3 + 2] = texture[i * 4 + 2];
                 a[i] = i / (numColors - 1.0f);
             }
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "OSPRayStructuredVolume: No alpha channel in transfer function connected to module. Adding alpha ramp to RGB colors.\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
+                                                   "connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
         vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");

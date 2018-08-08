@@ -1285,7 +1285,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
-                OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+                OSPData tf_rgb = ospNewData(element.tfRGB->size()/3, OSP_FLOAT3, element.tfRGB->data());
                 OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
                 ospSetData(tf, "colors", tf_rgb);
                 ospSetData(tf, "opacities", tf_opa);
