@@ -366,6 +366,42 @@ bool View3D2000GT::loadTexture(View3D2000GT::corner, vislib::StringA filename) {
  * View3D2000GT::loadFile
  */
 SIZE_T View3D2000GT::loadFile(vislib::StringA name, void** outData) {
-    // TODO implement
-    return 0;
+    *outData = nullptr;
+
+    vislib::StringW filename = static_cast<vislib::StringW>(name);
+    if (filename.IsEmpty()) {
+        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file: No filename given\n");
+        return 0;
+    }
+
+    if (!vislib::sys::File::Exists(filename)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[View3D] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
+        return 0;
+    }
+
+    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
+    if (size < 1) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[View3D] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
+        return 0;
+    }
+
+    vislib::sys::FastFile f;
+    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[View3D] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
+        return 0;
+    }
+
+    *outData = new BYTE[size];
+    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
+    if (num != size) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[View3D] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
+        ARY_SAFE_DELETE(*outData);
+        return 0;
+    }
+
+    return num;
 }
