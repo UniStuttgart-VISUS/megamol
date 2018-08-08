@@ -682,45 +682,14 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
 
     if (retval) {
         const VolumetricDataCall& vdc = dynamic_cast<VolumetricDataCall&>(call);
-        switch (this->metadata.ScalarType) {
-        case core::misc::FLOATING_POINT:
-        case core::misc::SIGNED_INTEGER:
-        case core::misc::UNSIGNED_INTEGER:
-
-            this->mins.resize(this->metadata.Components);
-            this->maxes.resize(this->metadata.Components);
-            for (auto c = 0; c < this->metadata.Components; ++c) {
-                double min = std::numeric_limits<double>::max();
-                double max = std::numeric_limits<double>::lowest();
-                size_t totalLength = 1;
-                for (int i = 0; i < this->fileInfo->dimensions; ++i) {
-                    totalLength *= this->fileInfo->resolution[i];
-                }
-                if (this->metadata.ScalarType == core::misc::FLOATING_POINT) {
-                    auto* vol = reinterpret_cast<const float*>(vdc.GetData());
-                    for (size_t x = c; x < totalLength; x += this->metadata.Components) {
-                        if (vol[x] < min) min = vol[x];
-                        if (vol[x] > max) max = vol[x];
-                    }
-                } else if (this->metadata.ScalarType == core::misc::SIGNED_INTEGER) {
-                    auto* vol = reinterpret_cast<const int32_t*>(vdc.GetData());
-                    for (size_t x = c; x < totalLength; x += this->metadata.Components) {
-                        if (vol[x] < min) min = vol[x];
-                        if (vol[x] > max) max = vol[x];
-                    }
-                } else {
-                    auto* vol = reinterpret_cast<const uint32_t*>(vdc.GetData());
-                    for (size_t x = c; x < totalLength; x += this->metadata.Components) {
-                        if (vol[x] < min) min = vol[x];
-                        if (vol[x] > max) max = vol[x];
-                    }
-                }
-                this->mins[c] = min;
-                this->maxes[c] = max;
-            }
+        switch (this->getOutputDataFormat()) {
+        case DR_FORMAT_UCHAR:
+            this->calcMinMax<uint8_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
             break;
-
-        case core::misc::BITS:
+        case DR_FORMAT_FLOAT:
+            this->calcMinMax<float>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+            break;
+        case DR_FORMAT_RAW:
             vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
             this->mins.resize(this->metadata.Components, 0.0);
             this->maxes.resize(this->metadata.Components, 1.0);
