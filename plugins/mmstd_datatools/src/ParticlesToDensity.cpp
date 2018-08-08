@@ -70,7 +70,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         &ParticlesToDensity::getExtentCallback);
     this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
-        &ParticlesToDensity::dummyCallback);
+        &ParticlesToDensity::getExtentCallback);
     this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
         &ParticlesToDensity::dummyCallback);
@@ -173,11 +173,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
     metadata.SliceDists[0] = new float;
-    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0]);
+    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
     metadata.SliceDists[1] = new float;
-    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1]);
+    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
     metadata.SliceDists[2] = new float;
-    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2]);
+    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
     metadata.IsUniform[0] = true;
     metadata.IsUniform[1] = true;
     metadata.IsUniform[2] = true;

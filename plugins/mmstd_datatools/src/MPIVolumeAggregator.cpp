@@ -46,8 +46,8 @@ datatools::MPIVolumeAggregator::~MPIVolumeAggregator(void) { this->Release(); }
  * datatools::MPIVolumeAggregator::manipulateData
  */
 bool datatools::MPIVolumeAggregator::manipulateData(
-    megamol::core::moldyn::VolumeDataCall& outData, megamol::core::moldyn::VolumeDataCall& inData) {
-    using megamol::core::moldyn::VolumeDataCall;
+    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    using megamol::core::misc::VolumetricDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
 
@@ -56,19 +56,32 @@ bool datatools::MPIVolumeAggregator::manipulateData(
 
 // without mpi, this module does nothing at all
 #ifdef WITH_MPI
+
+    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) return false;
     bool useMpi = initMPI();
 
-    auto dim = inData.VolumeDimension();
-    auto comp = inData.Components();
-    const size_t numFloats = comp * dim.Width() * dim.Height() * dim.Depth();
+    memcpy(&metadata, inData.GetMetadata(), sizeof(VolumetricDataCall::Metadata));
+    const auto comp = metadata.Components;
+
+    if (metadata.GridType != core::misc::CARTESIAN && metadata.GridType != core::misc::RECTILINEAR) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
+        return false;
+    }
+    if (metadata.ScalarType != core::misc::FLOATING_POINT) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "MPIVolumeAggregator cannot work with scalar type %d", metadata.ScalarType);
+        return false;
+    }
+
+    const size_t numFloats = comp * metadata.Extents[0] * metadata.Extents[1] * metadata.Extents[2];
     // we need a copy of the data since we must not alter it.
     std::vector<float> tmpVolume;
     tmpVolume.resize(numFloats);
-    memcpy(tmpVolume.data(), inData.VoxelMap(), numFloats * sizeof(float));
+    memcpy(tmpVolume.data(), inData.GetData(), numFloats * sizeof(float));
     // and a copy to receive the result
     this->theVolume.resize(numFloats);
-
-
 
     MPI_Op op = MPI_SUM;
     const auto opVal = this->operatorSlot.Param<core::param::EnumParam>()->Value();
@@ -118,9 +131,10 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     MPI_Allreduce(&min, &globalmin, 1, MPI_FLOAT, MPI_MIN, this->comm);
     MPI_Allreduce(&max, &globalmax, 1, MPI_FLOAT, MPI_MAX, this->comm);
 
-    outData.SetVoxelMapPointer(this->theVolume.data());
-    outData.SetMinimumDensity(globalmin);
-    outData.SetMaximumDensity(globalmax);
+    outData.SetData(this->theVolume.data());
+    metadata.MinValues[0] = globalmin;
+    metadata.MaxValues[0] = globalmax;
+    outData.SetMetadata(&metadata);
 #endif /* WITH_MPI */
 
     return true;

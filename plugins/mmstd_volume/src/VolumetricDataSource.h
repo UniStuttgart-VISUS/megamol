@@ -412,6 +412,8 @@ private:
     /** The slot that requests the data. */
     core::CalleeSlot slotGetData;
 
+    std::vector<double> mins, maxes;
+
 };
 
 } /* end namespace volume */
