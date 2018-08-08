@@ -89,8 +89,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     }
 
 
-    if (!(*cd)(1)) return false;
-    if (!(*cd)(0)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     auto const metadata = cd->GetMetadata();
 
@@ -240,7 +241,8 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
 
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
     this->extendContainer.timeFramesCount = cd->FrameCount();
