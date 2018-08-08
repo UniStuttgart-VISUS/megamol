@@ -1252,7 +1252,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 vol.push_back(ospNewVolume("shared_structured_volume"));
 
-                ospSetString(vol.back(), "voxelType", "float");
+                auto type = static_cast<uint8_t>(element.voxelDType);
+
+                ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
@@ -1267,7 +1269,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet1f(vol.back(), "samplingRate", element.samplingRate);
 
                 // add data
-                voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]), element.voxels, OSP_DATA_SHARED_BUFFER);
                 ospCommit(voxels);
                 ospSetData(vol.back(), "voxelData", voxels);
 

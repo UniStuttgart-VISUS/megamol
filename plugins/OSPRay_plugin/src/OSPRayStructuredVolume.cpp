@@ -55,7 +55,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->MakeSlotAvailable(&this->useAdaptiveSampling);
     this->adaptiveFactor << new core::param::FloatParam(15.0f, std::numeric_limits<float>::min());
     this->MakeSlotAvailable(&this->adaptiveFactor);
-    this->adaptiveMaxRate<< new core::param::FloatParam(2.0f, std::numeric_limits<float>::min());
+    this->adaptiveMaxRate << new core::param::FloatParam(2.0f, std::numeric_limits<float>::min());
     this->MakeSlotAvailable(&this->adaptiveMaxRate);
     this->samplingRate << new core::param::FloatParam(0.125f, std::numeric_limits<float>::min());
     this->MakeSlotAvailable(&this->samplingRate);
@@ -118,17 +118,6 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     auto const metadata = cd->GetMetadata();
 
-    if (metadata->ScalarType != core::misc::FLOATING_POINT) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "OSPRayStructuredVolume: Currently supports only float as voxel type\n");
-        return false;
-    }
-    if (metadata->Components != 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "OSPRayStructuredVolume: Currently supports only a single voxel component\n");
-        return false;
-    }
-
     /*unsigned int voxelCount =
         cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/
     unsigned int const voxelCount = metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2];
@@ -151,10 +140,39 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     unsigned int const maxDim =
         std::max<size_t>(metadata->Resolution[0], std::max<size_t>(metadata->Resolution[1], metadata->Resolution[2]));
 
+    voxelDataType voxelType = {};
 
-    std::vector<float> voxels(voxelCount);
-    std::copy(reinterpret_cast<float const*>(cd->GetData()), reinterpret_cast<float const*>(cd->GetData()) + voxelCount,
-        voxels.begin()); //< TODO this should not be necessary
+    switch (metadata->ScalarType) {
+    case core::misc::FLOATING_POINT:
+        if (metadata->ScalarLength == 4) {
+            voxelType = voxelDataType::FLOAT;
+            } else {
+            voxelType = voxelDataType::DOUBLE;
+                }
+        break;
+    case core::misc::UNSIGNED_INTEGER:
+        if (metadata->ScalarLength == 1) {
+            voxelType = voxelDataType::UCHAR;
+        } else if (metadata->ScalarLength == 2) {
+            voxelType = voxelDataType::USHORT;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            return false;
+            }
+        break;
+    case core::misc::SIGNED_INTEGER:
+        if (metadata->ScalarLength == 2) {
+            voxelType = voxelDataType::SHORT;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            return false;
+        }
+        break;
+    case core::misc::BITS:
+        vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+        return false;
+        break;
+    }
 
     // get color transfer function
     std::vector<float> rgb;
@@ -191,7 +209,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
     this->structureContainer.volRepType =
         (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
-    this->structureContainer.voxels = std::make_shared<std::vector<float>>(std::move(voxels));
+    this->structureContainer.voxels = cd->GetData();
     this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(std::move(gridOrigin));
     this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(std::move(gridSpacing));
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(std::move(dimensions));
@@ -201,7 +219,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         std::make_shared<std::pair<float, float>>(metadata->MinValues[0], metadata->MaxValues[0]);
     this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
     this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
-
+    this->structureContainer.voxelDType = voxelType;
 
     this->structureContainer.clippingBoxActive = this->clippingBoxActive.Param<core::param::BoolParam>()->Value();
     std::vector<float> cbl = {this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetX(),

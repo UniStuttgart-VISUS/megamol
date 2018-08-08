@@ -689,6 +689,15 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
         case DR_FORMAT_FLOAT:
             this->calcMinMax<float>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
             break;
+        case DR_FORMAT_DOUBLE:
+            this->calcMinMax<double>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+            break;
+        case DR_FORMAT_USHORT:
+            this->calcMinMax<uint16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+            break;
+        case DR_FORMAT_SHORT:
+            this->calcMinMax<int16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+            break;
         case DR_FORMAT_RAW:
             vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
             this->mins.resize(this->metadata.Components, 0.0);
