@@ -7,13 +7,11 @@
 #include "stdafx.h"
 #include <algorithm>
 #include <cassert>
-#include <cfloat>
 #include <cstdint>
 #include "ParticlesToDensity.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "omp.h"
 #include "vislib/sys/Log.h"
@@ -40,14 +38,14 @@ void datatools::ParticlesToDensity::release(void) {}
  */
 datatools::ParticlesToDensity::ParticlesToDensity(void)
     : aggregatorSlot("aggregator", "algorithm for the aggregation")
-    , outDataSlot("outData", "Provides a density volume for the particles")
-    , inDataSlot("inData", "takes the particle data")
     , xResSlot("sizex", "The size of the volume in numbers of voxels")
     , yResSlot("sizey", "The size of the volume in numbers of voxels")
     , zResSlot("sizez", "The size of the volume in numbers of voxels")
     , normalizeSlot("normalize", "Normalize the output volume")
     , datahash(0)
-    , time(0) {
+    , time(0)
+    , outDataSlot("outData", "Provides a density volume for the particles")
+    , inDataSlot("inData", "takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
@@ -204,9 +202,9 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
 
-    int sx = this->xResSlot.Param<core::param::IntParam>()->Value();
-    int sy = this->yResSlot.Param<core::param::IntParam>()->Value();
-    int sz = this->zResSlot.Param<core::param::IntParam>()->Value();
+    auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
+    auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
+    auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
     vol.resize(omp_get_max_threads());
     int init, j;
@@ -215,15 +213,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         vol[init].resize(sx * sy * sz, 0);
     }
 
-    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
-    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
-    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
-    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
-    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
-    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+    auto const minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
+    auto const minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
+    auto const minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
+    auto const rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
+    auto const rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
+    auto const rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
 
-    // float volGenFac = this->aoGenFacSlot.Param<megamol::core::param::FloatParam>()->Value();
-    float volGenFac = 1.0f;
     //    float voxelVol = (rangeOSx / static_cast<float>(sx))
     //        * (rangeOSy / static_cast<float>(sy))
     //        * (rangeOSz / static_cast<float>(sz));
@@ -267,7 +263,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 const float rad = ppos.vert.GetRf();
                 spVol = 4.0f / 3.0f * static_cast<float>(M_PI) * rad * rad * rad;
             }
-            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol) * volGenFac;
+            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol);
         }
     }
 
