@@ -1258,6 +1258,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
                 ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
 
+                ospSet1b(vol.back(), "singleShade", element.useMIP);
+                ospSet1b(vol.back(), "gradientShadingEnables", element.useGradient);
+                ospSet1b(vol.back(), "preIntegration", element.usePreIntegration);
+                ospSet1b(vol.back(), "adaptiveSampling", element.useAdaptiveSampling);
+                ospSet1f(vol.back(), "adaptiveScalar", element.adaptiveFactor);
+                ospSet1f(vol.back(), "adaptiveMaxSamplingRate", element.adaptiveMaxRate);
+                ospSet1f(vol.back(), "samplingRate", element.samplingRate);
+
                 // add data
                 voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
                 ospCommit(voxels);

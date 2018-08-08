@@ -21,21 +21,44 @@ using namespace megamol::ospray;
 
 OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     : AbstractOSPRayStructure()
-    , clippingBoxActive("ClippingBox::Active", "Activates the clipping Box")
+    , getDataSlot("getdata", "Connects to the data source")
+    , getTFSlot("gettransferfunction", "Connects to a color transfer function module")
     , clippingBoxLower("ClippingBox::Left", "Left corner of the clipping Box")
     , clippingBoxUpper("ClippingBox::Right", "Right corner of the clipping Box")
+    , clippingBoxActive("ClippingBox::Active", "Activates the clipping Box")
     , repType("Representation", "Activates one of the three different volume representations: Volume, Isosurfae, Slice")
-    , sliceNormal("Slice::sliceNormal", "Direction of the slice normal")
-    , sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector")
+    , useMIP("shading::useMIP", "toggle maximum intensity projection")
+    , useGradient("shading::useGradient", "compute gradient for shading")
+    , usePreIntegration("shading::usePreintegration", "toggle preintegration")
+    , useAdaptiveSampling("adaptive::enable", "toggle adaptive sampling")
+    , adaptiveFactor("adaptive::factor", "modifier for adaptive step size")
+    , adaptiveMaxRate("adaptive::maxRate", "maximum sampling rate")
+    , samplingRate("adaptive::minRate", "minimum sampling rate")
     , IsoValue("Isosurface::Isovalue", "Sets the isovalue of the isosurface")
-    , getTFSlot("gettransferfunction", "Connects to a color transfer function module")
-    , getDataSlot("getdata", "Connects to the data source") {
+    , sliceNormal("Slice::sliceNormal", "Direction of the slice normal")
+    , sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector") {
     core::param::EnumParam* rt = new core::param::EnumParam(VOLUMEREP);
     rt->SetTypePair(VOLUMEREP, "Volume");
     rt->SetTypePair(ISOSURFACE, "Isosurface");
     rt->SetTypePair(SLICE, "Slice");
     this->repType << rt;
     this->MakeSlotAvailable(&this->repType);
+
+    this->useMIP << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useMIP);
+    this->useGradient << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useGradient);
+    this->usePreIntegration << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->usePreIntegration);
+
+    this->useAdaptiveSampling << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useAdaptiveSampling);
+    this->adaptiveFactor << new core::param::FloatParam(15.0f, std::numeric_limits<float>::min());
+    this->MakeSlotAvailable(&this->adaptiveFactor);
+    this->adaptiveMaxRate<< new core::param::FloatParam(2.0f, std::numeric_limits<float>::min());
+    this->MakeSlotAvailable(&this->adaptiveMaxRate);
+    this->samplingRate << new core::param::FloatParam(0.125f, std::numeric_limits<float>::min());
+    this->MakeSlotAvailable(&this->samplingRate);
 
     this->clippingBoxActive << new core::param::BoolParam(false);
     this->clippingBoxLower << new core::param::Vector3fParam({-5.0f, -5.0f, -5.0f});
@@ -198,6 +221,14 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     std::vector<float> iValue = {this->IsoValue.Param<core::param::FloatParam>()->Value()};
     this->structureContainer.isoValue = std::make_shared<std::vector<float>>(std::move(iValue));
+
+    this->structureContainer.useMIP = this->useMIP.Param<core::param::BoolParam>()->Value();
+    this->structureContainer.useAdaptiveSampling = this->useAdaptiveSampling.Param<core::param::BoolParam>()->Value();
+    this->structureContainer.useGradient = this->useGradient.Param<core::param::BoolParam>()->Value();
+    this->structureContainer.usePreIntegration = this->usePreIntegration.Param<core::param::BoolParam>()->Value();
+    this->structureContainer.adaptiveFactor = this->adaptiveFactor.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.adaptiveMaxRate = this->adaptiveMaxRate.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.samplingRate = this->samplingRate.Param<core::param::FloatParam>()->Value();
 
     return true;
 }

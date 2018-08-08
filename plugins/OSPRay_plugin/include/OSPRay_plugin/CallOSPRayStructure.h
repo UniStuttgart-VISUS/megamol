@@ -106,6 +106,15 @@ public:
     bool isValid;
     bool smooth; //< valid for lines
 
+    // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
+    // TODO: both actually.
+    bool useMIP;
+    bool useGradient;
+    bool usePreIntegration;
+    bool useAdaptiveSampling;
+    float adaptiveFactor;
+    float adaptiveMaxRate;
+
     voxelDataType voxelDType;
 
     float samplingRate;
