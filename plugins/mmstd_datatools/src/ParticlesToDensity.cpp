@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <fstream>
 #include "ParticlesToDensity.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -275,18 +276,20 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
-                        float x_diff =
-                            static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + 0.5f * cellSizex;
-                        x_diff = std::fabsf(x_diff - x_base);
-                        float y_diff =
-                            static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + 0.5f * cellSizey;
-                        y_diff = std::fabsf(y_diff - y_base);
-                        float z_diff =
-                            static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + 0.5f * cellSizez;
-                        z_diff = std::fabsf(z_diff - z_base);
-                        float dis = std::sqrtf(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
-                        if (dis == 0.0f) dis = 1.0f;
-                        vol[omp_get_thread_num()][x + (y + z * sy) * sx] = 1.0f / dis;
+                        if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
+                            float x_diff =
+                                static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + 0.5f * cellSizex;
+                            x_diff = std::fabsf(x_diff - x_base);
+                            float y_diff =
+                                static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + 0.5f * cellSizey;
+                            y_diff = std::fabsf(y_diff - y_base);
+                            float z_diff =
+                                static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + 0.5f * cellSizez;
+                            z_diff = std::fabsf(z_diff - z_base);
+                            float dis = std::sqrtf(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+                            if (dis == 0.0f) dis = 1.0f;
+                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] = 1.0f / dis;
+                        }
                     }
                 }
             }
@@ -389,6 +392,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             // omp_get_thread_num(), vol[0][j]);
         }
     }
+
+//#define DEBUG_OUTPUT
+#ifdef DEBUG_OUTPUT
+    std::ofstream raw_file{"lasercross.raw", std::ios::binary};
+    raw_file.write(reinterpret_cast<char const*>(vol[0].data()), vol[0].size() * sizeof(float));
+    raw_file.close();
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
+#endif
 
     maxDens = *std::max_element(localMax.begin(), localMax.end());
     minDens = *std::min_element(localMin.begin(), localMin.end());
