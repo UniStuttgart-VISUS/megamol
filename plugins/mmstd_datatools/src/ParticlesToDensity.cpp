@@ -226,6 +226,10 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     const float voxelVol = (rangeOSx / static_cast<float>(sx - 1)) * (rangeOSy / static_cast<float>(sy - 1)) *
                            (rangeOSz / static_cast<float>(sz - 1));
 
+    float const cellSizex = rangeOSx / static_cast<float>(sx - 1);
+    float const cellSizey = rangeOSy / static_cast<float>(sy - 1);
+    float const cellSizez = rangeOSz / static_cast<float>(sz - 1);
+
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
@@ -239,32 +243,126 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
         const float globSpVol = 4.0f / 3.0f * static_cast<float>(M_PI) * globRad * globRad * globRad;
 
+        auto gauss = [](float x, float y, float z, float sigma) -> float {
+            return std::expf(-(x * x + y * y + z * z) / (2.0f * sigma * sigma)) /
+                   std::powf(std::sqrtf(2.0f * M_PI * sigma), 3);
+        };
+
+        int filterSize = 1;
+
 #pragma omp parallel for
-        for (j = 0; j < parts.GetCount(); ++j) {
-            // const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
+        for (int j = 0; j < parts.GetCount(); ++j) {
             auto ppos = parts[j];
-            int x = static_cast<int>(((ppos.vert.GetXf() - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
+            auto const x_base = ppos.vert.GetXf();
+            int x = static_cast<int>(((x_base - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
             if (x < 0)
                 x = 0;
             else if (x >= sx)
                 x = sx - 1;
-            int y = static_cast<int>(((ppos.vert.GetYf() - minOSy) / rangeOSy) * static_cast<float>(sy - 1));
+            auto const y_base = ppos.vert.GetYf();
+            int y = static_cast<int>(((y_base - minOSy) / rangeOSy) * static_cast<float>(sy - 1));
             if (y < 0)
                 y = 0;
             else if (y >= sy)
                 y = sy - 1;
-            int z = static_cast<int>(((ppos.vert.GetZf() - minOSz) / rangeOSz) * static_cast<float>(sz - 1));
+            auto const z_base = ppos.vert.GetZf();
+            int z = static_cast<int>(((z_base - minOSz) / rangeOSz) * static_cast<float>(sz - 1));
             if (z < 0)
                 z = 0;
             else if (z >= sz)
                 z = sz - 1;
-            float spVol = globSpVol;
+
+            for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
+                for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
+                    for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
+                        float x_diff =
+                            static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + 0.5f * cellSizex;
+                        x_diff = std::fabsf(x_diff - x_base);
+                        float y_diff =
+                            static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + 0.5f * cellSizey;
+                        y_diff = std::fabsf(y_diff - y_base);
+                        float z_diff =
+                            static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + 0.5f * cellSizez;
+                        z_diff = std::fabsf(z_diff - z_base);
+                        float dis = std::sqrtf(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+                        if (dis == 0.0f) dis = 1.0f;
+                        vol[omp_get_thread_num()][x + (y + z * sy) * sx] = 1.0f / dis;
+                    }
+                }
+            }
+        }
+
+#if 0
+#pragma omp parallel for
+        for (j = 0; j < parts.GetCount(); ++j) {
+            // const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
+            auto ppos = parts[j];
+            auto x_base = ppos.vert.GetXf();
+            int x = static_cast<int>(((x_base - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
+            if (x < 0)
+                x = 0;
+            else if (x >= sx)
+                x = sx - 1;
+            auto y_base = ppos.vert.GetYf();
+            int y = static_cast<int>(((y_base - minOSy) / rangeOSy) * static_cast<float>(sy - 1));
+            if (y < 0)
+                y = 0;
+            else if (y >= sy)
+                y = sy - 1;
+            auto z_base = ppos.vert.GetZf();
+            int z = static_cast<int>(((z_base - minOSz) / rangeOSz) * static_cast<float>(sz - 1));
+            if (z < 0)
+                z = 0;
+            else if (z >= sz)
+                z = sz - 1;
+
+            //for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
+            //    for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
+            //        for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
+            //            if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
+            //                float x_pos = x_base;
+            //                if (hx < x)
+            //                    x_pos =
+            //                        static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + cellSizex;
+            //                else if (hx > x)
+            //                    x_pos = static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx;
+            //                float y_pos = y_base;
+            //                if (hy < y)
+            //                    y_pos =
+            //                        static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + cellSizey;
+            //                else if (hy > y)
+            //                    y_pos = static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy;
+            //                float z_pos = z_base;
+            //                if (hz < z)
+            //                    z_pos =
+            //                        static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + cellSizez;
+            //                else if (hz > z)
+            //                    z_pos = static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz;
+            //                float spRad = globRad;
+            //                if (!useGlobRad) {
+            //                    spRad = ppos.vert.GetRf();
+            //                }
+            //                auto g = gauss(std::fabsf(x_pos - x_base), std::fabsf(y_pos - y_base),
+            //                    std::fabsf(z_pos - z_base), 5.0f*spRad);
+            //                vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] = g;
+            //                /*vol[0][hx + (hy + hz * sy) * sx] = g;
+            //                vislib::sys::Log::DefaultLog.WriteInfo(
+            //                    "ParticlesToDensity: pos %f %f %f gauss %f\n", x_pos, y_pos, z_pos, g);*/
+            //            }
+            //        }
+            //    }
+            //}
+
+            ++vol[omp_get_thread_num()][x + (y + z * sy) * sx];
+
+            /*float spVol = globSpVol;
             if (!useGlobRad) {
                 const float rad = ppos.vert.GetRf();
                 spVol = 4.0f / 3.0f * static_cast<float>(M_PI) * rad * rad * rad;
             }
-            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol);
+            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol);*/
         }
+#endif
     }
 
     std::vector<float> localMax(omp_get_max_threads(), 0.0f);
