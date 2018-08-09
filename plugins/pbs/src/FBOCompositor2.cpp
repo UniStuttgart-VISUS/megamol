@@ -208,6 +208,13 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     //initThreads();
 
+    // get requested time
+    auto cr3d = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
+    if (cr3d == nullptr) return false;
+    auto req_time = cr3d->Time();
+    //vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Requested time: %f\n", req_time);
+
+
     // if data changed check is size has changed
     // if no directly upload
     // it yes resize textures and upload afterward

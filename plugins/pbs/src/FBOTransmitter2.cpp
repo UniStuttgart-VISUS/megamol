@@ -99,6 +99,10 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
+    // get time of currently rendered frame
+
+
+
     // extract bbox
     float bbox[6];
     if (!this->extractBoundingBox(bbox)) {
@@ -144,18 +148,21 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     std::vector<char> depth_buf(width * height * depth_buf_el_size_);
 
     if ((tile_width < width) || (tile_height < height)) {
-        UINT row_offset    =  tile_viewport[1]  * width; // y * width = row offset * tile width
-        UINT colomn_offset = tile_viewport[0];           // x  = column offset 
-
-        UINT color_row_tile_width = col_buf_el_size_   * tile_width;
-        UINT depth_row_tile_width = depth_buf_el_size_ * tile_width;
+        int row_offset           = tile_viewport[1]  * width; // y * width = row offset * tile width
+        int colomn_offset        = tile_viewport[0];          // x  = column offset 
+        int color_row_tile_width = col_buf_el_size_   * tile_width;
+        int depth_row_tile_width = depth_buf_el_size_ * tile_width;
 
         // Copy tile (starting at index 0) to right position in row major format
         for (int i = 0; i < tile_height; ++i) {
             int offset = row_offset + (i * width) + colomn_offset;
-            memcpy(col_buf.data()   + col_buf_el_size_   * offset, col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
-            memcpy(depth_buf.data() + depth_buf_el_size_ * offset, depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
+            memcpy(col_buf.data()   + (col_buf_el_size_   * offset), col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
+            memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
         }
+    }
+    else { // (tile_width == width) && (tile_height == height))
+        memcpy(col_buf.data(),   col_buf_tile.data(),   tile_width * tile_height * col_buf_el_size_);
+        memcpy(depth_buf.data(), depth_buf_tile.data(), tile_width * tile_height * depth_buf_el_size_);
     }
 
 #ifdef WITH_MPI
