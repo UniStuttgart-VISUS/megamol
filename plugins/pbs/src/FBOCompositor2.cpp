@@ -206,7 +206,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    //initThreads();
+    // initThreads();
 
     // get requested time
     auto cr3d = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
@@ -290,7 +290,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
-    //initThreads();
+    // initThreads();
 
     auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
     if (imgc == nullptr) return false;
@@ -433,6 +433,15 @@ void megamol::pbs::FBOCompositor2::receiverJob(
             size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
             fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
             fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+
+            if (header.depth_buf_size <= 1 || header.color_buf_size <= 1) {
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; depth_buf size: %d; depth_comp_buf size: %d;\n",
+                    fbo_col_size, header.color_buf_size, fbo_depth_size, header.depth_buf_size);
+#endif
+                continue;
+            }
 
             std::vector<char> col_buf(fbo_col_size);
             std::vector<char> col_comp_buf(header.color_buf_size);
@@ -824,7 +833,7 @@ bool megamol::pbs::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const 
 
 
 bool megamol::pbs::FBOCompositor2::shutdownThreads() {
-    //close_promise_.set_value(true);
+    // close_promise_.set_value(true);
     shutdown_ = true;
     if (collector_thread_.joinable()) collector_thread_.join();
     if (this->initThreadsThread_.joinable()) this->initThreadsThread_.join();
