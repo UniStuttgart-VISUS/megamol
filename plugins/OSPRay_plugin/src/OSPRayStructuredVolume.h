@@ -62,6 +62,13 @@ protected:
     megamol::core::param::ParamSlot clippingBoxActive;
 
     megamol::core::param::ParamSlot repType;
+    megamol::core::param::ParamSlot useMIP;
+    megamol::core::param::ParamSlot useGradient;
+    megamol::core::param::ParamSlot usePreIntegration;
+    megamol::core::param::ParamSlot useAdaptiveSampling;
+    megamol::core::param::ParamSlot adaptiveFactor;
+    megamol::core::param::ParamSlot adaptiveMaxRate;
+    megamol::core::param::ParamSlot samplingRate;
 
     megamol::core::param::ParamSlot IsoValue;
 

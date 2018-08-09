@@ -64,7 +64,7 @@ public:
     std::shared_ptr<std::vector<float>> normalData;
     std::shared_ptr<std::vector<float>> texData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
-    std::shared_ptr<std::vector<float>> voxels;
+    void* voxels;
     std::shared_ptr<std::vector<float>> gridOrigin;
     std::shared_ptr<std::vector<float>> gridSpacing;
     std::shared_ptr<std::vector<int>> dimensions;
@@ -105,6 +105,15 @@ public:
     bool materialChanged;
     bool isValid;
     bool smooth; //< valid for lines
+
+    // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
+    // TODO: both actually.
+    bool useMIP;
+    bool useGradient;
+    bool usePreIntegration;
+    bool useAdaptiveSampling;
+    float adaptiveFactor;
+    float adaptiveMaxRate;
 
     voxelDataType voxelDType;
 

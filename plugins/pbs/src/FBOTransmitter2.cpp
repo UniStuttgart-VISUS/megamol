@@ -151,8 +151,11 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         // Copy tile into right row major format
         memcpy(col_buf.data() + offsetCol, col_buf.data(), offsetCol);
         memcpy(depth_buf.data() + offsetDepth, depth_buf.data(), offsetDepth);
-    }
 
+
+
+
+    }
 
 #ifdef WITH_MPI
     IceTUByte* icet_col_buf   = reinterpret_cast<IceTUByte*>(col_buf.data());
@@ -222,7 +225,6 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
 #if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
-
                 }
 /*#if _DEBUG
                 else {
@@ -478,7 +480,11 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
 #if _DEBUG	    
+<<<<<<< HEAD
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+=======
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+>>>>>>> c7c86da3ecb7757dccd48462597af13c6ddc8ffb
 #endif
             registerComm.Connect(registerAddress);
 
@@ -514,8 +520,10 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 while (!registerComm.Recv(buf)) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
-#endif  
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+#endif
+
                 }
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
@@ -592,7 +600,6 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetPhysicalRenderSize(width, height);
             icetResetTiles();
             icetAddTile(0, 0, width, height, displayRank);
-            //vislib::sys::Log::DefaultLog.WriteError(_T("FBOTransmitter2: initThreads >>>>> Rank: %d -- IceT -- width: %d  width: %d  "), mpiRank, width, height);
 
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
         }

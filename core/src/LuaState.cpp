@@ -91,6 +91,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMLISTINSTANTIATIONS "mmListInstantiations"
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
+#define MMC_LUA_MMQUIT "mmQuit"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -136,7 +137,8 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE "(string name)\n\tReturn the value of env variable <name>."},
     {MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
     {MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
-    {MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."}
+    {MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
+    {MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."}
 };
 
 // clang-format off
@@ -179,6 +181,7 @@ MMC_LUA_MMGETENVVALUE "=" MMC_LUA_MMGETENVVALUE ","
 MMC_LUA_MMLISTCALLS "=" MMC_LUA_MMLISTCALLS ","
 MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
+MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -371,6 +374,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
+        lua_register(L, MMC_LUA_MMQUIT, &dispatch<&LuaState::Quit>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -1564,4 +1568,11 @@ int megamol::core::LuaState::Help(lua_State *L) {
     }
     lua_pushstring(L, out.str().c_str());
     return 1;
+}
+
+int megamol::core::LuaState::Quit(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+        this->coreInst->Shutdown();
+    }
+    return 0;
 }

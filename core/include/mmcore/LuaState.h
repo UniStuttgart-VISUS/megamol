@@ -222,6 +222,7 @@ namespace utility {
         int ListInstatiations(lua_State *L);
 
         int Help(lua_State *L);
+        int Quit(lua_State *L);
 
     private:
 
