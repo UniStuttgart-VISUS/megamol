@@ -36,7 +36,7 @@ CUDAVolumeRaycaster::CUDAVolumeRaycaster(void) : core::view::Renderer3DModule(),
         lutFileParam("lut::lutfile", "File path to the file containing the lookup table"),
         lutSizeParam("lut::lutSize", "The number of components the lookup table should have. If a discrete LUT is loaded, this value is ignored.") {
 
-    this->volumeDataSlot.SetCompatibleCall<misc::VolumeticDataCallDescription>();
+    this->volumeDataSlot.SetCompatibleCall<misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->volumeDataSlot);
 
     this->inputImageSlot.SetCompatibleCall<core::view::CallRender3DDescription>();

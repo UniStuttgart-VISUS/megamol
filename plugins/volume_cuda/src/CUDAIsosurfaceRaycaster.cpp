@@ -33,7 +33,7 @@ CUDAIsosurfaceRaycaster::CUDAIsosurfaceRaycaster(void) : core::view::Renderer3DM
         densityParam("density", "Scaling factor for the density of the volume"),
         lutFileParam("lut::lutfile", "File path to the file containing the lookup table") {
 
-    this->volumeDataSlot.SetCompatibleCall<misc::VolumeticDataCallDescription>();
+    this->volumeDataSlot.SetCompatibleCall<misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->volumeDataSlot);
 
     this->inputImageSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
