@@ -28,7 +28,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
-    , startSlot_{"start", "start listening for connections"}
+    , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
@@ -57,7 +57,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     this->MakeSlotAvailable(&targetBandwidthSlot_);
     numRendernodesSlot_ << new megamol::core::param::IntParam(1, 1, std::numeric_limits<int>::max());
     this->MakeSlotAvailable(&numRendernodesSlot_);
-    startSlot_ << new megamol::core::param::ButtonParam();
+    startSlot_ << new megamol::core::param::ButtonParam(vislib::sys::KeyCode::KEY_F6);
     startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
     this->MakeSlotAvailable(&startSlot_);
 }
@@ -221,10 +221,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
 
-        auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
-                           (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
-        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
-                            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
+        auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
         if (this->width_ != width || this->height_ != height) {
             this->width_ = width;
@@ -242,8 +240,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 
         data_has_changed_.store(false);
     }
-
-
+    
     // constantly render current texture set
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
@@ -294,10 +291,8 @@ bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     if (data_has_changed_.load()) {
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
-        this->width_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
-                       (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
-        this->height_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
-                        (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
+        this->width_  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+        this->height_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
         // TODO For now, we only provide FBO 0
         auto const& fbo = (*this->fbo_msg_write_)[0];
@@ -405,11 +400,13 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
                     // status = close.wait_for(std::chrono::milliseconds(1));
                     // if (status == std::future_status::ready) break;
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#if _DEBUG
+                    vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+#endif
                 }
                 if (shutdown_) break;
-                /*#if _DEBUG
+/*#if _DEBUG
                 else {
                     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
                 }
@@ -522,7 +519,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
             this->fbo_msg_write_->resize(jobs.size());
             this->fbo_msg_recv_.reset(new std::vector<fbo_msg_t>);
             this->fbo_msg_recv_->resize(jobs.size());
-            this->width_ = 1;
+            this->width_  = 1;
             this->height_ = 1;
             this->initTextures(jobs.size(), this->width_, this->height_);
         }
@@ -641,8 +638,10 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "FBOCompositor2: Recv failed on 'registerComm', trying again\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#if _DEBUG
+                    vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Recv failed on 'registerComm', trying again\n");
+#endif
                 }
 #if _DEBUG
                 if (!shutdown_) {

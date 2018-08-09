@@ -272,7 +272,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Time settings -----------------------------------------------
     if (this->rendering) {
-        this->rtf_set_time_and_camera();
+        this->rtf_load_keyframe();
         loadNewCamParams = true;
     }
     else {
@@ -687,7 +687,7 @@ bool CinematicView::rtf_setup() {
 /*
 * CinematicView::rtf_set_time_and_camera
 */
-bool CinematicView::rtf_set_time_and_camera() {
+bool CinematicView::rtf_load_keyframe() {
 
     if (!this->pngdata.lock) {
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
@@ -825,9 +825,10 @@ bool CinematicView::rtf_finish() {
 
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
-    }
+    /// Crashes when used with FBOCompositor 
+        //if (this->fbo.IsEnabled()) {
+        //    this->fbo.Disable();
+        //}
 
     this->fbo.Release();
 

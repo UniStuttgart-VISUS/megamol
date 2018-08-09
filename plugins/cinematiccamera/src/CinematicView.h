@@ -153,7 +153,7 @@ namespace megamol {
             bool rtf_setup();
 
             /** */
-            bool rtf_set_time_and_camera();
+            bool rtf_load_keyframe();
 
             /** */
             bool rtf_create_frame();

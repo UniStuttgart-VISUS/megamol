@@ -83,6 +83,9 @@ private:
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
     bool extractBoundingBox(float bbox[6]);
+
+    bool extractViewport(int vvpt[6]);
+
     bool initMPI();
 
     bool reconnectCallback(megamol::core::param::ParamSlot& p);
@@ -96,6 +99,8 @@ private:
     megamol::core::param::ParamSlot commSelectSlot_;
 
     megamol::core::param::ParamSlot view_name_slot_;
+
+    megamol::core::param::ParamSlot mpiclusterview_name_slot_;
 
     megamol::core::param::ParamSlot trigger_button_slot_;
 

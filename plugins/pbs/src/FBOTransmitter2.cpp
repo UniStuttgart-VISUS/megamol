@@ -17,6 +17,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/cluster/simple/View.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
 
@@ -37,13 +38,12 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance."} // get viewport tile dimensions and position of different views
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
-    , aggregate_ {
-    false
-}
 #endif // WITH_MPI
-, frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
+    , aggregate_{false}
+    , frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
     color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
     color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
     depth_buf_el_size_{4}, connected_{false} {
@@ -56,7 +56,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
     commSelectSlot_ << ep;
     this->MakeSlotAvailable(&commSelectSlot_);
-    this->view_name_slot_ << new megamol::core::param::StringParam{"inst"};
+    this->view_name_slot_ << new megamol::core::param::StringParam{"::inst::view"};
     this->MakeSlotAvailable(&this->view_name_slot_);
     this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
@@ -74,6 +74,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
+
+    this->mpiclusterview_name_slot_ << new megamol::core::param::StringParam{""};
+    this->MakeSlotAvailable(&this->mpiclusterview_name_slot_);
 }
 
 
@@ -96,38 +99,76 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    // get viewport of current render context
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    auto const width = viewport[2] - viewport[0];
-    auto const height = viewport[3] - viewport[1];
-
-    // read FBO
-    std::vector<char> col_buf(width * height * col_buf_el_size_);
-    std::vector<char> depth_buf(width * height * depth_buf_el_size_);
-
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
-    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
-
+    // extract bbox
     float bbox[6];
     if (!this->extractBoundingBox(bbox)) {
         vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
     }
 
+    // extract viewport or get if from opengl context
+    int viewport[4]      = { 0, 0, 1, 1 };
+    int width            = 1;
+    int height           = 1;
+    int tile_viewport[4] = { 0, 0, 1, 1 };
+    auto tile_width      = width;
+    auto tile_height     = height;
+    int vvpt[6]          = { 0, 0, 1, 1, 1, 1 };
+    if (this->extractViewport(vvpt)) {
+        for (int i = 0; i < 4; ++i) {
+            tile_viewport[i] = vvpt[i];
+        }
+        tile_width  = vvpt[2];
+        tile_height = vvpt[3];
+        width  = viewport[2] = vvpt[4];
+        height = viewport[3] = vvpt[5];
+    }
+    else {
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        for (int i = 0; i < 4; ++i) {
+            tile_viewport[i] = viewport[i];
+        }
+        width  = tile_width  = viewport[2];
+        height = tile_height = viewport[3];
+    }
+
+    /// CHECK DIMENSIONS OF VIEWPORT TILE vs. GLOBAL VIEWPORT ...
+
+    // read FBO
+    std::vector<char> col_buf(width * height * col_buf_el_size_);
+    std::vector<char> depth_buf(width * height * depth_buf_el_size_);
+
+    glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
+    glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
+
+    if ((tile_width < width) || (tile_height < height)) {
+        int offset      = (tile_viewport[0] * tile_viewport[3] + tile_viewport[1] * tile_viewport[2]); // (x*height + y*width)
+        int offsetCol   = col_buf_el_size_ * offset;
+        int offsetDepth = depth_buf_el_size_ * offset;
+
+        int fracWidth  = width / tile_width;
+        int fracHeight = height / tile_height;
+
+        // Copy tile into right row major format
+        memcpy(col_buf.data() + offsetCol, col_buf.data(), offsetCol);
+        memcpy(depth_buf.data() + offsetDepth, depth_buf.data(), offsetDepth);
+    }
+
+
 #ifdef WITH_MPI
-    IceTUByte* icet_col_buf = reinterpret_cast<IceTUByte*>(col_buf.data());
+    IceTUByte* icet_col_buf   = reinterpret_cast<IceTUByte*>(col_buf.data());
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
 #if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
+
         std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
         auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
+            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor.data());
+
         if (mpiRank == 0) {
-            icet_col_buf = icetImageGetColorub(icet_comp_image);
+            icet_col_buf   = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
         }
     }
@@ -138,20 +179,14 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
-            float lower[] = {viewport[0], viewport[2]};
-            float upper[] = {viewport[1], viewport[3]};
             for (int i = 0; i < 4; ++i) {
                 this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = viewport[i];
             }
-            // this->fbo_msg_read_->screen_area = {viewport[0], viewport[1], viewport[2], viewport[3]};
-            // this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
             this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
             this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
             for (int i = 0; i < 6; ++i) {
                 this->fbo_msg_read_->os_bbox[i] = this->fbo_msg_read_->cs_bbox[i] = bbox[i];
             }
-            // this->fbo_msg_read_->os_bbox = bbox;
-            // this->fbo_msg_read_->cs_bbox = bbox;
 
             this->color_buf_read_->resize(col_buf.size());
             // std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
@@ -183,9 +218,13 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+#endif
+
                 }
-                /*#if _DEBUG
+/*#if _DEBUG
                 else {
                     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
                 }
@@ -336,6 +375,33 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
 }
 
 
+bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
+    bool success = true;
+    std::string mcvvn(mpiclusterview_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mcvvn.c_str());
+    auto vi = dynamic_cast<megamol::core::cluster::simple::View*>(ano.get());
+    if (vi != nullptr) {
+        // MPIClusterView keeps virtual viewport stuff
+        vvpt[0] = static_cast<int>(vi->getTileX());
+        vvpt[1] = static_cast<int>(vi->getTileY());
+        vvpt[2] = static_cast<int>(vi->getTileW());
+        vvpt[3] = static_cast<int>(vi->getTileH());
+        vvpt[4] = static_cast<int>(vi->getVirtWidth());
+        vvpt[5] = static_cast<int>(vi->getVirtHeight());
+    }
+    else {
+        if (!mcvvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find mpi cluster view name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
 bool megamol::pbs::FBOTransmitter2::initMPI() {
     bool retval = false;
 #ifdef WITH_MPI
@@ -411,7 +477,9 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
-            printf("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+#if _DEBUG	    
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+#endif
             registerComm.Connect(registerAddress);
 
             std::string hostname = std::string{"127.0.0.1"};
@@ -444,8 +512,10 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
 #endif
                 while (!registerComm.Recv(buf)) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#if _DEBUG
+                    vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+#endif  
                 }
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
@@ -483,21 +553,20 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
 
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
+
 #ifdef WITH_MPI
         }
 #endif // WITH_MPI
         connected_ = true;
 #ifdef WITH_MPI
-        // aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        // get viewport of current render context
         if (aggregate_) {
 #if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
-            // MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
-            // MPI_Comm_dup(MPI_COMM_WORLD, heinz);
+            // icet setup
             icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
-            icet_ctx_ = icetCreateContext(icet_comm_);
+            icet_ctx_  = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
             icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
@@ -505,18 +574,27 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            auto const width = viewport[2] - viewport[0];
-            auto const height = viewport[3] - viewport[1];
-
+            // extract viewport or get if from opengl context
+            auto width  = 1;
+            auto height = 1;
+            int vvpt[6] = { 0, 0, 0, 0, 0, 0 };
+            if (this->extractViewport(vvpt)) {
+                width  = vvpt[4];
+                height = vvpt[5];
+            }
+            else {
+                GLint viewport[4];
+                glGetIntegerv(GL_VIEWPORT, viewport);
+                width  = viewport[2];
+                height = viewport[3];
+            }
+            int displayRank = 0;
+            icetPhysicalRenderSize(width, height);
             icetResetTiles();
-            icetAddTile(
-                viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
-#if _DEBUG
+            icetAddTile(0, 0, width, height, displayRank);
+            //vislib::sys::Log::DefaultLog.WriteError(_T("FBOTransmitter2: initThreads >>>>> Rank: %d -- IceT -- width: %d  width: %d  "), mpiRank, width, height);
+
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#endif
         }
 #endif // WITH_MPI
     }
