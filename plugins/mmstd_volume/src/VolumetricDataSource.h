@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_MMSTD_VOLUME_VOLUMETRICDATASOURCE_H_INCLUDED
 #define MEGAMOL_MMSTD_VOLUME_VOLUMETRICDATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <atomic>
@@ -26,8 +26,8 @@
 #include "mmcore/Module.h"
 
 #include "vislib/PtrArray.h"
-#include "vislib/sys/Thread.h"
 #include "vislib/sys/Event.h"
+#include "vislib/sys/Thread.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -38,33 +38,26 @@ namespace volume {
 class VolumetricDataSource : public core::Module {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static inline const char *ClassName(void) {
-        return "VolumetricDataSource";
-    }
+    static inline const char* ClassName(void) { return "VolumetricDataSource"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static inline const char *Description(void) {
-        return "Data source for dat/raw-encoded volumetric data.";
-    }
+    static inline const char* Description(void) { return "Data source for dat/raw-encoded volumetric data."; }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
-        return true;
-    }
+    static inline bool IsAvailable(void) { return true; }
 
     /**
      * Initialises a new instance.
@@ -77,7 +70,6 @@ public:
     virtual ~VolumetricDataSource(void);
 
 protected:
-
     /** Superclass typedef. */
     typedef core::Module Base;
 
@@ -220,7 +212,6 @@ protected:
     bool suspendAsyncLoad(const bool isWait);
 
 private:
-
     /** Enapsulates all information about a buffer for a single frame. */
     typedef struct BufferSlot_t {
         vislib::RawStorage Buffer;
@@ -234,20 +225,17 @@ private:
     class BufferSlotUnlocker : public core::AbstractGetDataCall::Unlocker {
 
     public:
-
         /**
          * Initialises a new instance.
          *
          * @param buffer THe buffer that should be unlocked.
          */
-        inline BufferSlotUnlocker(BufferSlot *buffer) : Base(), buffers(2) {
-            this->AddBuffer(buffer);
-        }
+        inline BufferSlotUnlocker(BufferSlot* buffer) : Base(), buffers(2) { this->AddBuffer(buffer); }
 
         /** Dtor. */
         virtual ~BufferSlotUnlocker(void);
 
-        inline void AddBuffer(BufferSlot *buffer) {
+        inline void AddBuffer(BufferSlot* buffer) {
             ASSERT(buffer != nullptr);
             this->buffers.Add(buffer);
         }
@@ -256,13 +244,11 @@ private:
         virtual void Unlock(void);
 
     private:
-
         /** Base class. */
         typedef core::AbstractGetDataCall::Unlocker Base;
 
         /** The buffer slot to unlock */
-        vislib::Array<BufferSlot *> buffers;
-
+        vislib::Array<BufferSlot*> buffers;
     };
 
     /** Indicates that a buffer is about to be deleted by the UI thread. */
@@ -306,13 +292,12 @@ private:
     static const int LOADER_STATUS_STOPPING;
 
     /** Executes the given loading call asynchronously. */
-    static DWORD loadAsync(void *userData);
+    static DWORD loadAsync(void* userData);
 
     /**
-* Add an unlocker to 'call' that will eventually unlock 'buffer'.
-*/
-    static void setUnlocker(core::misc::VolumetricDataCall& call,
-        BufferSlot *buffer);
+     * Add an unlocker to 'call' that will eventually unlock 'buffer'.
+     */
+    static void setUnlocker(core::misc::VolumetricDataCall& call, BufferSlot* buffer);
 
     /**
      * Tries to set 'dst' to 'value' using an interlocked CAS operation
@@ -320,9 +305,8 @@ private:
      * a user mode spin lock that tries to set the value until success
      * execpt fpr 'canFail' is set true.
      */
-    static bool spinExchange(std::atomic_int& dst, const int value,
-        const int *expected, const size_t cntExpected,
-        const bool canFail);
+    static bool spinExchange(
+        std::atomic_int& dst, const int value, const int* expected, const size_t cntExpected, const bool canFail);
 
     /**
      * Try to ensure that the available buffers for frames match the
@@ -358,7 +342,7 @@ private:
     vislib::sys::Event evtStartLoading;
 
     /** The content of the dat file. */
-    DatRawFileInfo *fileInfo;
+    DatRawFileInfo* fileInfo;
 
     /** The status of the asynchronous loading thread. */
     std::atomic_int loaderStatus;
@@ -412,10 +396,33 @@ private:
     /** The slot that requests the data. */
     core::CalleeSlot slotGetData;
 
+    std::vector<double> mins, maxes;
+
+    template <class T>
+    void calcMinMax(void const* vol_ptr, std::vector<double>& mins, std::vector<double>& maxes,
+        DatRawFileInfo const& fileinfo, core::misc::VolumetricDataCall::Metadata const& metadata) {
+        mins.resize(metadata.Components);
+        maxes.resize(metadata.Components);
+        for (auto c = 0; c < metadata.Components; ++c) {
+            double min = std::numeric_limits<double>::max();
+            double max = std::numeric_limits<double>::lowest();
+            size_t totalLength = 1;
+            for (int i = 0; i < fileinfo.dimensions; ++i) {
+                totalLength *= fileinfo.resolution[i];
+            }
+            auto* vol = reinterpret_cast<const T*>(vol_ptr);
+            for (size_t x = c; x < totalLength; x += metadata.Components) {
+                if (vol[x] < min) min = vol[x];
+                if (vol[x] > max) max = vol[x];
+            }
+            mins[c] = min;
+            maxes[c] = max;
+        }
+    }
 };
 
 } /* end namespace volume */
-} /* end namespace stdplugin */
-} /* end namespace megamol */
+} // namespace stdplugin
+} // namespace megamol
 
 #endif /* MEGAMOL_CORE_VOLUMEDATACALL_H_INCLUDED */

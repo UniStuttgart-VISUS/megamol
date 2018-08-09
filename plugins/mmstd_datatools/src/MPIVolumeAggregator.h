@@ -68,8 +68,8 @@ namespace datatools {
          *
          * @return True on success
          */
-        virtual bool manipulateData(
-            megamol::core::moldyn::VolumeDataCall& outData, megamol::core::moldyn::VolumeDataCall& inData);
+        bool manipulateData (
+            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) override;
         bool initMPI();
 
     private:
@@ -83,6 +83,8 @@ namespace datatools {
         core::CallerSlot callRequestMpi;
 
         core::param::ParamSlot operatorSlot;
+
+        core::misc::VolumetricDataCall::Metadata metadata;
 
         int mpiRank = 0;
         int mpiSize = 0;

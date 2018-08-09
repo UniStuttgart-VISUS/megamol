@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
 
 namespace megamol {
@@ -62,7 +62,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::VolumeDataCall& outData, megamol::core::moldyn::VolumeDataCall& inData);
+            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
 
         /**
          * Manipulates the particle data extend information
@@ -75,7 +75,10 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateExtent(
-            megamol::core::moldyn::VolumeDataCall& outData, megamol::core::moldyn::VolumeDataCall& inData);
+            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
+
+        virtual bool manipulateMetaData(
+            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
 
     private:
 
@@ -96,6 +99,14 @@ namespace datatools {
          * @return True on success
          */
         bool getExtentCallback(megamol::core::Call& c);
+
+        bool getMetaDataCallback(megamol::core::Call& c);
+
+        bool startAsyncCallback(megamol::core::Call& c);
+
+        bool stopAsyncCallback(megamol::core::Call& c);
+
+        bool tryGetDataCallback(megamol::core::Call& c);
 
         /** The slot providing access to the manipulated data */
         megamol::core::CalleeSlot outDataSlot;

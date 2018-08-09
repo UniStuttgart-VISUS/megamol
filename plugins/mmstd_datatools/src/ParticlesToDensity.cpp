@@ -7,13 +7,11 @@
 #include "stdafx.h"
 #include <algorithm>
 #include <cassert>
-#include <cfloat>
 #include <cstdint>
 #include "ParticlesToDensity.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "omp.h"
 #include "vislib/sys/Log.h"
@@ -40,13 +38,14 @@ void datatools::ParticlesToDensity::release(void) {}
  */
 datatools::ParticlesToDensity::ParticlesToDensity(void)
     : aggregatorSlot("aggregator", "algorithm for the aggregation")
-    , outDataSlot("outData", "Provides a density volume for the particles")
-    , inDataSlot("inData", "takes the particle data")
     , xResSlot("sizex", "The size of the volume in numbers of voxels")
     , yResSlot("sizey", "The size of the volume in numbers of voxels")
     , zResSlot("sizez", "The size of the volume in numbers of voxels")
+    , normalizeSlot("normalize", "Normalize the output volume")
     , datahash(0)
-    , time(0) {
+    , time(0)
+    , outDataSlot("outData", "Provides a density volume for the particles")
+    , inDataSlot("inData", "takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
@@ -70,7 +69,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         &ParticlesToDensity::getExtentCallback);
     this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
-        &ParticlesToDensity::dummyCallback);
+        &ParticlesToDensity::getExtentCallback);
     this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
         &ParticlesToDensity::dummyCallback);
@@ -90,6 +89,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
 
     this->zResSlot << new core::param::IntParam(16);
     this->MakeSlotAvailable(&this->zResSlot);
+
+    this->normalizeSlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->normalizeSlot);
 
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -161,7 +163,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
     metadata.ScalarLength = sizeof(float);
     metadata.MinValues = new double;
-    metadata.MinValues[0] = 0.0f;
+    metadata.MinValues[0] = this->minDens;
     metadata.MaxValues = new double;
     metadata.MaxValues[0] = this->maxDens;
     auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -173,11 +175,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
     metadata.SliceDists[0] = new float;
-    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0]);
+    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
     metadata.SliceDists[1] = new float;
-    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1]);
+    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
     metadata.SliceDists[2] = new float;
-    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2]);
+    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
     metadata.IsUniform[0] = true;
     metadata.IsUniform[1] = true;
     metadata.IsUniform[2] = true;
@@ -191,7 +193,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     outVol->SetVoxelMapPointer(this->vol[0].data());*/
     // inMpdc->Unlock();
 
-return true;
+    return true;
 }
 
 
@@ -200,9 +202,9 @@ return true;
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
 
-    int sx = this->xResSlot.Param<core::param::IntParam>()->Value();
-    int sy = this->yResSlot.Param<core::param::IntParam>()->Value();
-    int sz = this->zResSlot.Param<core::param::IntParam>()->Value();
+    auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
+    auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
+    auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
     vol.resize(omp_get_max_threads());
     int init, j;
@@ -211,15 +213,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         vol[init].resize(sx * sy * sz, 0);
     }
 
-    float minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
-    float minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
-    float minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
-    float rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
-    float rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
-    float rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+    auto const minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
+    auto const minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
+    auto const minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
+    auto const rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
+    auto const rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
+    auto const rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
 
-    // float volGenFac = this->aoGenFacSlot.Param<megamol::core::param::FloatParam>()->Value();
-    float volGenFac = 1.0f;
     //    float voxelVol = (rangeOSx / static_cast<float>(sx))
     //        * (rangeOSy / static_cast<float>(sy))
     //        * (rangeOSz / static_cast<float>(sz));
@@ -240,7 +240,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         const float globSpVol = 4.0f / 3.0f * static_cast<float>(M_PI) * globRad * globRad * globRad;
 
 #pragma omp parallel for
-        for (j = 0; j < parts.GetCount(); j++) {
+        for (j = 0; j < parts.GetCount(); ++j) {
             // const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
             auto ppos = parts[j];
             int x = static_cast<int>(((ppos.vert.GetXf() - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
@@ -263,11 +263,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 const float rad = ppos.vert.GetRf();
                 spVol = 4.0f / 3.0f * static_cast<float>(M_PI) * rad * rad * rad;
             }
-            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol) * volGenFac;
+            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += (spVol / voxelVol);
         }
     }
 
     std::vector<float> localMax(omp_get_max_threads(), 0.0f);
+    std::vector<float> localMin(omp_get_max_threads(), std::numeric_limits<float>::max());
 
     int i = 0;
 #pragma omp parallel for private(i)
@@ -284,9 +285,26 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
             // omp_get_thread_num(), vol[0][j]);
         }
+        if (vol[0][j] < localMin[omp_get_thread_num()]) {
+            localMin[omp_get_thread_num()] = vol[0][j];
+            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
+            // omp_get_thread_num(), vol[0][j]);
+        }
     }
 
     maxDens = *std::max_element(localMax.begin(), localMax.end());
+    minDens = *std::min_element(localMin.begin(), localMin.end());
+
+    if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
+        auto const rcpValRange = 1.0f / (maxDens - minDens);
+#pragma omp parallel for
+        for (int64_t i = 0; i < vol[0].size(); ++i) {
+            vol[0][i] -= minDens;
+            vol[0][i] *= rcpValRange;
+        }
+        maxDens = 1.0f;
+        minDens = 0.0f;
+    }
 
     // Cleanup
     vol.resize(1);
@@ -295,5 +313,4 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 }
 
 
-bool datatools::ParticlesToDensity::dummyCallback(megamol::core::Call &c) { return true; }
-
+bool datatools::ParticlesToDensity::dummyCallback(megamol::core::Call& c) { return true; }
