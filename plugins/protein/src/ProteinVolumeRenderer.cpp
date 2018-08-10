@@ -647,6 +647,10 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
     cr3d->DisableOutputBuffer();
     // start rendering to the FBO for protein rendering
     this->proteinFBO.Enable();
+    
+    float bgColor[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+    glClearColor(0, 0, 0, 0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // render the current mouse position
@@ -666,6 +670,7 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
         glPopMatrix();
     }
     // stop rendering to the FBO for protein rendering
+    glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
     this->proteinFBO.Disable();
     // re-enable the output buffer
     cr3d->EnableOutputBuffer();
@@ -876,7 +881,9 @@ bool ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, Molec
         this->forceUpdateVolumeTexture = false;
     }
 
+    glEnable(GL_BLEND);
     this->proteinFBO.DrawColourTexture();
+    glDisable(GL_BLEND);
     CHECK_FOR_OGL_ERROR();
 
     unsigned int cpCnt;
@@ -932,7 +939,9 @@ bool ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallProt
     this->UpdateVolumeTexture( volume);
     CHECK_FOR_OGL_ERROR();
 
+    glEnable(GL_BLEND);
     this->proteinFBO.DrawColourTexture();
+    glDisable(GL_BLEND);
     CHECK_FOR_OGL_ERROR();
 
     this->RenderVolume( volume);
