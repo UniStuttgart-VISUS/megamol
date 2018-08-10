@@ -5,40 +5,20 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmstd_datatools/AbstractVolumeManipulator.h"
 #include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "mmstd_datatools/AbstractVolumeManipulator.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
 
-
-
-        /** Index of the function retrieving the data. */
-static const unsigned int IDX_GET_DATA;
-
-/** Index of the function retrieving the bounding box. */
-static const unsigned int IDX_GET_EXTENTS;
-
-/** Index of the function retrieving the meta data (dat content). */
-static const unsigned int IDX_GET_METADATA;
-
-/** Index of the function enabling asynchronous loading. */
-static const unsigned int IDX_START_ASYNC;
-
-/** Index of the function disabling asynchronous loading. */
-static const unsigned int IDX_STOP_ASYNC;
-
-/** Index of the function retrieving data that might be unavailable. */
-static const unsigned int IDX_TRY_GET_DATA;
 
 /*
  * datatools::AbstractVolumeManipulator::AbstractVolumeManipulator
  */
 datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outSlotName, const char* inSlotName)
     : megamol::core::Module()
-    ,
-        outDataSlot(outSlotName, "providing access to the manipulated data"),
-        inDataSlot(inSlotName, "accessing the original data") {
+    , outDataSlot(outSlotName, "providing access to the manipulated data")
+    , inDataSlot(inSlotName, "accessing the original data") {
 
     this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
@@ -61,7 +41,6 @@ datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outS
 
     this->inDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
-
 }
 
 
@@ -74,9 +53,7 @@ datatools::AbstractVolumeManipulator::~AbstractVolumeManipulator(void) {}
 /*
  * datatools::AbstractVolumeManipulator::create
  */
-bool datatools::AbstractVolumeManipulator::create(void) {
-    return true;
-}
+bool datatools::AbstractVolumeManipulator::create(void) { return true; }
 
 
 /*
@@ -89,7 +66,7 @@ void datatools::AbstractVolumeManipulator::release(void) {}
  * datatools::AbstractVolumeManipulator::manipulateData
  */
 bool datatools::AbstractVolumeManipulator::manipulateData(
-        megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -100,7 +77,7 @@ bool datatools::AbstractVolumeManipulator::manipulateData(
  * datatools::AbstractVolumeManipulator::manipulateExtent
  */
 bool datatools::AbstractVolumeManipulator::manipulateExtent(
-        megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -111,7 +88,7 @@ bool datatools::AbstractVolumeManipulator::manipulateExtent(
  * datatools::AbstractVolumeManipulator::manipulateMetaData
  */
 bool datatools::AbstractVolumeManipulator::manipulateMetaData(
-        class core::misc::VolumetricDataCall &outData, class core::misc::VolumetricDataCall &inData) {
+    class core::misc::VolumetricDataCall& outData, class core::misc::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -152,7 +129,7 @@ bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
-    
+
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
     if (inVdc == nullptr) return false;
 
@@ -236,7 +213,7 @@ bool datatools::AbstractVolumeManipulator::tryGetDataCallback(megamol::core::Cal
 
     *inVdc = *outVdc; // to get the correct request time
     if (!(*inVdc)(VolumetricDataCall::IDX_TRY_GET_DATA)) return false;
-    
+
     // TODO BUG HAZARD: if data, manipulate.
 
     inVdc->Unlock();
