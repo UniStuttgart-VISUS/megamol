@@ -99,14 +99,11 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    // get time of currently rendered frame
-
-
-
-    // extract bbox
+    // extract bbox and times
     float bbox[6];
-    if (!this->extractBoundingBox(bbox)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
+    float frame_times[2];
+    if (!this->extractBoundingBoxFrameTimes(bbox, frame_times)) {
+        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box and frame times\n");
     }
 
     // extract viewport or get if from opengl context
@@ -134,8 +131,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         width  = tile_width  = viewport[2];
         height = tile_height = viewport[3];
     }
-
-    /// CHECK DIMENSIONS OF VIEWPORT TILE vs. GLOBAL VIEWPORT ...
+///TODO: CHECK DIMENSIONS OF VIEWPORT TILE vs. GLOBAL VIEWPORT ...
 
     // read FBO
     std::vector<char> col_buf_tile(tile_width * tile_height * col_buf_el_size_);
@@ -198,6 +194,9 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             for (int i = 0; i < 6; ++i) {
                 this->fbo_msg_read_->os_bbox[i] = this->fbo_msg_read_->cs_bbox[i] = bbox[i];
             }
+            for (int i = 0; i < 2; ++i) {
+                this->fbo_msg_read_->frame_times[i] = frame_times[i];
+            }
 
             this->color_buf_read_->resize(col_buf.size());
             // std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
@@ -229,7 +228,6 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
@@ -345,7 +343,8 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
     auto vi = dynamic_cast<megamol::core::view::AbstractView*>(ano.get());
     if (vi != nullptr) {
         vi->RegisterHook(this);
-    } else {
+    }
+    else {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to find view \"%s\" for transmission", mvn.c_str());
     }
     this->ModuleGraphLock().UnlockExclusive();
@@ -354,7 +353,7 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
+bool megamol::pbs::FBOTransmitter2::extractBoundingBoxFrameTimes(float bbox[6], float frame_times[2]) {
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     this->ModuleGraphLock().LockExclusive();
@@ -373,11 +372,17 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
                     bbox[3] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
                     bbox[4] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
                     bbox[5] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
+                    frame_times[0] = r->Time();
+                    frame_times[1] = static_cast<float>(r->TimeFramesCount());
                     break;
                 }
             }
         }
-    } else {
+    } 
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+        }
         success = false;
     }
     this->ModuleGraphLock().UnlockExclusive();
@@ -403,7 +408,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     }
     else {
         if (!mcvvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find mpi cluster view name\n");
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW name\n");
         }
         success = false;
     }
@@ -526,7 +531,6 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
 #endif
                 while (!registerComm.Recv(buf)) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");

@@ -9,6 +9,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
@@ -30,6 +31,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
+    , cinematicRenderingSlot_{"cinematic_rendering", "Cinematic rendering mode for stalling rendering until frame for requested time is available."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -38,6 +40,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , depth_buf_el_size_{4}
     , width_{0}
     , height_{0}
+    , last_frame_id_{0}
+    , last_requested_time_{-1.0f}
     , connected_{false}
     , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
     , isRegistered_{false} {
@@ -60,6 +64,9 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     startSlot_ << new megamol::core::param::ButtonParam(vislib::sys::KeyCode::KEY_F6);
     startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
     this->MakeSlotAvailable(&startSlot_);
+
+    cinematicRenderingSlot_ << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&cinematicRenderingSlot_);
 }
 
 
@@ -147,8 +154,6 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
     auto cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
 
-    cr->SetTimeFramesCount(1);
-
     auto& out_bbox = cr->AccessBoundingBoxes();
 
 #if _DEBUG && VERBOSE
@@ -162,10 +167,10 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 #endif
 
     if (!this->fbo_msg_write_->empty()) {
-        float bbox[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
         auto& vec = (*this->fbo_msg_write_);
 
+        float bbox[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
         memcpy(bbox, vec[0].fbo_msg_header.os_bbox, 6 * sizeof(float));
 
         for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
@@ -196,7 +201,17 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
             scaling = 1.0f;
         }
         out_bbox.MakeScaledWorld(scaling);
-    } else {
+
+        float timeFramesCount = 1;
+        timeFramesCount = vec[0].fbo_msg_header.frame_times[1];
+        for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
+            timeFramesCount = fmin(timeFramesCount, vec[bidx].fbo_msg_header.frame_times[1]);
+        }
+        cr->SetTimeFramesCount(timeFramesCount);
+    } 
+    else {
+        cr->SetTimeFramesCount(1);
+
         out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     }
@@ -208,44 +223,59 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     // initThreads();
 
-    // get requested time
+    // requested time
     auto cr3d = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr3d == nullptr) return false;
     auto req_time = cr3d->Time();
-    //vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Requested time: %f\n", req_time);
 
+    // stall rendering until expected frame has arrived
+    bool render = false;
+    while (!render) {
 
-    // if data changed check is size has changed
-    // if no directly upload
-    // it yes resize textures and upload afterward
-    if (data_has_changed_.load()) {
+        // if data changed check is size has changed
+        // if no directly upload
+        // if yes resize textures and upload afterward
+        if (data_has_changed_.load()) {
 #if _DEBUG && VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
 #endif
-        std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
+            std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
 #if _DEBUG && VERBOSE
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
+            auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+            auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
-        auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
-        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
+            if (this->width_ != width || this->height_ != height) {
+                this->width_ = width;
+                this->height_ = height;
+                this->resize(this->color_textures_.size(), this->width_, this->height_);
+            }
 
-        if (this->width_ != width || this->height_ != height) {
-            this->width_ = width;
-            this->height_ = height;
-            this->resize(this->color_textures_.size(), this->width_, this->height_);
+            for (size_t i = 0; i < this->color_textures_.size(); ++i) {
+                auto const& fbo = (*this->fbo_msg_write_)[i];
+                glBindTexture(GL_TEXTURE_2D, this->color_textures_[i]);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, fbo.color_buf.data());
+                glBindTexture(GL_TEXTURE_2D, this->depth_textures_[i]);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo.depth_buf.data());
+            }
+
+            data_has_changed_.store(false);
+
+            auto current_frame_id = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_id;
+            //auto current_time     = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[0];
+            if (req_time != this->last_requested_time_) {
+                this->last_frame_id_ = current_frame_id + 1;
+            }
+            render = (current_frame_id == this->last_frame_id_);
+
         }
 
-        for (size_t i = 0; i < this->color_textures_.size(); ++i) {
-            auto const& fbo = (*this->fbo_msg_write_)[i];
-            glBindTexture(GL_TEXTURE_2D, this->color_textures_[i]);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, fbo.color_buf.data());
-            glBindTexture(GL_TEXTURE_2D, this->depth_textures_[i]);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo.depth_buf.data());
+        // Don't stall rendering if cinematic rendering mode is off
+        if (!this->cinematicRenderingSlot_.Param<megamol::core::param::BoolParam>()->Value()) {
+            render = true;
         }
-
-        data_has_changed_.store(false);
     }
     
     // constantly render current texture set
@@ -407,7 +437,6 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
                     // status = close.wait_for(std::chrono::milliseconds(1));
                     // if (status == std::future_status::ready) break;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
@@ -655,7 +684,6 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed on 'registerComm', trying again\n");

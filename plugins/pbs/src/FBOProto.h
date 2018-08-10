@@ -86,6 +86,8 @@ struct fbo_msg_header {
     float os_bbox[6];
     // cbbox
     float cs_bbox[6];
+    // frame_times
+    float frame_times[2]; /// requested time, time frames count
     // viewport
     int screen_area[4];
     // updated viewport

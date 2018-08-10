@@ -117,6 +117,8 @@ private:
 
     megamol::core::param::ParamSlot restartSlot_;
 
+    megamol::core::param::ParamSlot cinematicRenderingSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;
@@ -170,6 +172,10 @@ private:
     GLsizei width_;
 
     GLsizei height_;
+
+    megamol::pbs::id_t last_frame_id_;
+
+    float last_requested_time_;
 
     std::vector<GLuint> color_textures_;
 
