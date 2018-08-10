@@ -288,7 +288,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                             z_diff = std::fabsf(z_diff - z_base);
                             float dis = std::sqrtf(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                             if (dis == 0.0f) dis = 1.0f;
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] = 1.0f / dis;
+                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
                         }
                     }
                 }
