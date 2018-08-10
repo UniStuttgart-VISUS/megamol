@@ -208,10 +208,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
     vol.resize(omp_get_max_threads());
+    std::vector<std::vector<unsigned int>> weights(omp_get_max_threads());
     int init, j;
 #pragma omp parallel for
     for (init = 0; init < omp_get_max_threads(); init++) {
         vol[init].resize(sx * sy * sz, 0);
+        weights[init].resize(sx * sy * sz, 0);
     }
 
     auto const minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
@@ -277,18 +279,19 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
                         if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
-                            float x_diff =
-                                static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + 0.5f * cellSizex;
+                            float x_diff = static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx +
+                                           0.5f * cellSizex;
                             x_diff = std::fabs(x_diff - x_base);
-                            float y_diff =
-                                static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + 0.5f * cellSizey;
+                            float y_diff = static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy +
+                                           0.5f * cellSizey;
                             y_diff = std::fabs(y_diff - y_base);
-                            float z_diff =
-                                static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + 0.5f * cellSizez;
+                            float z_diff = static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz +
+                                           0.5f * cellSizez;
                             z_diff = std::fabs(z_diff - z_base);
                             float dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                             if (dis == 0.0f) dis = 1.0f;
                             vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
+                            ++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
                         }
                     }
                 }
@@ -296,7 +299,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
 
 #if 0
-#pragma omp parallel for
+#    pragma omp parallel for
         for (j = 0; j < parts.GetCount(); ++j) {
             // const float* ppos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride * j);
             auto ppos = parts[j];
@@ -376,11 +379,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     for (j = 0; j < sx * sy * sz; ++j) {
         for (i = 1; i < omp_get_max_threads(); ++i) {
             vol[0][j] += vol[i][j];
+            weights[0][j] += weights[i][j];
             /*if (vol[i][j] > 0.0f) {
                 vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in
             vol[%d][%d]\n", omp_get_thread_num(), i, j);
             }*/
         }
+        vol[0][j] /= static_cast<float>(weights[0][j]);
         if (vol[0][j] > localMax[omp_get_thread_num()]) {
             localMax[omp_get_thread_num()] = vol[0][j];
             // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
