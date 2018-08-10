@@ -72,6 +72,14 @@ if(BUILD_CORE)
     INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
   )
 
+  set(GLM_VER "0_9_9_0")
+  string(REPLACE "_" "." GLM_TAG ${GLM_VER})
+  ExternalProject_Add(extlibglm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG ${GLM_TAG}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DGLM_TEST_ENABLE=OFF
+  )
+  message(STATUS "GLM Git Tag: " ${GLM_TAG})
   
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
@@ -149,7 +157,7 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
-  add_dependencies(core vislib glad extlibzmq extlibcppzmq)
+  add_dependencies(core vislib glad extlibzmq extlibcppzmq extlibglm)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
