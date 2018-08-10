@@ -84,6 +84,7 @@ private:
     core::param::ParamSlot zResSlot;
 
     core::param::ParamSlot normalizeSlot;
+    core::param::ParamSlot filterSizeSlot;
 
     std::vector<std::vector<float>> vol;
 
