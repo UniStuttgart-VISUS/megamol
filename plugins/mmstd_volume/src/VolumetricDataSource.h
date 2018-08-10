@@ -216,7 +216,7 @@ private:
     typedef struct BufferSlot_t {
         vislib::RawStorage Buffer;
         unsigned int FrameID;
-        std::atomic_int Status;
+        std::atomic_int status;
     } BufferSlot;
 
     /**

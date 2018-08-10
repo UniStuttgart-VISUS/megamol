@@ -492,14 +492,14 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
             for (size_t i = 0; i < this->buffers.Count(); ++i) {
                 auto b = this->buffers[i % this->buffers.Count()];
                 if (b != buffer) {
-                    if (b->Status.load() == BUFFER_STATUS_UNUSED) {
+                    if (b->status.load() == BUFFER_STATUS_UNUSED) {
                         unusedBuffers.Add(b);
                     }
-                    if (b->Status.load() == BUFFER_STATUS_READY) {
+                    if (b->status.load() == BUFFER_STATUS_READY) {
                         oldBuffers.Add(b);
                     }
                     expected = BUFFER_STATUS_PENDING;
-                    if (b->Status.compare_exchange_strong(expected, BUFFER_STATUS_UNUSED)) {
+                    if (b->status.compare_exchange_strong(expected, BUFFER_STATUS_UNUSED)) {
                         unusedBuffers.Add(b);
                     }
                 } /* end if (b != buffer) */
@@ -526,10 +526,10 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                  */
                 if (buffer->FrameID != c.FrameID()) {
                     buffer->FrameID = c.FrameID();
-                    buffer->Status.store(BUFFER_STATUS_UNUSED);
+                    buffer->status.store(BUFFER_STATUS_UNUSED);
                 }
                 expected = BUFFER_STATUS_UNUSED;
-                buffer->Status.compare_exchange_strong(expected, BUFFER_STATUS_PENDING);
+                buffer->status.compare_exchange_strong(expected, BUFFER_STATUS_PENDING);
 
                 /* Ensure that loading the requested frame starts now. */
                 this->evtStartLoading.Set();
@@ -553,7 +553,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                                 frameID);
 #endif /* defined(DEBUG) || defined(_DEBUG) */
                             bs->FrameID = frameID;
-                            bs->Status.store(BUFFER_STATUS_PENDING);
+                            bs->status.store(BUFFER_STATUS_PENDING);
                             ASSERT(this->bufferForFrameIDUnsafe(frameID) != -1);
                         } /* end if (bs != nullptr) */
                     }     /* end if (this->bufferForFrameIDUnsafe(frameID) == -1) */
@@ -565,7 +565,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                 /* Wait for the requested data if not yet loaded. */
 #if 0
                 expected = BUFFER_STATUS_READY;
-                while (!buffer->Status.compare_exchange_strong(expected,
+                while (!buffer->status.compare_exchange_strong(expected,
                         BUFFER_STATUS_USED)) {
                     expected = BUFFER_STATUS_READY;
                     //vislib::sys::Thread::Reschedule();
@@ -573,9 +573,9 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                 }
 #else
                 int expecteds[] = {BUFFER_STATUS_READY, BUFFER_STATUS_USED};
-                this->spinExchange(buffer->Status, BUFFER_STATUS_USED, expecteds, STATIC_ARRAY_COUNT(expecteds), false);
+                this->spinExchange(buffer->status, BUFFER_STATUS_USED, expecteds, STATIC_ARRAY_COUNT(expecteds), false);
 #endif
-                ASSERT(buffer->Status == BUFFER_STATUS_USED);
+                ASSERT(buffer->status == BUFFER_STATUS_USED);
 
                 /* Move the stuff to the call and set the unlocker. */
                 c.SetData(buffer->Buffer.At(0), 1);
@@ -614,7 +614,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                  */
                 dst.SetCount(vislib::math::Min(this->assertBuffersUnsafe(cnt, true), cnt));
 
-                if ((bufferIdx >= 0) && (this->buffers[bufferIdx]->Status == BUFFER_STATUS_READY)) {
+                if ((bufferIdx >= 0) && (this->buffers[bufferIdx]->status == BUFFER_STATUS_READY)) {
                     loadStart = 1;
                     dst[0] = this->buffers[bufferIdx]->Buffer.At(0);
                     retval = true;
@@ -627,12 +627,12 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                     size_t idx = i % dst.Count();
                     this->buffers[idx]->FrameID = c.FrameID() + (unsigned int)i;
                     this->buffers[idx]->Buffer.AssertSize(frameSize);
-                    this->buffers[idx]->Status.store(BUFFER_STATUS_READY);
+                    this->buffers[idx]->status.store(BUFFER_STATUS_READY);
                     dst[i] = this->buffers[idx]->Buffer.At(0);
                 }
 
                 ASSERT(this->buffers[bufferIdx]->Buffer.At(0) == dst[0]);
-                this->buffers[bufferIdx]->Status.store(BUFFER_STATUS_USED);
+                this->buffers[bufferIdx]->status.store(BUFFER_STATUS_USED);
                 c.SetData(dst[0], 1);
                 VolumetricDataSource::setUnlocker(c, this->buffers[bufferIdx]);
 
@@ -829,7 +829,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onTryGetData(core::Call& 
         if (bufferIdx >= 0) {
             auto buffer = this->buffers[bufferIdx];
             int expected = BUFFER_STATUS_READY;
-            if (buffer->Status.compare_exchange_strong(expected, BUFFER_STATUS_USED)) {
+            if (buffer->status.compare_exchange_strong(expected, BUFFER_STATUS_USED)) {
                 data = buffer->Buffer.At(0);
                 cnt = 1;
             }
@@ -853,7 +853,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onTryGetData(core::Call& 
                 ASSERT(bufferIdx >= 0);
                 ::memcpy(c.GetData(), data, this->calcFrameSize());
                 c.SetData(c.GetData(), 1);
-                this->buffers[bufferIdx]->Status.store(BUFFER_STATUS_READY);
+                this->buffers[bufferIdx]->status.store(BUFFER_STATUS_READY);
             }
 
         } else {
@@ -1114,8 +1114,8 @@ megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlo
  */
 void megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock(void) {
     for (size_t i = 0; i < this->buffers.Count(); ++i) {
-        ASSERT(this->buffers[i]->Status == BUFFER_STATUS_USED);
-        this->buffers[i]->Status.store(BUFFER_STATUS_READY);
+        ASSERT(this->buffers[i]->status == BUFFER_STATUS_USED);
+        this->buffers[i]->status.store(BUFFER_STATUS_READY);
     }
     this->buffers.Clear();
 }
@@ -1145,7 +1145,7 @@ DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData
             for (size_t i = 0; (i < that->buffers.Count()) && (that->loaderStatus.load() == LOADER_STATUS_RUNNING);
                  ++i) {
                 expected = BUFFER_STATUS_PENDING;
-                if (that->buffers[i]->Status.compare_exchange_strong(expected, BUFFER_STATUS_LOADING)) {
+                if (that->buffers[i]->status.compare_exchange_strong(expected, BUFFER_STATUS_LOADING)) {
                     // We assume that the loader thread is not running while the
                     // data set or the number of buffers are changed. If this is
                     // the case, the following code might crash!
@@ -1158,12 +1158,12 @@ DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData
                         that->buffers[i]->FrameID, ::datRaw_getDataFormatName(format), dst);
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
                     if (::datRaw_loadStep(that->fileInfo, static_cast<int>(that->buffers[i]->FrameID), &dst, format)) {
-                        that->buffers[i]->Status.store(BUFFER_STATUS_READY);
+                        that->buffers[i]->status.store(BUFFER_STATUS_READY);
                     } else {
                         Log::DefaultLog.WriteError(_T("Loading frame %u ")
                                                    _T("failed."),
                             that->buffers[i]->FrameID);
-                        that->buffers[i]->Status.store(BUFFER_STATUS_UNUSED);
+                        that->buffers[i]->status.store(BUFFER_STATUS_UNUSED);
                     }
                     ::datRaw_close(that->fileInfo);
 
@@ -1172,7 +1172,7 @@ DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData
                     if (asyncSleep > 0) {
                         vislib::sys::Thread::Sleep(asyncSleep);
                     }
-                } /* end if (that->buffers[i]->Status. ... */
+                } /* end if (that->buffers[i]->status. ... */
             }     /* end for (size_t i = 0; (i < that->buffers.Count()) ... */
 
             /*
@@ -1282,16 +1282,16 @@ size_t megamol::stdplugin::volume::VolumetricDataSource::assertBuffersUnsafe(siz
             for (size_t i = cntBuffers; i < cntFrames; ++i) {
                 auto bufferSlot = new BufferSlot();
                 bufferSlot->Buffer.AssertSize(frameSize);
-                bufferSlot->Status = BUFFER_STATUS_UNUSED;
+                bufferSlot->status = BUFFER_STATUS_UNUSED;
                 this->buffers.Add(bufferSlot);
             }
 
         } else if ((cntBuffers > cntFrames) && !doNotFree) {
             int deletable[] = {BUFFER_STATUS_READY, BUFFER_STATUS_UNUSED, BUFFER_STATUS_PENDING};
             for (size_t i = 0; (i < this->buffers.Count()) && (this->buffers.Count() > cntFrames); ++i) {
-                if (VolumetricDataSource::spinExchange(this->buffers[i]->Status, BUFFER_STATUS_DELETING, deletable,
+                if (VolumetricDataSource::spinExchange(this->buffers[i]->status, BUFFER_STATUS_DELETING, deletable,
                         STATIC_ARRAY_COUNT(deletable), true)) {
-                    ASSERT(this->buffers[i]->Status == BUFFER_STATUS_DELETING);
+                    ASSERT(this->buffers[i]->status == BUFFER_STATUS_DELETING);
                     this->buffers.RemoveAt(i--);
                 }
             }
