@@ -30,10 +30,10 @@
 
 
 /*
- * thecam::math::quaternion<V, T>::quaternion
+ * megamol::core::thecam::math::quaternion<V, T>::quaternion
  */
 template<class V, class T>
-thecam::math::quaternion<V, T>::quaternion(std::initializer_list<value_type> il) {
+megamol::core::thecam::math::quaternion<V, T>::quaternion(std::initializer_list<value_type> il) {
     auto it = il.begin();
     for (size_type i = 0; i < this->size(); ++i) {
         if (it != il.end()) {
@@ -46,10 +46,10 @@ thecam::math::quaternion<V, T>::quaternion(std::initializer_list<value_type> il)
 
 
 /*
- * thecam::math::detail::quaternion<V, T>::operator =
+ * megamol::core::thecam::math::detail::quaternion<V, T>::operator =
  */
 template<class V, class T>
-thecam::math::quaternion<V, T>& thecam::math::quaternion<V, T>::operator =(
+megamol::core::thecam::math::quaternion<V, T>& megamol::core::thecam::math::quaternion<V, T>::operator =(
         const quaternion& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
@@ -60,10 +60,10 @@ thecam::math::quaternion<V, T>& thecam::math::quaternion<V, T>::operator =(
 
 
 /*
- * thecam::math::invert
+ * megamol::core::thecam::math::invert
  */
 template<class V, class T>
-thecam::math::quaternion<V, T> thecam::math::invert(
+megamol::core::thecam::math::quaternion<V, T> megamol::core::thecam::math::invert(
         const quaternion<V, T>& quat) {
     typedef typename T::value_type value_type;
 
@@ -91,10 +91,10 @@ thecam::math::quaternion<V, T> thecam::math::invert(
 
 
 /*
- * thecam::math::normalise
+ * megamol::core::thecam::math::normalise
  */
 template<class V, class T>
-thecam::math::quaternion<V, T> thecam::math::normalise(
+megamol::core::thecam::math::quaternion<V, T> megamol::core::thecam::math::normalise(
         const quaternion<V, T>& quat) {
     typedef typename T::value_type value_type;
 
@@ -122,10 +122,10 @@ thecam::math::quaternion<V, T> thecam::math::normalise(
 
 
 /*
- * thecam::math::rotate
+ * megamol::core::thecam::math::rotate
  */
 template<class V, class TQ, class TV>
-inline thecam::math::vector<V, 3, TV> thecam::math::rotate(
+inline megamol::core::thecam::math::vector<V, 3, TV> megamol::core::thecam::math::rotate(
         const vector<V, 3, TV>& vec, const quaternion<V, TQ>& quat) {
     typedef typename TQ::value_type value_type;
     const auto zero = static_cast<value_type>(0);
@@ -137,10 +137,10 @@ inline thecam::math::vector<V, 3, TV> thecam::math::rotate(
 
 
 /*
- * thecam::math::set_from_angle_axis
+ * megamol::core::thecam::math::set_from_angle_axis
  */
 template<class Q, class V, class A>
-thecam::math::quaternion<Q>& thecam::math::set_from_angle_axis(
+megamol::core::thecam::math::quaternion<Q>& megamol::core::thecam::math::set_from_angle_axis(
         quaternion<Q>& quat, const A angle, const vector<V, 3>& axis) {
     typedef typename quaternion<Q>::value_type value_type;
     value_type len = length(axis);
@@ -162,10 +162,10 @@ thecam::math::quaternion<Q>& thecam::math::set_from_angle_axis(
 
 
 /*
- * thecam::math::set_from_vectors
+ * megamol::core::thecam::math::set_from_vectors
  */
 template<class Q, class V>
-thecam::math::quaternion<Q>& thecam::math::set_from_vectors(quaternion<Q>& quat,
+megamol::core::thecam::math::quaternion<Q>& megamol::core::thecam::math::set_from_vectors(quaternion<Q>& quat,
         const vector<V, 3>& u, const vector<V, 3>& v) {
     const auto ONE = static_cast<V>(1);
     const auto TWO = static_cast<V>(2);
@@ -177,10 +177,10 @@ thecam::math::quaternion<Q>& thecam::math::set_from_vectors(quaternion<Q>& quat,
 
 
 /*
- * thecam::math::set_from_vectors
+ * megamol::core::thecam::math::set_from_vectors
  */
 template<class Q, class V>
-thecam::math::quaternion<Q>& thecam::math::set_from_vectors(quaternion<Q>& quat,
+megamol::core::thecam::math::quaternion<Q>& megamol::core::thecam::math::set_from_vectors(quaternion<Q>& quat,
         const vector<V, 4>& u, const vector<V, 4>& v) {
     auto uu = vector<V, 3>(u.x(), u.y(), u.z());
     auto vv = vector<V, 3>(v.x(), v.y(), v.z());
@@ -190,9 +190,9 @@ thecam::math::quaternion<Q>& thecam::math::set_from_vectors(quaternion<Q>& quat,
 
 #ifdef WITH_THE_XMATH
 /*
- * thecam::math::set_from_vectors
+ * megamol::core::thecam::math::set_from_vectors
  */
-inline thecam::math::quaternion<DirectX::XMFLOAT4>& thecam::math::set_from_vectors(
+inline megamol::core::thecam::math::quaternion<DirectX::XMFLOAT4>& megamol::core::thecam::math::set_from_vectors(
         quaternion<DirectX::XMFLOAT4>& quat,
         const vector<DirectX::XMFLOAT4>& u,
         const vector<DirectX::XMFLOAT4>& v) {
@@ -216,12 +216,12 @@ inline thecam::math::quaternion<DirectX::XMFLOAT4>& thecam::math::set_from_vecto
 
 
 /*
- * thecam::math::operator *
+ * megamol::core::thecam::math::operator *
  */
 template<class V, class T>
-thecam::math::quaternion<V, T> thecam::math::operator *(const quaternion<V, T>& lhs,
+megamol::core::thecam::math::quaternion<V, T> megamol::core::thecam::math::operator *(const quaternion<V, T>& lhs,
         const quaternion<V, T>& rhs) {
-    thecam::math::quaternion<V, T> retval(
+    megamol::core::thecam::math::quaternion<V, T> retval(
         lhs.w() * rhs.x() + lhs.x() * rhs.w()
         + lhs.y() * rhs.z() - lhs.z() * rhs.y(),
 

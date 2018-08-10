@@ -105,26 +105,26 @@ void Operator::on_mouse_up(const int button) throw() {
 
 
 /*
- * thecam::arcball_manipulator<T>::arcball_manipulator
+ * megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator
  */
 template<class T>
-thecam::arcball_manipulator<T>::arcball_manipulator(
+megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator(
     const point_type& rotCentre, const world_type radius)
     : ballRadius(radius), rotCentre(rotCentre) { }
 
 
 /*
- * thecam::arcball_manipulator<T>::~arcball_manipulator
+ * megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator
  */
 template<class T>
-thecam::arcball_manipulator<T>::~arcball_manipulator(void) { }
+megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) { }
 
 
 /*
- * thecam::arcball_manipulator<T>::on_drag
+ * megamol::core::thecam::arcball_manipulator<T>::on_drag
  */
 template<class T>
-void thecam::arcball_manipulator<T>::on_drag(
+void megamol::core::thecam::arcball_manipulator<T>::on_drag(
         const screen_type x, const screen_type y) {
     if (this->manipulating() && this->enabled()) {
         auto cam = this->camera();
@@ -132,7 +132,7 @@ void thecam::arcball_manipulator<T>::on_drag(
         this->currentVector = this->mapToSphere(x, y);
 
         // Compute axis of rotation.
-        auto axis = thecam::math::cross(this->startVector, this->currentVector);
+        auto axis = megamol::core::thecam::math::cross(this->startVector, this->currentVector);
 
         if (!axis.empty()) {
             // Compute angle and rotation quaternion.
@@ -156,10 +156,10 @@ void thecam::arcball_manipulator<T>::on_drag(
 
 
 /*
- * thecam::arcball_manipulator<T>::on_drag_start
+ * megamol::core::thecam::arcball_manipulator<T>::on_drag_start
  */
 template<class T>
-void thecam::arcball_manipulator<T>::on_drag_start(
+void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(
         const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();
@@ -171,11 +171,11 @@ void thecam::arcball_manipulator<T>::on_drag_start(
 
 
 /*
- * thecam::arcball_manipulator<T>::mapToSphere
+ * megamol::core::thecam::arcball_manipulator<T>::mapToSphere
  */
 template<class T>
-typename thecam::arcball_manipulator<T>::vector_type
-thecam::arcball_manipulator<T>::mapToSphere(
+typename megamol::core::thecam::arcball_manipulator<T>::vector_type
+megamol::core::thecam::arcball_manipulator<T>::mapToSphere(
         const screen_type sx, const screen_type sy) const {
     THE_ASSERT(this->camera() != nullptr);
     auto wndSize = this->camera()->resolution_gate();

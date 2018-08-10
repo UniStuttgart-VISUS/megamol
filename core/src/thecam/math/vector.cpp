@@ -33,9 +33,9 @@
 
 #ifdef WITH_THE_XMATH
 /*
- * thecam::math::orthonormalise
+ * megamol::core::thecam::math::orthonormalise
  */
-void thecam::math::orthonormalise(vector<DirectX::XMFLOAT4>& vec1,
+void megamol::core::thecam::math::orthonormalise(vector<DirectX::XMFLOAT4>& vec1,
         vector<DirectX::XMFLOAT4>& vec2) {
     auto v1 = load_xmvector(vec1);
     auto v2 = load_xmvector(vec2);

@@ -68,6 +68,8 @@
 #include "mmcore/thecam/math/vectorial_traits_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -218,7 +220,7 @@ namespace math {
     template<class V,
         size_t D = detail::implicit_dimension<V>::value,
         class T = vector_traits<V, D>>
-    class vector : public thecam::utility::equatable<vector<V, D, T>>,
+    class vector : public megamol::core::thecam::utility::equatable<vector<V, D, T>>,
             public detail::vector_accessors<vector<V, D, T>, T, D> {
 
     public:
@@ -293,7 +295,7 @@ namespace math {
          * Initialises an empty vector, all components zero.
          */
         inline vector(void) {
-            thecam::math::set_empty(*this);
+            megamol::core::thecam::math::set_empty(*this);
         }
 
         /**
@@ -402,7 +404,7 @@ namespace math {
          * Answer whether the vector is a null vector.
          *
          * @param epsilon An epsilon value used for comparison. This defaults to
-         *                thecam::math::epsilon<value_type>::value.
+         *                megamol::core::thecam::math::epsilon<value_type>::value.
          *
          * @return true if the vector is a null vector, false otherwise.
          */
@@ -699,7 +701,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT2> cross(
             const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVector2Cross(l, r);
@@ -721,7 +723,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT3> cross(
             const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVector3Cross(l, r);
@@ -746,7 +748,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT4> cross(
             const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVector3Cross(l, r);
@@ -944,7 +946,7 @@ namespace math {
      */
     THE_FORCE_INLINE vector<DirectX::XMFLOAT2> normalise(
             const vector<DirectX::XMFLOAT2>& vec) {
-        std::decay<decltype(vec)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector2Normalize(l);
         return store_xmvector(retval, v);
@@ -960,7 +962,7 @@ namespace math {
      */
     THE_FORCE_INLINE vector<DirectX::XMFLOAT3> normalise(
             const vector<DirectX::XMFLOAT3>& vec) {
-        std::decay<decltype(vec)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector3Normalize(l);
         return store_xmvector(retval, v);
@@ -976,7 +978,7 @@ namespace math {
      */
     THE_FORCE_INLINE vector<DirectX::XMFLOAT4> normalise(
             const vector<DirectX::XMFLOAT4>& vec) {
-        std::decay<decltype(vec)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector4Normalize(l);
         return store_xmvector(retval, v);
@@ -1065,7 +1067,7 @@ namespace math {
      */
     inline vector<DirectX::XMFLOAT4> perspective_divide(
             const vector<DirectX::XMFLOAT4>& vec) {
-        std::decay<decltype(vec)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto v = load_xmvector(vec);
         auto w = DirectX::XMVectorSplatW(v);
         v = DirectX::XMVectorDivide(v, w);
@@ -1279,7 +1281,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
             const vector<DirectX::XMFLOAT2>::value_type lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
-        std::decay<decltype(rhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVectorScale(r, lhs);
         return store_xmvector(retval, v);
@@ -1297,7 +1299,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
             const vector<DirectX::XMFLOAT3>::value_type lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
-        std::decay<decltype(rhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVectorScale(r, lhs);
         return store_xmvector(retval, v);
@@ -1315,7 +1317,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
             const vector<DirectX::XMFLOAT4>::value_type lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
-        std::decay<decltype(rhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVectorScale(r, lhs);
         return store_xmvector(retval, v);
@@ -1356,7 +1358,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
             const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>::value_type rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto v = DirectX::XMVectorScale(l, rhs);
         return store_xmvector(retval, v);
@@ -1374,7 +1376,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
             const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>::value_type rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto v = DirectX::XMVectorScale(l, rhs);
         return store_xmvector(retval, v);
@@ -1392,7 +1394,7 @@ namespace math {
     THE_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
             const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>::value_type rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto v = DirectX::XMVectorScale(l, rhs);
         return store_xmvector(retval, v);
@@ -1686,7 +1688,9 @@ namespace math {
     }
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/math/vector.inl"
 

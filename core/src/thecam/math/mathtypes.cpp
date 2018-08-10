@@ -41,24 +41,24 @@
 
 
 /*
- * thecam::math::euler_e<double>::value
+ * megamol::core::thecam::math::euler_e<double>::value
  */
-const double thecam::math::euler_e<double>::value(M_E);
+const double megamol::core::thecam::math::euler_e<double>::value(M_E);
 
 
 /*
- * thecam::math::epsilon<float>::value
+ * megamol::core::thecam::math::epsilon<float>::value
  */
-const float thecam::math::epsilon<float>::value(FLT_EPSILON);
+const float megamol::core::thecam::math::epsilon<float>::value(FLT_EPSILON);
 
 
 /*
- * thecam::math::epsilon<double>::value
+ * megamol::core::thecam::math::epsilon<double>::value
  */
-const double thecam::math::epsilon<double>::value(DBL_EPSILON);
+const double megamol::core::thecam::math::epsilon<double>::value(DBL_EPSILON);
 
 
 /*
- * thecam::math::pi<double>::value
+ * megamol::core::thecam::math::pi<double>::value
  */
-const double thecam::math::pi<double>::value(M_PI);
+const double megamol::core::thecam::math::pi<double>::value(M_PI);

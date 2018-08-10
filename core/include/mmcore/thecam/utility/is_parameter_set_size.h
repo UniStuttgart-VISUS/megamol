@@ -40,7 +40,9 @@
 #include "mmcore/thecam/utility/config.h"
 
 
-namespace the {
+namespace megamol {
+namespace core {
+namespace thecam {
 
     /**
      * This helper class works around VS 2013 not handling expression SFINAE
@@ -56,7 +58,9 @@ namespace the {
         static const bool value = (sizeof...(P) == S);
     };
 
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -39,7 +39,8 @@
 
 #include "mmcore/thecam/utility/config.h"
 
-
+namespace megamol {
+namespace core {
 namespace thecam {
 
     template<class T> class view_frustum {
@@ -47,6 +48,8 @@ namespace thecam {
     };
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

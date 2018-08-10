@@ -49,6 +49,8 @@
 #include "mmcore/thecam/math/vector.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -157,44 +159,46 @@ namespace thecam {
 #endif /* WITH_THE_XMATH */
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 /*
- * thecam::camera_maths<W, S, F, H>::up_vector
+ * megamol::core::thecam::camera_maths<W, S, F, H>::up_vector
  */
-template<class W, class S, class F, thecam::handedness H>
-const typename thecam::camera_maths<W, S, F, H>::vector_type
-thecam::camera_maths<W, S, F, H>::up_vector(static_cast<F>(0),
+template<class W, class S, class F, megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::camera_maths<W, S, F, H>::vector_type
+megamol::core::thecam::camera_maths<W, S, F, H>::up_vector(static_cast<F>(0),
     static_cast<F>(1), static_cast<F>(0), static_cast<F>(0));
 
 
 /*
- * thecam::camera_maths<W, S, F, H>::view_vector
+ * megamol::core::thecam::camera_maths<W, S, F, H>::view_vector
  */
-template<class W, class S, class F, thecam::handedness H>
-const typename thecam::camera_maths<W, S, F, H>::vector_type
-thecam::camera_maths<W, S, F, H>::view_vector(static_cast<F>(0),
+template<class W, class S, class F, megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::camera_maths<W, S, F, H>::vector_type
+megamol::core::thecam::camera_maths<W, S, F, H>::view_vector(static_cast<F>(0),
     static_cast<F>(0),
-    static_cast<F>(H == thecam::handedness::right_handed ? -1 : 1),
+    static_cast<F>(H == megamol::core::thecam::handedness::right_handed ? -1 : 1),
     static_cast<F>(0));
 
 
 #ifdef WITH_THE_XMATH
 /*
- * thecam::xmath_camera_maths<H>::up_vector
+ * megamol::core::thecam::xmath_camera_maths<H>::up_vector
  */
-template<thecam::handedness H>
-const typename thecam::xmath_camera_maths<H>::vector_type
-thecam::xmath_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
+template<megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::xmath_camera_maths<H>::vector_type
+megamol::core::thecam::xmath_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
 
 
 /*
- * thecam::xmath_camera_maths<H>::view_vector
+ * megamol::core::thecam::xmath_camera_maths<H>::view_vector
  */
-template<thecam::handedness H>
-const typename thecam::xmath_camera_maths<H>::vector_type
-thecam::xmath_camera_maths<H>::view_vector(0.0f, 0.0f,
-    (H == thecam::handedness::right_handed) ? -1.0f : 1.0f,
+template<megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::xmath_camera_maths<H>::vector_type
+megamol::core::thecam::xmath_camera_maths<H>::view_vector(0.0f, 0.0f,
+    (H == megamol::core::thecam::handedness::right_handed) ? -1.0f : 1.0f,
     0.0f);
 #endif /* WITH_THE_XMATH */
 

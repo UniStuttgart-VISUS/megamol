@@ -48,6 +48,8 @@
 #include "mmcore/thecam/property_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -105,7 +107,7 @@ namespace thecam {
          * it requires the property being synchronised to another one before
          * making any access to the property's value.
          */
-        inline processed_synchronisable_property(const thecam::utility::do_not_initialise_t)
+        inline processed_synchronisable_property(const megamol::core::thecam::utility::do_not_initialise_t)
             : value(nullptr) { }
 
         /**
@@ -174,6 +176,8 @@ namespace thecam {
     };
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 #if defined(_WIN32) && defined(_MANAGED)

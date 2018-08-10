@@ -46,6 +46,8 @@
 #include "mmcore/thecam/utility/types.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace utility{
 
@@ -145,6 +147,8 @@ namespace utility{
 
 } /* end namespace utility */
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

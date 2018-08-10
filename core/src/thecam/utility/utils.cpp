@@ -35,11 +35,28 @@
 #include "mmcore/thecam/utility/utils.h"
 #include "mmcore/thecam/utility/assert.h"
 
+// TEST-includes
+#include "mmcore/thecam/arcball_manipulator.h"
+#include "mmcore/thecam/camera.h"
+#include "mmcore/thecam/camera_maths.h"
+#include "mmcore/thecam/camera_snapshot.h"
+#include "mmcore/thecam/functions.h"
+#include "mmcore/thecam/head_tracking_manipulator.h"
+#include "mmcore/thecam/manipulator_base.h"
+#include "mmcore/thecam/minimal_camera_state.h"
+#include "mmcore/thecam/processed_synchronisable_property.h"
+#include "mmcore/thecam/property.h"
+#include "mmcore/thecam/property_base.h"
+#include "mmcore/thecam/synchronisable_property.h"
+#include "mmcore/thecam/translate_manipulator.h"
+#include "mmcore/thecam/types.h"
+#include "mmcore/thecam/view_frustum.h"
+
 
 /*
- * thecam::utility::uint_rle_encode
+ * megamol::core::thecam::utility::uint_rle_encode
  */
-bool thecam::utility::uint_rle_encode(unsigned char *dst, unsigned int &len, uint64_t src) {
+bool megamol::core::thecam::utility::uint_rle_encode(unsigned char *dst, unsigned int &len, uint64_t src) {
     unsigned int pos = 0;
     if (src == 0) {
         if (len == 0) return false; // dst insufficient
@@ -56,9 +73,9 @@ bool thecam::utility::uint_rle_encode(unsigned char *dst, unsigned int &len, uin
 
 
 /*
- * thecam::utility::uint_rle_decode
+ * megamol::core::thecam::utility::uint_rle_decode
  */
-bool thecam::utility::uint_rle_decode(uint64_t &dst, unsigned char *src, unsigned int &len) {
+bool megamol::core::thecam::utility::uint_rle_decode(uint64_t &dst, unsigned char *src, unsigned int &len) {
     unsigned int pos = 0;
     uint64_t mult = 0;
     dst = 0;

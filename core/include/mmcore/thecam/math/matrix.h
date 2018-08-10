@@ -51,9 +51,10 @@
 #include "mmcore/thecam/math/vector.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
-
 namespace detail {
 
     /**
@@ -368,7 +369,7 @@ namespace detail {
         size_t C = detail::implicit_matrix_properties<V>::columns,
         matrix_layout L = detail::implicit_matrix_properties<V>::layout,
         class T = matrix_traits<V, R, C, L>>
-    class matrix : public thecam::utility::equatable<matrix<V, R, C, L, T>> {
+    class matrix : public megamol::core::thecam::utility::equatable<matrix<V, R, C, L, T>> {
 
     public:
 
@@ -421,8 +422,8 @@ namespace detail {
          * @return An identity quaternion.
          */
         static inline matrix make_identity(void) {
-            matrix retval(thecam::utility::do_not_initialise);
-            thecam::math::set_identity(retval);
+            matrix retval(megamol::core::thecam::utility::do_not_initialise);
+            megamol::core::thecam::math::set_identity(retval);
             return retval;
         }
 
@@ -482,7 +483,7 @@ namespace detail {
          * Initialise all elements with zero.
          */
         inline matrix(void) {
-            thecam::math::set_empty(*this);
+            megamol::core::thecam::math::set_empty(*this);
         }
 
         /**
@@ -600,7 +601,7 @@ namespace detail {
          * @return true if the matrix is an identity matrix, false otherwise.
          */
         bool identity(const value_type epsilon
-            = thecam::math::epsilon<value_type>::value) const;
+            = megamol::core::thecam::math::epsilon<value_type>::value) const;
 
         /**
          * Answer the memory layout of the matrix.
@@ -867,7 +868,7 @@ namespace detail {
     //template<class V, size_t D, matrix_layout L>
     //inline matrix<V, D, D, L> make_identity_matrix(void) {
     //    matrix<V, D, D, L> retval;
-    //    return std::move(thecam::math::set_identity(retval));
+    //    return std::move(megamol::core::thecam::math::set_identity(retval));
     //}
     // TODO: chain multiplication function?
 
@@ -947,7 +948,7 @@ namespace detail {
      */
     inline matrix<DirectX::XMFLOAT4X4> transpose(
             const matrix<DirectX::XMFLOAT4X4>& matrix) {
-        thecam::math::matrix<DirectX::XMFLOAT4X4> retval(thecam::utility::do_not_initialise);
+        megamol::core::thecam::math::matrix<DirectX::XMFLOAT4X4> retval(megamol::core::thecam::utility::do_not_initialise);
         auto m = load_xmmatrix(matrix);
         auto r = DirectX::XMMatrixTranspose(m);
         return store_xmmatrix(retval, r);
@@ -1057,7 +1058,7 @@ namespace detail {
     inline matrix<DirectX::XMFLOAT4X4> operator *(
             const matrix<DirectX::XMFLOAT4X4>& lhs,
             const matrix<DirectX::XMFLOAT4X4>& rhs) {
-        thecam::math::matrix<DirectX::XMFLOAT4X4> retval(thecam::utility::do_not_initialise);
+        megamol::core::thecam::math::matrix<DirectX::XMFLOAT4X4> retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmmatrix(lhs);
         auto r = load_xmmatrix(rhs);
         auto m = DirectX::XMMatrixMultiply(l, r);
@@ -1097,10 +1098,10 @@ namespace detail {
      *
      * @return 'lhs' * 'rhs'.
      */
-    inline thecam::math::vector<DirectX::XMFLOAT4> operator *(
+    inline megamol::core::thecam::math::vector<DirectX::XMFLOAT4> operator *(
             const matrix<DirectX::XMFLOAT4X4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
-        std::decay<decltype(rhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = DirectX::XMMatrixTranspose(load_xmmatrix(lhs));
         auto r = load_xmvector(rhs);
         auto v = DirectX::XMVector4Transform(r, l);
@@ -1140,10 +1141,10 @@ namespace detail {
      *
      * @return 'lhs' * 'rhs'.
      */
-    inline thecam::math::vector<DirectX::XMFLOAT4> operator *(
+    inline megamol::core::thecam::math::vector<DirectX::XMFLOAT4> operator *(
             const vector<DirectX::XMFLOAT4>& lhs,
             const matrix<DirectX::XMFLOAT4X4>& rhs) {
-        std::decay<decltype(lhs)>::type retval(thecam::utility::do_not_initialise);
+        std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(lhs);
         auto r = load_xmmatrix(rhs);
         auto v = DirectX::XMVector4Transform(l, r);
@@ -1153,7 +1154,9 @@ namespace detail {
 
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/math/matrix.inl"
 

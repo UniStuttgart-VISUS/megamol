@@ -30,10 +30,10 @@
 
 
 /*
- * thecam::math::size<V, D, T>::size
+ * megamol::core::thecam::math::size<V, D, T>::size
  */
 template<class V, size_t D, class T>
-thecam::math::size<V, D, T>::size(void) {
+megamol::core::thecam::math::size<V, D, T>::size(void) {
     for (size_type i = 0; i < this->dimensions(); ++i) {
         traits_type::at(this->data, i) = static_cast<value_type>(0);
     }
@@ -41,10 +41,10 @@ thecam::math::size<V, D, T>::size(void) {
 
 
 /*
- * thecam::math::size<V, D, T>::size
+ * megamol::core::thecam::math::size<V, D, T>::size
  */
 template<class V, size_t D, class T>
-thecam::math::size<V, D, T>::size(std::initializer_list<value_type> il) {
+megamol::core::thecam::math::size<V, D, T>::size(std::initializer_list<value_type> il) {
     auto it = il.begin();
     for (size_type i = 0; i < this->dimensions(); ++i) {
         if (it != il.end()) {
@@ -57,10 +57,10 @@ thecam::math::size<V, D, T>::size(std::initializer_list<value_type> il) {
 
 
 /*
- * thecam::math::size<V, D, T>::empty
+ * megamol::core::thecam::math::size<V, D, T>::empty
  */
 template<class V, size_t D, class T>
-bool thecam::math::size<V, D, T>::empty(const value_type epsilon) const {
+bool megamol::core::thecam::math::size<V, D, T>::empty(const value_type epsilon) const {
     for (size_type i = 0; i < this->dimensions(); ++i) {
         if (!is_equal(traits_type::at(this->data, i),
                 static_cast<value_type>(0), epsilon)) {
@@ -72,11 +72,11 @@ bool thecam::math::size<V, D, T>::empty(const value_type epsilon) const {
 
 
 /*
- * thecam::math::size<V, D, T>::equals
+ * megamol::core::thecam::math::size<V, D, T>::equals
  */
 template<class V, size_t D, class T>
 template<class Vp, size_t Dp, class Tp>
-bool thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& rhs,
+bool megamol::core::thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& rhs,
         const value_type epsilon) const {
     if (D == Dp) {
         for (size_type i = 0; i < this->dimensions(); ++i) {
@@ -94,11 +94,11 @@ bool thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& rhs,
 
 
 /*
- * thecam::math::size<V, D, T>::volume
+ * megamol::core::thecam::math::size<V, D, T>::volume
  */
 template<class V, size_t D, class T>
-typename thecam::math::size<V, D, T>::value_type
-thecam::math::size<V, D, T>::volume(void) const {
+typename megamol::core::thecam::math::size<V, D, T>::value_type
+megamol::core::thecam::math::size<V, D, T>::volume(void) const {
     auto retval = static_cast<value_type>(1);
 
     for (size_type i = 0; i < this->dimensions(); ++i) {
@@ -110,10 +110,10 @@ thecam::math::size<V, D, T>::volume(void) const {
 
 
 /*
- * thecam::math::size<V, D, T>::operator =
+ * megamol::core::thecam::math::size<V, D, T>::operator =
  */
 template<class V, size_t D, class T>
-thecam::math::size<V, D, T>& thecam::math::size<V, D, T>::operator =(
+megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator =(
         const size& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
@@ -123,11 +123,11 @@ thecam::math::size<V, D, T>& thecam::math::size<V, D, T>::operator =(
 
 
 /*
- * thecam::math::size<V, D, T>::operator =
+ * megamol::core::thecam::math::size<V, D, T>::operator =
  */
 template<class V, size_t D, class T>
 template<class Vp, class Tp>
-thecam::math::size<V, D, T>& thecam::math::size<V, D, T>::operator =(
+megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator =(
         const size<Vp, D, Tp>& rhs) {
     THE_ASSERT(static_cast<void *>(this)
         != static_cast<const void *>(std::addressof(rhs)));

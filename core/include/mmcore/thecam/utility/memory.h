@@ -69,6 +69,8 @@
 #endif /* va_copy */
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace utility{
 
@@ -337,6 +339,8 @@ namespace utility{
 
 } /* end namespace utility */
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 // mueller: Same as for macros above.

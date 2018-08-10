@@ -57,6 +57,8 @@
 #include "mmcore/thecam/utility/utils.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -304,7 +306,7 @@ namespace math {
      * @return true, if 'm' and 'n' are equal, false otherwise.
      */
     template<> inline bool is_equal(const float m, const float n) {
-        return (::abs(m - n) < thecam::math::epsilon<float>::value);
+        return (::abs(m - n) < megamol::core::thecam::math::epsilon<float>::value);
     }
 
 
@@ -332,7 +334,7 @@ namespace math {
      * @return true, if 'm' and 'n' are equal, false otherwise.
      */
     template<> inline bool is_equal(const double m, const double n) {
-        return (::abs(m - n) < thecam::math::epsilon<double>::value);
+        return (::abs(m - n) < megamol::core::thecam::math::epsilon<double>::value);
     }
 
 
@@ -604,9 +606,9 @@ namespace math {
      */
     template<class T>
     inline T pythag(const T& a, const T& b, const T& epsilon = 
-            ::thecam::math::epsilon<T>::value) {
-        T absa = ::thecam::math::abs(a);
-        T absb = ::thecam::math::abs(b);
+            ::megamol::core::thecam::math::epsilon<T>::value) {
+        T absa = ::megamol::core::thecam::math::abs(a);
+        T absb = ::megamol::core::thecam::math::abs(b);
         if (absa > absb) {
             absb /= absa;
             absb *= absb;
@@ -622,7 +624,9 @@ namespace math {
 
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

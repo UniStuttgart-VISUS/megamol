@@ -60,6 +60,8 @@
 #include "mmcore/thecam/math/vectorial_traits_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -213,7 +215,7 @@ namespace math {
      *           type, the storage type and basic operations.
      */
     template<class V, class T = quaternion_traits<V>>
-    class quaternion : public thecam::utility::equatable<quaternion<V, T>> {
+    class quaternion : public megamol::core::thecam::utility::equatable<quaternion<V, T>> {
 
     public:
 
@@ -1169,7 +1171,9 @@ namespace math {
 #endif /* WITH_THE_XMATH */
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/math/quaternion.inl"
 

@@ -42,6 +42,8 @@
 #include "mmcore/thecam/property_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -101,6 +103,8 @@ namespace thecam {
     };
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 #if defined(_WIN32) && defined(_MANAGED)

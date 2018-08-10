@@ -58,6 +58,8 @@
 #include "mmcore/thecam/math/vectorial_traits_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -204,7 +206,7 @@ namespace math {
      *           the native size type to be wrapped.
      */
     template<class V, class T = rectangle_traits<V>>
-    class rectangle : public thecam::utility::equatable<rectangle<V, T>> {
+    class rectangle : public megamol::core::thecam::utility::equatable<rectangle<V, T>> {
 
     public:
 
@@ -241,7 +243,7 @@ namespace math {
         static inline rectangle from_bottom_left(const value_type left,
                 const value_type bottom, const value_type width,
                 const value_type height) {
-            rectangle retval(thecam::utility::do_not_initialise);
+            rectangle retval(megamol::core::thecam::utility::do_not_initialise);
             traits_type::assign(retval.data, left, bottom + height,
                 left + width, bottom);
             return retval;
@@ -276,7 +278,7 @@ namespace math {
         static inline  rectangle from_bounds(const value_type left,
                 const value_type top, const value_type right,
                 const value_type bottom) {
-            rectangle retval(thecam::utility::do_not_initialise);
+            rectangle retval(megamol::core::thecam::utility::do_not_initialise);
             traits_type::assign(retval.data, left, top, right, bottom);
             return retval;
         }
@@ -299,7 +301,7 @@ namespace math {
         static inline rectangle from_top_left(const value_type left,
                 const value_type top, const value_type width,
                 const value_type height) {
-            rectangle retval(thecam::utility::do_not_initialise);
+            rectangle retval(megamol::core::thecam::utility::do_not_initialise);
             traits_type::assign(retval.data, left, top, left +
                 width, top + height);
             return retval;
@@ -693,7 +695,9 @@ namespace math {
     };
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/math/rectangle.inl"
 

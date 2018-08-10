@@ -33,24 +33,24 @@
 #include <exception>
 
 /*
- * thecam::utility::not_movable::~not_movable
+ * megamol::core::thecam::utility::not_movable::~not_movable
  */
-thecam::utility::not_movable::~not_movable(void) {
+megamol::core::thecam::utility::not_movable::~not_movable(void) {
 }
 
 
 /*
- * thecam::utility::not_movable::not_movable
+ * megamol::core::thecam::utility::not_movable::not_movable
  */
-thecam::utility::not_movable::not_movable(not_movable&& rhs) {
+megamol::core::thecam::utility::not_movable::not_movable(not_movable&& rhs) {
     throw std::exception("moving not supported");
 }
 
 
 /*
- * thecam::utility::not_movable::operator =
+ * megamol::core::thecam::utility::not_movable::operator =
  */
-thecam::utility::not_movable& thecam::utility::not_movable::operator =(not_movable&& rhs) {
+megamol::core::thecam::utility::not_movable& megamol::core::thecam::utility::not_movable::operator =(not_movable&& rhs) {
     if (this != &rhs) {
         std::exception("Invalid argument \"rhs\"");
     }

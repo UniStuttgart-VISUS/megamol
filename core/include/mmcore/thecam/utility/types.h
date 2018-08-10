@@ -60,8 +60,10 @@ typedef uint8_t byte;
 #include <cstdint>
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
-    namespace utility {
+namespace utility {
 
     /**
      * Dummy for providing overloads of parameterless methods that should
@@ -87,6 +89,8 @@ namespace thecam {
 
 } /* end namespace utility */
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 #if defined(_WIN32) && defined(_MANAGED)

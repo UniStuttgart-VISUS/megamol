@@ -31,11 +31,11 @@
 
 
 /*
- * thecam::math::rectangle<V, T>::from_bottom_left
+ * megamol::core::thecam::math::rectangle<V, T>::from_bottom_left
  */
 template<class V, class T>
 template<class P, class S>
-static thecam::math::rectangle<V, T> thecam::math::rectangle<V, T>::from_bottom_left(
+static megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_bottom_left(
         const P& point, const S& size) {
     return rectangle::from_bottom_left(static_cast<value_type>(point.x()),
         static_cast<value_type>(point.y()),
@@ -45,11 +45,11 @@ static thecam::math::rectangle<V, T> thecam::math::rectangle<V, T>::from_bottom_
 
 
 /*
- * thecam::math::rectangle<V, T>::from_top_left
+ * megamol::core::thecam::math::rectangle<V, T>::from_top_left
  */
 template<class V, class T>
 template<class P, class S>
-static thecam::math::rectangle<V, T> thecam::math::rectangle<V, T>::from_top_left(
+static megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_top_left(
         const P& point, const S& size) {
     return rectangle::from_top_left(static_cast<value_type>(point.x()),
         static_cast<value_type>(point.y()),
@@ -59,20 +59,20 @@ static thecam::math::rectangle<V, T> thecam::math::rectangle<V, T>::from_top_lef
 
 
 /*
- * thecam::math::rectangle<V, T>::rectangle
+ * megamol::core::thecam::math::rectangle<V, T>::rectangle
  */
 template<class V, class T>
-thecam::math::rectangle<V, T>::rectangle(void) {
+megamol::core::thecam::math::rectangle<V, T>::rectangle(void) {
     const auto ZERO = static_cast<value_type>(0);
     traits_type::assign(this->data, ZERO, ZERO, ZERO, ZERO);
 }
 
 
 /*
- * thecam::math::rectangle<V, T>::rectangle
+ * megamol::core::thecam::math::rectangle<V, T>::rectangle
  */
 template<class V, class T>
-thecam::math::rectangle<V, T>::rectangle(std::initializer_list<value_type> il) {
+megamol::core::thecam::math::rectangle<V, T>::rectangle(std::initializer_list<value_type> il) {
     size_type i = 0;
     auto it = il.begin();
 
@@ -86,10 +86,10 @@ thecam::math::rectangle<V, T>::rectangle(std::initializer_list<value_type> il) {
 
 
 /*
- * thecam::math::rectangle<V, T>::empty
+ * megamol::core::thecam::math::rectangle<V, T>::empty
  */
 template<class V, class T>
-bool thecam::math::rectangle<V, T>::empty(void) const {
+bool megamol::core::thecam::math::rectangle<V, T>::empty(void) const {
     return ((this->left() == static_cast<value_type>(0))
         && (this->top() == static_cast<value_type>(0))
         && (this->right() == static_cast<value_type>(0))
@@ -98,10 +98,10 @@ bool thecam::math::rectangle<V, T>::empty(void) const {
 
 
 /*
- * thecam::math::rectangle<V, T>::empty
+ * megamol::core::thecam::math::rectangle<V, T>::empty
  */
 template<class V, class T>
-bool thecam::math::rectangle<V, T>::empty(const value_type epsilon) const {
+bool megamol::core::thecam::math::rectangle<V, T>::empty(const value_type epsilon) const {
     return ((std::abs(this->left()) < epsilon)
         && (std::abs(this->top()) < epsilon)
         && (std::abs(this->right()) < epsilon)
@@ -110,11 +110,11 @@ bool thecam::math::rectangle<V, T>::empty(const value_type epsilon) const {
 
 
 /*
- * thecam::math::rectangle<V, T>::equals
+ * megamol::core::thecam::math::rectangle<V, T>::equals
  */
 template<class V, class T>
 template<class Vp, class Tp>
-bool thecam::math::rectangle<V, T>::equals(const rectangle<Vp, Tp>& rhs,
+bool megamol::core::thecam::math::rectangle<V, T>::equals(const rectangle<Vp, Tp>& rhs,
         const value_type epsilon) const {
     return (is_equal(this->left(), static_cast<value_type>(rhs.left()), epsilon)
         && is_equal(this->top(), static_cast<value_type>(rhs.top()), epsilon)
@@ -124,10 +124,10 @@ bool thecam::math::rectangle<V, T>::equals(const rectangle<Vp, Tp>& rhs,
 
 
 /*
- * thecam::math::rectangle<V, T>::operator =
+ * megamol::core::thecam::math::rectangle<V, T>::operator =
  */
 template<class V, class T>
-thecam::math::rectangle<V, T>& thecam::math::rectangle<V, T>::operator =(
+megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator =(
         const rectangle& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
@@ -137,11 +137,11 @@ thecam::math::rectangle<V, T>& thecam::math::rectangle<V, T>::operator =(
 
 
 /*
- * thecam::math::rectangle<V, T>::operator =
+ * megamol::core::thecam::math::rectangle<V, T>::operator =
  */
 template<class V, class T>
 template<class Vp, class Tp>
-thecam::math::rectangle<V, T>& thecam::math::rectangle<V, T>::operator =(
+megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator =(
         const rectangle<Vp, Tp>& rhs) {
     THE_ASSERT(this != std::addressof(rhs));
     traits_type::assign(this->data, static_cast<value_type>(rhs.left()),

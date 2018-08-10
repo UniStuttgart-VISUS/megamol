@@ -30,10 +30,10 @@
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::matrix
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::matrix
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, R, C, L, T>::matrix(std::initializer_list<value_type> il) {
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, R, C, L, T>::matrix(std::initializer_list<value_type> il) {
     auto it = il.begin();
     for (size_type r = 0; r < this->rows(); ++r) {
         for (size_type c = 0; c < this->columns(); ++c) {
@@ -48,10 +48,10 @@ thecam::math::matrix<V, R, C, L, T>::matrix(std::initializer_list<value_type> il
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::empty
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::empty
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-bool thecam::math::matrix<V, R, C, L, T>::empty(const value_type epsilon) const {
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+bool megamol::core::thecam::math::matrix<V, R, C, L, T>::empty(const value_type epsilon) const {
     for (size_type r = 0; r < this->rows(); ++r) {
         for (size_type c = 0; c < this->columns(); ++c) {
             if (!is_equal(traits_type::at(this->data, r, c),
@@ -65,11 +65,11 @@ bool thecam::math::matrix<V, R, C, L, T>::empty(const value_type epsilon) const 
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::equals
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::equals
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-template<class Vp, size_t Rp, size_t Cp, thecam::math::matrix_layout Lp, class Tp>
-bool thecam::math::matrix<V, R, C, L, T>::equals(
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+template<class Vp, size_t Rp, size_t Cp, megamol::core::thecam::math::matrix_layout Lp, class Tp>
+bool megamol::core::thecam::math::matrix<V, R, C, L, T>::equals(
         const matrix<Vp, Rp, Cp, Lp, Tp>& rhs,
         const value_type epsilon) const {
     if ((R == Rp) && (C == Cp)) {
@@ -92,10 +92,10 @@ bool thecam::math::matrix<V, R, C, L, T>::equals(
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::identity
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::identity
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-bool thecam::math::matrix<V, R, C, L, T>::identity(const value_type epsilon) const {
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+bool megamol::core::thecam::math::matrix<V, R, C, L, T>::identity(const value_type epsilon) const {
     if (R == C) {
         for (size_type r = 0; r < this->rows(); ++r) {
             for (size_type c = 0; c < this->columns(); ++c) {
@@ -117,10 +117,10 @@ bool thecam::math::matrix<V, R, C, L, T>::identity(const value_type epsilon) con
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::operator =
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::operator =
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, R, C, L, T>& thecam::math::matrix<V, R, C, L, T>::operator =(
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, R, C, L, T>& megamol::core::thecam::math::matrix<V, R, C, L, T>::operator =(
         const matrix& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
@@ -132,11 +132,11 @@ thecam::math::matrix<V, R, C, L, T>& thecam::math::matrix<V, R, C, L, T>::operat
 
 
 /*
- * thecam::math::matrix<V, R, C, L, T>::operator =
+ * megamol::core::thecam::math::matrix<V, R, C, L, T>::operator =
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-template<class Vp, thecam::math::matrix_layout Lp, class Tp>
-thecam::math::matrix<V, R, C, L, T>& thecam::math::matrix<V, R, C, L, T>::operator =(
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+template<class Vp, megamol::core::thecam::math::matrix_layout Lp, class Tp>
+megamol::core::thecam::math::matrix<V, R, C, L, T>& megamol::core::thecam::math::matrix<V, R, C, L, T>::operator =(
         const matrix<Vp, R, C, Lp, Tp>& rhs) {
     THE_ASSERT(this != std::addressof(rhs));
     for (size_type r = 0; r < R; ++r) {
@@ -149,26 +149,26 @@ thecam::math::matrix<V, R, C, L, T>& thecam::math::matrix<V, R, C, L, T>::operat
 
 
 /*
- * thecam::math::det
+ * megamol::core::thecam::math::det
  */
-template<class V, thecam::math::matrix_layout L, class T>
-typename T::value_type thecam::math::det(const matrix<V, 4, 4, L, T>& matrix) {
-    thecam::math::matrix<V, 3, 3, L, T> m1 = {
+template<class V, megamol::core::thecam::math::matrix_layout L, class T>
+typename T::value_type megamol::core::thecam::math::det(const matrix<V, 4, 4, L, T>& matrix) {
+    megamol::core::thecam::math::matrix<V, 3, 3, L, T> m1 = {
         matrix(1, 0), matrix(2, 0), matrix(3, 0),
         matrix(1, 1), matrix(2, 1), matrix(3, 1),
         matrix(1, 3), matrix(2, 3), matrix(3, 3)
     };
-    thecam::math::matrix<V, 3, 3, L, T> m2 = {
+    megamol::core::thecam::math::matrix<V, 3, 3, L, T> m2 = {
         matrix(0, 0), matrix(2, 0), matrix(3, 0),
         matrix(0, 1), matrix(2, 1), matrix(3, 1),
         matrix(0, 3), matrix(2, 3), matrix(3, 3)
     };
-    thecam::math::matrix<V, 3, 3, L, T> m3 = {
+    megamol::core::thecam::math::matrix<V, 3, 3, L, T> m3 = {
         matrix(0, 0), matrix(1, 0), matrix(3, 0),
         matrix(0, 1), matrix(1, 1), matrix(3, 1),
         matrix(0, 3), matrix(1, 3), matrix(3, 3)
     };
-    thecam::math::matrix<V, 3, 3, L, T> m4 = {
+    megamol::core::thecam::math::matrix<V, 3, 3, L, T> m4 = {
         matrix(0, 0), matrix(1, 0), matrix(2, 0),
         matrix(0, 1), matrix(1, 1), matrix(2, 1),
         matrix(0, 3), matrix(1, 3), matrix(2, 3)
@@ -180,12 +180,12 @@ typename T::value_type thecam::math::det(const matrix<V, 4, 4, L, T>& matrix) {
 
 
 /*
- * thecam::math::invert
+ * megamol::core::thecam::math::invert
  */
-template<class V, size_t D, thecam::math::matrix_layout L, class T>
-bool thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
+template<class V, size_t D, megamol::core::thecam::math::matrix_layout L, class T>
+bool megamol::core::thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
 #define A(r, c) a[(r) * 2 * D + (c)]
-    typedef thecam::math::matrix<V, D, D, L, T> matrix_type;
+    typedef megamol::core::thecam::math::matrix<V, D, D, L, T> matrix_type;
     typedef matrix_type::size_type size_type;
     typedef matrix_type::value_type value_type;
     double a[2 * D * D];    // Input matrix for algorithm.
@@ -219,7 +219,7 @@ bool thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
             }
         }
 
-        if (maxVal < thecam::math::epsilon<double>::value) {
+        if (maxVal < megamol::core::thecam::math::epsilon<double>::value) {
             return false;   // delete is not possible
         }
 
@@ -265,11 +265,11 @@ bool thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
 
 
 /*
- * thecam::math::set_empty
+ * megamol::core::thecam::math::set_empty
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, R, C, L, T>& thecam::math::set_empty(
-        thecam::math::matrix<V, R, C, L, T>& matrix) {
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, R, C, L, T>& megamol::core::thecam::math::set_empty(
+        megamol::core::thecam::math::matrix<V, R, C, L, T>& matrix) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
@@ -284,11 +284,11 @@ thecam::math::matrix<V, R, C, L, T>& thecam::math::set_empty(
 
 
 /*
- * thecam::math::set_identity
+ * megamol::core::thecam::math::set_identity
  */
-template<class V, size_t D, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, D, D, L, T>& thecam::math::set_identity(
-        thecam::math::matrix<V, D, D, L, T>& matrix) {
+template<class V, size_t D, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, D, D, L, T>& megamol::core::thecam::math::set_identity(
+        megamol::core::thecam::math::matrix<V, D, D, L, T>& matrix) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
@@ -303,10 +303,10 @@ thecam::math::matrix<V, D, D, L, T>& thecam::math::set_identity(
 
 
 /*
- * thecam::math::trace
+ * megamol::core::thecam::math::trace
  */
-template<class V, size_t D, thecam::math::matrix_layout L, class T>
-typename T::value_type thecam::math::trace(const matrix<V, D, D, L, T>& matrix) {
+template<class V, size_t D, megamol::core::thecam::math::matrix_layout L, class T>
+typename T::value_type megamol::core::thecam::math::trace(const matrix<V, D, D, L, T>& matrix) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
@@ -321,15 +321,15 @@ typename T::value_type thecam::math::trace(const matrix<V, D, D, L, T>& matrix) 
 
 
 /*
- * thecam::math::transpose
+ * megamol::core::thecam::math::transpose
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, C, R, L, T> thecam::math::transpose(
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, C, R, L, T> megamol::core::thecam::math::transpose(
         const matrix<V, R, C, L, T>& matrix) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
-    thecam::math::matrix<V, C, R, L, T> retval(thecam::do_not_initialise);
+    megamol::core::thecam::math::matrix<V, C, R, L, T> retval(megamol::core::thecam::do_not_initialise);
 
     for (size_type r = 0; r < R; ++r) {
         for (size_type c = 0; c < C; ++c) {
@@ -342,10 +342,10 @@ thecam::math::matrix<V, C, R, L, T> thecam::math::transpose(
 
 
 /*
- * thecam::math::operator *=
+ * megamol::core::thecam::math::operator *=
  */
-template<class V, size_t R, size_t C, thecam::math::matrix_layout L, class T>
-thecam::math::matrix<V, R, C, L, T>& thecam::math::operator *=(
+template<class V, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L, class T>
+megamol::core::thecam::math::matrix<V, R, C, L, T>& megamol::core::thecam::math::operator *=(
         matrix<V, R, C, L, T>& lhs,
         const typename matrix<V, R, C, L, T>::value_type rhs) {
     typedef typename T::size_type size_type;
@@ -366,15 +366,15 @@ thecam::math::matrix<V, R, C, L, T>& thecam::math::operator *=(
  */
 template<class VL, class VR,
     size_t RL, size_t CL, size_t CR,
-    thecam::math::matrix_layout LL, thecam::math::matrix_layout LR,
+    megamol::core::thecam::math::matrix_layout LL, megamol::core::thecam::math::matrix_layout LR,
     class TL, class TR>
-thecam::math::matrix<VL, RL, CR, LL, thecam::math::matrix_traits<VL, RL, CR, LL>>
-thecam::math::operator *(const matrix<VL, RL, CL, LL, TL>& lhs,
+megamol::core::thecam::math::matrix<VL, RL, CR, LL, megamol::core::thecam::math::matrix_traits<VL, RL, CR, LL>>
+megamol::core::thecam::math::operator *(const matrix<VL, RL, CL, LL, TL>& lhs,
         const matrix<VR, CL, CR, LR, TR>& rhs) {
     typedef typename TL::size_type size_type;
     typedef typename TL::value_type value_type;
 
-    thecam::math::matrix<VL, RL, CR, LL> retval;
+    megamol::core::thecam::math::matrix<VL, RL, CR, LL> retval;
     THE_ASSERT(retval.size() == RL * CR);
     THE_ASSERT(retval.empty());
 
@@ -391,16 +391,16 @@ thecam::math::operator *(const matrix<VL, RL, CL, LL, TL>& lhs,
 
 
 /*
- * thecam::math::operator *
+ * megamol::core::thecam::math::operator *
  */
-template<class VM, class VV, size_t R, size_t C, thecam::math::matrix_layout L,
+template<class VM, class VV, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L,
     class TM, class TV>
-thecam::math::vector<typename TM::value_type, R> thecam::math::operator *(
+megamol::core::thecam::math::vector<typename TM::value_type, R> megamol::core::thecam::math::operator *(
         const matrix<VM, R, C, L, TM>& lhs, const vector<VV, C, TV>& rhs) {
     typedef typename TM::size_type size_type;
     typedef typename TM::value_type value_type;
 
-    thecam::math::vector<value_type, R> retval;
+    megamol::core::thecam::math::vector<value_type, R> retval;
     THE_ASSERT(retval.empty());
 
     for (size_type r = 0; r < R; ++r) {
@@ -414,16 +414,16 @@ thecam::math::vector<typename TM::value_type, R> thecam::math::operator *(
 
 
 /*
- * thecam::math::operator *
+ * megamol::core::thecam::math::operator *
  */
-template<class VM, class VV, size_t R, size_t C, thecam::math::matrix_layout L,
+template<class VM, class VV, size_t R, size_t C, megamol::core::thecam::math::matrix_layout L,
     class TM, class TV>
-thecam::math::vector<typename TM::value_type, C> thecam::math::operator *(
+megamol::core::thecam::math::vector<typename TM::value_type, C> megamol::core::thecam::math::operator *(
         const vector<VV, R, TV>& rhs, const matrix<VM, R, C, L, TM>& lhs) {
     typedef typename TM::size_type size_type;
     typedef typename TM::value_type value_type;
 
-    thecam::math::vector<value_type, C> retval;
+    megamol::core::thecam::math::vector<value_type, C> retval;
     THE_ASSERT(retval.empty());
 
     for (size_type r = 0; r < R; ++r) {

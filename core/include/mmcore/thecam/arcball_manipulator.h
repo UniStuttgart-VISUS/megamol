@@ -42,6 +42,8 @@
 #include "mmcore/thecam/manipulator_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -176,7 +178,9 @@ namespace thecam {
 
     };
 
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/arcball_manipulator.inl"
 

@@ -41,7 +41,8 @@
 
 #include "mmcore/thecam/manipulator_base.h"
 
-
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -133,6 +134,8 @@ namespace thecam {
     };
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/translate_manipulator.inl"
 

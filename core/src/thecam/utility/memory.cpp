@@ -37,13 +37,13 @@
 
 
 /*
- * thecam::utility::aligned_malloc
+ * megamol::core::thecam::utility::aligned_malloc
  */
-void *thecam::utility::aligned_malloc(const size_t size, const size_t alignment) {
+void *megamol::core::thecam::utility::aligned_malloc(const size_t size, const size_t alignment) {
     void *retval = nullptr;
 
     /* Sanity checks. */
-    if (!thecam::math::is_power_of_two(alignment)) {
+    if (!megamol::core::thecam::math::is_power_of_two(alignment)) {
         throw std::exception("alignment");
     }
 
@@ -57,7 +57,7 @@ void *thecam::utility::aligned_malloc(const size_t size, const size_t alignment)
     }
 
 #else /* defined(THE_WINDOWS) */
-#error "Implementation of thecam::aligned_malloc is missing!"
+#error "Implementation of megamol::core::thecam::aligned_malloc is missing!"
 
 #endif /* defined(THE_WINDOWS) */
 

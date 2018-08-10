@@ -56,6 +56,8 @@
 #include "mmcore/thecam/math/vectorial_traits_base.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -185,14 +187,14 @@ namespace math {
      * @tparam V The scalar type used to store the size or the native size type
      *           to be wrapped.
      * @tparam D The number of dimensions. This defaults to
-     *           thecam::math::detail::implicit_dimension<V>::value in order to
+     *           megamol::core::thecam::math::detail::implicit_dimension<V>::value in order to
      *           automatically derive the dimension of built-in types via
      *           template specialisation.
      */
     template<class V,
         size_t D = detail::implicit_dimension<V>::value,
         class T = size_traits<V, D >>
-    class size : public thecam::utility::equatable<size<V, D, T>>,
+    class size : public megamol::core::thecam::utility::equatable<size<V, D, T>>,
             public detail::size_accessors<size<V, D, T>, T, D> {
 
     public:
@@ -364,7 +366,7 @@ namespace math {
          * Answer whether the size (approximately) empty.
          *
          * @param epsilon An epsilon value used for comparison. This defaults to
-         *                thecam::math::epsilon<value_type>::value.
+         *                megamol::core::thecam::math::epsilon<value_type>::value.
          *
          * @return true if the size is a null size, false otherwise.
          */
@@ -476,7 +478,9 @@ namespace math {
     };
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/math/size.inl"
 

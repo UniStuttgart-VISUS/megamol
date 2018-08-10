@@ -30,10 +30,10 @@
 
 
 /*
- * thecam::math::vector<V, D, T>::vector
+ * megamol::core::thecam::math::vector<V, D, T>::vector
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T>::vector(std::initializer_list<value_type> il) {
+megamol::core::thecam::math::vector<V, D, T>::vector(std::initializer_list<value_type> il) {
     auto it = il.begin();
     for (size_type i = 0; i < this->size(); ++i) {
         if (it != il.end()) {
@@ -46,11 +46,11 @@ thecam::math::vector<V, D, T>::vector(std::initializer_list<value_type> il) {
 
 
 /*
- * thecam::math::vector<V, D, T>::vector
+ * megamol::core::thecam::math::vector<V, D, T>::vector
  */
 template<class V, size_t D, class T>
 template<class Vp, size_t Dp, class Tp>
-thecam::math::vector<V, D, T>::vector(const vector<Vp, Dp, Tp>& rhs,
+megamol::core::thecam::math::vector<V, D, T>::vector(const vector<Vp, Dp, Tp>& rhs,
         const value_type value) {
     size_type i = 0;
     for (; i < (std::min)(this->size(), rhs.size()); ++i) {
@@ -63,10 +63,10 @@ thecam::math::vector<V, D, T>::vector(const vector<Vp, Dp, Tp>& rhs,
 
 
 /*
- * thecam::math::vector<V, D, T>::empty
+ * megamol::core::thecam::math::vector<V, D, T>::empty
  */
 template<class V, size_t D, class T>
-bool thecam::math::vector<V, D, T>::empty(const value_type epsilon) const {
+bool megamol::core::thecam::math::vector<V, D, T>::empty(const value_type epsilon) const {
     for (size_type i = 0; i < this->size(); ++i) {
         if (!is_equal(traits_type::at(this->data, i),
                 static_cast<value_type>(0), epsilon)) {
@@ -78,11 +78,11 @@ bool thecam::math::vector<V, D, T>::empty(const value_type epsilon) const {
 
 
 /*
- * thecam::math::vector<V, D, T>::equals
+ * megamol::core::thecam::math::vector<V, D, T>::equals
  */
 template<class V, size_t D, class T>
 template<class Vp, size_t Dp, class Tp>
-bool thecam::math::vector<V, D, T>::equals(const vector<Vp, Dp, Tp>& rhs,
+bool megamol::core::thecam::math::vector<V, D, T>::equals(const vector<Vp, Dp, Tp>& rhs,
         const value_type epsilon) const {
     if (D == Dp) {
         for (size_type i = 0; i < this->size(); ++i) {
@@ -100,10 +100,10 @@ bool thecam::math::vector<V, D, T>::equals(const vector<Vp, Dp, Tp>& rhs,
 
 
 /*
- * thecam::math::vector<V, D, T>::operator =
+ * megamol::core::thecam::math::vector<V, D, T>::operator =
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T>& thecam::math::vector<V, D, T>::operator =(
+megamol::core::thecam::math::vector<V, D, T>& megamol::core::thecam::math::vector<V, D, T>::operator =(
         const vector& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
@@ -113,11 +113,11 @@ thecam::math::vector<V, D, T>& thecam::math::vector<V, D, T>::operator =(
 
 
 /*
- * thecam::math::vector<V, D, T>::operator =
+ * megamol::core::thecam::math::vector<V, D, T>::operator =
  */
 template<class V, size_t D, class T>
 template<class Vp, class Tp>
-thecam::math::vector<V, D, T>& thecam::math::vector<V, D, T>::operator =(
+megamol::core::thecam::math::vector<V, D, T>& megamol::core::thecam::math::vector<V, D, T>::operator =(
         const vector<Vp, D, Tp>& rhs) {
     THE_ASSERT(static_cast<void *>(this)
         != static_cast<const void *>(std::addressof(rhs)));
@@ -129,18 +129,18 @@ thecam::math::vector<V, D, T>& thecam::math::vector<V, D, T>::operator =(
 
 
 ///*
-// * thecam::math::vector<V, D, T>::alloc
+// * megamol::core::thecam::math::vector<V, D, T>::alloc
 // */
 //template<class V, size_t D, class T>
-//typename thecam::math::vector<V, D, T>::traits_type::allocator_type
-//thecam::math::vector<V, D, T>::alloc;
+//typename megamol::core::thecam::math::vector<V, D, T>::traits_type::allocator_type
+//megamol::core::thecam::math::vector<V, D, T>::alloc;
 
 
 /*
- * thecam::math::cross
+ * megamol::core::thecam::math::cross
  */
 template<class V, class T>
-thecam::math::vector<V, 3, T> thecam::math::cross(const vector<V, 3, T>& lhs,
+megamol::core::thecam::math::vector<V, 3, T> megamol::core::thecam::math::cross(const vector<V, 3, T>& lhs,
         const vector<V, 3, T>& rhs) {
     thecam::math::vector<V, 3, T> retval(
         lhs.y() * rhs.z() - lhs.z() * rhs.y(),
@@ -151,10 +151,10 @@ thecam::math::vector<V, 3, T> thecam::math::cross(const vector<V, 3, T>& lhs,
 
 
 /*
- * thecam::math::cross
+ * megamol::core::thecam::math::cross
  */
 template<class V, class T>
-thecam::math::vector<V, 4, T> thecam::math::cross(const vector<V, 4, T>& lhs,
+megamol::core::thecam::math::vector<V, 4, T> megamol::core::thecam::math::cross(const vector<V, 4, T>& lhs,
         const vector<V, 4, T>& rhs) {
     typedef typename T::value_type value_type;
     thecam::math::vector<V, 4, T> retval(
@@ -167,10 +167,10 @@ thecam::math::vector<V, 4, T> thecam::math::cross(const vector<V, 4, T>& lhs,
 
 
 /*
- * thecam::math::dot
+ * megamol::core::thecam::math::dot
  */
 template<class V, size_t D, class T>
-typename T::value_type thecam::math::dot(const vector<V, D, T>& lhs,
+typename T::value_type megamol::core::thecam::math::dot(const vector<V, D, T>& lhs,
         const vector<V, D, T>& rhs) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
@@ -185,10 +185,10 @@ typename T::value_type thecam::math::dot(const vector<V, D, T>& lhs,
 
 
 /*
- * thecam::math::normalise
+ * megamol::core::thecam::math::normalise
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T> thecam::math::normalise(const vector<V, D, T>& vec) {
+megamol::core::thecam::math::vector<V, D, T> megamol::core::thecam::math::normalise(const vector<V, D, T>& vec) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
@@ -211,10 +211,10 @@ thecam::math::vector<V, D, T> thecam::math::normalise(const vector<V, D, T>& vec
 
 
 /*
- * thecam::math::set_empty
+ * megamol::core::thecam::math::set_empty
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T>& thecam::math::set_empty(vector<V, D, T>& vec) {
+megamol::core::thecam::math::vector<V, D, T>& megamol::core::thecam::math::set_empty(vector<V, D, T>& vec) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
@@ -227,10 +227,10 @@ thecam::math::vector<V, D, T>& thecam::math::set_empty(vector<V, D, T>& vec) {
 
 
 /*
- * thecam::math::operator *=
+ * megamol::core::thecam::math::operator *=
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T>& thecam::math::operator *=(vector<V, D, T>& lhs,
+megamol::core::thecam::math::vector<V, D, T>& megamol::core::thecam::math::operator *=(vector<V, D, T>& lhs,
         const typename vector<V, D, T>::value_type rhs) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
@@ -245,10 +245,10 @@ thecam::math::vector<V, D, T>& thecam::math::operator *=(vector<V, D, T>& lhs,
 
 
 /*
- * thecam::math::operator *=
+ * megamol::core::thecam::math::operator *=
  */
 template<class V, size_t D, class T>
-thecam::math::vector<V, D, T>& thecam::math::operator /=(vector<V, D, T>& lhs,
+megamol::core::thecam::math::vector<V, D, T>& megamol::core::thecam::math::operator /=(vector<V, D, T>& lhs,
         const typename vector<V, D, T>::value_type rhs) {
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
@@ -264,10 +264,10 @@ thecam::math::vector<V, D, T>& thecam::math::operator /=(vector<V, D, T>& lhs,
 
 
 /*
- * thecam::math::operator +=
+ * megamol::core::thecam::math::operator +=
  */
 template<class V1, class T1, class V2, class T2, size_t D>
-thecam::math::vector<V1, D, T1> thecam::math::operator +=(vector<V1, D, T1>& lhs,
+megamol::core::thecam::math::vector<V1, D, T1> megamol::core::thecam::math::operator +=(vector<V1, D, T1>& lhs,
         const vector<V2, D, T2>& rhs) {
     typedef typename T1::size_type size_type;
     typedef typename T1::value_type value_type;
@@ -281,10 +281,10 @@ thecam::math::vector<V1, D, T1> thecam::math::operator +=(vector<V1, D, T1>& lhs
 
 
 /*
- * thecam::math::operator -=
+ * megamol::core::thecam::math::operator -=
  */
 template<class V1, class T1, class V2, class T2, size_t D>
-thecam::math::vector<V1, D, T1> thecam::math::operator -=(vector<V1, D, T1>& lhs,
+megamol::core::thecam::math::vector<V1, D, T1> megamol::core::thecam::math::operator -=(vector<V1, D, T1>& lhs,
         const vector<V2, D, T2>& rhs) {
     typedef typename T1::size_type size_type;
     typedef typename T1::value_type value_type;

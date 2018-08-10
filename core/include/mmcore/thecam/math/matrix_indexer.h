@@ -42,6 +42,8 @@
 #include "mmcore/thecam/math/mathtypes.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -218,7 +220,9 @@ namespace math {
     };
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

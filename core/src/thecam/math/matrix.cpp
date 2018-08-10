@@ -33,9 +33,9 @@
 
 #ifdef WITH_THE_XMATH
 /*
- * thecam::math::invert
+ * megamol::core::thecam::math::invert
  */
-bool thecam::math::invert(matrix<DirectX::XMFLOAT4X4>& matrix) {
+bool megamol::core::thecam::math::invert(matrix<DirectX::XMFLOAT4X4>& matrix) {
     auto m = load_xmmatrix(matrix);
     auto d = DirectX::XMMatrixDeterminant(m);
     if (DirectX::XMVectorGetX(d) == 0.0f) {

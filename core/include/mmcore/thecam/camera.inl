@@ -30,11 +30,11 @@
 
 
 /*
- * thecam::camera<M, P>::projection_matrix_left_handed
+ * megamol::core::thecam::camera<M, P>::projection_matrix_left_handed
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::matrix_type&
-thecam::camera<M, P>::projection_matrix_left_handed(
+typename megamol::core::thecam::camera<M, P>::matrix_type&
+megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(
         matrix_type& outMat, const snapshot_type& snapshot) {
     THE_ASSERT(snapshot.contains(snapshot_content::camera_space_frustum));
     THE_ASSERT(snapshot.frustum_near != snapshot.frustum_far);
@@ -75,11 +75,11 @@ thecam::camera<M, P>::projection_matrix_left_handed(
 
 
 /*
- * thecam::camera<M, P>::projection_matrix_right_handed
+ * megamol::core::thecam::camera<M, P>::projection_matrix_right_handed
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::matrix_type&
-thecam::camera<M, P>::projection_matrix_right_handed(
+typename megamol::core::thecam::camera<M, P>::matrix_type&
+megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
         matrix_type& outMat, const snapshot_type& snapshot) {
     THE_ASSERT(snapshot.contains(snapshot_content::camera_space_frustum));
     THE_ASSERT(snapshot.frustum_near != snapshot.frustum_far);
@@ -122,11 +122,11 @@ thecam::camera<M, P>::projection_matrix_right_handed(
 
 
 /*
- * thecam::camera<M, P>::view_matrix_left_handed
+ * megamol::core::thecam::camera<M, P>::view_matrix_left_handed
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::matrix_type&
-thecam::camera<M, P>::view_matrix_left_handed(
+typename megamol::core::thecam::camera<M, P>::matrix_type&
+megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
         matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
     static const auto ONE = static_cast<world_type>(1);
@@ -165,11 +165,11 @@ thecam::camera<M, P>::view_matrix_left_handed(
 }
 
 /*
- * thecam::camera<M, P>::view_matrix_right_handed
+ * megamol::core::thecam::camera<M, P>::view_matrix_right_handed
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::matrix_type&
-thecam::camera<M, P>::view_matrix_right_handed(
+typename megamol::core::thecam::camera<M, P>::matrix_type&
+megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
         matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
     static const auto ONE = static_cast<world_type>(1);
@@ -209,10 +209,10 @@ thecam::camera<M, P>::view_matrix_right_handed(
 
 
 /*
- * thecam::camera<M, P>::calc_matrices
+ * megamol::core::thecam::camera<M, P>::calc_matrices
  */
 template<class M, template<class> class P>
-void thecam::camera<M, P>::calc_matrices(
+void megamol::core::thecam::camera<M, P>::calc_matrices(
         snapshot_type& outSnapshot, matrix_type& outView,
         matrix_type& outProj, snapshot_content sc) const {
     sc |= snapshot_content::camera_coordinate_system;   // Just paranoia ...
@@ -237,11 +237,11 @@ void thecam::camera<M, P>::calc_matrices(
 
 
 /*
- * thecam::camera<M, P>::focal_length
+ * megamol::core::thecam::camera<M, P>::focal_length
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::world_type
-thecam::camera<M, P>::focal_length(void) const {
+typename megamol::core::thecam::camera<M, P>::world_type
+megamol::core::thecam::camera<M, P>::focal_length(void) const {
     // See http://www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/how-pinhole-camera-works-part-2
     // for connection between film gate, resolution gate and focal length.
     auto w = this->has_film_gate()
@@ -253,11 +253,11 @@ thecam::camera<M, P>::focal_length(void) const {
 
 
 /*
- * thecam::camera<M, P>::get_minimal_state
+ * megamol::core::thecam::camera<M, P>::get_minimal_state
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::minimal_state_type&
-thecam::camera<M, P>::get_minimal_state(
+typename megamol::core::thecam::camera<M, P>::minimal_state_type&
+megamol::core::thecam::camera<M, P>::get_minimal_state(
         minimal_state_type& outState) {
     outState.centre_offset[0] = this->centre_offset().x();
     outState.centre_offset[1] = this->centre_offset().y();
@@ -290,10 +290,10 @@ thecam::camera<M, P>::get_minimal_state(
 
 
 /*
- * thecam::camera<M, P>::look_at
+ * megamol::core::thecam::camera<M, P>::look_at
  */
 template<class M, template<class> class P>
-void thecam::camera<M, P>::look_at(const point_type& lookAt) {
+void megamol::core::thecam::camera<M, P>::look_at(const point_type& lookAt) {
     // http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
     const auto& sv = maths_type::view_vector;
     const auto tv = math::perspective_divide(lookAt) - this->position();
@@ -302,11 +302,11 @@ void thecam::camera<M, P>::look_at(const point_type& lookAt) {
 
 
 /*
- * thecam::camera<M, P>::projection_matrix
+ * megamol::core::thecam::camera<M, P>::projection_matrix
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::matrix_type
-thecam::camera<M, P>::projection_matrix(void) const {
+typename megamol::core::thecam::camera<M, P>::matrix_type
+megamol::core::thecam::camera<M, P>::projection_matrix(void) const {
     matrix_type retval;
     snapshot_type snapshot;
 
@@ -330,36 +330,36 @@ thecam::camera<M, P>::projection_matrix(void) const {
 
 
 /*
- * thecam::camera<M, P>::reset
+ * megamol::core::thecam::camera<M, P>::reset
  */
 template<class M, template<class> class P>
-void thecam::camera<M, P>::reset(void) {
+void megamol::core::thecam::camera<M, P>::reset(void) {
     const auto WZ = static_cast<world_type>(0);
     const auto WO = static_cast<world_type>(1);
 
     this->centre_offset(the::math::vector<fractional_type, 2>());
     this->convergence_plane(WZ);
     this->half_disparity(WZ);
-    this->eye(thecam::eye::centre);
+    this->eye(megamol::core::thecam::eye::centre);
     this->far_clipping_plane(WZ);
     this->film_gate(world_size_type());
-    this->gate_scaling(thecam::gate_scaling::none);
+    this->gate_scaling(megamol::core::thecam::gate_scaling::none);
     this->half_aperture_angle_radians(static_cast<fractional_type>(0));
     this->image_tile(screen_rectangle_type());
     this->near_clipping_plane(WZ);
     this->orientation(quaternion_type::create_identity());
     this->position(point_type(WZ, WZ, WZ, WO));
-    this->projection_type(thecam::projection_type::perspective);
+    this->projection_type(megamol::core::thecam::projection_type::perspective);
     this->resolution_gate(screen_size_type());
 }
 
 
 /*
- * thecam::camera<M, P>::take_snapshot
+ * megamol::core::thecam::camera<M, P>::take_snapshot
  */
 template<class M, template<class> class P>
-typename thecam::camera<M, P>::snapshot_type&
-thecam::camera<M, P>::take_snapshot(
+typename megamol::core::thecam::camera<M, P>::snapshot_type&
+megamol::core::thecam::camera<M, P>::take_snapshot(
         snapshot_type& snapshot, const snapshot_content which) const {
     const auto EYE_DIR = static_cast<world_type>(this->eye());
     const auto HALF = static_cast<world_type>(0.5);
@@ -621,11 +621,11 @@ thecam::camera<M, P>::take_snapshot(
 
 
 /*
- * thecam::camera<M, P>::operator =
+ * megamol::core::thecam::camera<M, P>::operator =
  */
 template<class M, template<class> class P>
-thecam::camera<M, P>&
-thecam::camera<M, P>::operator =(const minimal_state_type& rhs) {
+megamol::core::thecam::camera<M, P>&
+megamol::core::thecam::camera<M, P>::operator =(const minimal_state_type& rhs) {
     // TODO
     //this->centre_offset(rhs.centre_offset[0], rhs.centre_offset[1]);
     this->convergence_plane(rhs.convergence_plane);

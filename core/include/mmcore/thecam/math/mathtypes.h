@@ -47,6 +47,8 @@
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/thecam/utility/not_instantiable.h"
 
+namespace megamol {
+namespace core {
 namespace thecam {
 namespace math {
 
@@ -156,29 +158,31 @@ namespace math {
     };
 
 } /* end namespace math */
-} /* end namespace the */
+} /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 
 /*
- * thecam::math::euler_e<T>::value
+ * megamol::core::thecam::math::euler_e<T>::value
  */
 template<class T>
-const T thecam::math::euler_e<T>::value = static_cast<T>(
-    thecam::math::euler_e<double>::value);
+const T megamol::core::thecam::math::euler_e<T>::value = static_cast<T>(
+    megamol::core::thecam::math::euler_e<double>::value);
 
 
 /*
- * thecam::math::epsilon<T>::value
+ * megamol::core::thecam::math::epsilon<T>::value
  */
 template<class T>
-const T thecam::math::epsilon<T>::value = static_cast<T>(0);
+const T megamol::core::thecam::math::epsilon<T>::value = static_cast<T>(0);
 
 
 /*
- * thecam::math::pi<T>::value
+ * megamol::core::thecam::math::pi<T>::value
  */
 template<class T>
-const T thecam::math::pi<T>::value = static_cast<T>(thecam::math::pi<double>::value);
+const T megamol::core::thecam::math::pi<T>::value = static_cast<T>(megamol::core::thecam::math::pi<double>::value);
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

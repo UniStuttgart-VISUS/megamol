@@ -33,15 +33,15 @@
 #include <exception>
 
 /*
- * thecam::utility::not_instantiable::~not_instantiable
+ * megamol::core::thecam::utility::not_instantiable::~not_instantiable
  */
-thecam::utility::not_instantiable::~not_instantiable(void) {
+megamol::core::thecam::utility::not_instantiable::~not_instantiable(void) {
 }
 
 
 /*
- * thecam::utility::not_instantiable::not_instantiable
+ * megamol::core::thecam::utility::not_instantiable::not_instantiable
  */
-thecam::utility::not_instantiable::not_instantiable(void) : not_copyable(), not_movable() {
+megamol::core::thecam::utility::not_instantiable::not_instantiable(void) : not_copyable(), not_movable() {
     throw std::exception("instanciation not supported");
 }

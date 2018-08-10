@@ -32,12 +32,12 @@
 
 
 /*
- * thecam::utility::discard_return
+ * megamol::core::thecam::utility::discard_return
  */
-const thecam::utility::discard_return_t thecam::utility::discard_return = 47;
+const megamol::core::thecam::utility::discard_return_t megamol::core::thecam::utility::discard_return = 47;
 
 
 /*
- * thecam::utility::do_not_initialise
+ * megamol::core::thecam::utility::do_not_initialise
  */
-const thecam::utility::do_not_initialise_t thecam::utility::do_not_initialise = 42;
+const megamol::core::thecam::utility::do_not_initialise_t megamol::core::thecam::utility::do_not_initialise = 42;

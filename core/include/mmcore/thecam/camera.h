@@ -51,6 +51,8 @@
 #include "mmcore/thecam/math/vector.h"
 
 
+namespace megamol {
+namespace core {
 namespace thecam {
 
     /**
@@ -661,6 +663,8 @@ namespace thecam {
     };
 
 } /* end namespace thecam */
+} /* end namespace core */
+} /* end namespace megamol */
 
 #include "mmcore/thecam/camera.inl"
 
