@@ -245,8 +245,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         const float globSpVol = 4.0f / 3.0f * static_cast<float>(M_PI) * globRad * globRad * globRad;
 
         auto gauss = [](float x, float y, float z, float sigma) -> float {
-            return std::expf(-(x * x + y * y + z * z) / (2.0f * sigma * sigma)) /
-                   std::powf(std::sqrtf(2.0f * M_PI * sigma), 3);
+            return std::exp(-(x * x + y * y + z * z) / (2.0f * sigma * sigma)) /
+                   std::pow(std::sqrt(2.0f * M_PI * sigma), 3);
         };
 
         int filterSize = 1;
@@ -279,14 +279,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                         if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
                             float x_diff =
                                 static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx + 0.5f * cellSizex;
-                            x_diff = std::fabsf(x_diff - x_base);
+                            x_diff = std::fabs(x_diff - x_base);
                             float y_diff =
                                 static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy + 0.5f * cellSizey;
-                            y_diff = std::fabsf(y_diff - y_base);
+                            y_diff = std::fabs(y_diff - y_base);
                             float z_diff =
                                 static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz + 0.5f * cellSizez;
-                            z_diff = std::fabsf(z_diff - z_base);
-                            float dis = std::sqrtf(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+                            z_diff = std::fabs(z_diff - z_base);
+                            float dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                             if (dis == 0.0f) dis = 1.0f;
                             vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
                         }
