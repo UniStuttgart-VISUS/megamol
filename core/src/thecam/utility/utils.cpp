@@ -35,23 +35,6 @@
 #include "mmcore/thecam/utility/utils.h"
 #include "mmcore/thecam/utility/assert.h"
 
-// TEST-includes
-#include "mmcore/thecam/arcball_manipulator.h"
-#include "mmcore/thecam/camera.h"
-#include "mmcore/thecam/camera_maths.h"
-#include "mmcore/thecam/camera_snapshot.h"
-#include "mmcore/thecam/functions.h"
-#include "mmcore/thecam/head_tracking_manipulator.h"
-#include "mmcore/thecam/manipulator_base.h"
-#include "mmcore/thecam/minimal_camera_state.h"
-#include "mmcore/thecam/processed_synchronisable_property.h"
-#include "mmcore/thecam/property.h"
-#include "mmcore/thecam/property_base.h"
-#include "mmcore/thecam/synchronisable_property.h"
-#include "mmcore/thecam/translate_manipulator.h"
-#include "mmcore/thecam/types.h"
-#include "mmcore/thecam/view_frustum.h"
-
 
 /*
  * megamol::core::thecam::utility::uint_rle_encode
