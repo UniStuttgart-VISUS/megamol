@@ -103,6 +103,7 @@ public:
     bool clippingBoxActive;
     bool dataChanged;
     bool materialChanged;
+    bool parameterChanged;
     bool isValid;
     bool smooth; //< valid for lines
 

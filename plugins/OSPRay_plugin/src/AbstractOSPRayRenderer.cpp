@@ -988,108 +988,115 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 break;
             case AOVSPHERES: {
-                if (element.raw == nullptr) {
-                    returnValue = false;
-                    break;
-                }
-
-                error = ospLoadModule("aovspheres");
-                if (error != OSP_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
-                }
-
-                numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
-
-                // aovol
-                // auto const aovol = ospNewVolume("block_bricked_volume");
-                aovol = ospNewVolume("shared_structured_volume");
-                ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
-                ospSet1f(aovol, "samplingRate", element.samplingRate);
-                //ospSet1b(aovol, "adaptiveSampling", false);
-                ospSet3iv(aovol, "dimensions", element.dimensions->data());
-                ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
-                ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
-
-                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-                std::vector<float> faketf = {
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                    1.0f,
-                };
-                std::vector<float> fakeopa = {1.0f, 1.0f};
-
-                OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
-                OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
-                ospSetData(tf, "colors", tf_rgb);
-                ospSetData(tf, "opacities", tf_opa);
-                ospSet2f(tf, "valueRange", 0.0f, 1.0f);
-
-                ospCommit(tf);
-
-                ospSetObject(aovol, "transferFunction", tf);
-
-                // add data
-                voxels = ospNewData(element.voxelCount,
-                    static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]), *element.raw2,
-                    OSP_DATA_SHARED_BUFFER);
-                ospCommit(voxels);
-                ospSetData(aovol, "voxelData", voxels);
-
-                /*auto ptr = element.raw2.get();
-                ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
-                    osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
-
-                ospCommit(aovol);
-
-                for (unsigned int i = 0; i < numCreateGeo; i++) {
-                    geo.push_back(ospNewGeometry("aovspheres_geometry"));
-
-
-                    long long int floatsToRead =
-                        element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
-                    floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
-
-                    if (vertexData != nullptr) ospRelease(vertexData);
-                    vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                        &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
-                    ospCommit(vertexData);
-                    ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
-                    ospSetData(geo.back(), "spheres", vertexData);
-                    ospSetData(geo.back(), "color", nullptr);
-
-                    if (element.vertexLength > 3) {
-                        ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                    } else {
-                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                static bool isInitAOV = false;
+                if (element.dataChanged) {
+                    if (element.raw == nullptr) {
+                        returnValue = false;
+                        break;
                     }
-                    if (element.mmpldColor ==
-                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
-                        element.mmpldColor ==
-                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                        ospSet1i(geo.back(), "color_offset",
-                            element.vertexLength *
-                                sizeof(float)); // TODO: This won't work if there are radii in the array
-                        ospSet1i(geo.back(), "color_stride", element.colorStride);
-                        ospSetData(geo.back(), "color", vertexData);
-                        if (element.mmpldColor ==
-                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                            // ospSet1i(geo.back(), "color_components", 3);
-                            ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
+                    if (!isInitAOV) {
+                        error = ospLoadModule("aovspheres");
+                        if (error != OSP_NO_ERROR) {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
                         } else {
-                            // ospSet1i(geo.back(), "color_components", 4);
-                            ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                            isInitAOV = true;
                         }
                     }
 
-                    ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
-                    ospSetObject(geo.back(), "aovol", aovol);
+                    numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
+
+                    // aovol
+                    // auto const aovol = ospNewVolume("block_bricked_volume");
+                    aovol = ospNewVolume("shared_structured_volume");
+                    ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
+                    ospSet1f(aovol, "samplingRate", element.samplingRate);
+                    // ospSet1b(aovol, "adaptiveSampling", false);
+                    ospSet3iv(aovol, "dimensions", element.dimensions->data());
+                    ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
+                    ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
+                    ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
+
+                    OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                    std::vector<float> faketf = {
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                    };
+                    std::vector<float> fakeopa = {1.0f, 1.0f};
+
+                    OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
+                    OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
+                    ospSetData(tf, "colors", tf_rgb);
+                    ospSetData(tf, "opacities", tf_opa);
+                    ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+
+                    ospCommit(tf);
+
+                    ospSetObject(aovol, "transferFunction", tf);
+
+                    // add data
+                    voxels = ospNewData(element.voxelCount,
+                        static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]),
+                        *element.raw2, OSP_DATA_SHARED_BUFFER);
+                    ospCommit(voxels);
+                    ospSetData(aovol, "voxelData", voxels);
+
+                    /*auto ptr = element.raw2.get();
+                    ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
+                        osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
+
+                    ospCommit(aovol);
+
+                    for (unsigned int i = 0; i < numCreateGeo; i++) {
+                        geo.push_back(ospNewGeometry("aovspheres_geometry"));
+
+
+                        long long int floatsToRead =
+                            element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
+                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
+
+                        if (vertexData != nullptr) ospRelease(vertexData);
+                        vertexData = ospNewData(floatsToRead, OSP_FLOAT,
+                            &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                        ospCommit(vertexData);
+                        ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
+                        ospSetData(geo.back(), "spheres", vertexData);
+                        ospSetData(geo.back(), "color", nullptr);
+
+                        if (element.vertexLength > 3) {
+                            ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                        } else {
+                            ospSet1f(geo.back(), "radius", element.globalRadius);
+                        }
+                        if (element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                            element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+
+                            ospSet1i(geo.back(), "color_offset",
+                                element.vertexLength *
+                                    sizeof(float)); // TODO: This won't work if there are radii in the array
+                            ospSet1i(geo.back(), "color_stride", element.colorStride);
+                            ospSetData(geo.back(), "color", vertexData);
+                            if (element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                                // ospSet1i(geo.back(), "color_components", 3);
+                                ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
+                            } else {
+                                // ospSet1i(geo.back(), "color_components", 4);
+                                ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                            }
+                        }
+
+                        ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
+                        ospSetObject(geo.back(), "aovol", aovol);
+                    }
                 }
             } break;
             case geometryTypeEnum::PBS:
@@ -1269,7 +1276,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet1f(vol.back(), "samplingRate", element.samplingRate);
 
                 // add data
-                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]), element.voxels, OSP_DATA_SHARED_BUFFER);
+                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]),
+                    element.voxels, OSP_DATA_SHARED_BUFFER);
                 ospCommit(voxels);
                 ospSetData(vol.back(), "voxelData", voxels);
 
@@ -1285,7 +1293,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
-                OSPData tf_rgb = ospNewData(element.tfRGB->size()/3, OSP_FLOAT3, element.tfRGB->data());
+                OSPData tf_rgb = ospNewData(element.tfRGB->size() / 3, OSP_FLOAT3, element.tfRGB->data());
                 OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
                 ospSetData(tf, "colors", tf_rgb);
                 ospSetData(tf, "opacities", tf_opa);
