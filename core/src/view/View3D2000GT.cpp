@@ -167,7 +167,9 @@ void view::View3D2000GT::DeserialiseCamera(vislib::Serialiser& serialiser) {
  * View3D2000GT::Render
  */
 void View3D2000GT::Render(const mmcRenderViewContext& context) {
-    // TODO implement
+    const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->bkgndColour();
+    glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 /*
