@@ -21,22 +21,25 @@ if(BUILD_CORE)
   # include lua sources
   add_subdirectory(lua)
 
-  if (MSVC_IDE)
-    set (MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
-  else ()
-    set (MSVC_TOOLSET "")
-  endif ()
+  if(MSVC_IDE)
+    set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
+  else()
+    set(MSVC_TOOLSET "")
+  endif()
 
   # include ZMQ
   include(ExternalProject)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
   
-  set(ZMQ_VER "4_2_2")
+  set(ZMQ_VER "4_2_3")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
-  if (MSVC)
-    set(ZMQ_LIB debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib" optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib" CACHE INTERNAL '')
+  if(MSVC)
+    set(ZMQ_LIB
+        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib"
+        optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
+        CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
   else()
     include(GNUInstallDirs)
@@ -45,8 +48,9 @@ if(BUILD_CORE)
   ExternalProject_Add(extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
-  )
+    CMAKE_ARGS
+      -DZMQ_BUILD_TESTS=OFF 
+      -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION})
   message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
 
   # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
@@ -85,12 +89,6 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  if(UNIX)
-    find_package(OpenMP)
-  endif()
-
-  find_package(MPI)
-
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
     if(USE_INTERNAL_EXPAT)
@@ -106,7 +104,7 @@ if(BUILD_CORE)
   # include zfp
   set(ZFP_VER "0_5_2")
   string(REPLACE "_" "." ZFP_TAG ${ZFP_VER})
-  if (MSVC)
+  if(MSVC)
     set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/zfp.lib" CACHE INTERNAL '')
   else()
     include(GNUInstallDirs)
@@ -123,24 +121,18 @@ if(BUILD_CORE)
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-  if (OPENMP_FOUND OR WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
-  if (MPI_C_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
+  if(MPI_C_FOUND)
     include_directories(${MPI_C_INCLUDE_PATH})
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
     set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
   endif()
-
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
   set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
-  
+
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -192,11 +184,13 @@ if(BUILD_CORE)
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
   source_group("Shaders" FILES ${shader_files})
+  source_group("Resources" FILES ${resource_files})
   source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
     install(TARGETS core RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")

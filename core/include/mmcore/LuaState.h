@@ -209,6 +209,7 @@ namespace utility {
         int CreateModule(lua_State *L);
         int DeleteModule(lua_State *L);
         int CreateCall(lua_State *L);
+        int CreateChainCall(lua_State* L);
         int DeleteCall(lua_State *L);
         int CreateJob(lua_State *L);
         int DeleteJob(lua_State *L);
@@ -221,6 +222,7 @@ namespace utility {
         int ListInstatiations(lua_State *L);
 
         int Help(lua_State *L);
+        int Quit(lua_State *L);
 
     private:
 

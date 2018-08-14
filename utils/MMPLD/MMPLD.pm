@@ -8,7 +8,7 @@ use Readonly;
 use POSIX;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT);
+our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT $COLOR_RGBA_USHORT $COLOR_INTENSITY_DOUBLE);
 
 Readonly my $NOTHINGGOES => 0;
 Readonly my $CANADDFRAME => 1;
@@ -19,12 +19,15 @@ Readonly my $CLOSED => 5;
 
 Readonly our $VERTEX_XYZ_FLOAT => 0;
 Readonly our $VERTEX_XYZR_FLOAT => 1;
+Readonly our $VERTEX_XYZ_DOUBLE => 2;
 
 Readonly our $COLOR_NONE => 0;
 Readonly our $COLOR_INTENSITY_FLOAT => 1;
 Readonly our $COLOR_RGBA_BYTE => 2;
 Readonly our $COLOR_RGB_FLOAT => 3;
 Readonly our $COLOR_RGBA_FLOAT => 4;
+Readonly our $COLOR_RGBA_USHORT => 5;
+Readonly our $COLOR_INTENSITY_DOUBLE => 6;
 
 sub _closeAndDie {
     my $self = shift;
@@ -85,9 +88,14 @@ sub _initialize {
 }
 
 sub DESTROY {
-    #print "called destructor\n";
     my $self = shift;
-    $self->Close();
+    if (${^GLOBAL_PHASE} eq 'DESTRUCT') {
+        #if ($self and $self->{state} and $self->{state} != $CLOSED) {
+        #    print "not closing a file explicitly will result in frame table corruption!\n";
+        #}
+        return;
+    }
+    #$self->Close();
 }
 
 sub _finishup {
@@ -162,6 +170,8 @@ sub StartList() {
         $self->AppendUBytes(1);
     } elsif ($vertextype == $VERTEX_XYZR_FLOAT) {
         $self->AppendUBytes(2);
+    } elsif ($vertextype == $VERTEX_XYZ_DOUBLE) {
+        $self->AppendUBytes(4);
     } else {
         die "illegal vertex type $vertextype";
     }
@@ -177,11 +187,15 @@ sub StartList() {
         $self->AppendUBytes(4);
     } elsif ($colortype == $COLOR_RGBA_FLOAT) {
         $self->AppendUBytes(5);
+    } elsif ($colortype == $COLOR_RGBA_USHORT) {
+        $self->AppendUBytes(6);
+    } elsif ($colortype == $COLOR_INTENSITY_DOUBLE) {
+        $self->AppendUBytes(7);
     } else {
         die "illegal color type $colortype";
     }
     
-    if ($vertextype == $VERTEX_XYZ_FLOAT) {
+    if ($vertextype == $VERTEX_XYZ_FLOAT || $vertextype == $VERTEX_XYZ_DOUBLE) {
         if (!defined $globalradius ||  (0 + $globalradius) != $globalradius || $globalradius == 0) {
             die qq{global radius "$globalradius" is weird.};
         }
@@ -197,7 +211,7 @@ sub StartList() {
             die qq{global color "$globalcolor" is weird.};
         }
         $self->AppendUBytes(@gc);
-    } elsif ($colortype == $COLOR_INTENSITY_FLOAT) {
+    } elsif ($colortype == $COLOR_INTENSITY_FLOAT || $colortype == $COLOR_INTENSITY_DOUBLE) {
         if (!defined $minintensity || !defined $maxintensity || (0 + $minintensity) != $minintensity || (0 + $maxintensity) != $maxintensity) {
             die qq{minintensity "$minintensity" or maxintensity "$maxintensity" is weird.};
         }
@@ -237,7 +251,11 @@ sub AddParticle {
     if (!defined $x || !defined $y || !defined $z) {
         die "need xyz coordinates in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}";
     }
-    $self->AppendFloats($x, $y, $z);
+    if ($self->{currvertextype} == $VERTEX_XYZ_DOUBLE) {
+        $self->AppendDoubles($x, $y, $z);
+    } else {
+        $self->AppendFloats($x, $y, $z);
+    }
     $self->_adjustBounds($x, $y, $z);
     if ($self->{currvertextype} == $VERTEX_XYZR_FLOAT) {
         if (!defined $rad) {
@@ -253,6 +271,11 @@ sub AddParticle {
             die qq{invalid intensity "$i" in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}};
         }
         $self->AppendFloats($i);
+    } elsif ($self->{currcolortype} == $COLOR_INTENSITY_DOUBLE) {
+        if (!defined $i || $i < $self->{currminintensity} || $i > $self->{currmaxintensity}) {
+            die qq{invalid intensity "$i" in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}};
+        }
+        $self->AppendDoubles($i);
     } elsif ($self->{currcolortype} == $COLOR_RGBA_BYTE) {
         my @gc = ($r, $g, $b, $a);
         my $ok = _checkColor(@gc);
@@ -274,6 +297,13 @@ sub AddParticle {
             die qq{color "$r, $g, $b, $a" is weird in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}.};
         }
         $self->AppendFloats($r, $g, $b, $a);
+    } elsif ($self->{currcolortype} == $COLOR_RGBA_USHORT) {
+        my @gc = ($r, $g, $b, $a);
+        my $ok = _checkUShortColor(@gc);
+        if ($ok == 0) {
+            die qq{color "$r, $g, $b, $a" is weird in frame $self->{currframe}, list $self->{currlist}, particle $self->{currparticle}.};
+        }
+        $self->AppendUShorts($r, $g, $b, $a);
     }
     
     $self->{currparticle} = $self->{currparticle} + 1;
@@ -354,25 +384,25 @@ sub _state {
 sub _stringState {
     my $self = shift;
     #die "private method _stringState called" unless caller[0]->isa(ref($self));
-    if ($self == $NOTHINGGOES) {
+    if ($self->{state} == $NOTHINGGOES) {
         return "uninitialized";
     }
-    if ($self == $CANADDFRAME) {
+    if ($self->{state} == $CANADDFRAME) {
         return "waiting for a frame";
     }
-    if ($self == $CANADDLIST) {
+    if ($self->{state} == $CANADDLIST) {
         return "waiting for a list";
     }
-    if ($self == $CANADDPARTICLE) {
+    if ($self->{state} == $CANADDPARTICLE) {
         return "waiting for a particle";
     }
-    if ($self == $ALLDONE) {
+    if ($self->{state} == $ALLDONE) {
         return "all done";
     }
-    if ($self == $CLOSED) {
+    if ($self->{state} == $CLOSED) {
         return "closed"
     }
-    return "illegal";
+    return "illegal state: " . $self->{state};
 }
 
 sub NumFrames {
@@ -449,6 +479,20 @@ sub _checkColor {
         $ok = 1;
         for (my $x = 0; $x < 4; $x++) {
             if (int($gc[$x]) != $gc[$x] || $gc[$x] < 0 || $gc[$x] > 255) {
+                $ok = 0;
+            }
+        }
+    }
+    return $ok;
+}
+
+sub _checkUShortColor {
+    my @gc = @_;
+    my $ok = 0;
+    if ($#gc == 3) {
+        $ok = 1;
+        for (my $x = 0; $x < 4; $x++) {
+            if (int($gc[$x]) != $gc[$x] || $gc[$x] < 0 || $gc[$x] > 65535) {
                 $ok = 0;
             }
         }

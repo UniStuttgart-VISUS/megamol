@@ -1,11 +1,12 @@
 /*
 *CinematicView.h
 *
+* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
+*
+* DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
 */
 
-///////////////////////////////////////////////////////////////////////////////
-///// DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp" /////
-///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
@@ -18,6 +19,7 @@
 #include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
@@ -25,14 +27,10 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
 
 #include "Keyframe.h"
 #include "png.h"
 
-// #define USE_SIMPLE_FONT
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -99,11 +97,7 @@ namespace megamol {
             **********************************************************************/
 
             // font rendering
-#ifdef USE_SIMPLE_FONT
-            vislib::graphics::gl::SimpleFont  theFont;
-#else
-            vislib::graphics::gl::OutlineFont theFont;
-#endif
+            megamol::core::utility::SDFFont theFont;
 
             enum SkyboxSides {
                 SKYBOX_NONE = 0,
@@ -223,18 +217,24 @@ namespace megamol {
             /**********************************************************************
             * parameters
             **********************************************************************/
-            /** */
-			core::param::ParamSlot selectedSkyboxSideParam;
-            /** */
-            core::param::ParamSlot resHeightParam;
-            /** */
-            core::param::ParamSlot resWidthParam;
-            /** */
-            core::param::ParamSlot fpsParam;
+
             /** */
             core::param::ParamSlot renderParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
+            /** */
+			core::param::ParamSlot selectedSkyboxSideParam;
+            /** */
+            core::param::ParamSlot resWidthParam;
+            /** */
+            core::param::ParamSlot resHeightParam;
+            /** */
+            core::param::ParamSlot fpsParam;
+
+            /** */
+            core::param::ParamSlot eyeParam;
+            /** */
+            core::param::ParamSlot projectionParam;
 		};
 
 	} /* end namespace cinematiccamera */

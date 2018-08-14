@@ -58,6 +58,7 @@
 #include "ErosionField.h"
 #include "io/MMGDDWriter.h"
 #include "io/MMGDDDataSource.h"
+#include "io/PlyWriter.h"
 #include "floattable/FloatTableColumnScaler.h"
 #include "floattable/FloatTableObserverPlane.h"
 #include "floattable/FloatTableJoin.h"
@@ -65,7 +66,10 @@
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
-
+#include "floattable/FloatTableToLines.h"
+#include "MPIParticleCollector.h"
+#include "MPIVolumeAggregator.h"
+#include "ParticlesToDensity.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -169,6 +173,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToLines>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
@@ -193,6 +198,10 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToDensity>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

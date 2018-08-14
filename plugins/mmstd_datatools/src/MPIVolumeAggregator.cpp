@@ -1,0 +1,175 @@
+/*
+ * MPIParticleCollector.h
+ *
+ * Copyright (C) 2014 by S. Grottel
+ * Alle Rechte vorbehalten.
+ */
+#include "stdafx.h"
+#include "MPIVolumeAggregator.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/EnumParam.h"
+#include "vislib/sys/SystemInformation.h"
+
+using namespace megamol;
+using namespace megamol::stdplugin;
+
+
+/*
+ * datatools::MPIVolumeAggregator::MPIVolumeAggregator
+ */
+datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
+    : AbstractVolumeManipulator("outData", "indata")
+    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+    , operatorSlot("operator", "the operator to apply to the volume when aggregating") {
+
+    this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
+    this->MakeSlotAvailable(&this->callRequestMpi);
+
+    auto* ep = new core::param::EnumParam(2);
+    ep->SetTypePair(0, "Max");
+    ep->SetTypePair(1, "Min");
+    ep->SetTypePair(2, "Sum");
+    ep->SetTypePair(3, "Product");
+    this->operatorSlot << ep;
+    this->MakeSlotAvailable(&this->operatorSlot);
+}
+
+
+/*
+ * datatools::MPIVolumeAggregator::~MPIVolumeAggregator
+ */
+datatools::MPIVolumeAggregator::~MPIVolumeAggregator(void) { this->Release(); }
+
+
+/*
+ * datatools::MPIVolumeAggregator::manipulateData
+ */
+bool datatools::MPIVolumeAggregator::manipulateData(
+    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    using megamol::core::misc::VolumetricDataCall;
+
+    outData = inData; // also transfers the unlocker to 'outData'
+
+    inData.SetUnlocker(nullptr, false); // keep original data locked
+                                        // original data will be unlocked through outData
+
+// without mpi, this module does nothing at all
+#ifdef WITH_MPI
+
+    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) return false;
+    bool useMpi = initMPI();
+
+    memcpy(&metadata, inData.GetMetadata(), sizeof(VolumetricDataCall::Metadata));
+    const auto comp = metadata.Components;
+
+    if (metadata.GridType != core::misc::CARTESIAN && metadata.GridType != core::misc::RECTILINEAR) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
+        return false;
+    }
+    if (metadata.ScalarType != core::misc::FLOATING_POINT) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "MPIVolumeAggregator cannot work with scalar type %d", metadata.ScalarType);
+        return false;
+    }
+
+    const size_t numFloats = comp * metadata.Extents[0] * metadata.Extents[1] * metadata.Extents[2];
+    // we need a copy of the data since we must not alter it.
+    std::vector<float> tmpVolume;
+    tmpVolume.resize(numFloats);
+    memcpy(tmpVolume.data(), inData.GetData(), numFloats * sizeof(float));
+    // and a copy to receive the result
+    this->theVolume.resize(numFloats);
+
+    MPI_Op op = MPI_SUM;
+    const auto opVal = this->operatorSlot.Param<core::param::EnumParam>()->Value();
+    if (comp > 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "MPIVolumeAggregator: multi-component volume detected! Computing min/max density on the first component "
+            "only. Op %s is applied on all components.",
+            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].PeekBuffer());
+    }
+    switch (opVal) {
+    case 0:
+        op = MPI_MAX;
+        break;
+    case 1:
+        op = MPI_MIN;
+        break;
+    case 2:
+        op = MPI_SUM;
+        break;
+    case 3:
+        op = MPI_PROD;
+        break;
+    default:
+        vislib::sys::Log::DefaultLog.WriteError("MPIVolumeAggregator: unknown operation %u. Aborting.", opVal);
+        return false;
+    }
+
+    MPI_Allreduce(tmpVolume.data(), this->theVolume.data(), numFloats, MPI_FLOAT, op, this->comm);
+
+    const int chunkSize = (numFloats) / this->mpiSize + 1;
+    float min = std::numeric_limits<float>::max();
+    float max = 0.0f;
+    float globalmin = min;
+    float globalmax = max;
+    const int end = std::min<int>((this->mpiRank + 1) * chunkSize, numFloats);
+    for (int x = this->mpiRank * chunkSize; x < end; x += comp) {
+        auto& d = this->theVolume.data()[x];
+        if (d < min) {
+            min = d;
+        }
+        if (d > max) {
+            max = d;
+        }
+    }
+
+    // now make min max global
+    MPI_Allreduce(&min, &globalmin, 1, MPI_FLOAT, MPI_MIN, this->comm);
+    MPI_Allreduce(&max, &globalmax, 1, MPI_FLOAT, MPI_MAX, this->comm);
+
+    outData.SetData(this->theVolume.data());
+    metadata.MinValues[0] = globalmin;
+    metadata.MaxValues[0] = globalmax;
+    outData.SetMetadata(&metadata);
+#endif /* WITH_MPI */
+
+    return true;
+}
+
+bool datatools::MPIVolumeAggregator::initMPI() {
+    bool retval = false;
+#ifdef WITH_MPI
+    if (this->comm == MPI_COMM_NULL) {
+        auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
+        if (c != nullptr) {
+            /* New method: let MpiProvider do all the stuff. */
+            if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
+                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                this->comm = c->GetComm();
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                                                        _T("retrieve MPI communicator for the MPI-based view ")
+                                                        _T("from the registered provider module."));
+            }
+        }
+
+        if (this->comm != MPI_COMM_NULL) {
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+                                                   _T("retrieving communicator properties ..."));
+            ::MPI_Comm_rank(this->comm, &this->mpiRank);
+            ::MPI_Comm_size(this->comm, &this->mpiSize);
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
+                                                   _T("of %d."),
+                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
+        } /* end if (this->comm != MPI_COMM_NULL) */
+    }     /* end if (this->comm == MPI_COMM_NULL) */
+
+    /* Determine success of the whole operation. */
+    retval = (this->comm != MPI_COMM_NULL);
+#endif /* WITH_MPI */
+    return retval;
+}
