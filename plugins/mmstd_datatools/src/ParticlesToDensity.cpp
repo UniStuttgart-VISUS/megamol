@@ -18,6 +18,7 @@
 #include "vislib/sys/Log.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -207,6 +208,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
 
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
+    const auto startTime = std::chrono::high_resolution_clock::now();
+    size_t totalParticles = 0;
+
     auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
@@ -245,6 +250,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
+
+        totalParticles += parts.GetCount();
 
         auto const filterSize = this->filterSizeSlot.Param<core::param::IntParam>()->Value();
 
@@ -357,6 +364,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     // Cleanup
     vol.resize(1);
+
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "ParticlesToDensity: creation of %u x %u x %u volume from %llu particles took %f ms.", sx, sy, sz,
+        totalParticles, diffMillis.count());
 
     return true;
 }
