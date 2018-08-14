@@ -715,12 +715,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
     if (this->geo.size() != 0) {
         for (auto element : this->geo) {
             ospRemoveGeometry(this->world, element);
+            ospRelease(element);
         }
         this->geo.clear();
     }
     if (this->vol.size() != 0) {
         for (auto element : this->vol) {
             ospRemoveVolume(this->world, element);
+            ospRelease(element);
         }
         this->vol.clear();
     }
@@ -821,8 +823,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData xData = NULL;
         OSPData yData = NULL;
         OSPData zData = NULL;
-        OSPData bboxData = nullptr;
-        OSPVolume aovol = nullptr;
+        OSPData bboxData = NULL;
+        OSPVolume aovol = NULL;
         OSPError error;
 
         // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
@@ -989,7 +991,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case AOVSPHERES: {
                 static bool isInitAOV = false;
-                if (element.dataChanged) {
+                /*if (element.dataChanged)*/ {
                     if (element.raw == nullptr) {
                         returnValue = false;
                         break;
@@ -1052,6 +1054,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
 
                     ospCommit(aovol);
+                    ospRelease(tf);
 
                     for (unsigned int i = 0; i < numCreateGeo; i++) {
                         geo.push_back(ospNewGeometry("aovspheres_geometry"));
@@ -1237,7 +1240,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (yData != NULL) ospRelease(yData);
             if (zData != NULL) ospRelease(zData);
             if (bboxData != NULL) ospRelease(bboxData);
-            if (aovol != nullptr) ospRelease(aovol);
+            if (aovol != NULL) ospRelease(aovol);
+            if (voxels != NULL) ospRelease(voxels);
 
             break;
 
@@ -1303,6 +1307,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 ospSetObject(vol.back(), "transferFunction", tf);
                 ospCommit(vol.back());
+                ospRelease(tf);
             }
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
@@ -1344,6 +1349,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             }
+
+            if (voxels != NULL) ospRelease(voxels);
+            if (planes != NULL) ospRelease(planes);
+            if (isovalues != NULL) ospRelease(isovalues);
+
             break;
         }
 
