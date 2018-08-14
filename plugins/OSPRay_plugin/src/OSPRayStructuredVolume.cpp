@@ -98,7 +98,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
-    if (os->getTime() > cd->FrameCount()) {
+    if (os->getTime() >= cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true

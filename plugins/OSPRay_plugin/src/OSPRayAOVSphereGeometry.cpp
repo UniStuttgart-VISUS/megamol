@@ -61,14 +61,32 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    vd->SetFrameID(os->getTime(), true);
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->volDatahash != vd->DataHash() ||
-        this->volFrameID != vd->FrameID() || this->InterfaceIsDirty()) {
+
+    if (!(*cd)(1)) return false;
+    if (!(*vd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+
+    auto const minFrameCount = std::min(cd->FrameCount(), vd->FrameCount());
+
+    if (minFrameCount == 0) return false;
+
+    auto frameTime = 0;
+
+    if (os->getTime() >= minFrameCount) {
+        cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+        vd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+        frameTime = minFrameCount - 1;
+    } else {
+        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+        vd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+        frameTime = os->getTime();
+    }
+
+    if (this->datahash != cd->DataHash() || this->time != frameTime || this->volDatahash != vd->DataHash() ||
+        this->volFrameID != frameTime || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
-        this->time = os->getTime();
+        this->time = frameTime;
         this->volDatahash = vd->DataHash();
-        this->volFrameID = os->getTime();
+        this->volFrameID = frameTime;
         this->structureContainer.dataChanged = true;
     } else {
         return true;
