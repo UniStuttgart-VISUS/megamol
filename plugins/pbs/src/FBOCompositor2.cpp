@@ -31,7 +31,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , cinematicRenderingSlot_{"cinematic_rendering", "Cinematic rendering mode for stalling rendering until frame for requested time is available."}
+    , waitForNextFrameSlot_{"await_next_frame", "Cinematic rendering mode for stalling rendering until frame for requested time is available."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -40,8 +40,9 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , depth_buf_el_size_{4}
     , width_{0}
     , height_{0}
-    , last_frame_id_{0}
-    , last_requested_time_{-1.0f}
+    , frame_time_{-1.0f}
+    , frame_id_{0}
+    , got_first_frame_{false}
     , connected_{false}
     , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
     , isRegistered_{false} {
@@ -65,8 +66,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
     this->MakeSlotAvailable(&startSlot_);
 
-    cinematicRenderingSlot_ << new megamol::core::param::BoolParam(false);
-    this->MakeSlotAvailable(&cinematicRenderingSlot_);
+    waitForNextFrameSlot_ << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&waitForNextFrameSlot_);
 }
 
 
@@ -228,9 +229,20 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     if (cr3d == nullptr) return false;
     auto req_time = cr3d->Time();
 
+    /*
+    if (this->got_first_frame_) {
+        stall_rendering = this->waitForNextFrameSlot_.Param<megamol::core::param::BoolParam>()->Value();
+    }
+    */
+
     // stall rendering until expected frame has arrived
-    bool render = false;
-    while (!render) {
+    bool stall_rendering = true;
+    while (stall_rendering) {
+
+        stall_rendering = false;
+        if (this->got_first_frame_ && this->waitForNextFrameSlot_.Param<megamol::core::param::BoolParam>()->Value()){
+            stall_rendering = true;
+        }          
 
         // if data changed check is size has changed
         // if no directly upload
@@ -244,7 +256,34 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 #if _DEBUG && VERBOSE
             vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
-            auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+
+            if (!this->got_first_frame_) {
+                this->got_first_frame_ = true;
+            }
+
+            float current_frame_time = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[0];
+            auto  current_frame_id   = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_id;
+
+            // Check if stalling is enabled
+            if (stall_rendering)  {
+                if (fabs(req_time - current_frame_time) < 0.000001f) {
+
+
+
+
+                    this->frame_time_ = current_frame_time;
+                    this->frame_id_   = current_frame_id;
+
+                    stall_rendering = false;
+                }
+            }
+
+            vislib::sys::Log::DefaultLog.WriteError("DEBUG>>>  req_time: %f --- req_frame_time_: %f --- stall_rendering %s\n",
+                req_time, this->frame_time_, (stall_rendering) ? ("TRUE") : ("FALSE"));
+
+
+            
+            auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
             auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
             if (this->width_ != width || this->height_ != height) {
@@ -262,20 +301,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             }
 
             data_has_changed_.store(false);
-
-            auto current_frame_id = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_id;
-            //auto current_time     = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[0];
-            if (req_time != this->last_requested_time_) {
-                this->last_frame_id_ = current_frame_id + 1;
-            }
-            render = (current_frame_id == this->last_frame_id_);
-
         }
 
-        // Don't stall rendering if cinematic rendering mode is off
-        if (!this->cinematicRenderingSlot_.Param<megamol::core::param::BoolParam>()->Value()) {
-            render = true;
-        }
     }
     
     // constantly render current texture set

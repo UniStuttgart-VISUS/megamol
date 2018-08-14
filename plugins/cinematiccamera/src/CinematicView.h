@@ -122,7 +122,6 @@ namespace megamol {
             CinematicView::SkyboxSides              sbSide;
 
             vislib::graphics::gl::FramebufferObject fbo;
-            bool                                    resetFbo;
             bool                                    rendering;
             unsigned int                            fps;
             unsigned int                            expFrameCnt;
@@ -139,15 +138,12 @@ namespace megamol {
                 png_structp            ptr;
                 png_infop              infoptr;
                 float                  animTime;
-                bool                   lock;
+                unsigned int           await_frame_cnt;
             } pngdata;
 
             /**********************************************************************
             * functions
             **********************************************************************/
-
-            /** */
-            bool setSimTime(float st);
 
             /** Render to file functions */
             bool rtf_setup();
@@ -163,6 +159,9 @@ namespace megamol {
 
             /** */
             bool rtf_finish();
+
+            /** */
+            bool setSimTime(float st);
 
             /**
             * My error handling function for png export

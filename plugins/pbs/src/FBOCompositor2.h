@@ -117,7 +117,7 @@ private:
 
     megamol::core::param::ParamSlot restartSlot_;
 
-    megamol::core::param::ParamSlot cinematicRenderingSlot_;
+    megamol::core::param::ParamSlot waitForNextFrameSlot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
@@ -173,9 +173,11 @@ private:
 
     GLsizei height_;
 
-    megamol::pbs::id_t last_frame_id_;
+    float frame_time_;
 
-    float last_requested_time_;
+    megamol::pbs::id_t frame_id_;
+
+    bool got_first_frame_;
 
     std::vector<GLuint> color_textures_;
 
