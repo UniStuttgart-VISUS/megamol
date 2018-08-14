@@ -87,6 +87,7 @@ void AbstractOSPRayStructure::processMaterial() {
             this->structureContainer.materialContainer = cm->getMaterialParameter();
         }
     } else {
+        this->structureContainer.materialChanged = false;
         this->structureContainer.materialContainer = NULL;
     }
 }

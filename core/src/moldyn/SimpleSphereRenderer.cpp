@@ -24,11 +24,11 @@ using namespace megamol::core;
  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereRenderer(),
         sphereShader(),
-		scalingParam("scaling", "scaling factor for particle radii") {
+        scalingParam("scaling", "scaling factor for particle radii") {
     // intentionally empty
 
-	this->scalingParam << new core::param::FloatParam(1.0f);
-	this->MakeSlotAvailable(&this->scalingParam);
+    this->scalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->scalingParam);
 }
 
 
@@ -109,8 +109,8 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
     float clipDat[4];
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
-	
-	glDisable(GL_BLEND);
+    
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -127,7 +127,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
-	glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
 
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
@@ -162,10 +162,16 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 glEnableClientState(GL_COLOR_ARRAY);
                 glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
                 break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
                 glEnableVertexAttribArrayARB(cial);
-                glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
-
+                if (parts.GetColourDataType() == SimpleSphericalParticles::COLDATA_FLOAT_I) {
+                    glVertexAttribPointerARB(
+                        cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                } else {
+                    glVertexAttribPointerARB(
+                        cial, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                }
                 glEnable(GL_TEXTURE_1D);
 
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -182,6 +188,10 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 maxC = parts.GetMaxColourIndexValue();
                 glColor3ub(127, 127, 127);
             } break;
+            case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(4, GL_UNSIGNED_SHORT, parts.GetColourDataStride(), parts.GetColourData());
+                break;
             default:
                 glColor3ub(127, 127, 127);
                 break;
@@ -200,6 +210,16 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                 glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+                break;
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
+                break;
+            case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                glVertexPointer(3, GL_SHORT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             default:
                 continue;

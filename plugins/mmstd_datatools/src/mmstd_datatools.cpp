@@ -67,7 +67,9 @@
 #include "ParticleNeighborhood.h"
 #include "ParticleThermometer.h"
 #include "floattable/FloatTableToLines.h"
-
+#include "MPIParticleCollector.h"
+#include "MPIVolumeAggregator.h"
+#include "ParticlesToDensity.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -197,6 +199,9 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToDensity>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

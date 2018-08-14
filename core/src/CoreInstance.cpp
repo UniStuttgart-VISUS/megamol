@@ -812,6 +812,22 @@ bool megamol::core::CoreInstance::RequestCallInstantiation(const vislib::StringA
     return true;
 }
 
+bool megamol::core::CoreInstance::RequestChainCallInstantiation(
+    const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to) {
+    factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
+    if (cd == NULL) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to request chain instantiation of "
+                                                " unknown call class \"%s\".",
+            className.PeekBuffer());
+        return false;
+    }
+
+    core::InstanceDescription::CallInstanceRequest cir(chainStart, to, cd, false);
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingChainCallInstRequests.Add(cir);
+    return true;
+}
+
 
 bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, const vislib::StringA& value) {
     vislib::sys::AutoLock l(this->graphUpdateLock);
@@ -1004,7 +1020,154 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         this->pendingCallInstRequests.RemoveFirst();
         if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
-                " from \"%s\" to \"%s\".", cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
+                                                    " from \"%s\" to \"%s\".",
+                cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
+        }
+    }
+
+    while (this->pendingChainCallInstRequests.Count() > 0) {
+        auto cir = this->pendingChainCallInstRequests.First();
+        this->pendingChainCallInstRequests.RemoveFirst();
+
+        ASSERT(cir.From().StartsWith("::"));
+
+        std::string chainClass = cir.Description()->ClassName();
+
+        vislib::Array<vislib::StringA> fromDirs = vislib::StringTokeniserA::Split(cir.From(), "::", true);
+        vislib::StringA fromSlotName = fromDirs.Last();
+        fromDirs.RemoveLast();
+        vislib::StringA fromModName = fromDirs.Last();
+        fromDirs.RemoveLast();
+
+        ModuleNamespace::ptr_type fromNS =
+            ModuleNamespace::dynamic_pointer_cast(this->namespaceRoot->FindNamespace(fromDirs, false));
+        if (!fromNS) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to instantiate call: can not find source namespace \"%s\"", cir.From().PeekBuffer());
+            continue;
+        }
+
+        Module::ptr_type fromMod = std::dynamic_pointer_cast<Module>(fromNS->FindChild(fromModName));
+        if (!fromMod) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to instantiate call: can not find source module \"%s\"", cir.From().PeekBuffer());
+            continue;
+        }
+
+        CallerSlot* fromSlot = dynamic_cast<CallerSlot*>(fromMod->FindSlot(fromSlotName));
+        if (fromSlot == NULL) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to instantiate call: can not find source slot \"%s\"", cir.From().PeekBuffer());
+            continue;
+        }
+
+        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
+
+        const auto it_end = this->namespaceRoot->ChildList_End();
+        for (auto it = this->namespaceRoot->ChildList_Begin(); it != it_end; ++it) {
+            if (std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it)) {
+                anoStack.push_back(*it);
+            }
+        }
+
+        typedef struct {
+            std::string name;
+            std::string fromFull;
+            std::string toFull;
+        } conn;
+        std::vector<conn> connections;
+
+        while (!anoStack.empty()) {
+            AbstractNamedObject::const_ptr_type ano = anoStack.back();
+            anoStack.pop_back();
+
+            AbstractNamedObjectContainer::const_ptr_type anoc =
+                std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+            const CallerSlot* caller = dynamic_cast<const CallerSlot*>(ano.get());
+
+            if (caller) {
+                // TODO there must be a better way
+                const Call* c = const_cast<CallerSlot*>(caller)->CallAs<Call>();
+                if (c != nullptr) {
+                    if (c->ClassName() == chainClass) {
+                        conn theConn = {
+                            c->ClassName(), c->PeekCallerSlot()->FullName().PeekBuffer(), c->PeekCalleeSlot()->FullName().PeekBuffer()};
+                        connections.push_back(theConn);
+                    }
+                    // answer << c->ClassName() << ";" << c->PeekCallerSlot()->Parent()->Name() << ","
+                    //       << c->PeekCalleeSlot()->Parent()->Name() << ";" << c->PeekCallerSlot()->Name() << ","
+                    //       << c->PeekCalleeSlot()->Name() << std::endl;
+                }
+            }
+
+            if (anoc) {
+                const auto it_end2 = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
+                    anoStack.push_back(*it);
+                }
+            }
+        }
+
+        vislib::sys::Log::DefaultLog.WriteInfo("chain call: trying to find slot for appending %s at the end of %s",
+            cir.Description()->ClassName(), cir.From().PeekBuffer());
+        std::string currFrom = cir.From().PeekBuffer();
+
+        std::string currTo = "";
+        std::string modFull;
+        // find the one connection going out from the chain start
+        auto which = std::find_if(
+            connections.begin(), connections.end(), [currFrom](conn& c) { return c.fromFull == currFrom; });
+        if (which == connections.end()) {
+            // nothing found, this is the same as a normal call connection
+            vislib::sys::Log::DefaultLog.WriteInfo("chain call: there is nothing to append %s at the end of %s to",
+                cir.Description()->ClassName(), cir.From().PeekBuffer());
+            if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+                                                        " from \"%s\" to \"%s\".",
+                    cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
+            }
+        } else {
+            // walk the connection chain until we find an end
+
+            do {
+                // which->toFull points to a module::slot where we need to follow the chain
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "following chain from %s to %s", which->fromFull.c_str(), which->toFull.c_str());
+                auto pos = which->toFull.find_last_of("::");
+                modFull = which->toFull.substr(0, pos - 1);
+                which = std::find_if(connections.begin(), connections.end(), [modFull](conn& c) {
+                    auto pos2 = c.fromFull.find_last_of("::");
+                    std::string mod2 = c.fromFull.substr(0, pos2 - 1);
+                    return mod2 == modFull;
+                });
+            } while (which != connections.end());
+            vislib::sys::Log::DefaultLog.WriteInfo("chain ends at %s", modFull.c_str());
+
+
+            Module::ptr_type mod =
+                Module::dynamic_pointer_cast(this->namespaceRoot.get()->FindNamedObject(modFull.c_str()));
+            if (!mod) {
+                vislib::sys::Log::DefaultLog.WriteError("cannot get module %s", modFull.c_str());
+                continue;
+            }
+
+            AbstractNamedObjectContainer::child_list_type::iterator si, se;
+            se = mod->ChildList_End();
+            for (si = mod->ChildList_Begin(); si != se; ++si) {
+                CallerSlot* slot = dynamic_cast<CallerSlot*>((*si).get());
+                if (slot) {
+                    if (slot->IsCallCompatible(cir.Description())) {
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "chain connection from slot %s", slot->FullName().PeekBuffer());
+                        if (this->InstantiateCall(slot->FullName(), cir.To(), cir.Description()) == nullptr) {
+                            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+                                                                    " from \"%s\" to \"%s\".",
+                                cir.Description()->ClassName(), slot->FullName().PeekBuffer(), cir.To().PeekBuffer());
+                        }
+                        break;                        
+                    }
+                }
+            }
         }
     }
 

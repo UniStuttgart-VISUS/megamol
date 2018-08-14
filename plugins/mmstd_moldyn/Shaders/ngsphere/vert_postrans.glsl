@@ -7,4 +7,5 @@
  
     // calculate light position in glyph space 
 
-    lightPos = MVinv * gl_LightSource[0].position;
+    //lightPos = MVinv * gl_LightSource[0].position;
+    lightPos = MVinv * lpos;

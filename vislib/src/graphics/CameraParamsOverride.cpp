@@ -39,9 +39,9 @@ vislib::graphics::CameraParamsOverride::~CameraParamsOverride(void) {
 /*
  * vislib::graphics::CameraParamsOverride::ApplyLimits
  */
-void vislib::graphics::CameraParamsOverride::ApplyLimits(void) {
+void vislib::graphics::CameraParamsOverride::ApplyLimits(bool autoFocus) {
     ASSERT(!this->base.IsNull());
-    this->base->ApplyLimits();
+    this->base->ApplyLimits(autoFocus);
 }
 
 
@@ -390,9 +390,9 @@ void vislib::graphics::CameraParamsOverride::SetFocalDistance(
  */
 void vislib::graphics::CameraParamsOverride::SetLimits(
         const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& 
-        limits) {
+        limits, bool autoFocus) {
     ASSERT(!this->base.IsNull());
-    this->base->SetLimits(limits);
+    this->base->SetLimits(limits, autoFocus);
 }
 
 

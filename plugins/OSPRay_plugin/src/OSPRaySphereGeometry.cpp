@@ -69,7 +69,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
-	cd->SetTimeStamp(os->getTime());
+    cd->SetTimeStamp(os->getTime());
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
@@ -79,12 +79,13 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() >(cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
-    }
-
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
+    if (cd->GetParticleListCount() == 0) return false;
+
+    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    }
 
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 
@@ -169,7 +170,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         unsigned int iter = 0;
         for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
             if (loop % (vertexLength + colorLength) >= vertexLength) {
-                cd_rgba.push_back(std::abs(ffaf(parts, loop)) / 255.0f);
+                cd_rgba.push_back(std::abs(ffaf(parts, loop)));
                 iter++;
                 if (iter == 3) {
                     cd_rgba.push_back(1.0f);

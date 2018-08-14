@@ -448,6 +448,106 @@ void SDFFont::DrawString(const float col[4], float x, float y, float w, float h,
 /*
 * SDFFont::DrawString
 */
+void SDFFont::DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
+
+    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+
+    int *run = this->buildGlyphRun(txt, w / size);
+
+    if (flipY) y += h;
+
+    switch (align) {
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
+    default:
+        break;
+    }
+
+    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
+
+    ARY_SAFE_DELETE(run);
+}
+
+
+/*
+* SDFFont::DrawString
+*/
+void SDFFont::DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
+
+    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+
+    int *run = this->buildGlyphRun(txt, w / size);
+
+    if (flipY) y += h;
+
+    switch (align) {
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
+    default:
+        break;
+    }
+
+    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
+
+    ARY_SAFE_DELETE(run);
+}
+
+
+/*
+* SDFFont::DrawString
+*/
 void SDFFont::DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
     if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
@@ -598,7 +698,7 @@ bool SDFFont::initialise(megamol::core::CoreInstance *core) {
 void SDFFont::deinitialise(void) {
 
     // String cache
-    this->ClearBatchCache();
+    this->ClearBatchDrawCache();
 
     // Texture
     this->texture.Release();
@@ -1029,7 +1129,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
         run++;
     }
 
-    if (this->IsBatchDrawEnabled()) {
+    if (this->GetBatchDrawMode()) {
         // Copy new data to batch cache ...
         for (unsigned int i = 0; i < posCnt; ++i) {
             this->posBatchCache.push_back(posData[i]);
@@ -1165,9 +1265,9 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     this->initialised = false;
 
     this->ResetRotation();
-    this->DisableBatchDraw();
-    this->ClearBatchCache();
-    this->DisableBillboard();
+    this->SetBatchDrawMode(false);
+    this->ClearBatchDrawCache();
+    this->SetBillboardMode(false);
 
     if (core == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
@@ -1175,6 +1275,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (1) Load buffers --------------------------------------------------------
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading OGL BUFFERS ... \n");
     if (!this->loadFontBuffers()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
         return false;
@@ -1183,24 +1284,27 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     // (2) Load font information -----------------------------------------------
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT INFO ... \n");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
-    
+
     // (3) Load font texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT TEXTURE ... \n");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }
 
     // (4) Load shaders --------------------------------------------------------
+    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading SHADERS ... \n");
     if (!this->loadFontShader(core)) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
-    }  
+    }
 
     this->initialised = true;
     return true;
@@ -1464,12 +1568,11 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
         return false;
     }
 
-    if (pbc.Load((void *)buf, size)) {
-        // (Using template with minimum channels containing alpha)
-        img.Convert(vislib::graphics::BitmapImage::TemplateByteGrayAlpha); 
+    if (pbc.Load((void*)buf, size)) {
 
-        // (Red channel is Gray value - Green channel is alpha value from png)
-        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RG) != GL_NO_ERROR) {
+        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
+
+        if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
             vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
             return false;
