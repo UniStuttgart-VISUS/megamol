@@ -1,9 +1,9 @@
 /*
- * NGSphereRenderer.cpp
- *
- * Copyright (C) 2014 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
- */
+* NGSphereRenderer.cpp
+*
+* Copyright (C) 2014 by VISUS (Universitaet Stuttgart)
+* Alle Rechte vorbehalten.
+*/
 
 #include "stdafx.h"
 #include "NGSphereRenderer.h"
@@ -34,87 +34,88 @@ const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
+#define NGS_THE_ALIGNMENT "packed"
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar* message, const GLvoid* userParam) {
-        const char *sourceText, *typeText, *severityText;
-        switch(source) {
-            case GL_DEBUG_SOURCE_API:
-                sourceText = "API";
-                break;
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-                sourceText = "Window System";
-                break;
-            case GL_DEBUG_SOURCE_SHADER_COMPILER:
-                sourceText = "Shader Compiler";
-                break;
-            case GL_DEBUG_SOURCE_THIRD_PARTY:
-                sourceText = "Third Party";
-                break;
-            case GL_DEBUG_SOURCE_APPLICATION:
-                sourceText = "Application";
-                break;
-            case GL_DEBUG_SOURCE_OTHER:
-                sourceText = "Other";
-                break;
-            default:
-                sourceText = "Unknown";
-                break;
-        }
-        switch(type) {
-            case GL_DEBUG_TYPE_ERROR:
-                typeText = "Error";
-                break;
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-                typeText = "Deprecated Behavior";
-                break;
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-                typeText = "Undefined Behavior";
-                break;
-            case GL_DEBUG_TYPE_PORTABILITY:
-                typeText = "Portability";
-                break;
-            case GL_DEBUG_TYPE_PERFORMANCE:
-                typeText = "Performance";
-                break;
-            case GL_DEBUG_TYPE_OTHER:
-                typeText = "Other";
-                break;
-            case GL_DEBUG_TYPE_MARKER:
-                typeText = "Marker";
-                break;
-            default:
-                typeText = "Unknown";
-                break;
-        }
-        switch(severity) {
-            case GL_DEBUG_SEVERITY_HIGH:
-                severityText = "High";
-                break;
-            case GL_DEBUG_SEVERITY_MEDIUM:
-                severityText = "Medium";
-                break;
-            case GL_DEBUG_SEVERITY_LOW:
-                severityText = "Low";
-                break;
-            case GL_DEBUG_SEVERITY_NOTIFICATION:
-                severityText = "Notification";
-                break;
-            default:
-                severityText = "Unknown";
-                break;
-        }
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+    const char *sourceText, *typeText, *severityText;
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        sourceText = "API";
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceText = "Window System";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceText = "Shader Compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceText = "Third Party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceText = "Application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        sourceText = "Other";
+        break;
+    default:
+        sourceText = "Unknown";
+        break;
+    }
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        typeText = "Error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeText = "Deprecated Behavior";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeText = "Undefined Behavior";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeText = "Portability";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        typeText = "Performance";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        typeText = "Other";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+        typeText = "Marker";
+        break;
+    default:
+        typeText = "Unknown";
+        break;
+    }
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityText = "High";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        severityText = "Medium";
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        severityText = "Low";
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        severityText = "Notification";
+        break;
+    default:
+        severityText = "Unknown";
+        break;
+    }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 }
 
 
 /*
- * moldyn::NGSphereRenderer::NGSphereRenderer
- */
+* moldyn::NGSphereRenderer::NGSphereRenderer
+*/
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    scalingParam("scaling", "scaling factor for particle radii"),
-    colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE) {
+scalingParam("scaling", "scaling factor for particle radii"),
+colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE) {
 
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
@@ -122,15 +123,15 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 
 
 /*
- * moldyn::NGSphereRenderer::~NGSphereRenderer
- */
+* moldyn::NGSphereRenderer::~NGSphereRenderer
+*/
 NGSphereRenderer::~NGSphereRenderer(void) {
     this->Release();
 }
 
 /*
- * moldyn::SimpleSphereRenderer::create
- */
+* moldyn::SimpleSphereRenderer::create
+*/
 bool NGSphereRenderer::create(void) {
 #ifdef DEBUG_BLAHBLAH
     glDebugMessageCallback(MyFunkyDebugCallback, NULL);
@@ -161,66 +162,91 @@ bool NGSphereRenderer::create(void) {
 bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
     bool ret = true;
     switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            declaration = "";
-            code = "    theColor = vec4(1.0);\n";
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            ret = false;
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            declaration = "    uint color;\n";
-            if (interleaved) {
-                code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
-            } else {
-                code = "    theColor = unpackUnorm4x8(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
-            }
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            declaration = "    float r; float g; float b;\n";
-            if (interleaved) {
-                code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
-            } else {
-                code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
-            }
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            declaration = "    float r; float g; float b; float a;\n";
-            if (interleaved) {
-                code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
-            } else {
-                code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
-            }
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            declaration = "    float colorIndex;\n";
-            if (interleaved) {
-                code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
-            } else {
-                code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
-            }
-        } break;
-        default:
-            declaration = "";
-            code = "    theColor = gl_Color;\n"
-                   "    theColIdx = colIdx;";
-            break;
+    case MultiParticleDataCall::Particles::COLDATA_NONE:
+        declaration = "";
+        code = "";
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+        vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
+        ret = false;
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+        declaration = "    uint color;\n";
+        if (interleaved) {
+            code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+        }
+        else {
+            code = "    theColor = unpackUnorm4x8(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+        }
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+        declaration = "    float r; float g; float b;\n";
+        if (interleaved) {
+            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+        }
+        else {
+            code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+        }
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+        declaration = "    float r; float g; float b; float a;\n";
+        if (interleaved) {
+            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+        }
+        else {
+            code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+        }
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+        declaration = "    float colorIndex;\n";
+        if (interleaved) {
+            code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+        }
+        else {
+            code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+        }
+    } break;
+    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+        declaration = "    double colorIndex;\n";
+        if (interleaved) {
+            code = "    theColIdx = float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+        }
+        else {
+            code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+        }
+    } break;
+    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
+        declaration = "    uint col1; uint col2;\n";
+        if (interleaved) {
+            code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+        }
+        else {
+            code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+        }
+    } break;
+    default:
+        declaration = "";
+        code = "    theColor = gl_Color;\n"
+            "    theColIdx = colIdx;";
+        break;
     }
     //code = "    theColor = vec4(0.2, 0.7, 1.0, 1.0);";
     return ret;
 }
 
-bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved)  {
+bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
     bool ret = true;
 
     switch (parts.GetVertexDataType()) {
@@ -235,7 +261,23 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
-        } else {
+        }
+        else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        declaration = "    double posX; double posY; double posZ;\n";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
@@ -249,7 +291,8 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
-        } else {
+        }
+        else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
@@ -259,8 +302,8 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
     default:
         declaration = "";
         code = "    inPos = gl_Vertex;\n"
-               "    rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;\n"
-               "    inPos.w = 1.0; ";
+            "    rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;\n"
+            "    inPos.w = 1.0; ";
         break;
     }
 
@@ -281,7 +324,7 @@ std::shared_ptr<GLSLShader> NGSphereRenderer::makeShader(vislib::SmartPtr<Shader
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-            ce.FailedAction()), ce.GetMsgA());
+                ce.FailedAction()), ce.GetMsgA());
         return nullptr;
     }
     catch (vislib::Exception e) {
@@ -334,28 +377,32 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             if (parts.GetColourData() < parts.GetVertexData()) {
                 decl += colDecl;
                 decl += vertDecl;
-            } else {
+            }
+            else {
                 decl += vertDecl;
                 decl += colDecl;
             }
             decl += "};\n";
 
-            decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
                 "    SphereParams theBuffer[];\n"
                 // flat float version
                 //"    float theBuffer[];\n"
                 "};\n";
 
-        } else {
+        }
+        else {
             // we seem to have separate buffers for vertex and color data
 
             decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
             decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
 
-            decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+                ") buffer shader_data {\n"
                 "    SpherePosParams thePosBuffer[];\n"
                 "};\n";
-            decl += "layout(packed, binding = " + std::to_string(SSBOcolorBindingPoint) + ") buffer shader_data2 {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
+                ") buffer shader_data2 {\n"
                 "    SphereColParams theColBuffer[];\n"
                 "};\n";
         }
@@ -377,8 +424,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
 
 
 /*
- * moldyn::SimpleSphereRenderer::release
- */
+* moldyn::SimpleSphereRenderer::release
+*/
 void NGSphereRenderer::release(void) {
     //this->sphereShader.Release();
     // TODO release all shaders!
@@ -387,119 +434,57 @@ void NGSphereRenderer::release(void) {
 }
 
 
-void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
-    float minC = 0.0f, maxC = 0.0f;
-    unsigned int colTabSize = 0;
-
-    // colour
-    glBindBuffer(GL_ARRAY_BUFFER, colBuf);
-    switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            glColor3ubv(parts.GetGlobalColour());
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            glEnableVertexAttribArrayARB(colIdxAttribLoc);
-            glVertexAttribPointerARB(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
-
-            glEnable(GL_TEXTURE_1D);
-
-            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            } else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
-
-            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-            glColor3ub(127, 127, 127);
-        } break;
-        default:
-            glColor3ub(127, 127, 127);
-            break;
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, vertBuf);
-    // radius and position
-    switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-            glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-            glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        default:
-            break;
-    }
-}
-
 void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
     unsigned int &colStride, unsigned int &vertStride, bool &interleaved) {
     vertBytes = 0; colBytes = 0;
     switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            // nothing
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            colBytes = vislib::math::Max(colBytes, 3U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            colBytes = vislib::math::Max(colBytes, 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            colBytes = vislib::math::Max(colBytes, 3 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            colBytes = vislib::math::Max(colBytes, 4 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            colBytes = vislib::math::Max(colBytes, 1 * 4U);
-            // nothing else
-        }
-            break;
-        default:
-            // nothing
-            break;
+    case MultiParticleDataCall::Particles::COLDATA_NONE:
+        // nothing
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+        colBytes = vislib::math::Max(colBytes, 3U);
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+        colBytes = vislib::math::Max(colBytes, 4U);
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+        colBytes = vislib::math::Max(colBytes, 3 * 4U);
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+        colBytes = vislib::math::Max(colBytes, 4 * 4U);
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+        colBytes = vislib::math::Max(colBytes, 1 * 4U);
+    } break;
+    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+        colBytes = vislib::math::Max(colBytes, 1 * 8U);
+    }
+                                                             break;
+    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
+        colBytes = vislib::math::Max(colBytes, 4 * 2U);
+    } break;
+    default:
+        // nothing
+        break;
     }
 
     // radius and position
     switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            //continue;
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
-            break;
-        default:
-            //continue;
-            break;
+    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+        //continue;
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        vertBytes = vislib::math::Max(vertBytes, 3 * 8U);
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+        vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
+        break;
+    default:
+        //continue;
+        break;
     }
 
     colStride = parts.GetColourDataStride();
@@ -514,8 +499,8 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
 
 
 /*
- * moldyn::SimpleSphereRenderer::Render
- */
+* moldyn::SimpleSphereRenderer::Render
+*/
 bool NGSphereRenderer::Render(Call& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
@@ -528,12 +513,12 @@ bool NGSphereRenderer::Render(Call& call) {
     MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
     if (c2 == NULL) return false;
 
-//	timer.BeginFrame();
+    //	timer.BeginFrame();
 
     float clipDat[4];
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
-    
+
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -550,6 +535,8 @@ bool NGSphereRenderer::Render(Call& call) {
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
+    GLfloat lpos[4];
+    glGetLightfv(GL_LIGHT0, GL_POSITION, lpos);
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
@@ -580,7 +567,7 @@ bool NGSphereRenderer::Render(Call& call) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
-             newShader = this->generateShader(parts);
+            newShader = this->generateShader(parts);
         }
         newShader->Enable();
         colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
@@ -590,6 +577,7 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform4fv(newShader->ParameterLocation("lpos"), 1, lpos);
         glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
@@ -599,34 +587,44 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                glEnable(GL_TEXTURE_1D);
-                view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                if ((cgtf != NULL) && ((*cgtf)())) {
-                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                    colTabSize = cgtf->TextureSize();
-                } else {
-                    glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                    colTabSize = 2;
-                }
-                glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-                minC = parts.GetMinColourIndexValue();
-                maxC = parts.GetMaxColourIndexValue();
-            } break;
-            default:
-                break;
+        case MultiParticleDataCall::Particles::COLDATA_NONE: {
+            glUniform4f(this->newShader->ParameterLocation("globalCol"),
+                static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+                static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+                static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
+                1.0f);
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+            glEnable(GL_TEXTURE_1D);
+            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+            if ((cgtf != NULL) && ((*cgtf)())) {
+                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                colTabSize = cgtf->TextureSize();
+            }
+            else {
+                glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                colTabSize = 2;
+            }
+            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
+            minC = parts.GetMinColourIndexValue();
+            maxC = parts.GetMaxColourIndexValue();
+        } break;
+        default:
+            break;
         }
         switch (parts.GetVertexDataType()) {
-            case MultiParticleDataCall::Particles::VERTDATA_NONE:
-                break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-                break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-                break;
-            default:
-                break;
+        case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            break;
+        default:
+            break;
         }
 
 
@@ -635,29 +633,32 @@ bool NGSphereRenderer::Render(Call& call) {
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
         //currBuf = 0;
-        UINT64 numVerts, vertCounter;
+        //UINT64 numVerts, vertCounter;
+
         // does all data reside interleaved in the same memory?
-        if (interleaved)  {
+        if (interleaved) {
 
             const GLuint numChunks = streamer.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride,
                 parts.GetCount(), 3, 32 * 1024 * 1024);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
 
-            for(GLuint x = 0; x < numChunks; ++x) {
+            for (GLuint x = 0; x < numChunks; ++x) {
                 GLuint numItems, sync;
                 GLsizeiptr dstOff, dstLen;
                 streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                 //streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                 //    numItems, sync, dstOff, dstLen);
+                vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
                     this->streamer.GetHandle(), dstOff, dstLen);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
                 streamer.SignalCompletion(sync);
             }
-        } else {
+        }
+        else {
 
             const GLuint numChunks = streamer.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride,
                 parts.GetCount(), 3, 32 * 1024 * 1024);
@@ -669,16 +670,17 @@ bool NGSphereRenderer::Render(Call& call) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colStreamer.GetHandle());
 
             for (GLuint x = 0; x < numChunks; ++x) {
-                GLuint numItems, sync, sync2;
+                GLuint numItems, numItems2, sync, sync2;
                 GLsizeiptr dstOff, dstLen, dstOff2, dstLen2;
                 streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
-                colStreamer.UploadChunk(x, numItems, sync2, dstOff2, dstLen2);
+                colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
+                ASSERT(numItems == numItems2);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
                     this->streamer.GetHandle(), dstOff, dstLen);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint,
                     this->colStreamer.GetHandle(), dstOff2, dstLen2);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
                 streamer.SignalCompletion(sync);
                 streamer.SignalCompletion(sync2);
@@ -710,7 +712,7 @@ bool NGSphereRenderer::Render(Call& call) {
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-//	timer.EndFrame();
+    //	timer.EndFrame();
 
     return true;
 }
