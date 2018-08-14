@@ -1,9 +1,9 @@
 /*
-* View3D.cpp
-*
-* Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*/
+ * View3D.cpp
+ *
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
@@ -50,8 +50,8 @@ using namespace megamol::core;
 
 
 /*
-* view::View3D::View3D
-*/
+ * view::View3D::View3D
+ */
 view::View3D::View3D(void)
     : view::AbstractView3D()
     , AbstractCamParamSync()
@@ -79,7 +79,7 @@ view::View3D::View3D(void)
     , firstImg(false)
     , frozenValues(NULL)
     , isCamLightSlot(
-        "light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system")
+          "light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system")
     , lightDirSlot("light::direction", "Direction vector of the light")
     , lightColDifSlot("light::diffuseCol", "Diffuse light colour")
     , lightColAmbSlot("light::ambientCol", "Ambient light colour")
@@ -109,7 +109,7 @@ view::View3D::View3D(void)
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
     toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
     , toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor")
-    , bboxCol{ 1.0f, 1.0f, 1.0f, 0.625f }
+    , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
     , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
@@ -347,8 +347,8 @@ view::View3D::View3D(void)
 
 
 /*
-* view::View3D::~View3D
-*/
+ * view::View3D::~View3D
+ */
 view::View3D::~View3D(void) {
     this->Release();
     SAFE_DELETE(this->frozenValues);
@@ -357,26 +357,26 @@ view::View3D::~View3D(void) {
 
 
 /*
-* view::View3D::GetCameraSyncNumber
-*/
+ * view::View3D::GetCameraSyncNumber
+ */
 unsigned int view::View3D::GetCameraSyncNumber(void) const { return this->camParams->SyncNumber(); }
 
 
 /*
-* view::View3D::SerialiseCamera
-*/
+ * view::View3D::SerialiseCamera
+ */
 void view::View3D::SerialiseCamera(vislib::Serialiser& serialiser) const { this->camParams->Serialise(serialiser); }
 
 
 /*
-* view::View3D::DeserialiseCamera
-*/
+ * view::View3D::DeserialiseCamera
+ */
 void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) { this->camParams->Deserialise(serialiser); }
 
 
 /*
-* view::View3D::Render
-*/
+ * view::View3D::Render
+ */
 void view::View3D::Render(const mmcRenderViewContext& context) {
     float time = static_cast<float>(context.Time);
     float instTime = static_cast<float>(context.InstanceTime);
@@ -400,8 +400,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             ::glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
                 this->overrideViewport[3]);
         }
-    }
-    else {
+    } else {
         // this is correct in non-override mode,
         //  because then the tile will be whole viewport
         ::glViewport(0, 0, static_cast<GLsizei>(this->camParams->TileRect().Width()),
@@ -416,8 +415,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             }
         }
         this->overrideCall->EnableOutputBuffer();
-    }
-    else if (cr3d != nullptr) {
+    } else if (cr3d != nullptr) {
         cr3d->SetOutputBuffer(GL_BACK);
         if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
     }
@@ -431,12 +429,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             this->cam.Parameters()->TileRect().Width(), this->cam.Parameters()->TileRect().Height(),
             this->cam.Parameters()->VirtualViewSize().Width(), this->cam.Parameters()->VirtualViewSize().Height(),
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC) &&
-            (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
+                (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
             this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE, instTime);
         this->endFrame(true);
         return; // empty enought
-    }
-    else {
+    } else {
         cr3d->SetGpuAffinity(context.GpuAffinity);
         this->removeTitleRenderer();
     }
@@ -480,8 +477,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
                 if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
                     this->onRestoreCamera(this->restoreCameraSettingsSlot);
                 }
-            }
-            else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value())
+            } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value())
                 this->ResetView();
         }
 
@@ -511,12 +507,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
+    if (! (*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
         //vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.", this->FullName().PeekBuffer());
         frameIsNew = true;
-    }
-    else {
+    } else {
         frameIsNew = false;
     }
 
@@ -546,11 +541,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
     ::glEnable(GL_LIGHTING); // TODO: check renderer capabilities
     ::glEnable(GL_LIGHT0);
-    const float lp[4] = { -this->lightDir.X(), -this->lightDir.Y(), -this->lightDir.Z(), 0.0f };
+    const float lp[4] = {-this->lightDir.X(), -this->lightDir.Y(), -this->lightDir.Z(), 0.0f};
     ::glLightfv(GL_LIGHT0, GL_AMBIENT, this->lightColAmb);
     ::glLightfv(GL_LIGHT0, GL_DIFFUSE, this->lightColDif);
-    const float zeros[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    const float ones[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const float zeros[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    const float ones[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     ::glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
     ::glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
 
@@ -657,8 +652,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             this->paramScaleBottomRight.Param<param::FloatParam>()->SetValue(
                 this->paramScaleBottomRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll),
                 false);
-        }
-        else {
+        } else {
             this->firstParamChange = true;
         }
         this->lastScaleAll = scaleAll;
@@ -730,8 +724,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
 
 /*
-* view::View3D::ResetView
-*/
+ * view::View3D::ResetView
+ */
 void view::View3D::ResetView(void) {
     using namespace vislib::graphics;
     VLTRACE(VISLIB_TRCELVL_INFO, "View3D::ResetView\n");
@@ -747,9 +741,9 @@ void view::View3D::ResetView(void) {
         this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0);
     }
     float dist = (0.5f * sqrtf((this->bboxs.WorldSpaceBBox().Width() * this->bboxs.WorldSpaceBBox().Width()) +
-        (this->bboxs.WorldSpaceBBox().Depth() * this->bboxs.WorldSpaceBBox().Depth()) +
-        (this->bboxs.WorldSpaceBBox().Height() * this->bboxs.WorldSpaceBBox().Height()))) /
-        tanf(this->cam.Parameters()->HalfApertureAngle());
+                               (this->bboxs.WorldSpaceBBox().Depth() * this->bboxs.WorldSpaceBBox().Depth()) +
+                               (this->bboxs.WorldSpaceBBox().Height() * this->bboxs.WorldSpaceBBox().Height()))) /
+                 tanf(this->cam.Parameters()->HalfApertureAngle());
 
     ImageSpaceDimension dim = this->camParams->VirtualViewSize();
     double halfFovX =
@@ -757,7 +751,7 @@ void view::View3D::ResetView(void) {
         static_cast<double>(dim.Height());
     double distX = static_cast<double>(this->bboxs.WorldSpaceBBox().Width()) / (2.0 * tan(halfFovX));
     double distY = static_cast<double>(this->bboxs.WorldSpaceBBox().Height()) /
-        (2.0 * tan(static_cast<double>(this->cam.Parameters()->HalfApertureAngle())));
+                   (2.0 * tan(static_cast<double>(this->cam.Parameters()->HalfApertureAngle())));
     dist = static_cast<float>((distX > distY) ? distX : distY);
     dist = dist + (this->bboxs.WorldSpaceBBox().Depth() / 2.0f);
     SceneSpacePoint3D bbc = this->bboxs.WorldSpaceBBox().CalcCenter();
@@ -770,8 +764,8 @@ void view::View3D::ResetView(void) {
 
 
 /*
-* view::View3D::Resize
-*/
+ * view::View3D::Resize
+ */
 void view::View3D::Resize(unsigned int width, unsigned int height) {
     this->camParams->SetVirtualViewSize(
         static_cast<vislib::graphics::ImageSpaceType>(width), static_cast<vislib::graphics::ImageSpaceType>(height));
@@ -779,13 +773,12 @@ void view::View3D::Resize(unsigned int width, unsigned int height) {
 
 
 /*
-* view::View3D::SetCursor2DButtonState
-*/
+ * view::View3D::SetCursor2DButtonState
+ */
 void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetButtonState(btn, down);
-    }
-    else {
+    } else {
         // stuff from protein::View3DMouse
         switch (btn) {
         case 0: // left
@@ -803,13 +796,12 @@ void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
 
 
 /*
-* view::View3D::SetCursor2DPosition
-*/
+ * view::View3D::SetCursor2DPosition
+ */
 void view::View3D::SetCursor2DPosition(float x, float y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
-    }
-    else {
+    } else {
         // stuff from protein::View3DMouse
         CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
         if (cr3d) {
@@ -829,8 +821,8 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
 
 
 /*
-* view::View3D::SetInputModifier
-*/
+ * view::View3D::SetInputModifier
+ */
 void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
     unsigned int modId = 0;
     switch (mod) {
@@ -851,11 +843,11 @@ void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
 
 
 /*
-* view::View3D::OnRenderView
-*/
+ * view::View3D::OnRenderView
+ */
 bool view::View3D::OnRenderView(Call& call) {
     float overBC[3];
-    int overVP[4] = { 0, 0, 0, 0 };
+    int overVP[4] = {0, 0, 0, 0};
     view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
     if (crv == NULL) return false;
 
@@ -911,8 +903,8 @@ bool view::View3D::OnRenderView(Call& call) {
 
 
 /*
-* view::View3D::UpdateFreeze
-*/
+ * view::View3D::UpdateFreeze
+ */
 void view::View3D::UpdateFreeze(bool freeze) {
     // printf("%s view\n", freeze ? "Freezing" : "Unfreezing");
     if (freeze) {
@@ -923,8 +915,7 @@ void view::View3D::UpdateFreeze(bool freeze) {
         }
         *(this->frozenValues->camParams) = *this->camParams;
         this->frozenValues->time = 0.0f;
-    }
-    else {
+    } else {
         this->camOverrides.DynamicCast<CameraParamOverride>()->SetParametersBase(this->camParams);
         this->cam.SetParameters(this->camParams);
         SAFE_DELETE(this->frozenValues);
@@ -933,8 +924,8 @@ void view::View3D::UpdateFreeze(bool freeze) {
 
 
 /*
-* view::View3D::unpackMouseCoordinates
-*/
+ * view::View3D::unpackMouseCoordinates
+ */
 void view::View3D::unpackMouseCoordinates(float& x, float& y) {
     x *= this->camParams->VirtualViewSize().Width();
     y *= this->camParams->VirtualViewSize().Height();
@@ -943,8 +934,8 @@ void view::View3D::unpackMouseCoordinates(float& x, float& y) {
 
 
 /*
-* view::View3D::create
-*/
+ * view::View3D::create
+ */
 bool view::View3D::create(void) {
 
     bool wasd = false;
@@ -952,18 +943,15 @@ bool view::View3D::create(void) {
     bool invertY = true;
     try {
         wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
-    }
-    catch (...) {
+    } catch (...) {
     }
     try {
         invertX = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertX"));
-    }
-    catch (...) {
+    } catch (...) {
     }
     try {
         invertY = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("invertY"));
-    }
-    catch (...) {
+    } catch (...) {
     }
 
     this->cursor2d.SetButtonCount(3); /* This could be configurable. */
@@ -1032,8 +1020,8 @@ bool view::View3D::create(void) {
 
 
 /*
-* view::View3D::release
-*/
+ * view::View3D::release
+ */
 void view::View3D::release(void) {
     this->removeTitleRenderer();
     this->cursor2d.UnregisterCursorEvent(&this->rotator1);
@@ -1052,8 +1040,8 @@ bool view::View3D::mouseSensitivityChanged(param::ParamSlot& p) {
 
 
 /*
-* view::View3D::renderBBox
-*/
+ * view::View3D::renderBBox
+ */
 void view::View3D::renderBBox(void) {
     const vislib::math::Cuboid<float>& boundingBox = this->bboxs.WorldSpaceBBox();
     if (!this->bboxs.IsWorldSpaceBBoxValid()) {
@@ -1096,7 +1084,7 @@ void view::View3D::renderBBox(void) {
 
     ::glEnd();
 
-    //#define _SHOW_CLIPBOX
+//#define _SHOW_CLIPBOX
 #ifdef _SHOW_CLIPBOX
     {
         ::glColor4ub(255, 0, 0, 128);
@@ -1142,8 +1130,8 @@ void view::View3D::renderBBox(void) {
 
 
 /*
-* view::View3D::renderBBoxBackside
-*/
+ * view::View3D::renderBBoxBackside
+ */
 void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_BLEND);
@@ -1171,8 +1159,8 @@ void view::View3D::renderBBoxBackside(void) {
 
 
 /*
-* view::View3D::renderBBoxFrontside
-*/
+ * view::View3D::renderBBoxFrontside
+ */
 void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_BLEND);
@@ -1195,8 +1183,8 @@ void view::View3D::renderBBoxFrontside(void) {
 
 
 /*
-* view::View3D::renderLookAt
-*/
+ * view::View3D::renderLookAt
+ */
 void view::View3D::renderLookAt(void) {
     const vislib::math::Cuboid<float>& boundingBox = this->bboxs.WorldSpaceBBox();
     vislib::math::Point<float, 3> minp(vislib::math::Min(boundingBox.Left(), boundingBox.Right()),
@@ -1210,8 +1198,7 @@ void view::View3D::renderLookAt(void) {
     if (lap.X() < minp.X()) {
         lap.SetX(minp.X());
         xin = false;
-    }
-    else if (lap.X() > maxp.X()) {
+    } else if (lap.X() > maxp.X()) {
         lap.SetX(maxp.X());
         xin = false;
     }
@@ -1219,8 +1206,7 @@ void view::View3D::renderLookAt(void) {
     if (lap.Y() < minp.Y()) {
         lap.SetY(minp.Y());
         yin = false;
-    }
-    else if (lap.Y() > maxp.Y()) {
+    } else if (lap.Y() > maxp.Y()) {
         lap.SetY(maxp.Y());
         yin = false;
     }
@@ -1228,8 +1214,7 @@ void view::View3D::renderLookAt(void) {
     if (lap.Z() < minp.Z()) {
         lap.SetZ(minp.Z());
         zin = false;
-    }
-    else if (lap.Z() > maxp.Z()) {
+    } else if (lap.Z() > maxp.Z()) {
         lap.SetZ(maxp.Z());
         zin = false;
     }
@@ -1271,8 +1256,8 @@ void view::View3D::renderLookAt(void) {
 
 
 /*
-* view::View3D::renderSoftCursor
-*/
+ * view::View3D::renderSoftCursor
+ */
 void view::View3D::renderSoftCursor(void) {
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
@@ -1335,8 +1320,8 @@ void view::View3D::renderSoftCursor(void) {
 
 
 /*
-* view::View3D::OnGetCamParams
-*/
+ * view::View3D::OnGetCamParams
+ */
 bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
     c.SetCamParams(this->cam.Parameters());
     return true;
@@ -1344,8 +1329,8 @@ bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
 
 
 /*
-* view::View3D::onStoreCamera
-*/
+ * view::View3D::onStoreCamera
+ */
 bool view::View3D::onStoreCamera(param::ParamSlot& p) {
     vislib::TStringSerialiser strser;
     strser.ClearData();
@@ -1363,8 +1348,8 @@ bool view::View3D::onStoreCamera(param::ParamSlot& p) {
 
 
 /*
-* view::View3D::onRestoreCamera
-*/
+ * view::View3D::onRestoreCamera
+ */
 bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
     vislib::TString str = this->cameraSettingsSlot.Param<param::StringParam>()->Value();
     try {
@@ -1389,13 +1374,11 @@ bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
 
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Camera parameters restored from \"%s\"",
             this->cameraSettingsSlot.FullName().PeekBuffer());
-    }
-    catch (vislib::Exception ex) {
+    } catch (vislib::Exception ex) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": %s (%s; %d)",
             this->cameraSettingsSlot.FullName().PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-    }
-    catch (...) {
+    } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": unexpected exception",
             this->cameraSettingsSlot.FullName().PeekBuffer());
@@ -1405,8 +1388,8 @@ bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
 
 
 /*
-* view::View3D::onResetView
-*/
+ * view::View3D::onResetView
+ */
 bool view::View3D::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
@@ -1416,8 +1399,8 @@ bool view::View3D::onResetView(param::ParamSlot& p) {
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 
 /*
-* view::View3D::viewKeyPressed
-*/
+ * view::View3D::viewKeyPressed
+ */
 bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
 
     if ((&p == &this->viewKeyRotLeftSlot) || (&p == &this->viewKeyRotRightSlot) || (&p == &this->viewKeyRotUpSlot) ||
@@ -1432,20 +1415,15 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
 
         if (&p == &this->viewKeyRotLeftSlot) {
             q.Set(angle, this->camParams->Up());
-        }
-        else if (&p == &this->viewKeyRotRightSlot) {
+        } else if (&p == &this->viewKeyRotRightSlot) {
             q.Set(-angle, this->camParams->Up());
-        }
-        else if (&p == &this->viewKeyRotUpSlot) {
+        } else if (&p == &this->viewKeyRotUpSlot) {
             q.Set(angle, this->camParams->Right());
-        }
-        else if (&p == &this->viewKeyRotDownSlot) {
+        } else if (&p == &this->viewKeyRotDownSlot) {
             q.Set(-angle, this->camParams->Right());
-        }
-        else if (&p == &this->viewKeyRollLeftSlot) {
+        } else if (&p == &this->viewKeyRollLeftSlot) {
             q.Set(angle, this->camParams->Front());
-        }
-        else if (&p == &this->viewKeyRollRightSlot) {
+        } else if (&p == &this->viewKeyRollRightSlot) {
             q.Set(-angle, this->camParams->Front());
         }
 
@@ -1459,8 +1437,7 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
             up = q * up;
             lat += pos;
 
-        }
-        else if (ptIdx == 1) {
+        } else if (ptIdx == 1) {
             pos -= lat;
             pos = q * pos;
             up = q * up;
@@ -1470,10 +1447,9 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
         this->camParams->SetView(vislib::math::Point<float, 3>(pos.PeekComponents()),
             vislib::math::Point<float, 3>(lat.PeekComponents()), up);
 
-    }
-    else if ((&p == &this->viewKeyZoomInSlot) || (&p == &this->viewKeyZoomOutSlot) ||
-        (&p == &this->viewKeyMoveLeftSlot) || (&p == &this->viewKeyMoveRightSlot) ||
-        (&p == &this->viewKeyMoveUpSlot) || (&p == &this->viewKeyMoveDownSlot)) {
+    } else if ((&p == &this->viewKeyZoomInSlot) || (&p == &this->viewKeyZoomOutSlot) ||
+               (&p == &this->viewKeyMoveLeftSlot) || (&p == &this->viewKeyMoveRightSlot) ||
+               (&p == &this->viewKeyMoveUpSlot) || (&p == &this->viewKeyMoveDownSlot)) {
         // move
         float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
         const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
@@ -1485,24 +1461,19 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
         if (&p == &this->viewKeyZoomInSlot) {
             move = this->camParams->Front();
             move *= step;
-        }
-        else if (&p == &this->viewKeyZoomOutSlot) {
+        } else if (&p == &this->viewKeyZoomOutSlot) {
             move = this->camParams->Front();
             move *= -step;
-        }
-        else if (&p == &this->viewKeyMoveLeftSlot) {
+        } else if (&p == &this->viewKeyMoveLeftSlot) {
             move = this->camParams->Right();
             move *= -step;
-        }
-        else if (&p == &this->viewKeyMoveRightSlot) {
+        } else if (&p == &this->viewKeyMoveRightSlot) {
             move = this->camParams->Right();
             move *= step;
-        }
-        else if (&p == &this->viewKeyMoveUpSlot) {
+        } else if (&p == &this->viewKeyMoveUpSlot) {
             move = this->camParams->Up();
             move *= step;
-        }
-        else if (&p == &this->viewKeyMoveDownSlot) {
+        } else if (&p == &this->viewKeyMoveDownSlot) {
             move = this->camParams->Up();
             move *= -step;
         }
@@ -1518,20 +1489,18 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
 
 
 /*
-* view::View3D::onToggleButton
-*/
+ * view::View3D::onToggleButton
+ */
 bool view::View3D::onToggleButton(param::ParamSlot& p) {
     param::BoolParam* bp = NULL;
 
     if (&p == &this->toggleSoftCursorSlot) {
         this->toggleSoftCurse();
         return true;
-    }
-    else if (&p == &this->enableMouseSelectionSlot) {
+    } else if (&p == &this->enableMouseSelectionSlot) {
         this->toggleMouseSelection = !this->toggleMouseSelection;
         return true;
-    }
-    else if (&p == &this->toggleBBoxSlot) {
+    } else if (&p == &this->toggleBBoxSlot) {
         bp = this->showBBox.Param<param::BoolParam>();
     }
 
@@ -1543,8 +1512,8 @@ bool view::View3D::onToggleButton(param::ParamSlot& p) {
 
 
 /*
-* view::View3D::renderViewCube
-*/
+ * view::View3D::renderViewCube
+ */
 void view::View3D::renderViewCube(void) {
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -1690,8 +1659,8 @@ void view::View3D::renderViewCube(void) {
 
 
 /*
-* WatermarkRenderer::renderWatermark
-*/
+ * WatermarkRenderer::renderWatermark
+ */
 bool view::View3D::renderWatermark(view::View3D::corner cor, float vpH, float vpW) {
 
     // Set watermark dimensions
@@ -1763,8 +1732,7 @@ bool view::View3D::renderWatermark(view::View3D::corner cor, float vpH, float vp
         glTexCoord2f(0.0f, 1.0f);
         glVertex2f(left, bottom);
         glEnd();
-    }
-    else {
+    } else {
         return false;
     }
 
@@ -1773,8 +1741,8 @@ bool view::View3D::renderWatermark(view::View3D::corner cor, float vpH, float vp
 
 
 /*
-* WatermarkRenderer::loadTexture
-*/
+ * WatermarkRenderer::loadTexture
+ */
 bool view::View3D::loadTexture(view::View3D::corner cor, vislib::StringA filename) {
 
     if (!filename.IsEmpty()) {
@@ -1846,20 +1814,17 @@ bool view::View3D::loadTexture(view::View3D::corner cor, vislib::StringA filenam
                 tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
                 ARY_SAFE_DELETE(buf);
                 return true;
-            }
-            else {
+            } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WatermarkRenderer] [loadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
             }
-        }
-        else {
+        } else {
             // Error is already catch by loadFile function ...
             // vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\"
             // texture.", filename.PeekBuffer());
         }
         return false;
-    }
-    else {
+    } else {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "[WatermarkRenderer] [loadTexture] Unable to load file: No filename given\n");
     }
@@ -1869,10 +1834,10 @@ bool view::View3D::loadTexture(view::View3D::corner cor, vislib::StringA filenam
 
 
 /*
-* WatermarkRenderer::loadTexture
-*
-* Based on: megamol::core::utility::ResourceWrapper::LoadResource() but without the lookup in the resource folder(s)
-*/
+ * WatermarkRenderer::loadTexture
+ *
+ * Based on: megamol::core::utility::ResourceWrapper::LoadResource() but without the lookup in the resource folder(s)
+ */
 SIZE_T view::View3D::loadFile(vislib::StringA name, void** outData) {
 
     *outData = NULL;
