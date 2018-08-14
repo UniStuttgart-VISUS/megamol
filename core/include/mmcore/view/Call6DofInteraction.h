@@ -185,17 +185,15 @@ namespace view {
 
     private:
 
-// Disable dll export warning for not exported classes in ::vislib and ::std
-#ifdef _MSC_VER
-#pragma warning(disable: 4251)
-#endif /* _MSC_VER */
-
         /** The intents that are provided by the call. */
         static const std::array<std::string, 1> INTENTS;
 
         /** Hold the state of the buttons. */
         ButtonMaskType buttonStates;
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4251)
+#endif /* _MSC_VER */
         /** Holds the current orientation of the device. */
         QuaternionType orientation;
 
@@ -204,7 +202,6 @@ namespace view {
 
         /** The name of the rigid body to retrieve the state of. */
         std::string rigidBody;
-
 #ifdef _MSC_VER
 #pragma warning(default: 4251)
 #endif /* _MSC_VER */

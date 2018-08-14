@@ -32,7 +32,6 @@ uniform mat4 MVPtransp;
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
-uniform vec4 globalColor;
 
 out vec4 objPos;
 out vec4 camPos;
@@ -71,24 +70,19 @@ void main(void) {
     //inPos.w = 1.0;
     //inPos = vec4(0.0, 0.0, 0.0, 1.0);
     //rad = 1.0;
-        
-    if (COLTAB_SIZE > 0.0) {   
-        float cid = MAX_COLV - MIN_COLV;
-        if (cid < 0.000001) {
-            vertColor = texture1D(colTab, 0.5 / COLTAB_SIZE);
-        } else {
-            cid = (theColIdx - MIN_COLV) / cid;
-            cid = clamp(cid, 0.0, 1.0);
-        
-            cid *= (1.0 - 1.0 / COLTAB_SIZE);
-            cid += 0.5 / COLTAB_SIZE;
-        
-            vertColor = texture1D(colTab, cid);
-        }
+    float cid = MAX_COLV - MIN_COLV;
+    if (cid < 0.000001) {
+        vertColor = texture1D(colTab, 0.5 / COLTAB_SIZE);
     } else {
-        vertColor = theColor;
+        cid = (theColIdx - MIN_COLV) / cid;
+        cid = clamp(cid, 0.0, 1.0);
+        
+        cid *= (1.0 - 1.0 / COLTAB_SIZE);
+        cid += 0.5 / COLTAB_SIZE;
+        
+        vertColor = texture1D(colTab, cid);
     }
-    
+
     rad *= scaling;
 
     squarRad = rad * rad;

@@ -143,6 +143,14 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
+        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (scaling > 0.0000001) {
+            scaling = 10.0f / scaling;
+        } else {
+            scaling = 1.0f;
+        }
+        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+
     } else {
         cr->SetTimeFramesCount(1);
         cr->AccessBoundingBoxes().Clear();
@@ -171,22 +179,13 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(uns
         c2->SetFrameID(t, this->isTimeForced());
         if (!(*c2)(1)) return NULL;
 
-        // Calculate scaling factor for aligning object bbox to size of world space bbox (which is in [-1,1] for x, y, z)
-        ///OLD: outScaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge() / 2.0f; 
-        ///     -> inaccurate if object is not symmetrically aligned for each axis
-        vislib::graphics::SceneSpacePoint3D bb_lbb = c2->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack();
-        vislib::graphics::SceneSpacePoint3D bb_rtf = c2->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront();
-        float values[6] = { bb_lbb.X(), bb_lbb.Y(), bb_lbb.Z(), bb_rtf.X(), bb_rtf.Y(), bb_rtf.Z() };
-        outScaling = 0.0f;
-        for (unsigned int i = 0; i < 6; ++i) {
-            outScaling = vislib::math::Max(outScaling, vislib::math::Abs(values[i]));
-        }
+        // calculate scaling
+        outScaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         if (outScaling > 0.0000001) {
-            outScaling = 1.0f / outScaling ; 
+            outScaling = 10.0f / outScaling;
         } else {
             outScaling = 1.0f;
         }
-        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>> outScaling: %f", outScaling);
 
         c2->SetFrameID(t, this->isTimeForced());
         if (!(*c2)(0)) return NULL;

@@ -14,7 +14,7 @@ using namespace megamol::core;
 /*
  * view::CallRender3D::CallRender3D
  */
-view::CallRender3D::CallRender3D(void) : AbstractCallRender3D(), RenderOutput(), matrixTransform() {
+view::CallRender3D::CallRender3D(void) : AbstractCallRender3D(), RenderOutput() {
     // intentionally empty
 }
 
