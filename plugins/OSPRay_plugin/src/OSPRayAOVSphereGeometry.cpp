@@ -42,7 +42,7 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     this->samplingRateSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->samplingRateSlot);
 
-    //this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
+    // this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
     this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->aoThresholdSlot);
 }
@@ -200,9 +200,9 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);     //<
     this->structureContainer.voxelDType = voxelDataType::FLOAT;
     this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
-    //this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    // this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.aoThreshold = valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
-    //this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    // this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
 
     return true;
@@ -219,8 +219,10 @@ void OSPRayAOVSphereGeometry::release() {}
 
 
 bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
-    if (this->particleList.IsDirty()) {
+    if (this->particleList.IsDirty() || this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty()) {
         this->particleList.ResetDirty();
+        this->aoThresholdSlot.ResetDirty();
+        this->samplingRateSlot.ResetDirty();
         return true;
     } else {
         return false;
