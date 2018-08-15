@@ -17,10 +17,6 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 
-#ifdef MEGAMOL_NG_MESH
-#include "ng_mesh/CallNGMeshRenderBatches.h"
-#endif
-
 #include <string>
 #include <tuple>
 
@@ -109,34 +105,123 @@ namespace megamol
 
 				private:
 					/// <summary>
-					/// Get number of triangles, and float pointer to vertices and normals from mesh call
+					/// Class for wrapping a pointer, using a pointer or a container as input
 					/// </summary>
-					/// <param name="call">Call where the data is stored in</param>
-					/// <returns>[Number of triangles, vertex pointer, normal pointer]</returns>
-					std::tuple<std::size_t, const float*, const float*> get_mesh_data(geocalls::CallTriMeshData& call) const;
+					/// <typeparam name="VT">Value type</typeparam>
+					/// <typeparam name="CT">Container type</typeparam>
+					template <typename VT, typename CT>
+					class pointer_wrapper
+					{
+					public:
+						using value_type = VT;
+						using container_type = CT;
 
-#ifdef MEGAMOL_NG_MESH
+						static_assert(std::is_same<typename CT::value_type, VT>::value, "Value type of container must match the value type");
+						
+						/// <summary>
+						/// Constructor for nullptr
+						/// </summary>
+						pointer_wrapper()
+						{
+							this->pointer = nullptr;
+						}
+
+						/// <summary>
+						/// Constructor from pointer (does not assume ownership)
+						/// </summary>
+						/// <param name="pointer">Pointer</param>
+						pointer_wrapper(const VT* pointer)
+						{
+							this->pointer = pointer;
+						}
+
+						/// <summary>
+						/// Construct from moved container (destroy on desctruction)
+						/// </summary>
+						/// <param name="container">Container</param>
+						pointer_wrapper(CT&& container)
+						{
+							std::swap(this->container, container);
+							this->pointer = this->container.data();
+						}
+
+						/// <summary>
+						/// Move operator
+						/// </summary>
+						/// <param name="original">Source</param>
+						/// <returns>This</returns>
+						pointer_wrapper& operator=(pointer_wrapper&& original)
+						{
+							std::swap(this->container, original.container);
+							std::swap(this->pointer, original.pointer);
+
+							return *this;
+						}
+
+						/// <summary>
+						/// Return data pointer
+						/// </summary>
+						/// <returns>Data pointer</returns>
+						const VT* get() const
+						{
+							return this->pointer;
+						}
+
+					private:
+						/// Store pointer and container
+						const VT* pointer;
+						const CT container;
+					};
+
 					/// <summary>
-					/// Get number of triangles, and float pointer to vertices and normals from NG mesh call
+					/// Convert original data to new type
 					/// </summary>
-					/// <param name="call">Call where the data is stored in</param>
-					/// <returns>[Number of triangles, vertex pointer, normal pointer]</returns>
-					std::tuple<std::size_t, const float*, const float*> get_ngmesh_data(ngmesh::CallNGMeshRenderBatches& call) const;
-#endif
+					/// <param name="original">Pointer to original data</param>
+					/// <param name="length">Length of the array</param>
+					/// <typeparam name="NT">Type to convert to</typeparam>
+					/// <typeparam name="OT">Type to convert from</typeparam>
+					/// <returns>Wrapper around converted data</returns>
+					template <typename NT, typename OT>
+					pointer_wrapper<NT, std::vector<NT>> convert_if_necessary(const OT* original, std::size_t length)
+					{
+						if (std::is_same<NT, OT>::value)
+						{
+							return pointer_wrapper<NT, std::vector<NT>>(original);
+						}
+						else
+						{
+							std::vector<NT> converted(length);
+							std::transform(std::begin(original, original + length, converted.begin(), [](const OT& value) { return static_cast<NT>(value); });
+
+							return pointer_wrapper<NT, std::vector<NT>>(converted);
+						}
+					}
 
 					/// <summary>
 					/// Write a binary file
 					/// </summary>
 					/// <param name="filename">File name of the STL file</param>
-					/// <param name="mesh">Mesh data and information of the form [number of triangles, vertex pointer, normal pointer]</param>
-					void write_binary(const std::string& filename, const std::tuple<std::size_t, const float*, const float*>& mesh) const;
+					/// <param name="num_triangles">Number of triangles</param>
+					/// <param name="vertices">Vertex pointer</param>
+					/// <param name="normals">Normal pointer</param>
+					/// <param name="indices">Index pointer</param>
+					/// <typeparam name="IT">Integer type of the indices</typeparam>
+					template <typename IT>
+					void write_binary(const std::string& filename, uint32_t num_triangles, const float* vertices, const float* normals, const IT* indices) const;
 
 					/// <summary>
-					/// Write a textual file
+					/// Write an ASCII file
 					/// </summary>
 					/// <param name="filename">File name of the STL file</param>
-					/// <param name="mesh">Mesh data and information of the form [number of triangles, vertex pointer, normal pointer]</param>
-					void write_ascii(const std::string& filename, const std::tuple<std::size_t, const float*, const float*>& mesh) const;
+					/// <param name="num_triangles">Number of triangles</param>
+					/// <param name="vertices">Vertex pointer</param>
+					/// <param name="normals">Normal pointer</param>
+					/// <param name="indices">Index pointer</param>
+					/// <typeparam name="VFT">Floating point type of the vertices</typeparam>
+					/// <typeparam name="NFT">Floating point type of the normals</typeparam>
+					/// <typeparam name="IT">Integer type of the indices</typeparam>
+					template <typename VFT, typename NFT, typename IT>
+					void write_ascii(const std::string& filename, std::size_t num_triangles, const VFT* vertices, const NFT* normals, const IT* indices) const;
 
 					/// File name
 					core::param::ParamSlot filename_slot;
@@ -146,10 +231,6 @@ namespace megamol
 
 					/// Input
 					core::CallerSlot mesh_input_slot;
-
-#ifdef MEGAMOL_NG_MESH
-					core::CallerSlot ngmesh_input_slot;
-#endif
 				};
 			}
 		}

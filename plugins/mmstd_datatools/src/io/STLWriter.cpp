@@ -17,11 +17,8 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 
-#ifdef MEGAMOL_NG_MESH
-#include "ng_mesh/CallNGMeshRenderBatches.h"
-#endif
-
 #include <fstream>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -39,9 +36,6 @@ namespace megamol
 					, filename_slot("STL file", "The name of to the STL file to write")
 					, ascii_binary_slot("Output type", "Write an ASCII or binary file?")
 					, mesh_input_slot("mesh_data", "Input triangle mesh data")
-#ifdef MEGAMOL_NG_MESH
-					, ngmesh_input_slot("ngmesh_data", "Input triangle NG mesh data")
-#endif
 				{
 					// Create file name textbox
 					this->filename_slot << new core::param::FilePathParam("");
@@ -56,12 +50,6 @@ namespace megamol
 					// Create input slot for triangle mesh data
 					this->mesh_input_slot.SetCompatibleCall<geocalls::CallTriMeshDataDescription>();
 					this->MakeSlotAvailable(&this->mesh_input_slot);
-
-#ifdef MEGAMOL_NG_MESH
-					// Create input slot for triangle mesh data
-					this->ngmesh_input_slot.SetCompatibleCall<ngmesh::CallNGMeshRenderBatchesDescription>();
-					this->MakeSlotAvailable(&this->ngmesh_input_slot);
-#endif
 				}
 
 				STLWriter::~STLWriter()
@@ -82,35 +70,7 @@ namespace megamol
 				bool STLWriter::run()
 				{
 					// Get frame
-					core::AbstractGetData3DCall* call;
-
-					auto* mesh_call = this->mesh_input_slot.CallAs<geocalls::CallTriMeshData>();
-
-#ifdef MEGAMOL_NG_MESH
-					auto* ngmesh_call = this->ngmesh_input_slot.CallAs<ngmesh::CallNGMeshRenderBatches>();
-
-					if (mesh_call == nullptr && ngmesh_call == nullptr)
-					{
-						vislib::sys::Log::DefaultLog.WriteError("No data source connected");
-
-						return false;
-					}
-					else if (mesh_call != nullptr && ngmesh_call != nullptr)
-					{
-						vislib::sys::Log::DefaultLog.WriteError("Two data sources connected");
-
-						return false;
-					}
-					else if (mesh_call != nullptr)
-					{
-						call = mesh_call;
-					}
-					else
-					{
-						call = ngmesh_call;
-					}
-#else
-					call = dynamic_cast<core::AbstractGetData3DCall*>(mesh_call);
+					auto* call = this->mesh_input_slot.CallAs<geocalls::CallTriMeshData>();
 
 					if (call == nullptr)
 					{
@@ -118,7 +78,6 @@ namespace megamol
 
 						return false;
 					}
-#endif
 
 					// Call for get extents
 					call->SetFrameID(0);
@@ -140,39 +99,186 @@ namespace megamol
 
 					try
 					{
-#ifdef MEGAMOL_NG_MESH
-						if (mesh_call != nullptr)
-						{
-							if (this->ascii_binary_slot.Param<core::param::EnumParam>()->Value() == 0)
-							{
-								write_binary(filename, get_mesh_data(*mesh_call));
-							}
-							else
-							{
-								write_ascii(filename, get_mesh_data(*mesh_call));
-							}
-						}
-						else
-						{
-							if (this->ascii_binary_slot.Param<core::param::EnumParam>()->Value() == 0)
-							{
-								write_binary(filename, get_ngmesh_data(*ngmesh_call));
-							}
-							else
-							{
-								write_ascii(filename, get_ngmesh_data(*ngmesh_call));
-							}
-						}
-#else
+						const std::size_t num_triangles = static_cast<std::size_t>(call->Objects()->GetTriCount());
+
 						if (this->ascii_binary_slot.Param<core::param::EnumParam>()->Value() == 0)
 						{
-							write_binary(filename, get_mesh_data(*mesh_call));
+							// Sanity check
+							if (call->Objects()->GetVertexDataType() == geocalls::CallTriMeshData::Mesh::DT_NONE)
+							{
+								throw std::runtime_error("Illegal vertex data type");
+							}
+							if (call->Objects()->GetNormalDataType() == geocalls::CallTriMeshData::Mesh::DT_NONE)
+							{
+								throw std::runtime_error("Illegal normal data type");
+							}
+
+							// Convert vertices or normals to float if necessary
+							pointer_wrapper<float, std::vector<float>> vertices, normals;
+
+							if (call->Objects()->GetVertexDataType() == geocalls::CallTriMeshData::Mesh::DT_FLOAT)
+							{
+								vertices = convert_if_necessary<float>(call->Objects()->GetVertexPointerFloat(), num_triangles * 9);
+							}
+							else
+							{
+								vertices = convert_if_necessary<float>(call->Objects()->GetVertexPointerDouble(), num_triangles * 9);
+							}
+
+							if (call->Objects()->GetNormalDataType() == geocalls::CallTriMeshData::Mesh::DT_FLOAT)
+							{
+								normals = convert_if_necessary<float>(call->Objects()->GetNormalPointerFloat(), num_triangles * 9);
+							}
+							else
+							{
+								normals = convert_if_necessary<float>(call->Objects()->GetNormalPointerDouble(), num_triangles * 9);
+							}
+
+							// Write binary file
+							if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_BYTE)
+							{
+								write_binary(filename, static_cast<uint32_t>(num_triangles), vertices.get(), normals.get(), call->Objects()->GetTriIndexPointerByte());
+							}
+							else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT16)
+							{
+								write_binary(filename, static_cast<uint32_t>(num_triangles), vertices.get(), normals.get(), call->Objects()->GetTriIndexPointerUInt16());
+							}
+							else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT32)
+							{
+								write_binary(filename, static_cast<uint32_t>(num_triangles), vertices.get(), normals.get(), call->Objects()->GetTriIndexPointerUInt32());
+							}
+							else
+							{
+								std::vector<unsigned int> indices(num_triangles * 3);
+								std::iota(indices.begin(), indices.end(), 0);
+
+								write_binary(filename, static_cast<uint32_t>(num_triangles), vertices.get(), normals.get(), indices.data());
+							}
 						}
 						else
 						{
-							write_ascii(filename, get_mesh_data(*mesh_call));
+							// Sanity check
+							if (call->Objects()->GetVertexDataType() == geocalls::CallTriMeshData::Mesh::DT_NONE)
+							{
+								throw std::runtime_error("Illegal vertex data type");
+							}
+							if (call->Objects()->GetNormalDataType() == geocalls::CallTriMeshData::Mesh::DT_NONE)
+							{
+								throw std::runtime_error("Illegal normal data type");
+							}
+							
+							// Write ASCII file
+							if (call->Objects()->GetVertexDataType() == geocalls::CallTriMeshData::Mesh::DT_FLOAT)
+							{
+								if (call->Objects()->GetNormalDataType() == geocalls::CallTriMeshData::Mesh::DT_FLOAT)
+								{
+									if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_BYTE)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerByte());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT16)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerUInt16());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT32)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerUInt32());
+									}
+									else
+									{
+										std::vector<unsigned int> indices(num_triangles * 3);
+										std::iota(indices.begin(), indices.end(), 0);
+
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerFloat(), indices.data());
+									}
+								}
+								else
+								{
+									if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_BYTE)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerByte());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT16)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerUInt16());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT32)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerUInt32());
+									}
+									else
+									{
+										std::vector<unsigned int> indices(num_triangles * 3);
+										std::iota(indices.begin(), indices.end(), 0);
+
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerFloat(),
+											call->Objects()->GetNormalPointerDouble(), indices.data());
+									}
+								}
+							}
+							else
+							{
+								if (call->Objects()->GetNormalDataType() == geocalls::CallTriMeshData::Mesh::DT_FLOAT)
+								{
+									if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_BYTE)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerByte());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT16)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerUInt16());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT32)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerFloat(), call->Objects()->GetTriIndexPointerUInt32());
+									}
+									else
+									{
+										std::vector<unsigned int> indices(num_triangles * 3);
+										std::iota(indices.begin(), indices.end(), 0);
+
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerFloat(), indices.data());
+									}
+								}
+								else
+								{
+									if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_BYTE)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerByte());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT16)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerUInt16());
+									}
+									else if (call->Objects()->GetTriDataType() == geocalls::CallTriMeshData::Mesh::DT_UINT32)
+									{
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerDouble(), call->Objects()->GetTriIndexPointerUInt32());
+									}
+									else
+									{
+										std::vector<unsigned int> indices(num_triangles * 3);
+										std::iota(indices.begin(), indices.end(), 0);
+
+										write_ascii(filename, num_triangles, call->Objects()->GetVertexPointerDouble(),
+											call->Objects()->GetNormalPointerDouble(), indices.data());
+									}
+								}
+							}
 						}
-#endif
 					}
 					catch (const std::runtime_error& ex)
 					{
@@ -180,28 +286,24 @@ namespace megamol
 
 						return false;
 					}
-
+					
 					return true;
 				}
 
 				void STLWriter::release()
 				{ }
 
-				std::tuple<std::size_t, const float*, const float*> STLWriter::get_mesh_data(geocalls::CallTriMeshData& call) const
+				template <typename IT>
+				void STLWriter::write_binary(const std::string& filename, const uint32_t num_triangles, const float* vertices, const float* normals, const IT* indices) const
 				{
-					return std::make_tuple(static_cast<std::size_t>(call.Objects()->GetTriCount()),
-						call.Objects()->GetVertexPointerFloat(), call.Objects()->GetNormalPointerFloat());
-				}
+					static_assert(std::is_integral<IT>::value, "Indices must be of integral type");
 
-#ifdef MEGAMOL_NG_MESH
-				std::tuple<std::size_t, const float*, const float*> STLWriter::get_ngmesh_data(ngmesh::CallNGMeshRenderBatches& call) const
-				{
-					return std::make_tuple(static_cast<std::size_t>(0), nullptr, nullptr); // TODO
-				}
-#endif
+					if (num_triangles == 0)
+					{
+						vislib::sys::Log::DefaultLog.WriteWarn("Cannot write STL file. Number of triangles is zero!");
+						return;
+					}
 
-				void STLWriter::write_binary(const std::string& filename, const std::tuple<std::size_t, const float*, const float*>& mesh) const
-				{
 					// Open or create file
 					std::ofstream ofs(filename, std::ios_base::out | std::ios_base::binary);
 
@@ -216,17 +318,17 @@ namespace megamol
 						ofs.write(header_buffer.data(), header_buffer.size());
 
 						// Write number of triangles
-						uint32_t num_triangles = static_cast<uint32_t>(std::get<0>(mesh));
-
-						ofs.write(reinterpret_cast<char*>(&num_triangles), sizeof(uint32_t));
+						ofs.write(reinterpret_cast<const char*>(&num_triangles), sizeof(uint32_t));
 
 						// Write vertices and normals
-						const uint16_t additional_attribute = 42;
+						const uint16_t additional_attribute = 21313;
 
-						for (std::size_t triangle_index = 0; triangle_index < std::get<0>(mesh); ++triangle_index)
+						for (uint32_t triangle_index = 0; triangle_index < num_triangles; ++triangle_index)
 						{
-							ofs.write(reinterpret_cast<const char*>(&std::get<2>(mesh)[triangle_index * 9]), 3 * sizeof(float));
-							ofs.write(reinterpret_cast<const char*>(&std::get<1>(mesh)[triangle_index * 9]), 9 * sizeof(float));
+							ofs.write(reinterpret_cast<const char*>(&normals[indices[triangle_index * 3] * 3]), 3 * sizeof(float));
+							ofs.write(reinterpret_cast<const char*>(&vertices[indices[triangle_index * 3 + 0] * 3]), 3 * sizeof(float));
+							ofs.write(reinterpret_cast<const char*>(&vertices[indices[triangle_index * 3 + 1] * 3]), 3 * sizeof(float));
+							ofs.write(reinterpret_cast<const char*>(&vertices[indices[triangle_index * 3 + 2] * 3]), 3 * sizeof(float));
 							ofs.write(reinterpret_cast<const char*>(&additional_attribute), sizeof(uint16_t));
 						}
 
@@ -241,8 +343,19 @@ namespace megamol
 					}
 				}
 
-				void STLWriter::write_ascii(const std::string& filename, const std::tuple<std::size_t, const float*, const float*>& mesh) const
+				template <typename VFT, typename NFT, typename IT>
+				void STLWriter::write_ascii(const std::string& filename, const std::size_t num_triangles, const VFT* vertices, const NFT* normals, const IT* indices) const
 				{
+					static_assert(std::is_floating_point<VFT>::value, "Vertices must be of floating point type");
+					static_assert(std::is_floating_point<NFT>::value, "Normals must be of floating point type");
+					static_assert(std::is_integral<IT>::value, "Indices must be of integral type");
+
+					if (num_triangles == 0)
+					{
+						vislib::sys::Log::DefaultLog.WriteWarn("Cannot write STL file. Number of triangles is zero!");
+						return;
+					}
+
 					// Open or create file
 					std::ofstream ofs(filename, std::ios_base::out);
 
@@ -252,29 +365,29 @@ namespace megamol
 						ofs << "solid megamol_mesh\n";
 						ofs << std::scientific;
 
-						for (std::size_t triangle_index = 0; triangle_index < std::get<0>(mesh); ++triangle_index)
+						for (std::size_t triangle_index = 0; triangle_index < num_triangles; ++triangle_index)
 						{
 							ofs << "\tfacet\n";
 
 							ofs << "\t\tnormal "
-								<< std::get<2>(mesh)[triangle_index * 9 + 0] << " "
-								<< std::get<2>(mesh)[triangle_index * 9 + 1] << " "
-								<< std::get<2>(mesh)[triangle_index * 9 + 2] << "\n";
+								<< normals[indices[triangle_index * 3] * 3 + 0] << " "
+								<< normals[indices[triangle_index * 3] * 3 + 1] << " "
+								<< normals[indices[triangle_index * 3] * 3 + 2] << "\n";
 
 							ofs << "\t\touter loop\n";
 
 							ofs << "\t\t\tvertex "
-								<< std::get<1>(mesh)[triangle_index * 9 + 0] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 1] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 2] << "\n";
+								<< vertices[indices[triangle_index * 3 + 0] * 3 + 0] << " "
+								<< vertices[indices[triangle_index * 3 + 0] * 3 + 1] << " "
+								<< vertices[indices[triangle_index * 3 + 0] * 3 + 2] << "\n";
 							ofs << "\t\t\tvertex "
-								<< std::get<1>(mesh)[triangle_index * 9 + 3] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 4] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 5] << "\n";
+								<< vertices[indices[triangle_index * 3 + 1] * 3 + 0] << " "
+								<< vertices[indices[triangle_index * 3 + 1] * 3 + 1] << " "
+								<< vertices[indices[triangle_index * 3 + 1] * 3 + 2] << "\n";
 							ofs << "\t\t\tvertex "
-								<< std::get<1>(mesh)[triangle_index * 9 + 6] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 7] << " "
-								<< std::get<1>(mesh)[triangle_index * 9 + 8] << "\n";
+								<< vertices[indices[triangle_index * 3 + 2] * 3 + 0] << " "
+								<< vertices[indices[triangle_index * 3 + 2] * 3 + 1] << " "
+								<< vertices[indices[triangle_index * 3 + 2] * 3 + 2] << "\n";
 
 							ofs << "\t\tendloop\n";
 
