@@ -158,11 +158,11 @@ namespace megamol
 							reinterpret_cast<float*>(&this->vertex_normal_buffer.data()[2 * sizeof(uint32_t) + 9 * this->num_triangles * sizeof(float)]),
 							nullptr, nullptr, false);
 
-						this->mesh.SetTriangleData(static_cast<unsigned int>(this->num_triangles), this->index_buffer, false);
+						this->mesh.SetTriangleData(static_cast<unsigned int>(this->num_triangles), this->index_buffer.data(), false);
 						
 						call.SetObjects(1, &this->mesh);
 					}
-
+					
 					return true;
 				}
 
