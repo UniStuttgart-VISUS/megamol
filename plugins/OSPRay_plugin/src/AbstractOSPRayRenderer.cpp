@@ -1018,7 +1018,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSet3iv(aovol, "dimensions", element.dimensions->data());
                     ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
                     ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
-                    ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
+                    float fixedSpacing[3];
+                    for (auto x = 0; x < 3; ++x) {
+                        fixedSpacing[x] =
+                            element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                    }
+                    ospSet3fv(aovol, "gridSpacing", fixedSpacing);
 
                     OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
