@@ -19,6 +19,8 @@
 #include <exception>
 #include "vislib/Exception.h"
 
+#define FBOC_FLT_EPS (0.000001f)
+
 //#define _DEBUG 1
 //#define VERBOSE 1
 
@@ -31,7 +33,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , waitForNextFrameSlot_{"await_next_frame", "Cinematic rendering mode for stalling rendering until frame for requested time is available."}
+    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Rendering mode for aborting rendering until frame for requested camera and time is received -> Use for cinematic rendering."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -40,9 +42,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , depth_buf_el_size_{4}
     , width_{0}
     , height_{0}
-    , frame_time_{-1.0f}
-    , frame_id_{0}
-    , got_first_frame_{false}
+    , frame_times_{0.0f}
+    , camera_params_{0.0f}
     , connected_{false}
     , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
     , isRegistered_{false} {
@@ -66,8 +67,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
     this->MakeSlotAvailable(&startSlot_);
 
-    waitForNextFrameSlot_ << new megamol::core::param::BoolParam(false);
-    this->MakeSlotAvailable(&waitForNextFrameSlot_);
+    renderOnlyRequestedFramesSlot_ << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&renderOnlyRequestedFramesSlot_);
 }
 
 
@@ -224,87 +225,83 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     // initThreads();
 
-    // requested time
     auto cr3d = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr3d == nullptr) return false;
-    auto req_time = cr3d->Time();
+    auto req_time       = cr3d->Time();
+    auto req_cam_pos    = cr3d->GetCameraParameters()->Position();
+    auto req_cam_up     = cr3d->GetCameraParameters()->Up();
+    auto req_cam_lookat = cr3d->GetCameraParameters()->LookAt();
+    //vislib::sys::Log::DefaultLog.WriteError("REQUEST>>> frame_time: %f -- CAMERA: pos: %f/%f/%f - up: %f/%f/%f - lookat: %f/%f/%f\n",
+    //    req_time,
+    //    req_cam_pos[0], req_cam_pos[1], req_cam_pos[2],
+    //    req_cam_up[0], req_cam_up[1], req_cam_up[2],
+    //    req_cam_lookat[0], req_cam_lookat[1], req_cam_lookat[2]);
+    auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
-    /*
-    if (this->got_first_frame_) {
-        stall_rendering = this->waitForNextFrameSlot_.Param<megamol::core::param::BoolParam>()->Value();
-    }
-    */
-
-    // stall rendering until expected frame has arrived
-    bool stall_rendering = true;
-    while (stall_rendering) {
-
-        stall_rendering = false;
-        if (this->got_first_frame_ && this->waitForNextFrameSlot_.Param<megamol::core::param::BoolParam>()->Value()){
-            stall_rendering = true;
-        }          
-
-        // if data changed check is size has changed
-        // if no directly upload
-        // if yes resize textures and upload afterward
-        if (data_has_changed_.load()) {
+    // if data changed check is size has changed
+    // if no directly upload
+    // if yes resize textures and upload afterward
+    if (data_has_changed_.load()) {
 #if _DEBUG && VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
 #endif
-            std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
+        std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
 #if _DEBUG && VERBOSE
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
+        auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
-            if (!this->got_first_frame_) {
-                this->got_first_frame_ = true;
-            }
-
-            float current_frame_time = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[0];
-            auto  current_frame_id   = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_id;
-
-            // Check if stalling is enabled
-            if (stall_rendering)  {
-                if (fabs(req_time - current_frame_time) < 0.000001f) {
-
-
-
-
-                    this->frame_time_ = current_frame_time;
-                    this->frame_id_   = current_frame_id;
-
-                    stall_rendering = false;
-                }
-            }
-
-            vislib::sys::Log::DefaultLog.WriteError("DEBUG>>>  req_time: %f --- req_frame_time_: %f --- stall_rendering %s\n",
-                req_time, this->frame_time_, (stall_rendering) ? ("TRUE") : ("FALSE"));
-
-
-            
-            auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
-            auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
-
-            if (this->width_ != width || this->height_ != height) {
-                this->width_ = width;
-                this->height_ = height;
-                this->resize(this->color_textures_.size(), this->width_, this->height_);
-            }
-
-            for (size_t i = 0; i < this->color_textures_.size(); ++i) {
-                auto const& fbo = (*this->fbo_msg_write_)[i];
-                glBindTexture(GL_TEXTURE_2D, this->color_textures_[i]);
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, fbo.color_buf.data());
-                glBindTexture(GL_TEXTURE_2D, this->depth_textures_[i]);
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo.depth_buf.data());
-            }
-
-            data_has_changed_.store(false);
+        if (this->width_ != width || this->height_ != height) {
+            this->width_ = width;
+            this->height_ = height;
+            this->resize(this->color_textures_.size(), this->width_, this->height_);
         }
 
+        for (size_t i = 0; i < this->color_textures_.size(); ++i) {
+            auto const& fbo = (*this->fbo_msg_write_)[i];
+            glBindTexture(GL_TEXTURE_2D, this->color_textures_[i]);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, fbo.color_buf.data());
+            glBindTexture(GL_TEXTURE_2D, this->depth_textures_[i]);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo.depth_buf.data());
+        }
+
+        if (only_req_frame) {
+            for (int i = 0; i < 2; ++i) {
+                this->frame_times_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[i];
+            }
+            for (int i = 0; i < 9; ++i) {
+                this->camera_params_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.cam_params[i];
+            }
+            //vislib::sys::Log::DefaultLog.WriteError("FRAME>>> frame_time: %f -- CAMERA: pos: %f/%f/%f - up: %f/%f/%f - lookat: %f/%f/%f\n", 
+            //    this->frame_times_[0], 
+            //    this->camera_params_[0], this->camera_params_[1], this->camera_params_[2], 
+            //    this->camera_params_[3], this->camera_params_[4], this->camera_params_[5], 
+            //    this->camera_params_[6], this->camera_params_[7], this->camera_params_[8]);
+        }
+
+        data_has_changed_.store(false);
     }
-    
+
+    // Aborting rendering if requested frame has not been received yet
+    if (only_req_frame) {
+        // Check if current frame applies to requested camera and time
+        if ((std::fabs(req_time           - this->frame_times_[0])   > FBOC_FLT_EPS) || 
+            (std::fabs(req_cam_pos.X()    - this->camera_params_[0]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_pos.Y()    - this->camera_params_[1]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_pos.Z()    - this->camera_params_[2]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.X()     - this->camera_params_[3]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.Y()     - this->camera_params_[4]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.Z()     - this->camera_params_[5]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.X() - this->camera_params_[6]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.Y() - this->camera_params_[7]) > FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.Z() - this->camera_params_[8]) > FBOC_FLT_EPS))
+        {
+            return false;
+        }
+    }
+
     // constantly render current texture set
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];

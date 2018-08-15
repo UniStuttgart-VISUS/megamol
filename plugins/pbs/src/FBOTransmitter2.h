@@ -82,7 +82,11 @@ private:
 
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
-    bool extractBoundingBoxFrameTimes(float bbox[6], float frame_times[2]);
+    bool extractBoundingBox(float bbox[6]);
+        
+    bool extractFrameTimes(float frame_times[2]);
+
+    bool extractCameraParams(float cam_params[9]);
 
     bool extractViewport(int vvpt[6]);
 

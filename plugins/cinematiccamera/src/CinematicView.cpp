@@ -385,9 +385,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
         }
     }
+
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
     int fboVp[4] = { 0, 0, fboWidth, fboHeight };
-    this->overrideViewport = fboVp;
+    Base::overrideViewport = fboVp;
+
     // Set new viewport settings for camera
     this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
    
@@ -396,6 +398,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Create new frame for file
     if (this->rendering) {
         this->rtf_create_frame();
+
+        /// Disabling BBOX and CUBE -> needing uniform backCol for being able to check for changes ...
+        //Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
+        //Base::showBBox.Param<param::BoolParam>()->SetValue(false);
     }
 
     // Suppress TRACE output of fbo.Enable() and fbo.Create()
@@ -423,10 +429,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
-
-    this->overrideCall = cr3d;
+    Base::overrideCall = cr3d;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
@@ -436,9 +445,22 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Reset override render call
-    this->overrideCall = nullptr;
+    Base::overrideCall = nullptr;
     // Reset override viewport
-    this->overrideViewport = nullptr;
+    Base::overrideViewport = nullptr;
+
+
+
+    // Check if data was written to fbo colout texture
+    bool written2FBO = this->checkFBO4ColorChanges(this->fbo, Base::bkgndColour());
+    if (!written2FBO) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing rendered to FBO ...\n");
+    }
+
+
+
+
+
 
     // Write frame to file
     if (this->rendering) {
@@ -602,6 +624,38 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->pngdata.await_frame_cnt++;
     }
 }
+
+
+/*
+* CinematicView::checkColorWritten2FBO
+*/
+bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObject& fbo, const float* backCol) {
+
+    if (backCol == nullptr)
+        return false;
+
+    const unsigned int colBytes = 4;
+    const unsigned int texDim   = fbo.GetWidth() * fbo.GetHeight();
+    BYTE *buffer = new BYTE[texDim * colBytes];
+    fbo.GetColourTexture(buffer);
+
+    BYTE r = static_cast<BYTE>(backCol[0] * 255.0f);
+    BYTE g = static_cast<BYTE>(backCol[1] * 255.0f);
+    BYTE b = static_cast<BYTE>(backCol[2] * 255.0f);
+
+    for (unsigned int i = 0; i < texDim; ++i) {
+        if ((buffer[i*colBytes + 0] != r) ||
+            (buffer[i*colBytes + 1] != g) ||
+            (buffer[i*colBytes + 2] != b)) {
+            return true;
+        }
+    }
+
+    ARY_SAFE_DELETE(buffer);
+
+    return false;
+}
+
 
 
 /*
@@ -830,6 +884,7 @@ bool CinematicView::setSimTime(float st) {
     }
 
     float simTime = st;
+
     param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
