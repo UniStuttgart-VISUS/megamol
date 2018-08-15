@@ -138,7 +138,7 @@ namespace megamol {
                 png_structp            ptr;
                 png_infop              infoptr;
                 float                  animTime;
-                unsigned int           await_frame_cnt;
+                unsigned int           lock;
             } pngdata;
 
             /**********************************************************************
@@ -146,19 +146,13 @@ namespace megamol {
             **********************************************************************/
 
             /** Render to file functions */
-            bool rtf_setup();
+            bool render2file_setup();
 
             /** */
-            bool rtf_load_keyframe();
+            bool render2file_write_png();
 
             /** */
-            bool rtf_create_frame();
-
-            /** */
-            bool rtf_write_frame();
-
-            /** */
-            bool rtf_finish();
+            bool render2file_finish();
 
             /** */
             bool setSimTime(float st);

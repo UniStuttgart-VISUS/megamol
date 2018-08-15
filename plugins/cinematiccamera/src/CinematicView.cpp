@@ -34,9 +34,6 @@ using namespace megamol::cinematiccamera;
 using namespace vislib;
 
 
-#define AWAIT_FRAME_CNT (250) /// (Refers to local frame count of cinemativ view)
-
-
 /*
 * CinematicView::CinematicView
 */
@@ -80,7 +77,7 @@ CinematicView::CinematicView(void) : View3D(),
     this->pngdata.ptr               = nullptr;
     this->pngdata.infoptr           = nullptr;
     this->pngdata.filename          = "";
-    this->pngdata.await_frame_cnt = 0;
+    this->pngdata.lock              = 0;
 
     // init parameters
     param::EnumParam *sbs = new param::EnumParam(this->sbSide);
@@ -252,10 +249,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->renderParam.ResetDirty();
         this->rendering = !this->rendering;
         if (this->rendering) {
-            this->rtf_setup();
+            this->render2file_setup();
         }
         else {
-            this->rtf_finish();
+            this->render2file_finish();
         }
     }
     // Set (mono/stereo) projection for camera
@@ -269,10 +266,17 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
-    // Time settings -----------------------------------------------
+    // Time settings ----------------------------------------------------------
     // Load animation time
     if (this->rendering) {
-        this->rtf_load_keyframe();
+        if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
+            throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
+        }
+        // Get selected keyframe for current animation time
+        ccc->setSelectedKeyframeTime(this->pngdata.animTime);
+        // Update selected keyframe
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
+
         loadNewCamParams = true;
     }
     else {
@@ -283,7 +287,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             this->deltaAnimTime = tmpTime;
 
             float animTime = ccc->getSelectedKeyframe().GetAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
-            if (animTime > ccc->getTotalAnimTime()) { // Reset time if max animation time is reached
+            if ((animTime < 0.0f) || (animTime > ccc->getTotalAnimTime())) { // Reset time if max animation time is reached
                 animTime = 0.0f;
             }
             ccc->setSelectedKeyframeTime(animTime);
@@ -296,6 +300,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Load simulation time
     this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
 
+    // Camera settings --------------------------------------------------------
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering 
@@ -395,15 +400,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
    
     // Render to texture ------------------------------------------------------------
 
-    // Create new frame for file
-    if (this->rendering) {
-        this->rtf_create_frame();
-
-        /// Disabling BBOX and CUBE -> needing uniform backCol for being able to check for changes ...
-        //Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
-        //Base::showBBox.Param<param::BoolParam>()->SetValue(false);
-    }
-
     // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
@@ -429,9 +425,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glClearDepth(1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /// Disabling BBOX and CUBE -> needing uniform backCol for being able to check for changes written to fbo ...
+    //Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
+    //Base::showBBox.Param<param::BoolParam>()->SetValue(false);
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
@@ -449,22 +449,26 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Reset override viewport
     Base::overrideViewport = nullptr;
 
-
-
-    // Check if data was written to fbo colout texture
+    // Check if data was written to fbo color texture
     bool written2FBO = this->checkFBO4ColorChanges(this->fbo, Base::bkgndColour());
-    if (!written2FBO) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing rendered to FBO ...\n");
-    }
-
-
-
-
-
 
     // Write frame to file
     if (this->rendering) {
-        this->rtf_write_frame();
+
+        if (!written2FBO && (this->pngdata.lock == 0)) {
+            this->pngdata.lock = 1;
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing rendered to FBO ...\n");
+        }
+        else if ((written2FBO) && (this->pngdata.lock == 1)) {
+            this->pngdata.lock == 0;
+        }
+
+        this->render2file_write_png();
+
+        // Unlock render to fbo after n frames
+        if (this->pngdata.lock > 0) {
+            this->pngdata.lock--;
+        }
     }
 
     // Draw final image -------------------------------------------------------
@@ -618,11 +622,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Reset opengl
     glDisable(GL_BLEND);
-
-    // Unlock render to fbo after n frames
-    if (this->rendering && (this->pngdata.await_frame_cnt <= (unsigned int)AWAIT_FRAME_CNT)) {
-        this->pngdata.await_frame_cnt++;
-    }
 }
 
 
@@ -661,7 +660,7 @@ bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObjec
 /*
 * CinematicView::rtf_setup
 */
-bool CinematicView::rtf_setup() {
+bool CinematicView::render2file_setup() {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -675,9 +674,9 @@ bool CinematicView::rtf_setup() {
     this->pngdata.buffer            = nullptr;
     this->pngdata.ptr               = nullptr;
     this->pngdata.infoptr           = nullptr;
-    // Lock rendering and wait for one frame to get the new animation time applied. 
-    // Otherwise first frame is not set right -> just for high resolutions?
-    this->pngdata.await_frame_cnt   = 0;
+    // Lock writing of png for one frame to get the new animation time applied. 
+    // Otherwise first frame is not set right (-> just for high resolutions?)
+    this->pngdata.lock              = 1;
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->expFrameCnt = 1;
@@ -719,54 +718,11 @@ bool CinematicView::rtf_setup() {
 
 
 /*
-* CinematicView::rtf_set_time_and_camera
+* CinematicView::rtf_write_frame
 */
-bool CinematicView::rtf_load_keyframe() {
+bool CinematicView::render2file_write_png() {
 
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == nullptr) return false;
-
-    if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
-        throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Invalid animation time.", __FILE__, __LINE__);
-    }
-
-    // Get selected keyframe for current animation time
-    ccc->setSelectedKeyframeTime(this->pngdata.animTime);
-    // Update selected keyframe
-    if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-
-    if (this->pngdata.await_frame_cnt > AWAIT_FRAME_CNT) {
-
-        // Increase to next time step
-        float fpsFrac = (1.0f / static_cast<float>(this->fps));
-        this->pngdata.animTime += fpsFrac;
-
-        // Fit animTime to exact full seconds (removing rounding error)
-        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
-            this->pngdata.animTime = std::round(this->pngdata.animTime);
-        }
-
-        // Stop rendering if max anim time is reached
-        if (this->pngdata.animTime > ccc->getTotalAnimTime()) {
-
-            /// Resetting animation time to 0 is required for using FBOCompositor (-> asynchronous frame loading/rendering via MPI/IceT)
-            ccc->setSelectedKeyframeTime(0.0f);
-            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-
-            this->rtf_finish();
-            return false;
-        }
-    }
-    return true;
-}
-
-
-/*
-* CinematicView::rtf_create_frame
-*/
-bool CinematicView::rtf_create_frame() {
-
-    if (this->pngdata.await_frame_cnt > AWAIT_FRAME_CNT) {
+    if (this->pngdata.lock == 0) {
 
         vislib::StringA tmpFilename, tmpStr;
         tmpStr.Format(".%i", this->expFrameCnt);
@@ -792,20 +748,6 @@ bool CinematicView::rtf_create_frame() {
         }
         png_set_write_fn(this->pngdata.ptr, static_cast<void*>(&this->pngdata.file), &this->pngWrite, &this->pngFlush);
         png_set_IHDR(this->pngdata.ptr, this->pngdata.infoptr, this->pngdata.width, this->pngdata.height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-        this->pngdata.cnt++;
-    }
-
-    return true;
-}
-
-
-/*
-* CinematicView::rtf_write_frame
-*/
-bool CinematicView::rtf_write_frame() {
-
-    if (this->pngdata.await_frame_cnt > AWAIT_FRAME_CNT) {
 
         if (fbo.GetColourTexture(this->pngdata.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception("[CINEMATIC VIEW] [writeTextureToPng] Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
@@ -841,7 +783,39 @@ bool CinematicView::rtf_write_frame() {
 
         try { this->pngdata.file.Flush(); }  catch (...) {}
         try { this->pngdata.file.Close(); }  catch (...) {}
+
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Wrote png file %d for animation time %f ...\n", this->pngdata.cnt, this->pngdata.animTime);
+
+        this->pngdata.cnt++;
+
+        // --------------------------------------------------------------------
+
+        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        if (ccc == nullptr) return false;
+
+        // Increase to next time step
+        float fpsFrac = (1.0f / static_cast<float>(this->fps));
+        this->pngdata.animTime += fpsFrac;
+
+        // Fit animTime to exact full seconds (removing rounding error)
+        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
+            this->pngdata.animTime = std::round(this->pngdata.animTime);
+        }
+
+        if (this->pngdata.animTime == ccc->getTotalAnimTime()) {
+            this->pngdata.animTime -= 0.00001f;
+        }
+        // Stop rendering if max anim time is reached
+        else if (this->pngdata.animTime >= ccc->getTotalAnimTime()) {
+
+            this->render2file_finish();
+            return false;
+        }
+
+
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Animation time %f ...\n", this->pngdata.animTime);
     }
+
     return true;
 }
 
@@ -849,7 +823,7 @@ bool CinematicView::rtf_write_frame() {
 /*
 * CinematicView::rtf_finish
 */
-bool CinematicView::rtf_finish() {
+bool CinematicView::render2file_finish() {
 
     if (this->pngdata.ptr != nullptr) {
         if (this->pngdata.infoptr != nullptr) {

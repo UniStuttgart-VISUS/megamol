@@ -287,16 +287,16 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     // Aborting rendering if requested frame has not been received yet
     if (only_req_frame) {
         // Check if current frame applies to requested camera and time
-        if ((std::fabs(req_time           - this->frame_times_[0])   > FBOC_FLT_EPS) || 
-            (std::fabs(req_cam_pos.X()    - this->camera_params_[0]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_pos.Y()    - this->camera_params_[1]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_pos.Z()    - this->camera_params_[2]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_up.X()     - this->camera_params_[3]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_up.Y()     - this->camera_params_[4]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_up.Z()     - this->camera_params_[5]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_lookat.X() - this->camera_params_[6]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_lookat.Y() - this->camera_params_[7]) > FBOC_FLT_EPS) ||
-            (std::fabs(req_cam_lookat.Z() - this->camera_params_[8]) > FBOC_FLT_EPS))
+        if ((std::fabs(req_time           - this->frame_times_[0])   >= FBOC_FLT_EPS) || 
+            (std::fabs(req_cam_pos.X()    - this->camera_params_[0]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_pos.Y()    - this->camera_params_[1]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_pos.Z()    - this->camera_params_[2]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.X()     - this->camera_params_[3]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.Y()     - this->camera_params_[4]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_up.Z()     - this->camera_params_[5]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.X() - this->camera_params_[6]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.Y() - this->camera_params_[7]) >= FBOC_FLT_EPS) ||
+            (std::fabs(req_cam_lookat.Z() - this->camera_params_[8]) >= FBOC_FLT_EPS))
         {
             return false;
         }
