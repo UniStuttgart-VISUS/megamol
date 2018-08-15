@@ -390,13 +390,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
         }
     }
-
-    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
-    Base::overrideViewport = fboVp;
-
-    // Set new viewport settings for camera
-    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
    
     // Render to texture ------------------------------------------------------------
 
@@ -433,9 +426,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     //Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
     //Base::showBBox.Param<param::BoolParam>()->SetValue(false);
 
+    // Set new viewport settings for camera
+    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
+
+    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
+    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
+    Base::overrideViewport = fboVp;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
@@ -446,6 +446,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Reset override render call
     Base::overrideCall = nullptr;
+
     // Reset override viewport
     Base::overrideViewport = nullptr;
 
@@ -455,9 +456,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Write frame to file
     if (this->rendering) {
 
+        // Lock writing to file if nothing is written to fbo (see FBOCompositor)
         if (!written2FBO && (this->pngdata.lock == 0)) {
             this->pngdata.lock = 1;
-            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing rendered to FBO ...\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing is rendered to FBO ...\n");
         }
         else if ((written2FBO) && (this->pngdata.lock == 1)) {
             this->pngdata.lock == 0;
@@ -633,7 +635,7 @@ bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObjec
     if (backCol == nullptr)
         return false;
 
-    const unsigned int colBytes = 4;
+    const unsigned int colBytes = 4; // > RGBA
     const unsigned int texDim   = fbo.GetWidth() * fbo.GetHeight();
     BYTE *buffer = new BYTE[texDim * colBytes];
     fbo.GetColourTexture(buffer);
@@ -654,7 +656,6 @@ bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObjec
 
     return false;
 }
-
 
 
 /*
@@ -803,17 +804,15 @@ bool CinematicView::render2file_write_png() {
         }
 
         if (this->pngdata.animTime == ccc->getTotalAnimTime()) {
-            this->pngdata.animTime -= 0.00001f;
+            /// Handling this case is actually only necessary when rendering is done via FBOCompositor => Rndering crashes > WHY ?
+            /// Rendering last frame with animation time = total animation time is otherwise no problem.
+            this->pngdata.animTime -= 0.000005f;
         }
-        // Stop rendering if max anim time is reached
         else if (this->pngdata.animTime >= ccc->getTotalAnimTime()) {
-
+            // Stop rendering if max anim time is reached
             this->render2file_finish();
             return false;
         }
-
-
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Animation time %f ...\n", this->pngdata.animTime);
     }
 
     return true;
