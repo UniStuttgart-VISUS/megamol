@@ -49,7 +49,7 @@
 #include <vector>
 
 #ifdef WITH_THE_GLM
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #endif /* WITH_THE_GLM */
 
 #ifdef WITH_THE_XMATH

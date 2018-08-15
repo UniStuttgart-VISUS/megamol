@@ -42,8 +42,8 @@
 #include <array>
 
 #ifdef WITH_THE_GLM
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #endif /* WITH_THE_GLM */
 
 #ifdef WITH_THE_XMATH
@@ -121,7 +121,7 @@ namespace math {
         typedef glm::quat native_type;
 
         /** The type to specify array dimensions and indices. */
-        typedef size_t size_type;
+        typedef int size_type;
 
         /** The scalar type. */
         typedef float value_type;
@@ -155,9 +155,9 @@ namespace math {
          */
         static THE_FORCE_INLINE value_type at(const native_type& data,
                 const size_type i) {
-            THE_ASSERT(static_cast<size_t>(i) >= 0);
-            THE_ASSERT(static_cast<size_t>(i) < 4);
-            return data[static_cast<size_t>(i)];
+            THE_ASSERT(static_cast<size_type>(i) >= 0);
+            THE_ASSERT(static_cast<size_type>(i) < 4);
+            return data[static_cast<size_type>(i)];
         }
 
         /**
@@ -170,9 +170,9 @@ namespace math {
          */
         static THE_FORCE_INLINE value_type& at(native_type& data,
                 const size_type i) {
-            THE_ASSERT(static_cast<size_t>(i) >= 0);
-            THE_ASSERT(static_cast<size_t>(i) < 4);
-            return data[static_cast<size_t>(i)];
+            THE_ASSERT(static_cast<size_type>(i) >= 0);
+            THE_ASSERT(static_cast<size_type>(i) < 4);
+            return data[static_cast<size_type>(i)];
         }
 
         /**

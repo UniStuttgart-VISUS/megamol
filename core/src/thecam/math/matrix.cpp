@@ -47,3 +47,18 @@ bool megamol::core::thecam::math::invert(matrix<DirectX::XMFLOAT4X4>& matrix) {
     }
 }
 #endif /* WITH_THE_XMATH */
+
+#ifdef WITH_THE_GLM
+/*
+ * thecam::math::invert
+ */
+bool megamol::core::thecam::math::invert(matrix<glm::mat4>& matrix) {
+    auto det = glm::determinant(static_cast<glm::mat4>(matrix));
+    if (det == 0.0f) {
+        return false;
+    } else {
+        matrix = glm::inverse(static_cast<glm::mat4>(matrix));
+        return true;
+    }
+}
+#endif /* WITH_THE_GLM */

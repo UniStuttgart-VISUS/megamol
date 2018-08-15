@@ -43,6 +43,11 @@
 #include <DirectXMath.h>
 #endif /* WITH_THE_XMATH */
 
+#ifdef WITH_THE_GLM
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#endif /* WITH_THE_GLM */
+
 #include "mmcore/thecam/utility/equatable.h"
 #include "mmcore/thecam/utility/memory.h"
 #include "mmcore/thecam/utility/types.h"
@@ -88,6 +93,17 @@ namespace detail {
         static const size_t rows = 4;
     };
 #endif /* WITH_THE_XMATH */
+
+#ifdef WITH_THE_GLM
+    /**
+     * Provides implicit template parameters of the glm matrix class.
+     */
+    template<> struct implicit_matrix_properties<glm::mat4> {
+        static const size_t columns = 4;
+        static const matrix_layout layout = matrix_layout::column_major;
+        static const size_t rows = 4;
+    };
+#endif /* WITH_THE_GLM */
 
 } /* end namespace detail */
 
@@ -319,6 +335,87 @@ namespace detail {
         }
     };
 #endif /* WITH_THE_XMATH */
+   
+#ifdef WITH_THE_GLM
+    /**
+     * Specialisation of the matrix traits for glm.
+     */
+    template<>
+    struct matrix_traits<glm::mat4x4, 4, 4, matrix_layout::column_major> {
+
+        /** The allocator for heap allocations of the matrix class. */
+        template<class C> using allocator_type = std::allocator<C>;
+
+        /** The type of matrix indexer for locating a single component. */
+        typedef matrix_indexer<4, 4, matrix_layout::column_major> indexer_type;
+
+        /** The native storage type. */
+        typedef glm::mat4 native_type;
+
+        /** The type to specify dimensions and indices. */
+        typedef int size_type;
+
+        /** The scalar type. */
+        typedef float value_type;
+
+        /** Indicates that the storage layout of native_type is contiguous. */
+        static const bool is_contiguous = true;
+
+        /**
+         * Get the value of the specified component 'row', 'column'.
+         *
+         * @param data   The native data.
+         * @param row    The row of the element to retrieve.
+         * @param column The columns of the element to retrieve.
+         *
+         * @return The value of the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type at(const native_type& data,
+                const size_type row, const size_type column) {
+            THE_ASSERT(indexer_type::valid(row, column));
+            return data[row][column];
+        }
+
+        /**
+         * Get the value of the specified component 'row', 'column'.
+         *
+         * @param data   The native data.
+         * @param row    The row of the element to retrieve.
+         * @param column The columns of the element to retrieve.
+         *
+         * @return The value of the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type& at(native_type& data,
+                const size_type row, const size_type column) {
+            THE_ASSERT(indexer_type::valid(row, column));
+            return data[row][column];
+        }
+
+        /**
+         * Copy 'src' to 'dst'.
+         *
+         * @param dst The native storage of the destination.
+         * @param src The native storage of the source.
+         */
+        static THE_FORCE_INLINE void copy(native_type& dst,
+                const native_type& src) {
+            dst = src;
+        }
+
+        /**
+         * Test for equality of two native matrices.
+         *
+         * @param lhs The left-hand side operand.
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if 'lhs' and 'rhs' are equal, false otherwise.
+         */
+        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+                const native_type& rhs) {
+            return (::memcmp(glm::value_ptr(lhs), glm::value_ptr(rhs), sizeof(lhs)) == 0);
+        }
+    };
+#endif /* WITH_THE_GLM */
 
 
     // http://stackoverflow.com/questions/12250026/function-templates-different-specializations-with-type-traits
@@ -438,7 +535,7 @@ namespace detail {
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
             static typename traits_type::allocator_type<byte> alloc;
-            alloc.deallocate(static_cast<byte *>(ptr), size);
+            alloc.deallocate(static_cast<unsigned char *>(ptr), size);
         }
 
         /**
@@ -452,7 +549,7 @@ namespace detail {
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
             static typename traits_type::allocator_type<byte> alloc;
-            alloc.deallocate(static_cast<byte *>(ptr), size);
+            alloc.deallocate(static_cast<unsigned char *>(ptr), size);
         }
 
         /**
@@ -763,7 +860,9 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
-
+#ifdef WITH_THE_GLM
+    // glm version of this not needed
+#endif /* WITH_THE_GLM */
 
     /**
      * Computes the determinant of a matrix.
@@ -834,6 +933,19 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+#ifdef WITH_THE_GLM
+    /**
+     * Computes the determinant of a matrix.
+     *
+     * @param matrix The matrix to compute the determinant of.
+     *
+     * @return The determinant of 'matrix'.
+     */
+    inline float det(matrix<glm::mat4>& matrix) {
+        return glm::determinant(static_cast<glm::mat4>(matrix));
+    }
+#endif /* WITH_THE_GLM */
+
 
     /**
      * Inverts a matrix in-place using Gauss elimination.
@@ -858,6 +970,18 @@ namespace detail {
      */
     bool invert(matrix<DirectX::XMFLOAT4X4>& matrix);
 #endif /* WITH_THE_XMATH */
+
+#ifdef WITH_THE_GLM
+    /**
+     * Inverts a matrix in-place.
+     *
+     * @param matrix The matrix to be inverted.
+     *
+     * @return true if the matrix was invertable,
+     *         false if the matrix was not invertable.
+     */
+    bool invert(matrix<glm::mat4>& matrix);
+#endif /* WITH_THE_GLM */
 
 
     /**
@@ -955,6 +1079,18 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH*/
 
+#ifdef WITH_THE_GLM
+    /**
+     * Transpose a matrix.
+     *
+     * @param matrix The matrix to be transposed.
+     *
+     * @return The transposed matrix.
+     */
+    inline matrix<glm::mat4> transpose(const matrix<glm::mat4>& matrix) {
+        return glm::transpose(static_cast<glm::mat4>(matrix));
+    }
+#endif /* WITH_THE_GLM */
 
     /**
      * Scale a matrix.
@@ -1066,6 +1202,22 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+#ifdef WITH_THE_GLM
+    /**
+     * Multiply two matrices.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    inline matrix<glm::mat4> operator *(
+            const matrix<glm::mat4>& lhs,
+            const matrix<glm::mat4>& rhs) {
+        return static_cast<glm::mat4>(lhs) * static_cast<glm::mat4>(rhs);
+    }
+#endif /* WITH_THE_GLM */
+
 
     /**
      * Multiply a matrix and a column vector.
@@ -1109,6 +1261,22 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+#ifdef WITH_THE_GLM
+    /**
+     * Multiply a matrix and a column vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    inline thecam::math::vector<glm::vec4> operator *(
+            const matrix<glm::mat4>& lhs,
+            const vector<glm::vec4>& rhs) {
+        return static_cast<glm::mat4>(lhs) * static_cast<glm::vec4>(rhs);
+    }
+#endif /* WITH_THE_GLM */
+
 
     /**
      * Multiply a row vector and a matrix.
@@ -1151,6 +1319,22 @@ namespace detail {
         return store_xmvector(retval, v);
     }
 #endif /* WITH_THE_XMATH */
+
+#ifdef WITH_THE_GLM
+    /**
+     * Multiply a row vector and a matrix.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    inline thecam::math::vector<glm::vec4> operator *(
+            const vector<glm::vec4>& lhs,
+            const matrix<glm::mat4>& rhs) {
+        return static_cast<glm::vec4>(lhs) * static_cast<glm::mat4>(rhs);
+    }
+#endif /* WITH_THE_GLM */
 
 
 } /* end namespace math */

@@ -40,8 +40,8 @@
 #include "mmcore/thecam/utility/config.h"
 
 #ifdef WITH_THE_GLM
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #endif /* WITH_THE_GLM */
 
 #ifdef THE_WINDOWS

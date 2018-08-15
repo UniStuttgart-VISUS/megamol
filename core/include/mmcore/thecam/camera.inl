@@ -231,7 +231,7 @@ void megamol::core::thecam::camera<M, P>::calc_matrices(
             break;
 
         default:
-            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.")
+            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 }
 
@@ -322,7 +322,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix(void) const {
             break;
 
         default:
-            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.")
+            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 
     return std::move(retval);

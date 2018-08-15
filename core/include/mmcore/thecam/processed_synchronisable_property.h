@@ -126,7 +126,7 @@ namespace thecam {
          *
          * @param prop The property to synchronise with.
          */
-        inline void synchronise(synchronisable_property& prop) {
+        inline void synchronise(synchronisable_property<T>& prop) { // TODO is this correct?
             THE_ASSERT(prop.value);
             this->value = prop.value;
         }

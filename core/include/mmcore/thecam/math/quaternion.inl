@@ -73,8 +73,8 @@ megamol::core::thecam::math::quaternion<V, T> megamol::core::thecam::math::inver
         l = sqrt(l);
         quaternion<V, T> retval(
             quat.x() /= -l,
-            quat.y() /= -l
-            quat.z() /= -l
+            quat.y() /= -l,
+            quat.z() /= -l,
             quat.w() / l);
         return std::move(retval);
 

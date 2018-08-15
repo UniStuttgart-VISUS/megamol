@@ -145,7 +145,7 @@ megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::recta
         const rectangle<Vp, Tp>& rhs) {
     THE_ASSERT(this != std::addressof(rhs));
     traits_type::assign(this->data, static_cast<value_type>(rhs.left()),
-        static_cast<value_type>(rhs.top()), static_cast<value_type>(rhs.right())
+        static_cast<value_type>(rhs.top()), static_cast<value_type>(rhs.right()),
         static_cast<value_type>(rhs.bottom()));
     return *this;
 }
