@@ -26,8 +26,8 @@ namespace megamol
 			template <typename T, typename U = void*>
 			uint32_t DataHash(const T& first, const U second = nullptr)
 			{
-				const char* first_ptr = (const char*)&first;
-				const char* second_ptr = (const char*)&second;
+				const char* first_ptr = reinterpret_cast<const char*>(&first);
+				const char* second_ptr = reinterpret_cast<const char*>(&second);
 
 				uint32_t hash = 0;
 
@@ -42,6 +42,7 @@ namespace megamol
 				{
 					for (size_t i = 0; i < sizeof(second); ++i)
 					{
+						hash += second_ptr[i];
 						hash += (hash << 10);
 						hash ^= (hash >> 6);
 					}
