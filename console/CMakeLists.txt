@@ -101,7 +101,7 @@ if(BUILD_CONSOLE)
   endif()
 
 
-  # Configuration of the megamol.cfg megamol.sh files
+  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
   set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
@@ -109,7 +109,7 @@ if(BUILD_CONSOLE)
     include(GNUInstallDirs)
     set(cfg_EXTERNAL_LIB_PATH "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}")
     set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()
 
@@ -118,7 +118,7 @@ if(BUILD_CONSOLE)
     set(MMPLG_DIR "bin")
   endif()
 
-  configure_file(extra/megamol.cfg ${CMAKE_BINARY_DIR}/megamol.cfg)
+  configure_file(extra/megamol.cfg.in ${CMAKE_BINARY_DIR}/megamol.cfg)
   configure_file(extra/install_megamol_cfg.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake @ONLY)
   install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake)
 

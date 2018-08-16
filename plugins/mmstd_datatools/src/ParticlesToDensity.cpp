@@ -18,6 +18,7 @@
 #include "vislib/sys/Log.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -31,7 +32,13 @@ bool datatools::ParticlesToDensity::create(void) { return true; }
 /*
  * datatools::ParticlesToDensity::release
  */
-void datatools::ParticlesToDensity::release(void) {}
+void datatools::ParticlesToDensity::release(void) {
+    delete[] this->metadata.MinValues;
+    delete[] this->metadata.MaxValues;
+    delete[] this->metadata.SliceDists[0];
+    delete[] this->metadata.SliceDists[1];
+    delete[] this->metadata.SliceDists[2];
+}
 
 
 /*
@@ -161,15 +168,15 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     // TODO set data
     outVol->SetData(this->vol[0].data());
     metadata.Components = 1;
-    metadata.GridType = core::misc::GridType_t::RECTILINEAR;
+    metadata.GridType = core::misc::GridType_t::CARTESIAN;
     metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
     metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
     metadata.ScalarLength = sizeof(float);
-    metadata.MinValues = new double;
+    metadata.MinValues = new double[1];
     metadata.MinValues[0] = this->minDens;
-    metadata.MaxValues = new double;
+    metadata.MaxValues = new double[1];
     metadata.MaxValues[0] = this->maxDens;
     auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
     metadata.Extents[0] = bbox.Width();
@@ -179,11 +186,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.Origin[1] = bbox.Bottom();
     metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
-    metadata.SliceDists[0] = new float;
+    metadata.SliceDists[0] = new float[1];
     metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-    metadata.SliceDists[1] = new float;
+    metadata.SliceDists[1] = new float[1];
     metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-    metadata.SliceDists[2] = new float;
+    metadata.SliceDists[2] = new float[1];
     metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
     metadata.IsUniform[0] = true;
     metadata.IsUniform[1] = true;
@@ -206,6 +213,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
  *  moldyn::DynDensityGradientEstimator::createVolumeCPU
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
+
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
+    const auto startTime = std::chrono::high_resolution_clock::now();
+    size_t totalParticles = 0;
 
     auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
@@ -245,6 +256,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
+
+        totalParticles += parts.GetCount();
 
         auto const filterSize = this->filterSizeSlot.Param<core::param::IntParam>()->Value();
 
@@ -357,6 +370,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     // Cleanup
     vol.resize(1);
+
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "ParticlesToDensity: creation of %u x %u x %u volume from %llu particles took %f ms.", sx, sy, sz,
+        totalParticles, diffMillis.count());
 
     return true;
 }

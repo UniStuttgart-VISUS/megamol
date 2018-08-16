@@ -10,6 +10,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/SystemInformation.h"
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -56,12 +57,18 @@ bool datatools::MPIVolumeAggregator::manipulateData(
 
 // without mpi, this module does nothing at all
 #ifdef WITH_MPI
-
-    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) return false;
     bool useMpi = initMPI();
 
-    memcpy(&metadata, inData.GetMetadata(), sizeof(VolumetricDataCall::Metadata));
+    if (!useMpi) {
+        return true;
+    }
+    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) return false;
+
+    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting volume aggregation");
+    const auto startAllTime = std::chrono::high_resolution_clock::now();
+
+    metadata = inData.GetMetadata()->Clone();
     const auto comp = metadata.Components;
 
     if (metadata.GridType != core::misc::CARTESIAN && metadata.GridType != core::misc::RECTILINEAR) {
@@ -75,7 +82,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         return false;
     }
 
-    const size_t numFloats = comp * metadata.Extents[0] * metadata.Extents[1] * metadata.Extents[2];
+    const size_t numFloats = comp * metadata.Resolution[0] * metadata.Resolution[1] * metadata.Resolution[2];
     // we need a copy of the data since we must not alter it.
     std::vector<float> tmpVolume;
     tmpVolume.resize(numFloats);
@@ -109,7 +116,13 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         return false;
     }
 
+    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting Allreduce");
+    const auto startTime = std::chrono::high_resolution_clock::now();
+
     MPI_Allreduce(tmpVolume.data(), this->theVolume.data(), numFloats, MPI_FLOAT, op, this->comm);
+
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
 
     const int chunkSize = (numFloats) / this->mpiSize + 1;
     float min = std::numeric_limits<float>::max();
@@ -130,6 +143,13 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     // now make min max global
     MPI_Allreduce(&min, &globalmin, 1, MPI_FLOAT, MPI_MIN, this->comm);
     MPI_Allreduce(&max, &globalmax, 1, MPI_FLOAT, MPI_MAX, this->comm);
+
+    const auto endAllTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffAllMillis = endAllTime - startAllTime;
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Allreduce of %u x %u x %u volume took %f ms.",
+        metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffMillis.count());
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: volume aggregation of %u x %u x %u volume took %f ms.",
+        metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffAllMillis.count());
 
     outData.SetData(this->theVolume.data());
     metadata.MinValues[0] = globalmin;
@@ -172,4 +192,12 @@ bool datatools::MPIVolumeAggregator::initMPI() {
     retval = (this->comm != MPI_COMM_NULL);
 #endif /* WITH_MPI */
     return retval;
+}
+
+void datatools::MPIVolumeAggregator::release() {
+    delete[] this->metadata.MinValues;
+    delete[] this->metadata.MaxValues;
+    delete[] this->metadata.SliceDists[0];
+    delete[] this->metadata.SliceDists[1];
+    delete[] this->metadata.SliceDists[2];
 }
