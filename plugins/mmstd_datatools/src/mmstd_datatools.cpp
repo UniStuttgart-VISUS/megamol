@@ -70,6 +70,7 @@
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
 #include "ParticlesToDensity.h"
+#include "MPDCListsConcatenate.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -202,6 +203,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToDensity>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCListsConcatenate>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
