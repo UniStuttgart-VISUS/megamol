@@ -157,6 +157,9 @@ namespace megamol {
             /** */
             bool setSimTime(float st);
 
+            /** */
+            bool checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObject& fbo, const float* backCol);
+
             /**
             * My error handling function for png export
             *
