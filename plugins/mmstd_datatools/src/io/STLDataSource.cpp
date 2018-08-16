@@ -51,23 +51,23 @@ namespace megamol
 				{
 					// Create file name textbox
 					this->filename_slot << new core::param::FilePathParam("");
-					this->MakeSlotAvailable(&this->filename_slot);
+					Module::MakeSlotAvailable(&this->filename_slot);
 
 					// Create output slot for triangle mesh data
 					this->mesh_output_slot.SetCallback(geocalls::CallTriMeshData::ClassName(), "GetExtent", &STLDataSource::get_extent_callback);
 					this->mesh_output_slot.SetCallback(geocalls::CallTriMeshData::ClassName(), "GetData", &STLDataSource::get_mesh_data_callback);
 
-					this->MakeSlotAvailable(&this->mesh_output_slot);
+					Module::MakeSlotAvailable(&this->mesh_output_slot);
 
 					// Create output slot for ng mesh data
 #ifdef MEGAMOL_NG_MESH
 					this->shader_filename_slot << new core::param::FilePathParam("stl_triangles");
-					this->MakeSlotAvailable(&this->shader_filename_slot);
+					Module::MakeSlotAvailable(&this->shader_filename_slot);
 
 					this->ngmesh_output_slot.SetCallback<STLDataSource>("CallNGMeshRenderBatches", "GetExtent", &STLDataSource::get_extent_callback);
 					this->ngmesh_output_slot.SetCallback<STLDataSource>("CallNGMeshRenderBatches", "GetData", &STLDataSource::get_ngmesh_data_callback);
 
-					this->MakeSlotAvailable(&this->ngmesh_output_slot);
+					Module::MakeSlotAvailable(&this->ngmesh_output_slot);
 #endif
 				}
 
