@@ -20,6 +20,8 @@
 #include "ng_mesh/CallNGMeshRenderBatches.h"
 #endif
 
+#include "vislib/sys/Log.h"
+
 #include <array>
 #include <algorithm>
 #include <cstring>
@@ -97,9 +99,6 @@ namespace megamol
 						catch (const std::runtime_error& ex)
 						{
 							vislib::sys::Log::DefaultLog.WriteError("Request for extent of plugin 'STL Reader' failed: %s", ex.what());
-
-							this->min_x = this->min_y = this->min_z = this->max_x = this->max_y = this->max_z = 0.0f;
-							call.SetDataHash(0);
 
 							return false;
 						}
@@ -649,6 +648,11 @@ namespace megamol
 							reinterpret_cast<float*>(&this->vertex_normal_buffer[offset])[position++] = normals[triangle_index * 3 + 1];
 							reinterpret_cast<float*>(&this->vertex_normal_buffer[offset])[position++] = normals[triangle_index * 3 + 2];
 						}
+
+						// Fill index buffer
+						this->index_buffer.resize(this->num_triangles * 3);
+
+						std::iota(this->index_buffer.begin(), this->index_buffer.end(), 0);
 					}
 				}
 

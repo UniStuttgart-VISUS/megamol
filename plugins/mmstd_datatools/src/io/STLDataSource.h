@@ -12,7 +12,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "geometry_calls/CallTriMeshData.h"
