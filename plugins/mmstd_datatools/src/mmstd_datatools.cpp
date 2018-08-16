@@ -70,6 +70,7 @@
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
 #include "ParticlesToDensity.h"
+#include "MPDCListsConcatenate.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 
@@ -204,6 +205,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToDensity>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCListsConcatenate>();
 			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::STLDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TriMeshSTLWriter>();
 

@@ -27,6 +27,7 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     , samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
     , aoThresholdSlot(
           "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
+    , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
     , getDataSlot("getdata", "Connects to the data source")
     , getVolSlot("getVol", "Connects to the density volume provider") {
 
@@ -42,9 +43,12 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     this->samplingRateSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->samplingRateSlot);
 
-    //this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
+    // this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
     this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->aoThresholdSlot);
+
+    this->aoRayOffsetFactorSlot << new core::param::FloatParam(1.0f, 0.0f);
+    this->MakeSlotAvailable(&this->aoRayOffsetFactorSlot);
 }
 
 
@@ -61,14 +65,32 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    vd->SetFrameID(os->getTime(), true);
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->volDatahash != vd->DataHash() ||
-        this->volFrameID != vd->FrameID() || this->InterfaceIsDirty()) {
+
+    if (!(*cd)(1)) return false;
+    if (!(*vd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+
+    auto const minFrameCount = std::min(cd->FrameCount(), vd->FrameCount());
+
+    if (minFrameCount == 0) return false;
+
+    auto frameTime = 0;
+
+    if (os->getTime() >= minFrameCount) {
+        cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+        vd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+        frameTime = minFrameCount - 1;
+    } else {
+        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+        vd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+        frameTime = os->getTime();
+    }
+
+    if (this->datahash != cd->DataHash() || this->time != frameTime || this->volDatahash != vd->DataHash() ||
+        this->volFrameID != frameTime || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
-        this->time = os->getTime();
+        this->time = frameTime;
         this->volDatahash = vd->DataHash();
-        this->volFrameID = os->getTime();
+        this->volFrameID = frameTime;
         this->structureContainer.dataChanged = true;
     } else {
         return true;
@@ -182,10 +204,11 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);     //<
     this->structureContainer.voxelDType = voxelDataType::FLOAT;
     this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
-    //this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    // this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.aoThreshold = valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
-    //this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
+    // this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
+    this->structureContainer.aoRayOffsetFactor = this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value();
 
     return true;
 }
@@ -201,8 +224,12 @@ void OSPRayAOVSphereGeometry::release() {}
 
 
 bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
-    if (this->particleList.IsDirty()) {
+    if (this->particleList.IsDirty() || this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty() ||
+        this->aoRayOffsetFactorSlot.IsDirty()) {
         this->particleList.ResetDirty();
+        this->aoThresholdSlot.ResetDirty();
+        this->samplingRateSlot.ResetDirty();
+        this->aoRayOffsetFactorSlot.ResetDirty();
         return true;
     } else {
         return false;
