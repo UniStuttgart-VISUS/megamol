@@ -120,6 +120,7 @@ public:
 
     float samplingRate;
     float aoThreshold;
+    float aoRayOffsetFactor;
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

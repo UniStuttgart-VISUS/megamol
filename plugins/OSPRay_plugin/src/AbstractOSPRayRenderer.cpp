@@ -1105,7 +1105,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         }
 
                         ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
-                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing);
+                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing * element.aoRayOffsetFactor);
                         ospSetObject(geo.back(), "aovol", aovol);
                     }
                 }

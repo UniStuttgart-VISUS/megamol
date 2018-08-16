@@ -27,6 +27,7 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     , samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
     , aoThresholdSlot(
           "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
+    , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
     , getDataSlot("getdata", "Connects to the data source")
     , getVolSlot("getVol", "Connects to the density volume provider") {
 
@@ -45,6 +46,9 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     // this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
     this->aoThresholdSlot << new core::param::FloatParam(0.5f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->aoThresholdSlot);
+
+    this->aoRayOffsetFactorSlot << new core::param::FloatParam(1.0f, 0.0f);
+    this->MakeSlotAvailable(&this->aoRayOffsetFactorSlot);
 }
 
 
@@ -204,6 +208,7 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     this->structureContainer.aoThreshold = valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     // this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
     this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
+    this->structureContainer.aoRayOffsetFactor = this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value();
 
     return true;
 }
@@ -219,10 +224,12 @@ void OSPRayAOVSphereGeometry::release() {}
 
 
 bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
-    if (this->particleList.IsDirty() || this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty()) {
+    if (this->particleList.IsDirty() || this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty() ||
+        this->aoRayOffsetFactorSlot.IsDirty()) {
         this->particleList.ResetDirty();
         this->aoThresholdSlot.ResetDirty();
         this->samplingRateSlot.ResetDirty();
+        this->aoRayOffsetFactorSlot.ResetDirty();
         return true;
     } else {
         return false;
