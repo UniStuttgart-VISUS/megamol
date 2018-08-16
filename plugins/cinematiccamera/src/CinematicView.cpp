@@ -272,11 +272,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
             throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
         }
-        // Get selected keyframe for current animation time
         ccc->setSelectedKeyframeTime(this->pngdata.animTime);
-        // Update selected keyframe
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
-
         loadNewCamParams = true;
     }
     else {
@@ -291,16 +288,60 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
                 animTime = 0.0f;
             }
             ccc->setSelectedKeyframeTime(animTime);
-            // Update selected keyframe
             if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
-            
             loadNewCamParams = true;
         }
     }
     // Load simulation time
     this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
 
+    // Viewport stuff ---------------------------------------------------------
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    int   vpW_int = (vp[2] - vp[0]);
+    int   vpH_int = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
+    float vpH_flt = static_cast<float>(vpH_int);
+    float vpW_flt = static_cast<float>(vpW_int);
+    int   fboWidth = vpW_int;
+    int   fboHeight = vpH_int;
+    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+
+    if (this->rendering) {
+        fboWidth = this->cineWidth;
+        fboHeight = this->cineHeight;
+    }
+    else {
+        float vpRatio = vpW_flt / vpH_flt;
+
+        // Check for viewport changes
+        if ((this->vpWLast != vpW_int) || (this->vpHLast != vpH_int)) {
+            this->vpWLast = vpW_int;
+            this->vpHLast = vpH_int;
+        }
+
+        // Calculate reduced fbo width and height
+        if ((this->cineWidth < vpW_int) && (this->cineHeight < vpH_int)) {
+            fboWidth = this->cineWidth;
+            fboHeight = this->cineHeight;
+        }
+        else {
+            fboWidth = vpW_int;
+            fboHeight = vpH_int;
+
+            if (cineRatio > vpRatio) {
+                fboHeight = (static_cast<int>(vpW_flt / cineRatio));
+            }
+            else if (cineRatio < vpRatio) {
+                fboWidth = (static_cast<int>(vpH_flt * cineRatio));
+            }
+        }
+    }
+
     // Camera settings --------------------------------------------------------
+
+    // Set new viewport settings for camera
+    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering 
@@ -349,48 +390,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     ccc->setCameraParameters(this->cam.Parameters());
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
-    // Viewport stuff ---------------------------------------------------------
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpW_int   = (vp[2] - vp[0]);
-    int   vpH_int   = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
-    float vpH_flt   = static_cast<float>(vpH_int);
-    float vpW_flt   = static_cast<float>(vpW_int);
-    int   fboWidth  = vpW_int;
-    int   fboHeight = vpH_int;
-    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
-
-    if (this->rendering) {
-        fboWidth  = this->cineWidth;
-        fboHeight = this->cineHeight;
-    }
-    else {
-        float vpRatio = vpW_flt / vpH_flt;
-
-        // Check for viewport changes
-        if ((this->vpWLast != vpW_int) || (this->vpHLast != vpH_int)) {
-            this->vpWLast = vpW_int;
-            this->vpHLast = vpH_int;
-        }
-
-        // Calculate reduced fbo width and height
-        if ((this->cineWidth < vpW_int) && (this->cineHeight < vpH_int)) {
-            fboWidth  = this->cineWidth;
-            fboHeight = this->cineHeight;
-        }
-        else {
-            fboWidth = vpW_int;
-            fboHeight = vpH_int;
-
-            if (cineRatio > vpRatio) {
-                fboHeight = (static_cast<int>(vpW_flt / cineRatio));
-            }
-            else if (cineRatio < vpRatio) {
-                fboWidth = (static_cast<int>(vpH_flt * cineRatio));
-            }
-        }
-    }
-   
     // Render to texture ------------------------------------------------------------
 
     // Suppress TRACE output of fbo.Enable() and fbo.Create()
@@ -418,17 +417,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
-    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    //glClearDepth(1.0f);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    /// Disabling BBOX and CUBE -> needing uniform backCol for being able to check for changes written to fbo ...
-    //Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
-    //Base::showBBox.Param<param::BoolParam>()->SetValue(false);
-
-    // Set new viewport settings for camera
-    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
-
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -440,34 +428,34 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Call Render-Function of parent View3D
     Base::Render(context);
 
+    // Reset override render call
+    Base::overrideCall = nullptr;
+    // Reset override viewport 
+    Base::overrideViewport = nullptr;
+
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
     }
-
-    // Reset override render call
-    Base::overrideCall = nullptr;
-
-    // Reset override viewport
-    Base::overrideViewport = nullptr;
-
-    // Check if data was written to fbo color texture
-    bool written2FBO = this->checkFBO4ColorChanges(this->fbo, Base::bkgndColour());
-
+     
     // Write frame to file
     if (this->rendering) {
+
+        // Check if fbo in cr3d was reset by renderer
+        bool written2FBO = (cr3d->FrameBufferObject() != nullptr);
 
         // Lock writing to file if nothing is written to fbo (see FBOCompositor)
         if (!written2FBO && (this->pngdata.lock == 0)) {
             this->pngdata.lock = 1;
-            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Nothing is rendered to FBO ...\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping unused FBO ...\n");
         }
         else if ((written2FBO) && (this->pngdata.lock == 1)) {
             this->pngdata.lock == 0;
         }
 
+        // Write frame to PNG file
         this->render2file_write_png();
 
-        // Unlock render to fbo after n frames
+        // Unlock writing frame to file
         if (this->pngdata.lock > 0) {
             this->pngdata.lock--;
         }
@@ -492,7 +480,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glLoadIdentity();
 
     // Color stuff 
-    const float *bgColor = this->bkgndColour();
+    const float *bgColor = Base::BkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -628,38 +616,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
 
 /*
-* CinematicView::checkColorWritten2FBO
-*/
-bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObject& fbo, const float* backCol) {
-
-    if (backCol == nullptr)
-        return false;
-
-    const unsigned int colBytes = 4; // > RGBA
-    const unsigned int texDim   = fbo.GetWidth() * fbo.GetHeight();
-    BYTE *buffer = new BYTE[texDim * colBytes];
-    fbo.GetColourTexture(buffer);
-
-    BYTE r = static_cast<BYTE>(backCol[0] * 255.0f);
-    BYTE g = static_cast<BYTE>(backCol[1] * 255.0f);
-    BYTE b = static_cast<BYTE>(backCol[2] * 255.0f);
-
-    for (unsigned int i = 0; i < texDim; ++i) {
-        if ((buffer[i*colBytes + 0] != r) ||
-            (buffer[i*colBytes + 1] != g) ||
-            (buffer[i*colBytes + 2] != b)) {
-            return true;
-        }
-    }
-
-    ARY_SAFE_DELETE(buffer);
-
-    return false;
-}
-
-
-/*
-* CinematicView::rtf_setup
+* CinematicView::render2file_setup
 */
 bool CinematicView::render2file_setup() {
 
@@ -713,13 +670,18 @@ bool CinematicView::render2file_setup() {
         throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
+    // Disable showing BBOX and CUBE (Uniform backCol is needed for being able to detect changes written to fbo.)
+    Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
+    Base::showBBox.Param<param::BoolParam>()->SetValue(false);
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Hiding Bbox and Cube rendering of complete animation.");
+
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
     return true;
 }
 
 
 /*
-* CinematicView::rtf_write_frame
+* CinematicView::render2file_write_png
 */
 bool CinematicView::render2file_write_png() {
 
@@ -820,7 +782,7 @@ bool CinematicView::render2file_write_png() {
 
 
 /*
-* CinematicView::rtf_finish
+* CinematicView::render2file_finish
 */
 bool CinematicView::render2file_finish() {
 

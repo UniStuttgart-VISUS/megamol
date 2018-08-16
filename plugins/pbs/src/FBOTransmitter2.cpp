@@ -38,7 +38,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
-    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance."} // get viewport tile dimensions and position of different views
+    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports. Leave empty if no screen space subdivision is applied."} 
 #ifdef WITH_MPI
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
 #endif // WITH_MPI
@@ -74,7 +74,6 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
-
     this->mpiclusterview_name_slot_ << new megamol::core::param::StringParam{""};
     this->MakeSlotAvailable(&this->mpiclusterview_name_slot_);
 }
@@ -99,22 +98,6 @@ void megamol::pbs::FBOTransmitter2::release() {
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    // extract bbox 
-    float bbox[6];
-    if (!this->extractBoundingBox(bbox)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
-    }
-    // extract times 
-    float times[2];
-    if (!this->extractFrameTimes(times)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract frame times\n");
-    }
-    // extract camera params 
-    float camera[9];
-    if (!this->extractCameraParams(camera)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract camera parameters\n");
-    }
-
     // extract viewport or get if from opengl context
     int viewport[4]      = { 0, 0, 1, 1 };
     int width            = 1;
@@ -131,6 +114,18 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         tile_height = vvpt[3];
         width  = viewport[2] = vvpt[4];
         height = viewport[3] = vvpt[5];
+
+        // Check if tile viewport lies outside global viewport
+        if ((tile_viewport[0] < viewport[0]) ||
+            (tile_viewport[1] < viewport[1]) ||
+            (tile_viewport[0] + tile_viewport[2]) > (viewport[0] + viewport[2]) ||
+            (tile_viewport[1] + tile_viewport[3]) > (viewport[1] + viewport[3])) {
+            vislib::StringA e;
+            e.Format("[FBOTransmitter2] [AfterRender] Tile viewport (%d, %d, %d, %d) lies outside global viewport (%d, %d, %d, %d).",
+                tile_viewport[0], tile_viewport[1], tile_viewport[2], tile_viewport[3],
+                viewport[0], viewport[1], viewport[2], viewport[3]);
+            throw vislib::Exception(e.PeekBuffer(), __FILE__, __LINE__);
+        }
     }
     else {
         glGetIntegerv(GL_VIEWPORT, viewport);
@@ -140,34 +135,33 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         width  = tile_width  = viewport[2];
         height = tile_height = viewport[3];
     }
-///TODO: CHECK DIMENSIONS OF VIEWPORT TILE vs. GLOBAL VIEWPORT ...
 
     // read FBO
-    std::vector<char> col_buf_tile(tile_width * tile_height * col_buf_el_size_);
-    std::vector<char> depth_buf_tile(tile_width * tile_height * depth_buf_el_size_);
-
-    glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf_tile.data());
-    glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf_tile.data());
-
     std::vector<char> col_buf(width * height * col_buf_el_size_);
     std::vector<char> depth_buf(width * height * depth_buf_el_size_);
 
-    if ((tile_width < width) || (tile_height < height)) {
+    if ((tile_width == width) && (tile_height == height)) {
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
+        glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
+    }
+    else {
+        std::vector<char> col_buf_tile(tile_width * tile_height * col_buf_el_size_);
+        std::vector<char> depth_buf_tile(tile_width * tile_height * depth_buf_el_size_);
+
+        glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf_tile.data());
+        glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf_tile.data());
+
         int row_offset           = tile_viewport[1]  * width; // y * width = row offset * tile width
         int colomn_offset        = tile_viewport[0];          // x  = column offset 
         int color_row_tile_width = col_buf_el_size_   * tile_width;
         int depth_row_tile_width = depth_buf_el_size_ * tile_width;
 
-        // Copy tile (starting at index 0) to right position in row major format
+        // Copy tile rows to right position to fit row major format
         for (int i = 0; i < tile_height; ++i) {
             int offset = row_offset + (i * width) + colomn_offset;
             memcpy(col_buf.data()   + (col_buf_el_size_   * offset), col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
             memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
         }
-    }
-    else { // (tile_width == width) && (tile_height == height))
-        memcpy(col_buf.data(),   col_buf_tile.data(),   tile_width * tile_height * col_buf_el_size_);
-        memcpy(depth_buf.data(), depth_buf_tile.data(), tile_width * tile_height * depth_buf_el_size_);
     }
 
 #ifdef WITH_MPI
@@ -178,10 +172,12 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
-
-        std::array<IceTFloat, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 0.0f};
+        float backgroundColor[3] = {0.0f, 0.0f, 0.0f};
+        if (!this->extractBackgroundColor(backgroundColor)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract background color\n");
+        }
         auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor.data());
+            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor);
 
         if (mpiRank == 0) {
             icet_col_buf   = icetImageGetColorub(icet_comp_image);
@@ -190,6 +186,23 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
+
+        // extract bbox 
+        float bbox[6];
+        if (!this->extractBoundingBox(bbox)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
+        }
+        // extract times 
+        float times[2];
+        if (!this->extractFrameTimes(times)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract frame times\n");
+        }
+        // extract camera params 
+        float camera[9];
+        if (!this->extractCameraParams(camera)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract camera parameters\n");
+        }
+
 #endif // WITH_MPI
        // copy data to read buffer, if possible
         {
@@ -489,6 +502,32 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     else {
         if (!mcvvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(float bkgnd_color[3]) {
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto arv = dynamic_cast<core::view::AbstractRenderingView*>(ano.get());
+    if (arv != nullptr) {
+        const float * bkgndCol = arv->BkgndColour();
+        if (bkgndCol != nullptr) {
+            bkgnd_color[0] = bkgndCol[0];
+            bkgnd_color[1] = bkgndCol[1];
+            bkgnd_color[2] = bkgndCol[2];                
+        }
+    }
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
         }
         success = false;
     }

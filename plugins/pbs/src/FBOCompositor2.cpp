@@ -31,7 +31,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Rendering mode for aborting rendering until frame for requested camera and time is received -> Use for cinematic rendering."}
+    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Necessary for cinematic rendering. If true, rendering is aborted (FBO is set to nullptr!) until frame for requested camera and time is received."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -229,11 +229,6 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     auto req_cam_pos    = cr3d->GetCameraParameters()->Position();
     auto req_cam_up     = cr3d->GetCameraParameters()->Up();
     auto req_cam_lookat = cr3d->GetCameraParameters()->LookAt();
-    //vislib::sys::Log::DefaultLog.WriteError("REQUEST>>> frame_time: %f -- CAMERA: pos: %f/%f/%f - up: %f/%f/%f - lookat: %f/%f/%f\n",
-    //    req_time,
-    //    req_cam_pos[0], req_cam_pos[1], req_cam_pos[2],
-    //    req_cam_up[0], req_cam_up[1], req_cam_up[2],
-    //    req_cam_lookat[0], req_cam_lookat[1], req_cam_lookat[2]);
     auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
     // if data changed check is size has changed
@@ -248,7 +243,16 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 #if _DEBUG && VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex Render\n");
 #endif
-        auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
+        if (only_req_frame) {
+            for (int i = 0; i < 2; ++i) {
+                this->frame_times_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[i];
+            }
+            for (int i = 0; i < 9; ++i) {
+                this->camera_params_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.cam_params[i];
+            }
+        }
+
+        auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
         auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
 
         if (this->width_ != width || this->height_ != height) {
@@ -265,26 +269,12 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo.depth_buf.data());
         }
 
-        if (only_req_frame) {
-            for (int i = 0; i < 2; ++i) {
-                this->frame_times_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.frame_times[i];
-            }
-            for (int i = 0; i < 9; ++i) {
-                this->camera_params_[i] = (*this->fbo_msg_write_)[0].fbo_msg_header.cam_params[i];
-            }
-            //vislib::sys::Log::DefaultLog.WriteError("FRAME>>> frame_time: %f -- CAMERA: pos: %f/%f/%f - up: %f/%f/%f - lookat: %f/%f/%f\n", 
-            //    this->frame_times_[0], 
-            //    this->camera_params_[0], this->camera_params_[1], this->camera_params_[2], 
-            //    this->camera_params_[3], this->camera_params_[4], this->camera_params_[5], 
-            //    this->camera_params_[6], this->camera_params_[7], this->camera_params_[8]);
-        }
-
         data_has_changed_.store(false);
     }
 
-    // Aborting rendering if requested frame has not been received yet
     if (only_req_frame) {
-        float min = 0.000001f; // FLT_MIN;
+        float min = 0.00001f; // == 0 does not work (?)
+        // Aborting rendering if requested frame has not been received yet
         if ((std::fabs(req_time           - this->frame_times_[0])   >= min) ||
             (std::fabs(req_cam_pos.X()    - this->camera_params_[0]) >= min) ||
             (std::fabs(req_cam_pos.Y()    - this->camera_params_[1]) >= min) ||
@@ -296,6 +286,8 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             (std::fabs(req_cam_lookat.Y() - this->camera_params_[7]) >= min) ||
             (std::fabs(req_cam_lookat.Z() - this->camera_params_[8]) >= min))
         {
+            //Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while rendering.
+            cr3d->ResetOutputBuffer();
             return false;
         }
     }

@@ -9,7 +9,7 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
@@ -87,6 +87,8 @@ private:
     bool extractFrameTimes(float frame_times[2]);
 
     bool extractCameraParams(float cam_params[9]);
+
+    bool extractBackgroundColor(float bkgnd_color[3]);
 
     bool extractViewport(int vvpt[6]);
 
