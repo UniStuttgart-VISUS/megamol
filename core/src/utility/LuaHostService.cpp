@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "mmcore/utility/LuaHostService.h"
+#include <combaseapi.h>
 #include "mmcore/CoreInstance.h"
 #include "vislib/math/mathfunctions.h"
 
@@ -10,14 +11,12 @@ using megamol::core::AbstractNamedObjectContainer;
 
 unsigned int megamol::core::utility::LuaHostService::ID = 0;
 
-megamol::core::utility::LuaHostService::LuaHostService(core::CoreInstance& core) : AbstractService(core),
-        serverThread(), serverRunning(false), address("tcp://*:33333") {
+megamol::core::utility::LuaHostService::LuaHostService(core::CoreInstance& core)
+    : AbstractService(core), serverThread(), serverRunning(false), address("tcp://*:33333") {
     // Intentionally empty
 }
 
-megamol::core::utility::LuaHostService::~LuaHostService() {
-    assert(!this->IsEnabled());
-}
+megamol::core::utility::LuaHostService::~LuaHostService() { assert(!this->IsEnabled()); }
 
 bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
     using vislib::sys::Log;
@@ -39,7 +38,8 @@ bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
             Log::DefaultLog.WriteInfo("Set LRHostAddress = \"%s\"", address.c_str());
             break;
         default:
-            Log::DefaultLog.WriteWarn("Unable to set LRHostAddress: expected string, but found type %d", static_cast<int>(t));
+            Log::DefaultLog.WriteWarn(
+                "Unable to set LRHostAddress: expected string, but found type %d", static_cast<int>(t));
             break;
         }
     } else {
@@ -53,13 +53,27 @@ bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
         const void* d = cfg.GetValue(MMC_CFGID_VARIABLE, "LRHostEnable", &t);
         bool silent = false;
         switch (t) {
-        case MMC_TYPE_INT32: autoEnable = ((*static_cast<const int32_t*>(d)) != 0); break;
-        case MMC_TYPE_UINT32: autoEnable = ((*static_cast<const uint32_t*>(d)) != 0); break;
-        case MMC_TYPE_INT64: autoEnable = ((*static_cast<const int64_t*>(d)) != 0); break;
-        case MMC_TYPE_UINT64: autoEnable = ((*static_cast<const uint64_t*>(d)) != 0); break;
-        case MMC_TYPE_BYTE: autoEnable = ((*static_cast<const uint8_t*>(d)) != 0); break;
-        case MMC_TYPE_BOOL: autoEnable = *static_cast<const bool*>(d); break;
-        case MMC_TYPE_FLOAT: autoEnable = !vislib::math::IsEqual(*static_cast<const float*>(d), 0.0f); break;
+        case MMC_TYPE_INT32:
+            autoEnable = ((*static_cast<const int32_t*>(d)) != 0);
+            break;
+        case MMC_TYPE_UINT32:
+            autoEnable = ((*static_cast<const uint32_t*>(d)) != 0);
+            break;
+        case MMC_TYPE_INT64:
+            autoEnable = ((*static_cast<const int64_t*>(d)) != 0);
+            break;
+        case MMC_TYPE_UINT64:
+            autoEnable = ((*static_cast<const uint64_t*>(d)) != 0);
+            break;
+        case MMC_TYPE_BYTE:
+            autoEnable = ((*static_cast<const uint8_t*>(d)) != 0);
+            break;
+        case MMC_TYPE_BOOL:
+            autoEnable = *static_cast<const bool*>(d);
+            break;
+        case MMC_TYPE_FLOAT:
+            autoEnable = !vislib::math::IsEqual(*static_cast<const float*>(d), 0.0f);
+            break;
         case MMC_TYPE_CSTR:
             autoEnable = vislib::CharTraitsA::ParseBool(static_cast<const char*>(d));
             break;
@@ -67,7 +81,8 @@ bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
             autoEnable = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(d));
             break;
         default:
-            Log::DefaultLog.WriteWarn("Unable to set LRHostEnable: expected string, but found type %d", static_cast<int>(t));
+            Log::DefaultLog.WriteWarn(
+                "Unable to set LRHostEnable: expected string, but found type %d", static_cast<int>(t));
             silent = true;
             break;
         }
@@ -96,14 +111,11 @@ void megamol::core::utility::LuaHostService::SetAddress(const std::string& ad) {
     } else {
         address = ad;
     }
-
 }
 
 bool megamol::core::utility::LuaHostService::enableImpl() {
     assert(serverRunning == false);
-    serverThread = std::thread([&](){
-        this->serve();
-      });
+    serverThread = std::thread([&]() { this->serve(); });
     while (!serverRunning) std::this_thread::sleep_for(std::chrono::milliseconds(10));
     return true;
 }
@@ -111,6 +123,9 @@ bool megamol::core::utility::LuaHostService::enableImpl() {
 bool megamol::core::utility::LuaHostService::disableImpl() {
     serverRunning = false;
     if (serverThread.joinable()) serverThread.join();
+    for (auto& x : this->pairThreads) {
+        if (x.joinable()) x.join();
+    }
     return true;
 }
 
@@ -137,9 +152,6 @@ void megamol::core::utility::LuaHostService::serve() {
 
             std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
             std::string reply = makeAnswer(request_str);
-            //if (reply.empty()) {
-            //    reply = "ERR";
-            //}
             socket.send(reply.data(), reply.size());
         }
 
@@ -152,19 +164,79 @@ void megamol::core::utility::LuaHostService::serve() {
 
     try {
         socket.close();
-    } catch (...) {}
+    } catch (...) {
+    }
     Log::DefaultLog.WriteInfo("LRH Server socket closed");
+}
 
+void core::utility::LuaHostService::servePair() {
+    using vislib::sys::Log;
+
+    auto socket = zmq::socket_t(*context, zmq::socket_type::pair);
+    socket.bind("tcp://*:0");
+    size_t len = 1024;
+    char* opts = new char[len];
+    socket.getsockopt(ZMQ_LAST_ENDPOINT, opts, &len);
+    std::string endp(opts);
+    delete[] opts;
+    const auto portPos = endp.find_last_of(":");
+    const auto portStr = endp.substr(portPos + 1, -1);
+    this->lastPairPort.store(std::atoi(portStr.c_str()));
+
+    try {
+        while (serverRunning) {
+            zmq::message_t request;
+            if (!socket.connected()) break;
+            while (serverRunning && !socket.recv(&request, ZMQ_DONTWAIT)) {
+                // no messages available ATM
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            if (!serverRunning) break;
+
+            std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
+            std::string reply = makePairAnswer(request_str);
+            socket.send(reply.data(), reply.size());
+        }
+
+    } catch (std::exception& error) {
+        Log::DefaultLog.WriteError("Error on LRH Pair Server: %s", error.what());
+
+    } catch (...) {
+        Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception");
+    }
+
+    try {
+        socket.close();
+    } catch (...) {
+    }
+    Log::DefaultLog.WriteInfo("LRH Server socket closed");
 }
 
 std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string& req) {
 
     if (req.empty()) return std::string("Null Command.");
 
+    int port;
+    this->lastPairPort.store(0);
+
+    this->pairThreads.emplace_back([&]() { this->servePair(); });
+
+    while ((port = this->lastPairPort.load()) == 0 && serverRunning) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+
+    vislib::sys::Log::DefaultLog.WriteInfo("LRH: generated PAIR socket on port %i", port);
+    return std::to_string(port);
+}
+
+std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::string& req) const {
+    if (req.empty()) return std::string("Null Command.");
+
     std::string result;
     int ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+        // vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
         result = "Error: " + result;

@@ -3,6 +3,7 @@
 #include <string>
 #include <cctype>
 #include <vector>
+#include <thread>
 
 class Connection {
 public:
@@ -32,13 +33,23 @@ public:
     std::string sendCommand(const std::string& cmd) {
         socket.send(cmd.data(), cmd.length());
         zmq::message_t reply;
-        socket.recv(&reply);
-        return std::string(reinterpret_cast<char*>(reply.data()), reply.size());
+
+        size_t counter = 0;
+        bool have_something = false;
+        while (!(have_something = socket.recv(&reply, ZMQ_DONTWAIT)) && counter < 100) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            ++counter;
+        }
+        if (have_something) {
+            return std::string(reinterpret_cast<char*>(reply.data()), reply.size());
+        } else {
+            return "reply timeout, probably MegaMol was closed. Please reconnect.";
+        }
     }
 
     inline bool Connect(const std::string &host) {
         if (!activeHost.empty()) return false;
-
+        //socket.setsockopt(ZMQ_SNDHWM, 0);
         socket.connect(host);
         if (!socket.connected()) {
             throw std::runtime_error("Not connected after \"connect\" returned");

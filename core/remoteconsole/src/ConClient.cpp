@@ -2,16 +2,16 @@
 //
 
 #include "stdafx.h"
-#include <zmq.hpp>
-#include <string>
 #include <iostream>
+#include <string>
 #include <thread>
+#include <zmq.hpp>
 #include "Console.h"
 #include "cxxopts.hpp"
 
 #ifdef _WIN32
 int _tmain(int argc, _TCHAR* argv[]) {
-#else /* _WIN32 */
+#else  /* _WIN32 */
 int main(int argc, char* argv[]) {
 #endif /* _WIN32 */
     using std::cout;
@@ -22,13 +22,9 @@ int main(int argc, char* argv[]) {
     bool keepOpen = false;
 
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
-    options.add_options()
-        ("open", "open host", cxxopts::value<std::string>())
-        ("source", "source file", cxxopts::value<std::string>())
-        ("exec", "execute script", cxxopts::value<std::string>())
-        ("keep-open", "keep open")
-        ("help", "print help")
-        ;
+    options.add_options()("open", "open host", cxxopts::value<std::string>())(
+        "source", "source file", cxxopts::value<std::string>())(
+        "exec", "execute script", cxxopts::value<std::string>())("keep-open", "keep open")("help", "print help");
 
     try {
 
@@ -36,7 +32,7 @@ int main(int argc, char* argv[]) {
         auto parseRes = options.parse(argc, argv);
 
         if (parseRes.count("help")) {
-            std::cout << options.help({ "" }) << std::endl;
+            std::cout << options.help({""}) << std::endl;
             exit(0);
         }
 
@@ -52,29 +48,36 @@ int main(int argc, char* argv[]) {
 
         //  Prepare our context and socket
         zmq::context_t context(1);
-        zmq::socket_t socket(context, ZMQ_REQ);
+        zmq::socket_t pre_socket(context, ZMQ_REQ);
+        const int replyLength = 1024;
+        char portReply[replyLength];
+
+        zmq::socket_t socket(context, ZMQ_PAIR);
         Connection conn(socket);
 
         if (!host.empty()) {
             cout << "Connecting \"" << host << "\" ... ";
             try {
-                conn.Connect(host);
-                cout << endl
-                    << "\tConnected" << endl
-                    << endl;
+                pre_socket.connect(host);
+                pre_socket.send("ola", 3);
+                pre_socket.recv(portReply, replyLength);
 
-            }
-            catch (std::exception& ex) {
-                cout << endl
-                    << "ERR Socket connection failed: " << ex.what() << endl
-                    << endl;
-            }
-            catch (...) {
-                cout << endl
-                    << "ERR Socket connection failed: unknown exception" << endl
-                    << endl;
+                int p2 = std::atoi(portReply);
+                const auto portPos = host.find_last_of(":");
+                const auto hostStr = host.substr(0, portPos);
+                std::stringstream newHost;
+                newHost << hostStr << ":" << p2;
+
+                conn.Connect(newHost.str());
+                cout << endl << "\tConnected" << endl << endl;
+
+            } catch (std::exception& ex) {
+                cout << endl << "ERR Socket connection failed: " << ex.what() << endl << endl;
+            } catch (...) {
+                cout << endl << "ERR Socket connection failed: unknown exception" << endl << endl;
             }
         }
+
 
         if (!file.empty()) {
             runScript(conn, file);
@@ -90,12 +93,10 @@ int main(int argc, char* argv[]) {
             interactiveConsole(conn);
         }
 
-    }
-    catch (...) {
-        std::cout << options.help({ "" }) << std::endl;
+    } catch (...) {
+        std::cout << options.help({""}) << std::endl;
         exit(0);
     }
 
     return 0;
 }
-
