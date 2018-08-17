@@ -38,6 +38,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "AbstractSTLWriter.aux"
+
 namespace megamol
 {
 	namespace stdplugin
@@ -61,7 +63,7 @@ namespace megamol
 				/// Slots for parameters are also provided, which control the write operation:
 				/// - File name            - Path and file name of the file to be written (default: empty)
 				/// - ASCII/Binary option  - Option to choose between ASCII and binary output (default: binary)
-				/// - Automatical writing  - Checkbox to allow automatic writing when new data is provided by the source (default: on)
+				/// - Automatic writing    - Checkbox to allow automatic writing when new data is provided by the source (default: on)
 				/// - File name increment  - Option to choose how to behave in naming and when the output file already exists (default: increment)
 				///	                         None:                          Overwrite file if it exists
 				///                          Increment number (safe):       Append a number to prevent overwriting
@@ -346,7 +348,7 @@ namespace megamol
 
 									if (extracted_suffix.length() >= leading_zeroes.length() && extracted_suffix.find_first_not_of("0123456789") == std::string::npos)
 									{
-										this->increment = std::max(this->increment, std::stoull(extracted_suffix));
+										this->increment = std::max(this->increment, static_cast<std::size_t>(std::stoull(extracted_suffix)));
 										found = true;
 									}
 								}
@@ -430,150 +432,6 @@ namespace megamol
 						}
 					}
 				private:
-					/// <summary>
-					/// Struct for returning the incoming value or the value at the pointer's position
-					/// </summary>
-					/// <typeparam name="IT">Index type</typeparam>
-					template <typename IT>
-					struct pointer_or_identity
-					{
-						pointer_or_identity(const IT* pointer)
-						{
-							this->pointer = pointer;
-						}
-
-						std::size_t operator[](const std::size_t i) const
-						{
-							return static_cast<std::size_t>(this->pointer[i]);
-						}
-
-					private:
-						const IT* pointer;
-					};
-
-					template <>
-					struct pointer_or_identity<nullptr_t>
-					{
-						pointer_or_identity(const nullptr_t*)
-						{ }
-
-						std::size_t operator[](const std::size_t i) const
-						{
-							return i;
-						}
-					};
-
-					/// <summary>
-					/// Class for wrapping a pointer, using a pointer or a container as input
-					/// </summary>
-					/// <typeparam name="VT">Value type</typeparam>
-					/// <typeparam name="CT">Container type</typeparam>
-					template <typename VT, typename CT>
-					class pointer_wrapper
-					{
-					public:
-						using value_type = VT;
-						using container_type = CT;
-
-						static_assert(std::is_same<typename CT::value_type, VT>::value, "Value type of container must match the value type");
-
-						/// <summary>
-						/// Constructor for nullptr
-						/// </summary>
-						pointer_wrapper()
-						{
-							this->pointer = nullptr;
-						}
-
-						/// <summary>
-						/// Constructor from pointer (does not assume ownership)
-						/// </summary>
-						/// <param name="pointer">Pointer</param>
-						pointer_wrapper(const VT* pointer)
-						{
-							this->pointer = pointer;
-						}
-
-						/// <summary>
-						/// Constructor from invalid pointer
-						/// </summary>
-						/// <param name="pointer">Pointer</param>
-						pointer_wrapper(const void*)
-						{ }
-
-						/// <summary>
-						/// Construct from moved container (destroy on desctruction)
-						/// </summary>
-						/// <param name="container">Container</param>
-						pointer_wrapper(CT&& container)
-						{
-							std::swap(this->container, container);
-							this->pointer = this->container.data();
-						}
-
-						/// <summary>
-						/// Construct from other
-						/// </summary>
-						/// <param name="original">Source</param>
-						pointer_wrapper(pointer_wrapper&& original)
-						{
-							std::swap(this->container, original.container);
-							this->pointer = this->container.data();
-						}
-
-						/// <summary>
-						/// Move operator
-						/// </summary>
-						/// <param name="original">Source</param>
-						/// <returns>This</returns>
-						pointer_wrapper& operator=(pointer_wrapper&& original)
-						{
-							std::swap(this->container, original.container);
-							std::swap(this->pointer, original.pointer);
-
-							return *this;
-						}
-
-						/// <summary>
-						/// Return data pointer
-						/// </summary>
-						/// <returns>Data pointer</returns>
-						const VT* get() const
-						{
-							return this->pointer;
-						}
-
-					private:
-						/// Store pointer and container
-						const VT* pointer;
-						CT container;
-					};
-
-					/// <summary>
-					/// Convert original data to new type
-					/// </summary>
-					/// <param name="original">Pointer to original data</param>
-					/// <param name="length">Length of the array</param>
-					/// <typeparam name="NT">Type to convert to</typeparam>
-					/// <typeparam name="OT">Type to convert from</typeparam>
-					/// <returns>Wrapper around converted data</returns>
-					template <typename NT, typename OT>
-					pointer_wrapper<NT, std::vector<NT>> convert_if_necessary(const OT* original, std::size_t length,
-						typename std::enable_if<!std::is_same<OT, NT>::value>::type* = nullptr) const
-					{
-						std::vector<NT> converted(length);
-						std::transform(original, original + length, converted.begin(), [](const OT& value) { return static_cast<NT>(value); });
-
-						return pointer_wrapper<NT, std::vector<NT>>(std::move(converted));
-					}
-
-					template <typename NT, typename OT>
-					pointer_wrapper<NT, std::vector<NT>> convert_if_necessary(const OT* original, std::size_t length,
-						typename std::enable_if<std::is_same<OT, NT>::value>::type* = nullptr) const
-					{
-						return pointer_wrapper<NT, std::vector<NT>>(original);
-					}
-
 					/// <summary>
 					/// Write a binary file
 					/// </summary>
