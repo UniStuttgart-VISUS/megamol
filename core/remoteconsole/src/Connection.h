@@ -4,6 +4,7 @@
 #include <cctype>
 #include <vector>
 #include <thread>
+#include <iostream>
 
 class Connection {
 public:
@@ -31,7 +32,8 @@ public:
     }
 
     std::string sendCommand(const std::string& cmd) {
-        socket.send(cmd.data(), cmd.length());
+        auto sent = socket.send(cmd.data(), cmd.length());
+        //std::cout << "sent " << sent << "bytes";
         zmq::message_t reply;
 
         size_t counter = 0;

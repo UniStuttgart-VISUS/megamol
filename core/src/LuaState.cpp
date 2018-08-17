@@ -869,7 +869,9 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
         }
         Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName));
         if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": module not found");
+            std::stringstream ss;
+            ss << MMC_LUA_MMGETMODULEPARAMS ": module " << moduleName << " not found";
+            lua_pushstring(L, ss.str().c_str());
             lua_error(L);
             return 0;
         }

@@ -44,6 +44,10 @@
   <PropertyGroup>
     <Win32Resource>Resources\mmconfig.res</Win32Resource>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
