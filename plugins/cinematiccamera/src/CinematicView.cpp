@@ -440,10 +440,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Write frame to file
     if (this->rendering) {
 
-        // Check if data was written to fbo color texture
-        //bool written2FBO = this->checkFBO4ColorChanges(this->fbo, Base::BkgndColour());
-
-        /// DOES NOT WORK for "normal" rendering because FBO is always 0 > WHY?
         // Check if fbo in cr3d was reset by renderer
         bool written2FBO = (cr3d->FrameBufferObject() != nullptr);
 
@@ -616,40 +612,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Reset opengl
     glDisable(GL_BLEND);
-}
-
-
-/*
-* CinematicView::checkColorWritten2FBO
-*/
-bool CinematicView::checkFBO4ColorChanges(vislib::graphics::gl::FramebufferObject& fbo, const float* backCol) {
-
-    if (backCol == nullptr) return false;
-
-    const int colBytes = 4; // RGBA
-    const int texDim = fbo.GetWidth() * fbo.GetHeight();
-    BYTE *buffer = new BYTE[texDim * colBytes];
-    fbo.GetColourTexture(buffer);
-
-    const BYTE r = static_cast<BYTE>(backCol[0] * 255.0f);
-    const BYTE g = static_cast<BYTE>(backCol[1] * 255.0f);
-    const BYTE b = static_cast<BYTE>(backCol[2] * 255.0f);
-
-    bool retVal = false;
-
-#pragma omp parallel for
-    for (int i = 0; i < texDim; ++i)
-        // Return if any change to color is detected
-        if ((buffer[i*colBytes + 0] != r) ||
-            (buffer[i*colBytes + 1] != g) ||
-            (buffer[i*colBytes + 2] != b))
-        {
-            retVal = true;
-            break;
-        }
-
-    ARY_SAFE_DELETE(buffer);
-    return retVal;
 }
 
 

@@ -612,11 +612,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
 #if _DEBUG	    
-<<<<<<< HEAD
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
-=======
-	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
->>>>>>> c7c86da3ecb7757dccd48462597af13c6ddc8ffb
 #endif
             registerComm.Connect(registerAddress);
 

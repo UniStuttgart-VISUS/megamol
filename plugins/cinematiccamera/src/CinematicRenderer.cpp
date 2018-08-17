@@ -161,13 +161,16 @@ void CinematicRenderer::release(void) {
 */
 bool CinematicRenderer::GetCapabilities(Call& call) {
 
-	CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
+    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
 
-	CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (!(oc == nullptr) || (!(*oc)(2))) {
-		cr3d->AddCapability(oc->GetCapabilities());
-	}
+    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
+    // => Capabilities.
+    CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
+    if (!(cr3d_out == nullptr) || (!(*cr3d_out)(2))) {
+        cr3d_in->AddCapability(cr3d_out->GetCapabilities());
+    }
+    cr3d_in->AddCapability(view::CallRender3D::CAP_RENDER);
 
 	return true;
 }
@@ -178,29 +181,24 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 */
 bool CinematicRenderer::GetExtents(Call& call) {
 
-    view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
-
-	view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (oc == nullptr) return false;
+	view::CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
+	if (cr3d_out == nullptr) return false;
+    // Get bounding box of renderer.
+    if (!(*cr3d_out)(1)) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
 	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
-	// Get bounding box of renderer.
-	if (!(*oc)(1)) return false;
-	*cr3d = *oc;
-
     // Compute bounding box including spline (in world space) and object (in world space).
-    vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
+    vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
     // Set bounding box center of model
-    ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+    ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
     // Grow bounding box to manipulators and get information of bbox of model
-    this->manipulator.SetExtents(&bboxCR3D);
+    this->manipulator.SetExtents(&bbox);
 
-    vislib::math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
+    vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().WorldSpaceClipBox();
 
     // Get bounding box of spline.
     vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
@@ -209,16 +207,24 @@ bool CinematicRenderer::GetExtents(Call& call) {
         return false;
     }
 
-    bboxCR3D.Union(*bboxCCC);
-    cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
+    bbox.Union(*bboxCCC);
+    cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
 
     // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-    ccc->setBboxCenter(oc->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+    ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
 
-    // Apply new boundingbox 
-	cr3d->AccessBoundingBoxes().SetWorldSpaceBBox(bboxCR3D);
-    cr3d->AccessBoundingBoxes().SetWorldSpaceClipBox(cboxCR3D);
+    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
+    // => Bboxes and times.
+    view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
+    cr3d_in->SetTimeFramesCount(cr3d_out->TimeFramesCount());
+    cr3d_in->SetTime(cr3d_out->Time());
+    cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
+
+    // Apply modified boundingbox 
+    cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(bbox);
+    cr3d_in->AccessBoundingBoxes().SetWorldSpaceClipBox(cbox);
 
 	return true;
 }
@@ -229,11 +235,11 @@ bool CinematicRenderer::GetExtents(Call& call) {
 */
 bool CinematicRenderer::Render(Call& call) {
 
-    view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
+    view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
 
-    view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-    if (oc == nullptr) return false;
+    view::CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
+    if (cr3d_out == nullptr) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -261,17 +267,15 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Set total simulation time of call
-    float totalSimTime = static_cast<float>(oc->TimeFramesCount());
+    float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
     ccc->setTotalSimTime(totalSimTime);
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
 
-    *oc = *cr3d;
-
     Keyframe skf = ccc->getSelectedKeyframe();
 
-    // Set simulation time based on selected keyframe ('disables' animation via view3d)
+    // Set simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
-    oc->SetTime(simTime * totalSimTime);
+    cr3d_out->SetTime(simTime * totalSimTime);
 
     // Get the foreground color (inverse background color)
     float bgColor[4];
@@ -355,13 +359,14 @@ bool CinematicRenderer::Render(Call& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    oc->SetOutputBuffer(&this->fbo);
+    cr3d_out->SetOutputBuffer(&this->fbo);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
     // Call render function of slave renderer
-    (*oc)(0);
+    *cr3d_out = *cr3d_in;
+    (*cr3d_out)(0);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
@@ -427,9 +432,9 @@ bool CinematicRenderer::Render(Call& call) {
 
         // Update manipulator data
         this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
-            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
-            (cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
-            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
             this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
         // Draw manipulators
@@ -464,7 +469,7 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d->MouseSelection()) {
+    if (cr3d_in->MouseSelection()) {
         if (this->toggleManipulator == 0) { 
             midLabel = "KEYFRAME manipulation (keyframe position, spline control point)";
         } else {// if (this->toggleManipulator == 1) { 
