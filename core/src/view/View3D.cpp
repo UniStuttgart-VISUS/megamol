@@ -1535,7 +1535,7 @@ void view::View3D::renderViewCube(void) {
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     ::glDisable(GL_LIGHTING);
-    ::glDisable(GL_TEXTURE_2D);
+    //::glDisable(GL_TEXTURE_2D);
     ::glEnable(GL_LINE_SMOOTH);
     ::glLineWidth(1.5f);
     ::glDisable(GL_DEPTH_TEST);
@@ -1672,6 +1672,12 @@ void view::View3D::renderViewCube(void) {
     ::glVertex3i(0, 0, 0);
     ::glVertex3i(0, 0, 1);
     ::glEnd();
+
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+    glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1.0f);
+    glDisable(GL_CULL_FACE);
 }
 
 
