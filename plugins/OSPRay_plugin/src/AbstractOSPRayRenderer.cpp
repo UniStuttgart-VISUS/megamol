@@ -1025,6 +1025,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                     ospSet3fv(aovol, "gridSpacing", fixedSpacing);
 
+                    float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
+
                     OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
                     std::vector<float> faketf = {
@@ -1103,6 +1105,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         }
 
                         ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
+                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing * element.aoRayOffsetFactor);
                         ospSetObject(geo.back(), "aovol", aovol);
                     }
                 }

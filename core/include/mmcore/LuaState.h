@@ -206,6 +206,9 @@ namespace utility {
          */
         int SetParamValue(lua_State *L);
 
+        int CreateParamGroup(lua_State *L);
+        int SetParamGroupValue(lua_State* L);
+
         int CreateModule(lua_State *L);
         int DeleteModule(lua_State *L);
         int CreateCall(lua_State *L);
