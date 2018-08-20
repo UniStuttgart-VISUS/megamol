@@ -48,6 +48,9 @@
 #include "mmcore/thecam/math/size.h"
 #include "mmcore/thecam/math/vector.h"
 
+#ifdef WITH_THE_GLM
+#include <glm/glm.hpp>
+#endif
 
 namespace megamol {
 namespace core {
@@ -108,6 +111,44 @@ namespace thecam {
          */
         static const vector_type view_vector;
     };
+
+#ifdef WITH_THE_GLM
+
+    template<handedness H = handedness::right_handed>
+    struct glm_camera_maths {
+        typedef float fractional_type;
+
+        typedef int screen_type;
+
+        typedef float world_type;
+
+        typedef math::matrix<glm::mat4> matrix_type;
+
+        typedef math::point<glm::vec4> point_type;
+
+        typedef math::quaternion<glm::quat> quaternion_type;
+
+        typedef math::rectangle<RECT> screen_rectangle_type;
+
+        typedef math::size<SIZE> screen_size_type;
+
+        typedef math::vector<glm::vec4> vector_type;
+
+        typedef math::size<world_type, 2> world_size_type;
+
+        static const handedness handedness = H;
+
+        static const vector_type up_vector;
+
+        static const vector_type view_vector;
+    };
+
+    /** Left-handed XMATH camera maths types. */
+    typedef glm_camera_maths<handedness::left_handed> glm_camera_maths_lh;
+
+    /** Right-handed XMATH camera maths types. */
+    typedef glm_camera_maths<handedness::right_handed> glm_camera_maths_rh;
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -181,6 +222,25 @@ megamol::core::thecam::camera_maths<W, S, F, H>::view_vector(static_cast<F>(0),
     static_cast<F>(0),
     static_cast<F>(H == megamol::core::thecam::handedness::right_handed ? -1 : 1),
     static_cast<F>(0));
+
+#ifdef WITH_THE_GLM
+/*
+ * thecam::xmath_camera_maths<H>::up_vector
+ */
+template<thecam::handedness H>
+const typename thecam::glm_camera_maths<H>::vector_type
+thecam::glm_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
+
+
+/*
+ * thecam::xmath_camera_maths<H>::view_vector
+ */
+template<thecam::handedness H>
+const typename thecam::glm_camera_maths<H>::vector_type
+thecam::glm_camera_maths<H>::view_vector(0.0f, 0.0f,
+    (H == thecam::handedness::right_handed) ? -1.0f : 1.0f,
+    0.0f);
+#endif
 
 
 #ifdef WITH_THE_XMATH

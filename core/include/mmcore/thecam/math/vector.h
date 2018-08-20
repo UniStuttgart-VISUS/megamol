@@ -194,6 +194,189 @@ namespace math {
     };
 #endif /* WITH_THE_GLM */
 
+#ifdef WITH_THE_GLM
+    /**
+     * Specialisation of the vector_traits 3-dimensional GLM vectors.
+     */
+    template<> struct vector_traits<glm::vec3, 3> {
+
+        /** The allocator for heap allocations of the vector class. */
+        template<class C> using allocator_type = std::allocator<C>;
+
+        /** The native storage type. */
+        typedef glm::vec3 native_type;
+
+        /** The type to specify array dimensions and indices. */
+        typedef size_t size_type;
+
+        /** The scalar type. */
+        typedef float value_type;
+
+        /**
+         * Assign all components of the vector to 'dst'.
+         *
+         * @tparam P The variable argument list, which must comprise N elements
+         *           of value_type.
+         *
+         * @param dst    The native storage of the destination.
+         * @param values An argument list of N values to be assigned to the
+         *               components of 'dst'.
+         */
+        template<class... P>
+        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+            static_assert(sizeof...(P) == 3, "The parameter list 'value' must "
+                "contain all 3 components of the vector.");
+            dst = native_type(values...);
+        }
+
+        /**
+         * Get the value of the specified component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return The value of the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type at(const native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 3);
+            return data[static_cast<native_type::length_type>(i)];
+        }
+
+        /**
+         * Get a non-constant reference for component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return A reference to the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type& at(native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 3);
+            return data[static_cast<native_type::length_type>(i)];
+        }
+
+        /**
+         * Copy 'src' to 'dst'.
+         *
+         * @param dst The native storage of the destination.
+         * @param src The native storage of the source.
+         */
+        static THE_FORCE_INLINE void copy(native_type& dst,
+                const native_type& src) {
+            dst = src;
+        }
+
+        /**
+         * Test for equality of two native vectors.
+         *
+         * @param lhs The left-hand side operand.
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if 'lhs' and 'rhs' are equal, false otherwise.
+         */
+        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+                const native_type& rhs) {
+            return (lhs == rhs);
+        }
+    };
+#endif /* WITH_THE_GLM */
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Specialisation of the vector_traits 3-dimensional GLM vectors.
+     */
+    template<> struct vector_traits<glm::vec2, 2> {
+
+        /** The allocator for heap allocations of the vector class. */
+        template<class C> using allocator_type = std::allocator<C>;
+
+        /** The native storage type. */
+        typedef glm::vec2 native_type;
+
+        /** The type to specify array dimensions and indices. */
+        typedef size_t size_type;
+
+        /** The scalar type. */
+        typedef float value_type;
+
+        /**
+         * Assign all components of the vector to 'dst'.
+         *
+         * @tparam P The variable argument list, which must comprise N elements
+         *           of value_type.
+         *
+         * @param dst    The native storage of the destination.
+         * @param values An argument list of N values to be assigned to the
+         *               components of 'dst'.
+         */
+        template<class... P>
+        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+            static_assert(sizeof...(P) == 2, "The parameter list 'value' must "
+                "contain all 2 components of the vector.");
+            dst = native_type(values...);
+        }
+
+        /**
+         * Get the value of the specified component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return The value of the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type at(const native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 2);
+            return data[static_cast<native_type::length_type>(i)];
+        }
+
+        /**
+         * Get a non-constant reference for component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return A reference to the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type& at(native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 2);
+            return data[static_cast<native_type::length_type>(i)];
+        }
+
+        /**
+         * Copy 'src' to 'dst'.
+         *
+         * @param dst The native storage of the destination.
+         * @param src The native storage of the source.
+         */
+        static THE_FORCE_INLINE void copy(native_type& dst,
+                const native_type& src) {
+            dst = src;
+        }
+
+        /**
+         * Test for equality of two native vectors.
+         *
+         * @param lhs The left-hand side operand.
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if 'lhs' and 'rhs' are equal, false otherwise.
+         */
+        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+                const native_type& rhs) {
+            return (lhs == rhs);
+        }
+    };
+#endif /* WITH_THE_GLM */
+
 
     /**
      * Implementation of a D-dimensional vector.
@@ -675,6 +858,25 @@ namespace math {
      * @return The cross product of 'lhs' and 'rhs', with the w-component
      *         being 0.
      */
+    THE_FORCE_INLINE vector<glm::vec3> cross(
+            const vector<glm::vec3>& lhs,
+            const vector<glm::vec3>& rhs) {
+        glm::vec3 l(static_cast<const glm::vec3&>(lhs));
+        glm::vec3 r(static_cast<const glm::vec3&>(rhs));
+        return glm::cross(l, r);
+    }
+
+
+    /**
+     * Compute the cross product between two vectors (their first three
+     * components).
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return The cross product of 'lhs' and 'rhs', with the w-component
+     *         being 0.
+     */
     THE_FORCE_INLINE vector<glm::vec4> cross(
             const vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
@@ -783,6 +985,38 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
+    THE_FORCE_INLINE float dot(const vector<glm::vec2>& lhs,
+            const vector<glm::vec2>& rhs) {
+        auto& l = static_cast<const glm::vec2&>(lhs);
+        auto& r = static_cast<const glm::vec2&>(rhs);
+        return glm::dot(l, r);
+    }
+    
+
+    /**
+     * Compute the dot product between two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return The dot product of 'lhs' and 'rhs'.
+     */
+    THE_FORCE_INLINE float dot(const vector<glm::vec3>& lhs,
+            const vector<glm::vec3>& rhs) {
+        auto& l = static_cast<const glm::vec3&>(lhs);
+        auto& r = static_cast<const glm::vec3&>(rhs);
+        return glm::dot(l, r);
+    }
+
+
+    /**
+     * Compute the dot product between two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return The dot product of 'lhs' and 'rhs'.
+     */
     THE_FORCE_INLINE float dot(const vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
         auto& l = static_cast<const glm::vec4&>(lhs);
@@ -870,6 +1104,30 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
+    THE_FORCE_INLINE float length(const vector<glm::vec2>& vec) {
+        auto& v = static_cast<const glm::vec2&>(vec);
+        return glm::length(v);
+    }
+
+    /**
+     * Compute the length (Euclidean norm) of 'vec'.
+     *
+     * @param vec A vector.
+     *
+     * @return The length of 'vec'.
+     */
+    THE_FORCE_INLINE float length(const vector<glm::vec3>& vec) {
+        auto& v = static_cast<const glm::vec3&>(vec);
+        return glm::length(v);
+    }
+
+    /**
+     * Compute the length (Euclidean norm) of 'vec'.
+     *
+     * @param vec A vector.
+     *
+     * @return The length of 'vec'.
+     */
     THE_FORCE_INLINE float length(const vector<glm::vec4>& vec) {
         auto& v = static_cast<const glm::vec4&>(vec);
         return glm::length(v);
@@ -934,6 +1192,44 @@ namespace math {
      */
     template<class V, size_t D, class T>
     vector<V, D, T> normalise(const vector<V, D, T>& vec);
+
+#ifdef WITH_THE_GLM
+    /**
+     * Normalise 'vec'.
+     *
+     * @param vec The vector to be normalised.
+     *
+     * @return A normalised version of 'vec'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2> normalise(
+            const vector<glm::vec2>& vec) {
+        return glm::normalize(static_cast<glm::vec2>(vec));
+    }
+
+    /**
+     * Normalise 'vec'.
+     *
+     * @param vec The vector to be normalised.
+     *
+     * @return A normalised version of 'vec'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3> normalise(
+            const vector<glm::vec3>& vec) {
+        return glm::normalize(static_cast<glm::vec3>(vec));
+    }
+
+    /**
+     * Normalise 'vec'.
+     *
+     * @param vec The vector to be normalised.
+     *
+     * @return A normalised version of 'vec'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4> normalise(
+            const vector<glm::vec4>& vec) {
+        return glm::normalize(static_cast<glm::vec4>(vec));
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1020,6 +1316,24 @@ namespace math {
         vec2 = vec2 - p;
         vec2 = normalise(vec2);
     }
+
+#ifdef WITH_THE_GLM
+    /**
+     * Ensure that 'vec1' and 'vec1' are orthonormal.
+     *
+     * @tparam V The scalar value or storage type of the vector.
+     * @tparam T The traits of the vector.
+     *
+     * @param vec1 The first vector of the system.
+     * @param vec2 The second vector of the system.
+     */
+    inline void orthonormalise(vector<glm::vec4>& vec1, vector<glm::vec4>& vec2) {
+        vec1 = glm::normalize(static_cast<glm::vec4>(vec1));
+        auto p = glm::dot(static_cast<glm::vec4>(vec1), static_cast<glm::vec4>(vec2)) * static_cast<glm::vec4>(vec1);
+        vec2 = static_cast<glm::vec4>(vec2) - p;
+        vec2 = glm::normalize(static_cast<glm::vec4>(vec2));
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1127,6 +1441,56 @@ namespace math {
         const typename vector<V, D, T>::value_type rhs);
 
 
+#ifdef WITH_THE_GLM
+    /**
+     * Scale a vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', scaled by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2>& operator *=(
+            vector<glm::vec2>& lhs,
+            const vector<glm::vec2>::value_type rhs) {
+        lhs = static_cast<glm::vec2>(lhs) * rhs;
+        return lhs;
+    }
+
+
+    /**
+     * Scale a vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', scaled by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3>& operator *=(
+            vector<glm::vec3>& lhs,
+            const vector<glm::vec3>::value_type rhs) {
+        lhs = static_cast<glm::vec3>(lhs) * rhs;
+        return lhs;
+    }
+
+
+    /**
+     * Scale a vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', scaled by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4>& operator *=(
+            vector<glm::vec4>& lhs,
+            const vector<glm::vec4>::value_type rhs) {
+        lhs = static_cast<glm::vec4>(lhs) * rhs;
+        return lhs;
+    }
+#endif /* WITH_THE_GLM */
+
+
 #ifdef WITH_THE_XMATH
     /**
      * Scale a vector.
@@ -1195,6 +1559,55 @@ namespace math {
     template<class V, size_t D, class T>
     vector<V, D, T>& operator /=(vector<V, D, T>& lhs,
         const typename vector<V, D, T>::value_type rhs);
+
+#ifdef WITH_THE_GLM
+    /**
+     * Scale a vector by division.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', divided by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2>& operator /=(
+            vector<glm::vec2>& lhs,
+            const vector<glm::vec2>::value_type rhs) {
+        lhs *= (1.0f / rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Scale a vector by division.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', divided by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3>& operator /=(
+            vector<glm::vec3>& lhs,
+            const vector<glm::vec3>::value_type rhs) {
+        lhs *= (1.0f / rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Scale a vector by division.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', divided by 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4>& operator /=(
+            vector<glm::vec4>& lhs,
+            const vector<glm::vec4>::value_type rhs) {
+        lhs *= (1.0f / rhs);
+        return lhs;
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1267,6 +1680,52 @@ namespace math {
         retval *= lhs;
         return retval;
     }
+
+#ifdef WITH_THE_GLM
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2> operator *(
+            const vector<glm::vec2>::value_type lhs,
+            const vector<glm::vec2>& rhs) {
+        return lhs * static_cast<glm::vec2>(rhs);
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3> operator *(
+            const vector<glm::vec3>::value_type lhs,
+            const vector<glm::vec3>& rhs) {
+        return lhs * static_cast<glm::vec3>(rhs);
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4> operator *(
+            const vector<glm::vec4>::value_type lhs,
+            const vector<glm::vec4>& rhs) {
+        return lhs * static_cast<glm::vec4>(rhs);
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1346,6 +1805,53 @@ namespace math {
     }
 
 
+#ifdef WITH_THE_GLM
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2> operator *(
+            const vector<glm::vec2>& lhs,
+            const vector<glm::vec2>::value_type rhs) {
+        return static_cast<glm::vec2>(lhs) * rhs;
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3> operator *(
+            const vector<glm::vec3>& lhs,
+            const vector<glm::vec3>::value_type rhs) {
+        return static_cast<glm::vec3>(lhs) * rhs;
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4> operator *(
+            const vector<glm::vec4>& lhs,
+            const vector<glm::vec4>::value_type rhs) {
+        return static_cast<glm::vec4>(lhs) * rhs;
+    }
+#endif /* WITH_THE_GLM */
+
+
 #ifdef WITH_THE_XMATH
     /**
      * Compute a scaled vector.
@@ -1422,6 +1928,59 @@ namespace math {
         retval /= rhs;
         return retval;
     }
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec2> operator /(
+            const vector<glm::vec2>& lhs,
+            const vector<glm::vec2>::value_type rhs) {
+        auto retval = lhs;
+        retval /= rhs;
+        return retval;
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec3> operator /(
+            const vector<glm::vec3>& lhs,
+            const vector<glm::vec3>::value_type rhs) {
+        auto retval = lhs;
+        retval /= rhs;
+        return retval;
+    }
+
+
+    /**
+     * Compute a scaled vector.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE vector<glm::vec4> operator /(
+            const vector<glm::vec4>& lhs,
+            const vector<glm::vec4>::value_type rhs) {
+        auto retval = lhs;
+        retval /= rhs;
+        return retval;
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1515,6 +2074,56 @@ namespace math {
     template<class V1, class T1, class V2, class T2, size_t D>
     vector<V1, D, T1> operator +=(vector<V1, D, T1>& lhs,
         const vector<V2, D, T2>& rhs);
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Add two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been added to.
+     */
+    THE_FORCE_INLINE vector<glm::vec2>& operator +=(
+            vector<glm::vec2>& lhs,
+            const vector<glm::vec2>& rhs) {
+        lhs = static_cast<glm::vec2>(lhs) + static_cast<glm::vec2>(rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Add two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been added to.
+     */
+    THE_FORCE_INLINE vector<glm::vec3>& operator +=(
+            vector<glm::vec3>& lhs,
+            const vector<glm::vec3>& rhs) {
+        lhs = static_cast<glm::vec3>(lhs) + static_cast<glm::vec3>(rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Add two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been added to.
+     */
+    THE_FORCE_INLINE vector<glm::vec4>& operator +=(
+            vector<glm::vec4>& lhs,
+            const vector<glm::vec4>& rhs) {
+        lhs = static_cast<glm::vec4>(lhs) + static_cast<glm::vec4>(rhs);
+        return lhs;
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -1611,6 +2220,55 @@ namespace math {
     template<class V1, class T1, class V2, class T2, size_t D>
     vector<V1, D, T1> operator -=(vector<V1, D, T1>& lhs,
         const vector<V2, D, T2>& rhs);
+
+#ifdef WITH_THE_GLM
+    /**
+     * Subtract two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been subtracted from.
+     */
+    THE_FORCE_INLINE vector<glm::vec2>& operator -=(
+            vector<glm::vec2>& lhs,
+            const vector<glm::vec2>& rhs) {
+        lhs = static_cast<glm::vec2>(lhs) - static_cast<glm::vec2>(rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Subtract two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been subtracted from.
+     */
+    THE_FORCE_INLINE vector<glm::vec3>& operator -=(
+            vector<glm::vec3>& lhs,
+            const vector<glm::vec3>& rhs) {
+        lhs = static_cast<glm::vec3>(lhs) - static_cast<glm::vec3>(rhs);
+        return lhs;
+    }
+
+
+    /**
+     * Subtract two vectors.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs', which 'rhs' has been subtracted from.
+     */
+    THE_FORCE_INLINE vector<glm::vec4>& operator -=(
+            vector<glm::vec4>& lhs,
+            const vector<glm::vec4>& rhs) {
+        lhs = static_cast<glm::vec4>(lhs) - static_cast<glm::vec4>(rhs);
+        return lhs;
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH

@@ -759,6 +759,21 @@ namespace math {
     }
 
 
+#ifdef WITH_THE_GLM
+    /**
+    * Conjugate a quaternion.
+    *
+    * @param quat The quaternion to be conjugated.
+    *
+    * @return The conjugated quaternion.
+    */
+    THE_FORCE_INLINE quaternion<glm::quat> conjugate(
+            const quaternion<glm::quat>& quat) {
+        return glm::conjugate(static_cast<glm::quat>(quat));
+    }
+#endif /* WITH_THE_GLM */
+
+
 #ifdef WITH_THE_XMATH
     /**
     * Conjugate a quaternion.
@@ -789,6 +804,21 @@ namespace math {
      */
     template<class V, class T>
     quaternion<V, T> invert(const quaternion<V, T>& quat);
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Invert a quaternion.
+     *
+     * @param quat The quaternion to be inverted.
+     *
+     * @return The inverse quaternion.
+     */
+    THE_FORCE_INLINE quaternion<glm::quat> invert(
+            const quaternion<glm::quat>& quat) {
+        return glm::inverse(static_cast<glm::quat>(quat));
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -824,6 +854,19 @@ namespace math {
         return sqrt(square_norm(quat));
     }
 
+#ifdef WITH_THE_GLM
+    /**
+     * Compute the norm of a quaternion.
+     *
+     * @param quat The quaternion to compute the norm for.
+     *
+     * @return The norm of the quaternion.
+     */
+    THE_FORCE_INLINE float norm(const quaternion<glm::quat>& quat) {
+        return glm::length(static_cast<glm::quat>(quat));
+    }
+#endif /* WITH_THE_GLM */
+
 
 #ifdef WITH_THE_XMATH
     /**
@@ -852,6 +895,21 @@ namespace math {
      */
     template<class V, class T>
     quaternion<V, T> normalise(const quaternion<V, T>& quat);
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Compute a normalised version of a quaternion.
+     *
+     * @param quat The quaternion to be normalised.
+     *
+     * @return The normalised quaternion.
+     */
+    THE_FORCE_INLINE quaternion<glm::quat> normalise(
+            const quaternion<glm::quat>& quat) {
+        return glm::normalize(static_cast<glm::quat>(quat));
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH
@@ -980,6 +1038,34 @@ namespace math {
         return set_from_angle_axis(quat, angle, tmp);
     }
 
+#ifdef WITH_THE_GLM
+    /**
+     * Update 'quat' such that it represents a rotation by 'angle' radians
+     * around 'axis'.
+     *
+     * @param A The type to specify the angle.
+     *
+     * @param quat  The quaternion to be updated.
+     * @param angle The angle to rotate (in radians).
+     * @param angle The angle to rotate (in radians). Depending on the
+     *              coordinate system used, the direction of a positive
+     *              rotation turns in the directions your fingers curl when
+     *              the left/right thumb points along the rotation axis.
+     * @param axis  The axis to rotate around. Note that the vector does not
+     *              need to be normalised.
+     *
+     * @return 'quat'.
+     */
+    template<class A>
+    inline quaternion<glm::quat>& set_from_angle_axis(
+            quaternion<glm::quat>& quat,
+            const A angle, const vector<glm::vec4>& axis) {
+        glm::vec3 a = glm::vec3(static_cast<glm::vec4>(axis));
+        glm::quat unit = glm::quat(1, 0, 0, 0);
+        quat = glm::rotate(static_cast<glm::quat>(unit), angle, a);
+        return quat;
+    }
+#endif
 
 #ifdef WITH_THE_XMATH
     /**
@@ -1046,6 +1132,26 @@ namespace math {
         const vector<V, 4>& u, const vector<V, 4>& v);
 
 
+#ifdef WITH_THE_GLM
+    /**
+     * Update 'quat' such that it represents a rotation from the angle 'u' to
+     * the angle 'v'.
+     *
+     * @param Q
+     * @param V
+     *
+     * @param quat
+     * @param u    The original vector.
+     * @param v    The target vector.
+     *
+     * @return 'quat'.
+     */
+    inline quaternion<glm::quat>& set_from_vectors(
+        quaternion<glm::quat>& quat, const vector<glm::vec4>& u,
+        const vector<glm::vec4>& v);
+#endif /* WITH_THE_GLM */
+
+
 #ifdef WITH_THE_XMATH
     /**
      * Update 'quat' such that it represents a rotation from the angle 'u' to
@@ -1084,6 +1190,21 @@ namespace math {
         return quat;
     }
 
+#ifdef WITH_THE_GLM
+    /**
+     * Makes a quaternion an identity quaternion.
+     *
+     * @param quat The quaternion to modify.
+     *
+     * @return 'quat'.
+     */
+    inline quaternion<glm::quat>& set_identity(
+            quaternion<glm::quat>& quat) {
+        quat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        return quat;
+    }
+#endif /* WITH_THE_GLM */
+
 
 #ifdef WITH_THE_XMATH
     /**
@@ -1118,6 +1239,22 @@ namespace math {
     }
 
 
+#ifdef WITH_THE_GLM
+    /**
+     * Compute the squared norm of the given quaternion.
+     *
+     * @param quat a quaternion.
+     *
+     * @return The square norm of 'quat'.
+     */
+    THE_FORCE_INLINE float square_norm(
+            const quaternion<glm::quat>& quat) {
+        float l = glm::length(static_cast<glm::quat>(quat));
+        return l * l;
+    }
+#endif /* WITH_THE_GLM */
+
+
 #ifdef WITH_THE_XMATH
     /**
      * Compute the squared norm of the given quaternion.
@@ -1148,6 +1285,23 @@ namespace math {
     template<class V, class T>
     quaternion<V, T> operator *(const quaternion<V, T>& lhs,
         const quaternion<V, T>& rhs);
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Multiply two quaternions.
+     *
+     * @param lhs The left-hand side operand.
+     * @param rhs The right-hand side operand.
+     *
+     * @return 'lhs' * 'rhs'.
+     */
+    THE_FORCE_INLINE quaternion<glm::quat> operator *(
+            const quaternion<glm::quat>& lhs,
+            const quaternion<glm::quat>& rhs) {
+        return static_cast<glm::quat>(lhs) * static_cast<glm::quat>(rhs);
+    }
+#endif /* WITH_THE_GLM */
 
 
 #ifdef WITH_THE_XMATH

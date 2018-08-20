@@ -55,6 +55,9 @@
 #include "mmcore/thecam/math/size_accessors.h"
 #include "mmcore/thecam/math/vectorial_traits_base.h"
 
+#ifdef WITH_THE_GLM
+#include <glm/glm.hpp>
+#endif /* WITH_THE_GLM */
 
 namespace megamol {
 namespace core {
@@ -179,6 +182,98 @@ namespace math {
         }
     };
 #endif /* defined(THE_WINDOWS) */
+
+
+#if defined(WITH_THE_GLM)
+    /**
+     * Specialisation for the native SIZE type of Windows.
+     */
+    template<> struct size_traits<glm::ivec2, 2> {
+
+        /** The allocator for heap allocations of the size. */
+        template<class C> using allocator_type = std::allocator<C>;
+
+        /** The native type used to store the size. */
+        typedef glm::ivec2 native_type;
+
+        /** The type to specify array dimensions and indices. */
+        typedef size_t size_type;
+
+        /** The scalar type used in the size. */
+        typedef int value_type;
+
+        /**
+         * Assign all components of the vector to 'dst'.
+         *
+         * @tparam P The variable argument list, which must comprise N elements
+         *           of value_type.
+         *
+         * @param dst    The native storage of the destination.
+         * @param values An argument list of N values to be assigned to the
+         *               components of 'dst'.
+         */
+        template<class... P>
+        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+            static_assert(sizeof...(P) == 2, "The parameter list 'value' must "
+                "contain all 2 components of the size.");
+            dst = { values... };
+        }
+
+        /**
+         * Get the value of the specified component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return The value of the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type at(const native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 2);
+            return (i == 0) ? data.x : data.y;
+        }
+
+        /**
+         * Get a non-constant reference for component 'i'.
+         *
+         * @param data The native data.
+         * @param i    The component to retrieve.
+         *
+         * @return A reference to the 'i'th component.
+         */
+        static THE_FORCE_INLINE value_type& at(native_type& data,
+                const size_type i) {
+            THE_ASSERT(static_cast<size_t>(i) >= 0);
+            THE_ASSERT(static_cast<size_t>(i) < 2);
+            return (i == 0) ? data.x : data.y;
+        }
+
+        /**
+         * Copy 'src' to 'dst'.
+         *
+         * @param dst The native storage of the destination.
+         * @param src The native storage of the source.
+         */
+        static THE_FORCE_INLINE void copy(native_type& dst,
+                const native_type& src) {
+            dst = src;
+        }
+
+        /**
+         * Test for equality of two native sizes.
+         *
+         * @param lhs The left-hand side operand.
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if 'lhs' and 'rhs' are equal, false otherwise.
+         */
+        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+                const native_type& rhs) {
+            return (::memcmp(&lhs, &rhs, sizeof(native_type)) == 0);
+        }
+    };
+#endif /* defined(WITH_THE_GLM) */
 
 
     /**

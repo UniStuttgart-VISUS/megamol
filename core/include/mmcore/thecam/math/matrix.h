@@ -60,6 +60,7 @@ namespace megamol {
 namespace core {
 namespace thecam {
 namespace math {
+
 namespace detail {
 
     /**
@@ -860,9 +861,6 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
-#ifdef WITH_THE_GLM
-    // glm version of this not needed
-#endif /* WITH_THE_GLM */
 
     /**
      * Computes the determinant of a matrix.
@@ -933,6 +931,7 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+
 #ifdef WITH_THE_GLM
     /**
      * Computes the determinant of a matrix.
@@ -970,6 +969,7 @@ namespace detail {
      */
     bool invert(matrix<DirectX::XMFLOAT4X4>& matrix);
 #endif /* WITH_THE_XMATH */
+
 
 #ifdef WITH_THE_GLM
     /**
@@ -1078,6 +1078,7 @@ namespace detail {
         return store_xmmatrix(retval, r);
     }
 #endif /* WITH_THE_XMATH*/
+
 
 #ifdef WITH_THE_GLM
     /**
@@ -1202,6 +1203,7 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+
 #ifdef WITH_THE_GLM
     /**
      * Multiply two matrices.
@@ -1261,6 +1263,7 @@ namespace detail {
     }
 #endif /* WITH_THE_XMATH */
 
+
 #ifdef WITH_THE_GLM
     /**
      * Multiply a matrix and a column vector.
@@ -1319,6 +1322,7 @@ namespace detail {
         return store_xmvector(retval, v);
     }
 #endif /* WITH_THE_XMATH */
+
 
 #ifdef WITH_THE_GLM
     /**

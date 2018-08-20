@@ -72,7 +72,7 @@ if(BUILD_CORE)
     INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
   )
 
-  set(GLM_VER "0_9_9_0")
+  set(GLM_VER "0_9_6_3")
   string(REPLACE "_" "." GLM_TAG ${GLM_VER})
   ExternalProject_Add(extlibglm
     GIT_REPOSITORY https://github.com/g-truc/glm.git

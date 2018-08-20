@@ -98,6 +98,55 @@ namespace detail {
 #endif /* WITH_THE_GLM */
 
 
+#ifdef WITH_THE_GLM
+    /**
+     * Implicit dimension deduction for glm::vec3.
+     */
+    template<> struct implicit_dimension<glm::vec3> {
+        static const size_t value = 3;
+    };
+#endif /* WITH_THE_GLM */
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Implicit dimension deduction for glm::vec2.
+     */
+    template<> struct implicit_dimension<glm::vec2> {
+        static const size_t value = 2;
+    };
+#endif /* WITH_THE_GLM */
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Implicit dimension deduction for glm::vec4.
+     */
+    template<> struct implicit_dimension<glm::ivec4> {
+        static const size_t value = 4;
+    };
+#endif /* WITH_THE_GLM */
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Implicit dimension deduction for glm::vec3.
+     */
+    template<> struct implicit_dimension<glm::ivec3> {
+        static const size_t value = 3;
+    };
+#endif /* WITH_THE_GLM */
+
+
+#ifdef WITH_THE_GLM
+    /**
+     * Implicit dimension deduction for glm::vec2.
+     */
+    template<> struct implicit_dimension<glm::ivec2> {
+        static const size_t value = 2;
+    };
+#endif /* WITH_THE_GLM */
+
 #ifdef THE_WINDOWS
     /**
      * Implicit dimension deduction for RECT.
