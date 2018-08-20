@@ -189,6 +189,8 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->tex);
@@ -203,6 +205,8 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
     }
 }

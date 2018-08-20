@@ -1141,7 +1141,7 @@ void view::View3D::renderBBoxBackside(void) {
     ::glCullFace(GL_FRONT);
     ::glEnable(GL_LINE_SMOOTH);
     ::glLineWidth(1.25f);
-    ::glDisable(GL_TEXTURE_2D);
+    //::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_BACK, GL_LINE);
 
     // XXX: Note that historically, we had a hard-coded alpha of 0.625f, but just for the backside.
@@ -1155,6 +1155,15 @@ void view::View3D::renderBBoxBackside(void) {
     // this->renderBBox();
 
     ::glCullFace(GL_BACK);
+
+    glEnable(GL_LIGHTING);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1.0f);
+    glDisable(GL_CULL_FACE);
+    glPolygonMode(GL_BACK, GL_FILL);
 }
 
 
@@ -1171,7 +1180,7 @@ void view::View3D::renderBBoxFrontside(void) {
     ::glCullFace(GL_BACK);
     ::glEnable(GL_LINE_SMOOTH);
     ::glLineWidth(1.75f);
-    ::glDisable(GL_TEXTURE_2D);
+    //::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_FRONT, GL_LINE);
 
     ::glColor4fv(this->bboxCol);
@@ -1179,6 +1188,14 @@ void view::View3D::renderBBoxFrontside(void) {
 
     ::glDepthFunc(GL_LESS);
     ::glPolygonMode(GL_FRONT, GL_FILL);
+
+    glEnable(GL_LIGHTING);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1.0f);
+    glDisable(GL_CULL_FACE);
 }
 
 
@@ -1518,7 +1535,7 @@ void view::View3D::renderViewCube(void) {
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     ::glDisable(GL_LIGHTING);
-    ::glDisable(GL_TEXTURE_2D);
+    //::glDisable(GL_TEXTURE_2D);
     ::glEnable(GL_LINE_SMOOTH);
     ::glLineWidth(1.5f);
     ::glDisable(GL_DEPTH_TEST);
@@ -1655,6 +1672,12 @@ void view::View3D::renderViewCube(void) {
     ::glVertex3i(0, 0, 0);
     ::glVertex3i(0, 0, 1);
     ::glEnd();
+
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+    glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1.0f);
+    glDisable(GL_CULL_FACE);
 }
 
 
