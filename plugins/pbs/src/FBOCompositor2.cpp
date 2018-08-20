@@ -28,7 +28,8 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
     , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
-    , restartSlot_{"restart", "Restart compositor to wait for incomming connections"}
+    , startSlot_{"start", "start listening for connections"}
+    , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -56,9 +57,9 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     this->MakeSlotAvailable(&targetBandwidthSlot_);
     numRendernodesSlot_ << new megamol::core::param::IntParam(1, 1, std::numeric_limits<int>::max());
     this->MakeSlotAvailable(&numRendernodesSlot_);
-    restartSlot_ << new megamol::core::param::ButtonParam();
-    restartSlot_.SetUpdateCallback(&FBOCompositor2::restartCallback);
-    this->MakeSlotAvailable(&restartSlot_);
+    startSlot_ << new megamol::core::param::ButtonParam();
+    startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
+    this->MakeSlotAvailable(&startSlot_);
 }
 
 
@@ -127,9 +128,7 @@ bool megamol::pbs::FBOCompositor2::create() {
 }
 
 
-void megamol::pbs::FBOCompositor2::release() {
-    shutdownThreads();
-}
+void megamol::pbs::FBOCompositor2::release() { shutdownThreads(); }
 
 
 bool megamol::pbs::FBOCompositor2::GetCapabilities(megamol::core::Call& call) {
@@ -207,7 +206,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    initThreads();
+    // initThreads();
 
     // if data changed check is size has changed
     // if no directly upload
@@ -287,7 +286,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
-    initThreads();
+    // initThreads();
 
     auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
     if (imgc == nullptr) return false;
@@ -319,6 +318,12 @@ bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     return true;
 }
 
+bool megamol::pbs::FBOCompositor2::startCallback(megamol::core::param::ParamSlot& p) {
+    shutdownThreads();
+    this->initThreadsThread_ = std::thread{&FBOCompositor2::initThreads, this};
+    return true;
+}
+
 
 void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb) {
     auto const num_pixels = rgba.size() / 4;
@@ -334,7 +339,8 @@ void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std:
 
 bool megamol::pbs::FBOCompositor2::initThreads() {
     if (!register_done_) {
-        auto const bind_str = std::string("tcp://*:") + std::to_string(this->handshakePortSlot_.Param<megamol::core::param::IntParam>()->Value());
+        auto const bind_str = std::string("tcp://*:") +
+                              std::to_string(this->handshakePortSlot_.Param<megamol::core::param::IntParam>()->Value());
         registerComm_.Bind(bind_str);
 
         registerThread_ = std::thread{&FBOCompositor2::registerJob, this, std::ref(addresses_)};
@@ -395,11 +401,14 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 /*if (!comm.Recv(buf, recv_type::RECV)) {
                     vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
                 }*/
-                //std::future_status status;
+                // std::future_status status;
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
-                    //status = close.wait_for(std::chrono::milliseconds(1));
-                    //if (status == std::future_status::ready) break;
-                    vislib::sys::Log::DefaultLog.WriteWarn("FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+                    // status = close.wait_for(std::chrono::milliseconds(1));
+                    // if (status == std::future_status::ready) break;
+#if _DEBUG
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+#endif
                 }
                 if (shutdown_) break;
                 /*#if _DEBUG
@@ -421,6 +430,15 @@ void megamol::pbs::FBOCompositor2::receiverJob(
             size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
             fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
             fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+
+            if (header.depth_buf_size <= 1 || header.color_buf_size <= 1) {
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; depth_buf size: %d; depth_comp_buf size: %d;\n",
+                    fbo_col_size, header.color_buf_size, fbo_depth_size, header.depth_buf_size);
+#endif
+                continue;
+            }
 
             std::vector<char> col_buf(fbo_col_size);
             std::vector<char> col_comp_buf(header.color_buf_size);
@@ -459,14 +477,14 @@ void megamol::pbs::FBOCompositor2::receiverJob(
 
 #if 0
         {
-#if _DEBUG
+#    if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex receiverJob Heartbeat\n");
-#endif
+#    endif
             std::shared_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
-#if _DEBUG
+#    if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex receiverJob Heartbeat\n");
-#endif
+#    endif
             heartbeat_.wait(heartbeat_guard);
         }
 #endif
@@ -578,19 +596,19 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
             this->targetBandwidthSlot_.Param<megamol::core::param::IntParam>()->Value() * 1000 * 1000;
         float const target_fps = target_bandwidth / msg_size;
 
-#if _DEBUG
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Bandwidth %f\n", bandwidth);
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
-#endif
+#    endif
         {
-#if _DEBUG
+#    if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collector Job heartbeat\n");
-#endif
+#    endif
             std::unique_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
-#if _DEBUG
+#    if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob heartbeat\n");
-#endif
+#    endif
 
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<size_t>(1000.0f / target_fps)));
             heartbeat_.notify_all();
@@ -634,17 +652,23 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed on 'registerComm', trying again\n");
+#endif
                 }
 #if _DEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
+                if (!shutdown_) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received client address\n");
+                }
 #endif
             } catch (zmq::error_t const& e) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "FBOCompositor2: Failed to recv on register socket %s\n", e.what());
             }
             std::string str{buf.begin(), buf.end()};
+
+            if (shutdown_) break;
 #if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
 #endif
@@ -663,8 +687,9 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                     "FBOCompositor2: Failed to send  on register socket %s\n", e.what());
             }
         } while (addresses.size() < numNodes);
-
-        this->isRegistered_.store(true);
+        if (!this->shutdown_) {
+            this->isRegistered_.store(true);
+        }
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
     }
@@ -804,10 +829,10 @@ bool megamol::pbs::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const 
 
 
 bool megamol::pbs::FBOCompositor2::shutdownThreads() {
-    close_promise_.set_value(true);
+    // close_promise_.set_value(true);
     shutdown_ = true;
     if (collector_thread_.joinable()) collector_thread_.join();
-    if (registerThread_.joinable()) registerThread_.join();
+    if (this->initThreadsThread_.joinable()) this->initThreadsThread_.join();
 
     connected_ = false;
     isRegistered_.store(false);
@@ -816,11 +841,3 @@ bool megamol::pbs::FBOCompositor2::shutdownThreads() {
 
     return true;
 }
-
-
-bool megamol::pbs::FBOCompositor2::restartCallback(megamol::core::param::ParamSlot &p) {
-    shutdownThreads();
-    initThreads();
-    return true;
-}
-

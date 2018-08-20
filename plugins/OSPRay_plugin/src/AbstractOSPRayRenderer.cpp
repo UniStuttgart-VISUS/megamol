@@ -15,8 +15,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D.h"
-#include "ospray/ospray.h"
 #include "ospcommon/box.h"
+#include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"
@@ -32,9 +32,10 @@ void ospErrorCallback(OSPError err, const char* details) {
     vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
 }
 
-AbstractOSPRayRenderer::AbstractOSPRayRenderer(void) :
-    core::view::Renderer3DModule(),
-    extraSamles("extraSamples", "Extra sampling when camera is not moved"),
+AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
+    : core::view::Renderer3DModule()
+    , extraSamles("extraSamples", "Extra sampling when camera is not moved")
+    ,
     // general renderer parameters
     rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
     , rd_spp("SamplesPerPixel", "Samples per pixel")
@@ -253,7 +254,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
         ospDeviceCommit(dvce);
         ospSetCurrentDevice(dvce);
     }
-    //this->deviceTypeSlot.MakeUnavailable(); //< TODO: Make sure you can set a device only once
+    // this->deviceTypeSlot.MakeUnavailable(); //< TODO: Make sure you can set a device only once
 }
 
 
@@ -540,7 +541,8 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr, float scaling) {
+void AbstractOSPRayRenderer::setupOSPRayCamera(
+    OSPCamera& camera, megamol::core::view::CallRender3D* cr, float scaling) {
 
 
     // calculate image parts for e.g. screenshooter
@@ -567,15 +569,14 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core:
     // undo scaling
     auto bc = cr->AccessBoundingBoxes().ObjectSpaceBBox().CalcCenter();
     auto mmpos = cr->GetCameraParameters()->EyePosition().PeekCoordinates();
-    std::vector<float> ospPos = {
-        mmpos[0] / scaling,   //+bc.GetX() / scaling,
-        mmpos[1] / scaling,   //+bc.GetY() / scaling,
-        mmpos[2] / scaling }; //+bc.GetZ() / scaling
+    std::vector<float> ospPos = {mmpos[0] / scaling, //+bc.GetX() / scaling,
+        mmpos[1] / scaling,                          //+bc.GetY() / scaling,
+        mmpos[2] / scaling};                         //+bc.GetZ() / scaling
 
 
     ospSet3fv(camera, "pos", ospPos.data());
 
-    //ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
+    // ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
@@ -714,12 +715,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
     if (this->geo.size() != 0) {
         for (auto element : this->geo) {
             ospRemoveGeometry(this->world, element);
+            ospRelease(element);
         }
         this->geo.clear();
     }
     if (this->vol.size() != 0) {
         for (auto element : this->vol) {
             ospRemoveVolume(this->world, element);
+            ospRelease(element);
         }
         this->vol.clear();
     }
@@ -738,7 +741,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
         // custom material settings
         OSPMaterial material;
         material = NULL;
-        if (element.materialContainer != NULL && this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
+        if (element.materialContainer != NULL &&
+            this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
                 material = ospNewMaterial(renderer, "OBJMaterial");
@@ -819,7 +823,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData xData = NULL;
         OSPData yData = NULL;
         OSPData zData = NULL;
-        OSPData bboxData = nullptr;
+        OSPData bboxData = NULL;
+        OSPVolume aovol = NULL;
         OSPError error;
 
         // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
@@ -862,12 +867,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSetData(geo.back(), "bbox", bboxData);
 
                 if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
-                    auto const half_radius = element.globalRadius*0.5f;
+                    auto const half_radius = element.globalRadius * 0.5f;
 
-                    auto const bbox = element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
-                    ospcommon::vec3f lower{bbox[0]-half_radius, bbox[1]-half_radius, bbox[2]-half_radius}; //< TODO The bbox needs to include complete sphere bound
-                    ospcommon::vec3f upper{bbox[3]+half_radius, bbox[4]+half_radius, bbox[5]+half_radius};
-                    //ghostRegions.emplace_back(lower, upper);
+                    auto const bbox =
+                        element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
+                    ospcommon::vec3f lower{bbox[0] - half_radius, bbox[1] - half_radius,
+                        bbox[2] - half_radius}; //< TODO The bbox needs to include complete sphere bound
+                    ospcommon::vec3f upper{bbox[3] + half_radius, bbox[4] + half_radius, bbox[5] + half_radius};
+                    // ghostRegions.emplace_back(lower, upper);
                     worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
                     regions.emplace_back(lower, upper);
                 }
@@ -912,10 +919,10 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             &element.colorData->operator[](i* colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
                         ospCommit(colorData);
                         ospSetData(geo.back(), "color", colorData);
-                        //ospSet1i(geo.back(), "color_components", 4);
+                        // ospSet1i(geo.back(), "color_components", 4);
                         ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
-                        //ospSet1i(geo.back(), "color_offset", 0);
-                        //ospSet1i(geo.back(), "color_stride", 4 * sizeof(float));
+                        // ospSet1i(geo.back(), "color_offset", 0);
+                        // ospSet1i(geo.back(), "color_stride", 4 * sizeof(float));
                     }
                 }
                 // clipPlane setup
@@ -973,15 +980,136 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         ospSetData(geo.back(), "color", vertexData);
                         if (element.mmpldColor ==
                             core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                            //ospSet1i(geo.back(), "color_components", 3);
+                            // ospSet1i(geo.back(), "color_components", 3);
                             ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
                         } else {
-                            //ospSet1i(geo.back(), "color_components", 4);
+                            // ospSet1i(geo.back(), "color_components", 4);
                             ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                         }
                     }
                 }
                 break;
+            case AOVSPHERES: {
+                static bool isInitAOV = false;
+                /*if (element.dataChanged)*/ {
+                    if (element.raw == nullptr) {
+                        returnValue = false;
+                        break;
+                    }
+
+                    if (!isInitAOV) {
+                        error = ospLoadModule("aovspheres");
+                        if (error != OSP_NO_ERROR) {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
+                        } else {
+                            isInitAOV = true;
+                        }
+                    }
+
+                    numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
+
+                    // aovol
+                    // auto const aovol = ospNewVolume("block_bricked_volume");
+                    aovol = ospNewVolume("shared_structured_volume");
+                    ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
+                    ospSet1f(aovol, "samplingRate", element.samplingRate);
+                    // ospSet1b(aovol, "adaptiveSampling", false);
+                    ospSet3iv(aovol, "dimensions", element.dimensions->data());
+                    ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
+                    ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
+                    float fixedSpacing[3];
+                    for (auto x = 0; x < 3; ++x) {
+                        fixedSpacing[x] =
+                            element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                    }
+                    ospSet3fv(aovol, "gridSpacing", fixedSpacing);
+
+                    float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
+
+                    OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                    std::vector<float> faketf = {
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                    };
+                    std::vector<float> fakeopa = {1.0f, 1.0f};
+
+                    OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
+                    OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
+                    ospSetData(tf, "colors", tf_rgb);
+                    ospSetData(tf, "opacities", tf_opa);
+                    ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+
+                    ospCommit(tf);
+
+                    ospSetObject(aovol, "transferFunction", tf);
+
+                    // add data
+                    voxels = ospNewData(element.voxelCount,
+                        static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]),
+                        *element.raw2, OSP_DATA_SHARED_BUFFER);
+                    ospCommit(voxels);
+                    ospSetData(aovol, "voxelData", voxels);
+
+                    /*auto ptr = element.raw2.get();
+                    ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
+                        osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
+
+                    ospCommit(aovol);
+                    ospRelease(tf);
+
+                    for (unsigned int i = 0; i < numCreateGeo; i++) {
+                        geo.push_back(ospNewGeometry("aovspheres_geometry"));
+
+
+                        long long int floatsToRead =
+                            element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
+                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
+
+                        if (vertexData != nullptr) ospRelease(vertexData);
+                        vertexData = ospNewData(floatsToRead, OSP_FLOAT,
+                            &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                        ospCommit(vertexData);
+                        ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
+                        ospSetData(geo.back(), "spheres", vertexData);
+                        ospSetData(geo.back(), "color", nullptr);
+
+                        if (element.vertexLength > 3) {
+                            ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                        } else {
+                            ospSet1f(geo.back(), "radius", element.globalRadius);
+                        }
+                        if (element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                            element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+
+                            ospSet1i(geo.back(), "color_offset",
+                                element.vertexLength *
+                                    sizeof(float)); // TODO: This won't work if there are radii in the array
+                            ospSet1i(geo.back(), "color_stride", element.colorStride);
+                            ospSetData(geo.back(), "color", vertexData);
+                            if (element.mmpldColor ==
+                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                                // ospSet1i(geo.back(), "color_components", 3);
+                                ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
+                            } else {
+                                // ospSet1i(geo.back(), "color_components", 4);
+                                ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                            }
+                        }
+
+                        ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
+                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing * element.aoRayOffsetFactor);
+                        ospSetObject(geo.back(), "aovol", aovol);
+                    }
+                }
+            } break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
                     returnValue = false;
@@ -1026,6 +1154,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     vertexData = ospNewData(element.vertexCount, OSP_FLOAT3, element.vertexData->data());
                     ospCommit(vertexData);
                     ospSetData(geo.back(), "vertex", vertexData);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without vertex array");
+                    returnValue = false;
                 }
 
                 // check normal pointer
@@ -1051,9 +1182,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 // check index pointer
                 if (element.indexData->size() != 0) {
-                    indexData = ospNewData(element.triangleCount, OSP_UINT3, element.indexData->data());
+                    indexData = ospNewData(element.triangleCount, OSP_INT3, element.indexData->data());
                     ospCommit(indexData);
                     ospSetData(geo.back(), "index", indexData);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                    returnValue = false;
                 }
 
                 break;
@@ -1120,6 +1254,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (yData != NULL) ospRelease(yData);
             if (zData != NULL) ospRelease(zData);
             if (bboxData != NULL) ospRelease(bboxData);
+            if (aovol != NULL) ospRelease(aovol);
+            if (voxels != NULL) ospRelease(voxels);
 
             break;
 
@@ -1141,14 +1277,30 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 vol.push_back(ospNewVolume("shared_structured_volume"));
 
-                ospSetString(vol.back(), "voxelType", "float");
+                auto type = static_cast<uint8_t>(element.voxelDType);
+
+                ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
+                float fixedSpacing[3];
+                for (auto x = 0; x < 3; ++x) {
+                    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                }
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+                ospSet3fv(vol.back(), "gridSpacing", fixedSpacing);
+                ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
+
+                ospSet1b(vol.back(), "singleShade", element.useMIP);
+                ospSet1b(vol.back(), "gradientShadingEnables", element.useGradient);
+                ospSet1b(vol.back(), "preIntegration", element.usePreIntegration);
+                ospSet1b(vol.back(), "adaptiveSampling", element.useAdaptiveSampling);
+                ospSet1f(vol.back(), "adaptiveScalar", element.adaptiveFactor);
+                ospSet1f(vol.back(), "adaptiveMaxSamplingRate", element.adaptiveMaxRate);
+                ospSet1f(vol.back(), "samplingRate", element.samplingRate);
 
                 // add data
-                voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]),
+                    element.voxels, OSP_DATA_SHARED_BUFFER);
                 ospCommit(voxels);
                 ospSetData(vol.back(), "voxelData", voxels);
 
@@ -1164,7 +1316,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
-                OSPData tf_rgb = ospNewData(element.tfRGB->size(), OSP_FLOAT, element.tfRGB->data());
+                OSPData tf_rgb = ospNewData(element.tfRGB->size() / 3, OSP_FLOAT3, element.tfRGB->data());
                 OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
                 ospSetData(tf, "colors", tf_rgb);
                 ospSetData(tf, "opacities", tf_opa);
@@ -1174,6 +1326,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 ospSetObject(vol.back(), "transferFunction", tf);
                 ospCommit(vol.back());
+                ospRelease(tf);
             }
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
@@ -1215,12 +1368,18 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             }
+
+            if (voxels != NULL) ospRelease(voxels);
+            if (planes != NULL) ospRelease(planes);
+            if (isovalues != NULL) ospRelease(isovalues);
+
             break;
         }
 
     } // for element loop
 
-    if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size()>0 && regions.size()>0) {
+    if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size() > 0 &&
+        regions.size() > 0) {
         for (auto const& el : regions) {
             ghostRegions.push_back(worldBounds);
         }

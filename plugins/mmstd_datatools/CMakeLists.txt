@@ -14,6 +14,11 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   
   set(LIBS vislib core glad geometry_calls)
 
+  if(MPI_C_FOUND)
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+  endif()
+
   include_directories("include" "src" "3rd/nanoflann")
 
   if (OPENMP_FOUND OR WIN32)
@@ -77,6 +82,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

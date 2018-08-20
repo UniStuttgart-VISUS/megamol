@@ -295,6 +295,10 @@ namespace plugins {
          */
         bool RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
 
+        bool CreateParamGroup(const vislib::StringA& name, const int size);
+        bool RequestParamGroupValue(
+            const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value);
+
         //** do everything that is queued w.r.t. modules and calls */
         void PerformGraphUpdates();
 
@@ -1062,6 +1066,18 @@ namespace plugins {
         /** the list of (parameter = value) pairs that need to be set */
         vislib::SingleLinkedList<vislib::Pair< vislib::StringA, vislib::StringA>>
             pendingParamSetRequests;
+
+        struct ParamGroup {
+            int GroupSize;
+            vislib::StringA Name;
+            vislib::Map<vislib::StringA, vislib::StringA> Requests;
+
+            bool operator==(const ParamGroup& other) const { 
+                return this->Name.Equals(other.Name);
+            }
+        };
+
+        vislib::Map<vislib::StringA, ParamGroup> pendingGroupParamSetRequests;
 
         /**
          * You need to lock this if you manipulate any pending* lists. The lists

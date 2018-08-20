@@ -52,6 +52,16 @@ if(BUILD_REMOTECONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # Installation rules for generated files
+  if(UNIX)
+    include(GNUInstallDirs)
+    set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+    set(cfg_EXTERNAL_LIB_PATH "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}")
+    set(cfg_REMOTE "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
+    set(MEGAMOL_REMOTECONSOLE_SCRIPT "remoteconsole.sh")
+    configure_file(extra/remoteconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} @ONLY)
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} DESTINATION "bin")
+
+  endif()
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
 
 endif(BUILD_REMOTECONSOLE)
