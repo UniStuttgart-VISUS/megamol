@@ -16,26 +16,26 @@ if(BUILD_CONFIGURATOR)
   set(PROJ_TEAM "MegaMol Team: Visualization Research Center, University of Stuttgart; TU Dresden")
   set(PROJ_DESC "MegaMol Project File Configuration Utility. http://megamol.org")
 
-      project(configurator)
-      set(CONFIGURATOR_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf)
-      string(REGEX REPLACE "/" "\\\\" CONF_SOURCE  ${CMAKE_CURRENT_SOURCE_DIR})
-      string(REGEX REPLACE "/" "\\\\" CONF_BIN  ${CMAKE_CURRENT_BINARY_DIR})
-      string(REGEX REPLACE "/" "\\\\" CONF_INST  ${CMAKE_INSTALL_PREFIX})
-      configure_file(${CONFIGURATOR_SOURCE}/Resources/mmconfig.rc.input mmconfig.rc)
-      configure_file(${CONFIGURATOR_SOURCE}/Properties/AssemblyInfo.cs.input AssemblyInfo.cs)
+  string(REGEX REPLACE "/" "\\\\" CONFIGURATOR_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf")
+  string(REGEX REPLACE "/" "\\\\" CONFIGURATOR_BINARY  ${CMAKE_CURRENT_BINARY_DIR})
+  string(REGEX REPLACE "/" "\\\\" CONFIGURATOR_INSTALL  ${CMAKE_INSTALL_PREFIX})
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/NuGet.config ${CMAKE_CURRENT_BINARY_DIR}/../NuGet.config COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/Resources/mmconfig.rc.input mmconfig.rc)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/Properties/AssemblyInfo.cs.input AssemblyInfo.cs)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj.input MegaMolConf.csproj)
 
-  add_custom_target(prebuild_configurator_deps 
-  COMMAND "copy" "${CONF_BIN}\\mmconfig.res" "${CONF_SOURCE}\\MegaMolConf\\Resources\\mmconfig.res"
-  COMMAND "copy" "${CONF_BIN}\\AssemblyInfo.cs" "${CONF_SOURCE}\\MegaMolConf\\Properties\\AssemblyInfo.cs")
-
-  set_target_properties(prebuild_configurator_deps PROPERTIES FOLDER configurator)
-
-  include_external_msproject(MegaMolConf "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj" prebuild_configurator_deps)
+  include_external_msproject(MegaMolConf ${CMAKE_CURRENT_BINARY_DIR}/MegaMolConf.csproj)
 
   set_target_properties(MegaMolConf PROPERTIES FOLDER configurator)
 
   # Copy packages.config to build folder
   file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/packages.config" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+  #TODO: Call nuget restore to prevent broken dependencies.
+  #find_program(NUGET nuget)
+  #add_custom_target(nuget-restore
+  #  COMMAND ${NUGET} restore ${CMAKE_CURRENT_BINARY_DIR}/../megamol.sln)
+  #add_dependencies(MegaMolConf nuget-restore)
 
   # Run the resource compiler
   if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/mmconfig.res")
@@ -55,7 +55,6 @@ if(BUILD_CONFIGURATOR)
     endif()
   endif()
 
-
   # Install binaries and libraries
   install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
   install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
@@ -67,6 +66,5 @@ if(BUILD_CONFIGURATOR)
   endif()
   install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
   install(CODE "configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
-
   
 endif()
