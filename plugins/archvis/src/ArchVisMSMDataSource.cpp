@@ -529,11 +529,11 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 
 	// Create std-container holding vertex attribute descriptions
 	std::vector<std::string> attribute_names;
-	std::vector<MeshDataAccessor::VertexLayoutData::Attribute> attribs;
+	std::vector<VertexLayout::Attribute> attribs;
 	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
 	{
 		attribute_names.push_back(attribute.first);
-			attribs.push_back(MeshDataAccessor::VertexLayoutData::Attribute(
+			attribs.push_back(VertexLayout::Attribute(
 				models.front().accessors[attribute.second].type,
 				models.front().accessors[attribute.second].componentType,
 				models.front().accessors[attribute.second].normalized,

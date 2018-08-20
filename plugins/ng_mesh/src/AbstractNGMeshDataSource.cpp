@@ -13,6 +13,7 @@
 using namespace megamol;
 using namespace megamol::ngmesh;
 
+
 AbstractNGMeshDataSource::AbstractNGMeshDataSource()
 	: core::Module(),
 	m_getData_slot("getData","The slot publishing the loaded data")

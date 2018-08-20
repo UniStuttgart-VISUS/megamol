@@ -172,13 +172,13 @@ void NGMeshRenderer::addRenderBatch(
 	m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(),vert_shader_src.Count(),frag_shader_src.Code(),frag_shader_src.Count());
 
 	// Create mesh
-	Mesh::VertexLayout layout;
+	VertexLayout layout;
 	layout.stride = mesh_data.vertex_descriptor.stride;
 	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
 	{
-		layout.attributes.push_back(Mesh::VertexLayout::Attribute(
-			mesh_data.vertex_descriptor.attributes[i].type,
+		layout.attributes.push_back(VertexLayout::Attribute(
 			mesh_data.vertex_descriptor.attributes[i].size,
+			mesh_data.vertex_descriptor.attributes[i].type,
 			mesh_data.vertex_descriptor.attributes[i].normalized,
 			mesh_data.vertex_descriptor.attributes[i].offset)
 		);
@@ -301,13 +301,13 @@ void NGMeshRenderer::updateRenderBatch(
 	{
 		m_render_batches[idx].mesh.reset();
 
-		Mesh::VertexLayout layout;
+		VertexLayout layout;
 		layout.stride = mesh_data.vertex_descriptor.stride;
 		for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
 		{
-			layout.attributes.push_back(Mesh::VertexLayout::Attribute(
-				mesh_data.vertex_descriptor.attributes[i].type,
+			layout.attributes.push_back(VertexLayout::Attribute(
 				mesh_data.vertex_descriptor.attributes[i].size,
+				mesh_data.vertex_descriptor.attributes[i].type,
 				mesh_data.vertex_descriptor.attributes[i].normalized,
 				mesh_data.vertex_descriptor.attributes[i].offset)
 			);

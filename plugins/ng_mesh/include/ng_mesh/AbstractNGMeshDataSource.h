@@ -28,6 +28,59 @@ namespace ngmesh {
 	protected:
 
 		/**
+		*
+		*/
+		class RenderBatchesData
+		{
+		private:
+			struct MeshData
+			{
+				std::list<std::vector<uint8_t>>	vertex_data;
+				std::vector<uint8_t>			index_data;
+
+				VertexLayout	vertex_descriptor;
+				GLenum			index_type;
+				GLenum			usage;
+				GLenum			primitive_type;
+			};
+
+			struct RenderBatch
+			{
+				std::string							program_name;
+				MeshData							mesh_data;
+				std::vector<DrawElementsCommand>	draw_commands;
+				std::vector<uint8_t>				perObject_shader_params;
+				std::vector<uint8_t>				perMaterial_shader_params;
+				uint32_t							update_flags;
+			};
+
+			std::list<RenderBatch> m_render_batches;
+
+		public:
+			template<typename VertexBufferContainer,
+				typename IndexBufferContainer,
+				typename ObjectShaderParamsContainer,
+				typename MaterialShaderParamsContainer>
+			void addRenderTask(
+				std::string program_name,
+				VertexBufferContainer vertex_buffer_data,
+				IndexBufferContainer index_buffer_data,
+				VertexLayout vertex_descriptor,
+				ObjectShaderParamsContainer obj_shdr_params,
+				MaterialShaderParamsContainer mtl_shdr_params)
+			{
+				//TODO check if batch with same program and vertex layout already exits
+			}
+
+			RenderBatchesDataAccessor getAccessor()
+			{
+
+			}
+
+
+		};
+
+		/**
 		* Implementation of 'Create'.
 		*
 		* @return 'true' on success, 'false' otherwise.
@@ -59,6 +112,8 @@ namespace ngmesh {
 
 		/** The data storage for the render batches */
 		CallNGMeshRenderBatches::RenderBatchesData m_render_batches;
+
+		RenderBatchesData m_new_batches;
 
 		/** The bounding box */
 		vislib::math::Cuboid<float> m_bbox;

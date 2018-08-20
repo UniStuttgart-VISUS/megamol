@@ -144,9 +144,9 @@ bool NGMeshDebugDataSource::load(std::string const& shader_btf_namespace, std::s
 		{ -0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f }, // position data buffer
 		{ 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f } }; // normal data buffer
 	// Create std-container holding vertex attribute descriptions
-	std::vector<MeshDataAccessor::VertexLayoutData::Attribute> attribs = {
-		MeshDataAccessor::VertexLayoutData::Attribute(3,GL_FLOAT,GL_FALSE,0),
-		MeshDataAccessor::VertexLayoutData::Attribute(3,GL_FLOAT,GL_FALSE,0) };
+	std::vector<VertexLayout::Attribute> attribs = {
+		VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0),
+		VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0) };
 
 	// Create std-container holding index data
 	std::vector<uint32_t> indices = { 0,1,2 };

@@ -19,6 +19,7 @@
 #include "mmcore/view/CallRender3D.h"
 
 #include "ng_mesh/CallNGMeshRenderBatches.h"
+#include "ng_mesh/NGMeshStructs.h"
 
 namespace megamol {
 namespace ngmesh {
@@ -268,32 +269,6 @@ namespace ngmesh {
 		class Mesh
 		{
 		public:
-
-			/**
-			* Basic Vertex Layout descriptor taken over from glOwl.
-			*/
-			struct VertexLayout
-			{
-				struct Attribute
-				{
-					Attribute(GLenum type, GLint size, GLboolean normalized, GLsizei offset)
-						: size(size), type(type), normalized(normalized), offset(offset) {}
-
-					GLint size;
-					GLenum type;
-					GLboolean normalized;
-					GLsizei offset;
-				};
-
-				VertexLayout() : stride(0), attributes() {}
-				VertexLayout(GLsizei byte_size, const std::vector<Attribute>& attributes)
-					: stride(byte_size), attributes(attributes) {}
-				VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
-					: stride(byte_size), attributes(attributes) {}
-
-				GLsizei stride;
-				std::vector<Attribute> attributes;
-			};
 
 			template<typename VertexContainer, typename IndexContainer>
 			Mesh(VertexContainer const& vertices,

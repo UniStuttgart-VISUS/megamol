@@ -25,6 +25,8 @@
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 
+#include "ng_mesh/NGMeshStructs.h"
+
 
 namespace megamol {
 namespace ngmesh {
@@ -66,21 +68,9 @@ namespace ngmesh {
 
 		struct VertexLayoutData
 		{
-			struct Attribute
-			{
-				GLint		size;
-				GLenum		type;
-				GLboolean	normalized;
-				GLsizei		offset;
-
-				Attribute() {}
-				Attribute(GLint size, GLenum type, GLenum normlized, GLsizei offset)
-					: size(size), type(type), normalized(normalized), offset(offset) {}
-			};
-			
-			GLsizei		stride;
-			GLuint		attribute_cnt;
-			Attribute*	attributes;
+			GLsizei						stride;
+			GLuint						attribute_cnt;
+			VertexLayout::Attribute*	attributes;
 		};
 
 		VertexData			vertex_data;
@@ -120,6 +110,49 @@ namespace ngmesh {
 	{
 		MaterialParameters*	data;
 		size_t				elements_cnt;
+	};
+
+	class NG_MESH_API RenderBatchesDataAccessor
+	{
+		public:
+			
+			RenderBatchesDataAccessor(size_t batch_cnt)
+			{
+				// compute new size of head buffer
+				size_t byte_size = batch_cnt * (
+					sizeof(ShaderPrgmDataAccessor)
+					+ sizeof(MeshDataAccessor)
+					+ sizeof(MeshDataAccessor::VertexData::Buffer)
+					+ sizeof(VertexLayout::Attribute)
+					+ sizeof(DrawCommandDataAccessor)
+					+ sizeof(ObjectShaderParamsDataAccessor)
+					+ sizeof(MaterialShaderParamsDataAccessor)
+					+ sizeof(uint32_t));
+
+				raw_buffer = new uint8_t[byte_size];
+
+				shader_prgms = (ShaderPrgmDataAccessor*)raw_buffer;
+				meshes = (MeshDataAccessor*)(shader_prgms + batch_cnt);
+				vertex_buffers = (MeshDataAccessor::VertexData::Buffer*)(meshes + batch_cnt);
+				vertex_attributes = (VertexLayout::Attribute*)(vertex_buffers + batch_cnt);
+				draw_commands = (DrawCommandDataAccessor*)(vertex_attributes + batch_cnt);
+				obj_shader_params = (ObjectShaderParamsDataAccessor*)(draw_commands + batch_cnt);
+				mtl_shader_params = (MaterialShaderParamsDataAccessor*)(obj_shader_params + batch_cnt);
+				update_flags = (uint32_t*)(mtl_shader_params + batch_cnt);
+			}
+
+		private:
+
+			uint8_t* raw_buffer;
+
+			ShaderPrgmDataAccessor*					shader_prgms;
+			MeshDataAccessor*						meshes;
+			MeshDataAccessor::VertexData::Buffer*	vertex_buffers;
+			VertexLayout::Attribute*				vertex_attributes;
+			DrawCommandDataAccessor*				draw_commands;
+			ObjectShaderParamsDataAccessor*			obj_shader_params;
+			MaterialShaderParamsDataAccessor*		mtl_shader_params;
+			uint32_t*								update_flags;
 	};
 
 
@@ -253,8 +286,8 @@ namespace ngmesh {
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
 
-						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(m_data.raw_buffer + base_offset + offset);
-						offset += sizeof(MeshDataAccessor::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
+						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<VertexLayout::Attribute*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(VertexLayout::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
@@ -351,8 +384,8 @@ namespace ngmesh {
 						m_head.meshes[i].index_data.raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
 						offset += m_head.meshes[i].index_data.byte_size;
 
-						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(new_data.raw_buffer + base_offset + offset);
-						offset += sizeof(MeshDataAccessor::VertexLayoutData::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
+						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<VertexLayout::Attribute*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(VertexLayout::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
 						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
@@ -398,7 +431,7 @@ namespace ngmesh {
 							return vb_byte_size;
 						}()
 						// size required for storing the attribute descriptions
-						+ mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute)
+						+ mesh_data.vertex_descriptor.attribute_cnt * sizeof(VertexLayout::Attribute)
 						// size required for storing draw command data
 						+ draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand)
 						// size required for storing additional per object data, e.g. model-matrix
@@ -453,9 +486,9 @@ namespace ngmesh {
 					// Set and copy mesh vertex layout data
 					m_head.meshes[idx].vertex_descriptor.stride = mesh_data.vertex_descriptor.stride;
 					m_head.meshes[idx].vertex_descriptor.attribute_cnt = mesh_data.vertex_descriptor.attribute_cnt;
-					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<MeshDataAccessor::VertexLayoutData::Attribute*>(m_data.raw_buffer + offset);
-					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute);
-					std::memcpy(m_head.meshes[idx].vertex_descriptor.attributes, mesh_data.vertex_descriptor.attributes, mesh_data.vertex_descriptor.attribute_cnt * sizeof(MeshDataAccessor::VertexLayoutData::Attribute));
+					m_head.meshes[idx].vertex_descriptor.attributes = reinterpret_cast<VertexLayout::Attribute*>(m_data.raw_buffer + offset);
+					offset += m_head.meshes[idx].vertex_descriptor.attribute_cnt * sizeof(VertexLayout::Attribute);
+					std::memcpy(m_head.meshes[idx].vertex_descriptor.attributes, mesh_data.vertex_descriptor.attributes, mesh_data.vertex_descriptor.attribute_cnt * sizeof(VertexLayout::Attribute));
 
 					// Set and copy draw command data
 					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + offset);

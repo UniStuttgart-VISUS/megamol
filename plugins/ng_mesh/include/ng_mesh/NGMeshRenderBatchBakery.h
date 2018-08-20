@@ -28,8 +28,9 @@ namespace ngmesh {
 	* @param vertex_buffers Nested std-containers containing vertex buffer data. The outer container is expected
 	* to hold either one std-container (i.e. a single vertex buffer) for interleaved vertex data
 	* or several std-containers for non-interleaved vertex data. The inner containers contain the actual
-	* vertex data. In case of non-interleaved data, each inner container is expected to contain the all data for
-	* one vertex attribute.
+	* vertex data. In case of non-interleaved data, each inner container is expected to contain all data for
+	* one vertex attribute. Technically, a single inner container containing all non-interleaved data should
+	* also be possible if the offsets of all vertex attributes are set accordingly, but this has not been tested yet.
 	* Example: std::vector<std::vector<float>>
 	*
 	* @return Vector of vertex buffer accessors for the given vertex buffer data
