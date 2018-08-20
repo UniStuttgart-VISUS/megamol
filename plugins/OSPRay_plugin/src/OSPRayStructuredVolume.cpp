@@ -98,7 +98,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
-    if (os->getTime() > cd->FrameCount()) {
+    if (os->getTime() >= cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
@@ -117,6 +117,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     auto const metadata = cd->GetMetadata();
+
+    if (!metadata->GridType == core::misc::CARTESIAN) {
+        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+        return false;
+    }
 
     /*unsigned int voxelCount =
         cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/

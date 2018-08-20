@@ -18,6 +18,7 @@
 #include "vislib/sys/Log.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -31,7 +32,13 @@ bool datatools::ParticlesToDensity::create(void) { return true; }
 /*
  * datatools::ParticlesToDensity::release
  */
-void datatools::ParticlesToDensity::release(void) {}
+void datatools::ParticlesToDensity::release(void) {
+    delete[] this->metadata.MinValues;
+    delete[] this->metadata.MaxValues;
+    delete[] this->metadata.SliceDists[0];
+    delete[] this->metadata.SliceDists[1];
+    delete[] this->metadata.SliceDists[2];
+}
 
 
 /*
@@ -161,15 +168,15 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     // TODO set data
     outVol->SetData(this->vol[0].data());
     metadata.Components = 1;
-    metadata.GridType = core::misc::GridType_t::RECTILINEAR;
+    metadata.GridType = core::misc::GridType_t::CARTESIAN;
     metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
     metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
     metadata.ScalarLength = sizeof(float);
-    metadata.MinValues = new double;
+    metadata.MinValues = new double[1];
     metadata.MinValues[0] = this->minDens;
-    metadata.MaxValues = new double;
+    metadata.MaxValues = new double[1];
     metadata.MaxValues[0] = this->maxDens;
     auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
     metadata.Extents[0] = bbox.Width();
@@ -179,11 +186,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.Origin[1] = bbox.Bottom();
     metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
-    metadata.SliceDists[0] = new float;
+    metadata.SliceDists[0] = new float[1];
     metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-    metadata.SliceDists[1] = new float;
+    metadata.SliceDists[1] = new float[1];
     metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-    metadata.SliceDists[2] = new float;
+    metadata.SliceDists[2] = new float[1];
     metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
     metadata.IsUniform[0] = true;
     metadata.IsUniform[1] = true;
@@ -206,6 +213,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
  *  moldyn::DynDensityGradientEstimator::createVolumeCPU
  */
 bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
+
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
+    const auto startTime = std::chrono::high_resolution_clock::now();
+    size_t totalParticles = 0;
 
     auto const sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
@@ -231,6 +242,11 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     float const cellSizey = rangeOSy / static_cast<float>(sy - 1);
     float const cellSizez = rangeOSz / static_cast<float>(sz - 1);
 
+    float const d = std::sqrt(cellSizex*cellSizex+cellSizey*cellSizey+cellSizez*cellSizez);
+
+    float const maxCellSize = std::max(cellSizex, std::max(cellSizey, cellSizez));
+    float const disThreshold = 0.5f * maxCellSize;
+
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
@@ -242,47 +258,61 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             continue;
         }
 
+        totalParticles += parts.GetCount();
+
         auto const filterSize = this->filterSizeSlot.Param<core::param::IntParam>()->Value();
+
+        auto gauss = [](float const x, float const sigma) -> float {
+            return std::exp(-x * x / (2.0f * sigma * sigma)) / std::sqrt(2.0f * M_PI * sigma * sigma);
+        };
 
 #pragma omp parallel for
         for (int j = 0; j < parts.GetCount(); ++j) {
             auto ppos = parts[j];
             auto const x_base = ppos.vert.GetXf();
-            auto x = static_cast<int>(((x_base - minOSx) / rangeOSx) * static_cast<float>(sx - 1));
+            auto x = static_cast<int>(((x_base - minOSx) / rangeOSx) * static_cast<float>(sx));
             if (x < 0)
                 x = 0;
             else if (x >= sx)
                 x = sx - 1;
             auto const y_base = ppos.vert.GetYf();
-            auto y = static_cast<int>(((y_base - minOSy) / rangeOSy) * static_cast<float>(sy - 1));
+            auto y = static_cast<int>(((y_base - minOSy) / rangeOSy) * static_cast<float>(sy));
             if (y < 0)
                 y = 0;
             else if (y >= sy)
                 y = sy - 1;
             auto const z_base = ppos.vert.GetZf();
-            auto z = static_cast<int>(((z_base - minOSz) / rangeOSz) * static_cast<float>(sz - 1));
+            auto z = static_cast<int>(((z_base - minOSz) / rangeOSz) * static_cast<float>(sz));
             if (z < 0)
                 z = 0;
             else if (z >= sz)
                 z = sz - 1;
+            auto rad = globRad;
+            if (!useGlobRad) rad = ppos.vert.GetRf();
 
             for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
                         if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
-                            float x_diff = static_cast<float>(hx) / static_cast<float>(sx - 1) * rangeOSx + minOSx +
+                            float x_diff = static_cast<float>(hx) / static_cast<float>(sx) * rangeOSx + minOSx +
                                            0.5f * cellSizex;
                             x_diff = std::fabs(x_diff - x_base);
-                            float y_diff = static_cast<float>(hy) / static_cast<float>(sy - 1) * rangeOSy + minOSy +
+                            float y_diff = static_cast<float>(hy) / static_cast<float>(sy) * rangeOSy + minOSy +
                                            0.5f * cellSizey;
                             y_diff = std::fabs(y_diff - y_base);
-                            float z_diff = static_cast<float>(hz) / static_cast<float>(sz - 1) * rangeOSz + minOSz +
+                            float z_diff = static_cast<float>(hz) / static_cast<float>(sz) * rangeOSz + minOSz +
                                            0.5f * cellSizez;
                             z_diff = std::fabs(z_diff - z_base);
-                            float dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
-                            if (dis == 0.0f) dis = 1.0f;
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
-                            ++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
+                            float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+                            //if (dis == 0.0f) dis = 1.0f;
+                            //vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
+                            if (dis > disThreshold - rad) {
+                                vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] +=
+                                    gauss(dis - disThreshold + rad, 3.0f * rad);
+                            } else {
+                                vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f;
+                            }
+                            //++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
                         }
                     }
                 }
@@ -298,13 +328,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     for (j = 0; j < sx * sy * sz; ++j) {
         for (i = 1; i < omp_get_max_threads(); ++i) {
             vol[0][j] += vol[i][j];
-            weights[0][j] += weights[i][j];
+            //weights[0][j] += weights[i][j];
             /*if (vol[i][j] > 0.0f) {
                 vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in
             vol[%d][%d]\n", omp_get_thread_num(), i, j);
             }*/
         }
-        vol[0][j] /= static_cast<float>(weights[0][j]);
+        //vol[0][j] /= static_cast<float>(weights[0][j]);
         if (vol[0][j] > localMax[omp_get_thread_num()]) {
             localMax[omp_get_thread_num()] = vol[0][j];
             // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
@@ -341,6 +371,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     // Cleanup
     vol.resize(1);
+
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "ParticlesToDensity: creation of %u x %u x %u volume from %llu particles took %f ms.", sx, sy, sz,
+        totalParticles, diffMillis.count());
 
     return true;
 }
