@@ -233,7 +233,25 @@ void View3D2000GT::unpackMouseCoordinates(float& x, float& y) {
  * View3D2000GT::create
  */
 bool View3D2000GT::create(void) {
+    vislib::graphics::gl::ShaderSource lineVertSrc;
+    vislib::graphics::gl::ShaderSource lineFragSrc;
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::vertex", lineVertSrc)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::fragment", lineFragSrc)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
+    }
+    try {
+        if (!this->lineShader.Create(lineVertSrc.Code(), lineVertSrc.Count(), lineFragSrc.Code(), lineFragSrc.Count())) {
+            throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     // TODO implement
+
     return true;
 }
 

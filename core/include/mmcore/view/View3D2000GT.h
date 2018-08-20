@@ -11,6 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <memory>
 #include "AbstractCamParamSync.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CalleeSlot.h"
@@ -31,7 +32,9 @@
 #include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/PerformanceCounter.h"
@@ -526,6 +529,9 @@ protected:
 
     /** Flag whether mouse control is to be handed over to the renderer */
     bool toggleMouseSelection;
+
+    /** Shader program for lines */
+    vislib::graphics::gl::GLSLShader lineShader;
 
 private:
     /**********************************************************************
