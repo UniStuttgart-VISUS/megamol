@@ -33,11 +33,11 @@ namespace utility {
      * setting of configuration values based on the same runtime properties
      * as the traditional configuration (bits, os, machine name, ...), and
      * on the other allowing the same runtime settings as the MegaMol frontend
-     * (PLANNED - TODO) and project files (PLANNED - TODO).
+     * and project files.
      * For sandboxing, a standard environment megamol_env is provided that only
      * allows lua/lib calls that are considered safe and additionally redirects
      * print() to the MegaMol log output. By default only loads base, coroutine,
-     * string, table, math, and os (see LUA_FULL_ENVIRONMENT define).
+     * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
      * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
      */
     class LuaState {
@@ -280,6 +280,7 @@ namespace utility {
         /** the respective configuration, if startup */
         utility::Configuration *conf;
 
+        /** no two threads must interfere with the reentrant L */
         std::mutex stateLock;
     };
 
