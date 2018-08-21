@@ -21,7 +21,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRender3D.h"   // TODO new call?
+#include "mmcore/view/CallRender3D2000GT.h"
 #include "mmcore/view/CallRenderView.h" // TODO new call?
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -126,6 +126,12 @@ View3D2000GT::View3D2000GT(void)
     using vislib::sys::KeyCode;
 
     // TODO implement
+
+    this->rendererSlot.SetCompatibleCall<CallRender3D2000GTDescription>();
+    this->MakeSlotAvailable(&this->rendererSlot);
+
+    // TODO implement
+
 }
 
 /*

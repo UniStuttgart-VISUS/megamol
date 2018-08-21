@@ -11,7 +11,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D2000GT.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector4fParam.h"
@@ -39,7 +39,7 @@ const GLuint SSBObindingPoint = 2;
 /*
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
-CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void) : Renderer3DModule(),
+CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void) : Renderer3DModule2000GT(),
     getDataSlot("getdata", "Connects to the data source"),
     fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
     scalingParam("scaling", "scaling factor for particle radii"),
@@ -320,13 +320,13 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 * GetCapabilities
 */
 bool CartoonTessellationRenderer2000GT::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
     if (cr == NULL) return false;
 
     cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION
+        view::CallRender3D2000GT::CAP_RENDER
+        | view::CallRender3D2000GT::CAP_LIGHTING
+        | view::CallRender3D2000GT::CAP_ANIMATION
         );
 
     return true;
@@ -337,7 +337,7 @@ bool CartoonTessellationRenderer2000GT::GetCapabilities(Call& call) {
 * GetExtents
 */
 bool CartoonTessellationRenderer2000GT::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall *mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -400,7 +400,7 @@ bool CartoonTessellationRenderer2000GT::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;
@@ -712,9 +712,10 @@ bool CartoonTessellationRenderer2000GT::Render(Call& call) {
 			glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
 			colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
 			glUniform4fv(this->splineShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-			glUniform3fv(this->splineShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-			glUniform3fv(this->splineShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-			glUniform3fv(this->splineShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+            // TODO
+			//glUniform3fv(this->splineShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+			//glUniform3fv(this->splineShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+			//glUniform3fv(this->splineShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 			glUniform4fv(this->splineShader.ParameterLocation("clipDat"), 1, clipDat);
 			glUniform4fv(this->splineShader.ParameterLocation("clipCol"), 1, clipCol);
 			glUniformMatrix4fv(this->splineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
@@ -775,9 +776,10 @@ bool CartoonTessellationRenderer2000GT::Render(Call& call) {
 		glColor4f(1.0f / mainchain.size(), 0.75f, 0.25f, 1.0f);
 		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+        // TODO
+		//glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+		//glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+		//glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
 		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
@@ -844,9 +846,10 @@ bool CartoonTessellationRenderer2000GT::Render(Call& call) {
 		this->sphereShader.Enable();
 		// set shader variables
 		glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-		glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-		glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+        // TODO
+		//glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+		//glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+		//glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 		// set vertex and color pointers and draw them
 		glBegin(GL_POINTS);
 		// Ca atoms
