@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "mmcore/utility/LuaHostService.h"
-#include <combaseapi.h>
 #include "mmcore/CoreInstance.h"
 #include "vislib/math/mathfunctions.h"
 
