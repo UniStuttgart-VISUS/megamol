@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="cudavolumeraycaster">
+    <include file="common" />
+
+    <namespace name="texture">
+        <shader name="textureVertex">
+            <snippet type="version">430</snippet>
+            <snippet type="string">
+<!--
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec4 vColor;
+
+out vec2 texCoord;
+
+void main()
+{
+    texCoord = vColor.xy;
+    gl_Position = vec4(vPosition.xyz, 1.0);
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="textureFragment">
+        <snippet type="version">430</snippet>
+        <snippet type="string">
+<!--
+layout(location = 0) out vec4 frag_color;
+
+layout(binding = 15) uniform sampler2D myTexture;
+
+in vec2 texCoord;
+
+void main()
+{
+    frag_color = texture(myTexture, texCoord.st).rgba;
+    //frag_color = vec4(texCoord.st, 0, 1);
+}
+-->
+            </snippet>
+        </shader>
+		<shader name="combineFragment">
+			<snippet type="version">430</snippet>
+			<snippet type="string">
+<!--
+layout(location = 0) out vec4 frag_color;
+
+layout(binding = 14) uniform sampler2D proteinTexture;
+layout(binding = 15) uniform sampler2D volTexture;
+
+in vec2 texCoord;
+
+void main()
+{
+	vec4 c1 = texture(volTexture, texCoord.st).rgba;
+	vec4 c2 = texture(proteinTexture, texCoord.st).rgba;
+	
+	// no alpha premultiplication because the protein background should be opaque and alpha = 1.0
+	frag_color = c1 + c2 * (1.0f - c1.w);
+}
+-->
+			</snippet>
+		</shader>
+    </namespace>
+</btf>

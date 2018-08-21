@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Text;
 
 namespace MegaMolConf {
 
@@ -124,6 +127,9 @@ namespace MegaMolConf {
             }
             else if (p.Type is Data.ParamType.Color) {
                 return new ColorEditor();
+            } 
+            else if (p.Type is Data.ParamType.TransferFunc1D) {
+                return new TransferFunc1DEditor((Data.ParamType.TransferFunc1D)p.Type);
             }
             return base.GetEditor(editorBaseType);
         }

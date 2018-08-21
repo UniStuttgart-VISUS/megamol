@@ -405,6 +405,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     const param::FilePathParam       * p6 = dynamic_cast<const param::FilePathParam      *>(param);
     const param::FlexEnumParam       * p7 = dynamic_cast<const param::FlexEnumParam      *>(param);
     const param::ColorParam          * p8 = dynamic_cast<const param::ColorParam         *>(param);
+    const param::TransferFunc1DParam * p9 = dynamic_cast<const param::TransferFunc1DParam*>(param);
     if (p1 != nullptr) { WriteParamInfo(file, p1); return; }
     if (p2 != nullptr) { WriteParamInfo(file, p2); return; }
     if (p3 != nullptr) { WriteParamInfo(file, p3); return; }
@@ -413,6 +414,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     if (p6 != nullptr) { WriteParamInfo(file, p6); return; }
     if (p7 != nullptr) { WriteParamInfo(file, p7); return; }
     if (p8 != nullptr) { WriteParamInfo(file, p8); return; }
+    if (p9 != nullptr) { WriteParamInfo(file, p9); return; }
     // fallback string:
     file << "              <Type xsi:type=\"String\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
@@ -513,6 +515,16 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
 void megamol::core::job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file,
     param::ColorParam const* param) const {
     file << "              <Type xsi:type=\"Color\">" << std::endl;
+    WriteParamCommonTypeInfoe(file, "                ", param);
+    file << "              </Type>" << std::endl;
+}
+
+/*
+ * job::PluginsStateFileGeneratorJob::WriteParamInfo
+ */
+void megamol::core::job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file,
+    param::TransferFunc1DParam const* param) const {
+    file << "              <Type xsi:type=\"TransferFunc1D\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
     file << "              </Type>" << std::endl;
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace MegaMolConf.Data {
@@ -66,6 +68,8 @@ namespace MegaMolConf.Data {
                 ptb = new ParamType.FilePath();
             } else if (typeName == "MMCOLO") {
                 ptb = new ParamType.Color();
+            } else if (typeName == "MMTF1W" || typeName == "MMTF1A") {
+                ptb = new Data.ParamType.TransferFunc1D();
             } else {
                 ptb = new ParamType.String();
             }
