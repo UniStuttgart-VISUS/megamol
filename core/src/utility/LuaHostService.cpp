@@ -4,6 +4,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/math/mathfunctions.h"
 
+//#define LRH_ANNOYING_DETAILS
 
 using namespace megamol;
 using megamol::core::AbstractNamedObject;
@@ -195,7 +196,14 @@ void core::utility::LuaHostService::servePair() {
 
             std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
             std::string reply = makePairAnswer(request_str);
-            socket.send(reply.data(), reply.size());
+            const auto num_sent = socket.send(reply.data(), reply.size());
+#ifdef LRH_ANNOYING_DETAILS
+            if (num_sent == reply.size()) {
+                vislib::sys::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError("LRH: send failed");
+            }
+#endif
         }
 
     } catch (std::exception& error) {
@@ -234,11 +242,16 @@ std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::st
     if (req.empty()) return std::string("Null Command.");
 
     std::string result;
+#ifdef LRH_ANNOYING_DETAILS
+    vislib::sys::Log::DefaultLog.WriteInfo("LRH: got request: \"%s\"", req.c_str());
+#endif
     int ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
-        // vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+#ifdef LRH_ANNOYING_DETAILS
+        vislib::sys::Log::DefaultLog.WriteInfo("LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
+#endif
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+        vislib::sys::Log::DefaultLog.WriteError("LRH: execution is NOT OK and returned Error \"%s\"", result.c_str());
         result = "Error: " + result;
     }
     return result;
