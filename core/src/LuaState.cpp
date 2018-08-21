@@ -511,13 +511,15 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wst
 
 
 bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
+    // no two threads can touch L at the same time
+    std::lock_guard<std::mutex> stateGuard(this->stateLock);
     if (L != nullptr) {
         //vislib::sys::Log::DefaultLog.WriteInfo("trying to execute: %s", script.c_str());
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
         int old_n = lua_gettop(L);
-        int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
+        const int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
             const char *err = lua_tostring(L, -1); // get error from top of stack...
             //vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);

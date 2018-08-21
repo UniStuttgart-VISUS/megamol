@@ -15,6 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/JobInstance.h"
+#include <mutex>
 
 struct lua_State; // lua includes should stay in the core
 
@@ -98,6 +99,8 @@ namespace utility {
         // ************************************************************
         // Lua interface routines, published to Lua as mm<name>
         // ************************************************************
+
+    protected:
 
         /**
          * mmLog(int level, ...): Output to MegaMol log.
@@ -276,6 +279,8 @@ namespace utility {
 
         /** the respective configuration, if startup */
         utility::Configuration *conf;
+
+        std::mutex stateLock;
     };
 
 } /* namespace core */

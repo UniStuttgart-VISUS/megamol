@@ -244,7 +244,7 @@ std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::st
 #ifdef LRH_ANNOYING_DETAILS
     vislib::sys::Log::DefaultLog.WriteInfo("LRH: got request: \"%s\"", req.c_str());
 #endif
-    int ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
+    const bool ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
 #ifdef LRH_ANNOYING_DETAILS
         vislib::sys::Log::DefaultLog.WriteInfo("LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
