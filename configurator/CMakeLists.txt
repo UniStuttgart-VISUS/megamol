@@ -6,7 +6,7 @@
 
 option(BUILD_CONFIGURATOR "Build configurator" OFF)
 
-if(BUILD_CONFIGURATOR)
+if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   
   project(configurator)
 
@@ -18,7 +18,6 @@ if(BUILD_CONFIGURATOR)
 
   string(REGEX REPLACE "/" "\\\\" CONFIGURATOR_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf")
   string(REGEX REPLACE "/" "\\\\" CONFIGURATOR_BINARY  "${CMAKE_CURRENT_BINARY_DIR}")
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/NuGet.config ${CMAKE_CURRENT_BINARY_DIR}/../NuGet.config COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/Resources/mmconfig.rc.input mmconfig.rc)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/Properties/AssemblyInfo.cs.input AssemblyInfo.cs)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/MegaMolConf.csproj.input MegaMolConf.csproj)
@@ -29,12 +28,6 @@ if(BUILD_CONFIGURATOR)
 
   # Copy packages.config to build folder
   file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/MegaMolConf/packages.config" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-  #TODO: Call nuget restore to prevent broken dependencies.
-  #find_program(NUGET nuget)
-  #add_custom_target(nuget-restore
-  #  COMMAND ${NUGET} restore ${CMAKE_CURRENT_BINARY_DIR}/../megamol.sln)
-  #add_dependencies(MegaMolConf nuget-restore)
 
   # Run the resource compiler
   if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/mmconfig.res")
@@ -55,15 +48,15 @@ if(BUILD_CONFIGURATOR)
   endif()
 
   # Install binaries and libraries
-  install(CODE "configure_file(${CONFIGURATOR_BINARY}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
-  install(CODE "configure_file(${CONFIGURATOR_BINARY}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
 
   if(BITS EQUAL 64)
     set(sub_dir "amd64")
   else()
     set(sub_dir "i386")
   endif()
-  install(CODE "configure_file(${CONFIGURATOR_BINARY}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
-  install(CODE "configure_file(${CONFIGURATOR_BINARY}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
+  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
   
 endif()
