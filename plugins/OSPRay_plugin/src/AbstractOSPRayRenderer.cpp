@@ -57,7 +57,8 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     ,
     // Use depth buffer component
     useDB("useDBcomponent", "activates depth composition with OpenGL content")
-    , deviceTypeSlot("device", "Set the type of the OSPRay device") {
+    , deviceTypeSlot("device", "Set the type of the OSPRay device")
+    , numThreads("numThreads", "Number of threads used for rendering") {
 
     // ospray lights
     lightsToRender = NULL;
@@ -101,6 +102,10 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     // PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
+
+    // Number of threads
+    this->numThreads << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->numThreads);
 
     // Depth
     this->useDB << new core::param::BoolParam(false);
@@ -248,10 +253,18 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
             ospLoadModule("mpi");
             dvce = ospNewDevice("mpi_distributed");
             ospDeviceSet1i(dvce, "masterRank", 0);
+            if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                ospDeviceSet1i(dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+            }
         } break;
         default: {
             dvce = ospNewDevice("default");
-            ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+            if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                ospDeviceSet1i(dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+            }
+            else {
+                ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+            }
         }
         }
         ospDeviceSetErrorFunc(dvce, ospErrorCallback);
