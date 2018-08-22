@@ -18,7 +18,7 @@
 namespace megamol {
 namespace ospray {
 
-enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME };
+enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES };
 
 enum geometryTypeEnum {
     SPHERES,
@@ -27,7 +27,6 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
-    OSPRAY_API_GEOMETRY,
     PKD,
     AOVSPHERES
 };
@@ -84,8 +83,8 @@ public:
     std::shared_ptr<std::vector<float>> zData;
     std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however,
                                                                // this makes access more concise in the renderer
-    void* ospstructure;
 
+    std::vector<std::pair<void*, structureTypeEnum>> ospStructures;
 
     unsigned int voxelCount;
     unsigned int maxDim;
