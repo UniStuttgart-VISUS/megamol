@@ -72,6 +72,8 @@ namespace datatools {
             megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) override;
         bool initMPI();
 
+        void release(void) override;
+
     private:
 
 #ifdef WITH_MPI

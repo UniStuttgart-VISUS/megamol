@@ -127,6 +127,8 @@ protected:
     core::param::ParamSlot rd_ptBackground;
     core::param::ParamSlot shadows;
     core::param::ParamSlot useDB;
+    core::param::ParamSlot numThreads;
+    
 
     megamol::core::param::ParamSlot deviceTypeSlot;
 

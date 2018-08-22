@@ -118,6 +118,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     auto const metadata = cd->GetMetadata();
 
+    if (!metadata->GridType == core::misc::CARTESIAN) {
+        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+        return false;
+    }
+
     /*unsigned int voxelCount =
         cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/
     unsigned int const voxelCount = metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2];

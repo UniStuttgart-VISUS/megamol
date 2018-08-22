@@ -5,10 +5,10 @@
  */
 
 #include "stdafx.h"
+#include "AbstractOSPRayRenderer.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include "AbstractOSPRayRenderer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -57,7 +57,8 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     ,
     // Use depth buffer component
     useDB("useDBcomponent", "activates depth composition with OpenGL content")
-    , deviceTypeSlot("device", "Set the type of the OSPRay device") {
+    , deviceTypeSlot("device", "Set the type of the OSPRay device")
+    , numThreads("numThreads", "Number of threads used for rendering") {
 
     // ospray lights
     lightsToRender = NULL;
@@ -101,6 +102,10 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     // PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->rd_ptBackground);
+
+    // Number of threads
+    this->numThreads << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->numThreads);
 
     // Depth
     this->useDB << new core::param::BoolParam(false);
@@ -189,6 +194,8 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->tex);
@@ -203,6 +210,8 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
     }
 }
@@ -244,10 +253,18 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
             ospLoadModule("mpi");
             dvce = ospNewDevice("mpi_distributed");
             ospDeviceSet1i(dvce, "masterRank", 0);
+            if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                ospDeviceSet1i(dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+            }
         } break;
         default: {
             dvce = ospNewDevice("default");
-            ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+            if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                ospDeviceSet1i(dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+            }
+            else {
+                ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+            }
         }
         }
         ospDeviceSetErrorFunc(dvce, ospErrorCallback);
@@ -715,12 +732,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
     if (this->geo.size() != 0) {
         for (auto element : this->geo) {
             ospRemoveGeometry(this->world, element);
+            ospRelease(element);
         }
         this->geo.clear();
     }
     if (this->vol.size() != 0) {
         for (auto element : this->vol) {
             ospRemoveVolume(this->world, element);
+            ospRelease(element);
         }
         this->vol.clear();
     }
@@ -821,8 +840,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
         OSPData xData = NULL;
         OSPData yData = NULL;
         OSPData zData = NULL;
-        OSPData bboxData = nullptr;
-        OSPVolume aovol = nullptr;
+        OSPData bboxData = NULL;
+        OSPVolume aovol = NULL;
         OSPError error;
 
         // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
@@ -989,7 +1008,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case AOVSPHERES: {
                 static bool isInitAOV = false;
-                if (element.dataChanged) {
+                /*if (element.dataChanged)*/ {
                     if (element.raw == nullptr) {
                         returnValue = false;
                         break;
@@ -1016,7 +1035,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSet3iv(aovol, "dimensions", element.dimensions->data());
                     ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
                     ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
-                    ospSet3fv(aovol, "gridSpacing", element.gridSpacing->data());
+                    float fixedSpacing[3];
+                    for (auto x = 0; x < 3; ++x) {
+                        fixedSpacing[x] =
+                            element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                    }
+                    ospSet3fv(aovol, "gridSpacing", fixedSpacing);
+
+                    float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
 
                     OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
@@ -1052,6 +1078,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
 
                     ospCommit(aovol);
+                    ospRelease(tf);
 
                     for (unsigned int i = 0; i < numCreateGeo; i++) {
                         geo.push_back(ospNewGeometry("aovspheres_geometry"));
@@ -1095,6 +1122,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         }
 
                         ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
+                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing * element.aoRayOffsetFactor);
                         ospSetObject(geo.back(), "aovol", aovol);
                     }
                 }
@@ -1143,6 +1171,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     vertexData = ospNewData(element.vertexCount, OSP_FLOAT3, element.vertexData->data());
                     ospCommit(vertexData);
                     ospSetData(geo.back(), "vertex", vertexData);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without vertex array");
+                    returnValue = false;
                 }
 
                 // check normal pointer
@@ -1168,9 +1199,12 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 // check index pointer
                 if (element.indexData->size() != 0) {
-                    indexData = ospNewData(element.triangleCount, OSP_UINT3, element.indexData->data());
+                    indexData = ospNewData(element.triangleCount, OSP_INT3, element.indexData->data());
                     ospCommit(indexData);
                     ospSetData(geo.back(), "index", indexData);
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                    returnValue = false;
                 }
 
                 break;
@@ -1237,7 +1271,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
             if (yData != NULL) ospRelease(yData);
             if (zData != NULL) ospRelease(zData);
             if (bboxData != NULL) ospRelease(bboxData);
-            if (aovol != nullptr) ospRelease(aovol);
+            if (aovol != NULL) ospRelease(aovol);
+            if (voxels != NULL) ospRelease(voxels);
 
             break;
 
@@ -1262,10 +1297,15 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 auto type = static_cast<uint8_t>(element.voxelDType);
 
                 ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
+                float fixedSpacing[3];
+                for (auto x = 0; x < 3; ++x) {
+                    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                }
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+                ospSet3fv(vol.back(), "gridSpacing", fixedSpacing);
+                ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
 
                 ospSet1b(vol.back(), "singleShade", element.useMIP);
                 ospSet1b(vol.back(), "gradientShadingEnables", element.useGradient);
@@ -1303,6 +1343,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 ospSetObject(vol.back(), "transferFunction", tf);
                 ospCommit(vol.back());
+                ospRelease(tf);
             }
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
@@ -1344,6 +1385,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             }
+
+            if (voxels != NULL) ospRelease(voxels);
+            if (planes != NULL) ospRelease(planes);
+            if (isovalues != NULL) ospRelease(isovalues);
+
             break;
         }
 

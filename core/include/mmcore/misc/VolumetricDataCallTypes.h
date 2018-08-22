@@ -38,15 +38,36 @@ struct VolumetricMetadata_t {
         MaxValues = nullptr;
     }
 
-    ~VolumetricMetadata_t() {
-        if (MinValues != nullptr) {
-            delete[] MinValues;
-            MinValues = nullptr;
+    // creates a deep copy of the instance. beware that the owner of the copy
+    // needs to deallocate the components of SliceDists and all of MinValues and MaxValues explicitly!
+    VolumetricMetadata_t Clone() const {
+        VolumetricMetadata_t clone;
+        clone.Components = this->Components;
+        clone.GridType = this->GridType;
+        clone.ScalarType = this->ScalarType;
+        clone.ScalarLength = this->ScalarLength;
+        clone.NumberOfFrames = this->NumberOfFrames;
+        memcpy(clone.Resolution, this->Resolution, sizeof(size_t) * 3);
+        memcpy(clone.Origin, this->Origin, sizeof(float) * 3);
+        memcpy(clone.IsUniform, this->IsUniform, sizeof(bool) * 3);
+        memcpy(clone.Extents, this->Extents, sizeof(float) * 3);
+
+        if (this->GridType == RECTILINEAR) {
+            for (auto x = 0; x < 3; ++x) {
+                clone.SliceDists[x] = new float[this->Resolution[x] - 1];
+                memcpy(clone.SliceDists[x], this->SliceDists[x], sizeof(float) * (this->Resolution[x] - 1));
+            }
+        } else {
+            for (auto x = 0; x < 3; ++x) {
+                clone.SliceDists[x] = new float[1];
+                *clone.SliceDists[x] = *this->SliceDists[x];
+            }
         }
-        if (MaxValues != nullptr) {
-            delete[] MaxValues;
-            MaxValues = nullptr;
-        }
+        clone.MinValues = new double[this->Components];
+        clone.MaxValues = new double[this->Components];
+        memcpy(clone.MinValues, this->MinValues, sizeof(double) * this->Components);
+        memcpy(clone.MaxValues, this->MaxValues, sizeof(double) * this->Components);
+        return clone;
     }
 
     /** The type of the grid. */
