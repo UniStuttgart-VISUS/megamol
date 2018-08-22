@@ -25,7 +25,7 @@ if(BUILD_REMOTECONSOLE)
   ExternalProject_Add(extlibcxxopts
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     GIT_TAG ${CXXOPTS_TAG}
-    DEPENDS extlibzmq core
+    DEPENDS libzmq core
     CONFIGURE_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -45,7 +45,7 @@ if(BUILD_REMOTECONSOLE)
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-  add_dependencies(${PROJECT_NAME} extlibcxxopts extlibzmq core)
+  add_dependencies(${PROJECT_NAME} extlibcxxopts libzmq core)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})

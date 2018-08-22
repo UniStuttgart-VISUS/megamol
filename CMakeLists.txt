@@ -43,6 +43,9 @@ include(check_mmdep)
 # Clang-format
 include(ClangFormat)
 
+# External
+include(External)
+
 # NuGet
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.config ${CMAKE_CURRENT_BINARY_DIR}/NuGet.config COPYONLY)
 
