@@ -207,7 +207,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
         for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
             timeFramesCount = fmin(timeFramesCount, vec[bidx].fbo_msg_header.frame_times[1]);
         }
-        cr->SetTimeFramesCount(timeFramesCount);
+        cr->SetTimeFramesCount(static_cast<unsigned int>((timeFramesCount > 0.0f) ? (timeFramesCount) : (1.0f)));
     } 
     else {
         cr->SetTimeFramesCount(1);

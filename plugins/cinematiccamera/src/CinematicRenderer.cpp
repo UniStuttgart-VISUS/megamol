@@ -218,7 +218,8 @@ bool CinematicRenderer::GetExtents(Call& call) {
     // => Bboxes and times.
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
-    cr3d_in->SetTimeFramesCount(cr3d_out->TimeFramesCount());
+    unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
+    cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
     cr3d_in->SetTime(cr3d_out->Time());
     cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
 
