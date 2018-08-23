@@ -52,6 +52,8 @@ function(add_external_library TARGET)
     set(LINKAGE SHARED)
   elseif(args_INTERFACE)
     set(LINKAGE INTERFACE)
+  else()
+    message(FATAL_ERROR "Missing library linkage (STATIC, SHARED, INTERFACE)")
   endif()
 
   # Create include directory as required by INTERFACE_INCLUDE_DIRECTORIES.
@@ -69,7 +71,7 @@ function(add_external_library TARGET)
       IMPORTED_LOCATION_DEBUG "${INSTALL_DIR}/${LIBRARY_DEBUG}"
       IMPORTED_LOCATION_RELEASE "${INSTALL_DIR}/${LIBRARY_RELEASE}")
   endif()
-  if(LINKAGE STREQUAL "STATIC" OR LINKAGE STREQUAL "SHARED")
+  if(LINKAGE STREQUAL "SHARED")
     set_target_properties(${TARGET} PROPERTIES
       IMPORTED_IMPLIB_DEBUG "${INSTALL_DIR}/${IMPORT_LIBRARY_DEBUG}"
       IMPORTED_IMPLIB_RELEASE "${INSTALL_DIR}/${IMPORT_LIBRARY_RELEASE}")

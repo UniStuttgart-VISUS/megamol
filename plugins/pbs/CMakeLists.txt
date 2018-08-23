@@ -15,37 +15,37 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   set(SNAPPY_VER "1.1.7")
   if (MSVC)
-    set(SNAPPY_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/snappy.lib" CACHE INTERNAL '')
-    set(SNAPPY_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
-    set(ICET_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/IceTCore.lib" "${EXTERNAL_INSTALL_LOCATION}/lib/IceTGL.lib" "${EXTERNAL_INSTALL_LOCATION}/lib/IceTMPI.lib" CACHE INTERNAL '')
-    set(ICET_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
+    set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
+    set(SNAPPY_LIB "bin/snappy.dll")
+    set(ICET_IMPORT_LIB "lib/IceTCore.lib" "lib/IceTGL.lib" "lib/IceTMPI.lib")
+    set(ICET_LIB "bin/IceTCore.dll" "bin/IceTGL.dll" "bin/IceTMPI.dll")
   else()
     include(GNUInstallDirs)
-    set(SNAPPY_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
-    set(ICET_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/libIceTCore.so" "${EXTERNAL_INSTALL_LOCATION}/lib/libIceTGL.so" "${EXTERNAL_INSTALL_LOCATION}/lib/libIceTMPI.so")
+    set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
+    set(ICET_LIB "lib/libIceTCore.so" "lib/libIceTGL.so" "lib/libIceTMPI.so")
   endif()
   
-  Include(ExternalProject)
-  ExternalProject_Add(extsnappy
+  add_external_library(snappy SHARED
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG ${SNAPPY_VER}
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DSNAPPY_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-  )
-  message(STATUS "SNAPPY Git Tag: " ${SNAPPY_VER})
+	IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
+    IMPORT_LIBRARY_RELEASE ${SNAPPY_IMPORT_LIB}
+    LIBRARY_DEBUG ${SNAPPY_LIB}
+    LIBRARY_RELEASE ${SNAPPY_LIB}
+    CMAKE_ARGS 
+      -DBUILD_SHARED_LIBS=ON 
+      -DSNAPPY_BUILD_TESTS=OFF)
 
-  ExternalProject_Add(exticet
+  add_external_library(icet SHARED
     GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DICET_BUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME}
-  )
-
-  set(LIBS vislib core glad OSPRay_plugin image_calls ${ZFP_LIB} ${ZMQ_LIB} ${SNAPPY_LIB} ${ICET_LIB})
-  include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
-  link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
-
-  if (MPI_C_FOUND)
-    include_directories(${MPI_C_INCLUDE_PATH})
-    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-  endif()
+	IMPORT_LIBRARY_DEBUG ${ICET_IMPORT_LIB}
+    IMPORT_LIBRARY_RELEASE ${ICET_IMPORT_LIB}
+    LIBRARY_DEBUG ${ICET_LIB}
+    LIBRARY_RELEASE ${ICET_LIB}
+    CMAKE_ARGS 
+      -DBUILD_SHARED_LIBS=ON
+      -DICET_BUILD_TESTING=OFF
+      -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -53,17 +53,21 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
 
   # Target definition
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-  add_dependencies(${PROJECT_NAME} vislib core image_calls extsnappy exticet)
   # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    SUFFIX ".mmplg"
+    CXX_STANDARD 17)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  target_include_directories(${PROJECT_NAME} 
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad OSPRay_plugin image_calls zfp libzmq snappy icet)
+
+  if(MPI_C_FOUND)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+  endif()
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -88,6 +92,5 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Resources" FILES ${resource_files})
-
 
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

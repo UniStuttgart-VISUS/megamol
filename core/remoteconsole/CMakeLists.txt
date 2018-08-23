@@ -9,43 +9,28 @@ option(BUILD_REMOTECONSOLE "Build remote Lua console" ON)
 if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
-  # include externals
-  include(ExternalProject)
-
-  if(UNIX)
-    set(CXXOPTS_INSTALL_CMD "eval")
-    set(CXXOPTS_INSTALL_ARGS "cp ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
-  else()
-    set(CXXOPTS_INSTALL_CMD "powershell")
-    set(CXXOPTS_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcxxopts-prefix/src/extlibcxxopts/include/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
-  endif()
+  # Add libcxxopts.
   set(CXXOPTS_TAG "v2.0.0")
-  #string(REPLACE "_" "." CXXOPTS_TAG ${CXXOPTS_VER})
-  #string(CONCAT CXXOPTS_TAG "v" ${CXXOPTS_TAG})
-  ExternalProject_Add(extlibcxxopts
+  add_external_library(libcxxopts INTERFACE
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     GIT_TAG ${CXXOPTS_TAG}
     DEPENDS libzmq core
-    CONFIGURE_COMMAND ${CXXOPTS_INSTALL_CMD} ${CXXOPTS_INSTALL_ARGS}
+    INCLUDE_DIR "src/extlibcxxopts/include/"
+    CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-  )
-  #message(STATUS "cxxopts Git Tag: " ${CXXOPTS_TAG})
+    TEST_COMMAND "")
 
-  set(LIBS lua ${ZMQ_LIB})
-  include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-  link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
-
-  # Build MegaMol Remote Console
+  # Glob remote console files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  include_directories(BEFORE "include" "src")
 
-  # Target definition
+  # Setup target.
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-  add_dependencies(${PROJECT_NAME} extlibcxxopts libzmq core)
+  target_link_libraries(${PROJECT_NAME} PRIVATE lua libzmq libcxxopts)
+  target_include_directories(${PROJECT_NAME} 
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC "include" "src")
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
@@ -55,14 +40,12 @@ if(BUILD_REMOTECONSOLE)
   if(UNIX)
     include(GNUInstallDirs)
     set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-    set(cfg_EXTERNAL_LIB_PATH "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}")
+    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_LIBDIR}")
     set(cfg_REMOTE "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
     set(MEGAMOL_REMOTECONSOLE_SCRIPT "remoteconsole.sh")
     configure_file(extra/remoteconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} DESTINATION "bin")
-
   endif()
+  
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-
 endif(BUILD_REMOTECONSOLE)
-

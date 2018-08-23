@@ -136,23 +136,23 @@ if(BUILD_CORE)
     )    
 
   # Target definition
-  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
-  target_include_directories(${PROJECT_NAME} 
+  target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
-  target_link_libraries(core PRIVATE vislib glad lua libzmq libcppzmq ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib glad lua libzmq libcppzmq ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
-    set_target_properties(core PROPERTIES 
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
   if(MPI_C_FOUND)
-    include_directories(${MPI_C_INCLUDE_PATH})
-    target_link_libraries(core PRIVATE ${MPI_C_LIBRARIES})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
   endif()
 
   # Source groups in Visual Studio
-  set_target_properties(core PROPERTIES FOLDER base)
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   foreach(FILE_NAME ${source_files})
     get_filename_component(FILE_PATH ${FILE_NAME} PATH)
     string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
@@ -180,14 +180,14 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   if(WIN32)
-    install(TARGETS core RUNTIME DESTINATION "bin")
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")
-    install(TARGETS core ARCHIVE DESTINATION "lib")
+    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
-    file(GLOB ZMQ_LIB_FILES "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzmq.so*")
+    file(GLOB ZMQ_LIB_FILES "${CMAKE_INSTALL_LIBDIR}/libzmq.so*")
     install(FILES ${ZMQ_LIB_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
-    install(TARGETS core DESTINATION "lib" EXPORT core-target)
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
   add_subdirectory(remoteconsole)
