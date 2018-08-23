@@ -19,12 +19,16 @@ int main(int argc, char* argv[]) {
 
     std::string host;
     std::string file, script;
+    int hammerFactor = 1;
     bool keepOpen = false;
+    bool singleSend = false;
 
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
     options.add_options()("open", "open host", cxxopts::value<std::string>())(
         "source", "source file", cxxopts::value<std::string>())(
-        "exec", "execute script", cxxopts::value<std::string>())("keep-open", "keep open")("help", "print help");
+        "exec", "execute script", cxxopts::value<std::string>())("keep-open", "keep open")(
+        "hammer", "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())(
+            "single", "send whole file or script in one go")("help", "print help");
 
     try {
 
@@ -43,8 +47,12 @@ int main(int argc, char* argv[]) {
         if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
         if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
-        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
-
+        if (parseRes.count("hammer")) hammerFactor = parseRes["hammer"].as<int>();
+        if (parseRes.count("single")) singleSend = parseRes["single"].as<bool>();
+        
+        if (!parseRes.count("exec") && !parseRes.count("source")) {
+            hammerFactor = 1;
+        }
 
         //  Prepare our context and socket
         zmq::context_t context(1);
@@ -52,25 +60,39 @@ int main(int argc, char* argv[]) {
         const int replyLength = 1024;
         char portReply[replyLength];
 
-        zmq::socket_t socket(context, ZMQ_PAIR);
-        Connection conn(socket);
+        std::vector<zmq::socket_t> sockets;
+        std::vector<Connection> connections;
+
+        //zmq::socket_t socket(context, ZMQ_PAIR);
+        //Connection conn(socket);
+
+        for (int i = 0; i < hammerFactor; ++i) {
+            sockets.emplace_back(context, ZMQ_PAIR);
+            connections.emplace_back(sockets.back());
+        }
 
         if (!host.empty()) {
             cout << "Connecting \"" << host << "\" ... ";
             try {
+
                 pre_socket.connect(host);
-                pre_socket.send("ola", 3);
-                pre_socket.recv(portReply, replyLength);
+                for (int i = 0; i < hammerFactor; ++i) {
+                    pre_socket.send("ola", 3);
+                    pre_socket.recv(portReply, replyLength);
 
-                int p2 = std::atoi(portReply);
-                const auto portPos = host.find_last_of(":");
-                const auto hostStr = host.substr(0, portPos);
-                std::stringstream newHost;
-                newHost << hostStr << ":" << p2;
+                    int p2 = std::atoi(portReply);
+                    const auto portPos = host.find_last_of(":");
+                    const auto hostStr = host.substr(0, portPos);
+                    std::stringstream newHost;
+                    newHost << hostStr << ":" << p2;
 
-                conn.Connect(newHost.str());
-                cout << endl << "\tConnected" << endl << endl;
+                    cout << "Connecting to pair socket: " << newHost.str() << " ...";
 
+                    connections[i].Connect(newHost.str());
+                    cout << endl << "\tConnected to " << p2 << endl << endl;
+                }
+            } catch (zmq::error_t& zmqex) {
+                cout << endl << "ERR Socket connection failed: " << zmqex.what() << endl << endl;
             } catch (std::exception& ex) {
                 cout << endl << "ERR Socket connection failed: " << ex.what() << endl << endl;
             } catch (...) {
@@ -80,17 +102,21 @@ int main(int argc, char* argv[]) {
 
 
         if (!file.empty()) {
-            runScript(conn, file);
+            for (int i = 0; i < hammerFactor; ++i) {
+                runScript(connections[i], file, singleSend, i);
+            }
         } else if (!script.empty()) {
-            if (!execCommand(conn, script)) {
-                cout << "\tFailed" << endl;
+            for (int i = 0; i < hammerFactor; ++i) {
+                if (!execCommand(connections[i], script, i)) {
+                    cout << "\tFailed" << endl;
+                }
             }
         } else {
             keepOpen = true;
         }
 
         if (keepOpen) {
-            interactiveConsole(conn);
+            interactiveConsole(connections[0]);
         }
 
     } catch (...) {
