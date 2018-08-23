@@ -31,10 +31,14 @@ if(BUILD_CORE)
     set(MSVC_TOOLSET "")
   endif()
   if(MSVC)
-    set(ZMQ_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
-    set(ZMQ_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
+    set(ZMQ_IMPORT_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
+    set(ZMQ_IMPORT_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
+    set(ZMQ_DEBUG "bin/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.dll")
+    set(ZMQ_RELEASE "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
   else()
     include(GNUInstallDirs)
+    set(ZMQ_IMPORT_DEBUG "")
+    set(ZMQ_IMPORT_RELEASE "")
     set(ZMQ_DEBUG "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
     set(ZMQ_RELEASE ${ZMQ_DEBUG})
   endif()
@@ -42,6 +46,8 @@ if(BUILD_CORE)
   add_external_library(libzmq SHARED
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
+    IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
+    IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
     LIBRARY_DEBUG ${ZMQ_DEBUG}
     LIBRARY_RELEASE ${ZMQ_RELEASE}
     CMAKE_ARGS
@@ -55,7 +61,7 @@ if(BUILD_CORE)
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-	TEST_COMMAND "")
+    TEST_COMMAND "")
 
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
@@ -101,12 +107,12 @@ if(BUILD_CORE)
     LIBRARY_DEBUG ${ZFP_LIB}
     LIBRARY_RELEASE ${ZFP_LIB}
     CMAKE_ARGS
-	  -DBUILD_SHARED_LIBS=OFF 
-	  -DBUILD_UTILITIES=OFF
-	  -DBUILD_TESTING=OFF 
-	  -DZFP_WITH_ALIGNED_ALLOC=ON 
-	  -DZFP_WITH_CACHE_FAST_HASH=ON 
-	  -DCMAKE_BUILD_TYPE=Release)
+      -DBUILD_SHARED_LIBS=OFF 
+      -DBUILD_UTILITIES=OFF
+      -DBUILD_TESTING=OFF 
+      -DZFP_WITH_ALIGNED_ALLOC=ON 
+      -DZFP_WITH_CACHE_FAST_HASH=ON 
+      -DCMAKE_BUILD_TYPE=Release)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -131,27 +137,21 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
-  add_dependencies(core vislib glad libzmq libcppzmq)
-
-  set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} "src" "include")
-
+  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
+  target_include_directories(${PROJECT_NAME} 
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
+    PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+  target_link_libraries(core PRIVATE vislib glad lua libzmq libcppzmq ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  if(WIN32)
+    set_target_properties(core PROPERTIES 
+      LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
+  endif()
   if(MPI_C_FOUND)
     include_directories(${MPI_C_INCLUDE_PATH})
-    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+    target_link_libraries(core PRIVATE ${MPI_C_LIBRARIES})
   endif()
 
-  # Note: linking private prevents that dependent projects are required to link agains all these again.
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(core PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
-  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
-  if(WIN32)
-    set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
-  endif()
-
-  # Target structure in Visual Studio
+  # Source groups in Visual Studio
   set_target_properties(core PROPERTIES FOLDER base)
   foreach(FILE_NAME ${source_files})
     get_filename_component(FILE_PATH ${FILE_NAME} PATH)
