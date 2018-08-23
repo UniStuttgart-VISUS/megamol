@@ -16,11 +16,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Add Eigen.
   set(EIGEN_VER "3_3_4")
   string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
-  
   add_external_library(Eigen INTERFACE
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
     GIT_TAG ${EIGEN_TAG}
-    INCLUDE_DIR "src/extlibeigen/Eigen"
+    INCLUDE_DIR "src/Eigen_ext"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""

@@ -15,7 +15,7 @@ if(BUILD_REMOTECONSOLE)
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     GIT_TAG ${CXXOPTS_TAG}
     DEPENDS libzmq core
-    INCLUDE_DIR "src/extlibcxxopts/include/"
+    INCLUDE_DIR "src/libcxxopts_ext/include/"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -27,10 +27,10 @@ if(BUILD_REMOTECONSOLE)
 
   # Setup target.
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  target_link_libraries(${PROJECT_NAME} PRIVATE lua libzmq libcxxopts)
   target_include_directories(${PROJECT_NAME} 
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE lua libzmq libcppzmq libcxxopts)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
