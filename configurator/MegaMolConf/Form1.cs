@@ -90,7 +90,7 @@ namespace MegaMolConf {
                 }));
             } else {
                 using (StringSelector cs = new StringSelector("Select the Instance you want to use (cancel for no filtering / LUA projects)", insts)) {
-                    if (cs.ShowDialog(ParentForm) == DialogResult.Cancel) {
+                    if (cs.ShowDialog(this) == DialogResult.Cancel) {
                         SetTabInstantiation(tp, "");
                         return;
                     }
