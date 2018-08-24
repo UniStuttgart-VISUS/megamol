@@ -49,11 +49,25 @@ namespace MegaMolConf.Communication {
             if (!s.Connect(adress, out e)) {
                 throw new Exception(e.ToString());
             }
+            ZSocket s2 = new ZSocket(c, ZSocketType.PAIR);
+            ZFrame f = new ZFrame("ola", Encoding.UTF8);
+            s.Send(f);
+            ZMessage zm = s.ReceiveMessage();
+            if (zm.Count == 0) {
+                throw new Exception("did not get a port from MegaMol");
+            }
+            string port = zm[0].ReadString();
+            int idx = adress.LastIndexOf(":");
+            string adr2 = adress.Substring(0, idx);
+            adr2 += ":" + port;
+            if (!s2.Connect(adr2, out e)) {
+                throw new Exception(e.ToString());
+            }
 
             s.ReceiveTimeout = timeout;
             s.SendTimeout = timeout;
 
-            return new Connection() { context = c, socket = s };
+            return new Connection() { context = c, socket = s2 };
         }
 
         private Connection() { }
@@ -68,8 +82,8 @@ namespace MegaMolConf.Communication {
         /// </summary>
         /// <param name="req">The request to be sent to MegaMol</param>
         /// <returns>The response answer by MegaMol</returns>
-        public Response Send(Request req) {
-            return Send(req, defaultTimeout);
+        public void Send(Request req) {
+            Send(req, defaultTimeout);
         }
 
         /// <summary>
@@ -78,7 +92,7 @@ namespace MegaMolConf.Communication {
         /// <param name="req">The request to be sent to MegaMol</param>
         /// <param name="timeout">The timeout when the function will throw an exception</param>
         /// <returns>The response answer by MegaMol</returns>
-        public Response Send(Request req, TimeSpan timeout) {
+        public void Send(Request req, TimeSpan timeout) {
             if (req == null) throw new ArgumentNullException("req");
 
             socket.ReceiveTimeout = timeout;
@@ -88,15 +102,33 @@ namespace MegaMolConf.Communication {
             if (reqData == null) throw new ArgumentException("req seemed illegal");
             socket.Send(reqData);
 
-            Response resp = null;
-            using (ZFrame reply = socket.ReceiveFrame()) {
-                Response r = new Response();
-                r.Request = req; // set request first, because that object is required to parse the answer
-                r.fromZFrameString(reply.ReadString(Encoding.UTF8));
-                resp = r;
-            }
+            //Response resp = null;
+            //using (ZFrame reply = socket.ReceiveFrame()) {
+            //    Response r = new Response();
+            //    r.Request = req; // set request first, because that object is required to parse the answer
+            //    r.fromZFrameString(reply.ReadString(Encoding.UTF8));
+            //    resp = r;
+            //}
 
-            return resp;
+            //return resp;
+        }
+
+        public bool TryReceive(ref Response resp, ref string err) {
+            ZError e;
+            using (ZMessage reply = socket.ReceiveMessage(ZSocketFlags.DontWait, out e)) {
+                if (reply != null && reply.Count > 0) {
+                    //Response r = new Response();
+                    //r.Request = req; // set request first, because that object is required to parse the answer
+                    resp.fromZFrameString(reply[0].ReadString(Encoding.UTF8));
+                    //resp = r;
+                    if (e != null) {
+                        err = e.Text;
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            }
         }
 
         /// <summary>

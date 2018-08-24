@@ -1324,9 +1324,9 @@ vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
 megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingView(void) {
     using vislib::sys::Log;
 
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1554,9 +1554,9 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
  */
 megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
