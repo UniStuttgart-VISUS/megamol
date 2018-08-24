@@ -9,6 +9,7 @@
 #include <string>
 //#include "CommandFunctionPtr.h"
 #include <map>
+#include <atomic>
 
 namespace megamol {
 namespace core {
@@ -41,12 +42,16 @@ namespace utility {
     private:
 
         void serve();
+        void servePair();
         std::string makeAnswer(const std::string& req);
+        std::string makePairAnswer(const std::string& req) const;
+        std::atomic<int> lastPairPort;
 
         //ModuleGraphAccess mgAccess;
         ZMQContextUser::ptr context;
 
         std::thread serverThread;
+        std::vector<std::thread> pairThreads;
         bool serverRunning;
 
         std::string address;
