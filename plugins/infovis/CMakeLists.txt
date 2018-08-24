@@ -16,14 +16,16 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Add Eigen.
   set(EIGEN_VER "3_3_4")
   string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
-  add_external_library(Eigen INTERFACE
+  add_external_project(Eigen_ext
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
     GIT_TAG ${EIGEN_TAG}
-    INCLUDE_DIR "src/Eigen_ext"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     TEST_COMMAND "")
+  add_external_library(Eigen INTERFACE
+    DEPENDS Eigen_ext
+    INCLUDE_DIR "src/Eigen_ext")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")

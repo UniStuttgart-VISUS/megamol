@@ -43,26 +43,30 @@ if(BUILD_CORE)
     set(ZMQ_RELEASE ${ZMQ_DEBUG})
   endif()
   
-  add_external_library(libzmq SHARED
+  add_external_project(libzmq_ext
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
+    CMAKE_ARGS
+      -DZMQ_BUILD_TESTS=OFF)
+  add_external_library(libzmq SHARED
+    DEPENDS libzmq_ext
     IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
     IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
     LIBRARY_DEBUG ${ZMQ_DEBUG}
-    LIBRARY_RELEASE ${ZMQ_RELEASE}
-    CMAKE_ARGS
-      -DZMQ_BUILD_TESTS=OFF)
+    LIBRARY_RELEASE ${ZMQ_RELEASE})
 
-  add_external_library(libcppzmq INTERFACE
+  add_external_project(libcppzmq_ext
     DEPENDS libzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
     GIT_TAG ${ZMQ_TAG}
-    INCLUDE_DIR "src/libcppzmq_ext/"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     TEST_COMMAND "")
-
+  add_external_library(libcppzmq INTERFACE
+    DEPENDS libcppzmq_ext
+    INCLUDE_DIR "src/libcppzmq_ext/")
+    
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -101,11 +105,9 @@ if(BUILD_CORE)
     set(ZFP_LIB "zfp_ext-build/${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
   
-  add_external_library(zfp STATIC
+  add_external_project(zfp_ext
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
     GIT_TAG ${ZFP_TAG}
-    LIBRARY_DEBUG ${ZFP_LIB}
-    LIBRARY_RELEASE ${ZFP_LIB}
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=OFF 
       -DBUILD_UTILITIES=OFF
@@ -113,7 +115,11 @@ if(BUILD_CORE)
       -DZFP_WITH_ALIGNED_ALLOC=ON 
       -DZFP_WITH_CACHE_FAST_HASH=ON 
       -DCMAKE_BUILD_TYPE=Release)
-
+  add_external_library(zfp STATIC
+    DEPENDS zfp_ext
+    LIBRARY_DEBUG ${ZFP_LIB}
+    LIBRARY_RELEASE ${ZFP_LIB})
+      
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")

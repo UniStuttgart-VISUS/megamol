@@ -11,15 +11,17 @@ if(BUILD_REMOTECONSOLE)
 
   # Add libcxxopts.
   set(CXXOPTS_TAG "v2.0.0")
-  add_external_library(libcxxopts INTERFACE
+  add_external_project(libcxxopts_ext
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     GIT_TAG ${CXXOPTS_TAG}
     DEPENDS libzmq core
-    INCLUDE_DIR "src/libcxxopts_ext/include/"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     TEST_COMMAND "")
+  add_external_library(libcxxopts INTERFACE
+    DEPENDS libcxxopts_ext
+    INCLUDE_DIR "src/libcxxopts_ext/include/")
 
   # Glob remote console files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
