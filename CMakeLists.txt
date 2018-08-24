@@ -47,7 +47,7 @@ include(ClangFormat)
 include(External)
 
 # NuGet
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.config ${CMAKE_CURRENT_BINARY_DIR}/NuGet.config COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
 
 ###############################
 # Vislib
