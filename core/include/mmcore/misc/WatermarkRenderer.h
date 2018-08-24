@@ -12,12 +12,28 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/AbstractView3D.h"
+
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
 
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/math/Vector.h"
 
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowMatrix.h"
+
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
 
 
 namespace megamol {
@@ -113,15 +129,15 @@ namespace megamol {
                 * variables
                 **********************************************************************/
 
-                /** Disable warning for classes not marked for dll export. */
+/** Disable warning for classes not marked for dll export. */
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
                 enum corner {
-                    TOP_LEFT = 0,
-                    TOP_RIGHT = 1,
-                    BOTTOM_LEFT = 2,
+                    TOP_LEFT     = 0,
+                    TOP_RIGHT    = 1,
+                    BOTTOM_LEFT  = 2,
                     BOTTOM_RIGHT = 3,
                 };
 
@@ -142,22 +158,61 @@ namespace megamol {
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
+                ///////////////////////////////////////////////////////////////
+
+                /** The shader of the font. */
+                vislib::graphics::gl::GLSLShader shader;
+
+                /** Vertex buffer object attributes. */
+                enum VBOAttrib {
+                    POSITION = 0,
+                    TEXTURE  = 1
+                };
+
+                /** Vertex buffer object info. */
+                struct Vbo_Data {
+                    GLuint           handle;  // buffer handle
+                    vislib::StringA  name;    // varaible name of attribute in shader
+                    GLuint           index;   // index of attribute location
+                    unsigned int     dim;     // dimension of data
+                };
+                /** Vertex array object. */
+                GLuint vaoHandle;
+
+                /** Vertex buffer objects. */
+                std::vector<Vbo_Data> vbos;
+
                 /**********************************************************************
                 * functions
                 **********************************************************************/
 
-                /*   */
+                /** 
+                * Separate function for loading files from arbitrary paths.
+                * (not not only from within the resource folder like utility::ResourceWrapper::LoadResource() does)
+                */
                 SIZE_T loadFile(vislib::StringA name, void **outData);
 
-                /**  */
+                /** PNG image file must be in RGBA foramt. */
                 bool loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename);
 
                 /**  */
                 bool renderWatermark(WatermarkRenderer::corner cor, float vpH, float vpW);
 
+                ///////////////////////////////////////////////////////////////
+
+                /** */
+                bool loadBuffers(void);
+
+                /** */
+                bool loadShaders(void);
+
                 /**********************************************************************
                 * parameters
                 **********************************************************************/
+
+                /**  */
+                core::param::ParamSlot paramAlpha;
+                core::param::ParamSlot paramScaleAll;
 
                 /**  */
                 core::param::ParamSlot paramImgTopLeft;
@@ -166,14 +221,19 @@ namespace megamol {
                 core::param::ParamSlot paramImgBottomRight;
 
                 /**  */
-                core::param::ParamSlot paramScaleAll;
+
                 core::param::ParamSlot paramScaleTopLeft;
                 core::param::ParamSlot paramScaleTopRight;
                 core::param::ParamSlot paramScaleBottomLeft;
                 core::param::ParamSlot paramScaleBottomRight;
 
-                /**  */
-                core::param::ParamSlot paramAlpha;
+                /**********************************************************************
+                * callback slots
+                **********************************************************************/
+
+                /** The renderer caller slot */
+                core::CallerSlot rendererCallerSlot;
+
             };
 
         } /* end namespace misc */
