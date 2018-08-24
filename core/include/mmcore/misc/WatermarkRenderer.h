@@ -41,7 +41,7 @@ namespace megamol {
         namespace misc {
 
             /**
-            * Render watermarks using PNG-files in all four corners of the viewport.
+            * Render watermarks (e.g. logos) in all four corners of the viewport.
             */
             class MEGAMOLCORE_API WatermarkRenderer : public view::Renderer3DModule {
             public:
@@ -154,10 +154,6 @@ namespace megamol {
                 float lastScaleAll;
                 bool  firstParamChange;
 
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
                 ///////////////////////////////////////////////////////////////
 
                 /** The shader of the font. */
@@ -182,6 +178,10 @@ namespace megamol {
                 /** Vertex buffer objects. */
                 std::vector<Vbo_Data> vbos;
 
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
                 /**********************************************************************
                 * functions
                 **********************************************************************/
@@ -195,33 +195,32 @@ namespace megamol {
                 /** PNG image file must be in RGBA foramt. */
                 bool loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename);
 
-                /**  */
+                /** Draw specified watermark. */
                 bool renderWatermark(WatermarkRenderer::corner cor, float vpH, float vpW);
 
                 ///////////////////////////////////////////////////////////////
 
-                /** */
+                /** Load vertex buffer array and vertex buffer objects. */
                 bool loadBuffers(void);
 
-                /** */
+                /** Load shaders. */
                 bool loadShaders(void);
 
                 /**********************************************************************
                 * parameters
                 **********************************************************************/
 
-                /**  */
+                /** Global. */
                 core::param::ParamSlot paramAlpha;
                 core::param::ParamSlot paramScaleAll;
 
-                /**  */
+                /** Image path parameters. */
                 core::param::ParamSlot paramImgTopLeft;
                 core::param::ParamSlot paramImgTopRight;
                 core::param::ParamSlot paramImgBottomLeft;
                 core::param::ParamSlot paramImgBottomRight;
 
-                /**  */
-
+                /** Scaling parameters for each watermark. */
                 core::param::ParamSlot paramScaleTopLeft;
                 core::param::ParamSlot paramScaleTopRight;
                 core::param::ParamSlot paramScaleBottomLeft;

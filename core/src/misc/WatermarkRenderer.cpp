@@ -241,14 +241,10 @@ bool WatermarkRenderer::Render(Call& call) {
 
     // Draw 
     glBindVertexArray(this->vaoHandle);
-    glEnable(GL_TEXTURE_2D);
-
     this->renderWatermark(WatermarkRenderer::TOP_LEFT,     vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::TOP_RIGHT,    vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_LEFT,  vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_RIGHT, vpHeight, vpWidth);
-
-    glDisable(GL_TEXTURE_2D);
     glBindVertexArray(0);
 
     // Reset opengl states
@@ -336,42 +332,42 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     GLfloat texData[vertCnt * 2];
 
     // Triangle One (Front face => CCW)
-    vertData[0] = left;    // X
-    vertData[1] = bottom;  // Y
-    vertData[2] = -1.0f;   // Z
-    texData[0]  = 0.0f;    // X
-    texData[1]  = 1.0f;    // Y
+    vertData[0] = left;    // pos X
+    vertData[1] = bottom;  // pos Y
+    vertData[2] = -1.0f;   // pos Z
+    texData[0]  = 0.0f;    // tex X
+    texData[1]  = 1.0f;    // tex Y
 
-    vertData[3] = right;   // X
-    vertData[4] = bottom;  // Y
-    vertData[5] = -1.0f;   // Z
-    texData[2]  = 1.0f;    // X
-    texData[3]  = 1.0f;    // Y
+    vertData[3] = right;   // pos X
+    vertData[4] = bottom;  // pos Y
+    vertData[5] = -1.0f;   // pos Z
+    texData[2]  = 1.0f;    // tex X
+    texData[3]  = 1.0f;    // tex Y
 
-    vertData[6] = left;   // X
-    vertData[7] = top;    // Y
-    vertData[8] = -1.0f;  // Z
-    texData[4]  = 0.0f;   // X
-    texData[5]  = 0.0f;   // Y
+    vertData[6] = left;   // pos X
+    vertData[7] = top;    // pos Y
+    vertData[8] = -1.0f;  // pos Z
+    texData[4]  = 0.0f;   // tex X
+    texData[5]  = 0.0f;   // tex Y
 
     // Triangle Two
-    vertData[9] = right;   // X
-    vertData[10] = bottom; // Y
-    vertData[11] = -1.0f;  // Z
-    texData[6]   = 1.0f;   // X
-    texData[7]   = 1.0f;   // Y
+    vertData[9] = right;   // pos X
+    vertData[10] = bottom; // pos Y
+    vertData[11] = -1.0f;  // pos Z
+    texData[6]   = 1.0f;   // tex X
+    texData[7]   = 1.0f;   // tex Y
 
-    vertData[12] = right;  // X
-    vertData[13] = top;    // Y
-    vertData[14] = -1.0f;  // Z
-    texData[8]   = 1.0f;   // X
-    texData[9]   = 0.0f;   // Y
+    vertData[12] = right;  // pos X
+    vertData[13] = top;    // pos Y
+    vertData[14] = -1.0f;  // pos Z
+    texData[8]   = 1.0f;   // tex X
+    texData[9]   = 0.0f;   // tex Y
 
-    vertData[15] = left;   // X
-    vertData[16] = top;    // Y
-    vertData[17] = -1.0f;  // Z
-    texData[10]  = 0.0f;   // X
-    texData[11]  = 0.0f;   // Y
+    vertData[15] = left;   // pos X
+    vertData[16] = top;    // pos Y
+    vertData[17] = -1.0f;  // pos Z
+    texData[10]  = 0.0f;   // tex X
+    texData[11]  = 0.0f;   // tex Y
 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
@@ -384,12 +380,14 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    this->shader.Enable();
-    glUniform1f(this->shader.ParameterLocation("alpha"), alpha);
+    glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
     tex->Bind();
+    this->shader.Enable();
+    glUniform1f(this->shader.ParameterLocation("alpha"), alpha);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertCnt);
     this->shader.Disable();
+    glDisable(GL_TEXTURE_2D);
 
     return true;
 }
@@ -575,7 +573,7 @@ bool WatermarkRenderer::loadShaders(void) {
 
 
 /*
-* WatermarkRenderer::loadTexture
+* WatermarkRenderer::loadFile
 */
 SIZE_T WatermarkRenderer::loadFile(vislib::StringA name, void **outData) {
 
