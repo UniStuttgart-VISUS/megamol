@@ -202,8 +202,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
         }
         out_bbox.MakeScaledWorld(scaling);
 
-        float timeFramesCount = 1;
-        timeFramesCount = vec[0].fbo_msg_header.frame_times[1];
+        float timeFramesCount = vec[0].fbo_msg_header.frame_times[1];
         for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
             timeFramesCount = fmin(timeFramesCount, vec[bidx].fbo_msg_header.frame_times[1]);
         }

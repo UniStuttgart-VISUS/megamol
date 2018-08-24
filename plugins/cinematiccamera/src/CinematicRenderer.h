@@ -164,7 +164,7 @@ namespace megamol {
             **********************************************************************/
 
 			/** The renderer caller slot */
-			core::CallerSlot slaveRendererSlot;
+			core::CallerSlot rendererCallerSlot;
 
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;

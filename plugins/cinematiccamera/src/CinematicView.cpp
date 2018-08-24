@@ -121,7 +121,7 @@ CinematicView::CinematicView(void) : View3D(),
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
 
-
+    /*
     // TEMPORARY HACK #########################################################
     // Disable enableMouseSelectionSlot for this view
     // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer 
@@ -136,6 +136,7 @@ CinematicView::CinematicView(void) : View3D(),
     toggleAnimPlaySlot->MakeUnavailable();
     /// The right way doesn't work if (child->Parent().get() != this) ...
     ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(toggleAnimPlaySlot));
+    */
 }
 
 
@@ -195,6 +196,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
 
     bool loadNewCamParams = false;
+
+    // Disabling enableMouseSelectionSlot for this view
+    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer for mouse selection of manipulators
+    this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
+    // Disabling toggleAnimPlaySlot in the parent view3d
+    // -> 'SPACE'-key is needed to be available here for own control of animation time
+    this->SetSlotUnavailable(static_cast<AbstractSlot*>(this->timeCtrl.GetSlot(3)));
 
     // Update parameters ------------------------------------------------------
     if (this->toggleAnimPlayParam.IsDirty()) {
@@ -446,7 +454,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         // Lock writing to file if nothing is written to fbo (see FBOCompositor)
         if (!written2FBO && (this->pngdata.lock == 0)) {
             this->pngdata.lock = 1;
-            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping unused FBO ...\n");
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping empty FBO ...\n");
         }
         else if ((written2FBO) && (this->pngdata.lock == 1)) {
             this->pngdata.lock = 0;

@@ -48,7 +48,7 @@ using namespace vislib;
 */
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), manipulator(), textureShader(),
-    slaveRendererSlot("renderer", "outgoing renderer"),
+    rendererCallerSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
@@ -63,8 +63,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->manipOutsideModel = false;
 
     // init parameters
-    this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->slaveRendererSlot);
+    this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererCallerSlot);
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -164,12 +164,12 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
-    // => Capabilities.
-    CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
-    if (!(cr3d_out == nullptr) || (!(*cr3d_out)(2))) {
+    // Propagate changes made in GetCapabilities() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if ((cr3d_out != nullptr) && (*cr3d_out)(2)) {
         cr3d_in->AddCapability(cr3d_out->GetCapabilities());
     }
+
     cr3d_in->AddCapability(view::CallRender3D::CAP_RENDER);
 
 	return true;
@@ -181,51 +181,53 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 */
 bool CinematicRenderer::GetExtents(Call& call) {
 
-	view::CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (cr3d_out == nullptr) return false;
-    // Get bounding box of renderer.
-    if (!(*cr3d_out)(1)) return false;
-
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == nullptr) return false;
-	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
-
-    // Compute bounding box including spline (in world space) and object (in world space).
-    vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
-    // Set bounding box center of model
-    ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
-
-    // Grow bounding box to manipulators and get information of bbox of model
-    this->manipulator.SetExtents(&bbox);
-
-    vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().WorldSpaceClipBox();
-
-    // Get bounding box of spline.
-    vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
-    if (bboxCCC == nullptr)  {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
-        return false;
-    }
-
-    bbox.Union(*bboxCCC);
-    cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
-
-    // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-    ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
-    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-
-    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
-    // => Bboxes and times.
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
-    unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
-    cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
-    cr3d_in->SetTime(cr3d_out->Time());
-    cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
 
-    // Apply modified boundingbox 
-    cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(bbox);
-    cr3d_in->AccessBoundingBoxes().SetWorldSpaceClipBox(cbox);
+    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
+
+        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        if (ccc == nullptr) return false;
+        if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+
+        // Compute bounding box including spline (in world space) and object (in world space).
+        vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
+        // Set bounding box center of model
+        ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+
+        // Grow bounding box to manipulators and get information of bbox of model
+        this->manipulator.SetExtents(&bbox);
+
+        vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().WorldSpaceClipBox();
+
+        // Get bounding box of spline.
+        vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
+        if (bboxCCC == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
+            return false;
+        }
+
+        bbox.Union(*bboxCCC);
+        cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
+
+        // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
+        ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
+
+        // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
+        // => Bboxes and times.
+
+        unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
+        cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
+        cr3d_in->SetTime(cr3d_out->Time());
+        cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
+
+        // Apply modified boundingbox 
+        cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(bbox);
+        cr3d_in->AccessBoundingBoxes().SetWorldSpaceClipBox(cbox);
+    }
 
 	return true;
 }
@@ -239,7 +241,7 @@ bool CinematicRenderer::Render(Call& call) {
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
-    view::CallRender3D *cr3d_out = this->slaveRendererSlot.CallAs<CallRender3D>();
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<CallRender3D>();
     if (cr3d_out == nullptr) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
