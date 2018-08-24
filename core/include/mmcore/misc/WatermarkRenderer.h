@@ -160,23 +160,24 @@ namespace megamol {
                 vislib::graphics::gl::GLSLShader shader;
 
                 /** Vertex buffer object attributes. */
-                enum VBOAttrib {
+                enum VBOAttribs {
                     POSITION = 0,
                     TEXTURE  = 1
                 };
 
                 /** Vertex buffer object info. */
-                struct Vbo_Data {
+                struct VBOData {
                     GLuint           handle;  // buffer handle
                     vislib::StringA  name;    // varaible name of attribute in shader
                     GLuint           index;   // index of attribute location
                     unsigned int     dim;     // dimension of data
                 };
+
                 /** Vertex array object. */
                 GLuint vaoHandle;
 
                 /** Vertex buffer objects. */
-                std::vector<Vbo_Data> vbos;
+                std::vector<VBOData> vbos;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
@@ -187,7 +188,7 @@ namespace megamol {
                 **********************************************************************/
 
                 /** 
-                * Separate function for loading files from arbitrary paths.
+                * Separate function for loading files from arbitrary paths needed.
                 * (not not only from within the resource folder like utility::ResourceWrapper::LoadResource() does)
                 */
                 SIZE_T loadFile(vislib::StringA name, void **outData);

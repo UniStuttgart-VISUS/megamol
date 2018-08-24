@@ -371,10 +371,10 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
 
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
-        if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
+        if (this->vbos[i].index == (GLuint)VBOAttribs::POSITION) {
             glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * 3 * sizeof(GLfloat), vertData, GL_STATIC_DRAW);
         }
-        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+        else if (this->vbos[i].index == (GLuint)VBOAttribs::TEXTURE) {
             glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * 2 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -410,18 +410,18 @@ bool WatermarkRenderer::loadBuffers(void) {
     // Declare data buffers ---------------------------------------------------
 
     // Init vbos
-    Vbo_Data newVBO;
+    VBOData newVBO;
 
     // VBO for position data
     newVBO.name   = "inVertPos";
-    newVBO.index  = (GLuint)VBOAttrib::POSITION;
+    newVBO.index  = (GLuint)VBOAttribs::POSITION;
     newVBO.dim    = 3;
     newVBO.handle = 0; // default init
     this->vbos.push_back(newVBO);
 
     // VBO for texture coordinates
     newVBO.name   = "inTexCoord";
-    newVBO.index  = (GLuint)VBOAttrib::TEXTURE;
+    newVBO.index  = (GLuint)VBOAttribs::TEXTURE;
     newVBO.dim    = 2;
     newVBO.handle = 0; // default init
     this->vbos.push_back(newVBO);
