@@ -48,10 +48,8 @@ View3D2000GT::View3D2000GT(void)
     : view::AbstractView3D()
     , AbstractCamParamSync()
     , cam()
-    , camParams()
     , camOverrides()
     , cursor2d()
-    , modkeys()
     , rotator1()
     , rotator2()
     , zoomer1()
@@ -69,7 +67,6 @@ View3D2000GT::View3D2000GT(void)
     , restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings")
     , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
-    , frozenValues(NULL)
     , isCamLightSlot(
           "light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system")
     , lightDirSlot("light::direction", "Direction vector of the light")
@@ -124,7 +121,6 @@ View3D2000GT::View3D2000GT(void)
  */
 View3D2000GT::~View3D2000GT(void) {
     this->Release();
-    SAFE_DELETE(this->frozenValues);
     this->overrideCall = nullptr; // DO NOT DELETE
 }
 
@@ -142,7 +138,6 @@ unsigned int view::View3D2000GT::GetCameraSyncNumber(void) const {
  */
 void view::View3D2000GT::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO implement
-    this->camParams->Serialise(serialiser);
 }
 
 
@@ -151,7 +146,6 @@ void view::View3D2000GT::SerialiseCamera(vislib::Serialiser& serialiser) const {
  */
 void view::View3D2000GT::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO implement
-    this->camParams->Deserialise(serialiser);
 }
 
 /*
@@ -207,13 +201,6 @@ bool View3D2000GT::OnRenderView(Call& call) {
 }
 
 /*
- * View3D2000GT::UpdateFreeze
- */
-void View3D2000GT::UpdateFreeze(bool freeze) {
-    // TODO implement
-}
-
-/*
  * View3D2000GT::unpackMouseCoordinates
  */
 void View3D2000GT::unpackMouseCoordinates(float& x, float& y) {
@@ -257,7 +244,6 @@ void View3D2000GT::release(void) {
     this->cursor2d.UnregisterCursorEvent(&this->zoomer1);
     this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
     this->cursor2d.UnregisterCursorEvent(&this->mover);
-    SAFE_DELETE(this->frozenValues);
 }
 
 /*

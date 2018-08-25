@@ -159,15 +159,6 @@ public:
      */
     virtual bool OnRenderView(Call& call);
 
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze);
-
 protected:
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -192,55 +183,10 @@ protected:
 
     // protected variables //
 
-#ifdef _WIN32
-#    pragma warning(disable : 4251)
-#endif /* _WIN32 */
-    /** the input modifiers corresponding to this cursor. */
-    vislib::graphics::InputModifiers modkeys;
-
-    /** The normal camera parameters */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
-#ifdef _WIN32
-#    pragma warning(default : 4251)
-#endif /* _WIN32 */
-
     /** The complete scene bounding box */
     BoundingBoxes bboxs;
 
-#ifdef _WIN32
-#    pragma warning(disable : 4251)
-#endif /* _WIN32 */
-    /** keeping track of changes in the camera between frames */
-    vislib::SmartPtr<vislib::graphics::CameraParamsStore> lastFrameParams = new vislib::graphics::CameraParamsStore();
-#ifdef _WIN32
-#    pragma warning(default : 4251)
-#endif /* _WIN32 */
-
     bool frameIsNew = false;
-
-    /**
-     * internal utility class storing frozen values
-     */
-    class FrozenValues {
-    public:
-        /**
-         * Ctor
-         */
-        FrozenValues(void) {
-            this->camParams = new vislib::graphics::CameraParamsStore();
-            this->time = 0.0f;
-            this->freezeCounter = 1;
-        }
-
-        /** The camera parameters frozen (does not work at all!) */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
-
-        /** The frame time frozen */
-        float time;
-
-        /** The freezeCounter */
-        unsigned int freezeCounter;
-    };
 
     /**
      * Renders the vertices of the bounding box
@@ -404,15 +350,6 @@ protected:
      * initial camera reset
      */
     bool firstImg;
-
-#ifdef _WIN32
-#    pragma warning(disable : 4251)
-#endif /* _WIN32 */
-    /** The frozen values */
-    FrozenValues* frozenValues;
-#ifdef _WIN32
-#    pragma warning(default : 4251)
-#endif /* _WIN32 */
 
     /**
      * Flag whether the light is relative to the camera or to the world
