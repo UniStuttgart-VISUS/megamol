@@ -107,21 +107,7 @@ View3D2000GT::View3D2000GT(void)
     , mouseFlags(0)
     , timeCtrl()
     , toggleMouseSelection(false)
-    , paramAlpha("watermark::01_alpha", "The alpha value for the watermarks.")
-    , paramScaleAll("watermark::02_scaleAll", "The scale factor for all images.")
-    , paramImgTopLeft("watermark::03_imageTopLeft", "The image file name for the top left watermark.")
-    , paramScaleTopLeft("watermark::04_scaleTopLeft", "The scale factor for the top left watermark.")
-    , paramImgTopRight("watermark::05_imageTopRight", "The image file name for the top right watermark.")
-    , paramScaleTopRight("watermark::06_scaleTopRight", "The scale factor for the top right watermark.")
-    , paramImgBottomLeft("watermark::07_imageBottomLeft", "The image file name for the bottom left watermark.")
-    , paramScaleBottomLeft("watermark::08_scaleBottomLeft", "The scale factor for the botttom left watermark.")
-    , paramImgBottomRight("watermark::09_imageBottomRight", "The image file name for the bottom right watermark.")
-    , paramScaleBottomRight("watermark::10_scaleBottomRight", "The scale factor for the bottom right watermark.")
-    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
-    , textureBottomLeft()
-    , textureBottomRight()
-    , textureTopLeft()
-    , textureTopRight() {
+    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical") {
 
     using vislib::sys::KeyCode;
 
@@ -131,7 +117,6 @@ View3D2000GT::View3D2000GT(void)
     this->MakeSlotAvailable(&this->rendererSlot);
 
     // TODO implement
-
 }
 
 /*
@@ -248,7 +233,8 @@ bool View3D2000GT::create(void) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
     }
     try {
-        if (!this->lineShader.Create(lineVertSrc.Code(), lineVertSrc.Count(), lineFragSrc.Code(), lineFragSrc.Count())) {
+        if (!this->lineShader.Create(
+                lineVertSrc.Code(), lineVertSrc.Count(), lineFragSrc.Code(), lineFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
@@ -370,64 +356,4 @@ bool View3D2000GT::onToggleButton(param::ParamSlot& p) {
  */
 void View3D2000GT::renderViewCube(void) {
     // TODO implement
-}
-
-/*
- * View3D2000GT::renderWatermark
- */
-bool View3D2000GT::renderWatermark(View3D2000GT::corner, float vpH, float vpW) {
-    // TODO implement
-    return true;
-}
-
-/*
- * View3D2000GT::loadTexture
- */
-bool View3D2000GT::loadTexture(View3D2000GT::corner, vislib::StringA filename) {
-    // TODO implement
-    return true;
-}
-
-/*
- * View3D2000GT::loadFile
- */
-SIZE_T View3D2000GT::loadFile(vislib::StringA name, void** outData) {
-    *outData = nullptr;
-
-    vislib::StringW filename = static_cast<vislib::StringW>(name);
-    if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file: No filename given\n");
-        return 0;
-    }
-
-    if (!vislib::sys::File::Exists(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
-        return 0;
-    }
-
-    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
-    if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
-        return 0;
-    }
-
-    vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
-    if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
 }
