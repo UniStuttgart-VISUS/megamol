@@ -47,15 +47,7 @@ using namespace megamol::core::view;
 View3D2000GT::View3D2000GT(void)
     : view::AbstractView3D()
     , AbstractCamParamSync()
-    , cam()
-    , camOverrides()
     , cursor2d()
-    , rotator1()
-    , rotator2()
-    , zoomer1()
-    , zoomer2()
-    , mover()
-    , lookAtDist()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , lightDir(0.5f, -1.0f, -1.0f)
     , isCamLight(true)
@@ -93,7 +85,6 @@ View3D2000GT::View3D2000GT(void)
     , viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top")
     , viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom")
     , toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
-    , toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor")
     , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
     , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
@@ -200,6 +191,13 @@ bool View3D2000GT::OnRenderView(Call& call) {
     return true;
 }
 
+/* 
+ * View3D2000GT::UpdateFreeze
+ */
+void View3D2000GT::UpdateFreeze(bool freeze) {
+    // intentionally empty?
+}
+
 /*
  * View3D2000GT::unpackMouseCoordinates
  */
@@ -239,18 +237,12 @@ bool View3D2000GT::create(void) {
  */
 void View3D2000GT::release(void) {
     this->removeTitleRenderer();
-    this->cursor2d.UnregisterCursorEvent(&this->rotator1);
-    this->cursor2d.UnregisterCursorEvent(&this->rotator2);
-    this->cursor2d.UnregisterCursorEvent(&this->zoomer1);
-    this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
-    this->cursor2d.UnregisterCursorEvent(&this->mover);
 }
 
 /*
  * View3D2000GT::mouseSensitivityChanged
  */
 bool View3D2000GT::mouseSensitivityChanged(param::ParamSlot& p) {
-    this->rotator2.SetMouseSensitivity(p.Param<param::FloatParam>()->Value());
     return true;
 }
 
@@ -279,13 +271,6 @@ void View3D2000GT::renderBBoxFrontside(void) {
  * View3D2000GT::renderLookAt
  */
 void View3D2000GT::renderLookAt(void) {
-    // TODO implement
-}
-
-/*
- * View3D2000GT::renderSoftCursor
- */
-void View3D2000GT::renderSoftCursor(void) {
     // TODO implement
 }
 

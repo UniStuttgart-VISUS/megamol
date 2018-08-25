@@ -159,6 +159,15 @@ public:
      */
     virtual bool OnRenderView(Call& call);
 
+    /**
+     * Freezes, updates, or unfreezes the view onto the scene (not the
+     * rendering, but camera settings, timing, etc).
+     *
+     * @param freeze true means freeze or update freezed settings,
+     *               false means unfreeze
+     */
+    virtual void UpdateFreeze(bool freeze);
+
 protected:
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -207,11 +216,6 @@ protected:
      * Renders the cross for the look-at point
      */
     void renderLookAt(void);
-
-    /**
-     * Renders the soft cursor
-     */
-    void renderSoftCursor(void);
 
     bool mouseSensitivityChanged(param::ParamSlot& p);
 
@@ -267,47 +271,11 @@ protected:
      */
     void renderViewCube(void);
 
-    ///**
-    // * Renders a single egde of the view cube
-    // *
-    // * @param x1
-    // * @param y1
-    // * @param z1
-    // * @param x2
-    // * @param y2
-    // * @param z2
-    // */
-    // inline void renderViewCubeEdge(int x1, int y1, int z1, int x2, int y2, int z2);
-
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
-    /** The scene camera */
-    vislib::graphics::gl::CameraOpenGL cam;
-
-    /** The camera parameter overrides */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> camOverrides;
-
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
-
-    /** camera look at rotator */
-    vislib::graphics::CameraRotate2DLookAt rotator1;
-
-    /** camera rotator */
-    vislib::graphics::CameraRotate2D rotator2;
-
-    /** camera move zoom */
-    vislib::graphics::CameraZoom2DMove zoomer1;
-
-    /** camera angle zoom */
-    vislib::graphics::CameraZoom2DAngle zoomer2;
-
-    /** camera mover */
-    vislib::graphics::CameraMove2D mover;
-
-    /** camera look-at distance changer */
-    vislib::graphics::CameraLookAtDist lookAtDist;
 #ifdef _WIN32
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */
@@ -432,8 +400,6 @@ protected:
     param::ParamSlot viewKeyMoveDownSlot;
 
     param::ParamSlot toggleBBoxSlot;
-
-    param::ParamSlot toggleSoftCursorSlot;
 
     param::ParamSlot hookOnChangeOnlySlot;
 
