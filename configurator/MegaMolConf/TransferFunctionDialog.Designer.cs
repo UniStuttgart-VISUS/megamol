@@ -23,7 +23,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransferFunctionDialog));
+            this.components = new System.ComponentModel.Container();
             this.lbl_Res = new System.Windows.Forms.Label();
             this.nUD_Res = new System.Windows.Forms.NumericUpDown();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -38,9 +38,10 @@
             this.b_None = new System.Windows.Forms.ToolStripButton();
             this.b_Ramp = new System.Windows.Forms.ToolStripButton();
             this.b_Zero = new System.Windows.Forms.ToolStripButton();
-            this.panel_Canvas = new MegaMolConf.NoflickerPanel();
-            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.panel_Canvas = new MegaMolConf.NoflickerPanel();
+            this.throttleTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
@@ -53,7 +54,7 @@
             this.lbl_Res.Location = new System.Drawing.Point(186, 13);
             this.lbl_Res.Name = "lbl_Res";
             this.lbl_Res.Size = new System.Drawing.Size(29, 13);
-            this.lbl_Res.TabIndex = 6;
+            this.lbl_Res.TabIndex = 3;
             this.lbl_Res.Text = "Res:";
             // 
             // nUD_Res
@@ -66,7 +67,8 @@
             0});
             this.nUD_Res.Name = "nUD_Res";
             this.nUD_Res.Size = new System.Drawing.Size(53, 20);
-            this.nUD_Res.TabIndex = 7;
+            this.nUD_Res.TabIndex = 0;
+            this.nUD_Res.TabStop = false;
             this.nUD_Res.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.nUD_Res.Value = new decimal(new int[] {
             256,
@@ -84,7 +86,7 @@
             this.panel1.Location = new System.Drawing.Point(12, 426);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(920, 63);
-            this.panel1.TabIndex = 10;
+            this.panel1.TabIndex = 2;
             // 
             // pb_TransferFunc
             // 
@@ -94,7 +96,7 @@
             this.pb_TransferFunc.Name = "pb_TransferFunc";
             this.pb_TransferFunc.Size = new System.Drawing.Size(923, 125);
             this.pb_TransferFunc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pb_TransferFunc.TabIndex = 10;
+            this.pb_TransferFunc.TabIndex = 0;
             this.pb_TransferFunc.TabStop = false;
             // 
             // toolStrip1
@@ -115,15 +117,12 @@
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(944, 25);
-            this.toolStrip1.TabIndex = 13;
+            this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
             // b_R
             // 
-            this.b_R.Checked = true;
-            this.b_R.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_R.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_R.Image = ((System.Drawing.Image)(resources.GetObject("b_R.Image")));
             this.b_R.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_R.Name = "b_R";
             this.b_R.Size = new System.Drawing.Size(23, 22);
@@ -132,10 +131,7 @@
             // 
             // b_G
             // 
-            this.b_G.Checked = true;
-            this.b_G.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_G.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_G.Image = ((System.Drawing.Image)(resources.GetObject("b_G.Image")));
             this.b_G.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_G.Name = "b_G";
             this.b_G.Size = new System.Drawing.Size(23, 22);
@@ -144,10 +140,7 @@
             // 
             // b_B
             // 
-            this.b_B.Checked = true;
-            this.b_B.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_B.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_B.Image = ((System.Drawing.Image)(resources.GetObject("b_B.Image")));
             this.b_B.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_B.Name = "b_B";
             this.b_B.Size = new System.Drawing.Size(23, 22);
@@ -156,8 +149,9 @@
             // 
             // b_A
             // 
+            this.b_A.Checked = true;
+            this.b_A.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_A.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_A.Image = ((System.Drawing.Image)(resources.GetObject("b_A.Image")));
             this.b_A.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_A.Name = "b_A";
             this.b_A.Size = new System.Drawing.Size(23, 22);
@@ -172,7 +166,6 @@
             // b_All
             // 
             this.b_All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_All.Image = ((System.Drawing.Image)(resources.GetObject("b_All.Image")));
             this.b_All.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_All.Name = "b_All";
             this.b_All.Size = new System.Drawing.Size(25, 22);
@@ -182,7 +175,6 @@
             // b_None
             // 
             this.b_None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_None.Image = ((System.Drawing.Image)(resources.GetObject("b_None.Image")));
             this.b_None.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_None.Name = "b_None";
             this.b_None.Size = new System.Drawing.Size(40, 22);
@@ -193,7 +185,6 @@
             // 
             this.b_Ramp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.b_Ramp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_Ramp.Image = ((System.Drawing.Image)(resources.GetObject("b_Ramp.Image")));
             this.b_Ramp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_Ramp.Name = "b_Ramp";
             this.b_Ramp.Size = new System.Drawing.Size(42, 22);
@@ -204,12 +195,22 @@
             // 
             this.b_Zero.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.b_Zero.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.b_Zero.Image = ((System.Drawing.Image)(resources.GetObject("b_Zero.Image")));
             this.b_Zero.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_Zero.Name = "b_Zero";
             this.b_Zero.Size = new System.Drawing.Size(35, 22);
             this.b_Zero.Text = "Zero";
             this.b_Zero.Click += new System.EventHandler(this.btn_Zero_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(63, 22);
+            this.toolStripLabel2.Text = "Resolution";
             // 
             // panel_Canvas
             // 
@@ -220,7 +221,7 @@
             this.panel_Canvas.Location = new System.Drawing.Point(12, 29);
             this.panel_Canvas.Name = "panel_Canvas";
             this.panel_Canvas.Size = new System.Drawing.Size(920, 391);
-            this.panel_Canvas.TabIndex = 5;
+            this.panel_Canvas.TabIndex = 4;
             this.panel_Canvas.Click += new System.EventHandler(this.PanelCanvas_Click);
             this.panel_Canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelCanvas_Paint);
             this.panel_Canvas.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseDown);
@@ -228,16 +229,9 @@
             this.panel_Canvas.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseUp);
             this.panel_Canvas.Resize += new System.EventHandler(this.PanelCanvas_Resize);
             // 
-            // toolStripLabel2
+            // throttleTimer
             // 
-            this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(63, 22);
-            this.toolStripLabel2.Text = "Resolution";
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            this.throttleTimer.Tick += new System.EventHandler(this.throttleTimer_Tick);
             // 
             // TransferFunctionDialog
             // 
@@ -249,11 +243,14 @@
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.lbl_Res);
             this.Controls.Add(this.panel_Canvas);
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "TransferFunctionDialog";
             this.ShowIcon = false;
             this.Text = "Transfer function";
+            this.Load += new System.EventHandler(this.TransferFunctionDialog_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TransferFunctionDialog_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).EndInit();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).EndInit();
@@ -282,5 +279,6 @@
         private System.Windows.Forms.ToolStripButton b_Zero;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.Timer throttleTimer;
     }
 }
