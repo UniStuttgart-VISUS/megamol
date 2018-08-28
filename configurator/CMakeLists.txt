@@ -49,6 +49,7 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
 
   # Install binaries and libraries
   install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
+  #install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/MegaMolConf.pdb ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.pdb COPYONLY)")
   install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
 
   if(BITS EQUAL 64)

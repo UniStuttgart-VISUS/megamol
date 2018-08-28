@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 
 namespace MegaMolConf {
-    class GraphicalModule : INotifyPropertyChanged {
+    public class GraphicalModule : INotifyPropertyChanged {
         static Font moduleClassFont = new Font("Calibri", 8.0f, FontStyle.Italic);
         static Font moduleNameFont = new Font("Calibri", 10.0f);
         static Brush moduleNameBrush = Brushes.Black;

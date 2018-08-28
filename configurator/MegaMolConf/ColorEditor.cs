@@ -23,7 +23,7 @@ namespace MegaMolConf
             Color color = Color.Transparent;
             try
             {
-                color = ColorTranslator.FromHtml((string)e.Value);
+                color = Data.ParamType.Color.FromString((string)e.Value);
             }
             finally
             {

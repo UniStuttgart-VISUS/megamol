@@ -242,6 +242,14 @@
     <Compile Include="${CONFIGURATOR_BINARY}\AssemblyInfo.cs">
       <Link>${CONFIGURATOR_BINARY}\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="${CONFIGURATOR_SOURCE}\TransferFunctionDialog.cs">
+	  <Link>TransferFunctionDialog.cs</Link>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="${CONFIGURATOR_SOURCE}\TransferFunctionDialog.Designer.cs">
+	  <Link>TransferFunctionDialog.Designer.cs</Link>
+      <DependentUpon>TransferFunctionDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="${CONFIGURATOR_SOURCE}\Util\ApplicationSearchDialog.cs">
       <Link>Util\ApplicationSearchDialog.cs</Link>
     </Compile>
@@ -306,6 +314,10 @@
       <Link>ImportParamfileForm.resx</Link>
       <DependentUpon>ImportParamfileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="${CONFIGURATOR_SOURCE}\TransferFunctionDialog.resx">
+	  <Link>TransferFunctionDialog.resx</Link>
+      <DependentUpon>TransferFunctionDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="${CONFIGURATOR_SOURCE}\Util\AboutBox.resx">
 	  <Link>Util\AboutBox.resx</Link>
