@@ -831,13 +831,26 @@ namespace MegaMolConf {
                 {
                     if (gm.Module.Name == "LinearTransferFunction")
                     {
-                        TransferFunctionDialog tfDialog = new TransferFunctionDialog(gm);
+                        TransferFunctionDialog tfDialog = new TransferFunctionDialog(this, gm);
                         tfDialog.StartPosition = FormStartPosition.Manual;
                         tfDialog.Location = new Point(
                             this.Location.X + (this.Width - tfDialog.Width) / 2, 
                             this.Location.Y + (this.Height - tfDialog.Height) / 2);
                         tfDialog.Show(this);
                     }
+                }
+            }
+        }
+
+        public void UpdateParameters(GraphicalModule gm)
+        {
+            this.propertyGrid1.Refresh();
+            MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+            if (mmii != null)
+            {
+                foreach (var parameterValue in gm.ParameterValues)
+                {
+                     mmii.SendUpdate(parameterValue.Key.Name, parameterValue.Value);
                 }
             }
         }

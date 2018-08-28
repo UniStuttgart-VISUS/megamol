@@ -39,6 +39,8 @@
             this.b_Ramp = new System.Windows.Forms.ToolStripButton();
             this.b_Zero = new System.Windows.Forms.ToolStripButton();
             this.panel_Canvas = new MegaMolConf.NoflickerPanel();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
@@ -56,14 +58,14 @@
             // 
             // nUD_Res
             // 
-            this.nUD_Res.Location = new System.Drawing.Point(240, 3);
+            this.nUD_Res.Location = new System.Drawing.Point(234, 3);
             this.nUD_Res.Maximum = new decimal(new int[] {
             1024,
             0,
             0,
             0});
             this.nUD_Res.Name = "nUD_Res";
-            this.nUD_Res.Size = new System.Drawing.Size(106, 20);
+            this.nUD_Res.Size = new System.Drawing.Size(53, 20);
             this.nUD_Res.TabIndex = 7;
             this.nUD_Res.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.nUD_Res.Value = new decimal(new int[] {
@@ -107,7 +109,9 @@
             this.b_All,
             this.b_None,
             this.b_Ramp,
-            this.b_Zero});
+            this.b_Zero,
+            this.toolStripSeparator2,
+            this.toolStripLabel2});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(944, 25);
@@ -116,6 +120,8 @@
             // 
             // b_R
             // 
+            this.b_R.Checked = true;
+            this.b_R.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_R.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.b_R.Image = ((System.Drawing.Image)(resources.GetObject("b_R.Image")));
             this.b_R.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -126,6 +132,8 @@
             // 
             // b_G
             // 
+            this.b_G.Checked = true;
+            this.b_G.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_G.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.b_G.Image = ((System.Drawing.Image)(resources.GetObject("b_G.Image")));
             this.b_G.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -136,6 +144,8 @@
             // 
             // b_B
             // 
+            this.b_B.Checked = true;
+            this.b_B.CheckState = System.Windows.Forms.CheckState.Checked;
             this.b_B.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.b_B.Image = ((System.Drawing.Image)(resources.GetObject("b_B.Image")));
             this.b_B.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -218,6 +228,17 @@
             this.panel_Canvas.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PanelCanvas_MouseUp);
             this.panel_Canvas.Resize += new System.EventHandler(this.PanelCanvas_Resize);
             // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(63, 22);
+            this.toolStripLabel2.Text = "Resolution";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
             // TransferFunctionDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -259,5 +280,7 @@
         private System.Windows.Forms.ToolStripButton b_None;
         private System.Windows.Forms.ToolStripButton b_Ramp;
         private System.Windows.Forms.ToolStripButton b_Zero;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
