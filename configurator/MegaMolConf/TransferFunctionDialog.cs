@@ -11,6 +11,12 @@ namespace MegaMolConf
 {
     partial class TransferFunctionDialog : Form
     {
+        class DrawState
+        {
+             public int start_idx = -1;
+
+            public float start_val = 0.0f;
+        }
         private uint res;
 
         private float[] r_histo;
@@ -18,20 +24,7 @@ namespace MegaMolConf
         private float[] b_histo;
         private float[] a_histo;
 
-        //private enum Selected_Channel_Enum {
-        //    R,
-        //    G,
-        //    B,
-        //    A
-        //}
-
-        //private Selected_Channel_Enum selected_channel;
-
-        private bool drawing = false;
-
-        private int start_idx = -1;
-
-        private float start_val = 0.0f;
+        private DrawState drawState = null;
 
         private GraphicalModule gm;
 
@@ -43,8 +36,6 @@ namespace MegaMolConf
 
             this.parentForm = parentForm;
 
-            //selected_channel = Selected_Channel_Enum.A;
-
             this.gm = gm;
             if (!HistogramFromGM())
             {
@@ -54,8 +45,6 @@ namespace MegaMolConf
                 HistogramRamp(ref b_histo);
                 HistogramRamp(ref a_histo);
             }
-
-            pb_TransferFunc.Image = new Bitmap((int)res, 2);
         }
 
         private void Histogram(int resolution)
@@ -66,6 +55,7 @@ namespace MegaMolConf
             g_histo = new float[res];
             b_histo = new float[res];
             a_histo = new float[res];
+            pb_TransferFunc.Image = new Bitmap((int)res, 2);
         }
 
         private static void HistogramRamp(ref float[] histo)
@@ -115,7 +105,7 @@ namespace MegaMolConf
                 string value = asString(name);
                 if (value != null)
                 {
-                    return ColorTranslator.FromHtml(value);
+                    return Data.ParamType.Color.FromString(value);
                 }
                 return Color.Transparent;
             };
@@ -195,8 +185,7 @@ namespace MegaMolConf
 
                     string suffix = (i + 1).ToString("D2");
                     setString("enable" + suffix, "True");
-                    setString("colour" + suffix, ColorTranslator.ToHtml(c));
-                    System.Diagnostics.Debug.WriteLine(i + " " + c);
+                    setString("colour" + suffix, Data.ParamType.Color.ToString(c));
                 }
 
                 this.parentForm.UpdateParameters(this.gm);
@@ -209,17 +198,18 @@ namespace MegaMolConf
             return false;
         }
 
-        private void DrawChannel(Panel p, Graphics g, Color c, float[] values)
+        private void DrawHistogram(Panel p, Graphics g, Color c, float[] values, int channelIndex, int channelCount)
         {
             Brush brush = new SolidBrush(c);
+            float channelHeight = 4;
+            float pointWidth = (float)p.Width / res;
+            float pointHeight = (channelCount * channelHeight);
 
-            float el_width = (float)p.Width / res;
-
-            int counter = 0;
-            foreach (float val in values)
+            for (int i = 0; i < values.Count(); ++i)
             {
-                g.FillRectangle(brush, new RectangleF(counter * el_width, (1.0f - val) * p.Height, el_width, el_width));
-                ++counter;
+                float x = i * pointWidth;
+                float y = (int)((1.0f - values[i]) * p.Height / pointHeight) * pointHeight + channelIndex * channelHeight;
+                g.FillRectangle(brush, new RectangleF(x, y, pointWidth, channelHeight));
             }
         }
 
@@ -228,15 +218,24 @@ namespace MegaMolConf
             var p = sender as Panel;
             var g = e.Graphics;
 
-            DrawChannel(p, g, Color.Red, r_histo);
-            DrawChannel(p, g, Color.Green, g_histo);
-            DrawChannel(p, g, Color.Blue, b_histo);
-            DrawChannel(p, g, Color.Gray, a_histo);
+            DrawHistogram(p, g, Color.Red, r_histo, 0, 4);
+            DrawHistogram(p, g, Color.Green, g_histo, 1, 4);
+            DrawHistogram(p, g, Color.Blue, b_histo, 2, 4);
+            DrawHistogram(p, g, Color.Gray, a_histo, 3, 4);
 
+            UpdateTransferFunction();
+        }
+
+        private void UpdateTransferFunction()
+        {
             Bitmap image = pb_TransferFunc.Image as Bitmap;
             for (int x = 0; x < res; ++x)
             {
-                Color c = Color.FromArgb((int)(255 * a_histo[x]), (int)(255 * r_histo[x]), (int)(255 * g_histo[x]), (int)(255 * b_histo[x]));
+                Color c = Color.FromArgb(
+                    (int)(255 * a_histo[x]),
+                    (int)(255 * r_histo[x]),
+                    (int)(255 * g_histo[x]),
+                    (int)(255 * b_histo[x]));
                 image.SetPixel(x, 0, c);
                 image.SetPixel(x, 1, c);
             }
@@ -286,8 +285,6 @@ namespace MegaMolConf
             }
 
             Histogram((int)t.Value);
-            pb_TransferFunc.Image = new Bitmap((int)res, 2);
-
             HistogramRamp(ref r_histo);
             HistogramRamp(ref g_histo);
             HistogramRamp(ref b_histo);
@@ -303,25 +300,24 @@ namespace MegaMolConf
 
         private void PanelCanvas_MouseDown(object sender, MouseEventArgs e)
         {
-            drawing = true;
 
             var p = sender as Panel;
 
             float el_width = (float)p.Width / res;
-            start_idx = (int)Math.Floor(e.Location.X / el_width);
-            start_val = 1.0f - ((float)e.Location.Y / p.Height);
+            drawState = new DrawState {
+                start_idx = (int)Math.Floor(e.Location.X / el_width),
+                start_val = 1.0f - ((float)e.Location.Y / p.Height)
+            };
         }
 
         private void PanelCanvas_MouseUp(object sender, MouseEventArgs e)
         {
-            drawing = false;
-            start_idx = -1;
-            start_val = 0.0f;
+            drawState = null;
         }
 
         private void PanelCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!drawing)
+            if (drawState == null)
             {
                 return;
             }
@@ -334,21 +330,21 @@ namespace MegaMolConf
 
             int step = 1;
 
-            float dy = (end_val - start_val) / Math.Abs(end_idx - start_idx);
-            if (start_idx == end_idx)
+            float dy = (end_val - drawState.start_val) / Math.Abs(end_idx - drawState.start_idx);
+            if (drawState.start_idx == end_idx)
             {
                 PanelCanvas_Click(sender, e);
-                HistogramToGM();
+                this.UpdateParameters();
                 return;
             }
 
-            if (start_idx > end_idx)
+            if (drawState.start_idx > end_idx)
             {
                 step = -1;
             }
 
-            int idx = start_idx;
-            float val = start_val;
+            int idx = drawState.start_idx;
+            float val = drawState.start_val;
             do
             {
                 if ((idx < res && idx >= 0) && (val <= 1.0f && val >= 0.0f))
@@ -374,9 +370,9 @@ namespace MegaMolConf
                 val += dy;
             } while (idx != end_idx);
             panel_Canvas.Invalidate();
-            start_idx = end_idx;
-            start_val = end_val;
-            HistogramToGM();
+            drawState.start_idx = end_idx;
+            drawState.start_val = end_val;
+            this.UpdateParameters();
         }
 
         private void btn_Zero_Click(object sender, EventArgs e)
@@ -452,6 +448,45 @@ namespace MegaMolConf
         private void all_Clicked(object sender, EventArgs e)
         {
             b_R.Checked = b_G.Checked = b_B.Checked = b_A.Checked = true;
+        }
+
+        private void UpdateParameters()
+        {
+            if (!this.throttleTimer.Enabled) {
+                this.throttleTimer.Start();
+            }
+        }
+
+        private void throttleTimer_Tick(object sender, EventArgs e)
+        {
+            HistogramToGM();
+            this.parentForm.UpdateParameters(this.gm);
+            this.throttleTimer.Stop();
+        }
+
+        private void TransferFunctionDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.D1)
+            {
+                this.b_R.Checked = !this.b_R.Checked;
+            }
+            else if (e.KeyCode == Keys.D2)
+            {
+                this.b_G.Checked = !this.b_G.Checked;
+            }
+            else if (e.KeyCode == Keys.D3)
+            {
+                this.b_B.Checked = !this.b_B.Checked;
+            }
+            else if (e.KeyCode == Keys.D4)
+            {
+                this.b_A.Checked = !this.b_A.Checked;
+            }
+        }
+
+        private void TransferFunctionDialog_Load(object sender, EventArgs e)
+        {
+            this.panel_Canvas.Focus();
         }
     }
 }
