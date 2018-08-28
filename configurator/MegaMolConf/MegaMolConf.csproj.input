@@ -243,11 +243,11 @@
       <Link>${CONFIGURATOR_BINARY}\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="${CONFIGURATOR_SOURCE}\TransferFunctionDialog.cs">
-	  <Link>Util\TransferFunctionDialog.cs</Link>
+	  <Link>TransferFunctionDialog.cs</Link>
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="${CONFIGURATOR_SOURCE}\TransferFunctionDialog.Designer.cs">
-	  <Link>Util\TransferFunctionDialog.Designer.cs</Link>
+	  <Link>TransferFunctionDialog.Designer.cs</Link>
       <DependentUpon>TransferFunctionDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="${CONFIGURATOR_SOURCE}\Util\ApplicationSearchDialog.cs">
