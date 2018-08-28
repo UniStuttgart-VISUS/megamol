@@ -35,6 +35,9 @@ namespace moldyn {
     public:
         class VertexData_Detail {
         public:
+            virtual double GetXd() const = 0;
+            virtual double GetYd() const = 0;
+            virtual double GetZd() const = 0;
             virtual float const GetXf() const = 0;
             virtual float const GetYf() const = 0;
             virtual float const GetZf() const = 0;
@@ -52,6 +55,18 @@ namespace moldyn {
             VertexData_None() = default;
 
             VertexData_None(VertexData_None const& rhs) = default;
+
+            double GetXd() const override {
+                return 0.0;
+            }
+
+            double GetYd() const override {
+                return 0.0;
+            }
+
+            double GetZd() const override {
+                return 0.0;
+            }
 
             virtual float const GetXf() const override {
                 return 0.0f;
@@ -91,10 +106,14 @@ namespace moldyn {
         template<class T, bool hasRad>
         class VertexData_Impl : public VertexData_Detail {
         public:
-            VertexData_Impl(SimpleSphericalParticles& parent) : parent_(parent) {}
+            VertexData_Impl() = default;
 
             VertexData_Impl(VertexData_Impl const& rhs)
-                : basePtr{rhs.basePtr}, parent_(rhs.parent_)  { }
+                : basePtr{rhs.basePtr} { }
+
+            double GetXd() const override {
+                return GetX<double>();
+            }
 
             virtual float const GetXf() const override {
                 return GetX<float>();
@@ -114,6 +133,10 @@ namespace moldyn {
                 return static_cast<R>(this->basePtr[0]);
             }
 
+            double GetYd() const override {
+                return GetY<double>();
+            }
+
             virtual float const GetYf() const override {
                 return GetY<float>();
             }
@@ -130,6 +153,10 @@ namespace moldyn {
             template<class R>
             std::enable_if_t<!std::is_same<T, R>::value, R> const GetY() const {
                 return static_cast<R>(this->basePtr[1]);
+            }
+
+            double GetZd() const override {
+                return GetZ<double>();
             }
 
             virtual float const GetZf() const override {
@@ -161,7 +188,7 @@ namespace moldyn {
 
             template<bool hasRad_v>
             std::enable_if_t<!hasRad_v, float> const GetR() const {
-                return parent_.GetGlobalRadius();
+                return 0.0f;
             }
 
             virtual void SetBasePtr(void const* ptr) override {
@@ -173,7 +200,6 @@ namespace moldyn {
             }
         private:
             T const* basePtr;
-            SimpleSphericalParticles& parent_;
         };
 
         class VertexData_Base {
@@ -193,6 +219,18 @@ namespace moldyn {
             VertexData_Base& operator=(VertexData_Base&& rhs) {
                 pimpl = std::move(rhs.pimpl);
                 return *this;
+            }
+
+            double GetXd() const {
+                return pimpl->GetXd();
+            }
+
+            double GetYd() const {
+                return pimpl->GetYd();
+            }
+
+            double GetZd() const {
+                return pimpl->GetZd();
             }
 
             float const GetXf() const {
@@ -228,6 +266,10 @@ namespace moldyn {
 
         class ColorData_Detail {
         public:
+            virtual uint16_t GetRu16() const = 0;
+            virtual uint16_t GetGu16() const = 0;
+            virtual uint16_t GetBu16() const = 0;
+            virtual uint16_t GetAu16() const = 0;
             virtual uint8_t const GetRu8() const = 0;
             virtual uint8_t const GetGu8() const = 0;
             virtual uint8_t const GetBu8() const = 0;
@@ -237,6 +279,7 @@ namespace moldyn {
             virtual float const GetBf() const = 0;
             virtual float const GetAf() const = 0;
             virtual float const GetIf() const = 0;
+            virtual double GetId() const = 0;
             virtual void SetBasePtr(void const* ptr) = 0;
             virtual std::unique_ptr<ColorData_Detail> Clone() const = 0;
             virtual ~ColorData_Detail() = default;
@@ -247,6 +290,22 @@ namespace moldyn {
             ColorData_None() = default;
 
             ColorData_None(ColorData_None const& rhs) = default;
+
+            uint16_t GetRu16() const override {
+                return 0;
+            }
+
+            uint16_t GetGu16() const override {
+                return 0;
+            }
+
+            uint16_t GetBu16() const override {
+                return 0;
+            }
+
+            uint16_t GetAu16() const override {
+                return 0;
+            }
 
             virtual uint8_t const GetRu8() const override {
                 return 0;
@@ -284,6 +343,10 @@ namespace moldyn {
                 return 0.0f;
             }
 
+            double GetId() const override {
+                return 0.0;
+            }
+
             virtual void SetBasePtr(void const* ptr) override { }
 
             virtual std::unique_ptr<ColorData_Detail> Clone() const override {
@@ -298,6 +361,10 @@ namespace moldyn {
 
             ColorData_Impl(ColorData_Impl const& rhs)
                 : basePtr{rhs.basePtr} { }
+
+            uint16_t GetRu16() const override {
+                return GetR<uint16_t, isI>();
+            }
 
             virtual uint8_t const GetRu8() const override {
                 return GetR<uint8_t, isI>();
@@ -320,6 +387,10 @@ namespace moldyn {
             template<class R, bool isI_v>
             std::enable_if_t<isI_v, R> const GetR() const {
                 return static_cast<R>(0.0);
+            }
+
+            uint16_t GetGu16() const override {
+                return GetG<uint16_t, isI>();
             }
 
             virtual uint8_t const GetGu8() const override {
@@ -345,6 +416,10 @@ namespace moldyn {
                 return static_cast<R>(0.0);
             }
 
+            uint16_t GetBu16() const override {
+                return GetB<uint16_t, isI>();
+            }
+
             virtual uint8_t const GetBu8() const override {
                 return GetB<uint8_t, isI>();
             }
@@ -366,6 +441,10 @@ namespace moldyn {
             template<class R, bool isI_v>
             std::enable_if_t<isI_v, R> const GetB() const {
                 return static_cast<R>(0.0);
+            }
+
+            uint16_t GetAu16() const override {
+                return GetA<uint16_t, hasAlpha, isI>();
             }
 
             virtual uint8_t const GetAu8() const override {
@@ -398,6 +477,10 @@ namespace moldyn {
 
             virtual float const GetIf() const override {
                 return GetI<float, isI>();
+            }
+
+            double GetId() const override {
+                return GetI<double, isI>();
             }
 
             template<class R, bool isI_v>
@@ -447,6 +530,18 @@ namespace moldyn {
                 return *this;
             }
 
+            uint16_t GetRu16() const {
+                return pimpl->GetRu16();
+            }
+            uint16_t GetGu16() const {
+                return pimpl->GetGu16();
+            }
+            uint16_t GetBu16() const {
+                return pimpl->GetBu16();
+            }
+            uint16_t GetAu16() const {
+                return pimpl->GetAu16();
+            }
             uint8_t const GetRu8() const {
                 return pimpl->GetRu8();
             }
@@ -473,6 +568,9 @@ namespace moldyn {
             }
             float const GetIf() const {
                 return pimpl->GetIf();
+            }
+            double GetId() const {
+                return pimpl->GetId();
             }
         private:
             std::unique_ptr<ColorData_Detail> pimpl;
@@ -833,6 +931,12 @@ namespace moldyn {
             case COLDATA_FLOAT_I:
                 this->colorAccessor.reset(new ColorData_Impl<float, false, true>{ });
                 break;
+            case COLDATA_USHORT_RGBA:
+                this->colorAccessor.reset(new ColorData_Impl<uint16_t, true, false>{ });
+                break;
+            case COLDATA_DOUBLE_I:
+                this->colorAccessor.reset(new ColorData_Impl<double, false, true>{ });
+                break;
             case COLDATA_NONE:
             default:
                 this->colorAccessor.reset(new ColorData_None{});
@@ -917,13 +1021,16 @@ namespace moldyn {
 
             switch (t) {
             case VERTDATA_FLOAT_XYZ:
-                this->vertexAccessor.reset(new VertexData_Impl<float, false>(*this));
+                this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
                 break;
             case VERTDATA_FLOAT_XYZR:
-                this->vertexAccessor.reset(new VertexData_Impl<float, true>(*this));
+                this->vertexAccessor.reset(new VertexData_Impl<float, true>{});
                 break;
             case VERTDATA_SHORT_XYZ:
-                this->vertexAccessor.reset(new VertexData_Impl<short, false>(*this));
+                this->vertexAccessor.reset(new VertexData_Impl<short, false>{});
+                break;
+            case VERTDATA_DOUBLE_XYZ:
+                this->vertexAccessor.reset(new VertexData_Impl<double, false>{ });
                 break;
             case VERTDATA_NONE:
             default:
@@ -1013,7 +1120,7 @@ namespace moldyn {
          *
          * @throws std::out_of_range if idx is larger than particle count.
          */
-        inline particle_t At(size_t idx) const {
+        inline particle_t const& At(size_t idx) const {
             if (idx < this->count) {
                 return this->operator[](idx);
             } else {
