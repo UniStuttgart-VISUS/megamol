@@ -119,7 +119,10 @@ function(install_external)
       set(TARGET_DESTINATION "lib")
     endif()
 
-    install(FILES ${IMPORTED_LOCATION_DEBUG} DESTINATION ${TARGET_DESTINATION} OPTIONAL)
-    install(FILES ${IMPORTED_LOCATION_RELEASE} DESTINATION ${TARGET_DESTINATION} OPTIONAL)
+    # Wildcard-based install to catch PDB files and symlinks.
+    install(CODE "\
+      file(GLOB DEBUG_FILES \"${IMPORTED_LOCATION_DEBUG}*\")\n \
+      file(GLOB RELEASE_FILES \"${IMPORTED_LOCATION_RELEASE}*\")\n \
+      file(INSTALL \${DEBUG_FILES} \${RELEASE_FILES} DESTINATION \"${CMAKE_INSTALL_PREFIX}/${TARGET_DESTINATION}\")")
   endforeach()
 endfunction(install_external)
