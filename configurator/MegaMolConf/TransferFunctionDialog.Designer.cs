@@ -42,6 +42,7 @@
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.panel_Canvas = new MegaMolConf.NoflickerPanel();
             this.throttleTimer = new System.Windows.Forms.Timer(this.components);
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.nUD_Res)).BeginInit();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pb_TransferFunc)).BeginInit();
@@ -59,9 +60,9 @@
             // 
             // nUD_Res
             // 
-            this.nUD_Res.Location = new System.Drawing.Point(234, 3);
-            this.nUD_Res.Maximum = new decimal(new int[] {
-            1024,
+            this.nUD_Res.Location = new System.Drawing.Point(319, 3);
+            this.nUD_Res.Minimum = new decimal(new int[] {
+            1,
             0,
             0,
             0});
@@ -71,7 +72,7 @@
             this.nUD_Res.TabStop = false;
             this.nUD_Res.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.nUD_Res.Value = new decimal(new int[] {
-            256,
+            32,
             0,
             0,
             0});
@@ -110,6 +111,7 @@
             this.toolStripSeparator1,
             this.b_All,
             this.b_None,
+            this.toolStripSeparator3,
             this.b_Ramp,
             this.b_Zero,
             this.toolStripSeparator2,
@@ -183,7 +185,6 @@
             // 
             // b_Ramp
             // 
-            this.b_Ramp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.b_Ramp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.b_Ramp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_Ramp.Name = "b_Ramp";
@@ -193,7 +194,6 @@
             // 
             // b_Zero
             // 
-            this.b_Zero.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.b_Zero.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.b_Zero.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.b_Zero.Name = "b_Zero";
@@ -232,6 +232,11 @@
             // throttleTimer
             // 
             this.throttleTimer.Tick += new System.EventHandler(this.throttleTimer_Tick);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
             // 
             // TransferFunctionDialog
             // 
@@ -280,5 +285,6 @@
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.Timer throttleTimer;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }
