@@ -245,6 +245,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     float const d = std::sqrt(cellSizex*cellSizex+cellSizey*cellSizey+cellSizez*cellSizez);
 
     float const maxCellSize = std::max(cellSizex, std::max(cellSizey, cellSizez));
+    float const disThreshold = 0.5f * maxCellSize;
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
@@ -305,9 +306,9 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                             float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                             //if (dis == 0.0f) dis = 1.0f;
                             //vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
-                            if (dis > maxCellSize-rad) {
+                            if (dis > disThreshold - rad) {
                                 vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] +=
-                                    gauss(dis - maxCellSize + rad, 3.0f * rad);
+                                    gauss(dis - disThreshold + rad, 3.0f * rad);
                             } else {
                                 vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f;
                             }

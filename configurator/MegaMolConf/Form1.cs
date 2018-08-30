@@ -90,7 +90,7 @@ namespace MegaMolConf {
                 }));
             } else {
                 using (StringSelector cs = new StringSelector("Select the Instance you want to use (cancel for no filtering / LUA projects)", insts)) {
-                    if (cs.ShowDialog(ParentForm) == DialogResult.Cancel) {
+                    if (cs.ShowDialog(this) == DialogResult.Cancel) {
                         SetTabInstantiation(tp, "");
                         return;
                     }
@@ -817,6 +817,41 @@ namespace MegaMolConf {
             }
         }
 
+        private void tabViews_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            TabPage tp = tabViews.SelectedTab;
+            if (tp == null) {
+                return;
+            }
+
+            for (int i = tabModules[tp].Count - 1; i >= 0; i--)
+            {
+                GraphicalModule gm = tabModules[tp][i];
+                if (gm.IsHit(e.Location) && TransferFunctionDialog.IsEditable(gm))
+                {
+                    TransferFunctionDialog tfDialog = new TransferFunctionDialog(this, gm);
+                    tfDialog.StartPosition = FormStartPosition.Manual;
+                    tfDialog.Location = new Point(
+                        this.Location.X + (this.Width - tfDialog.Width) / 2, 
+                        this.Location.Y + (this.Height - tfDialog.Height) / 2);
+                    tfDialog.Show(this);
+                }
+            }
+        }
+
+        public void UpdateParameters(GraphicalModule gm)
+        {
+            this.propertyGrid1.Refresh();
+            MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
+            if (mmii != null)
+            {
+                foreach (var parameterValue in gm.ParameterValues)
+                {
+                     mmii.SendUpdate(parameterValue.Key.Name, parameterValue.Value);
+                }
+            }
+        }
+
         private void tabViews_MouseDown(object sender, MouseEventArgs e) {
             TabPage tp = tabViews.SelectedTab;
             Data.CallerSlot cr;
@@ -1115,6 +1150,7 @@ namespace MegaMolConf {
             //np.Size = new System.Drawing.Size(tabViews.GetTabRect(tabViews.SelectedIndex).Width,
             //    tabViews.GetTabRect(tabViews.SelectedIndex).Height);
             np.Paint += PaintTabpage;
+            np.MouseDoubleClick += tabViews_MouseDoubleClick;
             np.MouseDown += tabViews_MouseDown;
             np.MouseMove += tabViews_MouseMove;
             np.MouseUp += tabViews_MouseUp;

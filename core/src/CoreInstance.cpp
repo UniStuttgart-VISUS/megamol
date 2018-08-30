@@ -850,6 +850,45 @@ bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, c
     return true;
 }
 
+bool megamol::core::CoreInstance::CreateParamGroup(const vislib::StringA& name, const int size) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    if (this->pendingGroupParamSetRequests.Contains(name)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Cannot create parameter group %s: group already exists!", name.PeekBuffer());
+        return false;
+    } else {
+        ParamGroup pg;
+        pg.GroupSize = size;
+        pg.Name = name;
+        this->pendingGroupParamSetRequests[name] = pg;
+        vislib::sys::Log::DefaultLog.WriteInfo("Created parameter group %s with size %i", name.PeekBuffer(), size);
+        return true;
+    }
+}
+
+bool megamol::core::CoreInstance::RequestParamGroupValue(
+    const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value) {
+
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    if (this->pendingGroupParamSetRequests.Contains(group)) {
+        auto& g = this->pendingGroupParamSetRequests[group];
+        if (g.Requests.Contains(id)) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
+            return false;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(), id.PeekBuffer(), value.PeekBuffer());
+            g.Requests[id] = value;
+        }
+        return true;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Cannot queue parameter change into nonexisting group %s", group.PeekBuffer());
+        return false;
+    }
+}
+
 
 void megamol::core::CoreInstance::PerformGraphUpdates() {
     vislib::sys::AutoLock u(this->graphUpdateLock);
@@ -1131,7 +1170,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             }
         }
 
-        //for (auto& conn : connections) {
+        // for (auto& conn : connections) {
         //    vislib::sys::Log::DefaultLog.WriteInfo(
         //        "connection: %s --%s-> %s", conn.fromFull.c_str(), conn.name.c_str(), conn.toFull.c_str());
         //}
@@ -1147,7 +1186,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             connections.begin(), connections.end(), [currFrom](conn& c) { return c.fromFull == currFrom; });
         if (which == connections.end()) {
             // nothing found, this is the same as a normal call connection
-            vislib::sys::Log::DefaultLog.WriteInfo("chain call: there is nothing connected to %s, appending %s directly", cir.From().PeekBuffer(),
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "chain call: there is nothing connected to %s, appending %s directly", cir.From().PeekBuffer(),
                 cir.Description()->ClassName());
             if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteError("chain call: cannot instantiate \"%s\" call"
@@ -1232,6 +1272,38 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             continue;
         }
     }
+
+    auto pgp = this->pendingGroupParamSetRequests.GetIterator();
+    while (pgp.HasNext()) {
+        auto& pg = pgp.Next().Value();
+        if (pg.GroupSize == pg.Requests.Count()) {
+            vislib::sys::Log::DefaultLog.WriteInfo("parameter group %s is complete. executing:", pg.Name.PeekBuffer());
+            auto pgi = pg.Requests.GetIterator();
+            while (pgi.HasNext()) {
+                auto& pr = pgi.Next();
+
+                auto p = this->FindParameter(pr.Key());
+                if (p != nullptr) {
+                    vislib::TString val;
+                    vislib::UTF8Encoder::Decode(val, pr.Value());
+
+                    if (!p->ParseValue(val)) {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "Setting parameter \"%s\" to \"%s\": ParseValue failed.", pr.Key().PeekBuffer(),
+                            pr.Value().PeekBuffer());
+                        continue;
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "Setting parameter \"%s\" to \"%s\".", pr.Key().PeekBuffer(), pr.Value().PeekBuffer());
+                    }
+                } else {
+                    // the error is already shown
+                    continue;
+                }
+            }
+            pg.Requests.Clear();
+        }
+    }
 }
 
 
@@ -1252,9 +1324,9 @@ vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
 megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingView(void) {
     using vislib::sys::Log;
 
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1480,9 +1552,9 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
  */
 megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
+    vislib::sys::AutoLock l(this->graphUpdateLock);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
@@ -2564,27 +2636,27 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, "      <!--<param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#    ifdef WIN32
+#ifdef WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
-#    else
+#else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
-#    endif
+#endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
                 WriteLineToFile(outfile, "      <param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#    ifdef WIN32
+#ifdef WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
-#    else
+#else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
-#    endif
+#endif
                 WriteLineToFile(outfile, "\" />\n");
             }
         }
@@ -2659,7 +2731,7 @@ void megamol::core::CoreInstance::addProject(megamol::core::utility::xml::XmlRea
 }
 
 
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 
 /*
  * debugDumpSlots
@@ -2692,7 +2764,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer* c) {
     }
 }
 
-#    endif /* DEBUG || _DEBUG */
+#endif /* DEBUG || _DEBUG */
 
 
 /*
@@ -2756,9 +2828,9 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
             Log::DefaultLog.WriteMsg(
                 Log::LEVEL_INFO + 350, "Created module \"%s\" (%s)", desc->ClassName(), path.PeekBuffer());
             cns->AddChild(mod);
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
             debugDumpSlots(mod.get());
-#    endif /* DEBUG || _DEBUG */
+#endif /* DEBUG || _DEBUG */
         }
     }
 
@@ -3371,9 +3443,9 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
 }
 
 
-#    ifdef _WIN32
+#ifdef _WIN32
 extern HMODULE mmCoreModuleHandle;
-#    endif /* _WIN32 */
+#endif /* _WIN32 */
 
 
 /*
@@ -3382,12 +3454,12 @@ extern HMODULE mmCoreModuleHandle;
 void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
     const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers) {
     using vislib::sys::Log;
-#    ifdef _WIN32
+#ifdef _WIN32
     using vislib::sys::RegistryKey;
-#    endif /* _WIN32 */
+#endif /* _WIN32 */
     ASSERT(!fnext.IsEmpty());
     ASSERT(fnext[0] == _T('.'));
-#    ifdef _WIN32
+#ifdef _WIN32
     Log::DefaultLog.WriteInfo(
         _T("Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
     try {
@@ -3471,9 +3543,9 @@ void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& fron
                 str.Append(_T(" x86"));
             }
         }
-#        if defined(DEBUG) || defined(_DEBUG)
+#    if defined(DEBUG) || defined(_DEBUG)
         str.Append(_T(" [Debug]"));
-#        endif /* DEBUG || _DEBUG */
+#    endif /* DEBUG || _DEBUG */
         open.SetValue(_T(""), str);
 
         vislib::TString cmdline = feparams;
@@ -3506,10 +3578,10 @@ void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& fron
     } catch (...) {
         Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
     }
-#    else      /* _WIN32 */
+#else  /* _WIN32 */
     Log::DefaultLog.WriteError(
         _T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
-#    endif     /* _WIN32 */
+#endif /* _WIN32 */
 }
 
 
@@ -3519,12 +3591,12 @@ void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& fron
 void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
     const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers) {
     using vislib::sys::Log;
-#    ifdef _WIN32
+#ifdef _WIN32
     using vislib::sys::RegistryKey;
-#    endif /* _WIN32 */
+#endif /* _WIN32 */
     ASSERT(!fnext.IsEmpty());
     ASSERT(fnext[0] == _T('.'));
-#    ifdef _WIN32
+#ifdef _WIN32
     Log::DefaultLog.WriteInfo(
         _T("Un-Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
     try {
@@ -3572,11 +3644,11 @@ void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& fr
             errcode = typeKey.OpenSubKey(shell, "shell");
             if (errcode == ERROR_SUCCESS) {
                 vislib::Array<vislib::TString> subkeys =
-#        if defined(UNICODE) || defined(_UNICODE)
+#    if defined(UNICODE) || defined(_UNICODE)
                     shell.GetSubKeysW();
-#        else  /* UNICODE || _UNICODE */
+#    else  /* UNICODE || _UNICODE */
                     shell.GetSubKeysA();
-#        endif /* UNICODE || _UNICODE */
+#    endif /* UNICODE || _UNICODE */
                 vislib::TString fecmd(frontend);
                 fecmd.Prepend(_T("\""));
                 fecmd.Append(_T("\" "));
@@ -3642,8 +3714,8 @@ void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& fr
     } catch (...) {
         Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
     }
-#    else      /* _WIN32 */
+#else  /* _WIN32 */
     Log::DefaultLog.WriteWarn(
         _T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
-#    endif     /* _WIN32 */
+#endif /* _WIN32 */
 }
