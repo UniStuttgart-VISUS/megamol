@@ -827,17 +827,14 @@ namespace MegaMolConf {
             for (int i = tabModules[tp].Count - 1; i >= 0; i--)
             {
                 GraphicalModule gm = tabModules[tp][i];
-                if (gm.IsHit(e.Location))
+                if (gm.IsHit(e.Location) && TransferFunctionDialog.IsEditable(gm))
                 {
-                    if (gm.Module.Name == "LinearTransferFunction")
-                    {
-                        TransferFunctionDialog tfDialog = new TransferFunctionDialog(this, gm);
-                        tfDialog.StartPosition = FormStartPosition.Manual;
-                        tfDialog.Location = new Point(
-                            this.Location.X + (this.Width - tfDialog.Width) / 2, 
-                            this.Location.Y + (this.Height - tfDialog.Height) / 2);
-                        tfDialog.Show(this);
-                    }
+                    TransferFunctionDialog tfDialog = new TransferFunctionDialog(this, gm);
+                    tfDialog.StartPosition = FormStartPosition.Manual;
+                    tfDialog.Location = new Point(
+                        this.Location.X + (this.Width - tfDialog.Width) / 2, 
+                        this.Location.Y + (this.Height - tfDialog.Height) / 2);
+                    tfDialog.Show(this);
                 }
             }
         }

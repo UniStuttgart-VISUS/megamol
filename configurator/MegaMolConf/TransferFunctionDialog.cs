@@ -30,6 +30,11 @@ namespace MegaMolConf
 
         private Form1 parentForm;
 
+        public static bool IsEditable(GraphicalModule gm)
+        {
+            return gm.Module.Name == "LinearTransferFunction";
+        }
+
         public TransferFunctionDialog(Form1 parentForm, GraphicalModule gm)
         {
             InitializeComponent();
@@ -39,7 +44,7 @@ namespace MegaMolConf
             this.gm = gm;
             if (!HistogramFromGM())
             {
-                Histogram((int)nUD_Res.Value);
+                Histogram((int)nUD_Res.Value, 1024);
                 HistogramRamp(ref r_histo);
                 HistogramRamp(ref g_histo);
                 HistogramRamp(ref b_histo);
@@ -47,10 +52,12 @@ namespace MegaMolConf
             }
         }
 
-        private void Histogram(int resolution)
+        private void Histogram(int resolution, int maxResolution)
         {
-            res = (uint)resolution;
+            res = (uint)Math.Max(1, resolution);
             nUD_Res.Value = res;
+            nUD_Res.Maximum = maxResolution;
+            System.Diagnostics.Debug.WriteLine(resolution + " " + maxResolution);
             r_histo = new float[res];
             g_histo = new float[res];
             b_histo = new float[res];
@@ -133,7 +140,7 @@ namespace MegaMolConf
                         //values.Add(asNumber("value" + suffix));
                     }
 
-                    Histogram(colors.Count());
+                    Histogram(colors.Count(), 11);
                     for (int j = 0; j < colors.Count(); ++j)
                     {
                         r_histo[j] = (float)colors[j].R / 255.0f;
@@ -142,6 +149,8 @@ namespace MegaMolConf
                         a_histo[j] = (float)colors[j].A / 255.0f;
                     }
                 }
+
+                return true;
             }
             else
             {
@@ -273,6 +282,7 @@ namespace MegaMolConf
                 }
             }
             panel_Canvas.Invalidate();
+            this.UpdateParameters();
         }
 
         private void NUDRes_ValChanged(object sender, EventArgs e)
@@ -284,7 +294,7 @@ namespace MegaMolConf
                 return;
             }
 
-            Histogram((int)t.Value);
+            Histogram((int)t.Value, (int)nUD_Res.Maximum);
             HistogramRamp(ref r_histo);
             HistogramRamp(ref g_histo);
             HistogramRamp(ref b_histo);
@@ -334,7 +344,6 @@ namespace MegaMolConf
             if (drawState.start_idx == end_idx)
             {
                 PanelCanvas_Click(sender, e);
-                this.UpdateParameters();
                 return;
             }
 
@@ -419,15 +428,7 @@ namespace MegaMolConf
 
         private void color_Clicked(object sender, EventArgs e)
         {
-            if ((ModifierKeys & Keys.Control) == 0)
-            {
-                zero_Clicked(sender, e);
-                b_R.Checked = (b_R == sender);
-                b_G.Checked = (b_G == sender);
-                b_B.Checked = (b_B == sender);
-                b_A.Checked = (b_A == sender);
-            }
-            else
+            if (ModifierKeys == Keys.Control)
             {
                 if (b_R == sender)
                     b_R.Checked = !b_R.Checked;
@@ -437,6 +438,14 @@ namespace MegaMolConf
                     b_B.Checked = !b_B.Checked;
                 if (b_A == sender)
                     b_A.Checked = !b_A.Checked;
+            }
+            else
+            {
+                zero_Clicked(sender, e);
+                b_R.Checked = (b_R == sender);
+                b_G.Checked = (b_G == sender);
+                b_B.Checked = (b_B == sender);
+                b_A.Checked = (b_A == sender);
             }
         }
 
