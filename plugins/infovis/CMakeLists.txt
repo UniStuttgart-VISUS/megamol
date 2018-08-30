@@ -14,11 +14,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
   # Add Eigen.
-  set(EIGEN_VER "3_3_4")
-  string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
   add_external_project(Eigen_ext
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-    GIT_TAG ${EIGEN_TAG}
+    GIT_TAG "3.3.4"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -37,7 +35,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} 
+  target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
   target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad mmstd_datatools Eigen)
@@ -61,7 +59,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Shaders" FILES ${shader_files})
 
   # Format
-  add_clang_format(${PROJECT_NAME} 
-    STYLE "${CMAKE_SOURCE_DIR}/.clang-format" 
+  add_clang_format(${PROJECT_NAME}
+    STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
     FILES ${public_header_files} ${header_files} ${source_files})
-endif(BUILD_${EXPORT_NAME}_PLUGIN)
+endif()

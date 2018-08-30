@@ -80,7 +80,7 @@ function(add_external_library TARGET LINKAGE)
       IMPORTED_IMPLIB_DEBUG "${INSTALL_DIR}/${IMPORT_LIBRARY_DEBUG}"
       IMPORTED_IMPLIB_RELEASE "${INSTALL_DIR}/${IMPORT_LIBRARY_RELEASE}")
   endif()
-
+  
   #message(STATUS
   #  "${DEPENDS} / ${TARGET} settings:\n"
   #  "  Definitions:\t${COMPILE_DEFINITIONS}\n"
@@ -91,3 +91,35 @@ function(add_external_library TARGET LINKAGE)
   #  "  Import (release):\t${INSTALL_DIR}/${IMPORT_LIBRARY_RELEASE}\n"
   #  "  Interface:\t${INTERFACE_LIBRARIES}")
 endfunction(add_external_library)
+
+#
+# Installs external targets.
+#
+# install_external(TARGET libA BLib C)
+#
+# This is a workaround for limitations of install(TARGETS ...) [1][2].
+# [1] https://gitlab.kitware.com/cmake/cmake/issues/14311
+# [2] https://gitlab.kitware.com/cmake/cmake/issues/14444
+#
+function(install_external)
+  set(ARGS_MULTI_VALUE TARGETS)
+  cmake_parse_arguments(args "" "" "${ARGS_MULTI_VALUE}" ${ARGN})
+ 
+  foreach(target ${args_TARGETS})
+    get_target_property(IMPORTED_IMPLIB_DEBUG ${target} IMPORTED_IMPLIB_DEBUG)
+    get_target_property(IMPORTED_IMPLIB_RELEASE ${target} IMPORTED_IMPLIB_RELEASE)
+    get_target_property(IMPORTED_LOCATION_DEBUG ${target} IMPORTED_LOCATION_DEBUG)
+    get_target_property(IMPORTED_LOCATION_RELEASE ${target} IMPORTED_LOCATION_RELEASE)
+
+    if(WIN32)
+      install(FILES ${IMPORTED_IMPLIB_DEBUG} DESTINATION "lib" OPTIONAL)
+      install(FILES ${IMPORTED_IMPLIB_RELEASE} DESTINATION "lib" OPTIONAL)
+      set(TARGET_DESTINATION "bin")
+    else()
+      set(TARGET_DESTINATION "lib")
+    endif()
+
+    install(FILES ${IMPORTED_LOCATION_DEBUG} DESTINATION ${TARGET_DESTINATION} OPTIONAL)
+    install(FILES ${IMPORTED_LOCATION_RELEASE} DESTINATION ${TARGET_DESTINATION} OPTIONAL)
+  endforeach()
+endfunction(install_external)
