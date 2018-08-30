@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "mmcore/utility/gl/FramebufferObject.h"
 
+using namespace megamol::core::utility::gl;
+
 FramebufferObject::FramebufferObject(int width, int height, bool has_depth, bool has_stencil)
     : m_width(width), m_height(height) {
     glGenFramebuffers(1, &m_handle);

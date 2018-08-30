@@ -3,6 +3,8 @@
 
 #include <cassert>
 
+using namespace megamol::core::utility::gl;
+
 TextureCubemapArray::TextureCubemapArray(std::string id, GLint internal_format, unsigned int width, unsigned int height,
     unsigned int layers, GLenum format, GLenum type, GLsizei levels, GLvoid* data, bool generateMipmap)
     : Texture(id, internal_format, format, type, levels), m_width(width), m_height(height), m_layers(layers) {

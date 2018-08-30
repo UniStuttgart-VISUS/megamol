@@ -5,6 +5,11 @@
 #include <vector>
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 struct TextureLayout {
     TextureLayout() : width(0), internal_format(0), height(0), depth(0), format(0), type(0), levels(0) {}
     /**
@@ -126,5 +131,10 @@ public:
     GLenum getFormat() const { return m_format; }
     GLenum getType() const { return m_type; }
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif

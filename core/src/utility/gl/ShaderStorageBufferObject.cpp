@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "mmcore/utility/gl/ShaderStorageBufferObject.h"
 
+using namespace megamol::core::utility::gl;
+
 ShaderStorageBufferObject::ShaderStorageBufferObject(unsigned int size, const GLvoid* data)
     : m_handle(0), m_size(size), m_written_size(0) {
     /* make clang++ compiler 'unused variable' warning go away */

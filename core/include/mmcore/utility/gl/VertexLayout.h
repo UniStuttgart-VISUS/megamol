@@ -3,6 +3,11 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \struct VertexLayout
  *
@@ -48,5 +53,10 @@ inline bool operator==(VertexLayout const& lhs, VertexLayout const& rhs) {
 
     return rtn;
 }
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !VertexLayout_hpp

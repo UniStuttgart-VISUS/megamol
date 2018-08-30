@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "mmcore/utility/gl/Mesh.h"
 
+using namespace megamol::core::utility::gl;
+
 Mesh::Mesh(GLvoid const* vertex_data, GLsizeiptr vertex_data_byte_size, GLvoid const* index_data,
     GLsizeiptr index_data_byte_size, VertexLayout const& vertex_descriptor, GLenum indices_type, GLenum usage,
     GLenum primitive_type)

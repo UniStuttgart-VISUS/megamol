@@ -3,6 +3,11 @@
 
 #include "mmcore/utility/gl/Texture.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class TextureCubemapArray
  *
@@ -49,5 +54,10 @@ private:
     unsigned int m_height;
     unsigned int m_layers;
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !TextureCubemapArray_hpp

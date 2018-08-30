@@ -3,6 +3,11 @@
 
 #include "mmcore/utility/gl/Texture.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class Texture2DArray
  *
@@ -35,5 +40,10 @@ private:
     unsigned int m_height;
     unsigned int m_layers;
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !Texture2DArray_hpp

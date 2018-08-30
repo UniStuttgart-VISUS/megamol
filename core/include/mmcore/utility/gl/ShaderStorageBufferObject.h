@@ -6,6 +6,11 @@
 /*	std includes */
 #include <iostream>
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class ShaderStorageBufferObject
  *
@@ -110,5 +115,10 @@ private:
     */
     GLuint m_written_size;
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !ShaderStorageBufferObject_hpp

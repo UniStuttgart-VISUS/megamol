@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <iostream>
 
+using namespace megamol::core::utility::gl;
+
 Texture2DArray::Texture2DArray(std::string id, TextureLayout const& layout, GLvoid* data, bool generateMipmap)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels)
     , m_width(layout.width)

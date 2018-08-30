@@ -11,6 +11,11 @@
 #include <string>
 //#include <iostream>
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class GLSLProgram
  *
@@ -72,5 +77,10 @@ public:
     void setId(const std::string& id);
     std::string getId();
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !GLSLProgram_hpp

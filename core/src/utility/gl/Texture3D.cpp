@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iostream>
 
+using namespace megamol::core::utility::gl;
+
 Texture3D::Texture3D(std::string id, TextureLayout const& layout, GLvoid* data)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels)
     , m_width(layout.width)

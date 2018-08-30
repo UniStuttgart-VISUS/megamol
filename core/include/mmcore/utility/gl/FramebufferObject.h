@@ -10,6 +10,10 @@
 #include <memory>
 #include <string>
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
 
 /**
  * \class FramebufferObject
@@ -135,5 +139,10 @@ public:
 
     const std::string& getLog() const { return m_log; }
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !FramebufferObject_hpp

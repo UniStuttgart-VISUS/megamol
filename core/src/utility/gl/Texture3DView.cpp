@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace megamol::core::utility::gl;
+
 Texture3DView::Texture3DView(std::string id, Texture3D const& source_texture, TextureLayout const& layout,
     GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels) {

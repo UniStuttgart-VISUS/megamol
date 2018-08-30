@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace megamol::core::utility::gl;
+
 GLSLProgram::GLSLProgram() : m_link_status(false), m_compute_shader(false) {}
 
 GLSLProgram::~GLSLProgram() { glDeleteProgram(m_handle); }

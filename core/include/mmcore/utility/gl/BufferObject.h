@@ -5,6 +5,11 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class BufferObject
  *
@@ -128,5 +133,10 @@ private:
     GLsizeiptr m_byte_size;
     GLenum m_usage;
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !BufferObject_hpp

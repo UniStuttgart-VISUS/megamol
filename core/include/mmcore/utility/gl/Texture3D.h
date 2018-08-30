@@ -3,6 +3,11 @@
 
 #include "mmcore/utility/gl/Texture.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class Texture3D
  *
@@ -45,5 +50,10 @@ private:
     unsigned int m_height;
     unsigned int m_depth;
 };
+
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 #endif // !Texture3D_hpp

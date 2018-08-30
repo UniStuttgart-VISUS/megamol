@@ -10,6 +10,11 @@
 #include "mmcore/utility/gl/BufferObject.h"
 #include "mmcore/utility/gl/VertexLayout.h"
 
+namespace megamol {
+namespace core {
+namespace utility {
+namespace gl {
+
 /**
  * \class Mesh
  *
@@ -125,11 +130,15 @@ private:
     GLenum m_usage;
     GLenum m_primitive_type;
 };
+} // namespace gl
+} // namespace utility
+} // namespace core
+} // namespace megamol
 
 
 template <typename VertexContainer, typename IndexContainer>
-Mesh::Mesh(VertexContainer const& vertices, IndexContainer const& indices, VertexLayout const& vertex_descriptor,
-    GLenum indices_type, GLenum usage, GLenum primitive_type)
+megamol::core::utility::gl::Mesh::Mesh(VertexContainer const& vertices, IndexContainer const& indices,
+    VertexLayout const& vertex_descriptor, GLenum indices_type, GLenum usage, GLenum primitive_type)
     : m_ibo(GL_ELEMENT_ARRAY_BUFFER, indices, usage)
     , // TODO ibo generation in constructor might fail? needs a bound vao?
     m_vertex_descriptor(vertex_descriptor)
@@ -173,22 +182,24 @@ Mesh::Mesh(VertexContainer const& vertices, IndexContainer const& indices, Verte
 }
 
 template <typename VertexContainer>
-void Mesh::bufferVertexSubData(size_t vbo_idx, VertexContainer const& vertices, GLsizeiptr byte_offset) {
+void megamol::core::utility::gl::Mesh::bufferVertexSubData(
+    size_t vbo_idx, VertexContainer const& vertices, GLsizeiptr byte_offset) {
     if (vbo_idx < m_vbos.size()) m_vbos[vbo_idx]->bufferSubData<VertexContainer>(vertices, byte_offset);
 }
 
 template <typename IndexContainer>
-void Mesh::bufferIndexSubData(IndexContainer const& indices, GLsizeiptr byte_offset) {
+void megamol::core::utility::gl::Mesh::bufferIndexSubData(IndexContainer const& indices, GLsizeiptr byte_offset) {
     // TODO check type against current index type
     m_ibo.bufferSubData<IndexContainer>(indices, byte_offset);
 }
 
-template <typename VertexContainer> void Mesh::rebufferVertexData(size_t vbo_idx, VertexContainer const& vertices) {
+template <typename VertexContainer>
+void megamol::core::utility::gl::Mesh::rebufferVertexData(size_t vbo_idx, VertexContainer const& vertices) {
     if (vbo_idx < m_vbos.size()) m_vbos[vbo_idx]->rebuffer(vertices);
 }
 
 template <typename VertexContainer>
-void Mesh::rebufferVertexData(VertexContainer const& vertices, VertexLayout descriptor) {
+void megamol::core::utility::gl::Mesh::rebufferVertexData(VertexContainer const& vertices, VertexLayout descriptor) {
     m_vbos.clear();
 
     m_vbos.emplace_back(std::make_unique<BufferObject>(GL_ARRAY_BUFFER, vertices, m_usage));
@@ -214,7 +225,8 @@ void Mesh::rebufferVertexData(VertexContainer const& vertices, VertexLayout desc
     }
 }
 
-template <typename IndexContainer> void Mesh::rebufferIndexData(IndexContainer const& indices) {
+template <typename IndexContainer>
+void megamol::core::utility::gl::Mesh::rebufferIndexData(IndexContainer const& indices) {
     m_ibo.rebuffer(indices);
 
     GLuint vi_size = static_cast<GLuint>(indices.size() * sizeof(IndexContainer::value_type));
@@ -233,7 +245,8 @@ template <typename IndexContainer> void Mesh::rebufferIndexData(IndexContainer c
 }
 
 template <typename IndexContainer>
-void Mesh::rebufferIndexData(IndexContainer const& indices, GLenum indices_type, GLenum primitive_type) {
+void megamol::core::utility::gl::Mesh::rebufferIndexData(
+    IndexContainer const& indices, GLenum indices_type, GLenum primitive_type) {
     m_ibo.rebuffer(indices);
 
     m_indices_type = indices_type;
