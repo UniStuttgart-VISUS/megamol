@@ -110,7 +110,7 @@ namespace megamol
 						, write_now("Write now", "Write an STL file immediately")
 					{
 						// Create input slot for triangle mesh data
-						this->input_slot.SetCompatibleCall<InputCallDescription>();
+						this->input_slot.template SetCompatibleCall<InputCallDescription>();
 						Module::MakeSlotAvailable(&this->input_slot);
 
 						// Create output information
@@ -125,8 +125,8 @@ namespace megamol
 						
 						// Create enum for ASCII/binary option
 						this->ascii_binary_slot << new core::param::EnumParam(0);
-						this->ascii_binary_slot.Param<core::param::EnumParam>()->SetTypePair(0, "Binary");
-						this->ascii_binary_slot.Param<core::param::EnumParam>()->SetTypePair(1, "ASCII");
+						this->ascii_binary_slot.template Param<core::param::EnumParam>()->SetTypePair(0, "Binary");
+						this->ascii_binary_slot.template Param<core::param::EnumParam>()->SetTypePair(1, "ASCII");
 						Module::MakeSlotAvailable(&this->ascii_binary_slot);
 
 						// Write automatically?
@@ -135,11 +135,11 @@ namespace megamol
 
 						// Use file name suffix increment?
 						this->filename_increment << new core::param::EnumParam(1);
-						this->filename_increment.Param<core::param::EnumParam>()->SetTypePair(0, "None (overwrite)");
-						this->filename_increment.Param<core::param::EnumParam>()->SetTypePair(1, "Increment number (safe)");
-						this->filename_increment.Param<core::param::EnumParam>()->SetTypePair(2, "Increment number (overwrite)");
-						this->filename_increment.Param<core::param::EnumParam>()->SetTypePair(3, "Time stamp");
-						this->filename_increment.Param<core::param::EnumParam>()->SetTypePair(4, "Current time step");
+						this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(0, "None (overwrite)");
+						this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(1, "Increment number (safe)");
+						this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(2, "Increment number (overwrite)");
+						this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(3, "Time stamp");
+						this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(4, "Current time step");
 						Module::MakeSlotAvailable(&this->filename_increment);
 
 						// Button to write file manually
@@ -206,7 +206,7 @@ namespace megamol
 					{
 						// Create outgoing call
 						auto& incoming_call = dynamic_cast<core::AbstractGetData3DCall&>(caller);
-						auto& outgoing_call = *this->input_slot.CallAs<core::AbstractGetData3DCall>();
+						auto& outgoing_call = *this->input_slot.template CallAs<core::AbstractGetData3DCall>();
 
 						// Copy incoming call information to outgoing
 						outgoing_call.AccessBoundingBoxes() = incoming_call.GetBoundingBoxes();
@@ -246,7 +246,7 @@ namespace megamol
 					{
 						// Create outgoing call
 						auto& incoming_call = dynamic_cast<core::AbstractGetData3DCall&>(caller);
-						auto& outgoing_call = *this->input_slot.CallAs<core::AbstractGetData3DCall>();
+						auto& outgoing_call = *this->input_slot.template CallAs<core::AbstractGetData3DCall>();
 
 						// Call for get data
 						if (!outgoing_call(0))
@@ -265,7 +265,7 @@ namespace megamol
 							}
 
 							// Write data from outgoing call to file
-							if (this->write_automatically.Param<core::param::BoolParam>()->Value())
+							if (this->write_automatically.template Param<core::param::BoolParam>()->Value())
 							{
 								if (!write_data(outgoing_call))
 								{
@@ -315,14 +315,14 @@ namespace megamol
 						static_assert(std::is_integral<IT>::value || std::is_null_pointer<IT>::value, "Indices must be of integral type");
 
 						// Get filename
-						const auto& vislib_filename = this->filename_slot.Param<core::param::FilePathParam>()->Value();
+						const auto& vislib_filename = this->filename_slot.template Param<core::param::FilePathParam>()->Value();
 						std::string filename(vislib_filename.PeekBuffer());
 
 						// Modify file name suffix according to user's selection
 						const std::string leading_zeroes("0000000000");
 						std::string suffix("_");
 
-						if (this->filename_increment.Param<core::param::EnumParam>()->Value() == 1)
+						if (this->filename_increment.template Param<core::param::EnumParam>()->Value() == 1)
 						{
 							// Increment safely
 							if (this->filename_slot.IsDirty())
@@ -362,7 +362,7 @@ namespace megamol
 							const std::string number_with_lead = leading_zeroes + number;
 							suffix += number_with_lead.substr(std::min(number.length(), leading_zeroes.length()));
 						}
-						else if (this->filename_increment.Param<core::param::EnumParam>()->Value() == 2)
+						else if (this->filename_increment.template Param<core::param::EnumParam>()->Value() == 2)
 						{
 							// Increment beginning at 0
 							if (this->filename_slot.IsDirty())
@@ -375,7 +375,7 @@ namespace megamol
 							const std::string number_with_lead = leading_zeroes + number;
 							suffix += number_with_lead.substr(std::min(number.length(), leading_zeroes.length()));
 						}
-						else if (this->filename_increment.Param<core::param::EnumParam>()->Value() == 3)
+						else if (this->filename_increment.template Param<core::param::EnumParam>()->Value() == 3)
 						{
 							// Time stamp
 							std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
@@ -387,7 +387,7 @@ namespace megamol
 
 							suffix += ss.str();
 						}
-						else if (this->filename_increment.Param<core::param::EnumParam>()->Value() == 4)
+						else if (this->filename_increment.template Param<core::param::EnumParam>()->Value() == 4)
 						{
 							// Current time step
 							const std::string number = std::to_string(frame_id);
@@ -418,7 +418,7 @@ namespace megamol
 						}
 
 						// Decide file type
-						if (this->ascii_binary_slot.Param<core::param::EnumParam>()->Value() == 0)
+						if (this->ascii_binary_slot.template Param<core::param::EnumParam>()->Value() == 0)
 						{
 							vislib::sys::Log::DefaultLog.WriteInfo("Writing binary STL file '%s'", filename.c_str());
 							write_binary(filename, static_cast<uint32_t>(num_triangles), vertices, normals, pointer_or_identity<IT>(indices));
