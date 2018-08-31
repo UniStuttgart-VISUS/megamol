@@ -182,7 +182,7 @@ void GLSLProgram::setUniform(const char* name, float f) { glUniform1f(getUniform
 
 void GLSLProgram::setUniform(const char* name, bool b) { glUniform1i(getUniformLocation(name), b); }
 
-void GLSLProgram::printActiveUniforms() {
+std::string GLSLProgram::getActiveUniforms() {
     GLint maxLength, nUniforms;
     glGetProgramiv(m_handle, GL_ACTIVE_UNIFORMS, &nUniforms);
     glGetProgramiv(m_handle, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
@@ -201,7 +201,7 @@ void GLSLProgram::printActiveUniforms() {
     delete[] attributeName;
 }
 
-void GLSLProgram::printActiveAttributes() {
+std::string GLSLProgram::getActiveAttributes() {
     GLint maxLength, nAttributes;
     glGetProgramiv(m_handle, GL_ACTIVE_ATTRIBUTES, &nAttributes);
     glGetProgramiv(m_handle, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxLength);
