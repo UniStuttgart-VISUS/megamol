@@ -32,12 +32,12 @@ if(BUILD_CORE)
 
   set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
   
-  set(ZMQ_VER "4_2_2")
+  set(ZMQ_VER "4_2_3")
   string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
   string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
   if(MSVC)
     set(ZMQ_LIB
-        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
+        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib"
         optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
         CACHE INTERNAL '')
     set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
@@ -48,8 +48,9 @@ if(BUILD_CORE)
   ExternalProject_Add(extlibzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
-  )
+    CMAKE_ARGS
+      -DZMQ_BUILD_TESTS=OFF 
+      -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION})
   message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
 
   # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
@@ -88,16 +89,6 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  option(USE_MPI "enable MPI in build" OFF)
-
-  set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
-  if(USE_MPI)
-    if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
-      message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
-    endif()
-    find_package(MPI)
-  endif()
-
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
     if(USE_INTERNAL_EXPAT)
@@ -131,13 +122,9 @@ if(BUILD_CORE)
   link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
   if(MPI_C_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
     set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-    add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
   endif()
-
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -208,6 +195,7 @@ if(BUILD_CORE)
     install(TARGETS core RUNTIME DESTINATION "bin")
     install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")
     install(TARGETS core ARCHIVE DESTINATION "lib")
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
     file(GLOB ZMQ_LIB_FILES "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzmq.so*")
     install(FILES ${ZMQ_LIB_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")

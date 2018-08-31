@@ -7,17 +7,38 @@
 
 #include "stdafx.h"
 #include "io/PLYDataSource.h"
+#include <array>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include "geometry_calls/CallTriMeshData.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
-#include <fstream>
-#include <string>
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
+using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 using namespace megamol::stdplugin::datatools;
+using namespace megamol::core;
 
+/*
+ * Checks whether two chars are equal, regardless of their case.
+ *
+ * @param a The first char.
+ * @param b The second char.
+ * @return True if the two chars are equal, false otherwise.
+ */
 bool icompare_pred(unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); }
 
+/*
+ * Checks two strings for equality, regardless of the letters case.
+ *
+ * @param a The first string.
+ * @param b The second string.
+ * @return True if the two strings are equal, false otherwise.
+ */
 bool icompare(std::string const& a, std::string const& b) {
     if (a.length() == b.length()) {
         return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
@@ -26,25 +47,116 @@ bool icompare(std::string const& a, std::string const& b) {
     }
 }
 
-const char theUndef[] = "<undef>";
+/**
+ * Splits a string by a certain char delimiter.
+ *
+ * @param s The input string.
+ * @param delim The delimiter char.
+ * @return Vector containing all parts of the string.
+ */
+std::vector<std::string> isplit(std::string const& s, char delim = ' ') {
+    // TODO do this more intelligent
+    std::vector<std::string> result;
+    std::stringstream ss(s);
+    std::string line;
+    while (std::getline(ss, line, delim)) {
+        result.push_back(line);
+    }
+    return result;
+}
 
-io::PLYDataSource::PLYDataSource(void) : core::Module(),
-        filename("filename", "The path to the PLY file to load."),
-        vertElemSlot("vertex element", "which element to get the vertex info from"),
-        faceElemSlot("face element", "which element to get the face info from"),
-        xPropSlot("x property", "which property to get the x position from"),
-        yPropSlot("y property", "which property to get the y position from"),
-        zPropSlot("z property", "which property to get the z position from"),
-        nxPropSlot("nx property", "which property to get the normal x component from"),
-        nyPropSlot("ny property", "which property to get the normal y component from"),
-        nzPropSlot("nz property", "which property to get the normal z component from"),
-        rPropSlot("r property", "which property to get the red component from"),
-        gPropSlot("g property", "which property to get the green component from"),
-        bPropSlot("b property", "which property to get the blue component from"),
-        iPropSlot("i property", "which property to get the intensity from"),
-        indexPropSlot("index property", "which property to get the vertex indices from"),
-        getData("getdata", "Slot to request data from this data source."),
-        file(nullptr), data_hash(0) {
+/**
+ * Returns the size in bytes of the given tinyply data type.
+ *
+ * @param tinyplyType The type of the tinyply variable.
+ * @return The size of the given type in bytes.
+ */
+uint64_t tinyTypeSize(tinyply::Type tinyplyType) {
+    switch (tinyplyType) {
+    case tinyply::Type::INT8:
+    case tinyply::Type::UINT8:
+        return 1;
+    case tinyply::Type::INT16:
+    case tinyply::Type::UINT16:
+        return 2;
+    case tinyply::Type::INT32:
+    case tinyply::Type::UINT32:
+    case tinyply::Type::FLOAT32:
+        return 4;
+    case tinyply::Type::FLOAT64:
+        return 8;
+    case tinyply::Type::INVALID:
+    default:
+        return 0;
+    }
+}
+
+/**
+ * Returns whether the given tinyply type is a signed or unsigned one.
+ *
+ * @param tinyplyType The type of the tinyply variable.
+ * @return True if the type is a signed type. False otherwise.
+ */
+bool tinyIsSigned(tinyply::Type tinyplyType) {
+    switch (tinyplyType) {
+    case tinyply::Type::INT8:
+    case tinyply::Type::INT16:
+    case tinyply::Type::INT32:
+    case tinyply::Type::FLOAT32:
+    case tinyply::Type::FLOAT64:
+        return true;
+    case tinyply::Type::UINT8:
+    case tinyply::Type::UINT16:
+    case tinyply::Type::UINT32:
+    case tinyply::Type::INVALID:
+    default:
+        return false;
+    }
+}
+
+/**
+ * Changes the endianness of a given variable by reversing all bits in the field.
+ *
+ * @param obj Reference to the variable of which the endianness is changed.
+ */
+template <class T> void changeEndianness(T& obj) {
+    unsigned char* mem = reinterpret_cast<unsigned char*>(&obj);
+    std::reverse(mem, mem + sizeof(T));
+}
+
+/*
+ * io::PLYDataSource::theUndef
+ */
+const char theUndef[] = "undef";
+
+/*
+ * io::PLYDataSource::PLYDataSource
+ */
+io::PLYDataSource::PLYDataSource(void)
+    : core::Module()
+    , filename("filename", "The path to the PLY file to load.")
+    , vertElemSlot("vertex element", "which element to get the vertex info from")
+    , faceElemSlot("face element", "which element to get the face info from")
+    , xPropSlot("x property", "which property to get the x position from")
+    , yPropSlot("y property", "which property to get the y position from")
+    , zPropSlot("z property", "which property to get the z position from")
+    , nxPropSlot("nx property", "which property to get the normal x component from")
+    , nyPropSlot("ny property", "which property to get the normal y component from")
+    , nzPropSlot("nz property", "which property to get the normal z component from")
+    , rPropSlot("r property", "which property to get the red component from")
+    , gPropSlot("g property", "which property to get the green component from")
+    , bPropSlot("b property", "which property to get the blue component from")
+    , iPropSlot("i property", "which property to get the intensity from")
+    , indexPropSlot("index property", "which property to get the vertex indices from")
+    , radiusSlot("sphere radius", "the radius of the output spheres")
+    , getSphereData("getspheredata", "Slot to request sphere data from this data source.")
+    , getMeshData("getmeshdata", "Slot to request mesh data from this data source.")
+    , data_hash(0)
+    , data_offset(0)
+    , vertex_count(0)
+    , face_count(0)
+    , hasBinaryFormat(false)
+    , isLittleEndian(true) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&PLYDataSource::filenameChanged);
@@ -91,103 +203,468 @@ io::PLYDataSource::PLYDataSource(void) : core::Module(),
     this->indexPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->indexPropSlot);
 
-    this->getData.SetCallback("MultiParticleDataCall", "GetData", &PLYDataSource::getDataCallback);
-    this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &PLYDataSource::getExtentCallback);
-    this->MakeSlotAvailable(&this->getData);
+    this->radiusSlot.SetParameter(new core::param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->radiusSlot);
+    this->radiusSlot.ForceSetDirty(); // this forces the program to recompute the sphere bounding box
 
-    //this->setFrameCount(1);
-    //this->initFrameCache(1);
+    this->getSphereData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(0),
+        &PLYDataSource::getSphereDataCallback);
+    this->getSphereData.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1),
+        &PLYDataSource::getSphereExtentCallback);
+    this->MakeSlotAvailable(&this->getSphereData);
+
+    this->getMeshData.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &PLYDataSource::getMeshDataCallback);
+    this->getMeshData.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &PLYDataSource::getMeshExtentCallback);
+    this->MakeSlotAvailable(&this->getMeshData);
 }
 
-io::PLYDataSource::~PLYDataSource(void) {
-    Release();
-}
+/*
+ * io::PLYDataSource::~PLYDataSource
+ */
+io::PLYDataSource::~PLYDataSource(void) { this->Release(); }
 
+/*
+ * io::PLYDataSource::create
+ */
 bool io::PLYDataSource::create(void) {
     // intentionally empty
     return true;
 }
 
+/*
+ * io::PLYDataSource::release
+ */
 void io::PLYDataSource::release(void) {
-    //this->resetFrameCache();
-    //if (file != nullptr) {
-    //    vislib::sys::File *f = file;
-    //    file = nullptr;
-    //    f->Close();
-    //    delete f;
-    //}
-    //frameIdx.clear();
+    // intentionally empty
 }
 
+/*
+ * io::PLYDataSource::assertData
+ */
 bool io::PLYDataSource::assertData() {
 
-    if (!instream.is_open()) return false;
-    if (vertices != nullptr) return true; // there is a modicum of data present, we have read the file before
+    instream.close();
+    instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
+    if (instream.fail()) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+            vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        return true;
+    }
+    // if one of these pointers is not null, we already have read the data
+    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
 
-    auto& vertElem = this->vertElemSlot.Param<core::param::FlexEnumParam>()->Value();
+    // jump to the data in the file
+    instream.seekg(this->data_offset, instream.beg);
+    size_t vertexCount = 0;
+    size_t faceCount = 0;
 
-    if (vertElem != theUndef) {
-        if (this->xPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->yPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->zPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef) {
-            try {
-                vertices = plf.request_properties_from_element(
-                    vertElem,
-                        {this->xPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->yPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->zPropSlot.Param<core::param::FlexEnumParam>()->Value()});
-            } catch (const std::exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("tinyply exception reading vertices: %s", e.what());
+    // reserve the space for the data
+    if (std::none_of(guessedPos.begin(), guessedPos.end(), [](std::string s) { return s.empty(); })) {
+        if (std::any_of(
+                guessedPos.begin(), guessedPos.end(), [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
+            for (auto s : guessedPos) {
+                auto idx = this->elementIndexMap[s];
+                auto size = this->propertySizes[idx.first][idx.second];
+                elemCount += this->elementCount[idx.first];
+                vertexCount = this->elementCount[idx.first];
+                maxSize = size > maxSize ? size : maxSize;
+            }
+            if (maxSize <= 4) {
+                posPointers.pos_float = new float[elemCount];
+            } else {
+                posPointers.pos_double = new double[elemCount];
+            }
+            this->vertex_count = vertexCount;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn("One of the position labels could not be found");
+        }
+    }
+    if (std::none_of(guessedNormal.begin(), guessedNormal.end(), [](std::string s) { return s.empty(); })) {
+        if (std::any_of(guessedNormal.begin(), guessedNormal.end(),
+                [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
+            for (auto s : guessedNormal) {
+                auto idx = this->elementIndexMap[s];
+                auto size = this->propertySizes[idx.first][idx.second];
+                elemCount += this->elementCount[idx.first];
+                maxSize = size > maxSize ? size : maxSize;
+            }
+            if (maxSize <= 4) {
+                normalPointers.norm_float = new float[elemCount];
+            } else {
+                normalPointers.norm_double = new double[elemCount];
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn("One of the normal labels could not be found");
+        }
+    }
+    if (std::none_of(guessedColor.begin(), guessedColor.end(), [](std::string s) { return s.empty(); })) {
+        if (std::any_of(guessedColor.begin(), guessedColor.end(),
+                [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
+            uint64_t maxSize = 0;
+            uint64_t elemCount = 0;
+            for (auto s : guessedColor) {
+                auto idx = this->elementIndexMap[s];
+                auto size = this->propertySizes[idx.first][idx.second];
+                elemCount += this->elementCount[idx.first];
+                maxSize = size > maxSize ? size : maxSize;
+            }
+            if (maxSize <= 1) {
+                colorPointers.col_uchar = new unsigned char[elemCount];
+            } else if (maxSize > 1 && maxSize < 8) {
+                colorPointers.col_float = new float[elemCount];
+            } else {
+                colorPointers.col_double = new double[elemCount];
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn("One of the color labels could not be found");
+        }
+    }
+    if (!guessedIndices.empty()) {
+        if (this->elementIndexMap.count(guessedIndices) > 0) {
+            auto idx = this->elementIndexMap[guessedIndices];
+            auto size = this->propertySizes[idx.first][idx.second];
+            auto elemCount =
+                this->elementCount[idx.first] * 3; // TODO modify this to work with anything besides triangles
+            faceCount = this->elementCount[idx.first];
+            if (size <= 1) {
+                facePointers.face_uchar = new unsigned char[elemCount];
+            } else if (size == 2) {
+                facePointers.face_u16 = new uint16_t[elemCount];
+            } else {
+                facePointers.face_u32 = new uint32_t[elemCount];
+            }
+            this->face_count = faceCount;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn("The triangle index label could not be found");
+        }
+    }
+
+    this->boundingBox.Set(FLT_MAX, FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+    float* bbPointer = const_cast<float*>(boundingBox.PeekBounds()); // hackedihack
+
+    if (this->hasBinaryFormat) {
+        // vector storing the read data seperately
+        std::vector<std::vector<char>> readData(this->elementCount.size());
+        for (size_t i = 0; i < readData.size(); i++) {
+            // maybe TODO: skip unnecessary elements
+            uint64_t readsize = elementSizes[i];
+            if (elementIndexMap.count(guessedIndices) > 0) {
+                auto idx = elementIndexMap[guessedIndices];
+                if (idx.first == i && listFlags[idx.first][idx.second]) {
+                    // we assume that faces are always triangular
+                    readsize = listSizes[idx.first][idx.second] + 3 * propertySizes[idx.first][idx.second];
+                }
+            }
+            readData[i].resize(elementCount[i] * readsize);
+            auto ms = readData[i].max_size();
+            instream.read(reinterpret_cast<char*>(readData[i].data()), elementCount[i] * readsize);
+            if (instream.fail()) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "Reading of the field with index %i failed", static_cast<int>(i));
+                this->clearAllFields();
+                return false;
             }
         }
-        if (this->nxPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->nyPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->nzPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef) {
-            try {
-                normals = plf.request_properties_from_element(
-                    vertElem,
-                        {this->nxPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->nyPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->nzPropSlot.Param<core::param::FlexEnumParam>()->Value()});
-            } catch (const std::exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("tinyply exception reading normals: %s", e.what());
+
+        // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always
+        // the case)
+        // this could be done partially in parallel
+        for (size_t i = 0; i < guessedPos.size(); i++) {
+            if (elementIndexMap.count(guessedPos[i]) > 0) {
+                auto idx = elementIndexMap[guessedPos[i]];
+                auto elemSize = elementSizes[idx.first];
+                auto size = propertySizes[idx.first][idx.second];
+                auto stride = propertyStrides[idx.first][idx.second];
+                if (posPointers.pos_float != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &posPointers.pos_float[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                        if (posPointers.pos_float[3 * v + i] < bbPointer[i]) {
+                            bbPointer[i] = posPointers.pos_float[3 * v + i];
+                        }
+                        if (posPointers.pos_float[3 * v + i] > bbPointer[i + 3]) {
+                            bbPointer[i + 3] = posPointers.pos_float[3 * v + i];
+                        }
+                    }
+                }
+                if (posPointers.pos_double != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &posPointers.pos_double[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                        if (posPointers.pos_double[3 * v + i] < bbPointer[i]) {
+                            bbPointer[i] = static_cast<float>(posPointers.pos_double[3 * v + i]);
+                        }
+                        if (posPointers.pos_double[3 * v + i] > bbPointer[i + 3]) {
+                            bbPointer[i + 3] = static_cast<float>(posPointers.pos_double[3 * v + i]);
+                        }
+                    }
+                }
             }
         }
-        if (this->rPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->gPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef &&
-            this->bPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef) {
-            try {
-                colors = plf.request_properties_from_element(
-                    vertElem,
-                        {this->rPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->gPropSlot.Param<core::param::FlexEnumParam>()->Value(),
-                            this->bPropSlot.Param<core::param::FlexEnumParam>()->Value()});
-            } catch (const std::exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("tinyply exception reading colors: %s", e.what());
+
+        for (size_t i = 0; i < guessedNormal.size(); i++) {
+            if (elementIndexMap.count(guessedNormal[i]) > 0) {
+                auto idx = elementIndexMap[guessedNormal[i]];
+                auto elemSize = elementSizes[idx.first];
+                auto size = propertySizes[idx.first][idx.second];
+                auto stride = propertyStrides[idx.first][idx.second];
+                if (normalPointers.norm_float != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &normalPointers.norm_float[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                    }
+                }
+                if (normalPointers.norm_double != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &normalPointers.norm_double[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                    }
+                }
+            }
+        }
+
+        for (size_t i = 0; i < guessedColor.size(); i++) {
+            if (i > 2) break;
+            if (elementIndexMap.count(guessedColor[i]) > 0) {
+                auto idx = elementIndexMap[guessedColor[i]];
+                auto elemSize = elementSizes[idx.first];
+                auto size = propertySizes[idx.first][idx.second];
+                auto stride = propertyStrides[idx.first][idx.second];
+                if (colorPointers.col_uchar != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &colorPointers.col_uchar[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                    }
+                }
+                if (colorPointers.col_float != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &colorPointers.col_float[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                    }
+                }
+                if (colorPointers.col_double != nullptr) {
+                    for (size_t v = 0; v < vertex_count; v++) {
+                        std::memcpy(
+                            &colorPointers.col_double[3 * v + i], &readData[idx.first][v * elemSize + stride], size);
+                    }
+                }
+            }
+        }
+
+        if (elementIndexMap.count(guessedIndices) > 0) {
+            auto idx = elementIndexMap[guessedIndices];
+            auto elemSize = elementSizes[idx.first];
+            auto size = propertySizes[idx.first][idx.second];
+            auto stride = propertyStrides[idx.first][idx.second];
+            auto listStartSize = listSizes[idx.first][idx.second];
+            auto totSize = listStartSize + 3 * size;
+            if (facePointers.face_uchar != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    std::memcpy(&facePointers.face_uchar[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
+                }
+            }
+            if (facePointers.face_u16 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    std::memcpy(&facePointers.face_u16[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
+                }
+            }
+            if (facePointers.face_u32 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    std::memcpy(&facePointers.face_u32[f * 3],
+                        &readData[idx.first][f * totSize + stride + listStartSize], 3 * size);
+                }
+            }
+        }
+        // change endianness if necessary
+        if (!isLittleEndian) {
+            // this could be done in parallel
+            if (posPointers.pos_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(posPointers.pos_float[3 * v + 0]);
+                    changeEndianness(posPointers.pos_float[3 * v + 1]);
+                    changeEndianness(posPointers.pos_float[3 * v + 2]);
+                }
+            }
+            if (posPointers.pos_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(posPointers.pos_double[3 * v + 0]);
+                    changeEndianness(posPointers.pos_double[3 * v + 1]);
+                    changeEndianness(posPointers.pos_double[3 * v + 2]);
+                }
+            }
+            if (normalPointers.norm_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(normalPointers.norm_float[3 * v + 0]);
+                    changeEndianness(normalPointers.norm_float[3 * v + 1]);
+                    changeEndianness(normalPointers.norm_float[3 * v + 2]);
+                }
+            }
+            if (normalPointers.norm_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(normalPointers.norm_double[3 * v + 0]);
+                    changeEndianness(normalPointers.norm_double[3 * v + 1]);
+                    changeEndianness(normalPointers.norm_double[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_uchar != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_uchar[3 * v + 0]);
+                    changeEndianness(colorPointers.col_uchar[3 * v + 1]);
+                    changeEndianness(colorPointers.col_uchar[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_float != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_float[3 * v + 0]);
+                    changeEndianness(colorPointers.col_float[3 * v + 1]);
+                    changeEndianness(colorPointers.col_float[3 * v + 2]);
+                }
+            }
+            if (colorPointers.col_double != nullptr) {
+                for (size_t v = 0; v < vertex_count; v++) {
+                    changeEndianness(colorPointers.col_double[3 * v + 0]);
+                    changeEndianness(colorPointers.col_double[3 * v + 1]);
+                    changeEndianness(colorPointers.col_double[3 * v + 2]);
+                }
+            }
+            if (facePointers.face_uchar != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_uchar[3 * f + 0]);
+                    changeEndianness(facePointers.face_uchar[3 * f + 1]);
+                    changeEndianness(facePointers.face_uchar[3 * f + 2]);
+                }
+            }
+            if (facePointers.face_u16 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_u16[3 * f + 0]);
+                    changeEndianness(facePointers.face_u16[3 * f + 1]);
+                    changeEndianness(facePointers.face_u16[3 * f + 2]);
+                }
+            }
+            if (facePointers.face_u32 != nullptr) {
+                for (size_t f = 0; f < face_count; f++) {
+                    changeEndianness(facePointers.face_u32[3 * f + 0]);
+                    changeEndianness(facePointers.face_u32[3 * f + 1]);
+                    changeEndianness(facePointers.face_u32[3 * f + 2]);
+                }
+            }
+        }
+    } else { // ascii format
+        std::string line;
+        for (size_t elm = 0; elm < this->elementCount.size(); elm++) {
+            // parse vertices
+            if (icompare(elementNames[elm], guessedVertices)) {
+                for (size_t i = 0; i < vertexCount; i++) {
+                    if (std::getline(instream, line)) {
+                        auto split = isplit(line);
+                        for (size_t j = 0; j < guessedPos.size(); j++) {
+                            if (elementIndexMap.count(guessedPos[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (posPointers.pos_float != nullptr) {
+                                    posPointers.pos_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (posPointers.pos_double != nullptr) {
+                                    posPointers.pos_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                                if (std::stof(split[idx.second]) < bbPointer[j]) {
+                                    bbPointer[j] = std::stof(split[idx.second]);
+                                }
+                                if (std::stof(split[idx.second]) > bbPointer[j + 3]) {
+                                    bbPointer[j + 3] = std::stof(split[idx.second]);
+                                }
+                            }
+                        }
+                        for (size_t j = 0; j < guessedNormal.size(); j++) {
+                            if (elementIndexMap.count(guessedNormal[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (normalPointers.norm_float != nullptr) {
+                                    normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (normalPointers.norm_double != nullptr) {
+                                    normalPointers.norm_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                            }
+                        }
+                        for (size_t j = 0; j < guessedColor.size(); j++) {
+                            if (elementIndexMap.count(guessedColor[j]) > 0) {
+                                auto idx = elementIndexMap[guessedPos[j]];
+                                if (colorPointers.col_uchar != nullptr) {
+                                    colorPointers.col_uchar[3 * i + j] =
+                                        static_cast<unsigned char>(std::stoul(split[idx.second]));
+                                }
+                                if (colorPointers.col_float != nullptr) {
+                                    colorPointers.col_float[3 * i + j] = std::stof(split[idx.second]);
+                                }
+                                if (colorPointers.col_double != nullptr) {
+                                    colorPointers.col_double[3 * i + j] = std::stod(split[idx.second]);
+                                }
+                            }
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
+                        return false;
+                    }
+                }
+            }
+            // parse faces
+            if (icompare(elementNames[elm], guessedFaces)) {
+                for (size_t i = 0; i < faceCount; i++) {
+                    if (std::getline(instream, line)) {
+                        auto split = isplit(line);
+                        if (elementIndexMap.count(guessedIndices)) {
+                            uint64_t faceSize = static_cast<uint64_t>(std::stoul(split[0]));
+                            if (faceSize != 3) {
+                                vislib::sys::Log::DefaultLog.WriteError(
+                                    "The PlyDataSource is currently only able to handle triangular faces");
+                                return false;
+                            }
+                            for (size_t j = 1; j < faceSize + 1; j++) {
+                                unsigned long bla = std::stoul(split[j]);
+                                if (facePointers.face_uchar != nullptr) {
+                                    facePointers.face_uchar[3 * i + j - 1] = static_cast<unsigned char>(bla);
+                                }
+                                if (facePointers.face_u16 != nullptr) {
+                                    facePointers.face_u16[3 * i + j - 1] = static_cast<uint16_t>(bla);
+                                }
+                                if (facePointers.face_u32 != nullptr) {
+                                    facePointers.face_u32[3 * i + j - 1] = static_cast<uint32_t>(bla);
+                                }
+                            }
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
+                        return false;
+                    }
+                }
             }
         }
     }
-    if (this->faceElemSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef) {
-        if (this->indexPropSlot.Param<core::param::FlexEnumParam>()->Value() != theUndef) {
-            try {
-                faces = plf.request_properties_from_element(this->faceElemSlot.Param<core::param::FlexEnumParam>()->Value(),
-                        {this->indexPropSlot.Param<core::param::FlexEnumParam>()->Value()});
-            } catch (const std::exception& e) {
-                vislib::sys::Log::DefaultLog.WriteError("tinyply exception reading faces: %s", e.what());
-            }
-        }
-    }
-    plf.read(instream);
+
+    instream.close();
+    return true;
 }
 
+/*
+ * io::PLYDataSource::filenameChanged
+ */
 bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
 
+    instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".", vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
-        // TODO ?
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+            vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        this->clearAllFields();
         return true;
     }
 
@@ -212,23 +689,50 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     guessedNormal.assign(3, "");
     guessedColor.assign(3, "");
 
-    vertices = normals = colors = faces = nullptr;
+    this->elementIndexMap.clear();
+    this->elementSizes.clear();
+    this->elementCount.clear();
+    this->elementNames.clear();
+    this->propertySizes.clear();
+    this->propertyStrides.clear();
+    this->propertySigns.clear();
+    this->listFlags.clear();
+    this->listSigns.clear();
+    this->listSizes.clear();
+    this->hasBinaryFormat = false;
+    this->isLittleEndian = true;
+    this->data_offset = 0;
 
     plf.parse_header(instream);
 
-    for (auto e: plf.get_elements()) {
+    uint64_t element_index = 0;
+    uint64_t property_index = 0;
+    uint64_t element_size = 0;
+
+    for (auto e : plf.get_elements()) {
         this->vertElemSlot.Param<core::param::FlexEnumParam>()->AddValue(e.name);
         this->faceElemSlot.Param<core::param::FlexEnumParam>()->AddValue(e.name);
-        if (icompare(e.name,"vertex")) {
+        if (icompare(e.name, "vertex")) {
             guessedVertices = e.name;
         }
         if (icompare(e.name, "face")) {
             guessedFaces = e.name;
         }
+        this->elementCount.push_back(static_cast<uint64_t>(e.size));
+        this->elementNames.push_back(e.name);
+        this->propertySizes.push_back(std::vector<uint64_t>());
+        this->propertyStrides.push_back(std::vector<uint64_t>());
+        this->propertySigns.push_back(std::vector<bool>());
+        this->listFlags.push_back(std::vector<bool>());
+        this->listSigns.push_back(std::vector<bool>());
+        this->listSizes.push_back(std::vector<uint64_t>());
 
+        property_index = 0;
+        element_size = 0;
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "element: %s, %u bytes", e.name.c_str(), e.size);
-        for (auto p: e.properties) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "    property: %s %s", p.name.c_str(), tinyply::PropertyTable[p.propertyType].str.c_str());
+        for (auto p : e.properties) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "    property: %s %s %i", p.name.c_str(),
+                tinyply::PropertyTable[p.propertyType].str.c_str(), tinyply::PropertyTable[p.propertyType].stride);
             this->xPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
             this->yPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
             this->zPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
@@ -259,19 +763,31 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             if (icompare(p.name, "nz")) {
                 guessedNormal[2] = p.name;
             }
-            if (icompare(p.name, "r")) {
+            if (icompare(p.name, "r") || icompare(p.name, "red") || icompare(p.name, "diffuse_red")) {
                 guessedColor[0] = p.name;
             }
-            if (icompare(p.name, "g")) {
+            if (icompare(p.name, "g") || icompare(p.name, "green") || icompare(p.name, "diffuse_green")) {
                 guessedColor[1] = p.name;
             }
-            if (icompare(p.name, "b")) {
+            if (icompare(p.name, "b") || icompare(p.name, "blue") || icompare(p.name, "diffuse_blue")) {
                 guessedColor[2] = p.name;
             }
-            if (icompare(p.name, "indices")){ // || icompare(p.name, "vertex_indices")) {
+            if (icompare(p.name, "indices") || icompare(p.name, "vertex_indices")) {
                 guessedIndices = p.name;
             }
+            elementIndexMap[p.name] = std::make_pair(element_index, property_index);
+            propertyStrides[propertyStrides.size() - 1].push_back(element_size);
+            element_size += tinyTypeSize(p.propertyType);
+            propertySizes[propertySizes.size() - 1].push_back(tinyTypeSize(p.propertyType));
+            propertySigns[propertySigns.size() - 1].push_back(tinyIsSigned(p.propertyType));
+            property_index++;
+
+            listFlags[listFlags.size() - 1].push_back(p.isList);
+            listSizes[listSizes.size() - 1].push_back(tinyTypeSize(p.listType));
+            listSigns[listSigns.size() - 1].push_back(tinyIsSigned(p.listType));
         }
+        elementSizes.push_back(element_size);
+        element_index++;
     }
 
     if (!guessedVertices.empty()) {
@@ -299,103 +815,292 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         }
     }
 
-//    using vislib::sys::Log;
-//    using vislib::sys::File;
-//    this->resetFrameCache();
-//    this->data_hash++;
-//
-//    if (file == nullptr) {
-//        file = new vislib::sys::FastFile();
-//    } else {
-//        file->Close();
-//    }
-//    assert(filename.Param<core::param::FilePathParam>() != nullptr);
-//    if (!file->Open(filename.Param<core::param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".", vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
-//        SAFE_DELETE(file);
-//        this->setFrameCount(1);
-//        this->initFrameCache(1);
-//        return true;
-//    }
-//
-//#define _ERROR_OUT(MSG) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-//        SAFE_DELETE(this->file); \
-//        this->setFrameCount(1); \
-//        this->initFrameCache(1); \
-//        return true;
-//#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-//        _ERROR_OUT("Unable to read MMPLD file header"); \
-//        }
-//
-//    char magicid[6];
-//    _ASSERT_READFILE(magicid, 6);
-//    if (::memcmp(magicid, "MMGDD", 6) != 0) {
-//        _ERROR_OUT("MMGDD file header id wrong");
-//    }
-//    unsigned short ver;
-//    _ASSERT_READFILE(&ver, 2);
-//    if (ver != 100) {
-//        _ERROR_OUT("MMGDD file header version wrong");
-//    }
-//
-//    uint32_t frmCnt = 0;
-//    _ASSERT_READFILE(&frmCnt, 4);
-//    if (frmCnt == 0) {
-//        _ERROR_OUT("MMGDD file does not contain any frame information");
-//    }
-//
-//    frameIdx.resize(frmCnt + 1);
-//    _ASSERT_READFILE(frameIdx.data(), frameIdx.size() * 8);
-//
-//    double memHere = static_cast<double>(vislib::sys::SystemInformation::AvailableMemorySize());
-//    memHere *= 0.25; // only use max 25% of the memory of this data
-//    Log::DefaultLog.WriteInfo("Memory available: %u MB\n", static_cast<uint32_t>(memHere / (1024.0 * 1024.0)));
-//    double memWant = static_cast<double>(frameIdx.back() - frameIdx.front());
-//    Log::DefaultLog.WriteInfo("Memory required: %u MB for %u frames total\n", static_cast<uint32_t>(memWant / (1024.0 * 1024.0)), static_cast<uint32_t>(frameIdx.size()));
-//    uint32_t cacheSize = static_cast<uint32_t>((memHere / memWant) * static_cast<double>(frameIdx.size()) + 0.5);
-//    Log::DefaultLog.WriteInfo("Cache set to %u frames\n", cacheSize);
-//
-//    this->setFrameCount(frmCnt);
-//    this->initFrameCache(cacheSize);
-//
-//#undef _ASSERT_READFILE
-//#undef _ERROR_OUT
-//
-//    return true;
+    // read the missing data ourself: file format, offset of the data to the file start
+    instream.seekg(0, instream.beg);
+    std::string line;
+    bool done = false;
+    while (std::getline(instream, line) && !done) {
+        if (icompare(line.substr(0, 6), "format")) {
+            if (icompare(line.substr(7, 3), "asc")) {
+                this->hasBinaryFormat = false;
+            } else if (icompare(line.substr(7, 3), "bin")) {
+                this->hasBinaryFormat = true;
+                if (icompare(line.substr(14, 3), "lit")) {
+                    this->isLittleEndian = true;
+                } else if (icompare(line.substr(14, 3), "big")) {
+                    this->isLittleEndian = false;
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "Endianness could not be determined, assuming little endian");
+                    this->isLittleEndian = true;
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn("File format could not be determined, assuming ASCII");
+                this->hasBinaryFormat = false;
+            }
+        }
+        if (icompare(line.substr(0, 10), "end_header")) {
+            this->data_offset = static_cast<size_t>(instream.tellg());
+            done = true;
+        }
+    }
+    instream.close();
+    return true;
 }
 
+/*
+ * io::PLYDataSource::anyEnumChanged
+ */
 bool io::PLYDataSource::anyEnumChanged(core::param::ParamSlot& slot) {
-    this->vertices = nullptr;
+    this->clearAllFields();
+    return true;
 }
 
-bool io::PLYDataSource::getDataCallback(core::Call& caller) {
+/*
+ * io::PLYDataSource::getSphereDataCallback
+ */
+bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
+    auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    if (c2 == nullptr) return false;
+
+    c2->SetParticleListCount(1);
+    MultiParticleDataCall::Particles& p = c2->AccessParticles(0);
+    p.SetCount(this->vertex_count);
+    // Always write data in the float pointer, since sphere data is only possible with float
+    bool copyfloat = false;
+    if (copyfloat && this->posPointers.pos_double != nullptr && this->posPointers.pos_float == nullptr) {
+        this->posPointers.pos_float = new float[this->vertex_count * 3];
+        for (size_t i = 0; i < this->vertex_count * 3; i++) {
+            this->posPointers.pos_float[i] = static_cast<float>(this->posPointers.pos_double[i]);
+        }
+    }
+
+    if (p.GetCount() > 0) {
+        if (this->posPointers.pos_float != nullptr) {
+            p.SetVertexData(SimpleSphericalParticles::VertexDataType::VERTDATA_FLOAT_XYZ, this->posPointers.pos_float);
+        } else if (this->posPointers.pos_double != nullptr) {
+            p.SetVertexData(
+                SimpleSphericalParticles::VertexDataType::VERTDATA_DOUBLE_XYZ, this->posPointers.pos_double);
+        } else {
+            p.SetCount(0);
+        }
+        if (colorPointers.col_uchar != nullptr) {
+            p.SetColourData(SimpleSphericalParticles::ColourDataType::COLDATA_UINT8_RGB, this->colorPointers.col_uchar);
+        } else if (colorPointers.col_float != nullptr) {
+            p.SetColourData(SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB, this->colorPointers.col_float);
+        } else {
+            p.SetColourData(SimpleSphericalParticles::ColourDataType::COLDATA_NONE, nullptr);
+        }
+    }
+    p.SetGlobalRadius(this->radiusSlot.Param<param::FloatParam>()->Value());
+
+    return true;
+}
+
+/*
+ * io::PLYDataSource::getSphereExtentCallback
+ */
+bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
     if (!assertData()) return false;
-    //Frame *f = nullptr;
-    //if (c2 != nullptr) {
-    //    f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID(), true));
-    //    if (f == nullptr) return false;
-    //    c2->SetUnlocker(new Unlocker(*f));
-    //    c2->SetFrameID(f->FrameNumber());
-    //    c2->SetDataHash(this->data_hash);
-    //    f->SetData(*c2);
-    //}
+
+    if (this->radiusSlot.IsDirty()) {
+        this->radiusSlot.ResetDirty();
+        this->sphereBoundingBox = this->boundingBox;
+        this->sphereBoundingBox.Grow(this->radiusSlot.Param<param::FloatParam>()->Value());
+        this->data_hash++;
+    }
+
+    c2->AccessBoundingBoxes().Clear();
+    c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->sphereBoundingBox);
+    c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->sphereBoundingBox);
+    c2->SetFrameCount(1);
+    c2->SetDataHash(this->data_hash);
 
     return true;
 }
 
-bool io::PLYDataSource::getExtentCallback(core::Call& caller) {
-    auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+/*
+ * io::PLYDataSource::getMeshDataCallback
+ */
+bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
+    auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
+    if (c2 == nullptr) return false;
+
+    // stupid if-cascade...
+    // if you come up with something more beautiful, just do it
+    if (posPointers.pos_float != nullptr) {
+        if (normalPointers.norm_float != nullptr) {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_float, colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_float, colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_float, colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_float, nullptr, nullptr, false);
+            }
+        } else if (normalPointers.norm_double != nullptr) {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_double, colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_double, colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float,
+                    normalPointers.norm_double, colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(
+                    static_cast<uint32_t>(this->vertex_count), posPointers.pos_float, nullptr, nullptr, nullptr, false);
+            }
+        } else {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float, nullptr,
+                    colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float, nullptr,
+                    colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_float, nullptr,
+                    colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(
+                    static_cast<uint32_t>(this->vertex_count), posPointers.pos_float, nullptr, nullptr, nullptr, false);
+            }
+        }
+    } else if (posPointers.pos_double != nullptr) {
+        if (normalPointers.norm_float != nullptr) {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_float, colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_float, colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_float, colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_float, nullptr, nullptr, false);
+            }
+        } else if (normalPointers.norm_double != nullptr) {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_double, colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_double, colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double,
+                    normalPointers.norm_double, colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double, nullptr,
+                    nullptr, nullptr, false);
+            }
+        } else {
+            if (colorPointers.col_uchar) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double, nullptr,
+                    colorPointers.col_uchar, nullptr, false);
+            } else if (colorPointers.col_float) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double, nullptr,
+                    colorPointers.col_float, nullptr, false);
+            } else if (colorPointers.col_double) {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double, nullptr,
+                    colorPointers.col_double, nullptr, false);
+            } else {
+                this->mesh.SetVertexData(static_cast<uint32_t>(this->vertex_count), posPointers.pos_double, nullptr,
+                    nullptr, nullptr, false);
+            }
+        }
+    } else {
+        this->mesh.SetVertexData(0, nullptr, nullptr, nullptr, nullptr, false);
+    }
+
+    if (facePointers.face_uchar != nullptr) {
+        this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_uchar, false);
+    } else if (facePointers.face_u16 != nullptr) {
+        this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_u16, false);
+    } else if (facePointers.face_u32 != nullptr) {
+        this->mesh.SetTriangleData(static_cast<uint32_t>(this->face_count), facePointers.face_u32, false);
+        // this->mesh.SetTriangleData(0, facePointers.face_uchar, false);
+    } else {
+        this->mesh.SetTriangleData(0, facePointers.face_uchar, false);
+    }
+
+    c2->SetObjects(1, &this->mesh);
+
+    return true;
+}
+
+/*
+ * io::PLYDataSource::getMeshExtentCallback
+ */
+bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
+    auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
+    if (c2 == nullptr) return false;
 
     if (!assertData()) return false;
 
-    if (c2 != nullptr) {
-        c2->SetFrameCount(1);
-        c2->SetDataHash(this->data_hash);
-        return true;
-    }
+    c2->AccessBoundingBoxes().Clear();
+    c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+    c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
+    c2->SetFrameCount(1);
+    c2->SetDataHash(this->data_hash);
 
     return true;
+}
+
+/*
+ * io::PLYDataSource::clearAllFields
+ */
+void io::PLYDataSource::clearAllFields(void) {
+    if (posPointers.pos_float != nullptr) {
+        delete[] posPointers.pos_float;
+        posPointers.pos_float = nullptr;
+    }
+    if (posPointers.pos_double != nullptr) {
+        delete[] posPointers.pos_double;
+        posPointers.pos_double = nullptr;
+    }
+    if (colorPointers.col_uchar != nullptr) {
+        delete[] colorPointers.col_uchar;
+        colorPointers.col_uchar = nullptr;
+    }
+    if (colorPointers.col_float != nullptr) {
+        delete[] colorPointers.col_float;
+        colorPointers.col_float = nullptr;
+    }
+    if (colorPointers.col_double != nullptr) {
+        delete[] colorPointers.col_double;
+        colorPointers.col_double = nullptr;
+    }
+    if (normalPointers.norm_float != nullptr) {
+        delete[] normalPointers.norm_float;
+        normalPointers.norm_float = nullptr;
+    }
+    if (normalPointers.norm_double != nullptr) {
+        delete[] normalPointers.norm_double;
+        normalPointers.norm_double = nullptr;
+    }
+    if (facePointers.face_uchar != nullptr) {
+        delete[] facePointers.face_uchar;
+        facePointers.face_uchar = nullptr;
+    }
+    if (facePointers.face_u16 != nullptr) {
+        delete[] facePointers.face_u16;
+        facePointers.face_u16 = nullptr;
+    }
+    if (facePointers.face_u32 != nullptr) {
+        delete[] facePointers.face_u32;
+        facePointers.face_u32 = nullptr;
+    }
+    this->vertex_count = 0;
+    this->face_count = 0;
 }

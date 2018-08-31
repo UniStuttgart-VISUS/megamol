@@ -100,9 +100,9 @@ bool OSPRayRenderer::create() {
         return false;
     }
 
-    this->initOSPRay(device);
+    //this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, "scivis");
+    //this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -121,10 +121,31 @@ void OSPRayRenderer::release() {
 ospray::OSPRayRenderer::Render
 */
 bool OSPRayRenderer::Render(megamol::core::Call& call) {
+    this->initOSPRay(device);
 
     if (device != ospGetCurrentDevice()) {
         ospSetCurrentDevice(device);
     }
+
+    // if user wants to switch renderer
+    if (this->rd_type.IsDirty()) {
+        ospRelease(camera);
+        ospRelease(world);
+        ospRelease(renderer);
+        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+        case PATHTRACER:
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
+            break;
+        case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+            this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+            break;
+        default:
+            this->setupOSPRay(renderer, camera, world, "scivis");
+        }
+        renderer_has_changed = true;
+        this->rd_type.ResetDirty();
+    }
+
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -195,23 +216,24 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospCommit(framebuffer);
     }
 
-
-    // if user wants to switch renderer
-    if (this->rd_type.IsDirty()) {
-        ospRelease(camera);
-        ospRelease(world);
-        ospRelease(renderer);
-        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
-        case SCIVIS:
-            this->setupOSPRay(renderer, camera, world, "scivis");
-            break;
-        case PATHTRACER:
-            this->setupOSPRay(renderer, camera, world, "pathtracer");
-            break;
-        }
-        renderer_has_changed = true;
-    }
-    setupOSPRayCamera(camera, cr);
+    //// if user wants to switch renderer
+    //if (this->rd_type.IsDirty()) {
+    //    ospRelease(camera);
+    //    ospRelease(world);
+    //    ospRelease(renderer);
+    //    switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+    //    case PATHTRACER:
+    //        this->setupOSPRay(renderer, camera, world, "pathtracer");
+    //        break;
+    //    case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
+    //        this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+    //        break;
+    //    default:
+    //        this->setupOSPRay(renderer, camera, world, "scivis");
+    //    }
+    //    renderer_has_changed = true;
+    //}
+    setupOSPRayCamera(camera, cr, this->scale);
     ospCommit(camera);
 
     osprayShader.Enable();
@@ -405,20 +427,17 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
         frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
 
     }
+    scale = 1.0f;
     if (frameCnt == 0) {
         frameCnt = 1;
-        //float scale = 1.0f;
-        //finalBox.Clear();
-        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        finalBox.MakeScaledWorld(scale);
+        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
     } else {
-        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-        finalBox.MakeScaledWorld(scale);
+        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
     }
-
+    
     cr->SetTimeFramesCount(frameCnt);
     cr->AccessBoundingBoxes() = finalBox;
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    cr->AccessBoundingBoxes().MakeScaledWorld(scale);
 
     return true;
 }
@@ -514,8 +533,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call,
     const double fovy = cr->GetCameraParameters()->ApertureAngle();
     const double aspect = static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
         static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
-    const double zNear = cr->GetCameraParameters()->NearClip();
-    const double zFar = cr->GetCameraParameters()->FarClip();
+    const double zNear = cr->GetCameraParameters()->NearClip() / this->scale;
+    const double zFar = cr->GetCameraParameters()->FarClip()   / this->scale;
 
     float up_x = cr->GetCameraParameters()->Up().GetX();
     float up_y = cr->GetCameraParameters()->Up().GetY();

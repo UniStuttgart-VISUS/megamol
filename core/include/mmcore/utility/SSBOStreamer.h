@@ -32,7 +32,7 @@ namespace utility {
     class MEGAMOLCORE_API SSBOStreamer {
     public:
 
-         SSBOStreamer();
+         SSBOStreamer(const std::string& debugLabel = std::string());
         ~SSBOStreamer();
 
         /// @param data the pointer to the original data
@@ -89,6 +89,11 @@ namespace utility {
         /// @param sync the abstract sync object to signal as done
         void SignalCompletion(unsigned int sync);
 
+		/// @param numItemsPerChunk the minimum number of items per chunk
+		/// @param up rounds up if true, otherwise rounds down.
+		/// @returns the alignment-friendly (rounded) number of items per chunk
+        GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
+
         GLuint GetHandle(void) const {
             return theSSBO;
         }
@@ -121,6 +126,8 @@ namespace utility {
         GLuint currIdx;
         std::vector<GLsync> fences;
         int numThr;
+        std::string debugLabel;
+        int offsetAlignment = 0;
     };
 
     template<class fun>

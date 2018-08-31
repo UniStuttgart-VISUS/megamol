@@ -492,6 +492,7 @@ void WavefrontObjDataSource::makeMesh(megamol::geocalls::CallTriMeshData::Mesh& 
     float *vd = new float[tris.Count() * 3 * 3];  // vertices
     float *nd = (tris[0].n) ? new float[tris.Count() * 3 * 3] : NULL;  // normals
     float *td = (tris[0].t) ? new float[tris.Count() * 3 * 2] : NULL;  // texture coordinates
+    unsigned int* fd = new unsigned int[tris.Count() * 3]; // faces. actually just 0,1,2,3,4... since everything is multiplied out already
     vislib::math::Cuboid<float> bbox(v[0].X(), v[0].Y(), v[0].Z(), v[0].X(), v[0].Y(), v[0].Z());
 
     for (SIZE_T ti = 0; ti < tris.Count(); ti++) {
@@ -527,13 +528,17 @@ void WavefrontObjDataSource::makeMesh(megamol::geocalls::CallTriMeshData::Mesh& 
             td[ti * 6 + 4 + 0] = t[tri.t3].X();
             td[ti * 6 + 4 + 1] = t[tri.t3].Y();
         }
+        fd[ti * 3 + 0] = ti * 3;
+        fd[ti * 3 + 1] = ti * 3 + 1;
+        fd[ti * 3 + 2] = ti * 3 + 2;
     }
 
     // TODO: normal smoothing?
     // TODO: data consolidation?
 
     mesh.SetVertexData(static_cast<unsigned int>(tris.Count() * 3), vd, nd, NULL, td, true); // now don't delete vd, nd, or td
-    mesh.SetTriangleData(0, NULL, false);
+    //mesh.SetTriangleData(0, NULL, false);
+    mesh.SetTriangleData(tris.Count(), fd, true);
 
     if (this->bbox.IsEmpty()) this->bbox = bbox;
     else this->bbox.Union(bbox);

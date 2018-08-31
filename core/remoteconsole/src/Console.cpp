@@ -13,10 +13,22 @@ void printGreeting() {
         << std::endl;
 }
 
-bool execCommand(Connection& conn, std::string command) {
+bool execCommand(Connection& conn, const std::string& command, const int index) {
     using std::cout;
     using std::endl;
     using std::string;
+
+    const std::string from = "%%i%%";
+    const std::string to = std::to_string(index);
+    std::string c2 = command;
+
+    if (index > -1) {
+        size_t start_pos = 0;
+        while ((start_pos = c2.find(from, start_pos)) != std::string::npos) {
+            c2.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+        }
+    }
 
     if (!conn.Connected()) {
         cout << "Socket not connected" << endl
@@ -24,12 +36,12 @@ bool execCommand(Connection& conn, std::string command) {
         return false;
     }
     cout << "Reply: " << endl
-        << conn.sendCommand(command) << endl
+        << conn.sendCommand(c2) << endl
         << endl;
     return true;
 }
 
-void runScript(Connection& conn, const std::string& scriptfile) {
+void runScript(Connection& conn, const std::string& scriptfile, const bool singleSend, const int index) {
     using std::cout;
     using std::cin;
     using std::endl;
@@ -38,20 +50,29 @@ void runScript(Connection& conn, const std::string& scriptfile) {
     cout << "Loading commands from \"" << scriptfile << "\"" << endl;
 
     std::ifstream file(scriptfile);
-    while (!file.eof()) {
-        std::string line;
-        //if (std::getline(file, line).eof()) break;
-        std::getline(file, line);
 
-        cout << line << endl;
+    if (singleSend) {
+        while (!file.eof()) {
+            std::string line;
+            // if (std::getline(file, line).eof()) break;
+            std::getline(file, line);
 
-        if (!line.empty()) {
-            if (!execCommand(conn, line)) {
-                cout << "\tFailed" << endl;
+            cout << line << endl;
+
+            if (!line.empty()) {
+                if (!execCommand(conn, line, index)) {
+                    cout << "\tFailed" << endl;
+                }
             }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
+    } else {
+        std::stringstream buf;
+        buf << file.rdbuf();
+        cout << buf.str() << endl;
+        if (!execCommand(conn, buf.str(), index)) {
+            cout << "\tFailed" << endl;
+        }
     }
 
     cout << "Script completed" << endl

@@ -91,6 +91,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
             case 1: vrtSize = 12; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ; break;
             case 2: vrtSize = 16; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR; break;
             case 3: vrtSize = 6; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ; break;
+            case 4: vrtSize = 24; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ; break;
             default: vrtSize = 0; vrtDatType = MultiParticleDataCall::Particles::VERTDATA_NONE; break;
         }
         if (vrtType != 0) {
@@ -101,6 +102,8 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
                 case 3: colSize = 4; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_I; break;
                 case 4: colSize = 12; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB; break;
                 case 5: colSize = 16; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA; break;
+                case 6: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA; break;
+                case 7: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_DOUBLE_I; break;
                 default: colSize = 0; colDatType = MultiParticleDataCall::Particles::COLDATA_NONE; break;
             }
         } else {
@@ -109,7 +112,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         }
         unsigned int stride = static_cast<unsigned int>(vrtSize + colSize);
 
-        if ((vrtType == 1) || (vrtType == 3)) {
+        if ((vrtType == 1) || (vrtType == 3) || (vrtType == 4)) {
             pts.SetGlobalRadius(*this->dat.AsAt<float>(p)); p += 4;
         } else {
             pts.SetGlobalRadius(0.05f);
@@ -122,7 +125,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
             p += 4;
         } else {
             pts.SetGlobalColour(192, 192, 192);
-            if (colType == 3) {
+            if (colType == 3 || colType == 7) {
                 pts.SetColourMapIndexValues(
                     *this->dat.AsAt<float>(p),
                     *this->dat.AsAt<float>(p + 4));
@@ -133,6 +136,14 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         }
 
         pts.SetCount(*this->dat.AsAt<UINT64>(p)); p += 8;
+
+        if (this->fileVersion == 103) {
+            auto const box = this->dat.AsAt<float>(p);
+            vislib::math::Cuboid<float> bbox;
+            bbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
+            pts.SetBBox(bbox);
+            p += 24;
+        }
 
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
         pts.SetColourData(colDatType, this->dat.At(p + vrtSize), stride);
@@ -303,7 +314,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     unsigned short ver;
     _ASSERT_READFILE(&ver, 2);
-    if (ver != 100 && ver != 101 && ver != 102) {
+    if (ver < 100 || ver > 103) {
         _ERROR_OUT("MMPLD file header version wrong");
     }
     this->fileVersion = ver;

@@ -15,7 +15,8 @@
 #include "vislib/VersionNumber.h"
 #include "vislib/sys/Log.h"
 #include "vislib/xmlUtils.h"
-
+#include <sstream>
+#include <fstream>
 
 using namespace megamol::core;
 using namespace megamol::core::utility::xml;
@@ -297,6 +298,8 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                         newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::STRING_SNIPPET);
                     } else if (MMXML_STRING("version").Equals(stype)) {
                         newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::VERSION_SNIPPET);
+                    } else if (MMXML_STRING("file").Equals(stype)) {
+                        newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::FILE_SNIPPET);
                     } else {
                         if (!MMXML_STRING("string").Equals(stype)) {
                             this->Warning("\"snippet\" with unknown type: using \"string\".");
@@ -346,6 +349,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                 newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::EMPTY_SNIPPET);
             } else if (MMXML_STRING("version").Equals(stype)) {
                 newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::VERSION_SNIPPET);
+                outChildState = XMLSTATE_CONTENT;
+            } else if (MMXML_STRING("file").Equals(stype)) {
+                newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::FILE_SNIPPET);
                 outChildState = XMLSTATE_CONTENT;
             } else {
                 if (!MMXML_STRING("string").Equals(stype)) {
@@ -504,6 +510,36 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
                 pn->Children().RemoveAll(e);
             }
             return true;
+        } else if (s->Type() == BTFSnippet::FILE_SNIPPET) {
+            vislib::StringA str = s->Content();
+
+            s->SetType(BTFSnippet::STRING_SNIPPET);
+            s->SetFile(str);
+            s->SetLine(0);
+            try {
+                if (!this->Reader().GetPath().IsEmpty()) {
+                    auto path = this->Reader().GetPath();
+                    std::ifstream infile(path + "/" + str);
+                    if (infile.is_open()) {
+                        std::stringstream cont;
+                        cont << infile.rdbuf();
+                        s->SetContent(cont.str().c_str());
+                    } else {
+                        std::stringstream msg;
+                        msg << "cannot open include '" << str << "' for snippet '" << s->Name() << "'";
+                        this->Error(msg.str().c_str());
+                    }
+                } else {
+                    std::stringstream msg;
+                    msg << "cannot find include '" << str << "' for snippet '" << s->Name() << "' : path is unknown";
+                    this->Error(msg.str().c_str());
+                }
+            } catch (...) {
+                std::stringstream msg;
+                msg << "cannot load referenced snippet file " << str;
+                this->Error(msg.str().c_str());
+                s->SetContent("");
+            }
         }
 
         BTFShader *ps = p.DynamicCast<BTFShader>();

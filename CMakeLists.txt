@@ -12,7 +12,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "default install path" FORCE)
 endif()
 
-# configure directories
+# Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
 set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
@@ -26,49 +26,50 @@ if(UNIX)
     endif()
 endif()
 
-    
-# GLOBAL DLL DEFINITIONS
+# Global definitions
 if(WIN32)
   #add_definitions(-DGL_LOAD_DLL)
 endif()
 
-# VERSIONS
+# Versions
 include(global_versioninfo)
 
-# MEGAMOL OPTIONS
+# MegaMol options
 include(megamol_options)
 
-# MEGAMOL MAKROS
+# MegaMol macros
 include(check_mmdep)
 
-# NUGET SETTINGS
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config NuGet.Config COPYONLY)
+# Clang-format
+include(ClangFormat)
 
+# NuGet
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
 
 ###############################
-# vislib
+# Vislib
 ###############################
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
 
 ###############################
-# core
+# Core
 ###############################
 add_subdirectory(${MEGAMOL_CORE_DIR})
 
 ###############################
-# console
+# Console
 ###############################
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
-# add directory structure for visual studio
+# Add directory structure for visual studio
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
 ###############################
-# configurator
+# Configurator
 ###############################
 if(WIN32)
   add_subdirectory(configurator)
@@ -80,7 +81,7 @@ endif()
 add_subdirectory(plugins)
 
 ###############################
-# utils
+# Utils
 ###############################
 add_subdirectory(utils)
 

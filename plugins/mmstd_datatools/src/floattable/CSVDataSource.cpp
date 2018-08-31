@@ -424,7 +424,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
             static_cast<unsigned int>(colCnt), static_cast<unsigned int>(rowCnt));
 
     } catch (const vislib::Exception& ex) {
-        this->GetCoreInstance()->Log().WriteError("Could not load \"%s\": %s [%s, %d]", filename, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        this->GetCoreInstance()->Log().WriteError("Could not load \"%s\": %s [%s, %d]", filename.PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
     } catch (...) {
