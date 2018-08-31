@@ -19,7 +19,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
   endif()
 
-  include_directories("include" "src" "3rd/nanoflann")
+  include_directories("include" "src" "3rd/nanoflann" "${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/tinyply/source")
 
   if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -72,7 +72,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CMAKE_CURRENT_BINARY_DIR}/tinyply-prefix/src/tinyply/source)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
