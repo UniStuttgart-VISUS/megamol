@@ -595,7 +595,7 @@ bool io::PLYDataSource::assertData() {
                         }
                         for (size_t j = 0; j < guessedColor.size(); j++) {
                             if (elementIndexMap.count(guessedColor[j]) > 0) {
-                                auto idx = elementIndexMap[guessedPos[j]];
+                                auto idx = elementIndexMap[guessedColor[j]];
                                 if (colorPointers.col_uchar != nullptr) {
                                     colorPointers.col_uchar[3 * i + j] =
                                         static_cast<unsigned char>(std::stoul(split[idx.second]));
@@ -772,7 +772,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             if (icompare(p.name, "b") || icompare(p.name, "blue") || icompare(p.name, "diffuse_blue")) {
                 guessedColor[2] = p.name;
             }
-            if (icompare(p.name, "indices") || icompare(p.name, "vertex_indices")) {
+            if (icompare(p.name, "indices") || icompare(p.name, "vertex_indices") || icompare(p.name, "vertex_index")) {
                 guessedIndices = p.name;
             }
             elementIndexMap[p.name] = std::make_pair(element_index, property_index);
