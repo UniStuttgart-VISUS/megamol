@@ -1,5 +1,5 @@
-#ifndef Texture3DView_hpp
-#define Texture3DView_hpp
+#ifndef MEGAMOLCORE_TEXTURE3DVIEW_H_INCLUDED
+#define MEGAMOLCORE_TEXTURE3DVIEW_H_INCLUDED
 
 #include "mmcore/utility/gl/Texture.h"
 #include "mmcore/utility/gl/Texture3D.h"
@@ -42,4 +42,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !Texture3DView_hpp
+#endif // !MEGAMOLCORE_TEXTURE3DVIEW_H_INCLUDED

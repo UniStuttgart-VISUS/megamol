@@ -1,5 +1,5 @@
-#ifndef FramebufferObject_hpp
-#define FramebufferObject_hpp
+#ifndef MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
+#define MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
 
 /*	Include space-lion files */
 #include "mmcore/utility/gl/Texture2D.h"
@@ -145,4 +145,4 @@ public:
 } // namespace core
 } // namespace megamol
 
-#endif // !FramebufferObject_hpp
+#endif // !MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED

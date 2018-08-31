@@ -1,5 +1,5 @@
-#ifndef GLSLProgram_h
-#define GLSLProgram_h
+#ifndef MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED
+#define MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 //	OpenGL Math Library
@@ -83,4 +83,4 @@ public:
 } // namespace core
 } // namespace megamol
 
-#endif // !GLSLProgram_hpp
+#endif // !MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED

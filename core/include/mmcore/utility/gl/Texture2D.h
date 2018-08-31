@@ -1,5 +1,5 @@
-#ifndef Texture2D_hpp
-#define Texture2D_hpp
+#ifndef MEGAMOLCORE_TEXTURE2D_H_INCLUDED
+#define MEGAMOLCORE_TEXTURE2D_H_INCLUDED
 
 #include "mmcore/utility/gl/Texture.h"
 
@@ -63,4 +63,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !Texture2D_hpp
+#endif // !MEGAMOLCORE_TEXTURE2D_H_INCLUDED

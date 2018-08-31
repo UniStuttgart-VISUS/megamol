@@ -1,5 +1,5 @@
-#ifndef BufferObject_hpp
-#define BufferObject_hpp
+#ifndef MEGAMOLCORE_BUFFEROBJECT_H_INCLUDED
+#define MEGAMOLCORE_BUFFEROBJECT_H_INCLUDED
 
 #include <iostream>
 
@@ -139,4 +139,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !BufferObject_hpp
+#endif // !MEGAMOLCORE_BUFFEROBJECT_H_INCLUDED

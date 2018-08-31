@@ -1,5 +1,5 @@
-#ifndef fetol_shaderStorageBufferObject_h
-#define fetol_shaderStorageBufferObject_h
+#ifndef MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
+#define MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
@@ -121,4 +121,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !ShaderStorageBufferObject_hpp
+#endif // !MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED

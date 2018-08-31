@@ -1,5 +1,5 @@
-#ifndef TextureCubemapArray_hpp
-#define TextureCubemapArray_hpp
+#ifndef MEGAMOLCORE_TEXTURECUBEMAPARRAY_H_INCLUDED
+#define MEGAMOLCORE_TEXTURECUBEMAPARRAY_H_INCLUDED
 
 #include "mmcore/utility/gl/Texture.h"
 
@@ -60,4 +60,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !TextureCubemapArray_hpp
+#endif // !MEGAMOLCORE_TEXTURECUBEMAPARRAY_H_INCLUDED

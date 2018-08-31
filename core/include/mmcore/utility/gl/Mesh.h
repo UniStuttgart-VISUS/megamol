@@ -1,7 +1,8 @@
-#ifndef Mesh_hpp
-#define Mesh_hpp
+#ifndef MEGAMOLCORE_MESH_H_INCLUDED
+#define MEGAMOLCORE_MESH_H_INCLUDED
 
 /*	Include system libraries */
+#include <memory>
 #include <string>
 #include <vector>
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -272,4 +273,4 @@ void megamol::core::utility::gl::Mesh::rebufferIndexData(
     }
 }
 
-#endif // !Mesh_hpp
+#endif // !MEGAMOLCORE_MESH_H_INCLUDED

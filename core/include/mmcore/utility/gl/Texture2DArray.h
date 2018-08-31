@@ -1,5 +1,5 @@
-#ifndef Texture2DArray_hpp
-#define Texture2DArray_hpp
+#ifndef MEGAMOLCORE_TEXTURE2DARRAY_H_INCLUDED
+#define MEGAMOLCORE_TEXTURE2DARRAY_H_INCLUDED
 
 #include "mmcore/utility/gl/Texture.h"
 
@@ -46,4 +46,4 @@ private:
 } // namespace core
 } // namespace megamol
 
-#endif // !Texture2DArray_hpp
+#endif // !MEGAMOLCORE_TEXTURE2DARRAY_H_INCLUDED

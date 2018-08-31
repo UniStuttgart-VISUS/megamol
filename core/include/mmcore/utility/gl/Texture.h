@@ -1,5 +1,5 @@
-#ifndef Texture_hpp
-#define Texture_hpp
+#ifndef MEGAMOLCORE_TEXTURE_H_INCLUDED
+#define MEGAMOLCORE_TEXTURE_H_INCLUDED
 
 #include <string>
 #include <vector>
@@ -137,4 +137,4 @@ public:
 } // namespace core
 } // namespace megamol
 
-#endif
+#endif //! MEGAMOLCORE_TEXTURE_H_INCLUDED

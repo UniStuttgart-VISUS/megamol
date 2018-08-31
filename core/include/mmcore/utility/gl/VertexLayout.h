@@ -1,5 +1,5 @@
-#ifndef VertexLayout_hpp
-#define VertexLayout_hpp
+#ifndef MEGAMOLCORE_VERTEXLAYOUT_H_INCLUDED
+#define MEGAMOLCORE_VERTEXLAYOUT_H_INCLUDED
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
@@ -59,4 +59,4 @@ inline bool operator==(VertexLayout const& lhs, VertexLayout const& rhs) {
 } // namespace core
 } // namespace megamol
 
-#endif // !VertexLayout_hpp
+#endif // !MEGAMOLCORE_VERTEXLAYOUT_H_INCLUDED
