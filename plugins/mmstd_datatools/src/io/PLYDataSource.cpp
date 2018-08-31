@@ -584,7 +584,7 @@ bool io::PLYDataSource::assertData() {
                         }
                         for (size_t j = 0; j < guessedNormal.size(); j++) {
                             if (elementIndexMap.count(guessedNormal[j]) > 0) {
-                                auto idx = elementIndexMap[guessedPos[j]];
+                                auto idx = elementIndexMap[guessedNormal[j]];
                                 if (normalPointers.norm_float != nullptr) {
                                     normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
                                 }
