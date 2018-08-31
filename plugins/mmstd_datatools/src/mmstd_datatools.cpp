@@ -73,6 +73,7 @@
 #include "MPDCListsConcatenate.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
+#include "ParticleTranslateRotateScale.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -208,6 +209,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCListsConcatenate>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::STLDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TriMeshSTLWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleTranslateRotateScale>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
