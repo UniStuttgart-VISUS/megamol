@@ -251,7 +251,6 @@ namespace MegaMolConf {
             }
             while (!stopQueued) {
                 System.Threading.Thread.Sleep(1000);
-                GraphicalModule gm = Form1.selectedModule;
                 // check current tab (is the correct instance controlled)
                 if (stopQueued) {
                     break;
@@ -324,6 +323,8 @@ namespace MegaMolConf {
                         connectionDeletions.Clear();
                     }
 
+                    // what the hell?
+                    GraphicalModule gm = Form1.selectedModule;
                     if (gm != null) {
 #if true
                         if (stopQueued)
@@ -415,8 +416,7 @@ namespace MegaMolConf {
             }
         }
 
-        internal void SendUpdate(string p, string v) {
-            GraphicalModule gm = Form1.selectedModule;
+        internal void SendUpdate(GraphicalModule gm, string p, string v) {
             if (gm != null) {
                 string prefix = $"{ParentForm.TabInstantiation(TabPage)}::{gm.Name}::";
                 string ans = null;
@@ -427,6 +427,10 @@ namespace MegaMolConf {
         }
 
         bool TryGetAnswer(ref string answer, ref string err) {
+            if (Connection == null)
+            {
+                return false;
+            }
             Communication.Response r = new Response();
             bool good = Connection.TryReceive(ref r, ref err);
             if (r != null) {
