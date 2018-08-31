@@ -206,7 +206,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
-    //initThreads();
+    // initThreads();
 
     // if data changed check is size has changed
     // if no directly upload
@@ -286,7 +286,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
 
 
 bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
-    //initThreads();
+    // initThreads();
 
     auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
     if (imgc == nullptr) return false;
@@ -405,8 +405,10 @@ void megamol::pbs::FBOCompositor2::receiverJob(
                 while (!comm.Recv(buf, recv_type::RECV) && !shutdown_) {
                     // status = close.wait_for(std::chrono::milliseconds(1));
                     // if (status == std::future_status::ready) break;
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
+#endif
                 }
                 if (shutdown_) break;
                 /*#if _DEBUG
@@ -428,6 +430,15 @@ void megamol::pbs::FBOCompositor2::receiverJob(
             size_t fbo_col_size = fbo_depth_size = static_cast<size_t>(vol);
             fbo_col_size *= static_cast<size_t>(col_buf_el_size_);
             fbo_depth_size *= static_cast<size_t>(depth_buf_el_size_);
+
+            if (header.depth_buf_size <= 1 || header.color_buf_size <= 1) {
+#if _DEBUG
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; depth_buf size: %d; depth_comp_buf size: %d;\n",
+                    fbo_col_size, header.color_buf_size, fbo_depth_size, header.depth_buf_size);
+#endif
+                continue;
+            }
 
             std::vector<char> col_buf(fbo_col_size);
             std::vector<char> col_comp_buf(header.color_buf_size);
@@ -641,8 +652,10 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Receiving client address\n");
 #endif
                 while (!registerComm_.Recv(buf) && !shutdown_) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOCompositor2: Recv failed on 'registerComm', trying again\n");
+#endif
                 }
 #if _DEBUG
                 if (!shutdown_) {
@@ -816,7 +829,7 @@ bool megamol::pbs::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const 
 
 
 bool megamol::pbs::FBOCompositor2::shutdownThreads() {
-    //close_promise_.set_value(true);
+    // close_promise_.set_value(true);
     shutdown_ = true;
     if (collector_thread_.joinable()) collector_thread_.join();
     if (this->initThreadsThread_.joinable()) this->initThreadsThread_.join();

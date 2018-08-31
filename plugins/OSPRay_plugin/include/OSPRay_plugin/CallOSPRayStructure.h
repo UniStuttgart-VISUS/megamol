@@ -40,6 +40,16 @@ enum class voxelDataType : uint8_t { UCHAR = 0, SHORT = 1, USHORT = 2, FLOAT = 3
 
 static std::string voxelDataTypeS[] = {"uchar", "short", "ushort", "float", "double"};
 
+static uint32_t voxelDataTypeOSP[] = {2500, 3000, 3500, 6000, 7000};
+
+// enum class voxelDataTypeOSP {
+//    UCHAR = OSP_UCHAR,
+//    SHORT = OSP_SHORT,
+//    USHORT = OSP_USHORT,
+//    FLOAT = OSP_FLOAT,
+//    DOUBLE = OSP_DOUBLE
+//};
+
 
 class OSPRayStructureContainer {
 public:
@@ -54,7 +64,7 @@ public:
     std::shared_ptr<std::vector<float>> normalData;
     std::shared_ptr<std::vector<float>> texData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
-    std::shared_ptr<std::vector<float>> voxels;
+    void* voxels;
     std::shared_ptr<std::vector<float>> gridOrigin;
     std::shared_ptr<std::vector<float>> gridSpacing;
     std::shared_ptr<std::vector<int>> dimensions;
@@ -73,7 +83,7 @@ public:
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
     std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however,
-                                                               //this makes access more concise in the renderer
+                                                               // this makes access more concise in the renderer
     void* ospstructure;
 
 
@@ -93,13 +103,24 @@ public:
     bool clippingBoxActive;
     bool dataChanged;
     bool materialChanged;
+    bool parameterChanged;
     bool isValid;
     bool smooth; //< valid for lines
+
+    // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
+    // TODO: both actually.
+    bool useMIP;
+    bool useGradient;
+    bool usePreIntegration;
+    bool useAdaptiveSampling;
+    float adaptiveFactor;
+    float adaptiveMaxRate;
 
     voxelDataType voxelDType;
 
     float samplingRate;
     float aoThreshold;
+    float aoRayOffsetFactor;
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

@@ -70,6 +70,8 @@ protected:
 
     core::param::ParamSlot aoThresholdSlot;
 
+    core::param::ParamSlot aoRayOffsetFactorSlot;
+
     /** The call for data */
     core::CallerSlot getDataSlot;
 

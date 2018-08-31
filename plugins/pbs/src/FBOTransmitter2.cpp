@@ -183,7 +183,9 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+#endif
                 }
                 /*#if _DEBUG
                 else {
@@ -411,7 +413,9 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
-            printf("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+#if _DEBUG	    
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+#endif
             registerComm.Connect(registerAddress);
 
             std::string hostname = std::string{"127.0.0.1"};
@@ -444,8 +448,10 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
 #endif
                 while (!registerComm.Recv(buf)) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+#endif
                 }
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
@@ -483,6 +489,8 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
 
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
+
 #ifdef WITH_MPI
         }
 #endif // WITH_MPI
@@ -514,9 +522,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetResetTiles();
             icetAddTile(
                 viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
-#if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#endif
         }
 #endif // WITH_MPI
     }
