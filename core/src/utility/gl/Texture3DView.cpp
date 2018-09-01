@@ -1,3 +1,9 @@
+/*
+ * Texture3DView.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #include "stdafx.h"
 #include "mmcore/utility/gl/Texture3DView.h"
 
@@ -5,6 +11,9 @@
 
 using namespace megamol::core::utility::gl;
 
+/*
+ * Texture3DView::Texture3DView
+ */
 Texture3DView::Texture3DView(std::string id, Texture3D const& source_texture, TextureLayout const& layout,
     GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels) {
@@ -25,23 +34,40 @@ Texture3DView::Texture3DView(std::string id, Texture3D const& source_texture, Te
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        // "Do something cop!"
-        std::cerr << "GL error during 3D texture view creation: " << err << std::endl;
+        // TODO proper error handling
     }
 }
 
+/*
+ * Texture3DView::bindTexture
+ */
 void Texture3DView::bindTexture() const { glBindTexture(GL_TEXTURE_3D, m_name); }
 
+/*
+ * Texture3DView::bindImage
+ */
 void Texture3DView::bindImage(GLuint location, GLenum access) const {
     glBindImageTexture(location, m_name, 0, GL_TRUE, 0, access, m_internal_format);
 }
 
+/*
+ * Texture3DView::getTextureLayout
+ */
 TextureLayout Texture3DView::getTextureLayout() const {
     return TextureLayout(m_internal_format, m_width, m_height, m_depth, m_format, m_type, m_levels);
 }
 
+/*
+ * Texture3DView::getWidth
+ */
 unsigned int Texture3DView::getWidth() { return m_width; }
 
+/*
+ * Texture3DView::getHeight
+ */
 unsigned int Texture3DView::getHeight() { return m_height; }
 
+/*
+ * Texture3DView::getDepth
+ */
 unsigned int Texture3DView::getDepth() { return m_depth; }

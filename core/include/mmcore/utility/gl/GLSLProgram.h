@@ -1,3 +1,9 @@
+/*
+ * GLSLProgram.h
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #ifndef MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED
 #define MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED
 

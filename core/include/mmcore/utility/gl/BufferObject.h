@@ -1,3 +1,9 @@
+/*
+ * BufferObject.h
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #ifndef MEGAMOLCORE_BUFFEROBJECT_H_INCLUDED
 #define MEGAMOLCORE_BUFFEROBJECT_H_INCLUDED
 

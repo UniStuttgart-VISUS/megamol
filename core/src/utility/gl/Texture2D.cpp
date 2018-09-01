@@ -1,3 +1,9 @@
+/*
+ * Texture2D.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #include "stdafx.h"
 #include "mmcore/utility/gl/Texture2D.h"
 
@@ -6,6 +12,9 @@
 
 using namespace megamol::core::utility::gl;
 
+/*
+ * Texture2D::Texture2D
+ */
 Texture2D::Texture2D(std::string id, TextureLayout const& layout, GLvoid* data, bool generateMipmap)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels)
     , m_width(layout.width)
@@ -36,20 +45,28 @@ Texture2D::Texture2D(std::string id, TextureLayout const& layout, GLvoid* data, 
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        // "Do something cop!"
-        std::cerr << "GL error during texture (id: " << id << ") creation: " << err << std::endl;
+        // TODO proper error handling
     }
 }
 
+/*
+ * Texture2D::bindTexture
+ */
 void Texture2D::bindTexture() const { glBindTexture(GL_TEXTURE_2D, m_name); }
 
+/*
+ * Texture2D::updateMipmaps
+ */
 void Texture2D::updateMipmaps() {
     glBindTexture(GL_TEXTURE_2D, m_name);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture2D::reload(TextureLayout const& layout, GLvoid* data, bool generateMipmap) {
+/*
+ * Texture2D::reload
+ */
+bool Texture2D::reload(TextureLayout const& layout, GLvoid* data, bool generateMipmap) {
     m_width = layout.width;
     m_height = layout.height;
     m_internal_format = layout.internal_format;
@@ -81,16 +98,22 @@ void Texture2D::reload(TextureLayout const& layout, GLvoid* data, bool generateM
     glBindTexture(GL_TEXTURE_2D, 0);
 
     GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        // "Do something cop!"
-        std::cerr << "GL error during  (id: " << m_id << ") reload: " << err << std::endl;
-    }
+    return (err == GL_NO_ERROR);
 }
 
+/*
+ * Texture2D::getTextureLayout
+ */
 TextureLayout Texture2D::getTextureLayout() const {
     return TextureLayout(m_internal_format, m_width, m_height, 1, m_format, m_type, m_levels);
 }
 
+/*
+ * Texture2D::getWidth
+ */
 unsigned int Texture2D::getWidth() const { return m_width; }
 
+/*
+ * Texture2D::getHeight
+ */
 unsigned int Texture2D::getHeight() const { return m_height; }

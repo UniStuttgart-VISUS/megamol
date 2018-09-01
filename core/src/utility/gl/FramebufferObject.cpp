@@ -1,8 +1,17 @@
+/*
+ * FramebufferObject.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #include "stdafx.h"
 #include "mmcore/utility/gl/FramebufferObject.h"
 
 using namespace megamol::core::utility::gl;
 
+/*
+ * FramebufferObject::FramebufferObject
+ */
 FramebufferObject::FramebufferObject(int width, int height, bool has_depth, bool has_stencil)
     : m_width(width), m_height(height) {
     glGenFramebuffers(1, &m_handle);
@@ -18,9 +27,7 @@ FramebufferObject::FramebufferObject(int width, int height, bool has_depth, bool
         m_depthbuffer = 0;
     }
 
-    /*
-    /	TODO: stencilbuffer
-    */
+    //TODO: stencilbuffer
     if (0 && has_stencil) {
         has_stencil = !has_stencil;
     }
@@ -28,6 +35,9 @@ FramebufferObject::FramebufferObject(int width, int height, bool has_depth, bool
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+/*
+ * FramebufferObject::~FramebufferObject
+ */
 FramebufferObject::~FramebufferObject() {
     /*	Delete framebuffer resources. Texture delete themselves when the vector is destroyed. */
     if (m_depthbuffer != 0) glDeleteRenderbuffers(1, &m_depthbuffer);
@@ -37,6 +47,9 @@ FramebufferObject::~FramebufferObject() {
     glDeleteFramebuffers(1, &m_handle);
 }
 
+/*
+ * FramebufferObject::createColorAttachment
+ */
 bool FramebufferObject::createColorAttachment(GLenum internalFormat, GLenum format, GLenum type) {
     GLint maxAttachments;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttachments);
@@ -67,6 +80,9 @@ bool FramebufferObject::createColorAttachment(GLenum internalFormat, GLenum form
     return true;
 }
 
+/*
+ * FramebufferObject::bind
+ */
 void FramebufferObject::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
     //	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -90,18 +106,27 @@ void FramebufferObject::bind() {
     glDrawBuffers(static_cast<unsigned int>(m_drawBufs.size()), m_drawBufs.data());
 }
 
+/*
+ * FramebufferObject::bind
+ */
 void FramebufferObject::bind(const std::vector<GLenum>& draw_buffers) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
 
     glDrawBuffers(static_cast<unsigned int>(draw_buffers.size()), draw_buffers.data());
 }
 
+/*
+ * FramebufferObject::bind
+ */
 void FramebufferObject::bind(std::vector<GLenum>&& draw_buffers) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
 
     glDrawBuffers(static_cast<unsigned int>(draw_buffers.size()), draw_buffers.data());
 }
 
+/*
+ * FramebufferObject::bindToRead
+ */
 void FramebufferObject::bindToRead(unsigned int index) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_handle);
     GLenum readBuffer;
@@ -110,6 +135,9 @@ void FramebufferObject::bindToRead(unsigned int index) {
     glReadBuffer(readBuffer);
 }
 
+/*
+ * FramebufferObject::bindToDraw
+ */
 void FramebufferObject::bindToDraw() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_handle);
     unsigned int bufsSize = static_cast<unsigned int>(m_colorbuffers.size());
@@ -120,19 +148,34 @@ void FramebufferObject::bindToDraw() {
     glDrawBuffers(bufsSize, drawBufs);
 }
 
+/*
+ * FramebufferObject::bindColorbuffer
+ */
 void FramebufferObject::bindColorbuffer(unsigned int index) {
     if (index < m_colorbuffers.size()) m_colorbuffers[index]->bindTexture();
 }
 
+/*
+ * FramebufferObject::bindDepthbuffer
+ */
 void FramebufferObject::bindDepthbuffer() { glBindTexture(GL_TEXTURE_2D, m_depthbuffer); }
 
+/*
+ * FramebufferObject::bindStencilbuffer
+ */
 void FramebufferObject::bindStencilbuffer() { glBindTexture(GL_TEXTURE_2D, m_stencilbuffer); }
 
+/*
+ * FramebufferObject::checkStatus
+ */
 bool FramebufferObject::checkStatus() const {
     if (glCheckFramebufferStatus(m_handle) == GL_FRAMEBUFFER_COMPLETE) return true;
     return false;
 }
 
+/*
+ * FramebufferObject::resize
+ */
 void FramebufferObject::resize(int new_width, int new_height) {
     m_width = new_width;
     m_height = new_height;

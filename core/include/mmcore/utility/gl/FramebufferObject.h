@@ -1,3 +1,9 @@
+/*
+ * FramebufferObject.h
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #ifndef MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
 #define MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
 
@@ -6,7 +12,6 @@
 
 /*	Include system libraries */
 #include <vector>
-//#include <iostream>
 #include <memory>
 #include <string>
 

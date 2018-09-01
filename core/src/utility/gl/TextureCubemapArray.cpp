@@ -1,3 +1,9 @@
+/*
+ * TextureCubemapArray.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #include "stdafx.h"
 #include "mmcore/utility/gl/TextureCubemapArray.h"
 
@@ -94,6 +100,6 @@ TextureLayout TextureCubemapArray::getTextureLayout() const {
 
 unsigned int TextureCubemapArray::getWidth() const { return m_width; }
 
-unsigned int TextureCubemapArray::getHeigth() const { return m_height; }
+unsigned int TextureCubemapArray::getHeight() const { return m_height; }
 
 unsigned int TextureCubemapArray::getLayers() const { return m_layers; }

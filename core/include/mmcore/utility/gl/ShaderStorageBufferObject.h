@@ -1,10 +1,13 @@
+/*
+ * ShaderStorageBufferObject.h
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #ifndef MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
 #define MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-
-/*	std includes */
-#include <iostream>
 
 namespace megamol {
 namespace core {
@@ -12,16 +15,27 @@ namespace utility {
 namespace gl {
 
 /**
- * \class ShaderStorageBufferObject
+ * @class ShaderStorageBufferObject
  *
- * \brief Encapsulates SSBO functionality. Consider using the more generic BufferObject class.
+ * @brief Encapsulates SSBO functionality. Consider using the more generic BufferObject class.
  *
- * \author Michael Becher
+ * @author Michael Becher
  */
 class ShaderStorageBufferObject {
 public:
+    /**
+     * Constructor
+     *
+     * @param size Size of the SSBO in bytes
+     * @param data Pointer to the data that should be stored into the SSBO
+     */
     ShaderStorageBufferObject(unsigned int size, const GLvoid* data);
 
+    /**
+     * Constructor
+     *
+     * @param datastorage Container of the data that should be copied to the new SSBO
+     */
     template <typename Container>
     ShaderStorageBufferObject(const Container& datastorage)
         : m_handle(0)
@@ -38,17 +52,39 @@ public:
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 
-    ~ShaderStorageBufferObject();
+    /**
+     * Destructor
+     */
+    virtual ~ShaderStorageBufferObject();
 
     /* Deleted copy constructor (C++11). No going around deleting copies of OpenGL Object with identical handles! */
     ShaderStorageBufferObject(const ShaderStorageBufferObject& cpy) = delete;
+
+    /* Deleted move constructor (C++11). No going around deleting copies of OpenGL Object with identical handles! */
     ShaderStorageBufferObject(ShaderStorageBufferObject&& other) = delete;
+
+    /* Deleted move operator (C++11). No going around deleting copies of OpenGL Object with identical handles! */
     ShaderStorageBufferObject& operator=(ShaderStorageBufferObject&& rhs) = delete;
+
+    /* Deleted assignment operator (C++11). No going around deleting copies of OpenGL Object with identical handles! */
     ShaderStorageBufferObject& operator=(const ShaderStorageBufferObject& rhs) = delete;
 
-    void reload(unsigned int size, GLuint index, const GLvoid* data);
+    /**
+     * Reloads the data in the ssbo
+     *
+     * @param size The size of the new data in bytes
+     * @param data Pointer to the new data
+     * @return True on success, false otherwise
+     */
+    bool reload(unsigned int size, const GLvoid* data);
 
-    template <typename Container> void reload(const Container& datastorage) {
+    /**
+     * Reloads the data in the SSBO
+     *
+     * @param datastorage Container storing the new data
+     * @return True on success, false otherwise
+     */
+    template <typename Container> bool reload(const Container& datastorage) {
         m_size = static_cast<unsigned int>(datastorage.size() * sizeof(Container::value_type));
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_handle);
@@ -56,38 +92,50 @@ public:
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         auto err = glGetError();
-        if (err != GL_NO_ERROR) {
-            std::cerr << "Error - SSBO - reload: " << err << std::endl;
-        }
+        return (err == GL_NO_ERROR);
     }
 
-    template <typename Container> void loadSubdata(const Container& datastorage, GLuint offset = 0) {
+    /**
+     * Changes the data in a part of the SSBO
+     * 
+     * @param datastorage Container storing the new data
+     * @param offset Offset of the target location from the start of the SSBO in bytes
+     * @return True on success, false otherwise
+     */
+    template <typename Container> bool loadSubdata(const Container& datastorage, GLuint offset = 0) {
         // check if feasible
         if ((offset + datastorage.size() * sizeof(Container::value_type)) > m_size) {
-            // TODO error message
-            return;
+            return false;
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_handle);
         glBufferSubData(
             GL_SHADER_STORAGE_BUFFER, offset, datastorage.size() * sizeof(Container::value_type), datastorage.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        return true;
     }
 
     /**
-    /	Binds SSBO to shader storage buffer target
-    */
+     * Binds SSBO to shader storage buffer target
+     */
     void bind();
 
     /**
-    /	Binds SSBO to an indexed shader storage buffer target
-    */
+     * Binds SSBO to an indexed shader storage buffer target
+     *
+     * @param index The index of the buffer target
+     */
     void bind(GLuint index);
 
-    static void copy(ShaderStorageBufferObject* src, ShaderStorageBufferObject* tgt) {
+    /**
+     * Copies the data from one SSBO into another
+     * 
+     * @param src The source buffer
+     * @param tgt The buffer the data gets copied to
+     */
+    static bool copy(ShaderStorageBufferObject* src, ShaderStorageBufferObject* tgt) {
         if (src->m_size > tgt->m_size) {
-            std::cerr << "Error: ShaderStorageBufferObject::copy - target buffer smaller than source." << std::endl;
-            return;
+            return false;
         }
 
         glBindBuffer(GL_COPY_READ_BUFFER, src->m_handle);
@@ -97,8 +145,14 @@ public:
 
         glBindBuffer(GL_COPY_READ_BUFFER, 0);
         glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+        return true;
     }
 
+    /**
+     * Get the size of the SSBO in bytes
+     *
+     * @return Size of the SSBO in bytes
+     */
     GLuint getSize();
 
 private:
@@ -109,10 +163,10 @@ private:
     GLuint m_size;
 
     /**
-    /	Size of the data that has actually been written to the buffer.
-    /	Note that this has to be set manually (usually from an atomic integer) after
-    /	usage of the buffer!
-    */
+     *	Size of the data that has actually been written to the buffer.
+     *	Note that this has to be set manually (usually from an atomic integer) after
+     *	usage of the buffer!
+     */
     GLuint m_written_size;
 };
 

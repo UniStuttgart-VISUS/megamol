@@ -1,3 +1,9 @@
+/*
+ * Texture3D.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Alle Rechte vorbehalten.
+ */
 #include "stdafx.h"
 #include "mmcore/utility/gl/Texture3D.h"
 
@@ -6,6 +12,9 @@
 
 using namespace megamol::core::utility::gl;
 
+/*
+ * Texture3D::Texture3D
+ */
 Texture3D::Texture3D(std::string id, TextureLayout const& layout, GLvoid* data)
     : Texture(id, layout.internal_format, layout.format, layout.type, layout.levels)
     , m_width(layout.width)
@@ -31,20 +40,28 @@ Texture3D::Texture3D(std::string id, TextureLayout const& layout, GLvoid* data)
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        // "Do something cop!"
-        std::cerr << "GL error during 3D texture (id:" << id << ") creation: " << err << std::endl;
+        // TODO proper error handling;
     }
 }
 
+/*
+ * Texture3D::bindTexture
+ */
 void Texture3D::bindTexture() const { glBindTexture(GL_TEXTURE_3D, m_name); }
 
+/*
+ * Texture3D::updateMipmaps
+ */
 void Texture3D::updateMipmaps() {
     glBindTexture(GL_TEXTURE_3D, m_name);
     glGenerateMipmap(GL_TEXTURE_3D);
     glBindTexture(GL_TEXTURE_3D, 0);
 }
 
-void Texture3D::reload(TextureLayout const& layout, GLvoid* data) {
+/*
+ * Texture3D::reload
+ */
+bool Texture3D::reload(TextureLayout const& layout, GLvoid* data) {
     m_width = layout.width;
     m_height = layout.height;
     m_depth = layout.depth;
@@ -71,18 +88,27 @@ void Texture3D::reload(TextureLayout const& layout, GLvoid* data) {
     glBindTexture(GL_TEXTURE_3D, 0);
 
     GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        // "Do something cop!"
-        std::cerr << "GL error during texture reloading: " << err << std::endl;
-    }
+    return (err == GL_NO_ERROR);
 }
 
+/*
+ * Texture3D::getTextureLayout
+ */
 TextureLayout Texture3D::getTextureLayout() const {
     return TextureLayout(m_internal_format, m_width, m_height, m_depth, m_format, m_type, m_levels);
 }
 
+/*
+ * Texture3D::getWidth
+ */
 unsigned int Texture3D::getWidth() { return m_width; }
 
+/*
+ * Texture3D::getHeight
+ */
 unsigned int Texture3D::getHeight() { return m_height; }
 
+/*
+ * Texture3D::getDepth
+ */
 unsigned int Texture3D::getDepth() { return m_depth; }
