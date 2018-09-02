@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule2000GT.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -35,7 +35,7 @@ namespace protein {
     /**
      * Renderer for simple sphere glyphs
      */
-    class CartoonTessellationRenderer2000GT : public megamol::core::view::Renderer3DModule2000GT {
+    class CartoonTessellationRenderer2000GT : public megamol::core::view::Renderer3DModule_2 {
     public:
 
         /**

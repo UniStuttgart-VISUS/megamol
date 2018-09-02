@@ -1,12 +1,12 @@
 /*
- * View3D2000GT.cpp
+ * View3D_2.cpp
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/View3D2000GT.h"
+#include "mmcore/view/View3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #    include <windows.h>
@@ -21,7 +21,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRender3D2000GT.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h" // TODO new call?
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -42,9 +42,9 @@ using namespace megamol::core;
 using namespace megamol::core::view;
 
 /*
- * View3D2000GT::View3D2000GT
+ * View3D_2::View3D_2
  */
-View3D2000GT::View3D2000GT(void)
+View3D_2::View3D_2(void)
     : view::AbstractView3D()
     , AbstractCamParamSync()
     , cursor2d()
@@ -101,114 +101,114 @@ View3D2000GT::View3D2000GT(void)
 
     // TODO implement
 
-    this->rendererSlot.SetCompatibleCall<CallRender3D2000GTDescription>();
+    this->rendererSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
     // TODO implement
 }
 
 /*
- * View3D2000GT::~View3D2000GT
+ * View3D_2::~View3D_2
  */
-View3D2000GT::~View3D2000GT(void) {
+View3D_2::~View3D_2(void) {
     this->Release();
     this->overrideCall = nullptr; // DO NOT DELETE
 }
 
 /*
- * View3D2000GT::GetCameraSyncNumber
+ * View3D_2::GetCameraSyncNumber
  */
-unsigned int view::View3D2000GT::GetCameraSyncNumber(void) const {
+unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
 
 
 /*
- * View3D2000GT::SerialiseCamera
+ * View3D_2::SerialiseCamera
  */
-void view::View3D2000GT::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO implement
 }
 
 
 /*
- * View3D2000GT::DeserialiseCamera
+ * View3D_2::DeserialiseCamera
  */
-void view::View3D2000GT::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::Render
+ * View3D_2::Render
  */
-void View3D2000GT::Render(const mmcRenderViewContext& context) {
+void View3D_2::Render(const mmcRenderViewContext& context) {
     const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->bkgndColour();
     glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 /*
- * View3D2000GT::ResetView
+ * View3D_2::ResetView
  */
-void View3D2000GT::ResetView(void) {
+void View3D_2::ResetView(void) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::Resize
+ * View3D_2::Resize
  */
-void View3D2000GT::Resize(unsigned int width, unsigned int height) {
+void View3D_2::Resize(unsigned int width, unsigned int height) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::SetCursor2DButtonState
+ * View3D_2::SetCursor2DButtonState
  */
-void View3D2000GT::SetCursor2DButtonState(unsigned int btn, bool down) {
+void View3D_2::SetCursor2DButtonState(unsigned int btn, bool down) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::SetCursor2DPosition
+ * View3D_2::SetCursor2DPosition
  */
-void View3D2000GT::SetCursor2DPosition(float x, float y) {
+void View3D_2::SetCursor2DPosition(float x, float y) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::SetInputModifier
+ * View3D_2::SetInputModifier
  */
-void View3D2000GT::SetInputModifier(mmcInputModifier mod, bool down) {
+void View3D_2::SetInputModifier(mmcInputModifier mod, bool down) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::OnRenderView
+ * View3D_2::OnRenderView
  */
-bool View3D2000GT::OnRenderView(Call& call) {
+bool View3D_2::OnRenderView(Call& call) {
     // TODO implement
     return true;
 }
 
 /* 
- * View3D2000GT::UpdateFreeze
+ * View3D_2::UpdateFreeze
  */
-void View3D2000GT::UpdateFreeze(bool freeze) {
+void View3D_2::UpdateFreeze(bool freeze) {
     // intentionally empty?
 }
 
 /*
- * View3D2000GT::unpackMouseCoordinates
+ * View3D_2::unpackMouseCoordinates
  */
-void View3D2000GT::unpackMouseCoordinates(float& x, float& y) {
+void View3D_2::unpackMouseCoordinates(float& x, float& y) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::create
+ * View3D_2::create
  */
-bool View3D2000GT::create(void) {
+bool View3D_2::create(void) {
     vislib::graphics::gl::ShaderSource lineVertSrc;
     vislib::graphics::gl::ShaderSource lineFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::vertex", lineVertSrc)) {
@@ -233,98 +233,98 @@ bool View3D2000GT::create(void) {
 }
 
 /*
- * View3D2000GT::release
+ * View3D_2::release
  */
-void View3D2000GT::release(void) {
+void View3D_2::release(void) {
     this->removeTitleRenderer();
 }
 
 /*
- * View3D2000GT::mouseSensitivityChanged
+ * View3D_2::mouseSensitivityChanged
  */
-bool View3D2000GT::mouseSensitivityChanged(param::ParamSlot& p) {
+bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) {
     return true;
 }
 
 /*
- * View3D2000GT::renderBBox
+ * View3D_2::renderBBox
  */
-void View3D2000GT::renderBBox(void) {
+void View3D_2::renderBBox(void) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::renderBBoxBackside
+ * View3D_2::renderBBoxBackside
  */
-void View3D2000GT::renderBBoxBackside(void) {
+void View3D_2::renderBBoxBackside(void) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::renderBBoxFrontside
+ * View3D_2::renderBBoxFrontside
  */
-void View3D2000GT::renderBBoxFrontside(void) {
+void View3D_2::renderBBoxFrontside(void) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::renderLookAt
+ * View3D_2::renderLookAt
  */
-void View3D2000GT::renderLookAt(void) {
+void View3D_2::renderLookAt(void) {
     // TODO implement
 }
 
 /*
- * View3D2000GT::OnGetCamParams
+ * View3D_2::OnGetCamParams
  */
-bool View3D2000GT::OnGetCamParams(CallCamParamSync& c) {
-    // TODO implement
-    return true;
-}
-
-/*
- * View3D2000GT::onStoreCamera
- */
-bool View3D2000GT::onStoreCamera(param::ParamSlot& p) {
+bool View3D_2::OnGetCamParams(CallCamParamSync& c) {
     // TODO implement
     return true;
 }
 
 /*
- * View3D2000GT::onRestoreCamera
+ * View3D_2::onStoreCamera
  */
-bool View3D2000GT::onRestoreCamera(param::ParamSlot& p) {
+bool View3D_2::onStoreCamera(param::ParamSlot& p) {
     // TODO implement
     return true;
 }
 
 /*
- * View3D2000GT::onResetView
+ * View3D_2::onRestoreCamera
  */
-bool View3D2000GT::onResetView(param::ParamSlot& p) {
+bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
+    // TODO implement
+    return true;
+}
+
+/*
+ * View3D_2::onResetView
+ */
+bool View3D_2::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }
 
 /*
- * View3D2000GT::viewKeyPressed
+ * View3D_2::viewKeyPressed
  */
-bool View3D2000GT::viewKeyPressed(param::ParamSlot& p) {
+bool View3D_2::viewKeyPressed(param::ParamSlot& p) {
     // TODO implement
     return true;
 }
 
 /*
- * View3D2000GT::onToggleButton
+ * View3D_2::onToggleButton
  */
-bool View3D2000GT::onToggleButton(param::ParamSlot& p) {
+bool View3D_2::onToggleButton(param::ParamSlot& p) {
     // TODO implement
     return true;
 }
 
 /*
- * View3D2000GT::renderViewCube
+ * View3D_2::renderViewCube
  */
-void View3D2000GT::renderViewCube(void) {
+void View3D_2::renderViewCube(void) {
     // TODO implement
 }

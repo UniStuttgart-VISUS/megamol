@@ -1,12 +1,12 @@
 /*
- * View3D2000GT.h
+ * View3D_2.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VIEW3D2000GT_H_INCLUDED
-#define MEGAMOLCORE_VIEW3D2000GT_H_INCLUDED
+#ifndef MEGAMOLCORE_View3D_2_H_INCLUDED
+#define MEGAMOLCORE_View3D_2_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -43,7 +43,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3D2000GT : public AbstractView3D, public AbstractCamParamSync {
+class MEGAMOLCORE_API View3D_2 : public AbstractView3D, public AbstractCamParamSync {
 
 public:
     /**
@@ -51,7 +51,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "View3D2000GT"; }
+    static const char* ClassName(void) { return "View3D_2"; }
 
     /**
      * Answer a human readable description of this module.
@@ -68,10 +68,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    View3D2000GT(void);
+    View3D_2(void);
 
     /** Dtor. */
-    virtual ~View3D2000GT(void);
+    virtual ~View3D_2(void);
 
     /**
      * Answer the default time for this view
@@ -441,4 +441,4 @@ protected:
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_VIEW3D2000GT_H_INCLUDED */
+#endif /* MEGAMOLCORE_View3D_2_H_INCLUDED */

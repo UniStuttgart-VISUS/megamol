@@ -1,19 +1,19 @@
 /*
- * CallRender3D2000GT.h
+ * CallRender3D_2.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLRENDER3D2000GT_H_INCLUDED
-#define MEGAMOLCORE_CALLRENDER3D2000GT_H_INCLUDED
+#ifndef MEGAMOLCORE_CallRender3D_2_H_INCLUDED
+#define MEGAMOLCORE_CallRender3D_2_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender3D2000GT.h"
+#include "mmcore/view/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutput.h"
 
@@ -35,14 +35,14 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API CallRender3D2000GT : public AbstractCallRender3D2000GT, public RenderOutput {
+class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public RenderOutput {
 public:
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallRender3D2000GT"; }
+    static const char* ClassName(void) { return "CallRender3D_2"; }
 
     /**
      * Gets a human readable description of the module.
@@ -81,10 +81,10 @@ public:
     }
 
     /** Ctor. */
-    CallRender3D2000GT(void);
+    CallRender3D_2(void);
 
     /** Dtor. */
-    virtual ~CallRender3D2000GT(void);
+    virtual ~CallRender3D_2(void);
 
     /**
      * Answer the mouse flags
@@ -151,7 +151,7 @@ public:
      *
      * @return A reference to this
      */
-    CallRender3D2000GT& operator=(const CallRender3D2000GT& rhs);
+    CallRender3D_2& operator=(const CallRender3D_2& rhs);
 
 private:
     /** x-coordinate of the mouse pointer */
@@ -171,10 +171,10 @@ private:
 #endif /* _WIN32 */
 
 /** Description class typedef */
-typedef factories::CallAutoDescription<CallRender3D2000GT> CallRender3D2000GTDescription;
+typedef factories::CallAutoDescription<CallRender3D_2> CallRender3D_2Description;
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CALLRENDER3D2000GT_H_INCLUDED */
+#endif /* MEGAMOLCORE_CallRender3D_2_H_INCLUDED */

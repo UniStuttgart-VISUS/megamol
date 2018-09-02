@@ -1,12 +1,12 @@
 /*
- * AbstractCallRender3D2000GT.h
+ * AbstractCallRender3D_2.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTCALLRENDER3D2000GT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTCALLRENDER3D2000GT_H_INCLUDED
+#ifndef MEGAMOLCORE_ABSTRACTCallRender3D_2_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTCallRender3D_2_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -36,7 +36,7 @@ namespace view {
      * Function "GetCapabilities" asks the callee to set the capabilities
      * flags of the call.
      */
-    class MEGAMOLCORE_API AbstractCallRender3D2000GT : public AbstractCallRender {
+    class MEGAMOLCORE_API AbstractCallRender3D_2 : public AbstractCallRender {
     public:
 
         /** Capability of rendering (must be present) */
@@ -48,7 +48,7 @@ namespace view {
         /** Capability to represent dynamic (time-varying) data */
         static const UINT64 CAP_ANIMATION;
 
-        virtual ~AbstractCallRender3D2000GT(void);
+        virtual ~AbstractCallRender3D_2(void);
 
         /**
          * Accesses the bounding boxes of the output of the callee. This can
@@ -170,12 +170,12 @@ namespace view {
          *
          * @return A reference to this
          */
-        AbstractCallRender3D2000GT& operator=(const AbstractCallRender3D2000GT& rhs);
+        AbstractCallRender3D_2& operator=(const AbstractCallRender3D_2& rhs);
 
     protected:
 
         /** Ctor. */
-        AbstractCallRender3D2000GT(void);
+        AbstractCallRender3D_2(void);
 
     private:
 
@@ -203,4 +203,4 @@ namespace view {
 } /* end namespace megamol */
 
 
-#endif /* MEGAMOLCORE_ABSTRACTCALLRENDER3D2000GT_H_INCLUDED */
+#endif /* MEGAMOLCORE_ABSTRACTCallRender3D_2_H_INCLUDED */

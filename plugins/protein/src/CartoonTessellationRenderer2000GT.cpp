@@ -11,7 +11,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D2000GT.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector4fParam.h"
@@ -39,7 +39,7 @@ const GLuint SSBObindingPoint = 2;
 /*
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
-CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void) : Renderer3DModule2000GT(),
+CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void) : Renderer3DModule_2(),
     getDataSlot("getdata", "Connects to the data source"),
     fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
     scalingParam("scaling", "scaling factor for particle radii"),
@@ -320,13 +320,13 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 * GetCapabilities
 */
 bool CartoonTessellationRenderer2000GT::GetCapabilities(Call& call) {
-    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
+    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     cr->SetCapabilities(
-        view::CallRender3D2000GT::CAP_RENDER
-        | view::CallRender3D2000GT::CAP_LIGHTING
-        | view::CallRender3D2000GT::CAP_ANIMATION
+        view::CallRender3D_2::CAP_RENDER
+        | view::CallRender3D_2::CAP_LIGHTING
+        | view::CallRender3D_2::CAP_ANIMATION
         );
 
     return true;
@@ -337,7 +337,7 @@ bool CartoonTessellationRenderer2000GT::GetCapabilities(Call& call) {
 * GetExtents
 */
 bool CartoonTessellationRenderer2000GT::GetExtents(Call& call) {
-    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
+    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall *mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -400,7 +400,7 @@ bool CartoonTessellationRenderer2000GT::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    view::CallRender3D2000GT *cr = dynamic_cast<view::CallRender3D2000GT*>(&call);
+    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;
