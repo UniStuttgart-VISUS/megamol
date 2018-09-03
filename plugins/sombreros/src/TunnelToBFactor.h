@@ -6,13 +6,13 @@
 #ifndef MMSOMBREROSPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
 #define MMSOMBREROSPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "TunnelResidueDataCall.h"
@@ -21,84 +21,79 @@
 namespace megamol {
 namespace sombreros {
 
-    class TunnelToBFactor : public megamol::core::Module {
-    public:
+class TunnelToBFactor : public megamol::core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "TunnelToBFactor"; }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "TunnelToBFactor";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module for writing tunnel-information to the B-factor of a MolecularDataCall";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module for writing tunnel-information to the B-factor of a MolecularDataCall";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    TunnelToBFactor(void);
 
-        /** Ctor. */
-        TunnelToBFactor(void);
+    /** Dtor. */
+    virtual ~TunnelToBFactor(void);
 
-        /** Dtor. */
-        virtual ~TunnelToBFactor(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Call for get data.
+     */
+    bool getData(megamol::core::Call& call);
 
-        /**
-         * Implementation of 'release'.
-         */
-        virtual void release(void);
+    /**
+     * Call for get extent.
+     */
+    bool getExtent(megamol::core::Call& call);
 
-        /**
-         * Call for get data.
-         */
-        bool getData(megamol::core::Call& call);
+private:
+    /**
+     * Applies the B-Factor changes to the outgoing call
+     */
+    void applyBFactor(protein_calls::MolecularDataCall* outCall, protein_calls::MolecularDataCall* inCall,
+        TunnelResidueDataCall* tunnelCall);
 
-        /**
-         * Call for get extent.
-         */
-        bool getExtent(megamol::core::Call& call);
-    private:
+    /** Slot for the MolecularDataCall output */
+    core::CalleeSlot dataOutSlot;
 
-        /**
-         * Applies the B-Factor changes to the outgoing call
-         */
-        void applyBFactor(protein_calls::MolecularDataCall * outCall, protein_calls::MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall);
+    /** Slot for the molecule data input */
+    core::CallerSlot molInSlot;
 
-        /** Slot for the MolecularDataCall output */
-        core::CalleeSlot dataOutSlot;
+    /** Slot for the tunnel input */
+    core::CallerSlot tunnelInSlot;
 
-        /** Slot for the molecule data input */
-        core::CallerSlot molInSlot;
-
-        /** Slot for the tunnel input */
-        core::CallerSlot tunnelInSlot;
-
-        /** Storage for the new bFactors */
-        std::vector<float> bFactors;
-    };
+    /** Storage for the new bFactors */
+    std::vector<float> bFactors;
+};
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

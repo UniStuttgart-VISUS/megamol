@@ -10,22 +10,22 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/KeyCode.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 
-#include <set>
 #include <iterator>
+#include <set>
 
 using namespace megamol;
 using namespace megamol::sombreros;
@@ -36,17 +36,18 @@ using namespace megamol::core;
 /*
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
-SombreroMeshRenderer::SombreroMeshRenderer(void) : Renderer3DModule(),
-        getDataSlot("getData", "The slot to fetch the tri-mesh data"),
-        getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
-        showVertices("showVertices", "Flag whether to show the verices of the object"),
-        lighting("lighting", "Flag whether or not use lighting for the surface"),
-        surFrontStyle("frontstyle", "The rendering style for the front surface"),
-        surBackStyle("backstyle", "The rendering style for the back surface"),
-        windRule("windingrule", "The triangle edge winding rule"),
-        colorSlot("color", "The triangle color (if not colors are read from file)"),
-        doScaleSlot("doScale", "Do Scaling of model data"),
-        showSweatBandSlot("showSweatband", "Activates the display of the sweatband line") {
+SombreroMeshRenderer::SombreroMeshRenderer(void)
+    : Renderer3DModule()
+    , getDataSlot("getData", "The slot to fetch the tri-mesh data")
+    , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
+    , showVertices("showVertices", "Flag whether to show the verices of the object")
+    , lighting("lighting", "Flag whether or not use lighting for the surface")
+    , surFrontStyle("frontstyle", "The rendering style for the front surface")
+    , surBackStyle("backstyle", "The rendering style for the back surface")
+    , windRule("windingrule", "The triangle edge winding rule")
+    , colorSlot("color", "The triangle color (if not colors are read from file)")
+    , doScaleSlot("doScale", "Do Scaling of model data")
+    , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line") {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -57,7 +58,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void) : Renderer3DModule(),
     this->lighting.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->lighting);
 
-    param::EnumParam *ep = new param::EnumParam(0);
+    param::EnumParam* ep = new param::EnumParam(0);
     ep->SetTypePair(0, "Filled");
     ep->SetTypePair(1, "Wireframe");
     ep->SetTypePair(2, "Points");
@@ -78,7 +79,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void) : Renderer3DModule(),
     ep->SetTypePair(1, "Clock Wise");
     this->windRule << ep;
     this->MakeSlotAvailable(&this->windRule);
-    
+
     this->colorSlot.SetParameter(new param::StringParam("white"));
     this->MakeSlotAvailable(&this->colorSlot);
 
@@ -93,9 +94,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void) : Renderer3DModule(),
 /*
  * SombreroMeshRenderer::~SombreroMeshRenderer
  */
-SombreroMeshRenderer::~SombreroMeshRenderer(void) {
-    this->Release();
-}
+SombreroMeshRenderer::~SombreroMeshRenderer(void) { this->Release(); }
 
 
 /*
@@ -111,12 +110,11 @@ bool SombreroMeshRenderer::create(void) {
  * SombreroMeshRenderer::GetCapabilities
  */
 bool SombreroMeshRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER | 
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION);
+    cr->SetCapabilities(
+        view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING | view::CallRender3D::CAP_ANIMATION);
 
     return true;
 }
@@ -126,9 +124,9 @@ bool SombreroMeshRenderer::GetCapabilities(Call& call) {
  * TriSoupRenderer::GetExtents
  */
 bool SombreroMeshRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
-    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
@@ -160,9 +158,9 @@ void SombreroMeshRenderer::release(void) {
  * SombreroMeshRenderer::Render
  */
 bool SombreroMeshRenderer::Render(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
-    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+    megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
@@ -170,7 +168,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
     if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
         float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
         if (scale > 0.0f) scale = 2.0f / scale;
-        //float mat[16] = {
+        // float mat[16] = {
         //    scale, 0.0f, 0.0f, 0.0f,
         //    0.0f, scale, 0.0f, 0.0f,
         //    0.0f, 0.0f, scale, 0.0f,
@@ -183,8 +181,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(0)) return false;
 
-    //auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
-    //printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
+    // auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
+    // printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
 
     bool normals = false;
     bool colors = false;
@@ -207,16 +205,16 @@ bool SombreroMeshRenderer::Render(Call& call) {
     ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     ::glEnable(GL_NORMALIZE);
 
-    //GLsizei** oldbind = new GLsizei*[16];
-    //for (int i = 0; i < 16; i++) {
+    // GLsizei** oldbind = new GLsizei*[16];
+    // for (int i = 0; i < 16; i++) {
     //    oldbind[i] = new GLsizei();
     //}
     ////glGetVertexAttribPointerv(0, GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
-    //glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
+    // glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
     glVertexAttribPointer(0, 0, GL_FLOAT, GL_FALSE, 0, nullptr);
-    //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glBindVertexArray(0);
+    // glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
 
 
     GLint cfm;
@@ -235,16 +233,34 @@ bool SombreroMeshRenderer::Render(Call& call) {
     int fpm, bpm, cf = 0;
 
     switch (this->surFrontStyle.Param<param::EnumParam>()->Value()) {
-        default: fpm = GL_FILL; break;
-        case 1: fpm = GL_LINE; break;
-        case 2: fpm = GL_POINT; break;
-        case 3: fpm = GL_FILL; cf = GL_FRONT; break;
+    default:
+        fpm = GL_FILL;
+        break;
+    case 1:
+        fpm = GL_LINE;
+        break;
+    case 2:
+        fpm = GL_POINT;
+        break;
+    case 3:
+        fpm = GL_FILL;
+        cf = GL_FRONT;
+        break;
     }
     switch (this->surBackStyle.Param<param::EnumParam>()->Value()) {
-        default: bpm = GL_FILL; break;
-        case 1: bpm = GL_LINE; break;
-        case 2: bpm = GL_POINT; break;
-        case 3: bpm = GL_FILL; cf = (cf == 0) ? GL_BACK : GL_FRONT_AND_BACK; break;
+    default:
+        bpm = GL_FILL;
+        break;
+    case 1:
+        bpm = GL_LINE;
+        break;
+    case 2:
+        bpm = GL_POINT;
+        break;
+    case 3:
+        bpm = GL_FILL;
+        cf = (cf == 0) ? GL_BACK : GL_FRONT_AND_BACK;
+        break;
     }
     ::glPolygonMode(GL_FRONT, fpm);
     ::glPolygonMode(GL_BACK, bpm);
@@ -269,8 +285,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         const megamol::geocalls::CallTriMeshData::Mesh& obj1 = ctmd->Objects()[1];
 
         switch (obj0.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-        {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
             auto ptrb = obj0.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -278,10 +293,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 firstset.insert(static_cast<uint>(ptrb[j * 3 + 1]));
                 firstset.insert(static_cast<uint>(ptrb[j * 3 + 2]));
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
             auto ptr16 = obj0.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -289,10 +302,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 firstset.insert(static_cast<uint>(ptr16[j * 3 + 1]));
                 firstset.insert(static_cast<uint>(ptr16[j * 3 + 2]));
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
             auto ptr32 = obj0.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -300,15 +311,13 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 firstset.insert(static_cast<uint>(ptr32[j * 3 + 1]));
                 firstset.insert(static_cast<uint>(ptr32[j * 3 + 2]));
             }
-        }
-            break;
+        } break;
         default:
             break;
         }
 
         switch (obj1.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-        {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
             auto ptrb = obj1.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -316,10 +325,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 secondset.insert(static_cast<uint>(ptrb[j * 3 + 1]));
                 secondset.insert(static_cast<uint>(ptrb[j * 3 + 2]));
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
             auto ptr16 = obj1.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -327,10 +334,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 secondset.insert(static_cast<uint>(ptr16[j * 3 + 1]));
                 secondset.insert(static_cast<uint>(ptr16[j * 3 + 2]));
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
             auto ptr32 = obj1.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -338,19 +343,18 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 secondset.insert(static_cast<uint>(ptr32[j * 3 + 1]));
                 secondset.insert(static_cast<uint>(ptr32[j * 3 + 2]));
             }
-        }
-            break;
+        } break;
         default:
             break;
         }
 
         std::vector<uint> resvec;
-        std::set_intersection(firstset.begin(), firstset.end(), secondset.begin(), secondset.end(), std::back_inserter(resvec));
+        std::set_intersection(
+            firstset.begin(), firstset.end(), secondset.begin(), secondset.end(), std::back_inserter(resvec));
         std::set<uint> resset(resvec.begin(), resvec.end());
 
         switch (obj0.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-        {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
             auto ptrb = obj0.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -374,10 +378,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                     lines.push_back(resline);
                 }
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
             auto ptr16 = obj0.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -401,10 +403,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                     lines.push_back(resline);
                 }
             }
-        }
-            break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
-        {
+        } break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
             auto ptr32 = obj0.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -428,8 +428,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
                     lines.push_back(resline);
                 }
             }
-        }
-            break;
+        } break;
         default:
             break;
         }
@@ -445,28 +444,30 @@ bool SombreroMeshRenderer::Render(Call& call) {
         const megamol::geocalls::CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
         switch (obj.GetVertexDataType()) {
-            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
-                break;
-            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
-                break;
-            default: continue;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+            ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
+            break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+            ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
+            break;
+        default:
+            continue;
         }
 
         if (obj.HasNormalPointer() != NULL) {
-            if (!normals) { 
+            if (!normals) {
                 ::glEnableClientState(GL_NORMAL_ARRAY);
                 normals = true;
             }
             switch (obj.GetNormalDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (normals) {
             ::glDisableClientState(GL_NORMAL_ARRAY);
@@ -479,16 +480,17 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 colors = true;
             }
             switch (obj.GetColourDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                    ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+                ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (colors) {
             ::glDisableClientState(GL_COLOR_ARRAY);
@@ -501,13 +503,14 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 textures = true;
             }
             switch (obj.GetTextureCoordinateDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (textures) {
             ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -515,15 +518,15 @@ bool SombreroMeshRenderer::Render(Call& call) {
         }
 
         if (obj.GetMaterial() != NULL) {
-            const megamol::geocalls::CallTriMeshData::Material &mat = *obj.GetMaterial();
+            const megamol::geocalls::CallTriMeshData::Material& mat = *obj.GetMaterial();
 
             if (doLighting) {
                 ::glDisable(GL_COLOR_MATERIAL);
-                GLfloat mat_ambient[4] = { mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f };
-                GLfloat mat_diffuse[4] = { mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f };
-                GLfloat mat_specular[4] = { mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f };
-                GLfloat mat_emission[4] = { mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f };
-                GLfloat mat_shininess[1] = { mat.GetNs() };
+                GLfloat mat_ambient[4] = {mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f};
+                GLfloat mat_diffuse[4] = {mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f};
+                GLfloat mat_specular[4] = {mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f};
+                GLfloat mat_emission[4] = {mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f};
+                GLfloat mat_shininess[1] = {mat.GetNs()};
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -543,11 +546,11 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             }
         } else {
-            GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-            GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
-            GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            GLfloat mat_shininess[1] = { 0.0f };
+            GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+            GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+            GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            GLfloat mat_shininess[1] = {0.0f};
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -555,21 +558,22 @@ bool SombreroMeshRenderer::Render(Call& call) {
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
             ::glBindTexture(GL_TEXTURE_2D, 0);
             ::glEnable(GL_COLOR_MATERIAL);
-
         }
 
         if (obj.HasTriIndexPointer() != NULL) {
             switch (obj.GetTriDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
+                ::glDrawElements(
+                    GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
+                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
+                break;
+            default:
+                continue;
             }
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
@@ -585,11 +589,11 @@ bool SombreroMeshRenderer::Render(Call& call) {
     if (textures) ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
     {
-        GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-        GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
-        GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        GLfloat mat_shininess[1] = { 0.0f };
+        GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+        GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+        GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        GLfloat mat_shininess[1] = {0.0f};
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -608,13 +612,14 @@ bool SombreroMeshRenderer::Render(Call& call) {
         ::glColor3f(1.0f, 0.0f, 0.0f);
         for (unsigned int i = 0; i < ctmd->Count(); i++) {
             switch (ctmd->Objects()[i].GetVertexDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
+                break;
+            default:
+                continue;
             }
             ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
@@ -636,7 +641,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[0].GetVertexPointerDouble());
             break;
-        default: break;
+        default:
+            break;
         }
         ::glDrawElements(GL_LINES, linevec.size(), GL_UNSIGNED_INT, &linevec[0]);
         ::glEnable(GL_DEPTH_TEST);

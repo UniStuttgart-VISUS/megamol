@@ -6,170 +6,165 @@
 #ifndef MMSOMBREROSPLUGIN_TUNNELCUTTER_H_INCLUDED
 #define MMSOMBREROSPLUGIN_TUNNELCUTTER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "TunnelResidueDataCall.h"
 #include "SombreroHelpers.h"
+#include "TunnelResidueDataCall.h"
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "geometry_calls/CallTriMeshData.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
 namespace sombreros {
 
-    class TunnelCutter : public core::Module {
-    public:
+class TunnelCutter : public core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "TunnelCutter"; }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "TunnelCutter";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module that is able to cut a mesh. This module then only puts out a certain part of the mesh";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module that is able to cut a mesh. This module then only puts out a certain part of the mesh";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    TunnelCutter(void);
 
-        /** Ctor. */
-        TunnelCutter(void);
+    /** Dtor. */
+    virtual ~TunnelCutter(void);
 
-        /** Dtor. */
-        virtual ~TunnelCutter(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Call for get data.
+     */
+    bool getData(megamol::core::Call& call);
 
-        /**
-         * Implementation of 'release'.
-         */
-        virtual void release(void);
+    /**
+     * Call for get extent.
+     */
+    bool getExtent(megamol::core::Call& call);
 
-        /**
-         * Call for get data.
-         */
-        bool getData(megamol::core::Call& call);
+private:
+    /**
+     * Cuts away unnecessary parts from the mesh and writes the result into the meshVector.
+     * This method tries to cut the mesh equally so that the amount of geometry around the binding site stays the same
+     * in all directions
+     *
+     * @param meshCall The call containing the input mesh.
+     * @param cavityMeshCall The call containing the input cavity mesh.
+     * @param tunnelCall The call containing the tunnel data the cut region is based on.
+     * @param molCall The call containing the molecular data.
+     * @param bsCall The call containing the binding site data.
+     * @return True on success, false otherwise.
+     */
+    bool cutMeshEqually(geocalls::CallTriMeshData* meshCall, geocalls::CallTriMeshData* cavityMeshCall,
+        TunnelResidueDataCall* tunnelCall, protein_calls::MolecularDataCall* molCall,
+        protein_calls::BindingSiteCall* bsCall);
 
-        /**
-         * Call for get extent.
-         */
-        bool getExtent(megamol::core::Call& call);
+    /** The lastly received data hash */
+    SIZE_T lastDataHash;
 
-    private:
+    /** The lastly received cavity data hash */
+    SIZE_T lastCavityDataHash;
 
-        /** 
-         * Cuts away unnecessary parts from the mesh and writes the result into the meshVector.
-         * This method tries to cut the mesh equally so that the amount of geometry around the binding site stays the same in all directions
-         *
-         * @param meshCall The call containing the input mesh. 
-         * @param cavityMeshCall The call containing the input cavity mesh.
-         * @param tunnelCall The call containing the tunnel data the cut region is based on.
-         * @param molCall The call containing the molecular data.
-         * @param bsCall The call containing the binding site data.
-         * @return True on success, false otherwise.
-         */
-        bool cutMeshEqually(geocalls::CallTriMeshData * meshCall, geocalls::CallTriMeshData * cavityMeshCall, TunnelResidueDataCall * tunnelCall, protein_calls::MolecularDataCall * molCall, protein_calls::BindingSiteCall * bsCall);
+    /** The offset to the lastly received hash */
+    SIZE_T hashOffset;
 
-        /** The lastly received data hash */
-        SIZE_T lastDataHash;
+    /** Size of the grown region */
+    core::param::ParamSlot growSizeParam;
 
-        /** The lastly received cavity data hash */
-        SIZE_T lastCavityDataHash;
+    /** Activation slot for the cutting */
+    core::param::ParamSlot isActiveParam;
 
-        /** The offset to the lastly received hash */
-        SIZE_T hashOffset;
+    /** Parameter slot for the selected tunnel */
+    core::param::ParamSlot tunnelIdParam;
 
-        /** Size of the grown region */
-        core::param::ParamSlot growSizeParam;
+    /** Slot for the mesh input. */
+    core::CallerSlot meshInSlot;
 
-        /** Activation slot for the cutting */
-        core::param::ParamSlot isActiveParam;
+    /** Slot for the cavity mesh input */
+    core::CallerSlot cavityMeshInSlot;
 
-        /** Parameter slot for the selected tunnel */
-        core::param::ParamSlot tunnelIdParam;
+    /** Slot for the tunnel input */
+    core::CallerSlot tunnelInSlot;
 
-        /** Slot for the mesh input. */
-        core::CallerSlot meshInSlot;
+    /** Slot for the input of the molecular data */
+    core::CallerSlot moleculeInSlot;
 
-        /** Slot for the cavity mesh input */
-        core::CallerSlot cavityMeshInSlot;
+    /** Slot for the input of the binding site */
+    core::CallerSlot bindingSiteInSlot;
 
-        /** Slot for the tunnel input */
-        core::CallerSlot tunnelInSlot;
+    /** Slot for the ouput of the cut mesh */
+    core::CalleeSlot cutMeshOutSlot;
 
-        /** Slot for the input of the molecular data */
-        core::CallerSlot moleculeInSlot;
+    /** Vector containing the modified mesh data */
+    std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 
-        /** Slot for the input of the binding site */
-        core::CallerSlot bindingSiteInSlot;
+    /** Vector containing the information for each vertex whether to keep it or not */
+    std::vector<bool> vertexKeepFlags;
 
-        /** Slot for the ouput of the cut mesh */
-        core::CalleeSlot cutMeshOutSlot;
+    /** Container for the kept vertices */
+    std::vector<float> vertices;
 
-        /** Vector containing the modified mesh data */
-        std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
+    /** Container for the kept vertex normals */
+    std::vector<float> normals;
 
-        /** Vector containing the information for each vertex whether to keep it or not */
-        std::vector<bool> vertexKeepFlags;
+    /** Container for the kept colors */
+    std::vector<unsigned char> colors;
 
-        /** Container for the kept vertices */
-        std::vector<float> vertices;
+    /** Container for the kept atom index vertex attributes */
+    std::vector<unsigned int> attributes;
 
-        /** Container for the kept vertex normals */
-        std::vector<float> normals;
+    /** Container for the kept vertex level attributes */
+    std::vector<unsigned int> levelAttributes;
 
-        /** Container for the kept colors */
-        std::vector<unsigned char> colors;
+    /** Container for the kept binding site distance attributes */
+    std::vector<unsigned int> bindingDistanceAttributes;
 
-        /** Container for the kept atom index vertex attributes */
-        std::vector<unsigned int> attributes;
+    /** Container for the kept faces */
+    std::vector<unsigned int> faces;
 
-        /** Container for the kept vertex level attributes */
-        std::vector<unsigned int> levelAttributes;
-
-        /** Container for the kept binding site distance attributes */
-        std::vector<unsigned int> bindingDistanceAttributes;
-
-        /** Container for the kept faces */
-        std::vector<unsigned int> faces;
-
-        /** Dirty flag */
-        bool dirt;
-    };
+    /** Dirty flag */
+    bool dirt;
+};
 
 } /* end namespace sombreros */
 } /* end namespace megamol */
-
 
 
 #endif

@@ -13,8 +13,7 @@ using namespace megamol::sombreros;
 /*
  * TunnelResidueDataCall::TunnelResidueDataCall
  */
-TunnelResidueDataCall::TunnelResidueDataCall(void) : AbstractGetData3DCall(), tunnels(nullptr), numTunnels(0) {
-}
+TunnelResidueDataCall::TunnelResidueDataCall(void) : AbstractGetData3DCall(), tunnels(nullptr), numTunnels(0) {}
 
 /*
  * TunnelResidueDataCall::TunnelResidueDataCall

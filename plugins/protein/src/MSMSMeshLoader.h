@@ -9,167 +9,158 @@
 #ifndef MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED
 #define MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/Module.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/CallTriMeshData.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
 namespace protein {
+/**
+ * Class for loading MSMS mesh data
+ */
+class MSMSMeshLoader : public core::Module {
+public:
+    const int m_hightmp_col = -2; // colourmode index for hightmap colouring
+    const int m_hightmp_val = -3; // colourmode index for hightmap intensity
+
+
     /**
-     * Class for loading MSMS mesh data
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class MSMSMeshLoader : public core::Module {
-    public:
+    static const char* ClassName(void) { return "MSMSMeshLoader"; }
 
-		const int m_hightmp_col = -2; // colourmode index for hightmap colouring
-		const int m_hightmp_val = -3; // colourmode index for hightmap intensity
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Data source for MSMS mesh data files"; }
 
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-        /**
-        * Answer the name of this module.
-        *
-        * @return The name of this module.
-        */
-        static const char *ClassName(void) {
-            return "MSMSMeshLoader";
-        }
+    /** Ctor */
+    MSMSMeshLoader(void);
 
-        /**
-        * Answer a human readable description of this module.
-        *
-        * @return A human readable description of this module.
-        */
-        static const char *Description(void) {
-            return "Data source for MSMS mesh data files";
-        }
+    /** Dtor */
+    virtual ~MSMSMeshLoader(void);
 
-        /**
-        * Answers whether this module is available on the current system.
-        *
-        * @return 'true' if the module is available, 'false' otherwise.
-        */
-        static bool IsAvailable(void) {
-            return true;
-        }
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /** Ctor */
-        MSMSMeshLoader(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /** Dtor */
-        virtual ~MSMSMeshLoader(void);
+    /** The bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-    protected:
+    /** The data update hash */
+    SIZE_T datahash;
 
-        /**
-        * Implementation of 'Create'.
-        *
-        * @return 'true' on success, 'false' otherwise.
-        */
-        virtual bool create(void);
+    /**
+     * Loads the specified file
+     *
+     * @param filename The file to load
+     * @param frameID  The frame ID
+     *
+     * @return True on success
+     */
+    virtual bool load(const vislib::TString& filename, unsigned int frameID = 0);
 
-        /**
-        * Implementation of 'Release'.
-        */
-        virtual void release(void);
+private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-        /** The bounding box */
-        vislib::math::Cuboid<float> bbox;
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-        /** The data update hash */
-        SIZE_T datahash;
+    /** The slot for requesting data */
+    core::CalleeSlot getDataSlot;
 
-        /**
-        * Loads the specified file
-        *
-        * @param filename The file to load
-        * @param frameID  The frame ID
-        *
-        * @return True on success
-        */
-		virtual bool load(const vislib::TString& filename, unsigned int frameID = 0);
+    /** The slot for getting protein data */
+    core::CallerSlot molDataSlot;
 
-    private:
+    /** The slot for getting binding site data */
+    core::CallerSlot bsDataSlot;
 
-        /**
-        * Gets the data from the source.
-        *
-        * @param caller The calling call.
-        *
-        * @return 'true' on success, 'false' on failure.
-        */
-        bool getDataCallback(core::Call& caller);
+    /** The slot for getting per-atom float data */
+    core::CallerSlot perAtomDataSlot;
 
-        /**
-        * Gets the data from the source.
-        *
-        * @param caller The calling call.
-        *
-        * @return 'true' on success, 'false' on failure.
-        */
-        bool getExtentCallback(core::Call& caller);
+    /** the file name slot */
+    core::param::ParamSlot filenameSlot;
+    /** parameter slot for color table filename */
+    megamol::core::param::ParamSlot colorTableFileParam;
+    /** parameter slot for coloring mode */
+    megamol::core::param::ParamSlot coloringModeParam0;
+    /** parameter slot for coloring mode */
+    megamol::core::param::ParamSlot coloringModeParam1;
+    /** parameter slot for coloring mode weighting*/
+    megamol::core::param::ParamSlot colorWeightParam;
+    /** parameter slot for min color of gradient color mode */
+    megamol::core::param::ParamSlot minGradColorParam;
+    /** parameter slot for mid color of gradient color mode */
+    megamol::core::param::ParamSlot midGradColorParam;
+    /** parameter slot for max color of gradient color mode */
+    megamol::core::param::ParamSlot maxGradColorParam;
+    /** MSMS detail parameter */
+    megamol::core::param::ParamSlot msmsDetailParam;
+    /** MSMS detail parameter */
+    megamol::core::param::ParamSlot msmsProbeParam;
 
-        /** The slot for requesting data */
-        core::CalleeSlot getDataSlot;
+    /** The color lookup table (for chains, amino acids,...) */
+    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    /** The color lookup table which stores the rainbow colors */
+    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
 
-        /** The slot for getting protein data */
-        core::CallerSlot molDataSlot;
+    /** the number of vertices */
+    unsigned int vertexCount;
+    /** the number of faces */
+    unsigned int faceCount;
+    /** the number of atoms */
+    unsigned int atomCount;
 
-		/** The slot for getting binding site data */
-		core::CallerSlot bsDataSlot;
+    /** the index of the vertex attribute */
+    unsigned int attIdx;
 
-        /** The slot for getting per-atom float data */
-        core::CallerSlot perAtomDataSlot;
+    vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
 
-        /** the file name slot */
-        core::param::ParamSlot filenameSlot;
-        /** parameter slot for color table filename */
-        megamol::core::param::ParamSlot colorTableFileParam;
-        /** parameter slot for coloring mode */
-        megamol::core::param::ParamSlot coloringModeParam0;
-        /** parameter slot for coloring mode */
-        megamol::core::param::ParamSlot coloringModeParam1;
-        /** parameter slot for coloring mode weighting*/
-        megamol::core::param::ParamSlot colorWeightParam;
-        /** parameter slot for min color of gradient color mode */
-        megamol::core::param::ParamSlot minGradColorParam;
-        /** parameter slot for mid color of gradient color mode */
-        megamol::core::param::ParamSlot midGradColorParam;
-        /** parameter slot for max color of gradient color mode */
-        megamol::core::param::ParamSlot maxGradColorParam;
-        /** MSMS detail parameter */
-        megamol::core::param::ParamSlot msmsDetailParam;
-        /** MSMS detail parameter */
-        megamol::core::param::ParamSlot msmsProbeParam;
+    int prevTime;
+};
 
-        /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
-        /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
-
-        /** the number of vertices */
-        unsigned int vertexCount;
-        /** the number of faces */
-        unsigned int faceCount;
-        /** the number of atoms */
-        unsigned int atomCount;
-
-		/** the index of the vertex attribute */
-		unsigned int attIdx;
-
-        vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
-
-		int prevTime;
-    };
-
-} /* end namespace molecularmaps */
+} // namespace protein
 } /* end namespace megamol */
 
 #endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */

@@ -68,8 +68,7 @@ struct VertexID1Cmp {
  *            dimensions.
  */
 __device__ uint GetThreadIndex() {
-    return __umul24(__umul24(blockIdx.y, gridDim.x) + blockIdx.x, blockDim.x) +
-        threadIdx.x;
+    return __umul24(__umul24(blockIdx.y, gridDim.x) + blockIdx.x, blockDim.x) + threadIdx.x;
 }
 
 /**
@@ -82,8 +81,8 @@ __device__ uint GetThreadIndex() {
  * @param p_vertex_cnt The number of vertices in the mesh.
  */
 __global__ void GetNeighbourIds(uint* p_neighbour_ids, bool* p_valid_z_values,
-        const CUDAKernels::Edge* p_vertex_edge_offset, const uint* p_vertex_edge_offset_depth,
-        uint p_vertex_cnt, uint p_edge_cnt) {
+    const CUDAKernels::Edge* p_vertex_edge_offset, const uint* p_vertex_edge_offset_depth, uint p_vertex_cnt,
+    uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
@@ -97,8 +96,10 @@ __global__ void GetNeighbourIds(uint* p_neighbour_ids, bool* p_valid_z_values,
     // Find the IDs of neighbouring vertices.
     for (uint i = begin; i < end; i++) {
         CUDAKernels::Edge cur = p_vertex_edge_offset[i];
-        if (cur.vertex_id_0 == idx) neighbour_id = cur.vertex_id_1;
-        else neighbour_id = cur.vertex_id_0;
+        if (cur.vertex_id_0 == idx)
+            neighbour_id = cur.vertex_id_1;
+        else
+            neighbour_id = cur.vertex_id_0;
         p_neighbour_ids[i] = neighbour_id;
     }
 }
@@ -164,8 +165,8 @@ __global__ void InitEdges(const uint3* p_faces, CUDAKernels::Edge* p_edges, uint
  * of the current edge.
  * @param p_edge_cnt The number of edges in the mesh (x2).
  */
-__global__ void MatchEdges(CUDAKernels::Edge* p_edges, CUDAKernels::Edge* p_sorted_edges,
-        uint* p_edge_offset, uint p_edge_cnt) {
+__global__ void MatchEdges(
+    CUDAKernels::Edge* p_edges, CUDAKernels::Edge* p_sorted_edges, uint* p_edge_offset, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_edge_cnt) return;
 
@@ -182,8 +183,7 @@ __global__ void MatchEdges(CUDAKernels::Edge* p_edges, CUDAKernels::Edge* p_sort
         if (i == idx) continue;
         if (p_edges[id].face_id_1 != -1) continue;
 
-        if (cur.vertex_id_0 == p_edges[id].vertex_id_1 &&
-            cur.vertex_id_1 == p_edges[id].vertex_id_0) {
+        if (cur.vertex_id_0 == p_edges[id].vertex_id_1 && cur.vertex_id_1 == p_edges[id].vertex_id_0) {
             // Found the edge.
             cur.face_id_1 = p_edges[id].face_id_0;
             cur.opposite_edge_id = id;
@@ -198,7 +198,7 @@ __global__ void MatchEdges(CUDAKernels::Edge* p_edges, CUDAKernels::Edge* p_sort
 /**
  * Find all edges that belong to a certain face by looping over the edges
  * of the mesh.
- * 
+ *
  * @param p_face_edge_offset Will contain the edges that belong to a face.
  * @param p_face_id_0_offset Contains the edges sorted ascending for face_id_0
  * @param p_face_id_1_offset Contains the edges sorted ascending for face_id_1
@@ -206,7 +206,7 @@ __global__ void MatchEdges(CUDAKernels::Edge* p_edges, CUDAKernels::Edge* p_sort
  * @param p_face_cnt The number of faces in the mesh.
  */
 __global__ void SetFaceEdgeOffset(CUDAKernels::Edge* p_face_edge_offset, CUDAKernels::Edge* p_face_id_0_offset,
-        CUDAKernels::Edge* p_face_id_1_offset, uint depth, uint p_face_cnt) {
+    CUDAKernels::Edge* p_face_id_1_offset, uint depth, uint p_face_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_face_cnt) return;
 
@@ -223,7 +223,7 @@ __global__ void SetFaceEdgeOffset(CUDAKernels::Edge* p_face_edge_offset, CUDAKer
 /**
  * Find all edges that belong to a certain vertex by looping over the edges
  * of the mesh.
- * 
+ *
  * @param p_vertex_edge_offset Will contain the edges that belong to a vertex.
  * @param p_vertex_id_0_sorted Contains the edges sorted ascending for vertex_id_0
  * @param p_vertex_id_1_sorted Contains the edges sorted ascending for vertex_id_1
@@ -235,8 +235,8 @@ __global__ void SetFaceEdgeOffset(CUDAKernels::Edge* p_face_edge_offset, CUDAKer
  * @param p_vertex_cnt The number of vertices in the mesh.
  */
 __global__ void SetVertexEdgeOffset(CUDAKernels::Edge* p_vertex_edge_offset, CUDAKernels::Edge* p_vertex_id_0_sorted,
-        CUDAKernels::Edge* p_vertex_id_1_sorted, uint* p_vertex_id_0_offset, uint* p_vertex_id_1_offset,
-        uint* depth, uint p_vertex_cnt, uint p_edge_cnt) {
+    CUDAKernels::Edge* p_vertex_id_1_sorted, uint* p_vertex_id_0_offset, uint* p_vertex_id_1_offset, uint* depth,
+    uint p_vertex_cnt, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
 
@@ -254,11 +254,10 @@ __global__ void SetVertexEdgeOffset(CUDAKernels::Edge* p_vertex_edge_offset, CUD
     }
     // Edges with vertex_id_1 == idx
     begin = p_vertex_id_1_offset[idx];
-    end = p_vertex_id_1_offset[idx + 1]; 
+    end = p_vertex_id_1_offset[idx + 1];
     for (uint i = begin; i < end; i++) {
         p_vertex_edge_offset[cur_depth++] = p_vertex_id_1_sorted[i];
     }
-
 }
 
 /**
@@ -281,10 +280,9 @@ __global__ void SetVertexEdgeOffset(CUDAKernels::Edge* p_vertex_edge_offset, CUD
  * type -1.
  * @param p_vertex_cnt The number of vertices in the mesh.
  */
-__global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out, 
-        bool* p_valid_phi_values, const uint* p_vertex_neighbours, 
-        const uint* p_vertex_edge_offset_depth, const int* p_vertex_type, 
-        const uint* p_vertex_neighbours_offset, uint p_vertex_cnt, uint p_edge_cnt) {
+__global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out, bool* p_valid_phi_values,
+    const uint* p_vertex_neighbours, const uint* p_vertex_edge_offset_depth, const int* p_vertex_type,
+    const uint* p_vertex_neighbours_offset, uint p_vertex_cnt, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_phi_values[idx]) return;
@@ -305,7 +303,7 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
 
     } else {
         /**
-         * Since vertices with the types -1 and 1 are remembered in the 
+         * Since vertices with the types -1 and 1 are remembered in the
          * p_valid_phi_vlaues we can be shure that the vertices here are
          * of type 3.
          */
@@ -336,10 +334,8 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out,
  * @param p_vertex_cnt The number of vertices in the mesh.
  * @param p_edge_cnt The total number of edges of the mesh.
  */
-__global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values,
-        const uint* p_vertex_neighbours, const uint* p_vertex_edge_offset_depth,
-        const uint* p_vertex_multiplicity,
-        uint p_vertex_cnt, uint p_edge_cnt) {
+__global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values, const uint* p_vertex_neighbours,
+    const uint* p_vertex_edge_offset_depth, const uint* p_vertex_multiplicity, uint p_vertex_cnt, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
@@ -376,9 +372,8 @@ __global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values,
  * on the "left" side of the meridian.
  * @param p_vertex_cnt The number of vertices in the mesh.
  */
-__global__ void SortNeighbourIds(uint* p_neighbour_ids, uint* p_neighbour_ids_offset,
-        bool* p_valid_z_values, const uint* p_vertex_edge_offset_depth, 
-        const int* p_vertex_type, uint p_vertex_cnt, uint p_edge_cnt) {
+__global__ void SortNeighbourIds(uint* p_neighbour_ids, uint* p_neighbour_ids_offset, bool* p_valid_z_values,
+    const uint* p_vertex_edge_offset_depth, const int* p_vertex_type, uint p_vertex_cnt, uint p_edge_cnt) {
     const uint idx = GetThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
@@ -408,15 +403,14 @@ __global__ void SortNeighbourIds(uint* p_neighbour_ids, uint* p_neighbour_ids_of
 /*
  * CUDAKernels::~CUDAKernels
  */
-CUDAKernels::~CUDAKernels(void) {
-}
+CUDAKernels::~CUDAKernels(void) {}
 
 /*
  * CUDAKernels::CreatePhiValues
  */
 bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p_phi_values,
-        std::vector<bool> p_valid_phi_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
-        const std::vector<uint>& p_vertex_edge_offset_depth, const std::vector<int>& p_vertex_type) {
+    std::vector<bool> p_valid_phi_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
+    const std::vector<uint>& p_vertex_edge_offset_depth, const std::vector<int>& p_vertex_type) {
     // Convert vertex edge offset to CUDA
     uint vertex_cnt = static_cast<uint>(p_phi_values.size());
     std::vector<Edge> cuda_vertex_offset;
@@ -452,52 +446,40 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
     vertex_neighbours_offset.shrink_to_fit();
 
     // Get the neighbours of every vertex.
-    GetNeighbourIds <<< Grid(vertex_cnt, 256), 256 >>> (
-        thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
+    GetNeighbourIds<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
         thrust::raw_pointer_cast(p_valid_phi_values_d.data().get()),
         thrust::raw_pointer_cast(cuda_vertex_offset_d.data().get()),
-        thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
-        vertex_cnt, edge_cnt);
+        thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()), vertex_cnt, edge_cnt);
     checkCudaErrors(cudaDeviceSynchronize());
 
     // Get the offsets for the neighbours with the type of -1.
-    SortNeighbourIds <<< Grid(vertex_cnt, 256), 256 >>> (
-        thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
+    SortNeighbourIds<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
         thrust::raw_pointer_cast(vertex_neighbours_offset_d.data().get()),
         thrust::raw_pointer_cast(p_valid_phi_values_d.data().get()),
         thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
-        thrust::raw_pointer_cast(p_vertex_type_d.data().get()),
-        vertex_cnt,
-        edge_cnt
-    );
+        thrust::raw_pointer_cast(p_vertex_type_d.data().get()), vertex_cnt, edge_cnt);
     checkCudaErrors(cudaDeviceSynchronize());
 
     // Perform iterations.
     float diff = 2.0f * p_threshold;
     size_t round = 0;
     while (diff > p_threshold) {
-        SetPhiValues <<< Grid(vertex_cnt, 256), 256 >>> (
-            thrust::raw_pointer_cast(p_phi_values_one_d.data().get()),
+        SetPhiValues<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(p_phi_values_one_d.data().get()),
             thrust::raw_pointer_cast(p_phi_values_two_d.data().get()),
             thrust::raw_pointer_cast(p_valid_phi_values_d.data().get()),
             thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_type_d.data().get()),
-            thrust::raw_pointer_cast(vertex_neighbours_offset_d.data().get()),
-            vertex_cnt,
-            edge_cnt);
+            thrust::raw_pointer_cast(vertex_neighbours_offset_d.data().get()), vertex_cnt, edge_cnt);
         checkCudaErrors(cudaDeviceSynchronize());
 
-        SetPhiValues <<< Grid(vertex_cnt, 256), 256 >>> (
-            thrust::raw_pointer_cast(p_phi_values_two_d.data().get()),
+        SetPhiValues<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(p_phi_values_two_d.data().get()),
             thrust::raw_pointer_cast(p_phi_values_one_d.data().get()),
             thrust::raw_pointer_cast(p_valid_phi_values_d.data().get()),
             thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_type_d.data().get()),
-            thrust::raw_pointer_cast(vertex_neighbours_offset_d.data().get()),
-            vertex_cnt,
-            edge_cnt);
+            thrust::raw_pointer_cast(vertex_neighbours_offset_d.data().get()), vertex_cnt, edge_cnt);
         checkCudaErrors(cudaDeviceSynchronize());
 
         // Check the difference between the two.
@@ -511,15 +493,14 @@ bool CUDAKernels::CreatePhiValues(const float p_threshold, std::vector<float>& p
     thrust::copy(p_phi_values_one_d.begin(), p_phi_values_one_d.end(), p_phi_values.begin());
 
     return true;
-
 }
 
 /*
  * CUDAKernels::CreateZValues
  */
 bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_zvalues,
-        std::vector<bool> p_valid_z_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
-        const std::vector<uint>& p_vertex_edge_offset_depth, const std::vector<uint>& p_vertex_multiplicity) {
+    std::vector<bool> p_valid_z_values, const std::vector<std::vector<Edge>>& p_vertex_edge_offset,
+    const std::vector<uint>& p_vertex_edge_offset_depth, const std::vector<uint>& p_vertex_multiplicity) {
     // Convert vertex edge offset to CUDA
     uint vertex_cnt = static_cast<uint>(p_zvalues.size());
     std::vector<CUDAKernels::Edge> cuda_vertex_offset;
@@ -548,25 +529,19 @@ bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_z
     vertex_neighbours.shrink_to_fit();
 
     // Get the neighbours of every vertex.
-    GetNeighbourIds <<< Grid(vertex_cnt, 256), 256 >>> (
-        thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
+    GetNeighbourIds<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
         thrust::raw_pointer_cast(p_valid_z_values_d.data().get()),
         thrust::raw_pointer_cast(cuda_vertex_offset_d.data().get()),
-        thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
-        vertex_cnt,
-        edge_cnt);
+        thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()), vertex_cnt, edge_cnt);
     checkCudaErrors(cudaDeviceSynchronize());
 
     // Perform iterations.
     for (uint i = 0; i < p_iterations; i++) {
-        SetZValues <<< Grid(vertex_cnt, 256), 256 >>> (
-            thrust::raw_pointer_cast(p_zvalues_d.data().get()),
-            thrust::raw_pointer_cast(p_valid_z_values_d.data().get()), 
+        SetZValues<<<Grid(vertex_cnt, 256), 256>>>(thrust::raw_pointer_cast(p_zvalues_d.data().get()),
+            thrust::raw_pointer_cast(p_valid_z_values_d.data().get()),
             thrust::raw_pointer_cast(vertex_neighbours_d.data().get()),
             thrust::raw_pointer_cast(p_vertex_edge_offset_depth_d.data().get()),
-            thrust::raw_pointer_cast(p_vertex_multiplicity_d.data().get()),
-            vertex_cnt,
-            edge_cnt);
+            thrust::raw_pointer_cast(p_vertex_multiplicity_d.data().get()), vertex_cnt, edge_cnt);
         checkCudaErrors(cudaDeviceSynchronize());
     }
     thrust::copy(p_zvalues_d.begin(), p_zvalues_d.end(), p_zvalues.begin());
@@ -577,8 +552,7 @@ bool CUDAKernels::CreateZValues(const uint p_iterations, std::vector<float>& p_z
 /*
  * CUDAKernels::CUDAKernels
  */
-CUDAKernels::CUDAKernels(void) {
-}
+CUDAKernels::CUDAKernels(void) {}
 
 /*
  * CUDAKernels::SortEdges
@@ -586,7 +560,7 @@ CUDAKernels::CUDAKernels(void) {
 bool CUDAKernels::SortEdges(std::vector<Edge>& p_edges, const uint p_id) {
     // Upload the data.
     thrust::device_vector<Edge> edges_d = p_edges;
-    
+
     // Sort the data.
     if (p_id == 0) {
         thrust::sort(edges_d.begin(), edges_d.end(), VertexID0Cmp());

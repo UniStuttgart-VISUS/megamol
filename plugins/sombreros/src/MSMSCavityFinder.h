@@ -6,112 +6,106 @@
 #ifndef MMSOMBREROSPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
 #define MMSOMBREROSPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "TunnelResidueDataCall.h"
 #include "SombreroHelpers.h"
+#include "TunnelResidueDataCall.h"
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "geometry_calls/CallTriMeshData.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 
 namespace megamol {
 namespace sombreros {
 
-    class MSMSCavityFinder : public core::Module {
-    public:
+class MSMSCavityFinder : public core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "MSMSCavityFinder"; }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "MSMSCavityFinder";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module that finds cavities based on the input of two MSMS meshes (using the 3V method).";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module that finds cavities based on the input of two MSMS meshes (using the 3V method).";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    MSMSCavityFinder(void);
 
-        /** Ctor. */
-        MSMSCavityFinder(void);
+    /** Dtor. */
+    virtual ~MSMSCavityFinder(void);
 
-        /** Dtor. */
-        virtual ~MSMSCavityFinder(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Call for get data.
+     */
+    bool getData(megamol::core::Call& call);
 
-        /**
-         * Implementation of 'release'.
-         */
-        virtual void release(void);
+    /**
+     * Call for get extent.
+     */
+    bool getExtent(megamol::core::Call& call);
 
-        /**
-         * Call for get data.
-         */
-        bool getData(megamol::core::Call& call);
+private:
+    /** Slot for the inner mesh input. */
+    core::CallerSlot innerMeshInSlot;
+    /** Slot for the outer mesh input. */
+    core::CallerSlot outerMeshInSlot;
 
-        /**
-         * Call for get extent.
-         */
-        bool getExtent(megamol::core::Call& call);
+    /** Slot for the ouput of the cut mesh */
+    core::CalleeSlot cutMeshOutSlot;
 
-    private:
-        /** Slot for the inner mesh input. */
-        core::CallerSlot innerMeshInSlot;
-        /** Slot for the outer mesh input. */
-        core::CallerSlot outerMeshInSlot;
+    /** Param slots */
+    core::param::ParamSlot distanceParam;
+    core::param::ParamSlot areaParam;
 
-        /** Slot for the ouput of the cut mesh */
-        core::CalleeSlot cutMeshOutSlot;
+    /** data hash */
+    SIZE_T dataHash;
 
-        /** Param slots */
-        core::param::ParamSlot distanceParam;
-        core::param::ParamSlot areaParam;
-
-        /** data hash */
-        SIZE_T dataHash;
-
-        // variables for detecting new data
-        int lastFrame;
-        SIZE_T lastHashInner;
-        SIZE_T lastHashOuter;
-        std::vector<size_t> vertexIndex;
-        std::vector<float> distanceToMesh;
-        megamol::geocalls::CallTriMeshData::Mesh cavityMesh;
-        vislib::Array<unsigned int> triaIndices;
-        vislib::Array<megamol::geocalls::CallTriMeshData::Mesh> cavitySubmeshes;
-    };
+    // variables for detecting new data
+    int lastFrame;
+    SIZE_T lastHashInner;
+    SIZE_T lastHashOuter;
+    std::vector<size_t> vertexIndex;
+    std::vector<float> distanceToMesh;
+    megamol::geocalls::CallTriMeshData::Mesh cavityMesh;
+    vislib::Array<unsigned int> triaIndices;
+    vislib::Array<megamol::geocalls::CallTriMeshData::Mesh> cavitySubmeshes;
+};
 
 } /* end namespace sombreros */
 } /* end namespace megamol */

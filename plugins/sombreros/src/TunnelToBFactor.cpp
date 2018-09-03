@@ -6,9 +6,9 @@
 #include "stdafx.h"
 #include "TunnelToBFactor.h"
 
+#include <climits>
 #include "TunnelResidueDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
-#include <climits>
 
 
 using namespace megamol;
@@ -16,13 +16,14 @@ using namespace megamol::core;
 using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
-/* 
+/*
  * TunnelToBFactor::TunnelToBFactor
  */
-TunnelToBFactor::TunnelToBFactor(void) : Module(), 
-        dataOutSlot("dataOut", "Output slot for the output molecular data"),
-        molInSlot("moleculeIn", "Input slot for the molecular data"),
-        tunnelInSlot("tunnelIn", "Input slot for the tunnel data") {
+TunnelToBFactor::TunnelToBFactor(void)
+    : Module()
+    , dataOutSlot("dataOut", "Output slot for the output molecular data")
+    , molInSlot("moleculeIn", "Input slot for the molecular data")
+    , tunnelInSlot("tunnelIn", "Input slot for the tunnel data") {
 
     // caller slots
     this->molInSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -32,44 +33,40 @@ TunnelToBFactor::TunnelToBFactor(void) : Module(),
     this->MakeSlotAvailable(&this->tunnelInSlot);
 
     // callee slot
-    this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(0), &TunnelToBFactor::getData);
-    this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(1), &TunnelToBFactor::getExtent);
+    this->dataOutSlot.SetCallback(
+        MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(0), &TunnelToBFactor::getData);
+    this->dataOutSlot.SetCallback(
+        MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(1), &TunnelToBFactor::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     // parameters
-
 }
 
-/* 
+/*
  * TunnelToBFactor::~TunnelToBFactor
  */
-TunnelToBFactor::~TunnelToBFactor(void) {
-    this->Release();
-}
+TunnelToBFactor::~TunnelToBFactor(void) { this->Release(); }
 
-/* 
+/*
  * TunnelToBFactor::create
  */
-bool TunnelToBFactor::create(void) {
-    return true;
-}
+bool TunnelToBFactor::create(void) { return true; }
 
-/* 
+/*
  * TunnelToBFactor::release
  */
-void TunnelToBFactor::release(void) {
-}
+void TunnelToBFactor::release(void) {}
 
-/* 
+/*
  * TunnelToBFactor::getData
  */
 bool TunnelToBFactor::getData(Call& call) {
-    MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
+    MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
     if (outCall == nullptr) return false;
 
-    MolecularDataCall * mdc = this->molInSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* mdc = this->molInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr) return false;
-    TunnelResidueDataCall * trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (trdc == nullptr) return false;
 
     mdc->SetCalltime(outCall->Calltime());
@@ -84,17 +81,17 @@ bool TunnelToBFactor::getData(Call& call) {
     return true;
 }
 
-/* 
+/*
  * TunnelToBFactor::getExtent
  */
 bool TunnelToBFactor::getExtent(Call& call) {
-    MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
+    MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
     if (outCall == nullptr) return false;
 
-    MolecularDataCall * mdc = this->molInSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* mdc = this->molInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr) return false;
 
-    TunnelResidueDataCall * trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (trdc == nullptr) return false;
 
     mdc->SetCalltime(outCall->Calltime());
@@ -110,7 +107,8 @@ bool TunnelToBFactor::getExtent(Call& call) {
 /*
  * TunnelToBFactor::applyBFactor
  */
-void TunnelToBFactor::applyBFactor(MolecularDataCall * outCall, MolecularDataCall * inCall, TunnelResidueDataCall * tunnelCall) {
+void TunnelToBFactor::applyBFactor(
+    MolecularDataCall* outCall, MolecularDataCall* inCall, TunnelResidueDataCall* tunnelCall) {
     auto numFactors = inCall->AtomCount();
     this->bFactors.resize(numFactors, 0.0f);
 

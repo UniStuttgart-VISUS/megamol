@@ -6,20 +6,20 @@
 #include "stdafx.h"
 #include "SombreroWarper.h"
 
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "geometry_calls/CallTriMeshData.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "TunnelResidueDataCall.h"
-#include "tesselator.h"
-#include <climits>
-#include <limits>
-#include <iostream>
-#include <map>
 #include <chrono>
-#include "vislib/math/ShallowPoint.h"
+#include <climits>
+#include <iostream>
+#include <limits>
+#include <map>
+#include "TunnelResidueDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "tesselator.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowPoint.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -33,25 +33,33 @@ using namespace megamol::protein_calls;
 /*
  * SombreroWarper::SombreroWarper
  */
-SombreroWarper::SombreroWarper(void) : Module(),
-        meshInSlot("dataIn", "Receives the input mesh"),
-        tunnelInSlot("tunnelIn", "Receives the tunnel data"),
-        warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
-        minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim."),
-        maxBrimLevelParam("maxBrimLevel", "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level"),
-        liftingTargetDistance("meshDeformation::liftingTargetDistance", "The distance that is applied to a vertex during the lifting process."),
-        maxAllowedLiftingDistance("meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed."),
-        flatteningParam("flat", "Flat representation of the result"),
-        southBorderWeightParam("southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the tip of the head. Do not change unless you know what you do."),
-        southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices."), 
-        invertNormalParam("invertNormals", "Inverts the surface normals"),
-        fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices"),
-        meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier"),
-        useNewRadius("newRadius", "Use the radius computed from geometry instead of the caver radii") {
+SombreroWarper::SombreroWarper(void)
+    : Module()
+    , meshInSlot("dataIn", "Receives the input mesh")
+    , tunnelInSlot("tunnelIn", "Receives the tunnel data")
+    , warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+    , minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim.")
+    , maxBrimLevelParam("maxBrimLevel",
+          "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level")
+    , liftingTargetDistance("meshDeformation::liftingTargetDistance",
+          "The distance that is applied to a vertex during the lifting process.")
+    , maxAllowedLiftingDistance(
+          "meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.")
+    , flatteningParam("flat", "Flat representation of the result")
+    , southBorderWeightParam(
+          "southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the "
+                               "tip of the head. Do not change unless you know what you do.")
+    , southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices.")
+    , invertNormalParam("invertNormals", "Inverts the surface normals")
+    , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
+    , meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier")
+    , useNewRadius("newRadius", "Use the radius computed from geometry instead of the caver radii") {
 
     // Callee slot
-    this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
-    this->warpedMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &SombreroWarper::getExtent);
+    this->warpedMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
+    this->warpedMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &SombreroWarper::getExtent);
     this->MakeSlotAvailable(&this->warpedMeshOutSlot);
 
     // Caller slots
@@ -105,34 +113,29 @@ SombreroWarper::SombreroWarper(void) : Module(),
 /*
  * SombreroWarper::~SombreroWarper
  */
-SombreroWarper::~SombreroWarper(void) {
-    this->Release();
-}
+SombreroWarper::~SombreroWarper(void) { this->Release(); }
 
 /*
  * SombreroWarper::create
  */
-bool SombreroWarper::create(void) {
-    return true;
-}
+bool SombreroWarper::create(void) { return true; }
 
 /*
  * SombreroWarper::release
  */
-void SombreroWarper::release(void) {
-}
+void SombreroWarper::release(void) {}
 
 /*
  * SombreroWarper::getData
  */
 bool SombreroWarper::getData(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
-    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
-    TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tunnelCall == nullptr) return false;
 
     inCall->SetFrameID(outCall->FrameID());
@@ -140,8 +143,9 @@ bool SombreroWarper::getData(Call& call) {
 
     outCall->SetObjects(static_cast<uint>(this->outMeshVector.size()), this->outMeshVector.data());
 
-    //if (this->outMeshVector.size() > 0) {
-    //    printf("Length: %f ; Radius: %f; New Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0], this->sombreroRadiusNew[0]);
+    // if (this->outMeshVector.size() > 0) {
+    //    printf("Length: %f ; Radius: %f; New Radius: %f\n", this->sombreroLength[0], this->sombreroRadius[0],
+    //    this->sombreroRadiusNew[0]);
     //}
 
     return true;
@@ -151,17 +155,17 @@ bool SombreroWarper::getData(Call& call) {
  * SombreroWarper::getExtent
  */
 bool SombreroWarper::getExtent(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
-    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
-    TunnelResidueDataCall * tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tunnelCall == nullptr) return false;
 
     this->checkParameters();
-    
+
     if (dirtyFlag) {
         this->hashOffset++;
     }
@@ -317,7 +321,7 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
     this->meshVector.clear();
     this->meshVector.resize(ctmd.Count());
     this->meshVector.shrink_to_fit();
-    
+
     this->vertices.clear();
     this->vertices.resize(ctmd.Count());
 
@@ -357,7 +361,8 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
         uint vertexLvlAttrib = UINT_MAX;
         uint bsDistAttrib = UINT_MAX;
         if (attribCount < 3) {
-            vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the Sombrero warper needs at least three UINT32 vertex attributes.");
+            vislib::sys::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the "
+                                                    "Sombrero warper needs at least three UINT32 vertex attributes.");
             return false;
         }
         // determine the location of the needed attributes
@@ -372,7 +377,9 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
             }
         }
         if (atomIndexAttrib == UINT_MAX || vertexLvlAttrib == UINT_MAX || bsDistAttrib == UINT_MAX) {
-            vislib::sys::Log::DefaultLog.WriteError("Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least three UINT32 vertex attributes.");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Not enough UINT32 vertex attributes detected. The input mesh for the Sombrero warper needs at least "
+                "three UINT32 vertex attributes.");
             return false;
         }
 
@@ -386,13 +393,18 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
 
         std::memcpy(this->vertices[i].data(), ctmd.Objects()[i].GetVertexPointerFloat(), vertCount * 3 * sizeof(float));
         std::memcpy(this->normals[i].data(), ctmd.Objects()[i].GetNormalPointerFloat(), vertCount * 3 * sizeof(float));
-        std::memcpy(this->colors[i].data(), ctmd.Objects()[i].GetColourPointerByte(), vertCount * 3 * sizeof(unsigned char));
-        std::memcpy(this->atomIndexAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(atomIndexAttrib), vertCount * sizeof(uint));
-        std::memcpy(this->vertexLevelAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(vertexLvlAttrib), vertCount * sizeof(uint));
-        std::memcpy(this->bsDistanceAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(bsDistAttrib), vertCount * sizeof(uint));
+        std::memcpy(
+            this->colors[i].data(), ctmd.Objects()[i].GetColourPointerByte(), vertCount * 3 * sizeof(unsigned char));
+        std::memcpy(this->atomIndexAttachment[i].data(),
+            ctmd.Objects()[i].GetVertexAttribPointerUInt32(atomIndexAttrib), vertCount * sizeof(uint));
+        std::memcpy(this->vertexLevelAttachment[i].data(),
+            ctmd.Objects()[i].GetVertexAttribPointerUInt32(vertexLvlAttrib), vertCount * sizeof(uint));
+        std::memcpy(this->bsDistanceAttachment[i].data(), ctmd.Objects()[i].GetVertexAttribPointerUInt32(bsDistAttrib),
+            vertCount * sizeof(uint));
         std::memcpy(this->faces[i].data(), ctmd.Objects()[i].GetTriIndexPointerUInt32(), triCount * 3 * sizeof(uint));
 
-        this->meshVector[i].SetVertexData(vertCount, this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
+        this->meshVector[i].SetVertexData(
+            vertCount, this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
         this->meshVector[i].SetTriangleData(triCount, this->faces[i].data(), false);
         this->meshVector[i].SetMaterial(nullptr);
         this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
@@ -437,7 +449,7 @@ bool SombreroWarper::findSombreroBorder(void) {
         uint vCnt = mesh.GetVertexCount();
         uint fCnt = mesh.GetTriCount();
 
-        // NOTE: the direct manipulation of the vectors and not the meshes only works because the mesh does not own 
+        // NOTE: the direct manipulation of the vectors and not the meshes only works because the mesh does not own
         // the data storage. If this is changed, the code below has to be changed, too.
 
         // build triangle search structures
@@ -450,15 +462,12 @@ bool SombreroWarper::findSombreroBorder(void) {
         }
         secondOrder = firstOrder;
         thirdOrder = firstOrder;
-        std::sort(firstOrder.begin(), firstOrder.end(), [](const Triangle& a, const Triangle& b) {
-            return a.v1 < b.v1;
-        });
-        std::sort(secondOrder.begin(), secondOrder.end(), [](const Triangle& a, const Triangle& b) {
-            return a.v2 < b.v2;
-        });
-        std::sort(thirdOrder.begin(), thirdOrder.end(), [](const Triangle& a, const Triangle& b) {
-            return a.v3 < b.v3;
-        });
+        std::sort(
+            firstOrder.begin(), firstOrder.end(), [](const Triangle& a, const Triangle& b) { return a.v1 < b.v1; });
+        std::sort(
+            secondOrder.begin(), secondOrder.end(), [](const Triangle& a, const Triangle& b) { return a.v2 < b.v2; });
+        std::sort(
+            thirdOrder.begin(), thirdOrder.end(), [](const Triangle& a, const Triangle& b) { return a.v3 < b.v3; });
 
         // adjust the color
         uint maxVal = 0;
@@ -489,7 +498,8 @@ bool SombreroWarper::findSombreroBorder(void) {
 #endif
         // we need at least 1 border vertex with level > 0 to start an outer border and brim
         if (maxVal < 1) {
-            vislib::sys::Log::DefaultLog.WriteError("No region growing was performed and therefore no brim can be specified");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "No region growing was performed and therefore no brim can be specified");
             return false;
         }
 
@@ -504,7 +514,8 @@ bool SombreroWarper::findSombreroBorder(void) {
         }
 
         // count the number of vertices we have to process
-        uint maxValueVertexCount = static_cast<uint>(std::count(this->vertexLevelAttachment[i].begin(), this->vertexLevelAttachment[i].end(), maxBrim));
+        uint maxValueVertexCount = static_cast<uint>(
+            std::count(this->vertexLevelAttachment[i].begin(), this->vertexLevelAttachment[i].end(), maxBrim));
 
         this->borderVertices[i].clear();
         std::vector<std::set<uint>> localBorder;
@@ -515,7 +526,7 @@ bool SombreroWarper::findSombreroBorder(void) {
                 candidates.insert(static_cast<uint>(j));
             }
         }
-        
+
         while (!candidates.empty()) {
             auto start = static_cast<uint>(*candidates.begin()); // take the first element as starting point
             candidates.erase(start);
@@ -534,8 +545,10 @@ bool SombreroWarper::findSombreroBorder(void) {
                 // go through all forward edges
                 while (forward != edgesForward[i].end() && (*forward).first == current) {
                     auto target = (*forward).second;
-                    if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 && localBorder[setIndex].count(target) == 0) {
-                        // when we have found an edge target which is not yet known, add it as local candidate and to the border set
+                    if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 &&
+                        localBorder[setIndex].count(target) == 0) {
+                        // when we have found an edge target which is not yet known, add it as local candidate and to
+                        // the border set
                         localBorder[setIndex].insert(target);
                         localCandidates.insert(target);
                         candidates.erase(target);
@@ -546,8 +559,10 @@ bool SombreroWarper::findSombreroBorder(void) {
                 // go through all backward edges
                 while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
                     auto target = (*reverse).second;
-                    if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 && localBorder[setIndex].count(target) == 0) {
-                        // when we have found an edge target which is not yet known, add it as local candidate and to the border set
+                    if (this->vertexLevelAttachment[i][target] == maxBrim && localCandidates.count(target) == 0 &&
+                        localBorder[setIndex].count(target) == 0) {
+                        // when we have found an edge target which is not yet known, add it as local candidate and to
+                        // the border set
                         localBorder[setIndex].insert(target);
                         localCandidates.insert(target);
                         candidates.erase(target);
@@ -557,7 +572,7 @@ bool SombreroWarper::findSombreroBorder(void) {
             }
             setIndex++;
         }
-        
+
         // all borders have been located
         // find the longest one
         size_t maxSize = 0;
@@ -580,15 +595,12 @@ bool SombreroWarper::findSombreroBorder(void) {
             auto vIdx = *it;
             // we iterate over all outgoing triangles and add up the angles they produce
             // if the resulting angle is not very close to 360°, it is a cut vertex
-            auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                return t.v1 < s;
-            });
-            auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                return t.v2 < s;
-            });
-            auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                return t.v3 < s;
-            });
+            auto firstIt = std::lower_bound(
+                firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v1 < s; });
+            auto secondIt = std::lower_bound(
+                secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v2 < s; });
+            auto thirdIt = std::lower_bound(
+                thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v3 < s; });
 
             std::set<uint> vertexSet;
             uint triCount = 0;
@@ -716,15 +728,12 @@ bool SombreroWarper::findSombreroBorder(void) {
             for (auto vIdx : localBorder[j]) {
                 // we iterate over all outgoing triangles and add up the angles they produce
                 // if the resulting angle is not very close to 360°, it is a cut vertex
-                auto firstIt = std::lower_bound(firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                    return t.v1 < s;
-                });
-                auto secondIt = std::lower_bound(secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                    return t.v2 < s;
-                });
-                auto thirdIt = std::lower_bound(thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) {
-                    return t.v3 < s;
-                });
+                auto firstIt = std::lower_bound(
+                    firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v1 < s; });
+                auto secondIt = std::lower_bound(
+                    secondOrder.begin(), secondOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v2 < s; });
+                auto thirdIt = std::lower_bound(
+                    thirdOrder.begin(), thirdOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v3 < s; });
 
                 std::set<uint> vertexSet;
                 uint triCount = 0;
@@ -791,7 +800,7 @@ bool SombreroWarper::findSombreroBorder(void) {
  * SombreroWarper::warpMesh
  */
 bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
-    
+
     this->newBsDistances = this->bsDistanceAttachment;
     this->sombreroLength.clear();
     this->sombreroLength.resize(this->meshVector.size());
@@ -814,7 +823,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
             return false;
         }
 
-        
+
 #if 0 
         /*
          * step 1: vertex level computation
@@ -824,7 +833,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
             return false;
         }
 #endif
-    
+
 
         /*
          * step 2: compute the necessary parameters
@@ -892,7 +901,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
                 }
                 while (reverse != edgesReverse[i].end() && (*reverse).first == current && !found) {
                     auto target = (*reverse).second;
-                    if (this->vertexLevelAttachment[i][target] < level) {    
+                    if (this->vertexLevelAttachment[i][target] < level) {
                         level = this->vertexLevelAttachment[i][target];
                         found = true;
                         // compute the distance between the two vertices
@@ -918,27 +927,27 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         /**
          * step 3: mesh deformation
          */
-    #ifndef NO_DEFORMATION
+#ifndef NO_DEFORMATION
         bool yResult = this->computeHeightPerVertex(bsVertex);
         if (!yResult) return false;
 
-#ifdef SOMBRERO_TIMING
+#    ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
         std::cout << "Height per vertex computation took " << elapsed.count() << " ms" << std::endl;
         timebegin = std::chrono::steady_clock::now();
-#endif
-        
+#    endif
+
         bool xzResult = this->computeXZCoordinatePerVertex();
         if (!xzResult) return false;
 
-#ifdef SOMBRERO_TIMING
+#    ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
         std::cout << "x-z coordinate computation took " << elapsed.count() << " ms" << std::endl;
         timebegin = std::chrono::steady_clock::now();
+#    endif
 #endif
-    #endif    
     }
 
     /**
@@ -946,7 +955,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
      */
     this->boundingBox = vislib::math::Cuboid<float>();
     if (this->vertices.size() > 0 && this->vertices[0].size() > 0) {
-        this->boundingBox.Set(this->vertices[0][0], this->vertices[0][1], this->vertices[0][2], this->vertices[0][0], this->vertices[0][1], this->vertices[0][2]);
+        this->boundingBox.Set(this->vertices[0][0], this->vertices[0][1], this->vertices[0][2], this->vertices[0][0],
+            this->vertices[0][1], this->vertices[0][2]);
 
         for (size_t i = 0; i < this->vertices.size(); i++) {
             for (size_t j = 0; j < this->vertices[i].size(); j += 3) {
@@ -968,7 +978,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
     if (!this->flatteningParam.Param<param::BoolParam>()->Value() && this->sombreroLength.size() > 0) {
         this->boundingBox.Set(-30.0f, -7.0f, -30.0f, 30.0f, 7.0f, 30.0f);
     } else {
-        this->boundingBox.Set(-30.0f, -30.0f, (this->sombreroLength[0] / 2.0f) - bbmargin, 30.0f, 30.0f, (this->sombreroLength[0] / 2.0f) + bbmargin);
+        this->boundingBox.Set(-30.0f, -30.0f, (this->sombreroLength[0] / 2.0f) - bbmargin, 30.0f, 30.0f,
+            (this->sombreroLength[0] / 2.0f) + bbmargin);
     }
 #endif
 
@@ -978,8 +989,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
 /*
  * libtessAlloc
  */
-void * libtessAlloc(void * userData, unsigned int size) {
-    int * allocated = (int*)userData;
+void* libtessAlloc(void* userData, unsigned int size) {
+    int* allocated = (int*)userData;
     TESS_NOTUSED(userData);
     *allocated += static_cast<int>(size);
     return malloc(size);
@@ -988,7 +999,7 @@ void * libtessAlloc(void * userData, unsigned int size) {
 /*
  * libtessFree
  */
-void libtessFree(void * userData, void * ptr) {
+void libtessFree(void* userData, void* ptr) {
     TESS_NOTUSED(userData);
     free(ptr);
 }
@@ -1051,8 +1062,7 @@ bool SombreroWarper::fillMeshHoles(void) {
                                     localSet.erase(target);
                                     sortedCuts[j][k + 1] = target;
                                     found = true;
-                                }
-                                else {
+                                } else {
                                     if (sortedCuts[j][k - 1] != target) {
                                         localSet.erase(target);
                                         if (k != setsize - 1) {
@@ -1180,7 +1190,7 @@ bool SombreroWarper::fillMeshHoles(void) {
                 this->edgesReverse[i].push_back(std::pair<uint, uint>(z, y));
                 this->edgesReverse[i].push_back(std::pair<uint, uint>(x, z));
             }
-#else 
+#else
             vislib::math::Vector<float, 3> avgPos(0.0f, 0.0f, 0.0f);
             vislib::math::Vector<float, 3> avgNormal(0.0f, 0.0f, 0.0f);
             vislib::math::Vector<float, 3> avgColor(0.0f, 0.0f, 0.0f);
@@ -1219,7 +1229,7 @@ bool SombreroWarper::fillMeshHoles(void) {
             for (uint k = 0; k < siz; k++) {
                 uint x = static_cast<uint>(this->atomIndexAttachment[i].size() - 1);
                 uint y = sortedCuts[j][k];
-                uint z = sortedCuts[j][(k+1) % siz];
+                uint z = sortedCuts[j][(k + 1) % siz];
                 this->faces[i].push_back(x);
                 this->faces[i].push_back(y);
                 this->faces[i].push_back(z);
@@ -1234,12 +1244,14 @@ bool SombreroWarper::fillMeshHoles(void) {
 #endif
         }
         // resort the search structures
-        std::sort(edgesForward[i].begin(), edgesForward[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-            return left.first < right.first;
-        });
-        std::sort(edgesReverse[i].begin(), edgesReverse[i].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-            return left.first < right.first;
-        });
+        std::sort(edgesForward[i].begin(), edgesForward[i].end(),
+            [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+                return left.first < right.first;
+            });
+        std::sort(edgesReverse[i].begin(), edgesReverse[i].end(),
+            [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+                return left.first < right.first;
+            });
         // remove edge duplicates
         edgesForward[i].erase(std::unique(edgesForward[i].begin(), edgesForward[i].end()), edgesForward[i].end());
         edgesReverse[i].erase(std::unique(edgesReverse[i].begin(), edgesReverse[i].end()), edgesReverse[i].end());
@@ -1318,8 +1330,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         uint startIndex = UINT_MAX;
         if (it != this->bsDistanceAttachment[i].end()) {
             startIndex = static_cast<uint>(it - this->bsDistanceAttachment[i].begin());
-        }
-        else {
+        } else {
             vislib::sys::Log::DefaultLog.WriteError("No start binding site index found!");
             return false;
         }
@@ -1453,7 +1464,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         // it should be the vertex that is member of the meridian and the sweatband
         std::set<uint> meridianSet(meridian.begin(), meridian.end());
         std::vector<uint> intRes;
-        std::set_intersection(meridianSet.begin(), meridianSet.end(), sweatSet.begin(), sweatSet.end(), std::back_inserter(intRes));
+        std::set_intersection(
+            meridianSet.begin(), meridianSet.end(), sweatSet.begin(), sweatSet.end(), std::back_inserter(intRes));
 
         if (intRes.size() != 1) {
             vislib::sys::Log::DefaultLog.WriteError("The sweatband and the meridian do not intersect properly");
@@ -1538,7 +1550,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 auto target = (*reverse).second;
                 if (sweatSet.count(target) > 0) {
                     targets.insert(target);
-                } else{
+                } else {
                     if (this->brimFlags[i][target] == false) {
                         nonBrimTargets.insert(target);
                     }
@@ -1548,7 +1560,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             vertexMultiplicity[v] = static_cast<uint>(targets.size());
             nonbrimMultiplicity[v] = static_cast<uint>(nonBrimTargets.size());
         }
-    
+
         // do the same with the sweatband
         std::vector<uint> sweatSorted;
         std::set<uint> sweatReadySet;
@@ -1600,7 +1612,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 if (vertexMultiplicity[v] <= minmult) {
                     minmult = vertexMultiplicity[v];
                     finalv = v;
-                } 
+                }
             }
             sweatSorted.push_back(finalv);
             sweatReadySet.insert(finalv);
@@ -1686,7 +1698,6 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             left = sortedBrim[sortedBrim.size() - 1];
             isClockwise = false;
         }
-
 
 
         // determine candidate vertices
@@ -1826,11 +1837,13 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         // for the brim
         if (isClockwise) {
             for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
-                this->rahiAngles[i][sortedBrim[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
+                this->rahiAngles[i][sortedBrim[j]] =
+                    2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size()));
             }
         } else {
             for (uint j = 0; j < static_cast<uint>(sortedBrim.size()); j++) {
-                this->rahiAngles[i][sortedBrim[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size())));
+                this->rahiAngles[i][sortedBrim[j]] =
+                    (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sortedBrim.size())));
             }
         }
 #endif
@@ -1838,11 +1851,13 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         // initialize the angle values of vertices of the sweatband
         if (sweatIsClockwise) {
             for (uint j = 0; j < static_cast<uint>(sweatSorted.size()); j++) {
-                this->rahiAngles[i][sweatSorted[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size()));
+                this->rahiAngles[i][sweatSorted[j]] =
+                    2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size()));
             }
         } else {
             for (uint j = 0; j < static_cast<uint>(sweatSorted.size()); j++) {
-                this->rahiAngles[i][sweatSorted[j]] = (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size())));
+                this->rahiAngles[i][sweatSorted[j]] =
+                    (2.0f * thePi) - (2.0f * thePi * (static_cast<float>(j) / static_cast<float>(sweatSorted.size())));
             }
         }
 #endif
@@ -1903,7 +1918,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
         for (uint j = 0; j < static_cast<uint>(bsVertexCircle.size()); j++) {
-            this->rahiAngles[i][bsVertexCircle[j]] = 2.0f * thePi * (static_cast<float>(j) / static_cast<float>(bsVertexCircle.size()));
+            this->rahiAngles[i][bsVertexCircle[j]] =
+                2.0f * thePi * (static_cast<float>(j) / static_cast<float>(bsVertexCircle.size()));
         }
 #endif
 
@@ -1989,7 +2005,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             sum += oldVal;
         }
 
-        bool ret = this->cuda_kernels->CreatePhiValues(0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
+        bool ret = this->cuda_kernels->CreatePhiValues(
+            0.01f, this->rahiAngles[i], validVertices, vertex_edge_offset_local, offsetDepth, vTypes);
         if (!ret) {
             vislib::sys::Log::DefaultLog.WriteError("The CUDA angle diffusion failed");
             return false;
@@ -2006,13 +2023,11 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         uint addedFaceValues = static_cast<uint>(sortedBrim.size() * 3);
         this->faces[i].erase(this->faces[i].end() - addedFaceValues, this->faces[i].end());
         uint oldIndex = static_cast<uint>(this->vertexLevelAttachment[i].size());
-        auto rit = std::remove_if(this->edgesForward[i].begin(), this->edgesForward[i].end(), [oldIndex](const std::pair<uint, uint>& e) {
-            return ((e.first == oldIndex) || (e.second == oldIndex));
-        });
+        auto rit = std::remove_if(this->edgesForward[i].begin(), this->edgesForward[i].end(),
+            [oldIndex](const std::pair<uint, uint>& e) { return ((e.first == oldIndex) || (e.second == oldIndex)); });
         this->edgesForward[i].erase(rit, this->edgesForward[i].end());
-        rit = std::remove_if(this->edgesReverse[i].begin(), this->edgesReverse[i].end(), [oldIndex](const std::pair<uint, uint>& e) {
-            return ((e.first == oldIndex) || (e.second == oldIndex));
-        });
+        rit = std::remove_if(this->edgesReverse[i].begin(), this->edgesReverse[i].end(),
+            [oldIndex](const std::pair<uint, uint>& e) { return ((e.first == oldIndex) || (e.second == oldIndex)); });
         this->reconstructEdgeSearchStructures(i, oldIndex);
 
 #if 0 // color by angle
@@ -2039,14 +2054,17 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
  */
 void SombreroWarper::reconstructEdgeSearchStructures(uint index, uint vertex_count) {
     // sort the array
-    std::sort(edgesForward[index].begin(), edgesForward[index].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-        return left.first < right.first;
-    });
-    std::sort(edgesReverse[index].begin(), edgesReverse[index].end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-        return left.first < right.first;
-    });
+    std::sort(edgesForward[index].begin(), edgesForward[index].end(),
+        [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+            return left.first < right.first;
+        });
+    std::sort(edgesReverse[index].begin(), edgesReverse[index].end(),
+        [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+            return left.first < right.first;
+        });
     // construct the offset array
-    this->vertexEdgeOffsets[index] = std::vector<std::pair<uint, uint>>(vertex_count, std::pair<uint, uint>(UINT_MAX, UINT_MAX));
+    this->vertexEdgeOffsets[index] =
+        std::vector<std::pair<uint, uint>>(vertex_count, std::pair<uint, uint>(UINT_MAX, UINT_MAX));
     for (uint i = 0; i < edgesForward[index].size(); i++) {
         uint jj = edgesForward[index][i].first;
         if (this->vertexEdgeOffsets[index][jj].first == UINT_MAX) {
@@ -2120,8 +2138,8 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
             }
         }
 
-        // for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to the brim as source
-        // first step: identify these vertices
+        // for the remaining vertices we have to perform a height diffusion, using the last vertices not belonging to
+        // the brim as source first step: identify these vertices
         std::set<uint> borderSet;
         std::set<uint> southBorder;
         // go through all forward edges, if one vertex is on the brim and one is not, take the second one
@@ -2174,9 +2192,11 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         }
         float weight = this->southBorderHeightFactor.Param<param::FloatParam>()->Value();
         for (auto v : southBorder) {
-            zValues[vertMappingToNew[v]] = minHeight + weight * (maxHeight - minHeight) / static_cast<float>(maxBrimLevel);
+            zValues[vertMappingToNew[v]] =
+                minHeight + weight * (maxHeight - minHeight) / static_cast<float>(maxBrimLevel);
             zValidity[vertMappingToNew[v]] = false;
-            zVertexWeights[vertMappingToNew[v]] = static_cast<uint>(this->southBorderWeightParam.Param<param::IntParam>()->Value());
+            zVertexWeights[vertMappingToNew[v]] =
+                static_cast<uint>(this->southBorderWeightParam.Param<param::IntParam>()->Value());
         }
 
         for (auto e : this->edgesForward[i]) {
@@ -2206,7 +2226,8 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
             sum += oldVal;
         }
 
-        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
+        bool kernelRes =
+            this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
             vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
             return false;
@@ -2216,7 +2237,6 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
             auto idx = vertMappingToOld[j];
             this->vertices[i][3 * idx + 1] = zValues[j];
         }
-
     }
     return true;
 }
@@ -2281,7 +2301,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
                 zValidity[vertMappingToNew[v]] = false;
             }
         }
-        
+
         // add edges
         for (auto e : this->edgesForward[i]) {
             if (completeSet.count(e.first) > 0 && completeSet.count(e.second) > 0) {
@@ -2311,7 +2331,8 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
             sum += oldVal;
         }
 
-        bool kernelRes = this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
+        bool kernelRes =
+            this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
             vislib::sys::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
             return false;
@@ -2406,7 +2427,7 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 
         auto scaleInv = scale;
         scaleInv.Invert();
-        
+
         auto scaleInvTrans = scaleInv;
         scaleInvTrans.Transpose();
 
@@ -2451,13 +2472,13 @@ bool SombreroWarper::recomputeVertexNormals(void) {
             this->crownNormals[i][j * 3 + 2] = normal[2];
         }
 
-    #if 0 // normal as color
+#if 0 // normal as color
         for (size_t j = 0; j < vert_cnt; j++) {
             this->colors[i][j * 3 + 0] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 0]));
             this->colors[i][j * 3 + 1] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 1]));
             this->colors[i][j * 3 + 2] = static_cast<uint>(255.0f * std::max(0.0f, this->normals[i][j * 3 + 2]));
         }
-    #endif
+#endif
     }
 
     if (flatmode) {
@@ -2474,7 +2495,8 @@ bool SombreroWarper::divideMeshForOutput(void) {
 
     // reset the mesh vector
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-        this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->normals[i].data(), this->colors[i].data(), nullptr, false);
+        this->meshVector[i].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(),
+            this->normals[i].data(), this->colors[i].data(), nullptr, false);
         this->meshVector[i].SetTriangleData(static_cast<uint>(this->faces[i].size() / 3), this->faces[i].data(), false);
         this->meshVector[i].SetMaterial(nullptr);
         this->meshVector[i].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
@@ -2522,10 +2544,14 @@ bool SombreroWarper::divideMeshForOutput(void) {
 
     // reset the mesh vector
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-        this->outMeshVector[i * 2 + 0].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->brimNormals[i].data(), this->colors[i].data(), nullptr, false);
-        this->outMeshVector[i * 2 + 1].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3), this->vertices[i].data(), this->crownNormals[i].data(), this->colors[i].data(), nullptr, false);
-        this->outMeshVector[i * 2 + 0].SetTriangleData(static_cast<uint>(this->brimFaces[i].size() / 3), this->brimFaces[i].data(), false);
-        this->outMeshVector[i * 2 + 1].SetTriangleData(static_cast<uint>(this->crownFaces[i].size() / 3), this->crownFaces[i].data(), false);
+        this->outMeshVector[i * 2 + 0].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3),
+            this->vertices[i].data(), this->brimNormals[i].data(), this->colors[i].data(), nullptr, false);
+        this->outMeshVector[i * 2 + 1].SetVertexData(static_cast<uint>(this->vertices[i].size() / 3),
+            this->vertices[i].data(), this->crownNormals[i].data(), this->colors[i].data(), nullptr, false);
+        this->outMeshVector[i * 2 + 0].SetTriangleData(
+            static_cast<uint>(this->brimFaces[i].size() / 3), this->brimFaces[i].data(), false);
+        this->outMeshVector[i * 2 + 1].SetTriangleData(
+            static_cast<uint>(this->crownFaces[i].size() / 3), this->crownFaces[i].data(), false);
         this->outMeshVector[i * 2 + 0].SetMaterial(nullptr);
         this->outMeshVector[i * 2 + 1].SetMaterial(nullptr);
         this->outMeshVector[i * 2 + 0].AddVertexAttribPointer(this->atomIndexAttachment[i].data());
@@ -2543,7 +2569,7 @@ bool SombreroWarper::divideMeshForOutput(void) {
  * SombreroWarper::fixBrokenMeshParts
  */
 bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
-    
+
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         std::set<uint> outerBorderSet = std::set<uint>(this->brimIndices[i].begin(), this->brimIndices[i].end());
         uint vert_cnt = this->vertices[i].size() / 3;
@@ -2583,14 +2609,14 @@ bool SombreroWarper::fixBrokenMeshParts(float maxDistance) {
                 this->vertices[i][3 * v + 1] = neighavg[1];
                 this->vertices[i][3 * v + 2] = neighavg[2];
 
-                //for (auto t : neighbors) {
+                // for (auto t : neighbors) {
                 //    this->colors[i][3 * t + 0] = 255;
                 //    this->colors[i][3 * t + 1] = 0;
                 //    this->colors[i][3 * t + 2] = 0;
                 //}
-                //this->colors[i][3 * v + 0] = 0;
-                //this->colors[i][3 * v + 1] = 0;
-                //this->colors[i][3 * v + 2] = 255;
+                // this->colors[i][3 * v + 0] = 0;
+                // this->colors[i][3 * v + 1] = 0;
+                // this->colors[i][3 * v + 2] = 255;
             }
         }
     }

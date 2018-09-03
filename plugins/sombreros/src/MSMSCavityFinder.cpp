@@ -6,19 +6,19 @@
 #include "stdafx.h"
 #include "MSMSCavityFinder.h"
 
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
+#include <cfloat>
+#include <chrono>
+#include <climits>
+#include <iostream>
+#include <set>
+#include "TunnelResidueDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "geometry_calls/CallTriMeshData.h"
-#include "TunnelResidueDataCall.h"
-#include <set>
-#include <climits>
-#include <cfloat>
-#include <iostream>
-#include <chrono>
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
@@ -36,17 +36,23 @@ using namespace megamol::protein_calls;
 /*
  * MSMSCavityFinder::MSMSCavityFinder
  */
-MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
-        innerMeshInSlot("innerDataIn", "Receives the inner input mesh"),
-        outerMeshInSlot("outerDataIn", "Receives the outer input mesh"),
-        cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
-        distanceParam("distance", "Mesh-mesh distance threshold for cavity detection"),
-        areaParam("min area", "Minimum area of a cavity mesh"),
-        dataHash(0), lastFrame(-1), lastHashInner(0), lastHashOuter(0) {
+MSMSCavityFinder::MSMSCavityFinder(void)
+    : Module()
+    , innerMeshInSlot("innerDataIn", "Receives the inner input mesh")
+    , outerMeshInSlot("outerDataIn", "Receives the outer input mesh")
+    , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+    , distanceParam("distance", "Mesh-mesh distance threshold for cavity detection")
+    , areaParam("min area", "Minimum area of a cavity mesh")
+    , dataHash(0)
+    , lastFrame(-1)
+    , lastHashInner(0)
+    , lastHashOuter(0) {
 
     // Callee slot
-    this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &MSMSCavityFinder::getData);
-    this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &MSMSCavityFinder::getExtent);
+    this->cutMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &MSMSCavityFinder::getData);
+    this->cutMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &MSMSCavityFinder::getExtent);
     this->MakeSlotAvailable(&this->cutMeshOutSlot);
 
     // Caller slots
@@ -67,38 +73,33 @@ MSMSCavityFinder::MSMSCavityFinder(void) : Module(),
 /*
  * MSMSCavityFinder::~MSMSCavityFinder
  */
-MSMSCavityFinder::~MSMSCavityFinder(void) {
-    this->Release();
-}
+MSMSCavityFinder::~MSMSCavityFinder(void) { this->Release(); }
 
 /*
  * MSMSCavityFinder::create
  */
-bool MSMSCavityFinder::create(void) {
-    return true;
-}
+bool MSMSCavityFinder::create(void) { return true; }
 
 /*
  * MSMSCavityFinder::release
  */
-void MSMSCavityFinder::release(void) {
-}
+void MSMSCavityFinder::release(void) {}
 
 /*
  * MSMSCavityFinder::getData
  */
 bool MSMSCavityFinder::getData(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
 #ifdef SOMBRERO_TIMING
     auto timebegin = std::chrono::steady_clock::now();
 #endif
 
-    CallTriMeshData * inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
     if (inInnerCall == nullptr) return false;
 
-    CallTriMeshData * inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
     if (inOuterCall == nullptr) return false;
 
     inInnerCall->SetFrameID(outCall->FrameID());
@@ -113,19 +114,15 @@ bool MSMSCavityFinder::getData(Call& call) {
 
     // make sure that there is at least one mesh available and vertice are stored as float
     // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
-    if (inInnerCall->Count() == 0)
-        return false;
+    if (inInnerCall->Count() == 0) return false;
     auto innerObj = &inInnerCall->Objects()[0];
     // TODO implement branches for other data types
-    if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
-        return false;
+    if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
 
     // only recompute vertex distances if something has changed
-    if (this->lastFrame != outCall->FrameID() ||
-        this->lastHashInner != inInnerCall->DataHash() ||
-        this->lastHashOuter != inOuterCall->DataHash() ||
-        this->distanceParam.IsDirty() ||
-        this->vertexIndex.size() != innerObj->GetVertexCount() ) {
+    if (this->lastFrame != outCall->FrameID() || this->lastHashInner != inInnerCall->DataHash() ||
+        this->lastHashOuter != inOuterCall->DataHash() || this->distanceParam.IsDirty() ||
+        this->vertexIndex.size() != innerObj->GetVertexCount()) {
 
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
@@ -142,12 +139,10 @@ bool MSMSCavityFinder::getData(Call& call) {
 
         // insert all vertices of the outer mesh into the point cloud
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
-        if (inOuterCall->Count() == 0)
-            return false;
+        if (inOuterCall->Count() == 0) return false;
         auto outerObj = &inOuterCall->Objects()[0];
         // TODO implement branches for other data types
-        if (outerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
-            return false;
+        if (outerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
         PointCloud<float> pointCloud;
         pointCloud.pts.resize(outerObj->GetVertexCount());
         for (unsigned int i = 0; i < outerObj->GetVertexCount(); i++) {
@@ -156,36 +151,36 @@ bool MSMSCavityFinder::getData(Call& call) {
             pointCloud.pts[i].z = outerObj->GetVertexPointerFloat()[i * 3 + 2];
         }
 
-        typedef nanoflann::KDTreeSingleIndexAdaptor<
-            nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
-            PointCloud<float>,
-            3> my_kd_tree_t;
+        typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
+            PointCloud<float>, 3>
+            my_kd_tree_t;
 
         my_kd_tree_t searchIndex(3, pointCloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         searchIndex.buildIndex();
 
         nanoflann::SearchParams searchParams;
-    
+
         // search for closest point
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
         innerObj = &inInnerCall->Objects()[0];
         // TODO implement branches for other data types
-        if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
-            return false;
+        if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
         this->vertexIndex.clear();
         this->vertexIndex.resize(innerObj->GetVertexCount());
         this->distanceToMesh.clear();
         this->distanceToMesh.resize(innerObj->GetVertexCount());
         // DEBUG HACK!!
-        //auto color = const_cast<unsigned char*>(innerObj->GetColourPointerByte());
+        // auto color = const_cast<unsigned char*>(innerObj->GetColourPointerByte());
         for (unsigned int i = 0; i < innerObj->GetVertexCount(); i++) {
-            auto nMatches = searchIndex.knnSearch(&innerObj->GetVertexPointerFloat()[i * 3], 1, &this->vertexIndex[i], &this->distanceToMesh[i]);
+            auto nMatches = searchIndex.knnSearch(
+                &innerObj->GetVertexPointerFloat()[i * 3], 1, &this->vertexIndex[i], &this->distanceToMesh[i]);
             // DEBUG HACK!!
-            //if (this->distanceToMesh[i] > sqDist) {
+            // if (this->distanceToMesh[i] > sqDist) {
             //    color[i * 3 + 0] = 250;
             //    color[i * 3 + 1] = 250;
             //    color[i * 3 + 2] = 250;
-            //    //std::cout << "nMatches " << nMatches << " index: " << ret_index[0] << "; distance: " << sqrt(out_dist_sqr[0]) << std::endl;
+            //    //std::cout << "nMatches " << nMatches << " index: " << ret_index[0] << "; distance: " <<
+            //    sqrt(out_dist_sqr[0]) << std::endl;
             //}
         }
 
@@ -193,8 +188,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         this->cavityMesh = *innerObj;
         unsigned int triaCnt = this->cavityMesh.GetTriCount();
         // TODO implement branches for other data types
-        if (this->cavityMesh.GetTriDataType() != CallTriMeshData::Mesh::DT_UINT32)
-            return false;
+        if (this->cavityMesh.GetTriDataType() != CallTriMeshData::Mesh::DT_UINT32) return false;
         triaIndices.SetCount(0);
         triaIndices.AssertCapacity(triaCnt * 3);
         // check all triangle edges for distance to the outer mesh
@@ -206,26 +200,28 @@ bool MSMSCavityFinder::getData(Call& call) {
             idx1 = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1];
             idx2 = this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2];
             // add triangle, if all triangles are far from the outer mesh
-            if (this->distanceToMesh[idx0] > sqDist && this->distanceToMesh[idx1] > sqDist && this->distanceToMesh[idx2] > sqDist) {
+            if (this->distanceToMesh[idx0] > sqDist && this->distanceToMesh[idx1] > sqDist &&
+                this->distanceToMesh[idx2] > sqDist) {
                 triaIndices.Add(idx0);
                 triaIndices.Add(idx1);
                 triaIndices.Add(idx2);
             }
         }
-        this->cavityMesh.SetTriangleData(static_cast<uint>(this->triaIndices.Count() / 3), &this->triaIndices[0], false);
+        this->cavityMesh.SetTriangleData(
+            static_cast<uint>(this->triaIndices.Count() / 3), &this->triaIndices[0], false);
         this->dataHash++;
 
         // --- find connected trianges forming independent submeshes (i.e., cavities) ---
         this->cavitySubmeshes.SetCount(0);
         // for each vertex, collect all connected faces
-        vislib::Array<vislib::Array<unsigned int> > facesPerVertex;
+        vislib::Array<vislib::Array<unsigned int>> facesPerVertex;
         facesPerVertex.SetCount(this->cavityMesh.GetVertexCount());
         for (unsigned int triaIdx = 0; triaIdx < this->cavityMesh.GetTriCount(); triaIdx++) {
             facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 0]].Add(triaIdx);
             facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 1]].Add(triaIdx);
             facesPerVertex[this->cavityMesh.GetTriIndexPointerUInt32()[triaIdx * 3 + 2]].Add(triaIdx);
         }
-        //reset the mesh ID for all vertices
+        // reset the mesh ID for all vertices
         vislib::Array<int> vertexMeshId;
         vertexMeshId.SetCount(this->cavityMesh.GetVertexCount());
         int currentMeshId = -1;
@@ -280,7 +276,6 @@ bool MSMSCavityFinder::getData(Call& call) {
 
                 // go to the next vertex in the list of vertices belonging to the current mesh
                 vi++;
-
             }
 
             if (currentMeshVertices.Count() > 0) {
@@ -299,7 +294,7 @@ bool MSMSCavityFinder::getData(Call& call) {
                 auto end = std::unique(tmpTriaIndices.begin(), tmpTriaIndices.end());
                 // copy triangles (vertex indices) to new list
                 auto triaCnt = end - tmpTriaIndices.begin();
-                unsigned int *tmpTrias = new unsigned int[triaCnt * 3];
+                unsigned int* tmpTrias = new unsigned int[triaCnt * 3];
                 float tmpMeshArea = 0.0f;
                 vislib::math::Vector<float, 3> tmpVec1, tmpVec2;
                 for (unsigned int i = 0; i < triaCnt; i++) {
@@ -323,18 +318,21 @@ bool MSMSCavityFinder::getData(Call& call) {
                 }
                 // only add the mesh if it is large enough
                 if (this->areaParam.Param<param::FloatParam>()->Value() < tmpMeshArea) {
-                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea << " (Added)." << std::endl;
+                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea
+                              << " (Added)." << std::endl;
                     this->cavitySubmeshes.Add(this->cavityMesh);
                     this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
                 } else {
-                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea << " (Too small, threshold: " << this->areaParam.Param<param::FloatParam>()->Value() << ")." << std::endl;
+                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea
+                              << " (Too small, threshold: " << this->areaParam.Param<param::FloatParam>()->Value()
+                              << ")." << std::endl;
                 }
 
-            #if 1
+#if 1
                 // DEBUG COLOR HACK!!
                 if (this->cavitySubmeshes.Count() > 0) {
                     auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
-                    float colTab[18] = { 255, 0, 0,   0, 255, 0,   0, 0, 255,    255, 255, 0,    0, 255, 255,    255, 255, 255 };
+                    float colTab[18] = {255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255};
                     for (unsigned int i = 0; i < currentMeshVertices.Count(); i++) {
                         int colInd = vertexMeshId[currentMeshVertices[i]] % 6;
                         color[currentMeshVertices[i] * 3 + 0] = colTab[colInd * 3 + 0];
@@ -343,9 +341,8 @@ bool MSMSCavityFinder::getData(Call& call) {
                     }
                 }
                 // END DEBUG COLOR HACK!!
-            #endif
+#endif
             }
-
         }
         // --- END find connected trianges forming independent submeshes (i.e., cavities) ---
 
@@ -358,8 +355,8 @@ bool MSMSCavityFinder::getData(Call& call) {
     } // END only recompute vertex distances if something has changed
 
     // assign cavity meshes to outgoing call
-    //outCall->SetObjects( inInnerCall->Count(), inInnerCall->Objects());
-    //outCall->SetObjects(1, &this->cavityMesh);
+    // outCall->SetObjects( inInnerCall->Count(), inInnerCall->Objects());
+    // outCall->SetObjects(1, &this->cavityMesh);
     outCall->SetObjects(this->cavitySubmeshes.Count(), this->cavitySubmeshes.PeekElements());
     outCall->SetDataHash(this->dataHash);
 
@@ -370,13 +367,13 @@ bool MSMSCavityFinder::getData(Call& call) {
  * MSMSCavityFinder::getExtent
  */
 bool MSMSCavityFinder::getExtent(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
-    CallTriMeshData * inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
     if (inInnerCall == nullptr) return false;
 
-    CallTriMeshData * inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
     if (inOuterCall == nullptr) return false;
 
     inInnerCall->SetFrameID(outCall->FrameID());

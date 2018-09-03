@@ -6,19 +6,19 @@
 #include "stdafx.h"
 #include "TunnelCutter.h"
 
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 
-#include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "geometry_calls/CallTriMeshData.h"
-#include "TunnelResidueDataCall.h"
-#include <set>
-#include <climits>
 #include <cfloat>
+#include <chrono>
+#include <climits>
 #include <iostream>
 #include <iterator>
-#include <chrono>
+#include <set>
+#include "TunnelResidueDataCall.h"
+#include "geometry_calls/CallTriMeshData.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -29,20 +29,24 @@ using namespace megamol::protein_calls;
 /*
  * TunnelCutter::TunnelCutter
  */
-TunnelCutter::TunnelCutter(void) : Module(),
-        meshInSlot("dataIn", "Receives the input mesh"),
-        cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh"),
-        cutMeshOutSlot("getData", "Returns the mesh data of the wanted area"),
-        tunnelInSlot("tunnelIn", "Receives the input tunnel data"),
-        moleculeInSlot("molIn", "Receives the input molecular data"),
-        bindingSiteInSlot("bsIn", "Receives the input binding site data"),
-        growSizeParam("growSize", "The number of steps for the region growing"),
-        isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE"),
-        tunnelIdParam("tunnelID", "The id of the used tunnel. If no such tunnel is present, the first available one is used") {
+TunnelCutter::TunnelCutter(void)
+    : Module()
+    , meshInSlot("dataIn", "Receives the input mesh")
+    , cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh")
+    , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+    , tunnelInSlot("tunnelIn", "Receives the input tunnel data")
+    , moleculeInSlot("molIn", "Receives the input molecular data")
+    , bindingSiteInSlot("bsIn", "Receives the input binding site data")
+    , growSizeParam("growSize", "The number of steps for the region growing")
+    , isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE")
+    , tunnelIdParam(
+          "tunnelID", "The id of the used tunnel. If no such tunnel is present, the first available one is used") {
 
     // Callee slot
-    this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &TunnelCutter::getData);
-    this->cutMeshOutSlot.SetCallback(CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &TunnelCutter::getExtent);
+    this->cutMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &TunnelCutter::getData);
+    this->cutMeshOutSlot.SetCallback(
+        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &TunnelCutter::getExtent);
     this->MakeSlotAvailable(&this->cutMeshOutSlot);
 
     // Caller slots
@@ -81,43 +85,38 @@ TunnelCutter::TunnelCutter(void) : Module(),
 /*
  * TunnelCutter::~TunnelCutter
  */
-TunnelCutter::~TunnelCutter(void) {
-    this->Release();
-}
+TunnelCutter::~TunnelCutter(void) { this->Release(); }
 
 /*
  * TunnelCutter::create
  */
-bool TunnelCutter::create(void) {
-    return true;
-}
+bool TunnelCutter::create(void) { return true; }
 
 /*
  * TunnelCutter::release
  */
-void TunnelCutter::release(void) {
-}
+void TunnelCutter::release(void) {}
 
 /*
  * TunnelCutter::getData
  */
 bool TunnelCutter::getData(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
-    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
-    CallTriMeshData * inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
     if (inCav == nullptr) return false;
 
-    TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tc == nullptr) return false;
 
-    MolecularDataCall * mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr) return false;
 
-    BindingSiteCall * bsc = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
+    BindingSiteCall* bsc = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
     if (bsc == nullptr) return false;
 
     inCall->SetFrameID(outCall->FrameID());
@@ -161,19 +160,19 @@ bool TunnelCutter::getData(Call& call) {
  * TunnelCutter::getExtent
  */
 bool TunnelCutter::getExtent(Call& call) {
-    CallTriMeshData * outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
     if (outCall == nullptr) return false;
 
-    CallTriMeshData * inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
     if (inCall == nullptr) return false;
 
-    CallTriMeshData * inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
     if (inCav == nullptr) return false;
 
-    TunnelResidueDataCall * tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
+    TunnelResidueDataCall* tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
     if (tc == nullptr) return false;
 
-    MolecularDataCall * mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr) return false;
 
     inCall->SetFrameID(outCall->FrameID());
@@ -214,11 +213,13 @@ bool TunnelCutter::getExtent(Call& call) {
 /*
  * TunnelCutter::cutMeshEqually
  */
-bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * cavityMeshCall, TunnelResidueDataCall * tunnelCall, MolecularDataCall * molCall, BindingSiteCall * bsCall) {
+bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* cavityMeshCall,
+    TunnelResidueDataCall* tunnelCall, MolecularDataCall* molCall, BindingSiteCall* bsCall) {
 
     if (meshCall->Count() > 0 && cavityMeshCall->Count() > 0) {
         if (meshCall->Objects()[0].GetVertexCount() != cavityMeshCall->Objects()[0].GetVertexCount()) {
-            vislib::sys::Log::DefaultLog.WriteError("The vertex counts of the protein mesh and the cavity mesh do not match");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "The vertex counts of the protein mesh and the cavity mesh do not match");
             return false;
         }
     }
@@ -248,7 +249,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
 
     uint vertCount = meshCall->Objects()[i].GetVertexCount();
     uint triCount = meshCall->Objects()[i].GetTriCount();
-    
+
     this->meshVector.clear();
     this->meshVector.resize(1);
     this->vertexKeepFlags.clear();
@@ -283,7 +284,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     }
 
     if (!found) {
-        vislib::sys::Log::DefaultLog.WriteError("The %i th object had no atom index attribute and can therefore not be processed", 0);
+        vislib::sys::Log::DefaultLog.WriteError(
+            "The %i th object had no atom index attribute and can therefore not be processed", 0);
         return false;
     }
 
@@ -292,7 +294,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
      */
     this->vertexKeepFlags.resize(vertCount);
     auto atomIndices = meshCall->Objects()[i].GetVertexAttribPointerUInt32(attIdx);
-    
+
     int keptVertices = 0;
     for (int j = 0; j < static_cast<int>(vertCount); j++) {
         // the + 1 for the atom index reverses a -1 done in the MSMSMeshloader
@@ -306,7 +308,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     }
 
     /*
-     * step 1 a: calculate the closest mesh  
+     * step 1 a: calculate the closest mesh
      */
     uint maxCount = 0;
     uint maxIndex = UINT_MAX;
@@ -329,7 +331,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         for (uint k = 0; k < mesh.GetTriCount() * 3; k++) {
             localindices.insert(mesh.GetTriIndexPointerUInt32()[k]);
         }
-        std::set_intersection(localindices.begin(), localindices.end(), allowedVerticesSet.begin(), allowedVerticesSet.end(), std::back_inserter(localvector));
+        std::set_intersection(localindices.begin(), localindices.end(), allowedVerticesSet.begin(),
+            allowedVerticesSet.end(), std::back_inserter(localvector));
         if (localvector.size() > static_cast<size_t>(maxCount)) {
             maxCount = static_cast<uint>(localvector.size());
             maxIndex = j;
@@ -378,12 +381,14 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         edgesReverse.push_back(std::pair<unsigned int, unsigned int>(vert3, vert1));
     }
     // sort the search structures
-    std::sort(edgesForward.begin(), edgesForward.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-        return left.first < right.first;
-    });
-    std::sort(edgesReverse.begin(), edgesReverse.end(), [](const std::pair<unsigned int, unsigned int> &left, const std::pair<unsigned int, unsigned int> &right) {
-        return left.first < right.first;
-    });
+    std::sort(edgesForward.begin(), edgesForward.end(),
+        [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+            return left.first < right.first;
+        });
+    std::sort(edgesReverse.begin(), edgesReverse.end(),
+        [](const std::pair<unsigned int, unsigned int>& left, const std::pair<unsigned int, unsigned int>& right) {
+            return left.first < right.first;
+        });
 
     // we reuse the allowedset and switch it with the newset each step
     std::set<unsigned int> newset;
@@ -392,12 +397,10 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         // for each currently allowed vertex
         for (auto element : allowedVerticesSet) {
             // search for the start indices in both edge lists
-            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
-            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
+            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
+            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
 
             // go through all forward edges starting with the vertex
             while (forward != edgesForward.end() && (*forward).first == element) {
@@ -438,7 +441,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
      * third step: find start vertex for the connected component
      */
     if (bsCall->GetBindingSiteCount() < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("There are not binding sites provided. No further computation is possible!");
+        vislib::sys::Log::DefaultLog.WriteError(
+            "There are not binding sites provided. No further computation is possible!");
         return false;
     }
 
@@ -449,7 +453,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     unsigned int minIndex = UINT_MAX;
     for (unsigned int j = 0; j < vertCount; j++) {
         if (this->vertexKeepFlags[j]) {
-            vislib::math::Vector<float, 3> vertPos = vislib::math::Vector<float, 3>(&meshCall->Objects()[0].GetVertexPointerFloat()[j * 3]);
+            vislib::math::Vector<float, 3> vertPos =
+                vislib::math::Vector<float, 3>(&meshCall->Objects()[0].GetVertexPointerFloat()[j * 3]);
             vislib::math::Vector<float, 3> distVec = bspos - vertPos;
             if (distVec.Length() < minDist) {
                 minDist = distVec.Length();
@@ -465,18 +470,16 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     allowedVerticesSet.clear();
     allowedVerticesSet.insert(minIndex);
     keptVertices = 1; // reset the value if we want to have just 1 connected component
-    
+
     while (!allowedVerticesSet.empty()) {
         newset.clear();
         // for each currently allowed vertex
         for (auto element : allowedVerticesSet) {
             // search for the start indices in both edge lists
-            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
-            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
+            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
+            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
 
             // go through all forward edges starting with the vertex
             while (forward != edgesForward.end() && (*forward).first == element) {
@@ -541,13 +544,13 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
             this->colors[help * 3 + 1] = meshCall->Objects()[0].GetColourPointerByte()[j * 3 + 1];
             this->colors[help * 3 + 2] = meshCall->Objects()[0].GetColourPointerByte()[j * 3 + 2];
 
-        #if 0 // DEBUG
+#if 0 // DEBUG
             if (j == minIndex) {
                 this->colors[help * 3 + 0] = 255;
                 this->colors[help * 3 + 1] = 0;
                 this->colors[help * 3 + 2] = 0;
             }
-        #endif
+#endif
 
             this->attributes[help] = meshCall->Objects()[0].GetVertexAttribPointerUInt32(attIdx)[j];
             this->levelAttributes[help] = vertexDistances[j];
@@ -564,12 +567,12 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         unsigned int vert3 = meshCall->Objects()[0].GetTriIndexPointerUInt32()[j * 3 + 2];
 
         // to keep a triangle, all vertices have to be kept, since we have no correct mapping for the other vertices
-        if (vertexKeepFlags[vert1] && vertexKeepFlags[vert2] && vertexKeepFlags[vert3]) { 
+        if (vertexKeepFlags[vert1] && vertexKeepFlags[vert2] && vertexKeepFlags[vert3]) {
             this->faces.push_back(vertIndexMap[vert1]);
             this->faces.push_back(vertIndexMap[vert2]);
             this->faces.push_back(vertIndexMap[vert3]);
         }
-    }    
+    }
 
     /*
      * fifth step: vertex level computation
@@ -582,20 +585,20 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
         // for each currently allowed vertex
         for (auto element : allowedVerticesSet) {
             // search for the start indices in both edge lists
-            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
-            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element, [](std::pair<unsigned int, unsigned int> &x, unsigned int val) {
-                return x.first < val;
-            });
+            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
+            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), element,
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
 
             // go through all forward edges starting with the vertex
             while (forward != edgesForward.end() && (*forward).first == element) {
                 auto val = (*forward).second;
                 // check whether the endpoint is valid
                 if (this->vertexKeepFlags[val]) {
-                    if (this->bindingDistanceAttributes[vertIndexMap[val]] > this->bindingDistanceAttributes[vertIndexMap[element]] + 1) {
-                        this->bindingDistanceAttributes[vertIndexMap[val]] = this->bindingDistanceAttributes[vertIndexMap[element]] + 1;
+                    if (this->bindingDistanceAttributes[vertIndexMap[val]] >
+                        this->bindingDistanceAttributes[vertIndexMap[element]] + 1) {
+                        this->bindingDistanceAttributes[vertIndexMap[val]] =
+                            this->bindingDistanceAttributes[vertIndexMap[element]] + 1;
                         newset.insert(val);
                     }
                 }
@@ -607,8 +610,10 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
                 auto val = (*reverse).second;
                 // check whether the endpoint is valid
                 if (this->vertexKeepFlags[val]) {
-                    if (this->bindingDistanceAttributes[vertIndexMap[val]] > this->bindingDistanceAttributes[vertIndexMap[element]] + 1) {
-                        this->bindingDistanceAttributes[vertIndexMap[val]] = this->bindingDistanceAttributes[vertIndexMap[element]] + 1;
+                    if (this->bindingDistanceAttributes[vertIndexMap[val]] >
+                        this->bindingDistanceAttributes[vertIndexMap[element]] + 1) {
+                        this->bindingDistanceAttributes[vertIndexMap[val]] =
+                            this->bindingDistanceAttributes[vertIndexMap[element]] + 1;
                         newset.insert(val);
                     }
                 }
@@ -621,7 +626,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData * meshCall, CallTriMeshData * 
     /*
      * sixth step: fill the data into the structure
      */
-    this->meshVector[0].SetVertexData(static_cast<unsigned int>(this->vertices.size() / 3), this->vertices.data(), this->normals.data(), this->colors.data(), NULL, false);
+    this->meshVector[0].SetVertexData(static_cast<unsigned int>(this->vertices.size() / 3), this->vertices.data(),
+        this->normals.data(), this->colors.data(), NULL, false);
     this->meshVector[0].SetTriangleData(static_cast<unsigned int>(this->faces.size() / 3), this->faces.data(), false);
     this->meshVector[0].SetMaterial(nullptr);
     this->meshVector[0].AddVertexAttribPointer(this->attributes.data());

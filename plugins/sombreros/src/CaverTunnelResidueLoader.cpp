@@ -6,16 +6,16 @@
 #include "stdafx.h"
 #include "CaverTunnelResidueLoader.h"
 
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/TextFileReader.h"
-#include "vislib/sys/Log.h"
-#include "vislib/math/Point.h"
 #include "vislib/math/Dimension.h"
+#include "vislib/math/Point.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/TextFileReader.h"
 
 #include <string>
 
@@ -26,11 +26,12 @@ using namespace megamol::sombreros;
 /*
  * CaverTunnelResidueLoader::CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::CaverTunnelResidueLoader(void) : Module(),
-        getData("getData", "The slot providing the data loaded by this module."),
-        filenameSlot("filename", "The path to the residues.txt input file produced by caver."),
-        tunnelFilenameSlot("tunnelFilename", "The path to the tunnel_profiles.csv input file produced by caver."),
-        data_hash(0) {
+CaverTunnelResidueLoader::CaverTunnelResidueLoader(void)
+    : Module()
+    , getData("getData", "The slot providing the data loaded by this module.")
+    , filenameSlot("filename", "The path to the residues.txt input file produced by caver.")
+    , tunnelFilenameSlot("tunnelFilename", "The path to the tunnel_profiles.csv input file produced by caver.")
+    , data_hash(0) {
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&CaverTunnelResidueLoader::filenameChanged);
@@ -40,8 +41,10 @@ CaverTunnelResidueLoader::CaverTunnelResidueLoader(void) : Module(),
     this->tunnelFilenameSlot.SetUpdateCallback(&CaverTunnelResidueLoader::filenameChanged);
     this->MakeSlotAvailable(&this->tunnelFilenameSlot);
 
-    this->getData.SetCallback(TunnelResidueDataCall::ClassName(), TunnelResidueDataCall::FunctionName(0), &CaverTunnelResidueLoader::getDataCallback);
-    this->getData.SetCallback(TunnelResidueDataCall::ClassName(), TunnelResidueDataCall::FunctionName(1), &CaverTunnelResidueLoader::getExtentCallback);
+    this->getData.SetCallback(TunnelResidueDataCall::ClassName(), TunnelResidueDataCall::FunctionName(0),
+        &CaverTunnelResidueLoader::getDataCallback);
+    this->getData.SetCallback(TunnelResidueDataCall::ClassName(), TunnelResidueDataCall::FunctionName(1),
+        &CaverTunnelResidueLoader::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->file = nullptr;
@@ -51,9 +54,7 @@ CaverTunnelResidueLoader::CaverTunnelResidueLoader(void) : Module(),
 /*
  * CaverTunnelResidueLoader::~CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) {
-    this->Release();
-}
+CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) { this->Release(); }
 
 /*
  * CaverTunnelResidueLoader::create
@@ -69,13 +70,13 @@ bool CaverTunnelResidueLoader::create(void) {
  */
 void CaverTunnelResidueLoader::release(void) {
     if (this->file != nullptr) {
-        vislib::sys::File * f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = nullptr;
         f->Close();
         delete f;
     }
     if (this->tunnelFile != nullptr) {
-        vislib::sys::File * f = this->tunnelFile;
+        vislib::sys::File* f = this->tunnelFile;
         this->tunnelFile = nullptr;
         f->Close();
         delete f;
@@ -86,25 +87,26 @@ void CaverTunnelResidueLoader::release(void) {
  * CaverTunnelResidueLoader::filenameChanged
  */
 bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::Log;
     using vislib::sys::File;
+    using vislib::sys::Log;
 
     this->data_hash++;
 
-    /*********************************************** Read Residues file ******************************************************/
+    /*********************************************** Read Residues file
+     * ******************************************************/
     if (slot.Name().Equals(vislib::StringA("filename"))) {
 
         if (this->file == nullptr) {
             this->file = new File();
-        }
-        else {
+        } else {
             this->file->Close();
         }
         ASSERT(this->filenameSlot.Param<param::FilePathParam>() != nullptr);
 
-        if (!this->file->Open(this->filenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-            Log::DefaultLog.WriteError("Unable to open residues-File \"%s\".", vislib::StringA(
-                this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+        if (!this->file->Open(this->filenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY,
+                File::SHARE_READ, File::OPEN_ONLY)) {
+            Log::DefaultLog.WriteError("Unable to open residues-File \"%s\".",
+                vislib::StringA(this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
             SAFE_DELETE(this->file);
             return true;
         }
@@ -133,7 +135,7 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
             // split the line into the different parts
             std::vector<vislib::StringA> parts = splitLine(line);
-            TunnelResidueDataCall::Tunnel * tp = &this->tunnelVector[this->tunnelVector.size() - 1];
+            TunnelResidueDataCall::Tunnel* tp = &this->tunnelVector[this->tunnelVector.size() - 1];
 
             if (parts.size() > 5) { // only in this case we have atom indices
                 tp->atomNumbers.push_back(static_cast<int>(parts.size() - 5));
@@ -143,27 +145,29 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
                     // TODO this may be dangerous...
                     auto numberString = splitLine(parts[i], ':')[0];
                     auto idxString = splitLine(parts[i], '_')[1];
-                    tp->atomIdentifiers.push_back(std::pair<int, int>(std::stoi(idxString.PeekBuffer()), std::stoi(numberString.PeekBuffer())));
+                    tp->atomIdentifiers.push_back(
+                        std::pair<int, int>(std::stoi(idxString.PeekBuffer()), std::stoi(numberString.PeekBuffer())));
                 }
             }
         }
     }
 
-    /*********************************************** Read Tunnel file ******************************************************/
+    /*********************************************** Read Tunnel file
+     * ******************************************************/
 
     if (slot.Name().Equals(vislib::StringA("tunnelFilename"))) {
 
         if (this->tunnelFile == nullptr) {
             this->tunnelFile = new File();
-        }
-        else {
+        } else {
             this->tunnelFile->Close();
         }
         ASSERT(this->tunnelFilenameSlot.Param<param::FilePathParam>() != nullptr);
 
-        if (!this->tunnelFile->Open(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-            Log::DefaultLog.WriteError("Unable to open tunnel-File \"%s\".", vislib::StringA(
-                this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+        if (!this->tunnelFile->Open(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY,
+                File::SHARE_READ, File::OPEN_ONLY)) {
+            Log::DefaultLog.WriteError("Unable to open tunnel-File \"%s\".",
+                vislib::StringA(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
             SAFE_DELETE(this->file);
             return true;
         }
@@ -192,11 +196,12 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
             if (tunnelNum > static_cast<int>(this->tunnelVector.size())) {
                 // no tunnel exists
-                Log::DefaultLog.WriteWarn("The tunnel with index %i does not exist, all values for it will be ignored", tunnelNum);
+                Log::DefaultLog.WriteWarn(
+                    "The tunnel with index %i does not exist, all values for it will be ignored", tunnelNum);
                 continue;
             }
 
-            std::vector<float> * tp = &this->tunnelVector[tunnelNum - 1].coordinates;
+            std::vector<float>* tp = &this->tunnelVector[tunnelNum - 1].coordinates;
             if (tp->size() != (values.size() - 12) * 4) { // 4 entries for each vertex
                 tp->resize((values.size() - 12) * 4, 0.0f);
             }
@@ -219,7 +224,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
                 }
             } else if (values[11].Equals(vislib::StringA("distance"))) {
                 for (int i = 12; i < static_cast<int>(values.size()); i++) {
-                    this->tunnelVector[tunnelNum - 1].tunnelLength = static_cast<float>(std::stof(values[i].PeekBuffer()));
+                    this->tunnelVector[tunnelNum - 1].tunnelLength =
+                        static_cast<float>(std::stof(values[i].PeekBuffer()));
                 }
             }
         }
@@ -230,7 +236,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
         if (this->tunnelVector.size() > 0) {
             if (this->tunnelVector[0].coordinates.size() > 3) {
-                vislib::math::Point<float, 3> point = vislib::math::Point<float, 3>(this->tunnelVector[0].coordinates.data());
+                vislib::math::Point<float, 3> point =
+                    vislib::math::Point<float, 3>(this->tunnelVector[0].coordinates.data());
                 vislib::math::Dimension<float, 3> dim = vislib::math::Dimension<float, 3>(0.0f, 0.0f, 0.0f);
                 this->boundingBox = vislib::math::Cuboid<float>(point, dim);
             }
@@ -238,7 +245,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
         for (int i = 0; i < this->tunnelVector.size(); i++) {
             for (int j = 0; j < this->tunnelVector[i].coordinates.size(); j = j + 4) {
-                vislib::math::Point<float, 3> point = vislib::math::Point<float, 3>(&this->tunnelVector[i].coordinates[j]);
+                vislib::math::Point<float, 3> point =
+                    vislib::math::Point<float, 3>(&this->tunnelVector[i].coordinates[j]);
                 this->boundingBox.GrowToPoint(point);
                 if (maxRadius < this->tunnelVector[i].coordinates[j + 3]) {
                     maxRadius = this->tunnelVector[i].coordinates[j + 3];
@@ -291,7 +299,7 @@ std::vector<vislib::StringA> CaverTunnelResidueLoader::splitLine(vislib::StringA
  * CaverTunnelResidueLoader::getDataCallback
  */
 bool CaverTunnelResidueLoader::getDataCallback(core::Call& caller) {
-    TunnelResidueDataCall * trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
+    TunnelResidueDataCall* trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
     if (trdc == nullptr) return false;
 
     trdc->setTunnelNumber(static_cast<int>(this->tunnelVector.size()));
@@ -304,7 +312,7 @@ bool CaverTunnelResidueLoader::getDataCallback(core::Call& caller) {
  * CaverTunnelResidueLoader::getExtentCallback
  */
 bool CaverTunnelResidueLoader::getExtentCallback(core::Call& caller) {
-    TunnelResidueDataCall * trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
+    TunnelResidueDataCall* trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
 
     if (trdc != nullptr) {
         trdc->SetFrameCount(1); // TODO

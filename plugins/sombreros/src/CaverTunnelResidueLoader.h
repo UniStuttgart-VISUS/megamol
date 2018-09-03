@@ -6,138 +6,132 @@
 #ifndef MMSOMBREROSPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
 #define MMSOMBREROSPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/AnimDataModule.h"
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/AnimDataModule.h"
 
 #include "TunnelResidueDataCall.h"
 
-#include "vislib/sys/File.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/sys/File.h"
 
 namespace megamol {
 namespace sombreros {
 
+/**
+ * Data source for the tunnel-parallel residue files from the Caver software
+ */
+class CaverTunnelResidueLoader : public core::Module {
+public:
     /**
-     * Data source for the tunnel-parallel residue files from the Caver software
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class CaverTunnelResidueLoader : public core::Module {
-    public:
+    static const char* ClassName(void) { return "CaverTunnelResidueLoader"; }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "CaverTunnelResidueLoader";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Data source module for tunnel-residing residue index files outputted by Caver";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Data source module for tunnel-residing residue index files outputted by Caver";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    CaverTunnelResidueLoader(void);
 
-        /** Ctor. */
-        CaverTunnelResidueLoader(void);
+    /** Dtor. */
+    virtual ~CaverTunnelResidueLoader(void);
 
-        /** Dtor. */
-        virtual ~CaverTunnelResidueLoader(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Callback receiving the update of the file name parameter.
+     *
+     * @param slot The updated ParamSlot.
+     *
+     * @return Always 'true' to reset the dirty flag.
+     */
+    bool filenameChanged(core::param::ParamSlot& slot);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-    private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-        /**
-         * Callback receiving the update of the file name parameter.
-         *
-         * @param slot The updated ParamSlot.
-         *
-         * @return Always 'true' to reset the dirty flag.
-         */
-        bool filenameChanged(core::param::ParamSlot& slot);
+    /**
+     * Splits a line into different parts, seperated by a given char
+     *
+     * @param line The line to split
+     * @param splitChar The char to split after. Default: whitespace
+     * @return Vector containing all parts of the line. May be empty, when the line only contains the splitChar or was
+     * empty before.
+     */
+    std::vector<vislib::StringA> splitLine(vislib::StringA line, char splitChar = ' ');
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
+    /** Slot for the filename */
+    core::param::ParamSlot filenameSlot;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+    /** Slot for the filename containing the tunnel vertices */
+    core::param::ParamSlot tunnelFilenameSlot;
 
-        /**
-         * Splits a line into different parts, seperated by a given char
-         *
-         * @param line The line to split
-         * @param splitChar The char to split after. Default: whitespace
-         * @return Vector containing all parts of the line. May be empty, when the line only contains the splitChar or was empty before.
-         */
-        std::vector<vislib::StringA> splitLine(vislib::StringA line, char splitChar = ' ');
+    /** The data output callee slot */
+    core::CalleeSlot getData;
 
-        /** Slot for the filename */
-        core::param::ParamSlot filenameSlot;
+    /** The file handle */
+    vislib::sys::File* file;
 
-        /** Slot for the filename containing the tunnel vertices */
-        core::param::ParamSlot tunnelFilenameSlot;
+    /** The tunnel file handle */
+    vislib::sys::File* tunnelFile;
 
-        /** The data output callee slot */
-        core::CalleeSlot getData;
+    /** The data hash */
+    size_t data_hash;
 
-        /** The file handle */
-        vislib::sys::File * file;
+    /** data storage for all read tunnels */
+    std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
 
-        /** The tunnel file handle */
-        vislib::sys::File * tunnelFile;
-
-        /** The data hash */
-        size_t data_hash;
-
-        /** data storage for all read tunnels */
-        std::vector<TunnelResidueDataCall::Tunnel> tunnelVector;
-
-        /** The bounding box of the tunnel voronoi vertices */
-        vislib::math::Cuboid<float> boundingBox;
-    };
+    /** The bounding box of the tunnel voronoi vertices */
+    vislib::math::Cuboid<float> boundingBox;
+};
 
 } /* end namespace sombreros */
 } /* end namespace megamol */
