@@ -672,6 +672,8 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
+    this->clearAllFields();
+
     this->vertElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
     this->faceElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
     this->xPropSlot.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -706,8 +708,11 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->hasBinaryFormat = false;
     this->isLittleEndian = true;
     this->data_offset = 0;
+    this->face_count = 0;
+    this->vertex_count = 0;
 
-    plf.parse_header(instream);
+    tinyply::PlyFile plf;
+    plf.parse_header(this->instream);
 
     uint64_t element_index = 0;
     uint64_t property_index = 0;
