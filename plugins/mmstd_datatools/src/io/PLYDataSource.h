@@ -237,9 +237,6 @@ protected:
     /** The input file stream. */
     std::ifstream instream;
 
-    /** The tinyply file handle. */
-    tinyply::PlyFile plf;
-
     /** Struct for the different possible position types */
     struct pos_type {
         double* pos_double = nullptr;
