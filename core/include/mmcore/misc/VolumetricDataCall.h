@@ -289,7 +289,7 @@ namespace misc {
 
     /** Call Descriptor.  */
     typedef factories::CallAutoDescription<VolumetricDataCall>
-        VolumeticDataCallDescription;
+        VolumetricDataCallDescription;
 
 } /* end namespace misc */
 } /* end namespace core */

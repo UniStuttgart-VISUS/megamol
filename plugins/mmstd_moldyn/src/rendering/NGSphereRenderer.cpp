@@ -13,16 +13,14 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/FloatParam.h"
-#include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-#include <inttypes.h>
-#include <stdint.h>
+#include <cmath>
+#include <cinttypes>
 
 #include <chrono>
 #include <sstream>
-#include <iostream>
 #include <iterator>
 
 //#define CHRONOTIMING
@@ -33,14 +31,16 @@ using namespace megamol::stdplugin::moldyn::rendering;
 #define DEBUG_BLAHBLAH
 
 const GLuint SSBObindingPoint = 2;
+const GLuint SSBOcolorBindingPoint = 3;
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
+#define NGS_THE_ALIGNMENT "packed"
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar* message, const GLvoid* userParam) {
         const char *sourceText, *typeText, *severityText;
-        switch(source) {
+        switch(source) { 
             case GL_DEBUG_SOURCE_API:
                 sourceText = "API";
                 break;
@@ -114,21 +114,11 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-//sphereShader(),
-    fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
     scalingParam("scaling", "scaling factor for particle radii"),
-//	timer(),
-    // this variant should not need the fence
-    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
-    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
-    colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
-    theShaders() {
+    colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE) {
 
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
-    fences.resize(numBuffers);
 }
 
 
@@ -138,25 +128,6 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 NGSphereRenderer::~NGSphereRenderer(void) {
     this->Release();
 }
-
-void NGSphereRenderer::queueSignal(GLsync& syncObj) {
-    if (syncObj) {
-        glDeleteSync(syncObj);
-    }
-    syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-}
-
-void NGSphereRenderer::waitSignal(GLsync& syncObj) {
-    if (syncObj) {
-        while (1) {
-            GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-            if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
-                return;
-            }
-        }
-    }
-}
-
 
 /*
  * moldyn::SimpleSphereRenderer::create
@@ -175,22 +146,8 @@ bool NGSphereRenderer::create(void) {
         return false;
     }
 
-    //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
-    //    vert.WholeCode().PeekBuffer(),
-    //    frag.WholeCode().PeekBuffer());
-
-    //bool ret = makeShader(vert, frag);
-    //if (!ret) {
-    //	return false;
-    //}
-
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
-    glGenBuffers(1, &this->theSingleBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
-    glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
     //timer.SetNumRegions(4);
@@ -202,81 +159,89 @@ bool NGSphereRenderer::create(void) {
     return AbstractSimpleSphereRenderer::create();
 }
 
-bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration) {
+bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
     bool ret = true;
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "    theColor = vec4(1.0);\n";
-            //glColor3ubv(parts.GetGlobalColour());
+            code = "";
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            //glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
+            vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
             ret = false;
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            //glEnableClientState(GL_COLOR_ARRAY);
-            //glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
             declaration = "    uint color;\n";
-            code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+            if (interleaved) {
+                code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+            } else {
+                code = "    theColor = unpackUnorm4x8(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+            }
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            //glEnableClientState(GL_COLOR_ARRAY);
-            //glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
             declaration = "    float r; float g; float b;\n";
-            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+            if (interleaved) {
+                code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+            } else {
+                code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+            }
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            //glEnableClientState(GL_COLOR_ARRAY);
-            //glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
             declaration = "    float r; float g; float b; float a;\n";
-            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+            if (interleaved) {
+                code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                    "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+            } else {
+                code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
+                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                    "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+            }
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            //glEnableVertexAttribArrayARB(colIdxAttribLoc);
-            //glVertexAttribPointerARB(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
-
-            //glEnable(GL_TEXTURE_1D);
-
-            //view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            //if ((cgtf != NULL) && ((*cgtf)())) {
-            //	glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-            //	colTabSize = cgtf->TextureSize();
-            //}
             declaration = "    float colorIndex;\n";
-            code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
-            // flat float version
-            //code = "    theColIdx = theBuffer[5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 4]; \n";
-
-            //else {
-            //	glBindTexture(GL_TEXTURE_1D, this->greyTF);
-            //	colTabSize = 2;
-            //}
-
-            //glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
-            //minC = parts.GetMinColourIndexValue();
-            //maxC = parts.GetMaxColourIndexValue();
-            //glColor3ub(127, 127, 127);
+            if (interleaved) {
+                code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            } else {
+                code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            }
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+            declaration = "    double colorIndex;\n";
+            if (interleaved) {
+                code = "    theColIdx = float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            } else {
+                code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            }
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
+            declaration = "    uint col1; uint col2;\n";
+            if (interleaved) {
+                code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                       "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+            } else {
+                code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
+                       "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+            }
         } break;
         default:
-            //glColor3ub(127, 127, 127);
             declaration = "";
             code = "    theColor = gl_Color;\n"
                    "    theColIdx = colIdx;";
             break;
     }
+    //code = "    theColor = vec4(0.2, 0.7, 1.0, 1.0);";
     return ret;
 }
 
-bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration)  {
+bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved)  {
     bool ret = true;
-    //std::string code;
-    //std::string declaration;
 
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
@@ -284,38 +249,46 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
         code = "";
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        //glEnableClientState(GL_VERTEX_ARRAY);
-        //glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-        //glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
         declaration = "    float posX; float posY; float posZ;\n";
-        code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-               "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-               "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-               "    rad = CONSTRAD;";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        } else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        declaration = "    double posX; double posY; double posZ;\n";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        } else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-        //glEnableClientState(GL_VERTEX_ARRAY);
-        //glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-        //glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-        // broken
-        //declaration = "    vec4 posR;\n";
-        //code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
-        //       "    rad = inPos.w;\n"
-        //       "    inPos.w = 1.0;";
-
         declaration = "    float posX; float posY; float posZ; float posR;\n";
-        code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-            "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
-
-        // flat float version
-        //code = "    inPos = vec4(theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 0],"
-        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 1],"
-        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 2],"
-        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 3]);\n"
-        //    "    rad = inPos.w;\n"
-        //    "    inPos.w = 1.0;";
+        if (interleaved) {
+            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+        } else {
+            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+        }
         break;
     default:
         declaration = "";
@@ -324,8 +297,7 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
                "    inPos.w = 1.0; ";
         break;
     }
-    //codeSnippet = new ShaderSource::StringSnippet(code.c_str());
-    //declarationSnippet = new ShaderSource::StringSnippet(declaration.c_str());
+
     return ret;
 }
 
@@ -363,23 +335,23 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
 
-    shaderMap::iterator i = theShaders.find({ c, p });
+    unsigned int colBytes, vertBytes, colStride, vertStride;
+    bool interleaved;
+    this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
+
+    shaderMap::iterator i = theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == theShaders.end()) {
         //instance()->ShaderSourceFactory().MakeShaderSource()
 
-        unsigned int colBytes, vertBytes, colStride, vertStride;
-        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride);
+        vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*vert);
+        vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
+        std::string vertCode, colCode, vertDecl, colDecl, decl;
+        makeVertexString(parts, vertCode, vertDecl, interleaved);
+        makeColorString(parts, colCode, colDecl, interleaved);
 
-        if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData())
-            - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
-            && vertStride == colStride) || colStride == 0) {
+        if (interleaved) {
 
-            vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*vert);
-            vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
-            std::string vertCode, colCode, vertDecl, colDecl;
-            makeVertexString(parts, vertCode, vertDecl);
-            makeColorString(parts, colCode, colDecl);
-            std::string decl = "\nstruct SphereParams {\n";
+            decl = "\nstruct SphereParams {\n";
 
             //if (vertStride > vertBytes) {
             //    unsigned int rest = (vertStride - vertBytes);
@@ -402,27 +374,39 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             }
             decl += "};\n";
 
-            decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
                 "    SphereParams theBuffer[];\n"
                 // flat float version
                 //"    float theBuffer[];\n"
                 "};\n";
-            std::string code = "\n";
-            code += colCode;
-            code += vertCode;
-            declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
-            codeSnip = new ShaderSource::StringSnippet(code.c_str());
-            v2->Insert(3, declarationSnip);
-            v2->Insert(5, codeSnip);
-            std::string s(v2->WholeCode());
 
-            vislib::SmartPtr<ShaderSource> vss(v2);
-            theShaders.emplace(std::make_pair(std::make_pair(c, p), makeShader(v2, frag)));
-            i = theShaders.find({ c, p });
         } else {
-            // no clue yet
-            throw new vislib::Exception("er. uhm. I don't know.", __FILE__, __LINE__);
+            // we seem to have separate buffers for vertex and color data
+
+            decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
+            decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
+
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+                    ") buffer shader_data {\n"
+                "    SpherePosParams thePosBuffer[];\n"
+                "};\n";
+            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
+                    ") buffer shader_data2 {\n"
+                "    SphereColParams theColBuffer[];\n"
+                "};\n";
         }
+        std::string code = "\n";
+        code += colCode;
+        code += vertCode;
+        declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
+        codeSnip = new ShaderSource::StringSnippet(code.c_str());
+        v2->Insert(3, declarationSnip);
+        v2->Insert(5, codeSnip);
+        std::string s(v2->WholeCode());
+
+        vislib::SmartPtr<ShaderSource> vss(v2);
+        theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, frag)));
+        i = theShaders.find(std::make_tuple(c, p, interleaved));
     }
     return i->second;
 }
@@ -432,92 +416,15 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
  * moldyn::SimpleSphereRenderer::release
  */
 void NGSphereRenderer::release(void) {
-    glUnmapNamedBufferEXT(this->theSingleBuffer);
-    for (auto &x : fences) {
-        if (x) {
-            glDeleteSync(x);
-        }
-    }
     //this->sphereShader.Release();
     // TODO release all shaders!
     glDeleteVertexArrays(1, &this->vertArray);
-    glDeleteBuffers(1, &this->theSingleBuffer);
     AbstractSimpleSphereRenderer::release();
 }
 
 
-void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
-    float minC = 0.0f, maxC = 0.0f;
-    unsigned int colTabSize = 0;
-
-    // colour
-    glBindBuffer(GL_ARRAY_BUFFER, colBuf);
-    switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            glColor3ubv(parts.GetGlobalColour());
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-            glEnableVertexAttribArrayARB(colIdxAttribLoc);
-            glVertexAttribPointerARB(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
-
-            glEnable(GL_TEXTURE_1D);
-
-            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            } else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
-
-            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-            glColor3ub(127, 127, 127);
-        } break;
-        default:
-            glColor3ub(127, 127, 127);
-            break;
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, vertBuf);
-    // radius and position
-    switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-            glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-            glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-            break;
-        default:
-            break;
-    }
-}
-
 void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-    unsigned int &colStride, unsigned int &vertStride) {
+    unsigned int &colStride, unsigned int &vertStride, bool &interleaved) {
     vertBytes = 0; colBytes = 0;
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
@@ -537,9 +444,14 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
             colBytes = vislib::math::Max(colBytes, 1 * 4U);
-            // nothing else
+        } break;
+        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+            colBytes = vislib::math::Max(colBytes, 1 * 8U);
         }
-            break;
+        break;
+        case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
+            colBytes = vislib::math::Max(colBytes, 4 * 2U);
+        } break;
         default:
             // nothing
             break;
@@ -553,6 +465,9 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
             vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
             break;
+        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            vertBytes = vislib::math::Max(vertBytes, 3 * 8U);
+            break;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
             break;
@@ -565,6 +480,10 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
     colStride = colStride < colBytes ? colBytes : colStride;
     vertStride = parts.GetVertexDataStride();
     vertStride = vertStride < vertBytes ? vertBytes : vertStride;
+
+    interleaved = (std::abs(reinterpret_cast<const ptrdiff_t>(parts.GetColourData())
+        - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= vertStride
+        && vertStride == colStride) || colStride == 0;
 }
 
 
@@ -602,11 +521,11 @@ bool NGSphereRenderer::Render(Call& call) {
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     //glScalef(scaling, scaling, scaling);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
+    GLfloat lpos[4];
+    glGetLightfv(GL_LIGHT0, GL_POSITION, lpos);
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
@@ -647,6 +566,7 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform4fv(newShader->ParameterLocation("lpos"), 1, lpos);
         glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
@@ -656,7 +576,15 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            case MultiParticleDataCall::Particles::COLDATA_NONE: {
+                glUniform4f(this->newShader->ParameterLocation("globalCol"), 
+                    static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
+                    1.0f);
+            } break;
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
                 glEnable(GL_TEXTURE_1D);
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                 if ((cgtf != NULL) && ((*cgtf)())) {
@@ -677,6 +605,7 @@ bool NGSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
                 glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -688,55 +617,61 @@ bool NGSphereRenderer::Render(Call& call) {
 
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
-        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride);
+        bool interleaved;
+        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
         //currBuf = 0;
-        UINT64 numVerts, vertCounter;
+        //UINT64 numVerts, vertCounter;
+
         // does all data reside interleaved in the same memory?
-        if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
-                - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
-                && vertStride == colStride) || colStride == 0)  {
-                    numVerts = this->bufSize / vertStride;
-                    const char *currVert = static_cast<const char *>(parts.GetVertexData());
-                    const char *currCol = static_cast<const char *>(parts.GetColourData());
-                    vertCounter = 0;
-                    while (vertCounter < parts.GetCount()) {
-                        //GLuint vb = this->theBuffers[currBuf];
-                        void *mem = static_cast<char*>(theSingleMappedMem) + bufSize * currBuf;
-                        currCol = colStride == 0 ? currVert : currCol;
-                        //currCol = currCol == 0 ? currVert : currCol;
-                        const char *whence = currVert < currCol ? currVert : currCol;
-                        UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
+        if (interleaved)  {
 
-#ifdef CHRONOTIMING
-                        before = std::chrono::high_resolution_clock::now();
-#endif
-                        this->waitSignal(fences[currBuf]);
-#ifdef CHRONOTIMING
-                        after = std::chrono::high_resolution_clock::now();
-                        deltas.push_back(static_cast<std::chrono::steady_clock::time_point>(after - before));
-#endif
-                        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
-                        memcpy(mem, whence, vertsThisTime * vertStride);
-                        glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
-                        //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-                        //glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
-                        glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+            const GLuint numChunks = streamer.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride,
+                parts.GetCount(), 3, 32 * 1024 * 1024);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
 
-                        //this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-                        //glBindBuffer(GL_ARRAY_BUFFER, 0);
-                        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-                        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertsThisTime));
-                        //glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
-                        this->queueSignal(fences[currBuf]);
-
-                        currBuf = (currBuf + 1) % this->numBuffers;
-                        vertCounter += vertsThisTime;
-                        currVert += vertsThisTime * vertStride;
-                        currCol += vertsThisTime * colStride;
-                        //break;
-                    }
+            for(GLuint x = 0; x < numChunks; ++x) {
+                GLuint numItems, sync;
+                GLsizeiptr dstOff, dstLen;
+                streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                //streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
+                //    numItems, sync, dstOff, dstLen);
+                //vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
+                glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+                glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
+                    this->streamer.GetHandle(), dstOff, dstLen);
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
+                streamer.SignalCompletion(sync);
+            }
         } else {
+
+            const GLuint numChunks = streamer.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride,
+                parts.GetCount(), 3, 32 * 1024 * 1024);
+            const GLuint colSize = colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
+                parts.GetCount(), 3, streamer.GetMaxNumItemsPerChunk());
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, colStreamer.GetHandle());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colStreamer.GetHandle());
+
+            for (GLuint x = 0; x < numChunks; ++x) {
+                GLuint numItems, numItems2, sync, sync2;
+                GLsizeiptr dstOff, dstLen, dstOff2, dstLen2;
+                streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
+                ASSERT(numItems == numItems2);
+                glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+                glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,
+                    this->streamer.GetHandle(), dstOff, dstLen);
+                glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint,
+                    this->colStreamer.GetHandle(), dstOff2, dstLen2);
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
+                streamer.SignalCompletion(sync);
+                streamer.SignalCompletion(sync2);
+            }
 
         }
 

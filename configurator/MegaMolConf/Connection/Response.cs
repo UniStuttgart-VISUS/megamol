@@ -7,25 +7,25 @@ namespace MegaMolConf.Communication {
     /// </summary>
     public class Response {
 
-        private Request req;
+        //private Request req;
 
         /// <summary>
         /// The original request this response was replied to
         /// </summary>
-        public Request Request {
-            get { return req; }
-            internal set {
-                if (value != null) {
-                    req = value;
-                    Command = req.Command;
-                }
-            }
-        }
+        //public Request Request {
+        //    get { return req; }
+        //    internal set {
+        //        if (value != null) {
+        //            req = value;
+        //            Command = req.Command;
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// The original request command this response was replied to
         /// </summary>
-        public String Command { get; private set; }
+        // public String Command { get; private set; }
 
         /// <summary>
         /// The error state of this response

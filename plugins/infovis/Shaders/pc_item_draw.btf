@@ -63,7 +63,11 @@ void main()
   out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
   float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
-  out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
+  if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
+    out_.color = color;
+  } else {
+    out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
+  }
 
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
 #ifndef DOLINES // triangles need to be "less degenerate"

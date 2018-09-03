@@ -264,7 +264,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             this->send(answer);
             break;
         case MSG_HANDSHAKE_DONE:
-            Log::DefaultLog.WriteInfo("Handshake with server complete\n");
+            Log::DefaultLog.WriteInfo("Client: Handshake with server complete\n");
             answer.GetHeader().SetMessageID(MSG_TIMESYNC);
             answer.GetHeader().SetBodySize(sizeof(TimeSyncData));
             answer.AssertBodySize();
@@ -274,7 +274,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
         case MSG_TIMESYNC:
             if (msg.GetBodyAs<TimeSyncData>()->cnt == TIMESYNCDATACOUNT) {
                 const TimeSyncData *tsd = msg.GetBodyAs<TimeSyncData>();
-                Log::DefaultLog.WriteInfo("Timesync complete\n");
+                Log::DefaultLog.WriteInfo("Client: Timesync complete\n");
                 double lat = 0;
                 for (unsigned int i = 1; i < TIMESYNCDATACOUNT; i++) {
                     lat += (tsd->time[i] - tsd->time[i - 1]) * 0.5;
@@ -284,9 +284,9 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
                 double rcit = tsd->time[TIMESYNCDATACOUNT - 1] + lat;
                 this->GetCoreInstance()->OffsetInstanceTime(rcit - lcit);
                 double bclcit = this->GetCoreInstance()->GetCoreInstanceTime();
-                Log::DefaultLog.WriteInfo("Instancetime offsetted from %f to %f based on remote time %f\n", lcit, bclcit, rcit);
+                Log::DefaultLog.WriteInfo("Client: Instancetime offsetted from %f to %f based on remote time %f\n", lcit, bclcit, rcit);
 
-                Log::DefaultLog.WriteInfo("Cleaning up module graph\n");
+                Log::DefaultLog.WriteInfo("Client: Cleaning up module graph\n");
                 for (SIZE_T i = 0; i < this->views.Count(); i++) {
                     this->views[i]->DisconnectViewCall();
                 }
@@ -301,6 +301,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
         case MSG_MODULGRAPH:
         case MSG_MODULGRAPH_LUA:
             // MUST BE STORED FOR CREATING SYNCHRONOUSLY
+            Log::DefaultLog.WriteInfo("Client: got a Module Graph\n");
             if (!this->views.IsEmpty()) {
                 this->views[0]->SetSetupMessage(msg);
             }
@@ -327,12 +328,12 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             AbstractNamedObject::ptr_type psp = this->FindNamedObject(name, true);
             param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(psp.get());
             if (ps == NULL) {
-                Log::DefaultLog.WriteWarn("Unable to set parameter %s; not found\n", name.PeekBuffer());
+                Log::DefaultLog.WriteWarn("Client: Unable to set parameter %s; not found\n", name.PeekBuffer());
             } else {
                 bool b = ps->Param<param::AbstractParam>()->ParseValue(value);
                 if (b) {
 //#define LOGPARAMETERUPDATEWITHVALUE
-                    Log::DefaultLog.WriteInfo("Parameter %s updated"
+                    Log::DefaultLog.WriteInfo("Client: Parameter %s updated"
 #ifdef LOGPARAMETERUPDATEWITHVALUE
                         " to %s"
 #endif
@@ -342,11 +343,12 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
 #endif
                         );
                 } else {
-                    Log::DefaultLog.WriteWarn("Unable to set parameter %s; parse error\n", name.PeekBuffer());
+                    Log::DefaultLog.WriteWarn("Client: Unable to set parameter %s; parse error\n", name.PeekBuffer());
                 }
             }
         } break;
         case MSG_CAMERAUPDATE:
+            Log::DefaultLog.WriteInfo("Client: got a Camera Update\n");
             if (!this->views.IsEmpty()) {
                 vislib::RawStorageSerialiser ser(msg.GetBodyAs<BYTE>(), msg.GetHeader().GetBodySize());
                 ser.SetOffset(0);

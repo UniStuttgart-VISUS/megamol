@@ -18,8 +18,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     add_definitions(-DXMD_H) # prevents typedef conflict
   endif()
 
-  set(LIBS vislib core glad ${JPEG_LIBRARIES})
+  set(LIBS vislib core glad image_calls ${JPEG_LIBRARIES})
   include_directories("include" "src" ${JPEG_INCLUDE_DIR})
+
+  if(MPI_C_FOUND)
+    include_directories(${MPI_C_INCLUDE_PATH})
+    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+  endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -29,7 +34,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glad core)
+  add_dependencies(${PROJECT_NAME} vislib glad core image_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
@@ -44,6 +49,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
