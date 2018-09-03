@@ -163,44 +163,31 @@ io::PLYDataSource::PLYDataSource(void)
     this->MakeSlotAvailable(&this->filename);
 
     this->vertElemSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->vertElemSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->vertElemSlot);
     this->faceElemSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->faceElemSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->faceElemSlot);
 
     this->xPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->xPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->xPropSlot);
     this->yPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->yPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->yPropSlot);
     this->zPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->zPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->zPropSlot);
     this->nxPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->nxPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->nxPropSlot);
     this->nyPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->nyPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->nyPropSlot);
     this->nzPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->nzPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->nzPropSlot);
     this->rPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->rPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->rPropSlot);
     this->gPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->gPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->gPropSlot);
     this->bPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->bPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->bPropSlot);
     this->iPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->iPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->iPropSlot);
     this->indexPropSlot.SetParameter(new core::param::FlexEnumParam(theUndef));
-    this->indexPropSlot.SetUpdateCallback(&PLYDataSource::anyEnumChanged);
     this->MakeSlotAvailable(&this->indexPropSlot);
 
     this->radiusSlot.SetParameter(new core::param::FloatParam(1.0f));
@@ -218,6 +205,8 @@ io::PLYDataSource::PLYDataSource(void)
     this->getMeshData.SetCallback(
         CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &PLYDataSource::getMeshExtentCallback);
     this->MakeSlotAvailable(&this->getMeshData);
+
+    this->resetParameterDirtyness();
 }
 
 /*
@@ -244,6 +233,8 @@ void io::PLYDataSource::release(void) {
  * io::PLYDataSource::assertData
  */
 bool io::PLYDataSource::assertData() {
+    // if one of these pointers is not null, we already have read the data
+    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
 
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
@@ -252,8 +243,6 @@ bool io::PLYDataSource::assertData() {
             vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         return true;
     }
-    // if one of these pointers is not null, we already have read the data
-    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
 
     // jump to the data in the file
     instream.seekg(this->data_offset, instream.beg);
@@ -261,12 +250,12 @@ bool io::PLYDataSource::assertData() {
     size_t faceCount = 0;
 
     // reserve the space for the data
-    if (std::none_of(guessedPos.begin(), guessedPos.end(), [](std::string s) { return s.empty(); })) {
+    if (std::none_of(selectedPos.begin(), selectedPos.end(), [](std::string s) { return s.empty(); })) {
         if (std::any_of(
-                guessedPos.begin(), guessedPos.end(), [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
+                selectedPos.begin(), selectedPos.end(), [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
             uint64_t maxSize = 0;
             uint64_t elemCount = 0;
-            for (auto s : guessedPos) {
+            for (auto s : selectedPos) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
                 elemCount += this->elementCount[idx.first];
@@ -283,12 +272,12 @@ bool io::PLYDataSource::assertData() {
             vislib::sys::Log::DefaultLog.WriteWarn("One of the position labels could not be found");
         }
     }
-    if (std::none_of(guessedNormal.begin(), guessedNormal.end(), [](std::string s) { return s.empty(); })) {
-        if (std::any_of(guessedNormal.begin(), guessedNormal.end(),
+    if (std::none_of(selectedNormal.begin(), selectedNormal.end(), [](std::string s) { return s.empty(); })) {
+        if (std::any_of(selectedNormal.begin(), selectedNormal.end(),
                 [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
             uint64_t maxSize = 0;
             uint64_t elemCount = 0;
-            for (auto s : guessedNormal) {
+            for (auto s : selectedNormal) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
                 elemCount += this->elementCount[idx.first];
@@ -303,12 +292,12 @@ bool io::PLYDataSource::assertData() {
             vislib::sys::Log::DefaultLog.WriteWarn("One of the normal labels could not be found");
         }
     }
-    if (std::none_of(guessedColor.begin(), guessedColor.end(), [](std::string s) { return s.empty(); })) {
-        if (std::any_of(guessedColor.begin(), guessedColor.end(),
+    if (std::none_of(selectedColor.begin(), selectedColor.end(), [](std::string s) { return s.empty(); })) {
+        if (std::any_of(selectedColor.begin(), selectedColor.end(),
                 [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
             uint64_t maxSize = 0;
             uint64_t elemCount = 0;
-            for (auto s : guessedColor) {
+            for (auto s : selectedColor) {
                 auto idx = this->elementIndexMap[s];
                 auto size = this->propertySizes[idx.first][idx.second];
                 elemCount += this->elementCount[idx.first];
@@ -325,9 +314,9 @@ bool io::PLYDataSource::assertData() {
             vislib::sys::Log::DefaultLog.WriteWarn("One of the color labels could not be found");
         }
     }
-    if (!guessedIndices.empty()) {
-        if (this->elementIndexMap.count(guessedIndices) > 0) {
-            auto idx = this->elementIndexMap[guessedIndices];
+    if (!selectedIndices.empty()) {
+        if (this->elementIndexMap.count(selectedIndices) > 0) {
+            auto idx = this->elementIndexMap[selectedIndices];
             auto size = this->propertySizes[idx.first][idx.second];
             auto elemCount =
                 this->elementCount[idx.first] * 3; // TODO modify this to work with anything besides triangles
@@ -354,8 +343,8 @@ bool io::PLYDataSource::assertData() {
         for (size_t i = 0; i < readData.size(); i++) {
             // maybe TODO: skip unnecessary elements
             uint64_t readsize = elementSizes[i];
-            if (elementIndexMap.count(guessedIndices) > 0) {
-                auto idx = elementIndexMap[guessedIndices];
+            if (elementIndexMap.count(selectedIndices) > 0) {
+                auto idx = elementIndexMap[selectedIndices];
                 if (idx.first == i && listFlags[idx.first][idx.second]) {
                     // we assume that faces are always triangular
                     readsize = listSizes[idx.first][idx.second] + 3 * propertySizes[idx.first][idx.second];
@@ -375,9 +364,9 @@ bool io::PLYDataSource::assertData() {
         // copy the data into the vectors (this is necessary because the data may be interleaved, which is not always
         // the case)
         // this could be done partially in parallel
-        for (size_t i = 0; i < guessedPos.size(); i++) {
-            if (elementIndexMap.count(guessedPos[i]) > 0) {
-                auto idx = elementIndexMap[guessedPos[i]];
+        for (size_t i = 0; i < selectedPos.size(); i++) {
+            if (elementIndexMap.count(selectedPos[i]) > 0) {
+                auto idx = elementIndexMap[selectedPos[i]];
                 auto elemSize = elementSizes[idx.first];
                 auto size = propertySizes[idx.first][idx.second];
                 auto stride = propertyStrides[idx.first][idx.second];
@@ -408,9 +397,9 @@ bool io::PLYDataSource::assertData() {
             }
         }
 
-        for (size_t i = 0; i < guessedNormal.size(); i++) {
-            if (elementIndexMap.count(guessedNormal[i]) > 0) {
-                auto idx = elementIndexMap[guessedNormal[i]];
+        for (size_t i = 0; i < selectedNormal.size(); i++) {
+            if (elementIndexMap.count(selectedNormal[i]) > 0) {
+                auto idx = elementIndexMap[selectedNormal[i]];
                 auto elemSize = elementSizes[idx.first];
                 auto size = propertySizes[idx.first][idx.second];
                 auto stride = propertyStrides[idx.first][idx.second];
@@ -429,10 +418,10 @@ bool io::PLYDataSource::assertData() {
             }
         }
 
-        for (size_t i = 0; i < guessedColor.size(); i++) {
+        for (size_t i = 0; i < selectedColor.size(); i++) {
             if (i > 2) break;
-            if (elementIndexMap.count(guessedColor[i]) > 0) {
-                auto idx = elementIndexMap[guessedColor[i]];
+            if (elementIndexMap.count(selectedColor[i]) > 0) {
+                auto idx = elementIndexMap[selectedColor[i]];
                 auto elemSize = elementSizes[idx.first];
                 auto size = propertySizes[idx.first][idx.second];
                 auto stride = propertyStrides[idx.first][idx.second];
@@ -457,8 +446,8 @@ bool io::PLYDataSource::assertData() {
             }
         }
 
-        if (elementIndexMap.count(guessedIndices) > 0) {
-            auto idx = elementIndexMap[guessedIndices];
+        if (elementIndexMap.count(selectedIndices) > 0) {
+            auto idx = elementIndexMap[selectedIndices];
             auto elemSize = elementSizes[idx.first];
             auto size = propertySizes[idx.first][idx.second];
             auto stride = propertyStrides[idx.first][idx.second];
@@ -561,13 +550,13 @@ bool io::PLYDataSource::assertData() {
         std::string line;
         for (size_t elm = 0; elm < this->elementCount.size(); elm++) {
             // parse vertices
-            if (icompare(elementNames[elm], guessedVertices)) {
+            if (icompare(elementNames[elm], selectedVertices)) {
                 for (size_t i = 0; i < vertexCount; i++) {
                     if (std::getline(instream, line)) {
                         auto split = isplit(line);
-                        for (size_t j = 0; j < guessedPos.size(); j++) {
-                            if (elementIndexMap.count(guessedPos[j]) > 0) {
-                                auto idx = elementIndexMap[guessedPos[j]];
+                        for (size_t j = 0; j < selectedPos.size(); j++) {
+                            if (elementIndexMap.count(selectedPos[j]) > 0) {
+                                auto idx = elementIndexMap[selectedPos[j]];
                                 if (posPointers.pos_float != nullptr) {
                                     posPointers.pos_float[3 * i + j] = std::stof(split[idx.second]);
                                 }
@@ -582,9 +571,9 @@ bool io::PLYDataSource::assertData() {
                                 }
                             }
                         }
-                        for (size_t j = 0; j < guessedNormal.size(); j++) {
-                            if (elementIndexMap.count(guessedNormal[j]) > 0) {
-                                auto idx = elementIndexMap[guessedNormal[j]];
+                        for (size_t j = 0; j < selectedNormal.size(); j++) {
+                            if (elementIndexMap.count(selectedNormal[j]) > 0) {
+                                auto idx = elementIndexMap[selectedNormal[j]];
                                 if (normalPointers.norm_float != nullptr) {
                                     normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
                                 }
@@ -593,9 +582,9 @@ bool io::PLYDataSource::assertData() {
                                 }
                             }
                         }
-                        for (size_t j = 0; j < guessedColor.size(); j++) {
-                            if (elementIndexMap.count(guessedColor[j]) > 0) {
-                                auto idx = elementIndexMap[guessedColor[j]];
+                        for (size_t j = 0; j < selectedColor.size(); j++) {
+                            if (elementIndexMap.count(selectedColor[j]) > 0) {
+                                auto idx = elementIndexMap[selectedColor[j]];
                                 if (colorPointers.col_uchar != nullptr) {
                                     colorPointers.col_uchar[3 * i + j] =
                                         static_cast<unsigned char>(std::stoul(split[idx.second]));
@@ -615,11 +604,11 @@ bool io::PLYDataSource::assertData() {
                 }
             }
             // parse faces
-            if (icompare(elementNames[elm], guessedFaces)) {
+            if (icompare(elementNames[elm], selectedFaces)) {
                 for (size_t i = 0; i < faceCount; i++) {
                     if (std::getline(instream, line)) {
                         auto split = isplit(line);
-                        if (elementIndexMap.count(guessedIndices)) {
+                        if (elementIndexMap.count(selectedIndices)) {
                             uint64_t faceSize = static_cast<uint64_t>(std::stoul(split[0]));
                             if (faceSize != 3) {
                                 vislib::sys::Log::DefaultLog.WriteError(
@@ -659,6 +648,8 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
 
+    this->clearAllFields();
+
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
@@ -667,8 +658,6 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         this->clearAllFields();
         return true;
     }
-
-    this->clearAllFields();
 
     this->vertElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
     this->faceElemSlot.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -684,12 +673,19 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->iPropSlot.Param<core::param::FlexEnumParam>()->ClearValues();
     this->indexPropSlot.Param<core::param::FlexEnumParam>()->ClearValues();
 
-    guessedVertices = "";
-    guessedFaces = "";
-    guessedIndices = "";
-    guessedPos.assign(3, "");
-    guessedNormal.assign(3, "");
-    guessedColor.assign(3, "");
+    this->guessedVertices = "";
+    this->guessedFaces = "";
+    this->guessedIndices = "";
+    this->guessedPos.assign(3, "");
+    this->guessedNormal.assign(3, "");
+    this->guessedColor.assign(3, "");
+
+    this->selectedVertices = "";
+    this->selectedFaces = "";
+    this->selectedIndices = "";
+    this->selectedPos.assign(3, "");
+    this->selectedNormal.assign(3, "");
+    this->selectedColor.assign(3, "");
 
     this->elementIndexMap.clear();
     this->elementSizes.clear();
@@ -795,28 +791,35 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         element_index++;
     }
 
+    this->selectedPos = guessedPos;
+    this->selectedNormal = guessedNormal;
+    this->selectedColor = guessedColor;
+    this->selectedIndices = guessedIndices;
+    this->selectedVertices = guessedVertices;
+    this->selectedFaces = guessedFaces;
+
     if (!guessedVertices.empty()) {
         this->vertElemSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedVertices);
         if (std::none_of(guessedPos.begin(), guessedPos.end(), [](std::string s) { return s.empty(); })) {
-            this->xPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[0]);
-            this->yPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[1]);
-            this->zPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[2]);
+            this->xPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[0], false);
+            this->yPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[1], false);
+            this->zPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedPos[2], false);
         }
         if (std::none_of(guessedNormal.begin(), guessedNormal.end(), [](std::string s) { return s.empty(); })) {
-            this->nxPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[0]);
-            this->nyPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[1]);
-            this->nzPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[2]);
+            this->nxPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[0], false);
+            this->nyPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[1], false);
+            this->nzPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedNormal[2], false);
         }
         if (std::none_of(guessedColor.begin(), guessedColor.end(), [](std::string s) { return s.empty(); })) {
-            this->rPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[0]);
-            this->gPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[1]);
-            this->bPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[2]);
+            this->rPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[0], false);
+            this->gPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[1], false);
+            this->bPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedColor[2], false);
         }
     }
     if (!guessedFaces.empty()) {
-        this->faceElemSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedFaces);
+        this->faceElemSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedFaces, false);
         if (!guessedIndices.empty()) {
-            this->indexPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedIndices);
+            this->indexPropSlot.Param<core::param::FlexEnumParam>()->SetValue(guessedIndices, false);
         }
     }
 
@@ -850,16 +853,86 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         }
     }
     instream.close();
+
+    // we have to have a clean parameter state
+    this->resetParameterDirtyness();
+
     return true;
 }
 
 /*
- * io::PLYDataSource::anyEnumChanged
+ * io::PLYDataSource::fileUpdate
  */
-bool io::PLYDataSource::anyEnumChanged(core::param::ParamSlot& slot) {
+bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
+    using vislib::sys::Log;
+
     this->clearAllFields();
-    return true;
+
+    instream.close();
+    instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
+    if (instream.fail()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+            vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        this->clearAllFields();
+        return true;
+    }
+
+    for (size_t i = 0; i < this->guessedPos.size(); i++) {
+        if (this->guessedPos[i].length() > 0) {
+            if (i == 0) {
+                this->selectedPos[i] = this->xPropSlot.Param<param::FlexEnumParam>()->Value();
+            } else if (i == 1) {
+                this->selectedPos[i] = this->yPropSlot.Param<param::FlexEnumParam>()->Value();
+            } else if (i == 2) {
+                this->selectedPos[i] = this->zPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+        }
+    }
+
+    for (size_t i = 0; i < this->guessedNormal.size(); i++) {
+        if (this->guessedNormal[i].length() > 0) {
+            if (i == 0) {
+                this->selectedNormal[i] = this->nxPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+            else if (i == 1) {
+                this->selectedNormal[i] = this->nyPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+            else if (i == 2) {
+                this->selectedNormal[i] = this->nzPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+        }
+    }
+
+    for (size_t i = 0; i < this->guessedColor.size(); i++) {
+        if (this->guessedColor[i].length() > 0) {
+            if (i == 0) {
+                this->selectedColor[i] = this->rPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+            else if (i == 1) {
+                this->selectedColor[i] = this->gPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+            else if (i == 2) {
+                this->selectedColor[i] = this->bPropSlot.Param<param::FlexEnumParam>()->Value();
+            }
+        }
+    }
+
+    if (this->guessedIndices.length() > 0) {
+        this->selectedIndices = this->indexPropSlot.Param<param::FlexEnumParam>()->Value();
+    }
+
+    if (this->guessedVertices.length() > 0) {
+        this->selectedVertices = this->vertElemSlot.Param<param::FlexEnumParam>()->Value();
+    }
+
+    if (this->guessedFaces.length() > 0) {
+        this->selectedFaces = this->faceElemSlot.Param<param::FlexEnumParam>()->Value();
+    }
+
+    // we have to have a clean parameter state
+    this->resetParameterDirtyness();
 }
+
 
 /*
  * io::PLYDataSource::getSphereDataCallback
@@ -908,6 +981,11 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
 bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
+
+    if (this->checkParameterDirtyness()) {
+        this->fileUpdate(this->filename);
+        this->data_hash++;
+    }
 
     if (!assertData()) return false;
 
@@ -1051,6 +1129,11 @@ bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
     if (c2 == nullptr) return false;
 
+    if (this->checkParameterDirtyness()) {
+        this->fileUpdate(this->filename);
+        this->data_hash++;
+    }
+
     if (!assertData()) return false;
 
     c2->AccessBoundingBoxes().Clear();
@@ -1108,4 +1191,48 @@ void io::PLYDataSource::clearAllFields(void) {
     }
     this->vertex_count = 0;
     this->face_count = 0;
+}
+
+/*
+ * io::PLYDataSource::checkParameterDirtyness
+ */
+bool io::PLYDataSource::checkParameterDirtyness(void) {
+    bool isDirty = false;
+
+    isDirty = isDirty || this->vertElemSlot.IsDirty();
+    isDirty = isDirty || this->faceElemSlot.IsDirty();
+    isDirty = isDirty || this->xPropSlot.IsDirty();
+    isDirty = isDirty || this->yPropSlot.IsDirty();
+    isDirty = isDirty || this->zPropSlot.IsDirty();
+    isDirty = isDirty || this->nxPropSlot.IsDirty();
+    isDirty = isDirty || this->nyPropSlot.IsDirty();
+    isDirty = isDirty || this->nzPropSlot.IsDirty();
+    isDirty = isDirty || this->rPropSlot.IsDirty();
+    isDirty = isDirty || this->gPropSlot.IsDirty();
+    isDirty = isDirty || this->bPropSlot.IsDirty();
+    isDirty = isDirty || this->iPropSlot.IsDirty();
+    isDirty = isDirty || this->indexPropSlot.IsDirty();
+
+    this->resetParameterDirtyness();
+
+    return isDirty;
+}
+
+/*
+ * io::PLYDataSource::resetParameterDirtyness
+ */
+void io::PLYDataSource::resetParameterDirtyness(void) {
+    this->vertElemSlot.ResetDirty();
+    this->faceElemSlot.ResetDirty();
+    this->xPropSlot.ResetDirty();
+    this->yPropSlot.ResetDirty();
+    this->zPropSlot.ResetDirty();
+    this->nxPropSlot.ResetDirty();
+    this->nyPropSlot.ResetDirty();
+    this->nzPropSlot.ResetDirty();
+    this->rPropSlot.ResetDirty();
+    this->gPropSlot.ResetDirty();
+    this->bPropSlot.ResetDirty();
+    this->iPropSlot.ResetDirty();
+    this->indexPropSlot.ResetDirty();
 }
