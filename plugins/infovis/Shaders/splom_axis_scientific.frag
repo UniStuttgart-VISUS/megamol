@@ -6,65 +6,41 @@ in vec2 vsSmallSteppSize;
 
 out vec4 fsColor;
 
-float rayCastSmall(vec2 position) {
-    float width = 10.0;
-    float len = 0.2;
-
-    vec2 frac = position / vsSmallSteppSize;
-    vec2 integer = roundEven(frac);
-
-    if (abs(frac - integer).x > len || abs(frac - integer).y > len) return 0.0;
-
-    return mix(1.0, 0.0, min(abs(frac - integer).x * width, 1.0)) +
-           mix(1.0, 0.0, min(abs(frac - integer).y * width, 1.0));
+float roundedBox(vec2 position, vec2 size, float radius) { 
+    return length(max(abs(position) - size, 0.0)) - radius;
 }
 
-float rayCastMid(vec2 position) {
-    float width = 14.0;
-    float len = 0.2;
-
-    vec2 frac = position / (vsSmallSteppSize * 5);
+float marker(vec2 position, float stepFactor) {
+    vec2 frac = position / (vsSmallSteppSize * stepFactor);
     vec2 integer = roundEven(frac);
 
-    if (abs(frac - integer).x > len || abs(frac - integer).y > len) return 0.0;
+    float stepLen = 0.2;
+    float lineWidth = 0.0025;
+    float radius = 0.01;
+    float hBox = roundedBox(frac - integer, vec2(stepLen, lineWidth), radius);
+    float vBox = roundedBox(frac - integer, vec2(lineWidth, stepLen), radius);
 
-    return mix(1.0, 0.0, min(abs(frac - integer).x * width, 1.0)) +
-           mix(1.0, 0.0, min(abs(frac - integer).y * width, 1.0));
+    return min(vBox, hBox) * stepFactor;
 }
-
-float rayCastBig(vec2 position) {
-    float width = 18.0;
-    float len = 0.2;
-
-    vec2 frac = position / (vsSmallSteppSize * 5 * 5);
-    vec2 integer = roundEven(frac);
-
-    if (abs(frac - integer).x > len || abs(frac - integer).y > len) return 0.0;
-
-    return mix(1.0, 0.0, min(abs(frac - integer).x * width, 1.0)) +
-           mix(1.0, 0.0, min(abs(frac - integer).y * width, 1.0));
-}
-
 
 float rayCast(vec2 position) {
-    float value = 0;
+    float d = 1.0;
     if (depth >= 1) {
-        value += rayCastBig(position);
+        d = min(d, marker(position, 5.0 * 5.0));
     }
     if (depth >= 2) {
-        value += rayCastMid(position);
+        d = min(d, marker(position, 5.0));
     }
     if (depth >= 3) {
-        value += rayCastSmall(position);
+        d = min(d, marker(position, 1.0));
     }
-
-    return min(1.0, value);
+    return smoothstep(0.5 / pow(float(depth), 2), 0.0, d);
 }
 
 void main(void) {
-    float d = rayCast(vsFragCoord);
-    if (d == 0.0) {
+    float rho = rayCast(vsFragCoord);
+    if (rho == 0.0) {
         discard;
     }
-    fsColor = vec4(vsColor.rgb, d);
+    fsColor = vec4(vsColor.rgb, vsColor.a * rho);
 }

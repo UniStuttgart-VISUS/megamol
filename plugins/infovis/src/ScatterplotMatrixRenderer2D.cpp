@@ -425,12 +425,11 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
 
     // 0: no grid <-> 3: big,mid,small grid
     GLint recursiveDepth = 0;
-    // 770 pixels for 100 gridPoints
-    if (screenSpaceSize.X() > 770) {
+    if (screenSpaceSize.X() > 900) {
         recursiveDepth = 3;
-    } else if (screenSpaceSize.X() > 220) {
+    } else if (screenSpaceSize.X() > 300) {
         recursiveDepth = 2;
-    } else if (screenSpaceSize.X() > 40) {
+    } else if (screenSpaceSize.X() > 75) {
         recursiveDepth = 1;
     }
 
