@@ -27,7 +27,6 @@
 #include "ScreenSpaceEdgeRenderer.h"
 #include "vislib/Trace.h"
 #include "LinesRenderer.h"
-#include "PlyWriter.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -68,7 +67,6 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ScreenSpaceEdgeRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::LinesRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::PlyWriter>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
