@@ -316,16 +316,13 @@ bool MSMSCavityFinder::getData(Call& call) {
                     tmpVec2.Set(vert2X - vert0X, vert2Y - vert0Y, vert2Z - vert0Z);
                     tmpMeshArea += 0.5f * tmpVec1.Cross(tmpVec2).Length();
                 }
+
                 // only add the mesh if it is large enough
                 if (this->areaParam.Param<param::FloatParam>()->Value() < tmpMeshArea) {
-                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea
-                              << " (Added)." << std::endl;
+                    // std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea
+                    // << " (Added)." << std::endl;
                     this->cavitySubmeshes.Add(this->cavityMesh);
                     this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
-                } else {
-                    std::cout << "*********** Submesh " << this->cavitySubmeshes.Count() << " area = " << tmpMeshArea
-                              << " (Too small, threshold: " << this->areaParam.Param<param::FloatParam>()->Value()
-                              << ")." << std::endl;
                 }
 
 #if 1
