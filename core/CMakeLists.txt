@@ -67,14 +67,21 @@ if(BUILD_CORE)
     DEPENDS libcppzmq_ext
     INCLUDE_DIR "src/libcppzmq_ext/")
 
-  set(GLM_VER "0_9_6_3")
-  string(REPLACE "_" "." GLM_TAG ${GLM_VER})
-  ExternalProject_Add(extlibglm
+  #set(GLM_VER "0_9_6_3")
+  #string(REPLACE "_" "." GLM_TAG ${GLM_VER})
+  #ExternalProject_Add(extlibglm
+  #  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  #  GIT_TAG ${GLM_TAG}
+  #  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DGLM_TEST_ENABLE=OFF
+  #)
+
+  add_external_project(GLM_ext
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG ${GLM_TAG}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DGLM_TEST_ENABLE=OFF
-  )
-  message(STATUS "GLM Git Tag: " ${GLM_TAG})
+    GIT_TAG "0.9.6.3"
+    CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
+  add_external_library(GLM INTERFACE
+    DEPENDS GLM_ext
+    INCLUDE_DIR "src/GLM_ext")
   
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
@@ -154,7 +161,7 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib glad lua libzmq libcppzmq ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib glad lua libzmq libcppzmq GLM ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
