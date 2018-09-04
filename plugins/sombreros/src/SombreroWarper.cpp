@@ -767,7 +767,7 @@ bool SombreroWarper::findSombreroBorder(void) {
             }
         }
 
-#if 1 // color all cut vertices
+#if 0 // color all cut vertices
         for (uint j = 0; j < vCnt; j++) {
             bool colored = false;
             for (uint s = 0; s < this->cutVertices[i].size(); s++) {
@@ -973,7 +973,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         this->boundingBox.SetTop(this->boundingBox.Top() + bbmargin);
     }
 
-#define COMPARE
+//#define COMPARE
 #ifdef COMPARE
     if (!this->flatteningParam.Param<param::BoolParam>()->Value() && this->sombreroLength.size() > 0) {
         this->boundingBox.Set(-30.0f, -7.0f, -30.0f, 30.0f, 7.0f, 30.0f);
