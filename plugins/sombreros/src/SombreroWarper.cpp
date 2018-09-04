@@ -46,9 +46,9 @@ SombreroWarper::SombreroWarper(void)
     , maxAllowedLiftingDistance(
           "meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.")
     , flatteningParam("flat", "Flat representation of the result")
-    , southBorderWeightParam(
-          "southBorderWeight", "Weight of the southern border. This parameter influences the optical quality of the "
-                               "tip of the head. Do not change unless you know what you do.")
+    , southBorderWeightParam("southBorderWeight",
+          "Weight of the southern border. This parameter influences the optical quality of the "
+          "tip of the head. Do not change unless you know what you do.")
     , southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices.")
     , invertNormalParam("invertNormals", "Inverts the surface normals")
     , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
@@ -660,9 +660,9 @@ bool SombreroWarper::findSombreroBorder(void) {
                 this->colors[i][j * 3 + 1] = static_cast<unsigned char>(red.Y() * 255.0f);
                 this->colors[i][j * 3 + 2] = static_cast<unsigned char>(red.Z() * 255.0f);
             } else {
-                //this->colors[i][j * 3 + 0] = static_cast<unsigned char>(white.X() * 255.0f);
-                //this->colors[i][j * 3 + 1] = static_cast<unsigned char>(white.Y() * 255.0f);
-                //this->colors[i][j * 3 + 2] = static_cast<unsigned char>(white.Z() * 255.0f);
+                this->colors[i][j * 3 + 0] = static_cast<unsigned char>(white.X() * 255.0f);
+                this->colors[i][j * 3 + 1] = static_cast<unsigned char>(white.Y() * 255.0f);
+                this->colors[i][j * 3 + 2] = static_cast<unsigned char>(white.Z() * 255.0f);
             }
         }
 #endif
@@ -767,7 +767,7 @@ bool SombreroWarper::findSombreroBorder(void) {
             }
         }
 
-#if 0 // color all cut vertices
+#if 1 // color all cut vertices
         for (uint j = 0; j < vCnt; j++) {
             bool colored = false;
             for (uint s = 0; s < this->cutVertices[i].size(); s++) {
@@ -1617,9 +1617,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             sweatSorted.push_back(finalv);
             sweatReadySet.insert(finalv);
         }
-#endif
 
-#if 0 // switch for the colouring of the sweatband vertices by angle
+#    if 0 // switch for the colouring of the sweatband vertices by angle
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
         float factor = 1.0f / static_cast<float>(sweatSet.size());
         int f = 0;
@@ -1643,6 +1642,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             //}
             f++;
         }
+#    endif
 #endif
 
         // the brim and sweatband is sorted, now we can estimate the directions
