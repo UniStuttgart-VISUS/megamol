@@ -847,7 +847,7 @@ namespace MegaMolConf {
             {
                 foreach (var parameterValue in gm.ParameterValues)
                 {
-                     mmii.SendUpdate(parameterValue.Key.Name, parameterValue.Value);
+                     mmii.SendUpdate(gm, parameterValue.Key.Name, parameterValue.Value);
                 }
             }
         }
@@ -1794,7 +1794,7 @@ in PowerShell:
             RefreshCurrent();
             MegaMolInstanceInfo mmii = tabViews.SelectedTab.Tag as MegaMolInstanceInfo;
             if (mmii != null) {
-                mmii.SendUpdate(e.ChangedItem.Label, e.ChangedItem.Value.ToString());
+                mmii.SendUpdate(Form1.selectedModule, e.ChangedItem.Label, e.ChangedItem.Value.ToString());
             }
         }
 
