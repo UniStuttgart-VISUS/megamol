@@ -60,6 +60,11 @@ protected:
      * @return The return value of the function.
      */
     virtual bool Render(core::view::CallRender2D& call);
+
+    virtual bool GetExtents(core::view::CallRender2D& call) { return false; }
+
+private:
+    double lastViewportTime;
 };
 
 } // end namespace gui

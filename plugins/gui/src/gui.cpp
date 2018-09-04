@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "GUIRenderer.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -23,10 +25,10 @@ public:
         : ::megamol::core::utility::plugins::Plugin200Instance(
 
               /* machine-readable plugin assembly name */
-              "gui", // TODO: Change this!
+              "gui",
 
               /* human-readable plugin description */
-              "Describing gui (TODO: Change this!)"){
+              "Graphical user interface plugin"){
 
               // here we could perform addition initialization
           };
@@ -36,26 +38,7 @@ public:
     }
     /** Registers modules and calls */
     virtual void registerClasses(void) {
-
-        // register modules here:
-
-        //
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::gui::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::gui::MyModule2>();
-        //   ...
-        //
-
-        // register calls here:
-
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::gui::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::gui::MyCall2>();
-        //   ...
-        //
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };

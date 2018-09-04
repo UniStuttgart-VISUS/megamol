@@ -2,12 +2,12 @@
 #include "GUIRenderer.h"
 
 #include <imgui.h>
+#include "imgui_impl_opengl3.h"
 
 using namespace megamol;
 using namespace megamol::gui;
 
 void do_stuff() {
-
     ImGui::Text("Hello, world %d", 123);
     if (ImGui::Button("Save")) {
         // do stuff
@@ -17,7 +17,7 @@ void do_stuff() {
     ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
 }
 
-GUIRenderer::GUIRenderer() : core::view::Renderer2DModule() {}
+GUIRenderer::GUIRenderer() : core::view::Renderer2DModule(), lastViewportTime(0.0) {}
 
 GUIRenderer::~GUIRenderer() { this->Release(); }
 
@@ -25,8 +25,7 @@ bool GUIRenderer::create() {
     ImGui::CreateContext();
     ImGui::GetIO();
 
-    // ImGui_ImplGlfw_InitForOpenGL(window, true);
-    // ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplOpenGL3_Init("#version 150");
 
     ImGui::StyleColorsDark();
     return true;
@@ -35,18 +34,27 @@ bool GUIRenderer::create() {
 void GUIRenderer::release() {}
 
 bool GUIRenderer::Render(core::view::CallRender2D& call) {
+    auto viewportWidth = call.GetViewport().Width();
+    auto viewportHeight = call.GetViewport().Height();
+    auto viewportTime = call.InstanceTime();
+
     // Start the frame
-    // ImGui_ImplOpenGL3_NewFrame();
-    // ImGui_ImplGlfw_NewFrame();
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(viewportWidth, viewportHeight);
+    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+    io.DeltaTime = viewportTime - lastViewportTime;
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
     // Construct frame, i.e., geometry and stuff.
     do_stuff();
 
     // Render frame.
+    glViewport(0, 0, viewportWidth, viewportHeight);
     ImGui::Render();
-    // glViewport(0, 0, display_w, display_h);
-    // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    lastViewportTime = viewportTime;
 
     return true;
 }
