@@ -191,7 +191,7 @@ bool View3D_2::OnRenderView(Call& call) {
     return true;
 }
 
-/* 
+/*
  * View3D_2::UpdateFreeze
  */
 void View3D_2::UpdateFreeze(bool freeze) {
@@ -235,16 +235,12 @@ bool View3D_2::create(void) {
 /*
  * View3D_2::release
  */
-void View3D_2::release(void) {
-    this->removeTitleRenderer();
-}
+void View3D_2::release(void) { this->removeTitleRenderer(); }
 
 /*
  * View3D_2::mouseSensitivityChanged
  */
-bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) {
-    return true;
-}
+bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
 
 /*
  * View3D_2::renderBBox
