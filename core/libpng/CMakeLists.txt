@@ -1,19 +1,15 @@
 project(libpng C)
 
-set(PNG_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE INTERNAL "")
-
 set(PNGLIB_MAJOR 1)
 set(PNGLIB_MINOR 6)
 set(PNGLIB_RELEASE 30)
 set(PNGLIB_NAME libpng${PNGLIB_MAJOR}${PNGLIB_MINOR})
 set(PNGLIB_VERSION ${PNGLIB_MAJOR}.${PNGLIB_MINOR}.${PNGLIB_RELEASE})
 
-
 if(NOT WIN32)
   find_library(M_LIBRARY
     NAMES m
-    PATHS /usr/lib /usr/local/lib
-  )
+    PATHS /usr/lib /usr/local/lib)
   if(NOT M_LIBRARY)
     message(STATUS "math lib 'libm' not found; floating point support disabled")
   endif()
@@ -22,24 +18,15 @@ else()
   set(M_LIBRARY "")
 endif()
 
-
-if(MSVC)
-  add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-endif(MSVC)
-
-include_directories(${PNG_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
-
 set(libpng_public_hdrs
   include/png.h
   include/pngconf.h
-  include/pnglibconf.h
-)
+  include/pnglibconf.h)
 set(libpng_private_hdrs
   src/pngpriv.h
   src/pngdebug.h
   src/pnginfo.h
-  src/pngstruct.h
-)
+  src/pngstruct.h)
 
 set(libpng_sources
   ${libpng_public_hdrs}
@@ -58,12 +45,14 @@ set(libpng_sources
   src/pngwio.c
   src/pngwrite.c
   src/pngwtran.c
-  src/pngwutil.c
-)
+  src/pngwutil.c)
 
 add_library(libpng STATIC ${libpng_sources})
-target_link_libraries(libpng ${ZLIB_LIBRARIES} ${M_LIBRARY})
+target_include_directories(libpng PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(libpng zlib ${M_LIBRARY})
 
-set_target_properties(libpng PROPERTIES FOLDER external)
+if(MSVC)
+  target_compile_definitions(libpng PRIVATE _CRT_SECURE_NO_DEPRECATE)
+endif()
 
 set(PNG_LIBRARIES libpng CACHE INTERNAL "")

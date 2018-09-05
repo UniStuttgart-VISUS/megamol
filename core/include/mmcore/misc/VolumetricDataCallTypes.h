@@ -24,6 +24,9 @@ enum GridType_t { NONE, CARTESIAN, RECTILINEAR, TETRAHEDRAL };
 /** Possible types of scalars. */
 enum ScalarType_t { UNKNOWN, SIGNED_INTEGER, UNSIGNED_INTEGER, FLOATING_POINT, BITS };
 
+/** Possible (physical) memory locations */
+enum MemoryLocation { VRAM, RAM };
+
 /** Structure containing all required metadata about a data set. */
 struct VolumetricMetadata_t {
 
@@ -36,6 +39,7 @@ struct VolumetricMetadata_t {
         ::memset(this->Extents, 0, sizeof(this->Extents));
         MinValues = nullptr;
         MaxValues = nullptr;
+		MemLoc = RAM;
     }
 
     // creates a deep copy of the instance. beware that the owner of the copy
@@ -67,6 +71,7 @@ struct VolumetricMetadata_t {
         clone.MaxValues = new double[this->Components];
         memcpy(clone.MinValues, this->MinValues, sizeof(double) * this->Components);
         memcpy(clone.MaxValues, this->MaxValues, sizeof(double) * this->Components);
+		clone.MemLoc = this->MemLoc;
         return clone;
     }
 
@@ -120,6 +125,11 @@ struct VolumetricMetadata_t {
      * Maximal values per component.
      */
     double* MaxValues;
+
+	/**
+	 * (Physical) memory location of the volume data.
+	 */
+	enum MemoryLocation	MemLoc;
 };
 
 } /* end namespace misc */
