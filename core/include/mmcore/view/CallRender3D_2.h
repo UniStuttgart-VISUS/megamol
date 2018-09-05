@@ -72,8 +72,6 @@ public:
         case 1:
             return "GetExtents";
         case 2:
-            return "GetCapabilities";
-        case 3:
             return "MouseEvent";
         default:
             return NULL;

@@ -317,23 +317,6 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 }
 
 /*
-* GetCapabilities
-*/
-bool CartoonTessellationRenderer2000GT::GetCapabilities(Call& call) {
-    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D_2::CAP_RENDER
-        | view::CallRender3D_2::CAP_LIGHTING
-        | view::CallRender3D_2::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
 * GetExtents
 */
 bool CartoonTessellationRenderer2000GT::GetExtents(Call& call) {

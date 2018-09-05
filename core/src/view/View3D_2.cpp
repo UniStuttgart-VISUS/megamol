@@ -209,6 +209,7 @@ void View3D_2::unpackMouseCoordinates(float& x, float& y) {
  * View3D_2::create
  */
 bool View3D_2::create(void) {
+    // TODO the vislib shaders have to die a slow and painful death
     vislib::graphics::gl::ShaderSource lineVertSrc;
     vislib::graphics::gl::ShaderSource lineFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::vertex", lineVertSrc)) {
