@@ -278,7 +278,7 @@ bool CinematicRenderer::Render(Call& call) {
 
     // Set simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
-    cr3d_out->SetTime(simTime * totalSimTime);
+    cr3d_in->SetTime(simTime * totalSimTime);
 
     // Get the foreground color (inverse background color)
     float bgColor[4];
@@ -361,14 +361,16 @@ bool CinematicRenderer::Render(Call& call) {
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d_out->SetOutputBuffer(&this->fbo);
-
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    // Call render function of slave renderer
+    // Set data of outgoing cr3d to data of incoming cr3d
     *cr3d_out = *cr3d_in;
+
+    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+    cr3d_out->SetOutputBuffer(&this->fbo);
+
+    // Call render function of slave renderer
     (*cr3d_out)(0);
 
     glMatrixMode(GL_MODELVIEW);

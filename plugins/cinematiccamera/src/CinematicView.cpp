@@ -642,7 +642,7 @@ bool CinematicView::render2file_setup() {
     this->pngdata.infoptr           = nullptr;
     // Lock writing of png for one frame to get the new animation time applied. 
     // Otherwise first frame is not set right (-> just for high resolutions?)
-    this->pngdata.lock              = 1;
+    this->pngdata.lock              = 5;
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->expFrameCnt = 1;
