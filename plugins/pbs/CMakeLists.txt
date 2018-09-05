@@ -83,7 +83,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad OSPRay_plugin image_calls zfp libzmq snappy IceTCore IceTGL IceTMPI)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad OSPRay_plugin image_calls zfp libzmq libcppzmq snappy IceTCore IceTGL IceTMPI)
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
