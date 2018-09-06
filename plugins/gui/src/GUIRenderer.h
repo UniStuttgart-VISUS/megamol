@@ -1,7 +1,11 @@
 #ifndef MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
 
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
+
+#include <unordered_map>
 
 namespace megamol {
 namespace gui {
@@ -64,7 +68,20 @@ protected:
     virtual bool GetExtents(core::view::CallRender2D& call) { return false; }
 
 private:
+    /**
+     * Renders a parameter window.
+     */
+    void drawParameterWindow();
+
+    /**
+     * Renders one parameter.
+     */
+    void drawParameter(const core::Module& mod, const core::param::ParamSlot& slot);
+
     double lastViewportTime;
+
+    bool parameterWindowActive;
+    std::unordered_map<const core::param::ParamSlot*, char[256]> parameterStrings;
 };
 
 } // end namespace gui

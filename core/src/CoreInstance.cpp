@@ -877,8 +877,8 @@ bool megamol::core::CoreInstance::RequestParamGroupValue(
                 "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
             return false;
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(), id.PeekBuffer(), value.PeekBuffer());
+            vislib::sys::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(),
+                id.PeekBuffer(), value.PeekBuffer());
             g.Requests[id] = value;
         }
         return true;
@@ -2972,7 +2972,7 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
  * megamol::core::CoreInstance::enumParameters
  */
 void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, mmcEnumStringAFunction func, void* data) const {
+    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, const param::ParamSlot&)> cb) const {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -2989,16 +2989,13 @@ void megamol::core::CoreInstance::enumParameters(
             se = mod->ChildList_End();
             for (si = mod->ChildList_Begin(); si != se; ++si) {
                 const param::ParamSlot* slot = dynamic_cast<const param::ParamSlot*>((*si).get());
-                if (slot != NULL) {
-                    vislib::StringA name(mod->FullName());
-                    name.Append("::");
-                    name.Append(slot->Name());
-                    func(name.PeekBuffer(), data);
-                }
+                if (slot) {
+					cb(*mod, *slot);
+				}
             }
 
         } else if (ns) {
-            this->enumParameters(ns, func, data);
+            this->enumParameters(ns, cb);
         }
     }
 }

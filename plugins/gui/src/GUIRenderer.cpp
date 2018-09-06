@@ -1,21 +1,15 @@
 #include "stdafx.h"
 #include "GUIRenderer.h"
 
+#include "mmcore/CoreInstance.h"
+
+#include "vislib/UTF8Encoder.h"
+
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 
 using namespace megamol;
 using namespace megamol::gui;
-
-void do_stuff() {
-    ImGui::Text("Hello, world %d", 123);
-    if (ImGui::Button("Save")) {
-        // do stuff
-    }
-
-    float f;
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-}
 
 GUIRenderer::GUIRenderer() : core::view::Renderer2DModule(), lastViewportTime(0.0) {}
 
@@ -47,7 +41,8 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
     ImGui::NewFrame();
 
     // Construct frame, i.e., geometry and stuff.
-    do_stuff();
+    // XXX: drawOtherStuff();
+    drawParameterWindow();
 
     // Render frame.
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -57,4 +52,35 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
     lastViewportTime = viewportTime;
 
     return true;
+}
+
+void GUIRenderer::drawParameterWindow() {
+    ImGui::Begin("Parameters", &this->parameterWindowActive, ImGuiWindowFlags_AlwaysAutoResize);
+
+    bool currentModOpen = false;
+    const core::Module* currentMod = nullptr;
+    ImGui::SetNextTreeNodeOpen(true);
+    this->GetCoreInstance()->EnumParameters([&](const auto& mod, const auto& slot) {
+        if (currentMod != &mod) {
+            currentMod = &mod;
+            currentModOpen = ImGui::CollapsingHeader(mod.FullName());
+        }
+        if (currentModOpen) {
+            drawParameter(mod, slot);
+        }
+    });
+
+    ImGui::End();
+}
+
+void GUIRenderer::drawParameter(const core::Module& mod, const core::param::ParamSlot& slot) {
+    auto param = slot.Parameter();
+    if (!param.IsNull()) {
+        auto valueBuffer = this->parameterStrings[&slot];
+        vislib::StringA valueString;
+        vislib::UTF8Encoder::Encode(valueString, param->ValueString());
+        memcpy(valueBuffer, valueString, valueString.Length() + 1);
+
+        ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+    }
 }
