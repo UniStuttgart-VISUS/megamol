@@ -29,6 +29,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(imgui_files
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.h")
+  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -42,7 +43,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
     "${SOURCE_DIR}/examples/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad glfw ImGui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad ImGui)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
