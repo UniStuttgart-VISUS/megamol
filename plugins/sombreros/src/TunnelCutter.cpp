@@ -623,6 +623,23 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
         allowedVerticesSet = newset;
     }
 
+#if 1
+    uint minVal = UINT_MAX;
+    uint maxVal = 0;
+
+    std::vector<uint>& bla = this->bindingDistanceAttributes;
+
+    for (size_t i = 0; i < bla.size(); i++) {
+        if (bla[i] > maxVal) maxVal = bla[i];
+        if (bla[i] < minVal) minVal = bla[i];
+    }
+    for (size_t i = 0; i < bla.size(); i++) {
+        this->colors[3 * i + 0] = static_cast<unsigned char>(((bla[i] - minVal) * 255.0f) / (maxVal - minVal));
+        this->colors[3 * i + 1] = 0;// this->colors[3 * i + 0];
+        this->colors[3 * i + 2] = 0;// this->colors[3 * i + 0];
+    }
+#endif
+
     /*
      * sixth step: fill the data into the structure
      */
