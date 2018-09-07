@@ -230,9 +230,9 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     auto req_cam_lookat = cr3d->GetCameraParameters()->LookAt();
     auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
-    // if data changed check is size has changed
-    // if no directly upload
-    // if yes resize textures and upload afterward
+    // if data changed check if size has changed
+    // if no, directly upload
+    // if yes, resize textures and upload afterward
     if (data_has_changed_.load()) {
 #if _DEBUG && VERBOSE
         vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex Render\n");
@@ -288,6 +288,14 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             //Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while rendering.
             cr3d->ResetOutputBuffer();
             return false;
+        }
+        else {
+            // Write time difference between sending and receiving requested frame
+            std::chrono::duration<double> t = std::chrono::system_clock::now() - (*this->fbo_msg_write_)[0].fbo_msg_header.send_time;
+            this->render_log_.set_filename(vislib::StringA("cc_rendering.log"));
+            vislib::StringA line;
+            line.Format("          %f seconds: [FBOCompositor] Time diff...", t);
+            this->render_log_.write_line(line);
         }
     }
 

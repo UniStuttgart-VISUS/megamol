@@ -51,7 +51,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     snapSimFramesParam(            "07_snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames."),
     simTangentParam(               "08_linearizeSimTime", "Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe."),
     interpolTangentParam(          "09_interpolTangent", "Length of keyframe tangets affecting curvature of interpolation spline."),
-    //UNUSED setKeyframesToSameSpeed("10_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
+    setKeyframesToSameSpeed(       "10_setSameSpeed", "Move keyframes to get same speed between all keyframes."),
     editCurrentAnimTimeParam(      "editSelected::01_animTime", "Edit animation time of the selected keyframe."),
     editCurrentSimTimeParam(       "editSelected::02_simTime", "Edit simulation time of the selected keyframe."),
     editCurrentPosParam(           "editSelected::03_position", "Edit  position vector of the selected keyframe."),
@@ -174,8 +174,8 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->interpolTangentParam.SetParameter(new param::FloatParam(this->tl)); // , -10.0f, 10.0f));
     this->MakeSlotAvailable(&this->interpolTangentParam);
 
-    //UNUSED this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
-    //UNUSED this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
+    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
+    this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 }
 
 
@@ -451,14 +451,12 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->totalAnimTime = tt;
     }
 
-    /* UNUSED
     // setKeyframesToSameSpeed ------------------------------------------------
     if (this->setKeyframesToSameSpeed.IsDirty()) {
         this->setKeyframesToSameSpeed.ResetDirty();
 
         this->setSameSpeed();
     }
-    */
 
     // editCurrentAnimTimeParam -----------------------------------------------
     if (this->editCurrentAnimTimeParam.IsDirty()) {
@@ -980,36 +978,39 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 */
 bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) {
 
-    // Both are equal ... nothing to do
-    if (oldkf == newkf) {
-        return true;
-    }
+    if (!this->keyframes.IsEmpty()) {
 
-    // Check if old keyframe exists
-    int selIndex = static_cast<int>(this->keyframes.IndexOf(oldkf));
-    if (selIndex >= 0) {
-        // Delete old keyframe
-        this->deleteKeyframe(oldkf, false);
-        // Try to add new keyframe
-        if (!this->addKeyframe(newkf, false)) {
-            // There is alredy a keyframe on the new position ... overwrite existing keyframe.
-            float newAnimTime = newkf.GetAnimTime();
-            for (unsigned int i = 0; i < this->keyframes.Count(); i++) {
-                if (this->keyframes[i].GetAnimTime() == newAnimTime) {
-                    this->deleteKeyframe(this->keyframes[i], true);
-                    break;
+        // Both are equal ... nothing to do
+        if (oldkf == newkf) {
+            return true;
+        }
+
+        // Check if old keyframe exists
+        int selIndex = static_cast<int>(this->keyframes.IndexOf(oldkf));
+        if (selIndex >= 0) {
+            // Delete old keyframe
+            this->deleteKeyframe(oldkf, false);
+            // Try to add new keyframe
+            if (!this->addKeyframe(newkf, false)) {
+                // There is alredy a keyframe on the new position ... overwrite existing keyframe.
+                float newAnimTime = newkf.GetAnimTime();
+                for (unsigned int i = 0; i < this->keyframes.Count(); i++) {
+                    if (this->keyframes[i].GetAnimTime() == newAnimTime) {
+                        this->deleteKeyframe(this->keyframes[i], true);
+                        break;
+                    }
                 }
+                this->addKeyframe(newkf, false);
             }
-            this->addKeyframe(newkf, false);
+            if (undo) {
+                // Add modification to undo queue
+                this->addNewUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_MODIFY, newkf, oldkf);
+            }
         }
-        if (undo) {
-            // Add modification to undo queue
-            this->addNewUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_MODIFY, newkf, oldkf);
+        else {
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
+            return false;
         }
-    }
-    else {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
-        return false;
     }
 
     return true;
@@ -1021,53 +1022,57 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
 */
 bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
 
-    // Get index of keyframe to delete
-    unsigned int selIndex = static_cast<unsigned int>(this->keyframes.IndexOf(kf));
+    if (!this->keyframes.IsEmpty()) {
 
-    // Choose new selected keyframe
-    if (selIndex >= 0) {
+        // Get index of keyframe to delete
+        unsigned int selIndex = static_cast<unsigned int>(this->keyframes.IndexOf(kf));
 
-        // DELETE - UNDO //
-        // Remove keyframe from keyframe array
-        this->keyframes.RemoveAt(selIndex);
-        if (undo) {
-            // Add modification to undo queue
-            this->addNewUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_DELETE, kf, kf);
+        // Choose new selected keyframe
+        if (selIndex >= 0) {
 
-            // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
-            vislib::math::Vector<float, 3> tmpV;
-            if (this->keyframes.Count() > 1) {
-                if (selIndex == 0) {
-                    tmpV = (this->keyframes[0].GetCamPosition() - this->keyframes[1].GetCamPosition());
-                    tmpV.Normalise();
-                    this->firstCtrllPos = this->keyframes[0].GetCamPosition() + tmpV;
-                }
-                if (selIndex == this->keyframes.Count()) { // Element is already removed so the index is now: (this->keyframes.Count() - 1) + 1
-                    tmpV = (this->keyframes.Last().GetCamPosition() - this->keyframes[(int)this->keyframes.Count() - 2].GetCamPosition());
-                    tmpV.Normalise();
-                    this->lastCtrllPos = this->keyframes.Last().GetCamPosition() + tmpV;
+            // DELETE - UNDO //
+            // Remove keyframe from keyframe array
+            this->keyframes.RemoveAt(selIndex);
+            if (undo) {
+                // Add modification to undo queue
+                this->addNewUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_DELETE, kf, kf);
+
+                // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
+                vislib::math::Vector<float, 3> tmpV;
+                if (this->keyframes.Count() > 1) {
+                    if (selIndex == 0) {
+                        tmpV = (this->keyframes[0].GetCamPosition() - this->keyframes[1].GetCamPosition());
+                        tmpV.Normalise();
+                        this->firstCtrllPos = this->keyframes[0].GetCamPosition() + tmpV;
+                    }
+                    if (selIndex == this->keyframes.Count()) { // Element is already removed so the index is now: (this->keyframes.Count() - 1) + 1
+                        tmpV = (this->keyframes.Last().GetCamPosition() - this->keyframes[(int)this->keyframes.Count() - 2].GetCamPosition());
+                        tmpV.Normalise();
+                        this->lastCtrllPos = this->keyframes.Last().GetCamPosition() + tmpV;
+                    }
                 }
             }
+
+            // Reset bounding box
+            this->boundingBox.SetNull();
+
+            // Refresh interoplated camera positions
+            this->refreshInterpolCamPos(this->interpolSteps);
+
+            // Adjusting selected keyframe
+            if (selIndex > 0) {
+                this->selectedKeyframe = this->keyframes[selIndex - 1];
+            }
+            else if (selIndex < this->keyframes.Count()) {
+                this->selectedKeyframe = this->keyframes[selIndex];
+            }
+            this->updateEditParameters(this->selectedKeyframe);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Delete Keyframe] No existing keyframe selected.");
+            return false;
         }
 
-        // Reset bounding box
-        this->boundingBox.SetNull();
-
-        // Refresh interoplated camera positions
-        this->refreshInterpolCamPos(this->interpolSteps);
-
-        // Adjusting selected keyframe
-        if (selIndex > 0) {
-            this->selectedKeyframe = this->keyframes[selIndex - 1];
-        }
-        else if (selIndex < this->keyframes.Count()) {
-            this->selectedKeyframe = this->keyframes[selIndex];
-        }
-        this->updateEditParameters(this->selectedKeyframe);
-    }
-    else {
-        //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Delete Keyframe] No existing keyframe selected.");
-        return false;
     }
     return true;
 }

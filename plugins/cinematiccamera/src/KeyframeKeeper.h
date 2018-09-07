@@ -245,7 +245,7 @@ namespace megamol {
             /** */
             core::param::ParamSlot  interpolTangentParam;
             /** */
-            //UNUSED core::param::ParamSlot setKeyframesToSameSpeed;
+            core::param::ParamSlot setKeyframesToSameSpeed;
 			/**param for current keyframe aniamtion time */
 			core::param::ParamSlot editCurrentAnimTimeParam;
             /**param for current keyframe simulation time */

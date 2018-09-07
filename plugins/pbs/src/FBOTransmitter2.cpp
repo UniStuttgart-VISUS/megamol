@@ -232,6 +232,8 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
+
+            this->fbo_msg_read_->send_time = std::chrono::system_clock::now();
         }
 
         this->swapBuffers();

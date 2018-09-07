@@ -6,33 +6,7 @@
 */
 
 #include "stdafx.h"
-
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore/CoreInstance.h"
-
-#include "vislib/Array.h"
-#include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
-#include "vislib/String.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/StringSerialiser.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/CriticalSection.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/Trace.h"
-
 #include "CinematicRenderer.h"
-#include "CallCinematicCamera.h"
-#include "ReplacementRenderer.h"
-
 
 using namespace megamol;
 using namespace megamol::core;

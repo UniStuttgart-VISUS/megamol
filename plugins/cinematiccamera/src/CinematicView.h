@@ -18,9 +18,23 @@
 
 #include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
+
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderView.h"
+
 #include "mmcore/utility/SDFFont.h"
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
+
+#include "vislib/math/Rectangle.h"
+#include "vislib/Trace.h"
+#include "vislib/sys/Path.h"
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
@@ -28,8 +42,11 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
 
+#include "CallCinematicCamera.h"
 #include "Keyframe.h"
 #include "png.h"
+
+#include "mmcore/utility/timelog.h"
 
 
 namespace megamol {
@@ -92,6 +109,8 @@ namespace megamol {
 
 		private:
 
+            typedef std::chrono::system_clock::time_point time_point;
+
             /**********************************************************************
             * variables
             **********************************************************************/
@@ -126,6 +145,8 @@ namespace megamol {
             unsigned int                            fps;
             unsigned int                            expFrameCnt;
 
+            megamol::core::utility::timelog         render_log;
+
             struct pngData {
                 BYTE                  *buffer;
                 vislib::sys::FastFile  file;
@@ -138,8 +159,10 @@ namespace megamol {
                 png_structp            ptr;
                 png_infop              infoptr;
                 float                  animTime;
-                unsigned int           lock;
+                unsigned int           write_lock;
+                time_point             start_time;
             } pngdata;
+
 
             /**********************************************************************
             * functions
@@ -213,6 +236,8 @@ namespace megamol {
 
             /** */
             core::param::ParamSlot renderParam;
+            /** */
+            core::param::ParamSlot delayFirstRenderFrameParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
             /** */

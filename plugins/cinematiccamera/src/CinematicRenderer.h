@@ -15,22 +15,47 @@
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/CoreInstance.h"
+
 #include "mmcore/utility/SDFFont.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/CameraParamsStore.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
+
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/View3D.h"
+
+#include "vislib/Trace.h"
+#include "vislib/String.h"
+#include "vislib/Array.h"
+#include "vislib/memutils.h"
+#include "vislib/StringSerialiser.h"
+
+#include "vislib/math/Point.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/memutils.h"
-#include "vislib/String.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 
+#include "vislib/sys/Log.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/Thread.h"
+
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/graphics/CameraParamsStore.h"
+
+#include "CallCinematicCamera.h"
+#include "ReplacementRenderer.h"
 #include "KeyframeManipulator.h"
 
 

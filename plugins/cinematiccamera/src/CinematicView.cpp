@@ -7,24 +7,7 @@
 
 #include "stdafx.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/FilePathParam.h"
-
-#include "vislib/math/Rectangle.h"
-#include "vislib/Trace.h"
-#include "vislib/sys/Path.h"
-
-#include <ctime>
-
 #include "CinematicView.h"
-#include "CallCinematicCamera.h"
-
 
 using namespace megamol;
 using namespace megamol::core;
@@ -40,14 +23,15 @@ using namespace vislib;
 CinematicView::CinematicView(void) : View3D(),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
-    toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
-    selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
-    resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
-    eyeParam(                 "stereo::eye", "Select eye position (for stereo view)."),
-    projectionParam(          "stereo::projection", "Select camera projection.")
+    renderParam(                "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
+    toggleAnimPlayParam(        "02_playPreview", "Toggle playing animation as preview"),
+    selectedSkyboxSideParam(    "03_skyboxSide", "Select the skybox side."),
+    resWidthParam(              "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
+    resHeightParam(             "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    fpsParam(                   "06_fps", "Frames per second the animation should be rendered."),
+    delayFirstRenderFrameParam( "07_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
+    eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
+    projectionParam(            "stereo::projection", "Select camera projection.")
     {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -65,19 +49,6 @@ CinematicView::CinematicView(void) : View3D(),
     this->rendering       = false;
     this->fps             = 24;
     this->expFrameCnt     = 1;
-
-    // init png data struct
-    this->pngdata.bpp               = 3;
-    this->pngdata.width             = static_cast<unsigned int>(this->cineWidth);
-    this->pngdata.height            = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.filename          = "";
-    this->pngdata.cnt               = 0;
-    this->pngdata.animTime          = 0.0f;
-    this->pngdata.buffer            = nullptr;
-    this->pngdata.ptr               = nullptr;
-    this->pngdata.infoptr           = nullptr;
-    this->pngdata.filename          = "";
-    this->pngdata.lock              = 0;
 
     // init parameters
     param::EnumParam *sbs = new param::EnumParam(this->sbSide);
@@ -121,22 +92,8 @@ CinematicView::CinematicView(void) : View3D(),
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
 
-    /*
-    // TEMPORARY HACK #########################################################
-    // Disable enableMouseSelectionSlot for this view
-    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer 
-    //    mouse selection for manipulatiors
-    this->enableMouseSelectionSlot.MakeUnavailable();
-    /// The right way doesn't work if (child->Parent().get() != this) ...
-    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
-
-    // Disable toggleAnimPlaySlot in this view(3d)
-    // -> 'SPACE'-key is needed to be active in the View3D of the CinematicRenderer
-    param::ParamSlot* toggleAnimPlaySlot = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(3)); // toggleAnimPlaySlot
-    toggleAnimPlaySlot->MakeUnavailable();
-    /// The right way doesn't work if (child->Parent().get() != this) ...
-    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(toggleAnimPlaySlot));
-    */
+    this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
 }
 
 
@@ -449,24 +406,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->rendering) {
 
         // Check if fbo in cr3d was reset by renderer
-        bool written2FBO = (cr3d->FrameBufferObject() != nullptr);
-
-        // Lock writing to file if nothing is written to fbo (see FBOCompositor)
-        if (!written2FBO && (this->pngdata.lock == 0)) {
-            this->pngdata.lock = 1;
+        this->pngdata.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
+        if (this->pngdata.write_lock > 0) {
             vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping empty FBO ...\n");
         }
-        else if ((written2FBO) && (this->pngdata.lock == 1)) {
-            this->pngdata.lock = 0;
+        // Lock writing frame to file for specific tim
+        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->pngdata.start_time);
+        if (diff.count() < static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
+            this->pngdata.write_lock = 1;
         }
 
         // Write frame to PNG file
         this->render2file_write_png();
 
-        // Unlock writing frame to file
-        if (this->pngdata.lock > 0) {
-            this->pngdata.lock--;
-        }
     }
 
     // Draw final image -------------------------------------------------------
@@ -640,9 +592,8 @@ bool CinematicView::render2file_setup() {
     this->pngdata.buffer            = nullptr;
     this->pngdata.ptr               = nullptr;
     this->pngdata.infoptr           = nullptr;
-    // Lock writing of png for one frame to get the new animation time applied. 
-    // Otherwise first frame is not set right (-> just for high resolutions?)
-    this->pngdata.lock              = 5;
+    this->pngdata.write_lock        = 1;
+    this->pngdata.start_time        = std::chrono::system_clock::now();
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->expFrameCnt = 1;
@@ -652,7 +603,7 @@ bool CinematicView::render2file_setup() {
         this->expFrameCnt++;
     }
 
-    // Create new folder
+    // Creating new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
     struct tm *now = nullptr;
@@ -668,9 +619,20 @@ bool CinematicView::render2file_setup() {
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 
+    // Starting logfile
+    this->render_log.clear(vislib::StringA("cc_rendering.log"));
+    vislib::StringA line;
+    line.Format("Started rendering to \"%s\".", this->pngdata.path.PeekBuffer());
+    this->render_log.write_time_line(line);
+    line.Format("FPS: %d - Width: %d px - Height: %d px.", this->fps, this->pngdata.width, this->pngdata.height);
+    this->render_log.write_time_line(line);
+    line.Format("Waiting %f seconds for first frame.", this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value());
+    this->render_log.write_time_line(line);
+    line = "------------------------------------------";
+    this->render_log.write_time_line(line);
+
     // Set current time stamp to file name
     this->pngdata.filename = "frames";
-    // this->pngdata.filename.Format("frame_%i%i%i-%i%i%i_-_", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Create new byte buffer
     this->pngdata.buffer = new BYTE[this->pngdata.width * this->pngdata.height * this->pngdata.bpp];
@@ -684,6 +646,7 @@ bool CinematicView::render2file_setup() {
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Hiding Bbox and Cube rendering of complete animation.");
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
+
     return true;
 }
 
@@ -693,7 +656,15 @@ bool CinematicView::render2file_setup() {
 */
 bool CinematicView::render2file_write_png() {
 
-    if (this->pngdata.lock == 0) {
+    if (this->pngdata.write_lock == 0) {
+
+        // Log render time
+        this->render_log.set_time(timelog::TIME::WRITE);
+        vislib::StringA line;
+        line.Format("FRAME[%d]", this->pngdata.cnt);
+        this->render_log.write_time_line(line);
+        line.Format("          %f seconds: [CinematicView] Timespan waited for requested frame.", this->render_log.delta_time(timelog::TIME::REQUEST));
+        this->render_log.write_line(line);
 
         vislib::StringA tmpFilename, tmpStr;
         tmpStr.Format(".%i", this->expFrameCnt);
@@ -752,12 +723,16 @@ bool CinematicView::render2file_write_png() {
             }
         }
 
-        try { this->pngdata.file.Flush(); }  catch (...) {}
-        try { this->pngdata.file.Close(); }  catch (...) {}
+        try { this->pngdata.file.Flush(); }  
+        catch (...) {}
+        try { this->pngdata.file.Close(); }  
+        catch (...) {}
 
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Wrote png file %d for animation time %f ...\n", this->pngdata.cnt, this->pngdata.animTime);
 
-        this->pngdata.cnt++;
+        // Log render time
+        line.Format("          %f seconds: [CinematicView] Timespan written frame to file.", this->render_log.delta_time(timelog::TIME::WRITE));
+        this->render_log.write_line(line);
 
         // --------------------------------------------------------------------
 
@@ -783,6 +758,9 @@ bool CinematicView::render2file_write_png() {
             this->render2file_finish();
             return false;
         }
+
+        this->render_log.set_time(timelog::TIME::REQUEST);
+        this->pngdata.cnt++;
     }
 
     return true;
@@ -803,12 +781,18 @@ bool CinematicView::render2file_finish() {
         }
     }
 
-    try { this->pngdata.file.Flush(); } catch (...) {}
-    try { this->pngdata.file.Close(); } catch (...) {}
+    try { this->pngdata.file.Flush(); } 
+    catch (...) {}
+    try { this->pngdata.file.Close(); } 
+    catch (...) {}
 
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
     this->rendering = false;
+
+    // Log render time
+    vislib::StringA line("Finished rendering.");
+    this->render_log.write_time_line(line);
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
     return true;
