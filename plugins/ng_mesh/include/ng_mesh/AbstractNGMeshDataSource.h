@@ -28,15 +28,22 @@ namespace ngmesh {
 	protected:
 
 		/**
-		*
+		* Class for storing and managing rendering data in a NGMesh-friendly fashin.
+		* Either hand over your generated/loaded data (this will use a copy operation)
+		* or preallocate the space you need and generate/load your data in-place.
 		*/
 		class RenderBatchesData
 		{
 		private:
 			struct MeshData
 			{
-				std::list<std::vector<uint8_t>>	vertex_data;
-				std::vector<uint8_t>			index_data;
+				std::vector<std::vector<uint8_t>>	vertex_data;
+				std::vector<uint8_t>				index_data;
+
+				size_t used_vertex_cnt;
+				size_t used_index_cnt;
+				size_t allocated_vertex_cnt;
+				size_t allocated_index_cnt;
 
 				VertexLayout	vertex_descriptor;
 				GLenum			index_type;
@@ -50,29 +57,61 @@ namespace ngmesh {
 				MeshData							mesh_data;
 				std::vector<DrawElementsCommand>	draw_commands;
 				std::vector<uint8_t>				perObject_shader_params;
-				std::vector<uint8_t>				perMaterial_shader_params;
 				uint32_t							update_flags;
+			};
+
+			struct RenderTask
+			{
+				size_t batch_idx;
+				size_t draw_commands_offset;
+				size_t perObject_params_byte_offset;
+				size_t vertex_data_offset;
+				size_t index_data_offset;
 			};
 
 			std::list<RenderBatch> m_render_batches;
 
+			std::vector<RenderTask> m_render_tasks;
+
 		public:
-			template<typename VertexBufferContainer,
-				typename IndexBufferContainer,
-				typename ObjectShaderParamsContainer,
-				typename MaterialShaderParamsContainer>
+			template<
+				typename VertexBufferInterator,
+				typename IndexBufferIterator,
+				typename PerObjectShaderParams>
 			void addRenderTask(
-				std::string program_name,
-				VertexBufferContainer vertex_buffer_data,
-				IndexBufferContainer index_buffer_data,
+				std::string const& program_name,
 				VertexLayout vertex_descriptor,
-				ObjectShaderParamsContainer obj_shdr_params,
-				MaterialShaderParamsContainer mtl_shdr_params)
+				VertexBufferInterator vertex_buffer_begin, VertexBufferInterator vertex_buffer_end,
+				IndexBufferIterator index_buffer_begin, IndexBufferIterator index_buffer_end,
+				PerObjectShaderParams per_object_params)
 			{
 				//TODO check if batch with same program and vertex layout already exits
+
+				// use std::distance and iterator value type
 			}
 
-			RenderBatchesDataAccessor getAccessor()
+			template<typename PerObjectShaderParams>
+			size_t reserveRenderTask(
+				std::string const& program_name,
+				VertexLayout vertex_descriptor,
+				GLenum index_type,
+				size_t vertex_cnt,
+				size_t index_cnt,
+				PerObjectShaderParams per_object_params)
+			{
+
+			}
+
+			uint8_t* accessVertexBufferData(size_t task_idx, size_t attribute_idx);
+
+			uint8_t* accessIndexBufferData(size_t task_idx);
+
+			uint8_t* accessPerObjectParamsData(size_t task_idx);
+
+			void shrinkRenderTask(size_t vertex_cnt, size_t index_cnt);
+
+
+			RenderBatchesDataAccessor generateAccessor()
 			{
 
 			}
