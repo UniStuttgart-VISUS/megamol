@@ -637,7 +637,7 @@ bool NGSphereRenderer::Render(Call& call) {
                 streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                 //streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                 //    numItems, sync, dstOff, dstLen);
-                vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
+                //vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint,

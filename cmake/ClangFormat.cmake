@@ -37,10 +37,11 @@ function(add_clang_format TARGET)
       VERBATIM)
     add_dependencies(${TARGET} "${TARGET}_clangformat")
   elseif(CLANG_FORMAT)
-    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is wrong.\n"
-      "Please download and install a version matching \"${CLANG_FORMAT_VERSION_PATTERN}\""
-      " from\n  http://releases.llvm.org/download.html\nNote: Also adjust Visual Studio options!")
+    message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is unsuitable.\n"
+      "Please download and install a version matching ${CLANG_FORMAT_VERSION_PATTERN}"
+      " from http://releases.llvm.org/download.html\n"
+	  "Also adjust Visual Studio options and PATH variable as necessary!")
   else()
-    message(WARNING "clang-format was not found")
+    message(STATUS "clang-format: not found")
   endif()
 endfunction(add_clang_format)
