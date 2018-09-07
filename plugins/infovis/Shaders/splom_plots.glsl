@@ -9,6 +9,8 @@ struct Plot {
     float minY;
     float maxX;
     float maxY;
+    float smallTickX;
+    float smallTickY;
 };
 
 layout(std430, binding = 2) buffer PlotSSBO {

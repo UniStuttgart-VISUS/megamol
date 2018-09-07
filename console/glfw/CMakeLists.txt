@@ -297,5 +297,3 @@ target_compile_options(glfw PRIVATE
 if (MSVC)
     target_compile_definitions(glfw PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
-
-set_target_properties(glfw PROPERTIES FOLDER external)

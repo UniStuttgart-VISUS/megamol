@@ -42,6 +42,6 @@ function(add_clang_format TARGET)
       " from http://releases.llvm.org/download.html\n"
 	  "Also adjust Visual Studio options and PATH variable as necessary!")
   else()
-    message(WARNING "clang-format was not found")
+    message(STATUS "clang-format: not found")
   endif()
 endfunction(add_clang_format)

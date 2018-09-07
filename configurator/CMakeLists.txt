@@ -7,7 +7,7 @@
 option(BUILD_CONFIGURATOR "Build configurator" OFF)
 
 if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
-  
+
   project(configurator)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -59,5 +59,5 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   endif()
   install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
   install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
-  
+
 endif()

@@ -12,7 +12,7 @@ if(BUILD_CORE)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
-  
+
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
 
@@ -21,58 +21,51 @@ if(BUILD_CORE)
   # include lua sources
   add_subdirectory(lua)
 
+  # include ZMQ and its C++ bindings
+  set(ZMQ_VER "4_2_3")
+  string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
   if(MSVC_IDE)
     set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
   else()
     set(MSVC_TOOLSET "")
   endif()
-
-  # include ZMQ
-  include(ExternalProject)
-
-  set(EXTERNAL_INSTALL_LOCATION ${CMAKE_SOURCE_DIR}/external CACHE INTERNAL '')
-  
-  set(ZMQ_VER "4_2_3")
-  string(REPLACE "_" "." ZMQ_TAG ${ZMQ_VER})
-  string(CONCAT ZMQ_TAG "v" ${ZMQ_TAG})
-  if(MSVC)
-    set(ZMQ_LIB
-        debug "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib"
-        optimized "${EXTERNAL_INSTALL_LOCATION}/lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib"
-        CACHE INTERNAL '')
-    set(ZMQ_DLLDIR "${EXTERNAL_INSTALL_LOCATION}/bin")
+  if(WIN32)
+    set(ZMQ_IMPORT_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
+    set(ZMQ_IMPORT_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
+    set(ZMQ_DEBUG "bin/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.dll")
+    set(ZMQ_RELEASE "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
   else()
     include(GNUInstallDirs)
-    set(ZMQ_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzmq.so")
+    set(ZMQ_IMPORT_DEBUG "")
+    set(ZMQ_IMPORT_RELEASE "")
+    set(ZMQ_DEBUG "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
+    set(ZMQ_RELEASE ${ZMQ_DEBUG})
   endif()
-  ExternalProject_Add(extlibzmq
+
+  add_external_project(libzmq_ext
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
     GIT_TAG ${ZMQ_TAG}
     CMAKE_ARGS
-      -DZMQ_BUILD_TESTS=OFF 
-      -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION})
-  message(STATUS "ZMQ Git Tag: " ${ZMQ_TAG})
+      -DZMQ_BUILD_TESTS=OFF)
+  add_external_library(libzmq SHARED
+    DEPENDS libzmq_ext
+    IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
+    IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
+    LIBRARY_DEBUG ${ZMQ_DEBUG}
+    LIBRARY_RELEASE ${ZMQ_RELEASE})
 
-  # very ugly way of pulling cppzmq (also caused by the weird visual studio lib naming scheme of zmq)
-  if(UNIX)
-    set(ZMQCPP_INSTALL_CMD "eval")
-    set(ZMQCPP_INSTALL_ARGS "cp ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
-  else()
-    set(ZMQCPP_INSTALL_CMD "powershell")
-    set(ZMQCPP_INSTALL_ARGS "copy ${PROJECT_BINARY_DIR}/extlibcppzmq-prefix/src/extlibcppzmq/*.hpp ${EXTERNAL_INSTALL_LOCATION}/include/")
-  endif()
-  
-  ExternalProject_Add(extlibcppzmq
-    DEPENDS extlibzmq
+  add_external_project(libcppzmq_ext
+    DEPENDS libzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${ZMQCPP_INSTALL_CMD} ${ZMQCPP_INSTALL_ARGS}
-  )
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(libcppzmq INTERFACE
+    DEPENDS libcppzmq_ext
+    INCLUDE_DIR "src/libcppzmq_ext/")
 
-  
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
@@ -98,33 +91,31 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
     endif()
   else()
-      find_package(EXPAT REQUIRED)
+    find_package(EXPAT REQUIRED)
   endif()
 
   # include zfp
-  set(ZFP_VER "0_5_2")
-  string(REPLACE "_" "." ZFP_TAG ${ZFP_VER})
-  if(MSVC)
-    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/lib/zfp.lib" CACHE INTERNAL '')
+  if(WIN32)
+    set(ZFP_LIB "lib/zfp.lib")
   else()
     include(GNUInstallDirs)
-    set(ZFP_LIB "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzfp.a")
+    set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
-  ExternalProject_Add(extzfp
+
+  add_external_project(zfp_ext
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
-    GIT_TAG ${ZFP_TAG}
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_UTILITIES=OFF -DBUILD_TESTING=OFF -DZFP_WITH_ALIGNED_ALLOC=ON -DZFP_WITH_CACHE_FAST_HASH=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DCMAKE_BUILD_TYPE=release
-  )
-  message(STATUS "ZFP Git Tag: " ${ZFP_TAG})
-
-  set(LIBS vislib glad lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ZMQ_LIB})
-  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${EXTERNAL_INSTALL_LOCATION}/include "src" "include")
-  link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
-
-  if(MPI_C_FOUND)
-    include_directories(${MPI_C_INCLUDE_PATH})
-    set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-  endif()
+    GIT_TAG "0.5.2"
+    CMAKE_ARGS
+      -DBUILD_SHARED_LIBS=OFF
+      -DBUILD_UTILITIES=OFF
+      -DBUILD_TESTING=OFF
+      -DZFP_WITH_ALIGNED_ALLOC=ON
+      -DZFP_WITH_CACHE_FAST_HASH=ON
+      -DCMAKE_BUILD_TYPE=Release)
+  add_external_library(zfp STATIC
+    DEPENDS zfp_ext
+    LIBRARY_DEBUG ${ZFP_LIB}
+    LIBRARY_RELEASE ${ZFP_LIB})
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -145,26 +136,26 @@ if(BUILD_CORE)
     "src/vismol2/Mol20DataSource.cpp"
     "src/vismol2/Mol20Renderer.cpp"
     "src/vismol2/Mol2Data.cpp"
-    )    
+    )
 
   # Target definition
-  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
-  add_dependencies(core vislib glad extlibzmq extlibcppzmq)
-  # Note: linking private prevents that dependent projects are required to link agains all these again.
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(core PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
+    PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib glad lua libzmq libcppzmq ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
-    set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+      LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
+  endif()
+  if(MPI_C_FOUND)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
   endif()
 
-  # Target structure in Visual Studio
-  set_target_properties(core PROPERTIES FOLDER base)
-  #source_group("Public Header Files" FILES ${public_header_files})
-  #source_group("Header Files" FILES ${header_files})
-  #source_group("Source Files" FILES ${source_files})
+  # Source groups in Visual Studio
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   foreach(FILE_NAME ${source_files})
     get_filename_component(FILE_PATH ${FILE_NAME} PATH)
     string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
@@ -191,18 +182,14 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
+  install_external(TARGETS libzmq)
   if(WIN32)
-    install(TARGETS core RUNTIME DESTINATION "bin")
-    install(DIRECTORY ${ZMQ_DLLDIR} DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "libzmq*.dll")
-    install(TARGETS core ARCHIVE DESTINATION "lib")
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
-    file(GLOB ZMQ_LIB_FILES "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}/libzmq.so*")
-    install(FILES ${ZMQ_LIB_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
-    install(TARGETS core DESTINATION "lib" EXPORT core-target)
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
-add_subdirectory(remoteconsole)
-
+  add_subdirectory(remoteconsole)
 endif(BUILD_CORE)
-
