@@ -69,12 +69,17 @@ protected:
 
 private:
     /**
-     * Renders a parameter window.
+     * Draws the main menu bar.
+     */
+    void drawMainMenu();
+
+    /**
+     * Draws a parameter window.
      */
     void drawParameterWindow();
 
     /**
-     * Renders one parameter.
+     * Draws a parameter for the parameter window.
      */
     void drawParameter(const core::Module& mod, const core::param::ParamSlot& slot);
 

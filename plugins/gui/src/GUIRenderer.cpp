@@ -2,6 +2,19 @@
 #include "GUIRenderer.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/TernaryParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 
 #include "vislib/UTF8Encoder.h"
 
@@ -42,6 +55,7 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
 
     // Construct frame, i.e., geometry and stuff.
     // XXX: drawOtherStuff();
+    drawMainMenu();
     drawParameterWindow();
 
     // Render frame.
@@ -52,6 +66,47 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
     lastViewportTime = viewportTime;
 
     return true;
+}
+
+void GUIRenderer::drawMainMenu() {
+    // TODO: this is still mockup stuff...
+    bool a, b, c;
+    bool d, e, f;
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            ImGui::MenuItem("New", nullptr, &a);
+            ImGui::MenuItem("Open", nullptr, &a);
+            ImGui::EndMenu();
+            ImGui::MenuItem("Save", nullptr, &a);
+            ImGui::MenuItem("Save as...", nullptr, &a);
+            ImGui::EndMenu();
+            ImGui::MenuItem("Exit", nullptr, &a);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit")) {
+            ImGui::MenuItem("Cut", nullptr, &a);
+            ImGui::MenuItem("Copy", nullptr, &a);
+            ImGui::MenuItem("Paste", nullptr, &a);
+            ImGui::MenuItem("Delete", nullptr, &a);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Parameter inspector", nullptr, &a);
+            ImGui::MenuItem("Node editor", nullptr, &b);
+            ImGui::MenuItem("Console", nullptr, &c);
+            ImGui::Separator();
+            ImGui::MenuItem("Settings...", nullptr, &c);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Help")) {
+            ImGui::MenuItem("MegaMol Help...", nullptr, &e);
+            ImGui::MenuItem("Report Issue...", nullptr, &e);
+            ImGui::Separator();
+            ImGui::MenuItem("About...", nullptr, &f);
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
 }
 
 void GUIRenderer::drawParameterWindow() {
@@ -81,6 +136,38 @@ void GUIRenderer::drawParameter(const core::Module& mod, const core::param::Para
         vislib::UTF8Encoder::Encode(valueString, param->ValueString());
         memcpy(valueBuffer, valueString, valueString.Length() + 1);
 
-        ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+        auto label = slot.Name().PeekBuffer();
+
+        if (auto* p = slot.Param<core::param::BoolParam>()) {
+            ImGui::Checkbox(label, reinterpret_cast<bool*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::ButtonParam>()) {
+            ImGui::Button(label);
+        } else if (auto* p = slot.Param<core::param::ColorParam>()) {
+            ImGui::ColorEdit4(label, reinterpret_cast<float*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::EnumParam>()) {
+            ImGui::BeginCombo(label, "Select...");
+            ImGui::EndCombo();
+        } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
+            // TODO: easier file handling please!
+            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::FlexEnumParam>()) {
+            ImGui::BeginCombo(label, "Select...");
+            ImGui::EndCombo();
+        } else if (auto* p = slot.Param<core::param::FloatParam>()) {
+            ImGui::InputFloat(label, reinterpret_cast<float*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::IntParam>()) {
+            ImGui::InputInt(label, reinterpret_cast<int*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::TernaryParam>()) {
+            // TODO: do something smart here?
+            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::Vector2fParam>()) {
+            ImGui::InputFloat2(label, reinterpret_cast<float*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::Vector3fParam>()) {
+            ImGui::InputFloat3(label, reinterpret_cast<float*>(valueBuffer));
+        } else if (auto* p = slot.Param<core::param::Vector4fParam>()) {
+            ImGui::InputFloat4(label, reinterpret_cast<float*>(valueBuffer));
+        } else {
+            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+        }
     }
 }
