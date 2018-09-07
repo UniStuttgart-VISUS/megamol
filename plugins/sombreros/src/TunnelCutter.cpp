@@ -512,6 +512,58 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
 
     this->vertexKeepFlags = keepVector; // overwrite the vector
 
+#if 1
+    /*
+     * intermediate step: recalculate vertex distances
+     *
+     * This step is necessary becaues the region growing may close holes which then need a distance of 0 assigned
+     */
+
+    bool changed;
+    do {
+        changed = false;
+        for (size_t i = 0; i < this->vertexKeepFlags.size(); i++) {
+            if (!this->vertexKeepFlags[i]) continue; // skip all non-kept vertices
+            if (vertexDistances[i] == 0) continue;   // skip all vertices with a level that is already 0
+
+            auto ownlvl = vertexDistances[i];
+
+            // check the levels of all neighbors
+            auto forward = std::lower_bound(edgesForward.begin(), edgesForward.end(), static_cast<uint>(i),
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
+            auto reverse = std::lower_bound(edgesReverse.begin(), edgesReverse.end(), static_cast<uint>(i),
+                [](std::pair<unsigned int, unsigned int>& x, unsigned int val) { return x.first < val; });
+
+            bool hasLargerNeighbor = false;
+
+            // go through all forward edges starting with the vertex
+            while (forward != edgesForward.end() && (*forward).first == i && !hasLargerNeighbor) {
+                auto tgt = (*forward).second;
+                auto tlevel = vertexDistances[tgt];
+                if ((tlevel > ownlvl) || !this->vertexKeepFlags[tgt]) {
+                    hasLargerNeighbor = true;
+                }
+                forward++;
+            }
+
+            // do the same thing for all reverse edges
+            while (reverse != edgesReverse.end() && (*reverse).first == i && !hasLargerNeighbor) {
+                auto tgt = (*reverse).second;
+                auto tlevel = vertexDistances[tgt];
+                if ((tlevel > ownlvl) || !this->vertexKeepFlags[tgt]) {
+                    hasLargerNeighbor = true;
+                }
+                reverse++;
+            }
+
+            if (!hasLargerNeighbor) {
+                vertexDistances[i] = 0;
+                if (ownlvl != 0) changed = true;
+            }
+        }
+    } while (changed);
+#endif
+
     /*
      * fourth step: mesh cutting
      */
@@ -627,7 +679,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     uint minVal = UINT_MAX;
     uint maxVal = 0;
 
-    std::vector<uint>& bla = this->bindingDistanceAttributes;
+    std::vector<uint>& bla = this->levelAttributes;
 
     for (size_t i = 0; i < bla.size(); i++) {
         if (bla[i] > maxVal) maxVal = bla[i];
@@ -635,8 +687,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     }
     for (size_t i = 0; i < bla.size(); i++) {
         this->colors[3 * i + 0] = static_cast<unsigned char>(((bla[i] - minVal) * 255.0f) / (maxVal - minVal));
-        this->colors[3 * i + 1] = 0;// this->colors[3 * i + 0];
-        this->colors[3 * i + 2] = 0;// this->colors[3 * i + 0];
+        this->colors[3 * i + 1] = 0; // this->colors[3 * i + 0];
+        this->colors[3 * i + 2] = 0; // this->colors[3 * i + 0];
     }
 #endif
 
