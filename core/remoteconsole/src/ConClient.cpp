@@ -2,12 +2,16 @@
 //
 
 #include "stdafx.h"
+#include "Console.h"
+
+#undef min
+#undef max
+#include <cxxopts.hpp>
+#include <zmq.hpp>
+
 #include <iostream>
 #include <string>
 #include <thread>
-#include <zmq.hpp>
-#include "Console.h"
-#include "cxxopts.hpp"
 
 #ifdef _WIN32
 int _tmain(int argc, _TCHAR* argv[]) {
