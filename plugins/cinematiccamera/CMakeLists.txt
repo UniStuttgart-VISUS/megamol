@@ -26,11 +26,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${resource_files} ${source_files} ${shader_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad ${PNG_LIBRARIES})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${PNG_INCLUDE_DIRS})
-
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${PNG_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core ${PNG_LIBRARIES})
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
