@@ -8,9 +8,6 @@
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#ifdef _WIN32
-#    include <windows.h>
-#endif /* _WIN32 */
 #include <GL/glu.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"

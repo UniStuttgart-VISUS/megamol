@@ -3,9 +3,6 @@
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
-#ifdef _WIN32
-#include <windows.h>
-#endif /* _WIN32 */
 
 
 using namespace megamol::protein;
