@@ -64,7 +64,7 @@ if(BUILD_CONSOLE)
   endif()
   
   # AntTweakBar
-  if(NOT USE_EGL)
+  if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
     if(USE_INTERNAL_ANTTWEAKBAR)
       add_subdirectory(AntTweakBar)
