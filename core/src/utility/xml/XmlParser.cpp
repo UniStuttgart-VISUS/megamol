@@ -69,7 +69,7 @@ bool XmlParser::Parse(XmlReader& reader) {
 /*
  * XmlParser::CharacterData
  */
-void XmlParser::CharacterData(unsigned int level, const MMXML_CHAR *text, int len,
+void XmlParser::CharacterData(unsigned int level, const XML_Char *text, int len,
         XmlReader::ParserState state) {
     // intentionally empty
 }
@@ -78,7 +78,7 @@ void XmlParser::CharacterData(unsigned int level, const MMXML_CHAR *text, int le
 /*
  * XmlParser::Comment
  */
-void XmlParser::Comment(unsigned int level, const MMXML_CHAR *text,
+void XmlParser::Comment(unsigned int level, const XML_Char *text,
         XmlReader::ParserState state) {
     // intentionally empty
 }
@@ -134,7 +134,7 @@ void XmlParser::FatalError(const char *msg) const {
  * XmlParser::StartTag
  */
 bool XmlParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+        const XML_Char * name, const XML_Char ** attrib,
         XmlReader::ParserState state,
         XmlReader::ParserState& outChildState,
         XmlReader::ParserState& outEndTagState,
@@ -155,7 +155,7 @@ bool XmlParser::StartTag(unsigned int num, unsigned int level,
  * XmlParser::EndTag
  */
 bool XmlParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, XmlReader::ParserState state,
+        const XML_Char * name, XmlReader::ParserState state,
         XmlReader::ParserState& outPostEndTagState) {
 
     //for (unsigned int i = 0; i < level; i++) printf("  ");
@@ -186,7 +186,7 @@ void XmlParser::Warning(const char *msg) const {
 /*
  * XmlParser::WarnUnexpectedAttribut
  */
-void XmlParser::WarnUnexpectedAttribut(const MMXML_CHAR *tag, const MMXML_CHAR *attr) const {
+void XmlParser::WarnUnexpectedAttribut(const XML_Char *tag, const XML_Char *attr) const {
     vislib::StringA msg;
     msg.Format("Unexpected attribute \"%s\" in tag \"%s\"",
         vislib::StringA(attr).PeekBuffer(),
@@ -198,7 +198,7 @@ void XmlParser::WarnUnexpectedAttribut(const MMXML_CHAR *tag, const MMXML_CHAR *
 /*
  * XmlParser::startXmlTag
  */
-void XmlParser::startXmlTag(const MMXML_CHAR *name, const MMXML_CHAR **attrib,
+void XmlParser::startXmlTag(const XML_Char *name, const XML_Char **attrib,
         XmlReader::ParserState& outEndTagState,
         XmlReader::ParserState& outPostEndTagState) {
     bool handled = this->StartTag(this->number, this->level++, name, attrib, 
@@ -222,7 +222,7 @@ void XmlParser::startXmlTag(const MMXML_CHAR *name, const MMXML_CHAR **attrib,
 /*
  * XmlParser::endXmlTag
  */
-void XmlParser::endXmlTag(const MMXML_CHAR *name,
+void XmlParser::endXmlTag(const XML_Char *name,
         XmlReader::ParserState& outPostEndTagState) {
     this->EndTag(this->endNumbers.Pop(), --this->level, name, 
         this->reader->readerState, outPostEndTagState);

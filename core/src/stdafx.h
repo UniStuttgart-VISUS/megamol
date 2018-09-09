@@ -34,7 +34,6 @@
 // Windows Header Files:
 #include <windows.h>
 
-#define MMXML_CHAR wchar_t
 
 #else /* _WIN32 */
 /* Linux includes */
@@ -46,15 +45,11 @@
 #   define NULL 0
 #endif
 
-#define MMXML_CHAR char
-
 #endif /* _WIN32 */
 
 #include <stdlib.h>
 #include "vislib/types.h"
 #include "vislib/String.h"
-
-typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 
 /* common includes */
 // #define USE_LOG_SUFFIX true

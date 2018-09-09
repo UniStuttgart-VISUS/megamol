@@ -15,10 +15,10 @@ namespace megamol {
 namespace core {
 namespace utility {
 namespace xml {
-    static void XMLCALL xmlStartTag(void *data, const MMXML_CHAR *tag, const MMXML_CHAR **attr);
-    static void XMLCALL xmlEndTag(void *data, const MMXML_CHAR *tag);
-    static void XMLCALL xmlCharData(void *data, const MMXML_CHAR *text, int len);
-    static void XMLCALL xmlComment(void *data, const MMXML_CHAR *text);
+    static void XMLCALL xmlStartTag(void *data, const XML_Char *tag, const XML_Char **attr);
+    static void XMLCALL xmlEndTag(void *data, const XML_Char *tag);
+    static void XMLCALL xmlCharData(void *data, const XML_Char *text, int len);
+    static void XMLCALL xmlComment(void *data, const XML_Char *text);
 } /* end namespace xml */
 } /* end namespace utility */
 } /* end namespace core */
@@ -44,7 +44,7 @@ namespace xml {
  * xmlStartTag
  */
 static void XMLCALL megamol::core::utility::xml::xmlStartTag(
-        void *data, const MMXML_CHAR *tag, const MMXML_CHAR **attr) {
+        void *data, const XML_Char *tag, const XML_Char **attr) {
     static_cast<megamol::core::utility::xml::XmlReader*>(data)
         ->startTag(tag, attr);
 }
@@ -54,7 +54,7 @@ static void XMLCALL megamol::core::utility::xml::xmlStartTag(
  * xmlEndTag
  */
 static void XMLCALL megamol::core::utility::xml::xmlEndTag(
-        void *data, const MMXML_CHAR *tag) {
+        void *data, const XML_Char *tag) {
     static_cast<megamol::core::utility::xml::XmlReader*>(data)
         ->endTag(tag);
 }
@@ -64,7 +64,7 @@ static void XMLCALL megamol::core::utility::xml::xmlEndTag(
  * xmlCharData
  */
 static void XMLCALL megamol::core::utility::xml::xmlCharData(
-        void *data, const MMXML_CHAR *text, int len) {
+        void *data, const XML_Char *text, int len) {
     static_cast<megamol::core::utility::xml::XmlReader*>(data)
         ->charData(text, len);
 }
@@ -74,7 +74,7 @@ static void XMLCALL megamol::core::utility::xml::xmlCharData(
  * xmlComment
  */
 static void XMLCALL megamol::core::utility::xml::xmlComment(
-        void *data, const MMXML_CHAR *text) {
+        void *data, const XML_Char *text) {
     static_cast<megamol::core::utility::xml::XmlReader*>(data)
         ->comment(text);
 }
@@ -211,7 +211,7 @@ void XmlReader::StopParsing(void) {
 /*
  * XmlReader::charData
  */
-void XmlReader::charData(const MMXML_CHAR *text, int len) {
+void XmlReader::charData(const XML_Char *text, int len) {
     ASSERT(this->internalParser != NULL);
     if (this->externalParser) {
         this->externalParser->CharacterData(
@@ -224,7 +224,7 @@ void XmlReader::charData(const MMXML_CHAR *text, int len) {
 /*
  * XmlReader::comment
  */
-void XmlReader::comment(const MMXML_CHAR *text) {
+void XmlReader::comment(const XML_Char *text) {
     ASSERT(this->internalParser != NULL);
     if (this->externalParser) {
         this->externalParser->Comment(
@@ -237,7 +237,7 @@ void XmlReader::comment(const MMXML_CHAR *text) {
 /*
  * XmlReader::endTag
  */
-void XmlReader::endTag(const MMXML_CHAR *tag) {
+void XmlReader::endTag(const XML_Char *tag) {
     ASSERT(this->internalParser != NULL);
 
     ParserState postEnd = this->endTagStates.Pop();
@@ -336,7 +336,7 @@ bool XmlReader::parseXml(void) {
                 int lineNumber = XML_GetCurrentLineNumber(parser);
                 int column = XML_GetCurrentColumnNumber(parser);
 
-                const MMXML_CHAR *errorString = XML_ErrorString(errorCode);
+                const XML_Char *errorString = XML_ErrorString(errorCode);
                 vislib::StringA msg;
                 msg.Format("Xml-file parse error %d[Ln:%d;Col:%d]: %s", 
                     int(errorCode), lineNumber, column,
@@ -366,7 +366,7 @@ bool XmlReader::parseXml(void) {
 /*
  * XmlReader::startTag
  */
-void XmlReader::startTag(const MMXML_CHAR *tag, const MMXML_CHAR **attributes) {
+void XmlReader::startTag(const XML_Char *tag, const XML_Char **attributes) {
     ASSERT(this->internalParser != NULL);
 //    XML_Parser &parser = *static_cast<XML_Parser*>(this->internalParser);
 
