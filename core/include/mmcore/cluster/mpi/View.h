@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
 #include <WinSock2.h>
-#include <windows.h>
+#include <Windows.h>
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif /* _WIN32 */
 

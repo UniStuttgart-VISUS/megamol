@@ -11,6 +11,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#undef min
+#undef max
 #include "glad/glad_wgl.h"
 #else
 #ifndef USE_EGL

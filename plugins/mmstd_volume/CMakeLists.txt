@@ -8,6 +8,8 @@ option(BUILD_MMSTD_VOLUME_PLUGIN "Option to build mmstd_VOLUME" ON)
 if(BUILD_MMSTD_VOLUME_PLUGIN)
   project(mmstd_volume)
 
+  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_VOLUME_PLUGIN BUILD_CORE" CACHE INTERNAL "")
@@ -23,12 +25,9 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core datraw glad)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-
-  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core datraw)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
