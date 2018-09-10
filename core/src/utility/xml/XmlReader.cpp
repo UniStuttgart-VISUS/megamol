@@ -17,50 +17,9 @@
 #include <new>
 
 /*
- * xmlStartTag
- */
-static void XMLCALL megamol::core::utility::xml::xmlStartTag(
-        void *data, const XML_Char *tag, const XML_Char **attr) {
-    static_cast<megamol::core::utility::xml::XmlReader*>(data)
-        ->startTag(tag, attr);
-}
-
-
-/*
- * xmlEndTag
- */
-static void XMLCALL megamol::core::utility::xml::xmlEndTag(
-        void *data, const XML_Char *tag) {
-    static_cast<megamol::core::utility::xml::XmlReader*>(data)
-        ->endTag(tag);
-}
-
-
-/*
- * xmlCharData
- */
-static void XMLCALL megamol::core::utility::xml::xmlCharData(
-        void *data, const XML_Char *text, int len) {
-    static_cast<megamol::core::utility::xml::XmlReader*>(data)
-        ->charData(text, len);
-}
-
-
-/*
- * xmlComment
- */
-static void XMLCALL megamol::core::utility::xml::xmlComment(
-        void *data, const XML_Char *text) {
-    static_cast<megamol::core::utility::xml::XmlReader*>(data)
-        ->comment(text);
-}
-
-
-/*
  * using xml implementation namespaces
  */
 using namespace megamol::core::utility::xml;
-
 
 /*
  * XmlReader::STATE_NULL
@@ -181,6 +140,46 @@ void XmlReader::StopParsing(void) {
         XML_Parser &parser = *static_cast<XML_Parser*>(this->internalParser);
         XML_StopParser(parser, false);
     }
+}
+
+
+/*
+ * XmlReader::xmlStartTag
+ */
+void XMLCALL XmlReader::xmlStartTag(
+        void *data, const XML_Char *tag, const XML_Char **attr) {
+    static_cast<megamol::core::utility::xml::XmlReader*>(data)
+        ->startTag(tag, attr);
+}
+
+
+/*
+ * XmlReader::xmlEndTag
+ */
+void XMLCALL XmlReader::xmlEndTag(
+        void *data, const XML_Char *tag) {
+    static_cast<megamol::core::utility::xml::XmlReader*>(data)
+        ->endTag(tag);
+}
+
+
+/*
+ * XmlReader::xmlCharData
+ */
+void XMLCALL XmlReader::xmlCharData(
+        void *data, const XML_Char *text, int len) {
+    static_cast<megamol::core::utility::xml::XmlReader*>(data)
+        ->charData(text, len);
+}
+
+
+/*
+ * XmlReader::xmlComment
+ */
+void XMLCALL XmlReader::xmlComment(
+        void *data, const XML_Char *text) {
+    static_cast<megamol::core::utility::xml::XmlReader*>(data)
+        ->comment(text);
 }
 
 

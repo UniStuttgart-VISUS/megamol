@@ -48,12 +48,6 @@ namespace xml {
 
     public:
 
-        /** friend declaration of xml parser callbacks */
-        friend void XMLCALL xmlStartTag(void *, const XML_Char *, const XML_Char **);
-        friend void XMLCALL xmlEndTag(void *, const XML_Char *);
-        friend void XMLCALL xmlCharData(void *, const XML_Char *, int);
-        friend void XMLCALL xmlComment(void *, const XML_Char *);
-
         /** 
          * friend declaration of abstract xml parser of calling the parse 
          * method 
@@ -245,6 +239,11 @@ namespace xml {
         void StopParsing(void);
 
     private:
+        /** declaration of xml parser callbacks */
+        static void XMLCALL xmlStartTag(void *, const XML_Char *, const XML_Char **);
+        static void XMLCALL xmlEndTag(void *, const XML_Char *);
+        static void XMLCALL xmlCharData(void *, const XML_Char *, int);
+        static void XMLCALL xmlComment(void *, const XML_Char *);
 
         /**
          * Callback handler for the character data.
