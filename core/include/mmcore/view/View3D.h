@@ -16,7 +16,7 @@
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/CalleeSlot.h"
@@ -47,7 +47,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D : public AbstractView3D,
+    class MEGAMOLCORE_API View3D : public AbstractRenderingView,
             public AbstractCamParamSync {
 
     public:

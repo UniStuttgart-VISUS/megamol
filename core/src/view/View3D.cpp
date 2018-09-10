@@ -50,7 +50,7 @@ using namespace megamol::core;
  * view::View3D::View3D
  */
 view::View3D::View3D(void)
-    : view::AbstractView3D()
+    : view::AbstractRenderingView()
     , AbstractCamParamSync()
     , cam()
     , camParams()
