@@ -105,7 +105,7 @@ namespace utility {
          *         'false' if the tag was not handled.
          */
         virtual bool StartTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+            const XML_Char * name, const XML_Char ** attrib,
             xml::XmlReader::ParserState state,
             xml::XmlReader::ParserState& outChildState,
             xml::XmlReader::ParserState& outEndTagState,
@@ -128,7 +128,7 @@ namespace utility {
          *         'false' if the tag was not handled.
          */
         virtual bool EndTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, xml::XmlReader::ParserState state,
+            const XML_Char * name, xml::XmlReader::ParserState state,
             xml::XmlReader::ParserState& outPostEndTagState);
 
     private:

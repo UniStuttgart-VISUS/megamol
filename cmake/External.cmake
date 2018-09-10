@@ -24,7 +24,10 @@ function(add_external_project TARGET)
   
   # Compile arguments for ExternalProject_Add.
   set(ARGN_EXT "${ARGN}")
-  list(APPEND ARGN_EXT CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>)
+  list(APPEND ARGN_EXT CMAKE_ARGS 
+    "-G${CMAKE_GENERATOR}"
+    "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+    "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>")
   
   # Add external project.
   ExternalProject_Add(${TARGET} "${ARGN_EXT}")

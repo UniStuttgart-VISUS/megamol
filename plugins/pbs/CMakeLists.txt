@@ -43,30 +43,32 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY_DEBUG ${SNAPPY_LIB}
     LIBRARY_RELEASE ${SNAPPY_LIB})
 
-  add_external_project(IceT_ext
-    GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-    CMAKE_ARGS
-      -DBUILD_SHARED_LIBS=ON
-      -DICET_BUILD_TESTING=OFF
-      -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
-  add_external_library(IceTCore SHARED
-    DEPENDS IceT_ext
-    IMPORT_LIBRARY_DEBUG ${ICET_CORE_IMPORT_LIB}
-    IMPORT_LIBRARY_RELEASE ${ICET_CORE_IMPORT_LIB}
-    LIBRARY_DEBUG ${ICET_CORE_LIB}
-    LIBRARY_RELEASE ${ICET_CORE_LIB})
-  add_external_library(IceTGL SHARED
-    DEPENDS IceT_ext
-    IMPORT_LIBRARY_DEBUG ${ICET_GL_IMPORT_LIB}
-    IMPORT_LIBRARY_RELEASE ${ICET_GL_IMPORT_LIB}
-    LIBRARY_DEBUG ${ICET_GL_LIB}
-    LIBRARY_RELEASE ${ICET_GL_LIB})
-  add_external_library(IceTMPI SHARED
-    DEPENDS IceT_ext
-    IMPORT_LIBRARY_DEBUG ${ICET_MPI_IMPORT_LIB}
-    IMPORT_LIBRARY_RELEASE ${ICET_MPI_IMPORT_LIB}
-    LIBRARY_DEBUG ${ICET_MPI_LIB}
-    LIBRARY_RELEASE ${ICET_MPI_LIB})
+  if(MPI_C_FOUND)
+    add_external_project(IceT_ext
+      GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DICET_BUILD_TESTING=OFF
+        -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
+    add_external_library(IceTCore SHARED
+      DEPENDS IceT_ext
+      IMPORT_LIBRARY_DEBUG ${ICET_CORE_IMPORT_LIB}
+      IMPORT_LIBRARY_RELEASE ${ICET_CORE_IMPORT_LIB}
+      LIBRARY_DEBUG ${ICET_CORE_LIB}
+      LIBRARY_RELEASE ${ICET_CORE_LIB})
+    add_external_library(IceTGL SHARED
+      DEPENDS IceT_ext
+      IMPORT_LIBRARY_DEBUG ${ICET_GL_IMPORT_LIB}
+      IMPORT_LIBRARY_RELEASE ${ICET_GL_IMPORT_LIB}
+      LIBRARY_DEBUG ${ICET_GL_LIB}
+      LIBRARY_RELEASE ${ICET_GL_LIB})
+    add_external_library(IceTMPI SHARED
+      DEPENDS IceT_ext
+      IMPORT_LIBRARY_DEBUG ${ICET_MPI_IMPORT_LIB}
+      IMPORT_LIBRARY_RELEASE ${ICET_MPI_IMPORT_LIB}
+      LIBRARY_DEBUG ${ICET_MPI_LIB}
+      LIBRARY_RELEASE ${ICET_MPI_LIB})
+  endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -75,6 +77,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+  
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES
     SUFFIX ".mmplg"
@@ -83,7 +87,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad OSPRay_plugin image_calls zfp libzmq snappy IceTCore IceTGL IceTMPI)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core OSPRay_plugin image_calls zfp libzmq libcppzmq snappy)
+  if(MPI_C_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI)
+  endif()
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
@@ -93,7 +100,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
-  install_external(TARGETS snappy IceTCore IceTGL IceTMPI)
+  install_external(TARGETS snappy)
+  if(MPI_C_FOUND)
+    install_external(TARGETS IceTCore IceTGL IceTMPI)
+  endif()
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")

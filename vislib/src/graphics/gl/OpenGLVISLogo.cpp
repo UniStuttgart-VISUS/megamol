@@ -8,7 +8,7 @@
 #include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #endif /* _WIN32 */
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #define _USE_MATH_DEFINES

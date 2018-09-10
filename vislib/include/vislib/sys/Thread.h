@@ -227,6 +227,27 @@ namespace sys {
          */
         bool TryTerminate(const bool doWait = false);
 
+    protected:
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Thread(const Thread& rhs);
+
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Thread& operator =(const Thread& rhs);
+
     private:
 
         /**
@@ -263,26 +284,6 @@ namespace sys {
 #else /* _WIN32 */
         static void *ThreadFunc(void *param);
 #endif /* _WIN32 */
-
-        /**
-         * Forbidden copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-        Thread(const Thread& rhs);
-
-        /**
-         * Forbidden assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throws IllegalParamException If (this != &rhs).
-         */
-        Thread& operator =(const Thread& rhs);
 
 #ifdef _WIN32 
         /** Handle of the thread. */
