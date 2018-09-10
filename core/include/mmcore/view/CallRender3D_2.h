@@ -56,7 +56,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 4; }
+    static unsigned int FunctionCount(void) { return 3; }
 
     /**
      * Answer the name of the function used for this call.
