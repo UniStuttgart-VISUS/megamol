@@ -7,38 +7,14 @@
 
 #include "stdafx.h"
 
-#ifdef UNIX
-// this must be defined before including AbstractXMLParser.h to make gcc happy
-#define XML_STATIC // We're linking expat as static library
-#include <expat.h>
-namespace megamol {
-namespace core {
-namespace utility {
-namespace xml {
-    static void XMLCALL xmlStartTag(void *data, const XML_Char *tag, const XML_Char **attr);
-    static void XMLCALL xmlEndTag(void *data, const XML_Char *tag);
-    static void XMLCALL xmlCharData(void *data, const XML_Char *text, int len);
-    static void XMLCALL xmlComment(void *data, const XML_Char *text);
-} /* end namespace xml */
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-#endif /* UNIX */
-
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore/utility/xml/XmlParser.h"
 
-#ifndef UNIX
-#define XML_UNICODE_WCHAR_T
-#define XML_STATIC // We're linking expat as static library
-#include <expat.h>
-#endif /* UNIX */
-
-#include <new>
 #include "vislib/Exception.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/sys/Log.h"
 
+#include <new>
 
 /*
  * xmlStartTag
