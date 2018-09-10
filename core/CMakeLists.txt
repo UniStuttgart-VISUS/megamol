@@ -97,10 +97,10 @@ if(BUILD_CORE)
 
   # include zfp
   if(WIN32)
-    set(ZFP_LIB "zfp_ext-build/lib/zfp.lib")
+    set(ZFP_LIB "lib/zfp.lib")
   else()
     include(GNUInstallDirs)
-    set(ZFP_LIB "zfp_ext-build/${CMAKE_INSTALL_LIBDIR}/libzfp.a")
+    set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
 
   add_external_project(zfp_ext
