@@ -19,10 +19,11 @@ namespace console {
         ViewMouseUILayer(gl::Window& wnd, void * viewHandle);
         virtual ~ViewMouseUILayer();
 
-        virtual void onResize(int w, int h);
-        virtual bool onMouseMove(double x, double y);
-        virtual bool onMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods);
-        virtual bool onMouseWheel(double x, double y);
+        virtual void OnResize(int w, int h);
+
+        virtual bool OnMouseMove(double x, double y);
+        virtual bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods);
+        virtual bool OnMouseScroll(double x, double y);
 
     private:
         void *hView; // handle memory is owned by Window

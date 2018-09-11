@@ -15,10 +15,13 @@ gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(gl::Window &wnd) : Ab
 
 gl::WindowEscapeHotKeysUILayer::~WindowEscapeHotKeysUILayer() {}
 
-bool gl::WindowEscapeHotKeysUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mods) {
-    if (((key == Key::KEY_ESCAPE) || (key == Key::KEY_Q)) && (action == KeyAction::PRESS)
-        && ((mods & ~KEY_MOD_SHIFT) == 0)) {
-        if ((mods & KEY_MOD_SHIFT) == KEY_MOD_SHIFT) {
+bool gl::WindowEscapeHotKeysUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+    bool isQuit = (key == core::view::Key::KEY_ESCAPE)  || (key == core::view::Key::KEY_Q);
+    bool isPressed = (action == core::view::KeyAction::PRESS);
+    bool isNotShift = (mods & ~core::view::Modifiers::SHIFT) == core::view::Modifiers::NONE;
+	bool isShift = (mods & core::view::Modifiers::CTRL) == core::view::Modifiers::CTRL;
+    if (isQuit && isPressed  && isNotShift) {
+        if (isShift) {
             wnd.RequestClose();
         } else {
             WindowManager::Instance().Shutdown();

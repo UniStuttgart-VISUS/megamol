@@ -18,29 +18,29 @@ ViewMouseUILayer::~ViewMouseUILayer() {
     hView = nullptr; // handle memory is owned by Window and will be deleted there
 }
 
-void ViewMouseUILayer::onResize(int w, int h) {
+void ViewMouseUILayer::OnResize(int w, int h) {
     ::mmcResizeView(hView, static_cast<unsigned int>(w), static_cast<unsigned int>(h));
 }
 
-bool ViewMouseUILayer::onMouseMove(double x, double y) {
+bool ViewMouseUILayer::OnMouseMove(double x, double y) {
     ::mmcSet2DMousePosition(hView, static_cast<float>(x), static_cast<float>(y));
     return false;
 }
 
-bool ViewMouseUILayer::onMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+bool ViewMouseUILayer::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     // modifiers
-    ::mmcSetInputModifier(hView, MMC_INMOD_ALT, (mods & KEY_MOD_ALT) == KEY_MOD_ALT);
-    ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, (mods & KEY_MOD_CTRL) == KEY_MOD_CTRL);
-    ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, (mods & KEY_MOD_SHIFT) == KEY_MOD_SHIFT);
+    ::mmcSetInputModifier(hView, MMC_INMOD_ALT, (mods & core::view::Modifiers::ALT) == core::view::Modifiers::ALT);
+    ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, (mods & core::view::Modifiers::CTRL) == core::view::Modifiers::CTRL);
+    ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, (mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::SHIFT);
 
     // button states and infos stuff
     unsigned int btn = static_cast<unsigned int>(button);
-    ::mmcSet2DMouseButton(hView, btn, action == MouseButtonAction::PRESS);
+    ::mmcSet2DMouseButton(hView, btn, action == core::view::MouseButtonAction::PRESS);
 
-    return action == MouseButtonAction::PRESS;
+    return action == core::view::MouseButtonAction::PRESS;
 }
 
-bool ViewMouseUILayer::onMouseWheel(double x, double y) {
+bool ViewMouseUILayer::OnMouseScroll(double x, double y) {
     // currently not implemented by MegaMol core views ...
     return false;
 }

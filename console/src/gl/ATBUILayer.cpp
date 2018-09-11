@@ -62,26 +62,26 @@ void gl::ATBUILayer::ToggleEnable() {
 
 #if 1 /* REGION INPUT CONTROL */
 
-void gl::ATBUILayer::onResize(int w, int h) {
+void gl::ATBUILayer::OnResize(int w, int h) {
     ::TwSetCurrentWindow(atbWinID);
     ::TwWindowSize(w, h);
 }
 
-void gl::ATBUILayer::onDraw() {
+void gl::ATBUILayer::OnDraw() {
 
     if (this->wasdHotfixed) {
         CoreHandle hParam;
         if (this->fwd) {
-            this->onChar('w');
+            this->OnChar('w');
         }
         if (this->back) {
-            this->onChar('s');
+            this->OnChar('s');
         }
         if (this->left) {
-            this->onChar('a');
+            this->OnChar('a');
         }
         if (this->right) {
-            this->onChar('d');
+            this->OnChar('d');
         }
     }
 
@@ -103,23 +103,23 @@ void gl::ATBUILayer::onDraw() {
     }
 }
 
-bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mods) {
+bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
     ::TwSetCurrentWindow(atbWinID);
 
     atbKeyMod = 0;
-    if (mods & Modifiers::KEY_MOD_SHIFT) {
+    if ((mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::NONE) {
         ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, true);
         atbKeyMod |= TW_KMOD_SHIFT;
     } else {
         ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, false);
     }
-    if (mods & Modifiers::KEY_MOD_CTRL) {
+    if ((mods & core::view::Modifiers::CTRL) == core::view::Modifiers::NONE) {
         ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, true);
         atbKeyMod |= TW_KMOD_CTRL;
     } else {
         ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, false);
     }
-    if (mods & Modifiers::KEY_MOD_ALT) {
+    if ((mods & core::view::Modifiers::ALT) == core::view::Modifiers::NONE) {
         ::mmcSetInputModifier(hView, MMC_INMOD_ALT, true);
         atbKeyMod |= TW_KMOD_ALT;
     } else {
@@ -128,139 +128,139 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
 
 
     // Process key pressed
-    if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
+    if (action == core::view::KeyAction::PRESS || action == core::view::KeyAction::REPEAT) {
         bool testkp = ((atbKeyMod & TW_KMOD_CTRL) || (atbKeyMod & TW_KMOD_ALT)) ? true : false;
 
-        if ((atbKeyMod == TW_KMOD_CTRL) && (key > static_cast<Key>(0)) && (key < KEY_ESCAPE)) {
+        if ((atbKeyMod == TW_KMOD_CTRL) && (key > static_cast<core::view::Key>(0)) && (key < core::view::Key::KEY_ESCAPE)) {
             // CTRL cases
             printf(" key %d + %d\n", key, atbKeyMod);
-            if (::TwKeyPressed(key, atbKeyMod)) {
+            if (::TwKeyPressed(static_cast<int>(key), atbKeyMod)) {
                 return true;
             }
 
-        } else if (key >= KEY_ESCAPE) {
+        } else if (key >= core::view::Key::KEY_ESCAPE) {
             int k = 0;
             switch (key) {
-            case KEY_SPACE: k = TW_KEY_SPACE; break;
-            case KEY_APOSTROPHE: k = '\''; break;
-            case KEY_COMMA: k = ','; break;
-            case KEY_MINUS: k = '-'; break;
-            case KEY_PERIOD: k = '.'; break;
-            case KEY_SLASH: k = '/'; break;
-            case KEY_0: k = '0'; break;
-            case KEY_1: k = '1'; break;
-            case KEY_2: k = '2'; break;
-            case KEY_3: k = '3'; break;
-            case KEY_4: k = '4'; break;
-            case KEY_5: k = '5'; break;
-            case KEY_6: k = '6'; break;
-            case KEY_7: k = '7'; break;
-            case KEY_8: k = '8'; break;
-            case KEY_9: k = '9'; break;
-            case KEY_SEMICOLON: k = ';'; break;
-            case KEY_EQUAL: k = '='; break;
-            case KEY_A: k = 'a'; break;
-            case KEY_B: k = 'b'; break;
-            case KEY_C: k = 'c'; break;
-            case KEY_D: k = 'd'; break;
-            case KEY_E: k = 'e'; break;
-            case KEY_F: k = 'f'; break;
-            case KEY_G: k = 'g'; break;
-            case KEY_H: k = 'h'; break;
-            case KEY_I: k = 'i'; break;
-            case KEY_J: k = 'j'; break;
-            case KEY_K: k = 'k'; break;
-            case KEY_L: k = 'l'; break;
-            case KEY_M: k = 'm'; break;
-            case KEY_N: k = 'n'; break;
-            case KEY_O: k = 'o'; break;
-            case KEY_P: k = 'p'; break;
-            case KEY_Q: k = 'q'; break;
-            case KEY_R: k = 'r'; break;
-            case KEY_S: k = 's'; break;
-            case KEY_T: k = 't'; break;
-            case KEY_U: k = 'u'; break;
-            case KEY_V: k = 'v'; break;
-            case KEY_W: k = 'w'; break;
-            case KEY_X: k = 'x'; break;
-            case KEY_Y: k = 'y'; break;
-            case KEY_Z: k = 'z'; break;
-            case KEY_LEFT_BRACKET: k = '('; break;
-            case KEY_BACKSLASH: k = '\\'; break;
-            case KEY_RIGHT_BRACKET: k = ')'; break;
-            case KEY_GRAVE_ACCENT: k = '´'; break;
-            //case KEY_WORLD_1: k = TW_KEY_WORLD_1; break;
-            //case KEY_WORLD_2: k = TW_KEY_WORLD_2; break;
-            case KEY_ESCAPE: k = TW_KEY_ESCAPE; break;
-            case KEY_ENTER: k = TW_KEY_RETURN; break;
-            case KEY_TAB: k = TW_KEY_TAB; break;
-            case KEY_BACKSPACE: k = TW_KEY_BACKSPACE; break;
-            case KEY_INSERT: k = TW_KEY_INSERT; break;
-            case KEY_DELETE: k = TW_KEY_DELETE; break;
-            case KEY_RIGHT: k = TW_KEY_RIGHT; break;
-            case KEY_LEFT: k = TW_KEY_LEFT; break;
-            case KEY_DOWN: k = TW_KEY_DOWN; break;
-            case KEY_UP: k = TW_KEY_UP; break;
-            case KEY_PAGE_UP: k = TW_KEY_PAGE_UP; break;
-            case KEY_PAGE_DOWN: k = TW_KEY_PAGE_DOWN; break;
-            case KEY_HOME: k = TW_KEY_HOME; break;
-            case KEY_END: k = TW_KEY_END; break;
-            //case KEY_CAPS_LOCK: k = TW_KEY_CAPS_LOCK; break;
-            //case KEY_SCROLL_LOCK: k = TW_KEY_SCROLL_LOCK; break;
-            //case KEY_NUM_LOCK: k = TW_KEY_NUM_LOCK; break;
-            //case KEY_PRINT_SCREEN: k = TW_KEY_PRINT_SCREEN; break;
-            case KEY_PAUSE: k = TW_KEY_PAUSE; break;
-            case KEY_F1: k = TW_KEY_F1; break;
-            case KEY_F2: k = TW_KEY_F2; break;
-            case KEY_F3: k = TW_KEY_F3; break;
-            case KEY_F4: k = TW_KEY_F4; break;
-            case KEY_F5: k = TW_KEY_F5; break;
-            case KEY_F6: k = TW_KEY_F6; break;
-            case KEY_F7: k = TW_KEY_F7; break;
-            case KEY_F8: k = TW_KEY_F8; break;
-            case KEY_F9: k = TW_KEY_F9; break;
-            case KEY_F10: k = TW_KEY_F10; break;
-            case KEY_F11: k = TW_KEY_F11; break;
-            case KEY_F12: k = TW_KEY_F12; break;
-            case KEY_F13: k = TW_KEY_F13; break;
-            case KEY_F14: k = TW_KEY_F14; break;
-            case KEY_F15: k = TW_KEY_F15; break;
-            case KEY_F16: k = TW_KEY_F10 + 6; break;
-            case KEY_F17: k = TW_KEY_F10 + 7; break;
-            case KEY_F18: k = TW_KEY_F10 + 8; break;
-            case KEY_F19: k = TW_KEY_F10 + 9; break;
-            case KEY_F20: k = TW_KEY_F10 + 10; break;
-            case KEY_F21: k = TW_KEY_F10 + 11; break;
-            case KEY_F22: k = TW_KEY_F10 + 12; break;
-            case KEY_F23: k = TW_KEY_F10 + 13; break;
-            case KEY_F24: k = TW_KEY_F10 + 14; break;
-            case KEY_F25: k = TW_KEY_F10 + 15; break;
-            case KEY_KP_0: if (testkp) k = '0'; break;
-            case KEY_KP_1: if (testkp) k = '1'; break;
-            case KEY_KP_2: if (testkp) k = '2'; break;
-            case KEY_KP_3: if (testkp) k = '3'; break;
-            case KEY_KP_4: if (testkp) k = '4'; break;
-            case KEY_KP_5: if (testkp) k = '5'; break;
-            case KEY_KP_6: if (testkp) k = '6'; break;
-            case KEY_KP_7: if (testkp) k = '7'; break;
-            case KEY_KP_8: if (testkp) k = '8'; break;
-            case KEY_KP_9: if (testkp) k = '9'; break;
-            case KEY_KP_DECIMAL: if (testkp) k = '.'; break;
-            case KEY_KP_DIVIDE: if (testkp) k = '/'; break;
-            case KEY_KP_MULTIPLY: if (testkp) k = '*'; break;
-            case KEY_KP_SUBTRACT: if (testkp) k = '-'; break;
-            case KEY_KP_ADD: if (testkp) k = '+'; break;
-            case KEY_KP_ENTER: k = TW_KEY_RETURN; break;
-            case KEY_KP_EQUAL: if (testkp) k = '='; break;
-            //case KEY_LEFT_SHIFT: k = TW_KEY_LEFT_SHIFT; break;
-            //case KEY_LEFT_CONTROL: k = TW_KEY_LEFT_CONTROL; break;
-            //case KEY_LEFT_ALT: k = TW_KEY_LEFT_ALT; break;
-            //case KEY_LEFT_SUPER: k = TW_KEY_LEFT_SUPER; break;
-            //case KEY_RIGHT_SHIFT: k = TW_KEY_RIGHT_SHIFT; break;
-            //case KEY_RIGHT_CONTROL: k = TW_KEY_RIGHT_CONTROL; break;
-            //case KEY_RIGHT_ALT: k = TW_KEY_RIGHT_ALT; break;
-            //case KEY_RIGHT_SUPER: k = TW_KEY_RIGHT_SUPER; break;
-            //case KEY_MENU: k = TW_KEY_MENU; break;
+            case core::view::Key::KEY_SPACE: k = TW_KEY_SPACE; break;
+            case core::view::Key::KEY_APOSTROPHE: k = '\''; break;
+            case core::view::Key::KEY_COMMA: k = ','; break;
+            case core::view::Key::KEY_MINUS: k = '-'; break;
+            case core::view::Key::KEY_PERIOD: k = '.'; break;
+            case core::view::Key::KEY_SLASH: k = '/'; break;
+            case core::view::Key::KEY_0: k = '0'; break;
+            case core::view::Key::KEY_1: k = '1'; break;
+            case core::view::Key::KEY_2: k = '2'; break;
+            case core::view::Key::KEY_3: k = '3'; break;
+            case core::view::Key::KEY_4: k = '4'; break;
+            case core::view::Key::KEY_5: k = '5'; break;
+            case core::view::Key::KEY_6: k = '6'; break;
+            case core::view::Key::KEY_7: k = '7'; break;
+            case core::view::Key::KEY_8: k = '8'; break;
+            case core::view::Key::KEY_9: k = '9'; break;
+            case core::view::Key::KEY_SEMICOLON: k = ';'; break;
+            case core::view::Key::KEY_EQUAL: k = '='; break;
+            case core::view::Key::KEY_A: k = 'a'; break;
+            case core::view::Key::KEY_B: k = 'b'; break;
+            case core::view::Key::KEY_C: k = 'c'; break;
+            case core::view::Key::KEY_D: k = 'd'; break;
+            case core::view::Key::KEY_E: k = 'e'; break;
+            case core::view::Key::KEY_F: k = 'f'; break;
+            case core::view::Key::KEY_G: k = 'g'; break;
+            case core::view::Key::KEY_H: k = 'h'; break;
+            case core::view::Key::KEY_I: k = 'i'; break;
+            case core::view::Key::KEY_J: k = 'j'; break;
+            case core::view::Key::KEY_K: k = 'k'; break;
+            case core::view::Key::KEY_L: k = 'l'; break;
+            case core::view::Key::KEY_M: k = 'm'; break;
+            case core::view::Key::KEY_N: k = 'n'; break;
+            case core::view::Key::KEY_O: k = 'o'; break;
+            case core::view::Key::KEY_P: k = 'p'; break;
+            case core::view::Key::KEY_Q: k = 'q'; break;
+            case core::view::Key::KEY_R: k = 'r'; break;
+            case core::view::Key::KEY_S: k = 's'; break;
+            case core::view::Key::KEY_T: k = 't'; break;
+            case core::view::Key::KEY_U: k = 'u'; break;
+            case core::view::Key::KEY_V: k = 'v'; break;
+            case core::view::Key::KEY_W: k = 'w'; break;
+            case core::view::Key::KEY_X: k = 'x'; break;
+            case core::view::Key::KEY_Y: k = 'y'; break;
+            case core::view::Key::KEY_Z: k = 'z'; break;
+            case core::view::Key::KEY_LEFT_BRACKET: k = '('; break;
+            case core::view::Key::KEY_BACKSLASH: k = '\\'; break;
+            case core::view::Key::KEY_RIGHT_BRACKET: k = ')'; break;
+            case core::view::Key::KEY_GRAVE_ACCENT: k = '´'; break;
+            //case core::view::Key::KEY_WORLD_1: k = TW_KEY_WORLD_1; break;
+            //case core::view::Key::KEY_WORLD_2: k = TW_KEY_WORLD_2; break;
+            case core::view::Key::KEY_ESCAPE: k = TW_KEY_ESCAPE; break;
+            case core::view::Key::KEY_ENTER: k = TW_KEY_RETURN; break;
+            case core::view::Key::KEY_TAB: k = TW_KEY_TAB; break;
+            case core::view::Key::KEY_BACKSPACE: k = TW_KEY_BACKSPACE; break;
+            case core::view::Key::KEY_INSERT: k = TW_KEY_INSERT; break;
+            case core::view::Key::KEY_DELETE: k = TW_KEY_DELETE; break;
+            case core::view::Key::KEY_RIGHT: k = TW_KEY_RIGHT; break;
+            case core::view::Key::KEY_LEFT: k = TW_KEY_LEFT; break;
+            case core::view::Key::KEY_DOWN: k = TW_KEY_DOWN; break;
+            case core::view::Key::KEY_UP: k = TW_KEY_UP; break;
+            case core::view::Key::KEY_PAGE_UP: k = TW_KEY_PAGE_UP; break;
+            case core::view::Key::KEY_PAGE_DOWN: k = TW_KEY_PAGE_DOWN; break;
+            case core::view::Key::KEY_HOME: k = TW_KEY_HOME; break;
+            case core::view::Key::KEY_END: k = TW_KEY_END; break;
+            //case core::view::Key::KEY_CAPS_LOCK: k = TW_KEY_CAPS_LOCK; break;
+            //case core::view::Key::KEY_SCROLL_LOCK: k = TW_KEY_SCROLL_LOCK; break;
+            //case core::view::Key::KEY_NUM_LOCK: k = TW_KEY_NUM_LOCK; break;
+            //case core::view::Key::KEY_PRINT_SCREEN: k = TW_KEY_PRINT_SCREEN; break;
+            case core::view::Key::KEY_PAUSE: k = TW_KEY_PAUSE; break;
+            case core::view::Key::KEY_F1: k = TW_KEY_F1; break;
+            case core::view::Key::KEY_F2: k = TW_KEY_F2; break;
+            case core::view::Key::KEY_F3: k = TW_KEY_F3; break;
+            case core::view::Key::KEY_F4: k = TW_KEY_F4; break;
+            case core::view::Key::KEY_F5: k = TW_KEY_F5; break;
+            case core::view::Key::KEY_F6: k = TW_KEY_F6; break;
+            case core::view::Key::KEY_F7: k = TW_KEY_F7; break;
+            case core::view::Key::KEY_F8: k = TW_KEY_F8; break;
+            case core::view::Key::KEY_F9: k = TW_KEY_F9; break;
+            case core::view::Key::KEY_F10: k = TW_KEY_F10; break;
+            case core::view::Key::KEY_F11: k = TW_KEY_F11; break;
+            case core::view::Key::KEY_F12: k = TW_KEY_F12; break;
+            case core::view::Key::KEY_F13: k = TW_KEY_F13; break;
+            case core::view::Key::KEY_F14: k = TW_KEY_F14; break;
+            case core::view::Key::KEY_F15: k = TW_KEY_F15; break;
+            case core::view::Key::KEY_F16: k = TW_KEY_F10 + 6; break;
+            case core::view::Key::KEY_F17: k = TW_KEY_F10 + 7; break;
+            case core::view::Key::KEY_F18: k = TW_KEY_F10 + 8; break;
+            case core::view::Key::KEY_F19: k = TW_KEY_F10 + 9; break;
+            case core::view::Key::KEY_F20: k = TW_KEY_F10 + 10; break;
+            case core::view::Key::KEY_F21: k = TW_KEY_F10 + 11; break;
+            case core::view::Key::KEY_F22: k = TW_KEY_F10 + 12; break;
+            case core::view::Key::KEY_F23: k = TW_KEY_F10 + 13; break;
+            case core::view::Key::KEY_F24: k = TW_KEY_F10 + 14; break;
+            case core::view::Key::KEY_F25: k = TW_KEY_F10 + 15; break;
+            case core::view::Key::KEY_KP_0: if (testkp) k = '0'; break;
+            case core::view::Key::KEY_KP_1: if (testkp) k = '1'; break;
+            case core::view::Key::KEY_KP_2: if (testkp) k = '2'; break;
+            case core::view::Key::KEY_KP_3: if (testkp) k = '3'; break;
+            case core::view::Key::KEY_KP_4: if (testkp) k = '4'; break;
+            case core::view::Key::KEY_KP_5: if (testkp) k = '5'; break;
+            case core::view::Key::KEY_KP_6: if (testkp) k = '6'; break;
+            case core::view::Key::KEY_KP_7: if (testkp) k = '7'; break;
+            case core::view::Key::KEY_KP_8: if (testkp) k = '8'; break;
+            case core::view::Key::KEY_KP_9: if (testkp) k = '9'; break;
+            case core::view::Key::KEY_KP_DECIMAL: if (testkp) k = '.'; break;
+            case core::view::Key::KEY_KP_DIVIDE: if (testkp) k = '/'; break;
+            case core::view::Key::KEY_KP_MULTIPLY: if (testkp) k = '*'; break;
+            case core::view::Key::KEY_KP_SUBTRACT: if (testkp) k = '-'; break;
+            case core::view::Key::KEY_KP_ADD: if (testkp) k = '+'; break;
+            case core::view::Key::KEY_KP_ENTER: k = TW_KEY_RETURN; break;
+            case core::view::Key::KEY_KP_EQUAL: if (testkp) k = '='; break;
+            //case core::view::Key::KEY_LEFT_SHIFT: k = TW_KEY_LEFT_SHIFT; break;
+            //case core::view::Key::KEY_LEFT_CONTROL: k = TW_KEY_LEFT_CONTROL; break;
+            //case core::view::Key::KEY_LEFT_ALT: k = TW_KEY_LEFT_ALT; break;
+            //case core::view::Key::KEY_LEFT_SUPER: k = TW_KEY_LEFT_SUPER; break;
+            //case core::view::Key::KEY_RIGHT_SHIFT: k = TW_KEY_RIGHT_SHIFT; break;
+            //case core::view::Key::KEY_RIGHT_CONTROL: k = TW_KEY_RIGHT_CONTROL; break;
+            //case core::view::Key::KEY_RIGHT_ALT: k = TW_KEY_RIGHT_ALT; break;
+            //case core::view::Key::KEY_RIGHT_SUPER: k = TW_KEY_RIGHT_SUPER; break;
+            //case core::view::Key::KEY_MENU: k = TW_KEY_MENU; break;
             default: break;
             }
 
@@ -286,18 +286,18 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
     }
 
     if (wasdHotfixed) {
-        const bool down = action != KeyAction::RELEASE;
+        const bool down = action != core::view::KeyAction::RELEASE;
         switch (key) {
-            case KEY_W:
+            case core::view::Key::KEY_W:
                 this->fwd = down;
                 break;
-            case KEY_A:
+            case core::view::Key::KEY_A:
                 this->left = down;
                 break;
-            case KEY_S:
+            case core::view::Key::KEY_S:
                 this->back = down;
                 break;
-            case KEY_D:
+            case core::view::Key::KEY_D:
                 this->right = down;
                 break;
         }
@@ -306,7 +306,7 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
     return false;
 }
 
-bool gl::ATBUILayer::onChar(unsigned int charcode) {
+bool gl::ATBUILayer::OnChar(unsigned int charcode) {
     ::TwSetCurrentWindow(atbWinID);
 
     if ((charcode & 0xff00) == 0) {
@@ -317,22 +317,22 @@ bool gl::ATBUILayer::onChar(unsigned int charcode) {
     return false;
 }
 
-bool gl::ATBUILayer::onMouseMove(double x, double y) {
+bool gl::ATBUILayer::OnMouseMove(double x, double y) {
     ::TwSetCurrentWindow(atbWinID);
 
     ::TwMouseMotion((int)x, (int)y);
     return false;
 }
 
-bool gl::ATBUILayer::onMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+bool gl::ATBUILayer::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     ::TwSetCurrentWindow(atbWinID);
 
-    TwMouseAction act = (action == MouseButtonAction::PRESS) ? TW_MOUSE_PRESSED : TW_MOUSE_RELEASED;
+    TwMouseAction act = (action == core::view::MouseButtonAction::PRESS) ? TW_MOUSE_PRESSED : TW_MOUSE_RELEASED;
     TwMouseButtonID btn;
     switch (button) {
-    case MouseButton::Left: btn = TW_MOUSE_LEFT; break;
-    case MouseButton::Right: btn = TW_MOUSE_RIGHT; break;
-    case MouseButton::Middle: btn = TW_MOUSE_MIDDLE; break;
+    case core::view::MouseButton::BUTTON_LEFT: btn = TW_MOUSE_LEFT; break;
+    case core::view::MouseButton::BUTTON_RIGHT: btn = TW_MOUSE_RIGHT; break;
+    case core::view::MouseButton::BUTTON_MIDDLE: btn = TW_MOUSE_MIDDLE; break;
     default: return false;
     }
 
@@ -343,7 +343,7 @@ bool gl::ATBUILayer::onMouseButton(MouseButton button, MouseButtonAction action,
     return false;
 }
 
-bool gl::ATBUILayer::onMouseWheel(double x, double y) {
+bool gl::ATBUILayer::OnMouseScroll(double x, double y) {
     ::TwSetCurrentWindow(atbWinID);
     static int scrollpos = 0;
     scrollpos += static_cast<int>(y);

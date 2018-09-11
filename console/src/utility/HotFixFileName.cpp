@@ -61,8 +61,8 @@ utility::HotFixFileName::~HotFixFileName() {
     hCore = nullptr; // we don't own, so we don't delete
 }
 
-bool utility::HotFixFileName::onKey(Key key, int scancode, KeyAction action, Modifiers mods) {
-    if (((key == Key::KEY_F)) && (action == KeyAction::PRESS) && (mods == 0)) {
+bool utility::HotFixFileName::OnKey(core::view::Key key,  core::view::KeyAction action, core::view::Modifiers mods) {
+    if (((key == core::view::Key::KEY_F)) && (action == core::view::KeyAction::PRESS) && (mods == core::view::Modifiers::NONE)) {
         ::mmcEnumParametersA(hCore, fixFileNameEnum, hCore);
         return true;
     }
