@@ -820,16 +820,16 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
 /*
  * view::View3D::SetInputModifier
  */
-void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
+void view::View3D::SetInputModifier(view::Modifiers mod, bool down) {
     unsigned int modId = 0;
     switch (mod) {
-    case MMC_INMOD_SHIFT:
+    case core::view::Modifiers::SHIFT:
         modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
         break;
-    case MMC_INMOD_CTRL:
+    case core::view::Modifiers::CTRL:
         modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
         break;
-    case MMC_INMOD_ALT:
+    case core::view::Modifiers::ALT:
         modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
         break;
     default:

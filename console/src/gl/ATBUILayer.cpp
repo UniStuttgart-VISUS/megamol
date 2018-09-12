@@ -108,22 +108,22 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
 
     atbKeyMod = 0;
     if ((mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::NONE) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::SHIFT), true);
         atbKeyMod |= TW_KMOD_SHIFT;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::SHIFT), false);
     }
     if ((mods & core::view::Modifiers::CTRL) == core::view::Modifiers::NONE) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), true);
         atbKeyMod |= TW_KMOD_CTRL;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), false);
     }
     if ((mods & core::view::Modifiers::ALT) == core::view::Modifiers::NONE) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), true);
         atbKeyMod |= TW_KMOD_ALT;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), false);
     }
 
 

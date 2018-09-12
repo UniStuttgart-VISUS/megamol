@@ -137,12 +137,40 @@ typedef enum _mmcInitValueEnum : int {
     MMC_INITVAL_CFGOVERRIDE // a config value to override from the command line
 } mmcInitValue;
 
-/** Possible input modifier values */
-typedef enum _mmcInputModifierEnum : int {
-    MMC_INMOD_SHIFT,
-    MMC_INMOD_CTRL,
-    MMC_INMOD_ALT
-} mmcInputModifier;
+/**
+ * Possible input modifier values.
+ *
+ * See megamol::core::view::Modifiers
+ */
+typedef int mmcInputModifiers;
+
+/**
+ * Possible input key codes.
+ *
+ * See megamol::core::view::Key
+ */
+//typedef int mmcInputKey;
+
+/**
+ * Possible input key states.
+ *
+ * See megamol::core::view::KeyAction
+ */
+//typedef int mmcInputKeyAction;
+
+/**
+ * Possible input mouse buttons.
+ *
+ * See megamol::core::view::MouseButton
+ */
+//typedef int mmcInputButton;
+
+/**
+ * Possible input mouse action states.
+ *
+ * See megamol::core::view::MouseButtonAction
+ */
+//typedef int mmcInputButtonAction;
 
 /** User context for mmcRenderView function. */
 typedef struct _mmcRenderViewContext {
@@ -587,7 +615,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
  * @param down The new state of the input modifier.
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
-    mmcInputModifier mod, bool down);
+    mmcInputModifiers mod, bool down);
 
 /**
  * Sets the state of a button of the 2d mouse.

@@ -79,7 +79,7 @@ namespace cluster {
          * @param mod The input modifier to be set.
          * @param down The new state of the input modifier.
          */
-        virtual void SetInputModifier(mmcInputModifier mod, bool down);
+        virtual void SetInputModifier(view::Modifiers mod, bool down);
 
     protected:
 

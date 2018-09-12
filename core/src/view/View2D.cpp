@@ -431,17 +431,17 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
 /*
  * view::View2D::SetInputModifier
  */
-void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
+void view::View2D::SetInputModifier(view::Modifiers mod, bool down) {
     switch (mod) {
-        case MMC_INMOD_SHIFT:
+        case core::view::Modifiers::SHIFT:
             view::MouseFlagsSetFlag(this->mouseFlags,
                 view::MOUSEFLAG_MODKEY_SHIFT_DOWN, down);
             break;
-        case MMC_INMOD_CTRL:
+        case core::view::Modifiers::CTRL:
             view::MouseFlagsSetFlag(this->mouseFlags,
                 view::MOUSEFLAG_MODKEY_CTRL_DOWN, down);
             break;
-        case MMC_INMOD_ALT:
+        case core::view::Modifiers::ALT:
             view::MouseFlagsSetFlag(this->mouseFlags,
                 view::MOUSEFLAG_MODKEY_ALT_DOWN, down);
             break;

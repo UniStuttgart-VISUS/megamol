@@ -72,22 +72,22 @@ bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action
     cleanKey = cleanKey & ~vislib::sys::KeyCode::KEY_MOD;
 
     if ((mods & core::view::Modifiers::ALT) == core::view::Modifiers::ALT) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_ALT;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), false);
     }
     if ((mods & core::view::Modifiers::CTRL) == core::view::Modifiers::CTRL) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_CTRL;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), false);
     }
     if ((mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::SHIFT) {
-        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, true);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_SHIFT;
     } else {
-        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), false);
     }
 
     vislib::sys::KeyCode keycode(cleanKey);

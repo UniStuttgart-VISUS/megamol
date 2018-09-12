@@ -16,6 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/view/AbstractInputScope.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
@@ -31,7 +32,7 @@ namespace view {
     /**
      * Abstract base class of rendering views
      */
-    class MEGAMOLCORE_API AbstractView : public Module {
+    class MEGAMOLCORE_API AbstractView : public Module, public AbstractInputScope  {
     public:
 
         /**
@@ -164,7 +165,7 @@ namespace view {
          * @param mod The input modifier to be set.
          * @param down The new state of the input modifier.
          */
-        virtual void SetInputModifier(mmcInputModifier mod, bool down) = 0;
+        virtual void SetInputModifier(core::view::Modifiers mod, bool down) = 0;
 
         /**
          * Answers the desired window position configuration of this view.

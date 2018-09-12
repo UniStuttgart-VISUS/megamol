@@ -443,7 +443,7 @@ void view::SplitView::SetCursor2DPosition(float x, float y) {
 /*
  * view::SplitView::SetInputModifier
  */
-void view::SplitView::SetInputModifier(mmcInputModifier mod, bool down) {
+void view::SplitView::SetInputModifier(view::Modifiers mod, bool down) {
     CallRenderView *crv = this->render1();
     if (crv != NULL) {
         crv->SetInputModifier(mod, down);

@@ -691,12 +691,12 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
  * mmcSetInputModifier
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
-        mmcInputModifier mod, bool down) {
+        mmcInputModifiers mod, bool down) {
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->SetInputModifier(mod, down);
+        view->View()->SetInputModifier(static_cast<megamol::core::view::Modifiers>(mod), down);
     }
 }
 

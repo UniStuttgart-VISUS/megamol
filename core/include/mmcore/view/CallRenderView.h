@@ -14,7 +14,8 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutput.h" 
+#include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
 
@@ -156,7 +157,7 @@ namespace view {
          *
          * @return The input modifier
          */
-        inline mmcInputModifier InputModifier(void) const {
+        inline Modifiers InputModifier(void) const {
             return this->mod;
         }
 
@@ -294,7 +295,7 @@ namespace view {
          * @param mod The input modifier
          * qparam down The down flag
          */
-        inline void SetInputModifier(mmcInputModifier mod, bool down) {
+        inline void SetInputModifier(Modifiers mod, bool down) {
             this->mod = mod;
             this->down = down;
         }
@@ -495,7 +496,7 @@ namespace view {
         float y;
 
         /** The input modifier to be set */
-        mmcInputModifier mod;
+        Modifiers mod;
 
     };
 #ifdef _WIN32

@@ -137,7 +137,7 @@ void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
 /*
  * cluster::AbstractClusterView::SetInputModifier
  */
-void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
+void cluster::AbstractClusterView::SetInputModifier(view::Modifiers mod, bool down) {
     // intentionally empty to disallow local user input
 }
 
