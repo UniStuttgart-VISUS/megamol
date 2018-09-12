@@ -125,7 +125,7 @@ void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
 /*
  * view::AbstractOverrideView::SetInputModifier
  */
-void view::AbstractOverrideView::SetInputModifier(view::Modifiers mod, bool down) {
+void view::AbstractOverrideView::SetInputModifier(view::Modifier mod, bool down) {
     view::CallRenderView *crv = this->getCallRenderView();
     if (crv != NULL) {
         crv->SetInputModifier(mod, down);

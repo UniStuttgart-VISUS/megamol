@@ -821,14 +821,13 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
 /*
  * view::View3D::SetInputModifier
  */
-void view::View3D::SetInputModifier(view::Modifiers mod, bool down) {
+void view::View3D::SetInputModifier(view::Modifier mod, bool down) {
     unsigned int modId = 0;
-    if (mod.test(core::view::Modifier::SHIFT)) {
+    if (mod == core::view::Modifier::SHIFT) {
         modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
-    } else if (mod.test(core::view::Modifier::CTRL)) {
+    } else if (mod == core::view::Modifier::CTRL) {
         modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
-    }
-    else if (mod.test(core::view::Modifier::ALT)) {
+    } else if (mod == core::view::Modifier::ALT) {
         modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
     }
     this->modkeys.SetModifierState(modId, down);

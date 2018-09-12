@@ -22,40 +22,28 @@ void ViewUILayer::OnResize(int w, int h) {
 }
 
 bool ViewUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    // TODO: NYI
-    return false;
+    return ::mmcSendKeyEvent(hView,
+		static_cast<mmcInputKey>(key),
+		static_cast<mmcInputKeyAction>(action),
+		static_cast<mmcInputModifiers>(mods.toInt()));
 }
 
 bool ViewUILayer::OnChar(unsigned int codePoint) {
-    // TODO: NYI
-    return false;
-}
-
-bool ViewUILayer::OnMouseMove(double x, double y) {
-    ::mmcSet2DMousePosition(hView, static_cast<float>(x), static_cast<float>(y));
-    return false;
+    return ::mmcSendCharEvent(hView, codePoint);
 }
 
 bool ViewUILayer::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    // modifiers
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), mods.test(core::view::Modifier::SHIFT));
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), mods.test(core::view::Modifier::CTRL));
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), mods.test(core::view::Modifier::ALT));
-
-    // button states and infos stuff
-    unsigned int btn = static_cast<unsigned int>(button);
-    ::mmcSet2DMouseButton(hView, btn, action == core::view::MouseButtonAction::PRESS);
-
-
-    /*
-    Idee
-    mmcSendInput(hView, inputs, inputs.length() * sizeof(input))
-    */
-    return action == core::view::MouseButtonAction::PRESS;
+    return ::mmcSendMouseButtonEvent(hView, 
+		static_cast<mmcInputButton>(button), 
+		static_cast<mmcInputButtonAction>(action),
+        static_cast<mmcInputModifiers>(mods.toInt()));
 }
 
-bool ViewUILayer::OnMouseScroll(double x, double y) {
-    // TODO: NYI
-    return false;
+bool ViewUILayer::OnMouseMove(double x, double y) {
+    return ::mmcSendMouseMoveEvent(hView, static_cast<float>(x), static_cast<float>(y));
+}
+
+bool ViewUILayer::OnMouseScroll(double dx, double dy) {
+    return ::mmcSendMouseScrollEvent(hView, static_cast<float>(dx), static_cast<float>(dy));
 }

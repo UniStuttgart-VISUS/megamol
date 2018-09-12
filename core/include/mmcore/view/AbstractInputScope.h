@@ -21,9 +21,9 @@ class AbstractInputScope {
 public:
     virtual bool OnKey(Key key, KeyAction action, Modifiers mods) { return false; }
     virtual bool OnChar(unsigned int codePoint) { return false; }
-    virtual bool OnMouseMove(double x, double y) { return false; }
     virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) { return false; }
-    virtual bool OnMouseScroll(double x, double y) { return false; }
+    virtual bool OnMouseMove(double x, double y) { return false; }
+    virtual bool OnMouseScroll(double dx, double dy) { return false; }
 
 protected:
     AbstractInputScope() = default;

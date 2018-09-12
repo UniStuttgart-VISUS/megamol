@@ -163,32 +163,31 @@ enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1 };
 
 class Modifiers {
-    std::bitset<3> bits;
-
-    inline typename std::underlying_type<Modifier>::type asBits(Modifier mod) const {
-        return static_cast<typename std::underlying_type<Modifier>::type>(mod);
-    }
+    typedef std::bitset<3> Bits;
+    Bits bits;
 
 public:
     Modifiers() {}
 
-    Modifiers(Modifier mod) : bits(asBits(mod)) {}
+    Modifiers(Modifier mod) : bits(static_cast<typename std::underlying_type<Modifier>::type>(mod)) {}
 
     explicit Modifiers(int bits) : bits(bits) {}
 
     inline int toInt() { return static_cast<int>(bits.to_ulong()); }
 
-    inline bool test(Modifier mod) const { return bits.test(asBits(mod)); }
-
     inline bool none() const { return bits.none(); }
 
+    inline bool test(Modifier mod) const { return (bits & Modifiers(mod).bits).any(); }
+
     inline Modifiers& reset(Modifier mod) {
-        bits.reset(asBits(mod));
+        Modifiers mask(mod);
+        bits ^= mask.bits;
         return *this;
     }
 
     inline Modifiers& set(Modifier mod) {
-        bits.set(asBits(mod));
+        Modifiers mask(mod);
+        bits |= mask.bits;
         return *this;
     }
 

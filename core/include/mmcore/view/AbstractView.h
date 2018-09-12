@@ -148,7 +148,8 @@ namespace view {
          * @param button The button.
          * @param down Flag whether the button is pressed, or not.
          */
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down) = 0;
+		[[deprecated("Use AbstractInputScope instead")]]
+        virtual void SetCursor2DButtonState(unsigned int btn, bool down) {}
 
         /**
          * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
@@ -157,7 +158,8 @@ namespace view {
          * @param x The x coordinate
          * @param y The y coordinate
          */
-        virtual void SetCursor2DPosition(float x, float y) = 0;
+		[[deprecated("Use AbstractInputScope instead")]]
+        virtual void SetCursor2DPosition(float x, float y) {}
 
         /**
          * Sets the state of an input modifier.
@@ -165,7 +167,8 @@ namespace view {
          * @param mod The input modifier to be set.
          * @param down The new state of the input modifier.
          */
-        virtual void SetInputModifier(core::view::Modifiers mod, bool down) = 0;
+		[[deprecated("Use AbstractInputScope instead")]]
+        virtual void SetInputModifier(core::view::Modifier mod, bool down) {}
 
         /**
          * Answers the desired window position configuration of this view.
@@ -243,6 +246,10 @@ namespace view {
          *               false means unfreeze
          */
         virtual void UpdateFreeze(bool freeze) = 0;
+
+		virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+
+        virtual bool OnMouseMove(double x, double y) override;
 
     protected:
 

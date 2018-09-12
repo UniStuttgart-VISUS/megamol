@@ -148,6 +148,23 @@ bool view::AbstractView::OnRenderView(Call& call) {
 }
 
 
+bool megamol::core::view::AbstractView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+	// Ugly mapping to deprecated functions (can be removed some day).
+    auto down = action == core::view::MouseButtonAction::PRESS;
+    this->SetInputModifier(core::view::Modifier::SHIFT, mods.test(core::view::Modifier::SHIFT));
+    this->SetInputModifier(core::view::Modifier::CTRL, mods.test(core::view::Modifier::CTRL));
+    this->SetInputModifier(core::view::Modifier::ALT, mods.test(core::view::Modifier::ALT));
+    this->SetCursor2DButtonState(static_cast<unsigned int>(button), down);
+    return down;
+}
+
+
+bool megamol::core::view::AbstractView::OnMouseMove(double x, double y) {
+	// Ugly mapping to deprecated functions (can be removed some day).
+    this->SetCursor2DPosition(x, y);
+    return false;
+}
+
 /*
  * view::AbstractView::desiredWindowPosition
  */

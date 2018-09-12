@@ -72,24 +72,14 @@ bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action
     cleanKey = cleanKey & ~vislib::sys::KeyCode::KEY_MOD;
 
     if (mods.test(core::view::Modifier::ALT)) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_ALT;
-    } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), false);
     }
     if (mods.test(core::view::Modifier::CTRL)) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_CTRL;
-    } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), false);
     }
     if (mods.test(core::view::Modifier::SHIFT)) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_SHIFT;
-    } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), false);
     }
-
     vislib::sys::KeyCode keycode(cleanKey);
 
     auto hotkey = hotkeys.find(keycode);

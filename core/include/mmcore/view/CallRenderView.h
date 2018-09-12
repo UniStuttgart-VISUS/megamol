@@ -157,7 +157,7 @@ namespace view {
          *
          * @return The input modifier
          */
-        inline Modifiers InputModifier(void) const {
+        inline Modifier InputModifier(void) const {
             return this->mod;
         }
 
@@ -295,7 +295,8 @@ namespace view {
          * @param mod The input modifier
          * qparam down The down flag
          */
-        inline void SetInputModifier(Modifiers mod, bool down) {
+        [[deprecated("This is utterly bad design and to be replaced by something AbstractInputScope-y")]]
+        inline void SetInputModifier(Modifier mod, bool down) {
             this->mod = mod;
             this->down = down;
         }
@@ -496,7 +497,7 @@ namespace view {
         float y;
 
         /** The input modifier to be set */
-        Modifiers mod;
+        Modifier mod;
 
     };
 #ifdef _WIN32
