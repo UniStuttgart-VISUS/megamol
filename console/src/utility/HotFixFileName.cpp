@@ -62,7 +62,7 @@ utility::HotFixFileName::~HotFixFileName() {
 }
 
 bool utility::HotFixFileName::OnKey(core::view::Key key,  core::view::KeyAction action, core::view::Modifiers mods) {
-    if (((key == core::view::Key::KEY_F)) && (action == core::view::KeyAction::PRESS) && (mods == core::view::Modifiers::NONE)) {
+    if (((key == core::view::Key::KEY_F)) && (action == core::view::KeyAction::PRESS) && mods.none()) {
         ::mmcEnumParametersA(hCore, fixFileNameEnum, hCore);
         return true;
     }

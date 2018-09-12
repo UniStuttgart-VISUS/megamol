@@ -71,23 +71,23 @@ bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action
 
     cleanKey = cleanKey & ~vislib::sys::KeyCode::KEY_MOD;
 
-    if ((mods & core::view::Modifiers::ALT) == core::view::Modifiers::ALT) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), true);
+    if (mods.test(core::view::Modifier::ALT)) {
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_ALT;
     } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), false);
     }
-    if ((mods & core::view::Modifiers::CTRL) == core::view::Modifiers::CTRL) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), true);
+    if (mods.test(core::view::Modifier::CTRL)) {
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_CTRL;
     } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), false);
     }
-    if ((mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::SHIFT) {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), true);
+    if (mods.test(core::view::Modifier::SHIFT)) {
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), true);
         cleanKey |= vislib::sys::KeyCode::KEY_MOD_SHIFT;
     } else {
-        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), false);
+        ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), false);
     }
 
     vislib::sys::KeyCode keycode(cleanKey);

@@ -39,9 +39,9 @@ bool ViewUILayer::OnMouseMove(double x, double y) {
 bool ViewUILayer::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     // modifiers
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), (mods & core::view::Modifiers::ALT) == core::view::Modifiers::ALT);
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::CTRL), (mods & core::view::Modifiers::CTRL) == core::view::Modifiers::CTRL);
-    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifiers::ALT), (mods & core::view::Modifiers::SHIFT) == core::view::Modifiers::SHIFT);
+    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::SHIFT), mods.test(core::view::Modifier::SHIFT));
+    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::CTRL), mods.test(core::view::Modifier::CTRL));
+    ::mmcSetInputModifier(hView, static_cast<mmcInputModifiers>(core::view::Modifier::ALT), mods.test(core::view::Modifier::ALT));
 
     // button states and infos stuff
     unsigned int btn = static_cast<unsigned int>(button);

@@ -432,19 +432,12 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
  * view::View2D::SetInputModifier
  */
 void view::View2D::SetInputModifier(view::Modifiers mod, bool down) {
-    switch (mod) {
-        case core::view::Modifiers::SHIFT:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_SHIFT_DOWN, down);
-            break;
-        case core::view::Modifiers::CTRL:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_CTRL_DOWN, down);
-            break;
-        case core::view::Modifiers::ALT:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_ALT_DOWN, down);
-            break;
+    if (mod.test(core::view::Modifier::SHIFT)) {
+        view::MouseFlagsSetFlag(this->mouseFlags, view::MOUSEFLAG_MODKEY_SHIFT_DOWN, down);
+    } else if (mod.test(core::view::Modifier::CTRL)) {
+        view::MouseFlagsSetFlag(this->mouseFlags, view::MOUSEFLAG_MODKEY_CTRL_DOWN, down);
+    } else if (mod.test(core::view::Modifier::ALT)) {
+        view::MouseFlagsSetFlag(this->mouseFlags, view::MOUSEFLAG_MODKEY_ALT_DOWN, down);
     }
 }
 

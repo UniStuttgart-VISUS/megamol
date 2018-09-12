@@ -377,10 +377,10 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
     case GLFW_RELEASE: action = core::view::KeyAction::RELEASE; break;
     }
 
-    core::view::Modifiers mods = core::view::Modifiers::NONE;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods = mods | core::view::Modifiers::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods = core::view::Modifiers::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods = core::view::Modifiers::ALT;
+    core::view::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |=  core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
         if (!uil->Enabled()) continue;
@@ -420,10 +420,10 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
         (a == GLFW_PRESS) ? core::view::MouseButtonAction::PRESS
             : core::view::MouseButtonAction::RELEASE;
 
-    core::view::Modifiers mods = core::view::Modifiers::NONE;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods = mods | core::view::Modifiers::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods = core::view::Modifiers::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods = core::view::Modifiers::ALT;
+    core::view::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);

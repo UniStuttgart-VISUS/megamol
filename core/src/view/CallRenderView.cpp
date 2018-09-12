@@ -78,7 +78,7 @@ view::CallRenderView::CallRenderView(void) : AbstractCallRender(), RenderOutput(
         flagProj(false), flagTile(false), height(1.0f),
         projType(vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
         tileH(1.0f), tileW(1.0f), tileX(0.0f), tileY(0.0f), width(1.0f),
-        btn(0), down(false), x(0.0f), y(0.0f), mod(Modifiers::ALT) {
+        btn(0), down(false), x(0.0f), y(0.0f), mod(Modifier::ALT) {
     // intentionally empty
 }
 

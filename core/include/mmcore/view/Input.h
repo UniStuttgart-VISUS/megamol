@@ -11,6 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <bitset>
 #include <type_traits>
 
 namespace megamol {
@@ -159,21 +160,67 @@ enum class MouseButton : int {
 
 enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 
-enum class Modifiers : int { NONE = 0, ALT = 4, CTRL = 2, SHIFT = 1 };
+enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1 };
 
+class Modifiers {
+    std::bitset<3> bits;
+
+    inline typename std::underlying_type<Modifier>::type asBits(Modifier mod) const {
+        return static_cast<typename std::underlying_type<Modifier>::type>(mod);
+    }
+
+public:
+    Modifiers() {}
+
+    Modifiers(Modifier mod) : bits(asBits(mod)) {}
+
+    explicit Modifiers(int bits) : bits(bits) {}
+
+    inline int toInt() { return static_cast<int>(bits.to_ulong()); }
+
+    inline bool test(Modifier mod) const { return bits.test(asBits(mod)); }
+
+    inline bool none() const { return bits.none(); }
+
+    inline Modifiers& reset(Modifier mod) {
+        bits.reset(asBits(mod));
+        return *this;
+    }
+
+    inline Modifiers& set(Modifier mod) {
+        bits.set(asBits(mod));
+        return *this;
+    }
+
+    inline Modifiers& operator|=(const Modifiers& other) {
+        bits |= other.bits;
+        return *this;
+    }
+
+    inline Modifiers& operator&=(const Modifiers& other) {
+        bits &= other.bits;
+        return *this;
+    }
+
+    inline Modifiers& operator^=(const Modifiers& other) {
+        bits = other.bits;
+        return *this;
+    }
+};
 
 inline Modifiers operator|(Modifiers lhs, Modifiers rhs) {
-    return static_cast<Modifiers>(static_cast<std::underlying_type<Modifiers>::type>(lhs) |
-                                  static_cast<std::underlying_type<Modifiers>::type>(rhs));
+    Modifiers ans = lhs;
+    return (ans |= rhs);
 }
 
 inline Modifiers operator&(Modifiers lhs, Modifiers rhs) {
-    return static_cast<Modifiers>(static_cast<std::underlying_type<Modifiers>::type>(lhs) &
-                                  static_cast<std::underlying_type<Modifiers>::type>(rhs));
+    Modifiers ans = lhs;
+    return (ans &= rhs);
 }
 
-inline Modifiers operator~(Modifiers mod) {
-    return static_cast<Modifiers>(~static_cast<std::underlying_type<Modifiers>::type>(mod));
+inline Modifiers operator^(Modifiers lhs, Modifiers rhs) {
+    Modifiers ans = lhs;
+    return (ans ^= rhs);
 }
 
 } /* end namespace view */

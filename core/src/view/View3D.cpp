@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -24,6 +23,7 @@
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/graphics/CameraParamsStore.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
@@ -504,9 +504,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (! (*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
+    if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.", this->FullName().PeekBuffer());
+        // vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
+        // this->FullName().PeekBuffer());
         frameIsNew = true;
     } else {
         frameIsNew = false;
@@ -822,18 +823,13 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
  */
 void view::View3D::SetInputModifier(view::Modifiers mod, bool down) {
     unsigned int modId = 0;
-    switch (mod) {
-    case core::view::Modifiers::SHIFT:
+    if (mod.test(core::view::Modifier::SHIFT)) {
         modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
-        break;
-    case core::view::Modifiers::CTRL:
+    } else if (mod.test(core::view::Modifier::CTRL)) {
         modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
-        break;
-    case core::view::Modifiers::ALT:
+    }
+    else if (mod.test(core::view::Modifier::ALT)) {
         modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
-        break;
-    default:
-        return;
     }
     this->modkeys.SetModifierState(modId, down);
 }
