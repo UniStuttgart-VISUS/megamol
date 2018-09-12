@@ -13,7 +13,7 @@
 #include "vislib/sys/Log.h"
 #include "utility/ConfigHelper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "ViewMouseUILayer.h"
+#include "ViewUILayer.h"
 #include "ButtonParamUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
 #ifdef HAS_ANTTWEAKBAR
@@ -234,7 +234,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     w->AddUILayer(atbLayer);
     w->AddUILayer(std::make_shared<gl::ATBToggleHotKeyUILayer>(*w.get(), *atbLayer.get()));
 #endif /* HAS_ANTTWEAKBAR */
-    w->AddUILayer(std::make_shared<ViewMouseUILayer>(*w.get(), w->Handle()));
+    w->AddUILayer(std::make_shared<ViewUILayer>(*w.get(), w->Handle()));
     std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(*w.get(), hCore, w->Handle());
     w->AddUILayer(btnLayer);
 #ifdef HAS_ANTTWEAKBAR

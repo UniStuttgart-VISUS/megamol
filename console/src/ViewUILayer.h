@@ -14,10 +14,10 @@ namespace console {
     /**
      * This UI layer propagates mouse events to the connected (core) view
      */
-    class ViewMouseUILayer : public AbstractUILayer {
+    class ViewUILayer : public AbstractUILayer {
     public:
-        ViewMouseUILayer(gl::Window& wnd, void * viewHandle);
-        virtual ~ViewMouseUILayer();
+        ViewUILayer(gl::Window& wnd, void * viewHandle);
+        virtual ~ViewUILayer();
 
         virtual void OnResize(int w, int h);
 
