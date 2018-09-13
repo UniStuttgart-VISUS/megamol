@@ -69,19 +69,52 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
 }
 
 bool megamol::gui::GUIRenderer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    return false;
+    ImGuiIO& io = ImGui::GetIO();
+    auto keyIndex = static_cast<size_t>(key); // TODO: verify mapping!
+    switch (action) {
+    case core::view::KeyAction::PRESS:
+        io.KeysDown[keyIndex] = true;
+        break;
+    case core::view::KeyAction::RELEASE:
+        io.KeysDown[keyIndex] = false;
+        break;
+    default:
+        break;
+    }
+    io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
+    io.KeyShift = mods.test(core::view::Modifier::SHIFT);
+    io.KeyAlt = mods.test(core::view::Modifier::ALT);
+    // io.KeySuper =  mods.test(core::view::Modifier::SUPER)
+    return true;
 }
 
-bool megamol::gui::GUIRenderer::OnChar(unsigned int codePoint) { return false; }
+bool megamol::gui::GUIRenderer::OnChar(unsigned int codePoint) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
+    return true;
+}
 
 bool megamol::gui::GUIRenderer::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    return false;
+    bool down = (action == core::view::MouseButtonAction::PRESS);
+    auto buttonIndex = static_cast<size_t>(button);
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseDown[buttonIndex] = down;
+    return true;
 }
 
-bool megamol::gui::GUIRenderer::OnMouseMove(double x, double y) { return false; }
+bool megamol::gui::GUIRenderer::OnMouseMove(double x, double y) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.MousePos = ImVec2(x, y);
+    return true;
+}
 
-bool megamol::gui::GUIRenderer::OnMouseScroll(double dx, double dy) { return false; }
+bool megamol::gui::GUIRenderer::OnMouseScroll(double dx, double dy) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseWheelH += (float)dx;
+    io.MouseWheel += (float)dy;
+    return true;
+}
 
 void GUIRenderer::drawMainMenu() {
     // TODO: this is still mockup stuff...
