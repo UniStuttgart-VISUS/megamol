@@ -142,35 +142,6 @@ namespace view {
         virtual void Resize(unsigned int width, unsigned int height) = 0;
 
         /**
-         * Sets the button state of a button of the 2d cursor. See
-         * 'vislib::graphics::Cursor2D' for additional information.
-         *
-         * @param button The button.
-         * @param down Flag whether the button is pressed, or not.
-         */
-		[[deprecated("Use AbstractInputScope instead")]]
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down) {}
-
-        /**
-         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-         * for additional information.
-         *
-         * @param x The x coordinate
-         * @param y The y coordinate
-         */
-		[[deprecated("Use AbstractInputScope instead")]]
-        virtual void SetCursor2DPosition(float x, float y) {}
-
-        /**
-         * Sets the state of an input modifier.
-         *
-         * @param mod The input modifier to be set.
-         * @param down The new state of the input modifier.
-         */
-		[[deprecated("Use AbstractInputScope instead")]]
-        virtual void SetInputModifier(core::view::Modifier mod, bool down) {}
-
-        /**
          * Answers the desired window position configuration of this view.
          *
          * @param x To receive the coordinate of the upper left corner
@@ -246,10 +217,6 @@ namespace view {
          *               false means unfreeze
          */
         virtual void UpdateFreeze(bool freeze) = 0;
-
-		virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
-
-        virtual bool OnMouseMove(double x, double y) override;
 
     protected:
 

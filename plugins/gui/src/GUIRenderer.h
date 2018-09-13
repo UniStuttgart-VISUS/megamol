@@ -44,28 +44,24 @@ public:
     virtual ~GUIRenderer();
 
 protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create();
+    virtual bool create() override;
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release();
+    virtual void release() override;
 
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool Render(core::view::CallRender2D& call);
+    virtual bool Render(core::view::CallRender2D& call) override;
 
     virtual bool GetExtents(core::view::CallRender2D& call) { return false; }
+
+    virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
+
+    virtual bool OnChar(unsigned int codePoint) override;
+
+    virtual bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    virtual bool OnMouseMove(double x, double y) override;
+
+    virtual bool OnMouseScroll(double dx, double dy) override;
 
 private:
     /**

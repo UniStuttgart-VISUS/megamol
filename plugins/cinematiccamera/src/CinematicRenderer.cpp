@@ -53,7 +53,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box.")
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."), 
+	isSelecting(false)
     {
 
     // init variables
@@ -464,7 +465,7 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d->MouseSelection()) {
+    if (this->isSelecting) {
         if (this->toggleManipulator == 0) { 
             midLabel = "KEYFRAME manipulation (keyframe position, spline control point)";
         } else {// if (this->toggleManipulator == 1) { 
@@ -595,6 +596,10 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] Pointer to keyframe array is nullptr.");
         return false;
     }
+
+	// isSelecting was MouseSelection previously - semantics are guessed, thus re-implementation using 
+	// AbstractInputScope is strongly advised.
+    isSelecting = (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN);
 
     // on leftclick
     if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {

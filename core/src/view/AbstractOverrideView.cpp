@@ -97,41 +97,41 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 }
 
 
-/*
- * view::AbstractOverrideView::SetCursor2DButtonState
- */
-void view::AbstractOverrideView::SetCursor2DButtonState(unsigned int btn, bool down) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        crv->SetMouseButton(btn, down);
-        (*crv)(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
-    }
-}
-
-
-/*
- * view::AbstractOverrideView::SetCursor2DPosition
- */
-void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        this->packMouseCoordinates(x, y);
-        crv->SetMousePosition(x, y);
-        (*crv)(view::CallRenderView::CALL_SETCURSOR2DPOSITION);
-    }
-}
-
-
-/*
- * view::AbstractOverrideView::SetInputModifier
- */
-void view::AbstractOverrideView::SetInputModifier(view::Modifier mod, bool down) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        crv->SetInputModifier(mod, down);
-        (*crv)(view::CallRenderView::CALL_SETINPUTMODIFIER);
-    }
-}
+///*
+// * view::AbstractOverrideView::SetCursor2DButtonState
+// */
+//void view::AbstractOverrideView::SetCursor2DButtonState(unsigned int btn, bool down) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        crv->SetMouseButton(btn, down);
+//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
+//    }
+//}
+//
+//
+///*
+// * view::AbstractOverrideView::SetCursor2DPosition
+// */
+//void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        this->packMouseCoordinates(x, y);
+//        crv->SetMousePosition(x, y);
+//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DPOSITION);
+//    }
+//}
+//
+//
+///*
+// * view::AbstractOverrideView::SetInputModifier
+// */
+//void view::AbstractOverrideView::SetInputModifier(view::Modifier mod, bool down) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        crv->SetInputModifier(mod, down);
+//        (*crv)(view::CallRenderView::CALL_SETINPUTMODIFIER);
+//    }
+//}
 
 
 /*

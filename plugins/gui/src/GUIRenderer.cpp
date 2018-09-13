@@ -68,6 +68,21 @@ bool GUIRenderer::Render(core::view::CallRender2D& call) {
     return true;
 }
 
+bool megamol::gui::GUIRenderer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+    return false;
+}
+
+bool megamol::gui::GUIRenderer::OnChar(unsigned int codePoint) { return false; }
+
+bool megamol::gui::GUIRenderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    return false;
+}
+
+bool megamol::gui::GUIRenderer::OnMouseMove(double x, double y) { return false; }
+
+bool megamol::gui::GUIRenderer::OnMouseScroll(double dx, double dy) { return false; }
+
 void GUIRenderer::drawMainMenu() {
     // TODO: this is still mockup stuff...
     bool a, b, c;

@@ -13,17 +13,13 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
 using vislib::sys::Log;
-
-
-
-
-
 
 
 /*
@@ -147,24 +143,6 @@ bool view::AbstractView::OnRenderView(Call& call) {
         "AbstractView::OnRenderView", __FILE__, __LINE__);
 }
 
-
-bool megamol::core::view::AbstractView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-	// Ugly mapping to deprecated functions (can be removed some day).
-    auto down = action == core::view::MouseButtonAction::PRESS;
-    this->SetInputModifier(core::view::Modifier::SHIFT, mods.test(core::view::Modifier::SHIFT));
-    this->SetInputModifier(core::view::Modifier::CTRL, mods.test(core::view::Modifier::CTRL));
-    this->SetInputModifier(core::view::Modifier::ALT, mods.test(core::view::Modifier::ALT));
-    this->SetCursor2DButtonState(static_cast<unsigned int>(button), down);
-    return down;
-}
-
-
-bool megamol::core::view::AbstractView::OnMouseMove(double x, double y) {
-	// Ugly mapping to deprecated functions (can be removed some day).
-    this->SetCursor2DPosition(x, y);
-    return false;
-}
-
 /*
  * view::AbstractView::desiredWindowPosition
  */
@@ -273,7 +251,8 @@ void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
 bool view::AbstractView::onSetCursor2DButtonState(Call& call) {
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
-    this->SetCursor2DButtonState(crv->MouseButton(), crv->MouseButtonDown());
+	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
+    //this->SetCursor2DButtonState(crv->MouseButton(), crv->MouseButtonDown());
     return true;
 }
 
@@ -285,10 +264,11 @@ bool view::AbstractView::onSetCursor2DPosition(Call& call) {
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
 
-    float x = crv->MouseX();
-    float y = crv->MouseY();
-    this->unpackMouseCoordinates(x, y);
-    this->SetCursor2DPosition(x, y);
+	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
+    //float x = crv->MouseX();
+    //float y = crv->MouseY();
+    //this->unpackMouseCoordinates(x, y);
+    //this->SetCursor2DPosition(x, y);
 
     return true;
 }
@@ -300,7 +280,8 @@ bool view::AbstractView::onSetCursor2DPosition(Call& call) {
 bool view::AbstractView::onSetInputModifier(Call& call) {
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
-    this->SetInputModifier(crv->InputModifier(), crv->MouseButtonDown());
+	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
+    //this->SetInputModifier(crv->InputModifier(), crv->MouseButtonDown());
     return true;
 }
 

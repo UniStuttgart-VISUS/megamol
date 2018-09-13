@@ -12,12 +12,54 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
+#include "mmcore/view/Input.h"
 #include "mmcore/view/MouseFlags.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 
+/**
+ * Stateful input event.
+ *
+ * Note that this is a semi-shitty workaround for callbacks not having user defined signatures.
+ * See also megamol::core::view::AbstractInputScope.
+ */
+struct InputEvent {
+    enum class Tag : unsigned char { None, Key, Char, MouseButton, MouseMove, MouseScroll } tag;
+    union {
+        struct NoData {
+        } noData;
+
+        struct KeyData {
+            Key key;
+            KeyAction action;
+            Modifiers mods;
+        } keyData;
+
+        struct CharData {
+            unsigned int codePoint;
+        } charData;
+
+        struct MouseButtonData {
+            MouseButton button;
+            MouseButtonAction action;
+            Modifiers mods;
+        } mouseButtonData;
+
+        struct MouseMoveData {
+            double x;
+            double y;
+        } mouseMoveData;
+
+        struct MouseScrollData {
+            double dx;
+            double dy;
+        } mouseScrollData;
+    };
+
+    InputEvent() : tag(Tag::None), noData() {}
+};
 
 /**
  * Base class of input calls
@@ -60,60 +102,26 @@ public:
 #undef CaseFunction
     }
 
-	/** Ctor. */
-    InputCall() : mouseX(0.0f), mouseY(0.0f), mouseFlags(0) {}
+    /** Ctor. */
+    InputCall() = default;
 
     /** Dtor. */
     virtual ~InputCall(void) = default;
 
 
     /**
-     * Answer the mouse flags
+     * Answer the stored input event.
      *
-     * @return The mouse flags
+     * @return The input event.
      */
-    inline MouseFlags GetMouseFlags(void) const { return this->mouseFlags; }
+    inline const InputEvent& GetInputEvent(void) const { return this->e; }
 
     /**
-     * Answer the mouse x coordinate in world space
+     * Stores an input event.
      *
-     * @return The mouse x coordinate in world space
+     * @return The input event.
      */
-    inline float GetMouseX(void) const { return this->mouseX; }
-
-    /**
-     * Answer the mouse y coordinate in world space
-     *
-     * @return The mouse y coordinate in world space
-     */
-    inline float GetMouseY(void) const { return this->mouseY; }
-
-    /**
-     * Sets the mouse informations.
-     *
-     * @param x The mouse x coordinate in world space
-     * @param y The mouse y coordinate in world space
-     * @param flags The mouse flags
-     */
-    inline void SetMouseInfo(float x, float y, MouseFlags flags) {
-        this->mouseX = x;
-        this->mouseY = y;
-        this->mouseFlags = flags;
-    }
-
-    /**
-     * Gets the state of the mouse selection.
-     *
-     * @return The current state of the mouse selection
-     */
-    inline bool MouseSelection(void) { return this->mouseSelection; }
-
-    /**
-     * Sets the state of the mouse selection.
-     *
-     * @param selection The current state of the mouse selection
-     */
-    inline void SetMouseSelection(bool selection) { this->mouseSelection = selection; }
+    inline void SetInputEvent(const InputEvent& evt) { this->e = evt; }
 
     /**
      * Assignment operator
@@ -124,21 +132,13 @@ public:
      */
     InputCall& operator=(const InputCall& rhs) = default;
 
-protected:
-    /** The mouse coordinates for the mouse event */
-    float mouseX, mouseY;
-
-    /** The mouse flags for the mouse event */
-    MouseFlags mouseFlags;
-
-
-    /** The current state of the mouse toggle selection */
-    bool mouseSelection;
+private:
+    InputEvent e;
 };
 
 
 } /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace core
+} // namespace megamol
 
 #endif /* MEGAMOLCORE_INPUTCALL_H_INCLUDED */
