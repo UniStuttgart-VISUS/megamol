@@ -427,7 +427,7 @@ namespace plugins {
          *
          * @param cb The callback function.
          */
-        inline void EnumParameters(std::function<void(const Module&, const param::ParamSlot&)> cb)
+        inline void EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb)
                 const {
 			 this->enumParameters(this->namespaceRoot, cb);
 		}
@@ -925,7 +925,7 @@ namespace plugins {
          *             function.
          */
         void enumParameters(ModuleNamespace::const_ptr_type path,
-			std::function<void(const Module&, const param::ParamSlot&)> cb) const;
+			std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
         /**
          * Answer the full name of the paramter 'param' if it is bound to a

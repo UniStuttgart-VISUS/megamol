@@ -1,11 +1,10 @@
 #ifndef MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
 
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-
-#include <unordered_map>
 
 namespace megamol {
 namespace gui {
@@ -77,12 +76,14 @@ private:
     /**
      * Draws a parameter for the parameter window.
      */
-    void drawParameter(const core::Module& mod, const core::param::ParamSlot& slot);
+    void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
+
+    /** The decorated renderer caller slot */
+    core::CallerSlot decoratedRendererSlot;
 
     double lastViewportTime;
 
     bool parameterWindowActive;
-    std::unordered_map<const core::param::ParamSlot*, char[256]> parameterStrings;
 };
 
 } // end namespace gui

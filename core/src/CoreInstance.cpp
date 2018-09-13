@@ -2972,7 +2972,7 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
  * megamol::core::CoreInstance::enumParameters
  */
 void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, const param::ParamSlot&)> cb) const {
+    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -2988,7 +2988,7 @@ void megamol::core::CoreInstance::enumParameters(
             AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
             se = mod->ChildList_End();
             for (si = mod->ChildList_Begin(); si != se; ++si) {
-                const param::ParamSlot* slot = dynamic_cast<const param::ParamSlot*>((*si).get());
+                param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
                 if (slot) {
 					cb(*mod, *slot);
 				}

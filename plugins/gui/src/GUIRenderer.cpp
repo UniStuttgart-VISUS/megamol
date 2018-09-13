@@ -24,7 +24,12 @@
 using namespace megamol;
 using namespace megamol::gui;
 
-GUIRenderer::GUIRenderer() : lastViewportTime(0.0) {}
+GUIRenderer::GUIRenderer()
+    : decoratedRendererSlot("decoratedRenderer", "Connects to another Renderer being decorated")
+    , lastViewportTime(0.0) {
+    this->decoratedRendererSlot.SetCompatibleCall<core::view::CallRender2DDescription>();
+    this->MakeSlotAvailable(&this->decoratedRendererSlot);
+}
 
 GUIRenderer::~GUIRenderer() { this->Release(); }
 
@@ -41,6 +46,12 @@ bool GUIRenderer::create() {
 void GUIRenderer::release() {}
 
 bool GUIRenderer::Render(core::view::CallRender2D& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender2D>();
+    if (cr != NULL) {
+        // XXX: We do not care if the decorated renderer failed, right?
+        (*cr)(core::view::CallRender2D::FnRender);
+    }
+
     auto viewportWidth = call.GetViewport().Width();
     auto viewportHeight = call.GetViewport().Height();
     auto viewportTime = call.InstanceTime();
@@ -117,7 +128,7 @@ bool megamol::gui::GUIRenderer::OnMouseScroll(double dx, double dy) {
 }
 
 void GUIRenderer::drawMainMenu() {
-    // TODO: this is still mockup stuff...
+#if 0 // TODO: this is still mockup stuff...
     bool a, b, c;
     bool d, e, f;
     if (ImGui::BeginMainMenuBar()) {
@@ -155,6 +166,7 @@ void GUIRenderer::drawMainMenu() {
         }
         ImGui::EndMainMenuBar();
     }
+#endif
 }
 
 void GUIRenderer::drawParameterWindow() {
@@ -163,7 +175,7 @@ void GUIRenderer::drawParameterWindow() {
     bool currentModOpen = false;
     const core::Module* currentMod = nullptr;
     ImGui::SetNextTreeNodeOpen(true);
-    this->GetCoreInstance()->EnumParameters([&](const auto& mod, const auto& slot) {
+    this->GetCoreInstance()->EnumParameters([&](const auto& mod, auto& slot) {
         if (currentMod != &mod) {
             currentMod = &mod;
             currentModOpen = ImGui::CollapsingHeader(mod.FullName());
@@ -176,46 +188,99 @@ void GUIRenderer::drawParameterWindow() {
     ImGui::End();
 }
 
-void GUIRenderer::drawParameter(const core::Module& mod, const core::param::ParamSlot& slot) {
+void GUIRenderer::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
     auto param = slot.Parameter();
     if (!param.IsNull()) {
-        auto valueBuffer = this->parameterStrings[&slot];
-        vislib::StringA valueString;
-        vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-        memcpy(valueBuffer, valueString, valueString.Length() + 1);
-
         auto label = slot.Name().PeekBuffer();
-
         if (auto* p = slot.Param<core::param::BoolParam>()) {
-            ImGui::Checkbox(label, reinterpret_cast<bool*>(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::Checkbox(label, &value)) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::ButtonParam>()) {
-            ImGui::Button(label);
+            // TODO: fiddle with key code (no getter and it is private - wtf?)
+            if (ImGui::Button(label)) {
+                p->setDirty();
+            }
         } else if (auto* p = slot.Param<core::param::ColorParam>()) {
-            ImGui::ColorEdit4(label, reinterpret_cast<float*>(valueBuffer));
+            core::param::ColorParam::Type value;
+            std::memcpy(value, p->Value(), sizeof(core::param::ColorParam::Type));
+            if (ImGui::ColorEdit4(label, value)) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::EnumParam>()) {
-            ImGui::BeginCombo(label, "Select...");
+            // XXX: no UTF8 fanciness required here?
+            auto map = p->getMap();
+            auto key = p->Value();
+            ImGui::BeginCombo(label, map[key].PeekBuffer());
+            auto iter = map.GetConstIterator();
+            while (iter.HasNext()) {
+                auto pair = iter.Next();
+
+                bool isSelected = (pair.Key() == key);
+                if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
+                    p->SetValue(pair.Key());
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
             ImGui::EndCombo();
-        } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
-            // TODO: easier file handling please!
-            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
         } else if (auto* p = slot.Param<core::param::FlexEnumParam>()) {
-            ImGui::BeginCombo(label, "Select...");
+            // XXX: no UTF8 fanciness required here?
+            auto value = p->Value();
+            ImGui::BeginCombo(label, value.c_str());
+            for (auto valueOption : p->getStorage()) {
+                bool isSelected = (valueOption == value);
+                if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
+                    p->SetValue(valueOption);
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
             ImGui::EndCombo();
         } else if (auto* p = slot.Param<core::param::FloatParam>()) {
-            ImGui::InputFloat(label, reinterpret_cast<float*>(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::InputFloat(label, &value)) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::IntParam>()) {
-            ImGui::InputInt(label, reinterpret_cast<int*>(valueBuffer));
-        } else if (auto* p = slot.Param<core::param::TernaryParam>()) {
-            // TODO: do something smart here?
-            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::InputInt(label, &value)) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::Vector2fParam>()) {
-            ImGui::InputFloat2(label, reinterpret_cast<float*>(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::InputFloat2(label, value.PeekComponents())) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::Vector3fParam>()) {
-            ImGui::InputFloat3(label, reinterpret_cast<float*>(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::InputFloat3(label, value.PeekComponents())) {
+                p->SetValue(value);
+            }
         } else if (auto* p = slot.Param<core::param::Vector4fParam>()) {
-            ImGui::InputFloat4(label, reinterpret_cast<float*>(valueBuffer));
+            auto value = p->Value();
+            if (ImGui::InputFloat4(label, value.PeekComponents())) {
+                p->SetValue(value);
+            }
         } else {
-            ImGui::InputText(slot.Name().PeekBuffer(), valueBuffer, IM_ARRAYSIZE(valueBuffer));
+            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+            vislib::StringA valueString;
+            vislib::UTF8Encoder::Encode(valueString, param->ValueString());
+
+            size_t bufferLength = std::min(4096, (valueString.Length() + 1) * 2);
+            char* buffer = new char[bufferLength];
+            memcpy(buffer, valueString, valueString.Length() + 1);
+
+            if (ImGui::InputText(slot.Name().PeekBuffer(), buffer, bufferLength)) {
+
+                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
+                param->ParseValue(valueString);
+            }
+
+            delete[] buffer;
         }
     }
 }
