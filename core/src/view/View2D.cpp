@@ -150,7 +150,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         this->ResetView();
     }
 
-    if ((*cr2d)(1)) {
+    if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
         if (this->bbox != cr2d->GetBoundingBox()
             && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
             this->ResetView();
@@ -255,7 +255,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glLineWidth(1.0f);
     }
 
-    (*cr2d)(0); // render
+    (*cr2d)(AbstractCallRender::FnRender);
 
     if (this->showSoftCursor()) {
         ::glMatrixMode(GL_PROJECTION);
@@ -284,7 +284,7 @@ void view::View2D::ResetView(void) {
     VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
 
     CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-    if ((cr2d != NULL) && ((*cr2d)(1))) {
+    if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
         this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
         this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
         if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBox().AspectRatio())) {
@@ -343,7 +343,7 @@ void view::View2D::SetCursor2DButtonState(unsigned int btn, bool down) {
             mx -= this->viewX;
             my -= this->viewY;
             cr2d->SetMouseInfo(mx, my, this->mouseFlags);
-            if ((*cr2d)(2)) {
+            if ((*cr2d)(AbstractCallRender::FnOnMouseButton)) {
                 view::MouseFlagsResetAllChanged(this->mouseFlags);
                 // mouse event consumed
                 return;
@@ -383,7 +383,7 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
             mx -= this->viewX;
             my -= this->viewY;
             cr2d->SetMouseInfo(mx, my, this->mouseFlags);
-            if ((*cr2d)(2)) {
+            if ((*cr2d)(AbstractCallRender::FnOnMouseButton)) {
                 this->mouseX = x;
                 this->mouseY = y;
                 view::MouseFlagsResetAllChanged(this->mouseFlags);
@@ -408,7 +408,7 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
         float base = 1.0f;
 
         CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-        if ((cr2d != NULL) && ((*cr2d)(1))) {
+        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
             base = cr2d->GetBoundingBox().Height();
         }
 

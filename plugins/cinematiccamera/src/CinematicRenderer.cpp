@@ -165,7 +165,7 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 	if (cr3d == nullptr) return false;
 
 	CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (!(oc == nullptr) || (!(*oc)(2))) {
+	if (!(oc == nullptr) || (!(*oc)(CallRender3D::FnGetCapabilities))) {
 		cr3d->AddCapability(oc->GetCapabilities());
 	}
 
@@ -189,7 +189,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
 	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
 	// Get bounding box of renderer.
-	if (!(*oc)(1)) return false;
+	if (!(*oc)(AbstractCallRender::FnGetExtents)) return false;
 	*cr3d = *oc;
 
     // Compute bounding box including spline (in world space) and object (in world space).
@@ -361,7 +361,7 @@ bool CinematicRenderer::Render(Call& call) {
     glPushMatrix();
 
     // Call render function of slave renderer
-    (*oc)(0);
+    (*oc)(AbstractCallRender::FnRender);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();

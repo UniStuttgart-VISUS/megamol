@@ -24,7 +24,7 @@
 using namespace megamol;
 using namespace megamol::gui;
 
-GUIRenderer::GUIRenderer() : core::view::Renderer2DModule(), lastViewportTime(0.0) {}
+GUIRenderer::GUIRenderer() : lastViewportTime(0.0) {}
 
 GUIRenderer::~GUIRenderer() { this->Release(); }
 

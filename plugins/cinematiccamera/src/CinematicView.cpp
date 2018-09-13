@@ -181,7 +181,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     view::CallRender3D *cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
     if (cr3d == nullptr) return;
-    if (!(*cr3d)(1)) return; // get extents
+    if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return;

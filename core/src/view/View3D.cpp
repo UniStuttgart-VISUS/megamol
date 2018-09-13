@@ -460,7 +460,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->stereoFocusDistSlot.ResetDirty();
     }
     if (cr3d != NULL) {
-        (*cr3d)(1); // GetExtents
+        (*cr3d)(AbstractCallRender::FnGetExtents);
         if (this->firstImg ||
             (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                 !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsObjectSpaceBBoxValid() &&
@@ -595,7 +595,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     // call for render
     if (cr3d != NULL) {
-        (*cr3d)(0);
+        (*cr3d)(AbstractCallRender::FnRender);
     }
 
     // render bounding box front
@@ -805,7 +805,7 @@ void view::View3D::SetCursor2DPosition(float x, float y) {
         if (cr3d) {
             cr3d->SetMouseInfo(
                 static_cast<float>(static_cast<int>(x)), static_cast<float>(static_cast<int>(y)), this->mouseFlags);
-            if ((*cr3d)(3)) {
+            if ((*cr3d)(InputCall::FnOnMouseButton)) {
                 this->mouseX = (float)static_cast<int>(x);
                 this->mouseY = (float)static_cast<int>(y);
                 view::MouseFlagsResetAllChanged(this->mouseFlags);

@@ -14,6 +14,7 @@
 #include "mmcore/Call.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/AbstractRenderOutput.h"
+#include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Rectangle.h"
@@ -30,8 +31,38 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API AbstractCallRender : public Call, public virtual AbstractRenderOutput {
+    class MEGAMOLCORE_API AbstractCallRender : public InputCall, public virtual AbstractRenderOutput {
     public:
+        static const unsigned int FnRender = 5;
+        static const unsigned int FnGetExtents = 6;
+
+		/**
+         * Answer the number of functions used for this call.
+         *
+         * @return The number of functions used for this call.
+         */
+        static unsigned int FunctionCount(void) {
+            ASSERT(FnRender == InputCall::FunctionCount() && "Enum has bad magic number");
+            ASSERT(FnGetExtents == InputCall::FunctionCount() + 1 && "Enum has bad magic number");
+            return InputCall::FunctionCount() + 2;
+        }
+
+        /**
+         * Answer the name of the function used for this call.
+         *
+         * @param idx The index of the function to return it's name.
+         *
+         * @return The name of the requested function.
+         */
+        static const char * FunctionName(unsigned int idx) {
+			#define CaseFunction(id) case Fn##id: return #id
+            switch (idx) {
+                CaseFunction(Render);
+                CaseFunction(GetExtents);
+                default: return InputCall::FunctionName(idx);
+            }
+			#undef CaseFunction
+        }
 
         /** Defines the type of a GPU handle specifying the GPU affinity. */
         typedef void *GpuHandleType;
@@ -40,7 +71,7 @@ namespace view {
         static const GpuHandleType NO_GPU_AFFINITY;
 
         /** Dtor. */
-        virtual ~AbstractCallRender(void);
+        virtual ~AbstractCallRender(void) = default;
 
         /**
          * Get the GPU affinity handle and convert it to its native type in

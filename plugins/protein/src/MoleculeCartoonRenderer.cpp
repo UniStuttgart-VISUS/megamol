@@ -702,14 +702,14 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
         view::CallRender3D *molrencr3d
             = this->molRendererCallerSlot.CallAs<view::CallRender3D>();
         if( molrencr3d ) {
-            (*molrencr3d)(1); // GetExtents
+            (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents);
         }
     }
     else {
         view::CallRenderDeferred3D *molrencr3d
             = this->molRendererORCallerSlot.CallAs<view::CallRenderDeferred3D>();
         if( molrencr3d ) {
-            (*molrencr3d)(1); // GetExtents
+            (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
         }
     }
 
@@ -748,7 +748,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
     view::CallRender3D *solrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
     vislib::math::Point<float, 3> solrenbbc;
     if( solrencr3d ) {
-        (*solrencr3d)(1); // GetExtents
+        (*solrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
         BoundingBoxes &solrenbb = solrencr3d->AccessBoundingBoxes();
         //this->solrenScale =  solrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
         //this->solrenTranslate = ( solrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;

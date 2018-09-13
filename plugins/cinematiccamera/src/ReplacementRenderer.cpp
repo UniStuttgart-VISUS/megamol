@@ -100,7 +100,7 @@ bool ReplacementRenderer::GetCapabilities(Call& call) {
     }
 
     CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-    if (!(oc == NULL) || (!(*oc)(2))) {
+    if (!(oc == NULL) || (!(*oc)(core::view::CallRender3D::FnGetCapabilities))) {
         cr3d->AddCapability(oc->GetCapabilities());
     }
     cr3d->AddCapability(view::CallRender3D::CAP_RENDER);
@@ -123,7 +123,7 @@ bool ReplacementRenderer::GetExtents(Call& call) {
     if (oc == NULL) return false;
 
     // Get bounding box of renderer.
-    if (!(*oc)(1)) return false;
+    if (!(*oc)(view::AbstractCallRender::FnGetExtents)) return false;
     *cr3d = *oc;
 
     this->bbox = cr3d->AccessBoundingBoxes().WorldSpaceBBox();
@@ -204,7 +204,7 @@ bool ReplacementRenderer::Render(Call& call) {
     else {
         *oc = *cr3d;
         // Call render function of slave renderer
-        (*oc)(0);
+        (*oc)(view::AbstractCallRender::FnRender);
     }
 
     return true;
