@@ -86,8 +86,21 @@ namespace ngmesh {
 				PerObjectShaderParams per_object_params)
 			{
 				//TODO check if batch with same program and vertex layout already exits
+				for (auto it = m_render_batches.begin(); it != m_render_batches.end() ++it)
+				{
+					if( (it->program_name.compare(program_name) == 0) && (it->mesh_data.vertex_descriptor == vertex_descriptor) )
+					{
+						// use std::distance and iterator value type
+						int batch_idx = std::distance(m_render_batches.begin(), it);
 
-				// use std::distance and iterator value type
+						// TODO check whether there is enough space left in batch
+
+						// TODO add render task to batch
+					}
+				}
+
+				//TODO if no batch was found, create new one and add task
+
 			}
 
 			template<typename PerObjectShaderParams>

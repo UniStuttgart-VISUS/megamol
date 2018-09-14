@@ -31,6 +31,10 @@ struct VertexLayout
 		Attribute(GLint size, GLenum type, GLboolean normalized, GLsizei offset)
 			: size(size), type(type), normalized(normalized), offset(offset) {}
 
+		inline bool operator==(Attribute const& other) {
+			return ( (type == other.type) && (size == other.size) && (normalized == other.normalized) && (offset == other.offset) );
+		}
+
 		GLenum type;
 		GLint size;
 		GLboolean normalized;
@@ -42,6 +46,20 @@ struct VertexLayout
 		: stride(byte_size), attributes(attributes) {}
 	VertexLayout(GLsizei byte_size, std::vector<Attribute>&& attributes)
 		: stride(byte_size), attributes(attributes) {}
+
+	inline bool operator==(VertexLayout const& other) {
+		bool rtn = false;
+		rtn = rtn && (stride == other.stride);
+		rtn = rtn && (attributes.size() == other.attributes.size());
+
+		if (rtn)
+		{
+			for (int i = 0; i < attributes.size(); ++i)
+				rtn = rtn && (attributes[i] == other.attributes[i]);
+		}
+
+		return rtn;
+	}
 
 	GLsizei stride;
 	std::vector<Attribute> attributes;
