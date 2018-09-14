@@ -26,6 +26,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#undef min
+#undef max
 #else /* _WIN32 */
 #include <sys/types.h>
 #include <dirent.h>

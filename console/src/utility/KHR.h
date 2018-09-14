@@ -15,7 +15,7 @@
 #endif
 #include <execinfo.h>
 #else
-#include <windows.h>
+#include <Windows.h>
 #include <DbgHelp.h>
 #pragma comment(lib,"Dbghelp")
 #endif

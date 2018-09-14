@@ -10,7 +10,7 @@ if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
   # Add libcxxopts.
-  set(CXXOPTS_TAG "v2.0.0")
+  set(CXXOPTS_TAG "v2.1.1")
   add_external_project(libcxxopts_ext
     GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
     GIT_TAG ${CXXOPTS_TAG}

@@ -58,7 +58,6 @@ if(BUILD_CORE)
     DEPENDS libzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
     GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -104,6 +103,7 @@ if(BUILD_CORE)
     if(USE_INTERNAL_EXPAT)
       add_subdirectory(expat)
       set(EXPAT_LIBRARIES expat)
+      set(EXPAT_INCLUDE_DIRS "")
     else()
       find_package(EXPAT REQUIRED)
     endif()
@@ -161,7 +161,9 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib glad lua libzmq libcppzmq GLM ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(${PROJECT_NAME} 
+    PUBLIC vislib glad GLM ${EXPAT_LIBRARIES}
+    PRIVATE lua libzmq libcppzmq ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
@@ -210,4 +212,3 @@ if(BUILD_CORE)
 
   add_subdirectory(remoteconsole)
 endif(BUILD_CORE)
-

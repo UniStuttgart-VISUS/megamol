@@ -16,15 +16,13 @@
 
 #include "targetver.h"
 
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
-#include <windows.h>
-
-//#define MMXML_CHAR wchar_t
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#undef min
+#undef max
 
 #else /* _WIN32 */
 /* Linux includes */
-
 
 #include <memory.h>
 #include <pthread.h>
@@ -33,14 +31,10 @@
 #   define NULL 0
 #endif
 
-//#define MMXML_CHAR char
-
 #endif /* _WIN32 */
 
 #include <stdlib.h>
 #include "vislib/types.h"
 #include "vislib/String.h"
-
-//typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 
 #endif /* MEGAMOL_PROTEIN_STDAFX_H_INCLUDED */

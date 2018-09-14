@@ -158,7 +158,7 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
  * ConfigurationParser::StartTag
  */
 bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib, XmlReader::ParserState state,
+        const XML_Char * name, const XML_Char ** attrib, XmlReader::ParserState state,
         XmlReader::ParserState& outChildState,
         XmlReader::ParserState& outEndTagState,
         XmlReader::ParserState& outPostEndTagState) {
@@ -170,8 +170,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
     if (state == XmlReader::STATE_USER + 1) {
         if (MMXML_STRING("param").Equals(name)) {
-            const MMXML_CHAR *name = NULL;
-            const MMXML_CHAR *value = NULL;
+            const XML_Char *name = NULL;
+            const XML_Char *value = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -198,7 +198,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
     }
 
     if (MMXML_STRING("redirect").Equals(name, false)) {
-        const MMXML_CHAR *red = NULL;
+        const XML_Char *red = NULL;
         vislib::StringW redirection;
 
         // check attributs
@@ -229,7 +229,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
         if (MMXML_STRING("directory").Equals(name, false)) {
 
             unsigned int dirname = 0;
-            const MMXML_CHAR *path = NULL;
+            const XML_Char *path = NULL;
             const char *pathA = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -289,7 +289,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
     } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
         if (MMXML_STRING("appdir").Equals(name, false)) {
-            const MMXML_CHAR *path = NULL;
+            const XML_Char *path = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("path").Equals(attrib[i])) {
                     path = attrib[i + 1];
@@ -305,7 +305,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
         if (MMXML_STRING("shaderdir").Equals(name, false)) {
-            const MMXML_CHAR *path = NULL;
+            const XML_Char *path = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("path").Equals(attrib[i])) {
                     path = attrib[i + 1];
@@ -325,7 +325,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
         if (MMXML_STRING("resourcedir").Equals(name, false)) {
-            const MMXML_CHAR *path = NULL;
+            const XML_Char *path = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("path").Equals(attrib[i])) {
                     path = attrib[i + 1];
@@ -348,8 +348,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
 
     if (MMXML_STRING("plugin").Equals(name, false)) {
-        const MMXML_CHAR *path = NULL;
-        const MMXML_CHAR *name = NULL;
+        const XML_Char *path = NULL;
+        const XML_Char *name = NULL;
         bool inc = true;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("path").Equals(attrib[i])) {
@@ -363,7 +363,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
                     inc = false;
                 } else {
                     try {
-                        inc = vislib::CharTraits<MMXML_CHAR>::ParseBool(attrib[i + 1]);
+                        inc = vislib::CharTraits<XML_Char>::ParseBool(attrib[i + 1]);
                     } catch(...) {
                         vislib::StringA a(attrib[i + 1]);
                         vislib::StringA b;
@@ -460,8 +460,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
     if (MMXML_STRING("set").Equals(name, false)) {
         // general tag to set a configuration value
-        const MMXML_CHAR *name = NULL;
-        const MMXML_CHAR *value = NULL;
+        const XML_Char *name = NULL;
+        const XML_Char *value = NULL;
 
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -486,8 +486,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
     if (MMXML_STRING("instance").Equals(name)) {
         // general tag to set a configuration value
-        const MMXML_CHAR *name = NULL;
-        const MMXML_CHAR *id = NULL;
+        const XML_Char *name = NULL;
+        const XML_Char *id = NULL;
 
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -526,7 +526,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
  * ConfigurationParser::EndTag
  */
 bool ConfigurationParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, XmlReader::ParserState state,
+        const XML_Char * name, XmlReader::ParserState state,
         XmlReader::ParserState& outPostEndTagState) {
     if (ConditionalParser::EndTag(num, level, name, state, 
             outPostEndTagState)) {
@@ -658,7 +658,7 @@ void ConfigurationParser::Completed(void) {
 /*
  * ConfigurationParser::parseLevelAttribute
  */
-UINT ConfigurationParser::parseLevelAttribute(const MMXML_CHAR *attr, UINT def) {
+UINT ConfigurationParser::parseLevelAttribute(const XML_Char *attr, UINT def) {
     UINT retval = def;
     if (MMXML_STRING("error").Equals(attr, false)) {
         retval = vislib::sys::Log::LEVEL_ERROR;
@@ -680,7 +680,7 @@ UINT ConfigurationParser::parseLevelAttribute(const MMXML_CHAR *attr, UINT def) 
         retval = vislib::sys::Log::LEVEL_ALL;
     } else {
         try {
-            retval = vislib::CharTraits<MMXML_CHAR>::ParseInt(attr);
+            retval = vislib::CharTraits<XML_Char>::ParseInt(attr);
         } catch(...) {
             retval = def;
         }
