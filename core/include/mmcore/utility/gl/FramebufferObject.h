@@ -34,13 +34,8 @@ class FramebufferObject {
 public:
     /**
      * Constructor for a FramebufferObject
-     *
-     * @param width The width of the represented image
-     * @param height The height of the represented image
-     * @param has_depth True if this FBO should have a depth component, false otherwise
-     * @param has_stencil True if this FBO should have a stencil buffer, false otherwise
      */
-    FramebufferObject(int width, int height, bool has_depth = false, bool has_stencil = false);
+    FramebufferObject(void);
 
     /**
      * Destructor
@@ -119,6 +114,17 @@ public:
      * @return Returns true if the framebuffer object is complete, false otherwise.
      */
     bool checkStatus() const;
+
+    /**
+     * Creates a new Framebuffer object with the specified parameters
+     *
+     * @param width The width of the represented image
+     * @param height The height of the represented image
+     * @param has_depth True if this FBO should have a depth component, false otherwise
+     * @param has_stencil True if this FBO should have a stencil buffer, false otherwise
+     * @return True on success, false otherwise
+     */
+    bool create(int width, int height, bool has_depth = false, bool has_stencil = false);
 
     /**
      * @brief Resize the framebuffer object, i.e. it's color attachments.

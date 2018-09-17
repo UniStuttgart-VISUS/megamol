@@ -1,7 +1,7 @@
 /*
  * FramebufferObject.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
@@ -12,27 +12,8 @@ using namespace megamol::core::utility::gl;
 /*
  * FramebufferObject::FramebufferObject
  */
-FramebufferObject::FramebufferObject(int width, int height, bool has_depth, bool has_stencil)
-    : m_width(width), m_height(height) {
-    glGenFramebuffers(1, &m_handle);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
-
-    if (has_depth) {
-        glGenRenderbuffers(1, &m_depthbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_depthbuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    } else {
-        m_depthbuffer = 0;
-    }
-
-    //TODO: stencilbuffer
-    if (0 && has_stencil) {
-        has_stencil = !has_stencil;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+FramebufferObject::FramebufferObject(void) : m_width(0), m_height(0) {
+    // intentionally empty
 }
 
 /*
@@ -43,8 +24,10 @@ FramebufferObject::~FramebufferObject() {
     if (m_depthbuffer != 0) glDeleteRenderbuffers(1, &m_depthbuffer);
 
     /*	Delete framebuffer object */
-    glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
-    glDeleteFramebuffers(1, &m_handle);
+    if (m_handle != 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
+        glDeleteFramebuffers(1, &m_handle);
+    }
 }
 
 /*
@@ -171,6 +154,35 @@ void FramebufferObject::bindStencilbuffer() { glBindTexture(GL_TEXTURE_2D, m_ste
 bool FramebufferObject::checkStatus() const {
     if (glCheckFramebufferStatus(m_handle) == GL_FRAMEBUFFER_COMPLETE) return true;
     return false;
+}
+
+/*
+ * FramebufferObject::create
+ */
+bool FramebufferObject::create(int width, int height, bool has_depth, bool has_stencil) {
+    this->m_width = width;
+    this->m_height = height;
+
+    glGenFramebuffers(1, &m_handle);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
+
+    if (has_depth) {
+        glGenRenderbuffers(1, &m_depthbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_depthbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    } else {
+        m_depthbuffer = 0;
+    }
+
+    // TODO: stencilbuffer
+    if (0 && has_stencil) {
+        has_stencil = !has_stencil;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return true;
 }
 
 /*
