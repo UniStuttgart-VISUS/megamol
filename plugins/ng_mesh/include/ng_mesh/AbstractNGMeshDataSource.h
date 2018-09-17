@@ -75,31 +75,53 @@ namespace ngmesh {
 
 		public:
 			template<
-				typename VertexBufferInterator,
+				typename VertexBuffersInterator,
 				typename IndexBufferIterator,
 				typename PerObjectShaderParams>
 			void addRenderTask(
 				std::string const& program_name,
 				VertexLayout vertex_descriptor,
-				VertexBufferInterator vertex_buffer_begin, VertexBufferInterator vertex_buffer_end,
+				VertexBuffersInterator vertex_buffers_begin, VertexBuffersInterator vertex_buffers_end,
 				IndexBufferIterator index_buffer_begin, IndexBufferIterator index_buffer_end,
 				PerObjectShaderParams per_object_params)
 			{
 				//TODO check if batch with same program and vertex layout already exits
-				for (auto it = m_render_batches.begin(); it != m_render_batches.end() ++it)
+				auto it = m_render_batches.begin()
+				for (; it != m_render_batches.end() ++it)
 				{
-					if( (it->program_name.compare(program_name) == 0) && (it->mesh_data.vertex_descriptor == vertex_descriptor) )
+					size_t index_byte_size = it->mesh_data.index_type == 5123 ? 2 : (it->mesh_data.index_type == 5125 ? 4 : 0);
+					
+					bool prgm_check = it->program_name.compare(program_name) == 0;
+					bool vert_layout_check = it->mesh_data.vertex_descriptor == vertex_descriptor;
+					bool vert_buffer_cnt_check = it->mesh_data.vertex_data.size() == std::distance(vertex_buffers_begin, vertex_buffers_end);
+					bool idx_type_check = index_byte_size == sizeof(std::iterator_traits<IndexBufferIterator>::value_type);
+
+					if( prgm_check && vert_layout_check && vert_buffer_cnt_check && idx_type_check)
 					{
-						// use std::distance and iterator value type
-						int batch_idx = std::distance(m_render_batches.begin(), it);
+						// check whether there are as many seperate vertex buffers in given data as in batch
+						
 
-						// TODO check whether there is enough space left in batch
+						// check whether there is enough space left in batch
+						//size_t req_vert_byte_size = sizeof(std::iterator_traits<VertexBufferInterator>::value_type) * ;
+						size_t ava_vert_byte_size = (it->mesh_data.allocated_vertex_cnt - it->mesh_data.used_vertex_cnt) * it->mesh_data.vertex_descriptor.stride; // assume stride to equal byte size (i.e. tightly packed)
 
-						// TODO add render task to batch
+						size_t req_index_byte_size = sizeof(std::iterator_traits<IndexBufferIterator>::value_type) * std::distance(index_buffer_begin, index_buffer_end);
+						size_t ava_index_byte_size = (it->mesh_data.allocated_index_cnt - it->mesh_data.used_index_cnt) * index_byte_size;
+
+						if ((req_byte_size < ava_byte_size)&&(req_index_byte_size<ava_index_byte_size))
+						{
+							// TODO add render task to batch
+
+							int batch_idx = std::distance(m_render_batches.begin(), it);
+						}
 					}
 				}
 
 				//TODO if no batch was found, create new one and add task
+				if (it == m_render_batches.end())
+				{
+
+				}
 
 			}
 
