@@ -3,7 +3,7 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-if(NOT UNIX)
+if(MSVC)
   option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
 else()
   set(BUILD_PROTEIN_CUDA_PLUGIN OFF)
