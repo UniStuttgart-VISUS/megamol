@@ -3,7 +3,13 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
+if(NOT UNIX)
+  option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
+else()
+  set(BUILD_PROTEIN_CUDA_PLUGIN OFF)
+endif()
+
+#message("${CMAKE_CUDA_COMPILER_VERSION}")
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
@@ -18,7 +24,6 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   set(CMAKE_CUDA_STANDARD 11)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
-
 
   get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
   
