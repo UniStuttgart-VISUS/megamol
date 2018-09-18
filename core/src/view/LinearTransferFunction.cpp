@@ -8,9 +8,6 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/LinearTransferFunction.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"

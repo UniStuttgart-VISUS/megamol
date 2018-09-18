@@ -284,9 +284,20 @@ namespace plugins {
             const vislib::StringA& from, const vislib::StringA& to);
 
         /**
+         * Request instantiation of a call at the end of a chain of calls of
+         * type className. See Daisy-Chaining Paradigm.
+         */
+        bool RequestChainCallInstantiation(
+            const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
+
+        /**
          * Request setting the parameter id to the value.
          */
         bool RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
+
+        bool CreateParamGroup(const vislib::StringA& name, const int size);
+        bool RequestParamGroupValue(
+            const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value);
 
         //** do everything that is queued w.r.t. modules and calls */
         void PerformGraphUpdates();
@@ -321,6 +332,7 @@ namespace plugins {
                 || !this->pendingJobInstRequests.IsEmpty()
                 || !this->pendingCallDelRequests.IsEmpty()
                 || !this->pendingCallInstRequests.IsEmpty()
+                || !this->pendingChainCallInstRequests.IsEmpty()
                 || !this->pendingModuleDelRequests.IsEmpty()
                 || !this->pendingModuleInstRequests.IsEmpty()
                 || !this->pendingParamSetRequests.IsEmpty();
@@ -1038,6 +1050,9 @@ namespace plugins {
         /** the list of calls to be instantiated: (class,(from,to))* */
         vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingCallInstRequests;
 
+        /** the list of calls to be instantiated: (class,(from == chainStart,to))* */
+        vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> pendingChainCallInstRequests;
+
         /** the list of modules to be instantiated: (class, id)* */
         vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> pendingModuleInstRequests;
 
@@ -1051,6 +1066,18 @@ namespace plugins {
         /** the list of (parameter = value) pairs that need to be set */
         vislib::SingleLinkedList<vislib::Pair< vislib::StringA, vislib::StringA>>
             pendingParamSetRequests;
+
+        struct ParamGroup {
+            int GroupSize;
+            vislib::StringA Name;
+            vislib::Map<vislib::StringA, vislib::StringA> Requests;
+
+            bool operator==(const ParamGroup& other) const { 
+                return this->Name.Equals(other.Name);
+            }
+        };
+
+        vislib::Map<vislib::StringA, ParamGroup> pendingGroupParamSetRequests;
 
         /**
          * You need to lock this if you manipulate any pending* lists. The lists

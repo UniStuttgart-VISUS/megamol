@@ -89,7 +89,7 @@ namespace graphics {
          * limits, the parameter values may be clipped to valid values or the
          * new values will not be set.
          */
-        virtual void ApplyLimits(void) = 0;
+        virtual void ApplyLimits(bool autoFocus = true) = 0;
 
         /**
          * Answers the auto focus offset
@@ -121,27 +121,29 @@ namespace graphics {
          * Copies all values from 'src' into this object.
          *
          * @param src The source object to copy from.
+         * @param autoFocus influences the setting of the FocalDistance internally
          */
-        inline void CopyFrom(const SmartPtr<CameraParameters> src) {
-            this->CopyFrom(src.operator->());
+        inline void CopyFrom(const SmartPtr<CameraParameters> src, bool autoFocus = true) {
+            this->CopyFrom(src.operator->(), autoFocus);
         }
 
         /**
          * Copies all values from 'src' into this object.
          *
          * @param src The source object to copy from.
+         * @param autoFocus influences the setting of the FocalDistance internally
          */
-        inline void CopyFrom(const CameraParameters *src) {
+        inline void CopyFrom(const CameraParameters *src, bool autoFocus = true) {
             this->SetApertureAngle(src->ApertureAngle());
             this->SetAutoFocusOffset(src->AutoFocusOffset());
             this->SetClip(src->NearClip(), src->FarClip());
             this->SetCoordSystemType(src->CoordSystemType());
             this->SetProjection(src->Projection());
-            this->SetStereoParameters(src->StereoDisparity(), src->Eye(), src->FocalDistance());
+            this->SetStereoParameters(src->StereoDisparity(), src->Eye(), src->FocalDistance(autoFocus));
             this->SetView(src->Position(), src->LookAt(), src->Up());
             this->SetVirtualViewSize(src->VirtualViewSize());
             this->SetTileRect(src->TileRect()); // set after virtual view size
-            this->SetLimits(src->Limits()); // set as last
+            this->SetLimits(src->Limits(), autoFocus); // set as last
         }
 
         /**
@@ -370,7 +372,7 @@ namespace graphics {
          *
          * @param limits The new limits object.
          */
-        virtual void SetLimits(const SmartPtr<CameraParameterLimits>& limits) = 0;
+        virtual void SetLimits(const SmartPtr<CameraParameterLimits>& limits, bool autoFocus = true) = 0;
 
         /**
          * Sets the look-at-point of the camera in world coordinates.
