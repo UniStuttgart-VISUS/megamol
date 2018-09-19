@@ -24,16 +24,35 @@
 using namespace megamol;
 using namespace megamol::gui;
 
-GUIRenderer::GUIRenderer()
-    : decoratedRendererSlot("decoratedRenderer", "Connects to another Renderer being decorated")
+template <>
+GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
+    : decoratedRendererSlot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , lastViewportTime(0.0) {
+
     this->decoratedRendererSlot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decoratedRendererSlot);
 }
 
-GUIRenderer::~GUIRenderer() { this->Release(); }
+template <> const char* GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName(void) {
+    return "GUIRenderer2D";
+}
 
-bool GUIRenderer::create() {
+template <> const char* GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName(void) {
+    return "GUIRenderer3D";
+}
+
+template <>
+GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
+    : decoratedRendererSlot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
+    , lastViewportTime(0.0) {
+
+    this->decoratedRendererSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->decoratedRendererSlot);
+}
+
+template <class M, class C> GUIRenderer<M, C>::~GUIRenderer() { this->Release(); }
+
+template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGui::CreateContext();
     ImGui::GetIO();
 
@@ -42,44 +61,10 @@ bool GUIRenderer::create() {
     ImGui::StyleColorsDark();
     return true;
 }
+template <class M, class C> void GUIRenderer<M, C>::release() {}
 
-void GUIRenderer::release() {}
-
-bool GUIRenderer::Render(core::view::CallRender2D& call) {
-    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender2D>();
-    if (cr != NULL) {
-        // XXX: We do not care if the decorated renderer failed, right?
-        (*cr)(core::view::CallRender2D::FnRender);
-    }
-
-    auto viewportWidth = call.GetViewport().Width();
-    auto viewportHeight = call.GetViewport().Height();
-    auto viewportTime = call.InstanceTime();
-
-    // Start the frame
-    ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(viewportWidth, viewportHeight);
-    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-    io.DeltaTime = viewportTime - lastViewportTime;
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui::NewFrame();
-
-    // Construct frame, i.e., geometry and stuff.
-    // XXX: drawOtherStuff();
-    drawMainMenu();
-    drawParameterWindow();
-
-    // Render frame.
-    glViewport(0, 0, viewportWidth, viewportHeight);
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    lastViewportTime = viewportTime;
-
-    return true;
-}
-
-bool megamol::gui::GUIRenderer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+template <class M, class C>
+bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
     ImGuiIO& io = ImGui::GetIO();
     auto keyIndex = static_cast<size_t>(key); // TODO: verify mapping!
     switch (action) {
@@ -99,13 +84,14 @@ bool megamol::gui::GUIRenderer::OnKey(core::view::Key key, core::view::KeyAction
     return true;
 }
 
-bool megamol::gui::GUIRenderer::OnChar(unsigned int codePoint) {
+template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoint) {
     ImGuiIO& io = ImGui::GetIO();
     if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
     return true;
 }
 
-bool megamol::gui::GUIRenderer::OnMouseButton(
+template <class M, class C>
+bool GUIRenderer<M, C>::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
@@ -114,20 +100,20 @@ bool megamol::gui::GUIRenderer::OnMouseButton(
     return true;
 }
 
-bool megamol::gui::GUIRenderer::OnMouseMove(double x, double y) {
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2(x, y);
     return true;
 }
 
-bool megamol::gui::GUIRenderer::OnMouseScroll(double dx, double dy) {
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheelH += (float)dx;
     io.MouseWheel += (float)dy;
     return true;
 }
 
-void GUIRenderer::drawMainMenu() {
+template <class M, class C> void GUIRenderer<M, C>::drawMainMenu() {
 #if 0 // TODO: this is still mockup stuff...
     bool a, b, c;
     bool d, e, f;
@@ -169,15 +155,86 @@ void GUIRenderer::drawMainMenu() {
 #endif
 }
 
-void GUIRenderer::drawParameterWindow() {
-    ImGui::Begin("Parameters", &this->parameterWindowActive, ImGuiWindowFlags_AlwaysAutoResize);
 
-    bool currentModOpen = false;
+template <class M, class C> bool GUIRenderer<M, C>::GetExtents(C& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<C>();
+    if (cr != NULL) {
+        (*cr) = call;
+        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
+            call = (*cr);
+        }
+    }
+    return true;
+}
+
+template <>
+bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetCapabilities(core::Call& call) {
+    // Does not exist for 2D renderers.
+    return false;
+}
+
+template <>
+bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetCapabilities(core::Call& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender3D>();
+    auto* c = dynamic_cast<core::view::CallRender3D*>(&call);
+    assert(c != NULL && "GetCapabilities() invoked with bad call (interface shittiness)");
+    if (cr != NULL) {
+        (*cr) = *c;
+        if ((*cr)(core::view::CallRender3D::FnGetCapabilities)) {
+            (*c) = (*cr);
+        }
+    }
+    return true;
+}
+
+template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<C>();
+    if (cr != NULL) {
+        (*cr) = call;
+        if ((*cr)(core::view::AbstractCallRender::FnRender)) {
+            call = (*cr);
+        }
+    }
+
+    auto viewportWidth = call.GetViewport().Width();
+    auto viewportHeight = call.GetViewport().Height();
+    auto viewportTime = call.InstanceTime();
+
+    // Start the frame
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(viewportWidth, viewportHeight);
+    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+    io.DeltaTime = viewportTime - lastViewportTime;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui::NewFrame();
+
+    // Construct frame, i.e., geometry and stuff.
+    // XXX: drawOtherStuff();
+    drawMainMenu();
+    drawParameterWindow();
+
+    // Render frame.
+    glViewport(0, 0, viewportWidth, viewportHeight);
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    lastViewportTime = viewportTime;
+
+    return true;
+}
+
+template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow() {
+    ImGui::Begin("Parameters", &this->parameterWindowOpen, ImGuiWindowFlags_AlwaysAutoResize);
+
     const core::Module* currentMod = nullptr;
-    ImGui::SetNextTreeNodeOpen(true);
+    bool currentModOpen = false;
     this->GetCoreInstance()->EnumParameters([&](const auto& mod, auto& slot) {
         if (currentMod != &mod) {
             currentMod = &mod;
+            // Set to "open" by default.
+            auto headerId = ImGui::GetID(mod.FullName());
+            int headerState = ImGui::GetStateStorage()->GetInt(headerId, 1);
+            ImGui::GetStateStorage()->SetInt(headerId, headerState);
             currentModOpen = ImGui::CollapsingHeader(mod.FullName());
         }
         if (currentModOpen) {
@@ -188,7 +245,8 @@ void GUIRenderer::drawParameterWindow() {
     ImGui::End();
 }
 
-void GUIRenderer::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
+template <class M, class C>
+void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         auto label = slot.Name().PeekBuffer();
@@ -212,34 +270,35 @@ void GUIRenderer::drawParameter(const core::Module& mod, core::param::ParamSlot&
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
             auto key = p->Value();
-            ImGui::BeginCombo(label, map[key].PeekBuffer());
-            auto iter = map.GetConstIterator();
-            while (iter.HasNext()) {
-                auto pair = iter.Next();
-
-                bool isSelected = (pair.Key() == key);
-                if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
-                    p->SetValue(pair.Key());
+            if (ImGui::BeginCombo(label, map[key].PeekBuffer())) {
+                auto iter = map.GetConstIterator();
+                while (iter.HasNext()) {
+                    auto pair = iter.Next();
+                    bool isSelected = (pair.Key() == key);
+                    if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
+                        p->SetValue(pair.Key());
+                    }
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
                 }
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
-                }
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
         } else if (auto* p = slot.Param<core::param::FlexEnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto value = p->Value();
-            ImGui::BeginCombo(label, value.c_str());
-            for (auto valueOption : p->getStorage()) {
-                bool isSelected = (valueOption == value);
-                if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
-                    p->SetValue(valueOption);
+            if (ImGui::BeginCombo(label, value.c_str())) {
+                for (auto valueOption : p->getStorage()) {
+                    bool isSelected = (valueOption == value);
+                    if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
+                        p->SetValue(valueOption);
+                    }
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
                 }
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
-                }
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
         } else if (auto* p = slot.Param<core::param::FloatParam>()) {
             auto value = p->Value();
             if (ImGui::InputFloat(label, &value)) {

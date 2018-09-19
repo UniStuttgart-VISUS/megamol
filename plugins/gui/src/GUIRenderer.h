@@ -5,18 +5,19 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
 
 namespace megamol {
 namespace gui {
 
-class GUIRenderer : public core::view::Renderer2DModule {
+template <class M, class C> class GUIRenderer : public M {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) { return "GUIRenderer"; }
+    static const char* ClassName(void);
 
     /**
      * Answer a human readable description of this module.
@@ -47,10 +48,6 @@ protected:
 
     virtual void release() override;
 
-    virtual bool Render(core::view::CallRender2D& call) override;
-
-    virtual bool GetExtents(core::view::CallRender2D& call) { return false; }
-
     virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     virtual bool OnChar(unsigned int codePoint) override;
@@ -61,6 +58,13 @@ protected:
     virtual bool OnMouseMove(double x, double y) override;
 
     virtual bool OnMouseScroll(double dx, double dy) override;
+
+    virtual bool GetExtents(C& call) override;
+
+    virtual bool GetCapabilities(core::Call& call) /* override (only for 3D) */;
+
+    virtual bool Render(C& call) override;
+
 
 private:
     /**
@@ -83,8 +87,11 @@ private:
 
     double lastViewportTime;
 
-    bool parameterWindowActive;
+    bool parameterWindowOpen;
 };
+
+typedef GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D> GUIRenderer2D;
+typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIRenderer3D;
 
 } // end namespace gui
 } // end namespace megamol

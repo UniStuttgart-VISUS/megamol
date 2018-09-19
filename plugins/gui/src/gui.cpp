@@ -38,7 +38,8 @@ public:
     }
     /** Registers modules and calls */
     virtual void registerClasses(void) {
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer3D>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };

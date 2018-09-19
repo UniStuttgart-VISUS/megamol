@@ -42,7 +42,7 @@ namespace view {
          * @return The return value of the function.
          */
 		[[deprecated("Use CallRender3D version instead")]]
-        virtual bool GetCapabilities(Call& call) = 0;
+        virtual bool GetCapabilities(Call& call) { return false; };
 
 		virtual bool GetCapabilities(CallRender3D& call) { return this->GetCapabilities(call); }
 
@@ -56,9 +56,9 @@ namespace view {
          * @return The return value of the function.
          */
         [[deprecated("Use CallRender3D version instead")]]
-        virtual bool GetExtents(Call& call) = 0;
+        virtual bool GetExtents(Call& call) { return false; };
 
-		virtual bool GetExtents(CallRender3D& call) { return this->GetExtents(call); }
+		virtual bool GetExtents(CallRender3D& call) override { return this->GetExtents(call); }
 
         /**
          * The render callback.
@@ -68,9 +68,9 @@ namespace view {
          * @return The return value of the function.
          */
 		[[deprecated("Use CallRender3D version instead")]]
-        virtual bool Render(Call& call) = 0;
+        virtual bool Render(Call& call) { return false; };
 
-		virtual bool Render(CallRender3D& call) { return this->Render(call); }
+		virtual bool Render(CallRender3D& call) override { return this->Render(call); }
 
         bool GetCapabilitiesCallback(Call& call);
     };
