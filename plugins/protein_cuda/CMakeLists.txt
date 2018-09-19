@@ -3,7 +3,11 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-if(MSVC)
+include(CheckLanguage)
+
+check_language(CUDA) # check if a compiler exists
+
+if(MSVC AND CMAKE_CUDA_COMPILER)
   option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
 else()
   set(BUILD_PROTEIN_CUDA_PLUGIN OFF)
