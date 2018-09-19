@@ -5,20 +5,23 @@
 #
 include(CheckLanguage)
 
-check_language(CUDA) # check if a compiler exists
-
+check_language(CUDA)
 if(MSVC AND CMAKE_CUDA_COMPILER)
   option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
 else()
   set(BUILD_PROTEIN_CUDA_PLUGIN OFF)
 endif()
 
-#message("${CMAKE_CUDA_COMPILER_VERSION}")
-
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 if(BUILD_PROTEIN_CUDA_PLUGIN)
   project(protein_cuda LANGUAGES CXX CUDA)
+
+  string(REPLACE "." ";" CUDA_VERSION_LIST ${CMAKE_CUDA_COMPILER_VERSION})
+  list(GET CUDA_VERSION_LIST 0 CUDA_VERSION_MAJOR)
+  if(NOT CUDA_VERSION_MAJOR MATCHES 8)
+    message(FATAL_ERROR "Protein_CUDA currently only supports CUDA 8. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Protein_CUDA plugin or install the correct version of CUDA." )
+  endif()
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
