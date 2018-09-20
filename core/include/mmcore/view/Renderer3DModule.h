@@ -44,7 +44,7 @@ namespace view {
 		[[deprecated("Use CallRender3D version instead")]]
         virtual bool GetCapabilities(Call& call) { return false; };
 
-		virtual bool GetCapabilities(CallRender3D& call) { return this->GetCapabilities(call); }
+		virtual bool GetCapabilities(CallRender3D& call) { return this->GetCapabilities(static_cast<Call&>(call)); }
 
 		/**
          * The get extents callback. The module should set the members of
@@ -58,7 +58,7 @@ namespace view {
         [[deprecated("Use CallRender3D version instead")]]
         virtual bool GetExtents(Call& call) { return false; };
 
-		virtual bool GetExtents(CallRender3D& call) override { return this->GetExtents(call); }
+		virtual bool GetExtents(CallRender3D& call) override { return this->GetExtents(static_cast<Call&>(call)); }
 
         /**
          * The render callback.
@@ -70,7 +70,7 @@ namespace view {
 		[[deprecated("Use CallRender3D version instead")]]
         virtual bool Render(Call& call) { return false; };
 
-		virtual bool Render(CallRender3D& call) override { return this->Render(call); }
+		virtual bool Render(CallRender3D& call) override { return this->Render(static_cast<Call&>(call)); }
 
         bool GetCapabilitiesCallback(Call& call);
     };
