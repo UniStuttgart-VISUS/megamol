@@ -79,7 +79,7 @@ namespace moldyn {
          *
          * @return Pointer to MultiParticleDataCall ...
          */
-        MultiParticleDataCall *getData(unsigned int t, float& outScaling);
+        MultiParticleDataCall *getData(float t, float& outScaling);
 
         /**
          * TODO: Document

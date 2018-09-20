@@ -1116,12 +1116,13 @@ bool ParticleFrameInterpolator::checkForTransition(core::Call& inCall, core::Cal
         }
 
         /*printf("PFI: PL0 %d %d %d\n", (int)(this->startPoints[0].size()) - (int)(nextFrame[0].size()),
-        this->startPoints[0].size(), nextFrame[0].size()); printf("PFI: PL1 %d %d %d\n",
-        (int)(this->startPoints[1].size()) - (int)(nextFrame[1].size()), this->startPoints[1].size(),
-        nextFrame[1].size()); printf("PFI: PL2 %d %d %d\n", (int)(this->startPoints[2].size()) -
-        (int)(nextFrame[2].size()), this->startPoints[2].size(), nextFrame[2].size()); printf("PFI: PL3 %d %d %d\n",
-        (int)(this->startPoints[3].size()) - (int)(nextFrame[3].size()), this->startPoints[3].size(),
-        nextFrame[3].size());*/
+            this->startPoints[0].size(), nextFrame[0].size());
+        printf("PFI: PL1 %d %d %d\n", (int)(this->startPoints[1].size()) - (int)(nextFrame[1].size()),
+            this->startPoints[1].size(), nextFrame[1].size());
+        printf("PFI: PL2 %d %d %d\n", (int)(this->startPoints[2].size()) - (int)(nextFrame[2].size()),
+            this->startPoints[2].size(), nextFrame[2].size());
+        printf("PFI: PL3 %d %d %d\n", (int)(this->startPoints[3].size()) - (int)(nextFrame[3].size()),
+            this->startPoints[3].size(), nextFrame[3].size());*/
     }
 
     // calculate trajectories
