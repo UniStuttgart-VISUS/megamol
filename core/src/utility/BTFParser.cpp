@@ -66,7 +66,7 @@ void utility::BTFParser::SetRootElement(
 /*
  * utility::BTFParser::CharacterData
  */
-void utility::BTFParser::CharacterData(unsigned int level, const MMXML_CHAR *text,
+void utility::BTFParser::CharacterData(unsigned int level, const XML_Char *text,
         int len, utility::xml::XmlReader::ParserState state) {
     if (state != XMLSTATE_CONTENT) return;
 
@@ -88,7 +88,7 @@ void utility::BTFParser::CharacterData(unsigned int level, const MMXML_CHAR *tex
 /*
  * utility::BTFParser::Comment
  */
-void utility::BTFParser::Comment(unsigned int level, const MMXML_CHAR *text,
+void utility::BTFParser::Comment(unsigned int level, const XML_Char *text,
         utility::xml::XmlReader::ParserState state) {
     if (state != XMLSTATE_CONTENT) return;
 
@@ -180,7 +180,7 @@ bool utility::BTFParser::CheckBaseTag(const utility::xml::XmlReader& reader) {
  * utility::BTFParser::StartTag
  */
 bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+        const XML_Char * name, const XML_Char ** attrib,
         utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outChildState,
         utility::xml::XmlReader::ParserState& outEndTagState,
@@ -207,7 +207,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
 
     vislib::SmartPtr<BTFElement> newEl;
     if (MMXML_STRING("include").Equals(name)) {
-        const MMXML_CHAR *filename = NULL;
+        const XML_Char *filename = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("file").Equals(attrib[i])) {
                 if (filename == NULL) {
@@ -238,7 +238,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
     } else
     if (MMXML_STRING("namespace").Equals(name)) {
         if (nmspc != NULL) {
-            const MMXML_CHAR *nname = NULL;
+            const XML_Char *nname = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
                     if (nname == NULL) {
@@ -263,8 +263,8 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         SIZE_T line = this->Reader().XmlLine();
         vislib::StringA file = this->root->Name();
         if (nmspc != NULL) {
-            const MMXML_CHAR *sname = NULL;
-            const MMXML_CHAR *stype = NULL;
+            const XML_Char *sname = NULL;
+            const XML_Char *stype = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -315,9 +315,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                 }
             }
         } else if (shader != NULL) {
-            const MMXML_CHAR *sname = NULL;
-            const MMXML_CHAR *stype = NULL;
-            const MMXML_CHAR *sid = NULL;
+            const XML_Char *sname = NULL;
+            const XML_Char *stype = NULL;
+            const XML_Char *sid = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -377,7 +377,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         }
     } else
     if (MMXML_STRING("shader").Equals(name)) {
-        const MMXML_CHAR *sname = NULL;
+        const XML_Char *sname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 if (sname == NULL) {
@@ -476,7 +476,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
  * utility::BTFParser::EndTag
  */
 bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, utility::xml::XmlReader::ParserState state,
+        const XML_Char * name, utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outPostEndTagState) {
     if (ConditionalParser::EndTag(num, level, name, state, 
             outPostEndTagState)) {

@@ -15,7 +15,7 @@
 
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
 #include <sys/types.h>
 #endif /* _WIN32 */

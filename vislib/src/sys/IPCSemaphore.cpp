@@ -63,7 +63,7 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const char *name,
 vislib::sys::IPCSemaphore::~IPCSemaphore(void) {
 #ifndef _WIN32
     if (this->isOwner) {
-        ::semctl(this->id, MEMBER_IDX, IPC_RMID, 0);
+        ::semctl(this->id, static_cast<unsigned short>(MEMBER_IDX), IPC_RMID, 0);
     }
 #endif /* !_WIN32 */
 }
@@ -75,7 +75,7 @@ vislib::sys::IPCSemaphore::~IPCSemaphore(void) {
  * vislib::sys::IPCSemaphore::Lock
  */
 void vislib::sys::IPCSemaphore::Lock(void) {
-    struct sembuf lock = { MEMBER_IDX, -1, 0 };
+    struct sembuf lock = { static_cast<unsigned short>(MEMBER_IDX), -1, 0 };
 
     if ((::semop(this->id, &lock, 1)) == -1) {
         throw SystemException(__FILE__, __LINE__);
@@ -87,7 +87,7 @@ void vislib::sys::IPCSemaphore::Lock(void) {
  * vislib::sys::IPCSemaphore::TryLock
  */
 bool vislib::sys::IPCSemaphore::TryLock(void) {
-    struct sembuf lock = { MEMBER_IDX, -1, IPC_NOWAIT };
+    struct sembuf lock = { static_cast<unsigned short>(MEMBER_IDX), -1, IPC_NOWAIT };
     int error = 0;
 
     if (this->getCount() < 1) {
@@ -110,7 +110,7 @@ bool vislib::sys::IPCSemaphore::TryLock(void) {
  * vislib::sys::IPCSemaphore::Unlock
  */
 void vislib::sys::IPCSemaphore::Unlock(void) {
-    struct sembuf unlock = { MEMBER_IDX, 1, IPC_NOWAIT };
+    struct sembuf unlock = { static_cast<unsigned short>(MEMBER_IDX), 1, IPC_NOWAIT };
 
     //TODO: This will not work
     //if (this->getCount() == this->maxCount) {
