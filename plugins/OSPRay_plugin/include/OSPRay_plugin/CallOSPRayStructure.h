@@ -73,7 +73,7 @@ public:
     std::shared_ptr<std::vector<float>> sliceData;
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
-    std::shared_ptr<const void*> raw;
+    const void* raw;
     std::shared_ptr<void const*> raw2;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;

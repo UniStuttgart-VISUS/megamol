@@ -75,6 +75,7 @@
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 #include "ParticleTranslateRotateScale.h"
+#include "MeshTranslateRotateScale.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -212,6 +213,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TriMeshSTLWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleTranslateRotateScale>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

@@ -892,7 +892,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("pkd_geometry"));
 
-                vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
                 // set bbox
@@ -996,7 +996,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                     if (vertexData != NULL) ospRelease(vertexData);
                     vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                        &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                        &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                     ospCommit(vertexData);
                     ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospSetData(geo.back(), "spheres", vertexData);
@@ -1112,7 +1112,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                         if (vertexData != nullptr) ospRelease(vertexData);
                         vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                         ospCommit(vertexData);
                         ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                         ospSetData(geo.back(), "spheres", vertexData);

@@ -253,7 +253,7 @@ bool io::PLYDataSource::assertData() {
         return true;
     }
     // if one of these pointers is not null, we already have read the data
-    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
+    //if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
 
     // jump to the data in the file
     instream.seekg(this->data_offset, instream.beg);
@@ -584,7 +584,7 @@ bool io::PLYDataSource::assertData() {
                         }
                         for (size_t j = 0; j < guessedNormal.size(); j++) {
                             if (elementIndexMap.count(guessedNormal[j]) > 0) {
-                                auto idx = elementIndexMap[guessedPos[j]];
+                                auto idx = elementIndexMap[guessedNormal[j]];
                                 if (normalPointers.norm_float != nullptr) {
                                     normalPointers.norm_float[3 * i + j] = std::stof(split[idx.second]);
                                 }
@@ -658,6 +658,8 @@ bool io::PLYDataSource::assertData() {
 bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     using vislib::sys::Log;
+
+    this->data_hash++;
 
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
@@ -845,6 +847,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
         }
     }
     instream.close();
+
     return true;
 }
 
