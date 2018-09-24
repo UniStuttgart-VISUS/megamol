@@ -25,7 +25,9 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   if(WIN32)
     set(TNY_IMPORT_LIB "lib/tinyply.lib")
+    set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
     set(TNY_LIB "bin/tinyply.dll")
+    set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
   else()
     include(GNUInstallDirs)
     set(TNY_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyply.so")
@@ -33,9 +35,9 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   add_external_library(tinyply SHARED
   DEPENDS tinyply_ext
-  IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB}
+  IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB_DEBUG}
   IMPORT_LIBRARY_RELEASE ${TNY_IMPORT_LIB}
-  LIBRARY_DEBUG ${TNY_LIB}
+  LIBRARY_DEBUG ${TNY_LIB_DEBUG}
   LIBRARY_RELEASE ${TNY_LIB})
 
 
