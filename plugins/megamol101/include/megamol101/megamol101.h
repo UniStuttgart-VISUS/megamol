@@ -46,10 +46,10 @@ MEGAMOL101_API int mmplgPluginAPIVersion(void);
  * @param onError Callback function pointer used when an error occures
  *
  * @return The compatibility information struct, or nullptr in case of an
- *         error.
+ *        error.
  *
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
- *          memory of the returned struct.
+ *         memory of the returned struct.
  */
 MEGAMOL101_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
@@ -73,7 +73,7 @@ MEGAMOL101_API void mmplgReleasePluginCompatibilityInfo(
  * @return A new instance of this plugin, or nullptr in case of an error
  *
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
- *          the returned object.
+ *         the returned object.
  */
 MEGAMOL101_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
