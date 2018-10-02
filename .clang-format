@@ -1,4 +1,7 @@
 ---
+#
+# Requires clang-format 6.0.0+
+#
 BasedOnStyle: LLVM
 AccessModifierOffset: '-4'
 AlignTrailingComments: true
@@ -16,6 +19,7 @@ MaxEmptyLinesToKeep: '2'
 PointerBindsToType: true
 TabWidth: 4
 UseTab: Never
+IndentPPDirectives: AfterHash
 IncludeCategories:
   - Regex:           '^"(stdafx|PrecompiledHeader)'
     Priority:        -1

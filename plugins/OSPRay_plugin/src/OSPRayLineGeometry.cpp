@@ -8,6 +8,7 @@
 #include "OSPRayLineGeometry.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/Call.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
@@ -20,13 +21,17 @@ using namespace megamol;
 OSPRayLineGeometry::OSPRayLineGeometry(void) :
     AbstractOSPRayStructure(),
     getDataSlot("getdata", "Connects to the data source"),
-    globalRadiusSlot("globalRadius", "Sets the radius of the lines")
+    globalRadiusSlot("globalRadius", "Sets the radius of the lines"),
+    smoothSlot("smooth", "Set whether to smooth the lines")
     {
     this->getDataSlot.SetCompatibleCall<geocalls::LinesDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->globalRadiusSlot << new core::param::FloatParam(0.01);
     this->MakeSlotAvailable(&this->globalRadiusSlot);
+
+    this->smoothSlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->smoothSlot);
 }
 
 
@@ -121,6 +126,7 @@ bool OSPRayLineGeometry::readData(core::Call &call) {
     this->structureContainer.colorLength = 4;
     this->structureContainer.indexData = std::make_shared<std::vector<unsigned int>>(std::move(index));
     this->structureContainer.globalRadius = globalRadiusSlot.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.smooth = smoothSlot.Param<core::param::BoolParam>()->Value();
 
     return true;
 }
@@ -145,9 +151,11 @@ bool OSPRayLineGeometry::InterfaceIsDirty() {
     cm->getMaterialParameter();
     if (
         cm->InterfaceIsDirty() ||
-        this->globalRadiusSlot.IsDirty()
+        this->globalRadiusSlot.IsDirty() ||
+        this->smoothSlot.IsDirty()
         ) {
         this->globalRadiusSlot.ResetDirty();
+        this->smoothSlot.ResetDirty();
         return true;
     } else {
         return false;

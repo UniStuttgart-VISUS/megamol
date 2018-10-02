@@ -5,7 +5,7 @@
  */
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #endif /* _WIN32 */
 
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -658,6 +658,13 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     GLint status;
     GL_VERIFY_THROW(glGetShaderiv(shader, GL_COMPILE_STATUS, &status));
     if (status != GL_TRUE) {
+#if 0
+        printf("full shader:\n");
+        for (int x = 0; x < cnt; x++) {
+            printf("%s\n//snippet end\n", src[x]);
+        }
+        printf("\n\n");
+#endif
         throw CompileException(getShaderInfoLog(shader),
             CompileException::CompilationFailedAction(type),
             __FILE__, __LINE__);

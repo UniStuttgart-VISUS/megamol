@@ -3,6 +3,7 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
+string(TOUPPER protein EXPORT_NAME)
 option(BUILD_PROTEIN_PLUGIN "Option to build protein" ON)
 
 if(BUILD_PROTEIN_PLUGIN)
@@ -40,12 +41,11 @@ if(BUILD_PROTEIN_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-	# special case for the MSMS-related files
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    # special case for the MSMS-related files
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
-	# special case for the MSMS-related files
-	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.x86_64Linux2.2.6.1 DESTINATION "bin")
   endif()
 
   # Grouping in Visual Studio
@@ -54,5 +54,4 @@ if(BUILD_PROTEIN_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
-
-endif(BUILD_PROTEIN_PLUGIN)
+endif()

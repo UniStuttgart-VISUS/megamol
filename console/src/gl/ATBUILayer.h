@@ -51,6 +51,9 @@ namespace gl {
         bool enabled;
         bool isCoreHotFixed;
         std::chrono::system_clock::time_point lastParamUpdateTime;
+
+        bool fwd = false, back = false, left = false, right = false;
+        bool wasdHotfixed = false;
     };
 
 } /* end namespace gl */

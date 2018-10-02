@@ -1,10 +1,10 @@
 #
 # Vislib test
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
-if (NOT DEFINED BUILDING_VISLIB_PROJECT)
-	message(FATAL_ERROR "This CMakefile cannot be processed independently.")
+if(NOT DEFINED BUILDING_VISLIB_PROJECT)
+  message(FATAL_ERROR "This CMakefile cannot be processed independently.")
 endif()
 
 #input file

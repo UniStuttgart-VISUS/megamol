@@ -212,7 +212,8 @@ namespace utility {
             enum SnippetType {
                 EMPTY_SNIPPET,
                 STRING_SNIPPET,
-                VERSION_SNIPPET
+                VERSION_SNIPPET,
+                FILE_SNIPPET
             };
 
             /**
@@ -438,7 +439,7 @@ namespace utility {
          * @param len Length of the character data.
          * @param state The current state of the reader.
          */
-        virtual void CharacterData(unsigned int level, const MMXML_CHAR *text,
+        virtual void CharacterData(unsigned int level, const XML_Char *text,
             int len, xml::XmlReader::ParserState state);
 
         /**
@@ -449,7 +450,7 @@ namespace utility {
          * @param text Pointer to the character data.
          * @param state The current state of the reader.
          */
-        virtual void Comment(unsigned int level, const MMXML_CHAR *text,
+        virtual void Comment(unsigned int level, const XML_Char *text,
              xml::XmlReader::ParserState state);
 
         /**
@@ -489,7 +490,7 @@ namespace utility {
          *         'false' if the tag was not handled.
          */
         virtual bool StartTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+            const XML_Char * name, const XML_Char ** attrib,
             xml::XmlReader::ParserState state,
             xml::XmlReader::ParserState& outChildState,
             xml::XmlReader::ParserState& outEndTagState,
@@ -512,7 +513,7 @@ namespace utility {
          *         'false' if the tag was not handled.
          */
         virtual bool EndTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, utility::xml::XmlReader::ParserState state,
+            const XML_Char * name, utility::xml::XmlReader::ParserState state,
             xml::XmlReader::ParserState& outPostEndTagState);
 
     private:

@@ -78,7 +78,7 @@ namespace moldyn {
                 case 0:
                     return "GetData";
                 case 1:
-                    return "GetExtend";
+                    return "GetExtent";
             }
             return "";
         }

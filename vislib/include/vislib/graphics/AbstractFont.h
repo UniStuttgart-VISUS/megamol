@@ -14,7 +14,11 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+
 #include "vislib/String.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+
 
 namespace vislib {
 namespace graphics {

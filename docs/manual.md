@@ -63,7 +63,7 @@ Screenshot of `cmake-gui` after generating build files.
 </p>
 </center>
 
-<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well: ISPC, TBB, and Embree work in their binary versions, you additionally need the installation path of a self-compiled OSPRay 1.3. For the downloads and more information, see [ISPC homepage](https://ispc.github.io/), [TBB homepage](https://www.threadingbuildingblocks.org/) and [Embree Homepage](https://embree.github.io/) on GitHub.
+<b>Note</b>: the *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well. Ideally, you just download [OSPRay](https://www.ospray.org/downloads.html) and adjust the `CMAKE_PREFIX_PATH`. However, if you want to compile OSPRay yourself, you need to install [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/), and [Embree](https://embree.github.io/) first (binary versions are okay).
 
 #### Linux
 

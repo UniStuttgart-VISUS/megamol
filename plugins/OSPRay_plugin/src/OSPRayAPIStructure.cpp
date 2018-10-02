@@ -49,7 +49,7 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
 
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
-
+    /*
     std::vector<float> vertexD;
     std::vector<float> colorD;
     std::vector<float> normalD;
@@ -73,8 +73,7 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
     }
 
     this->structureContainer.ospstructure = cd->getAPIObject();
-    this->structureContainer.dataChanged = cd->isDirty();
-
+    */
     return true;
 }
 

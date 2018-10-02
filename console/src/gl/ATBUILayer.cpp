@@ -5,6 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
+#include "vislib/sys/KeyCode.h"
 #ifdef HAS_ANTTWEAKBAR
 #include "gl/Window.h"
 #include "ATBUILayer.h"
@@ -40,7 +41,8 @@ gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *
         paramBar = std::make_shared<ATParamBar>(hCore);
     }
     lastParamUpdateTime = std::chrono::system_clock::now() - std::chrono::seconds(1);
-    isCoreHotFixed = utility::HotFixes::Instance().IsHotFixed("atbCore");
+    this->isCoreHotFixed = utility::HotFixes::Instance().IsHotFixed("atbCore");
+    this->wasdHotfixed = utility::HotFixes::Instance().IsHotFixed("wasdnorepeat");
 }
 
 gl::ATBUILayer::~ATBUILayer() {
@@ -66,6 +68,23 @@ void gl::ATBUILayer::onResize(int w, int h) {
 }
 
 void gl::ATBUILayer::onDraw() {
+
+    if (this->wasdHotfixed) {
+        CoreHandle hParam;
+        if (this->fwd) {
+            this->onChar('w');
+        }
+        if (this->back) {
+            this->onChar('s');
+        }
+        if (this->left) {
+            this->onChar('a');
+        }
+        if (this->right) {
+            this->onChar('d');
+        }
+    }
+
     ::TwSetCurrentWindow(atbWinID);
 
     if ((std::chrono::system_clock::now() - lastParamUpdateTime) > std::chrono::milliseconds(100)) {
@@ -88,9 +107,25 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
     ::TwSetCurrentWindow(atbWinID);
 
     atbKeyMod = 0;
-    if (mods & Modifiers::KEY_MOD_SHIFT) atbKeyMod |= TW_KMOD_SHIFT;
-    if (mods & Modifiers::KEY_MOD_CTRL) atbKeyMod |= TW_KMOD_CTRL;
-    if (mods & Modifiers::KEY_MOD_ALT) atbKeyMod |= TW_KMOD_ALT;
+    if (mods & Modifiers::KEY_MOD_SHIFT) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, true);
+        atbKeyMod |= TW_KMOD_SHIFT;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_SHIFT, false);
+    }
+    if (mods & Modifiers::KEY_MOD_CTRL) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, true);
+        atbKeyMod |= TW_KMOD_CTRL;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_CTRL, false);
+    }
+    if (mods & Modifiers::KEY_MOD_ALT) {
+        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, true);
+        atbKeyMod |= TW_KMOD_ALT;
+    } else {
+        ::mmcSetInputModifier(hView, MMC_INMOD_ALT, false);
+    }
+
 
     // Process key pressed
     if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
@@ -248,6 +283,24 @@ bool gl::ATBUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mo
     if (::TwKeyTest('0', TW_KMOD_NONE)) {
         // This captures all keyboard input for ATB only.
         return true;
+    }
+
+    if (wasdHotfixed) {
+        const bool down = action != KeyAction::RELEASE;
+        switch (key) {
+            case KEY_W:
+                this->fwd = down;
+                break;
+            case KEY_A:
+                this->left = down;
+                break;
+            case KEY_S:
+                this->back = down;
+                break;
+            case KEY_D:
+                this->right = down;
+                break;
+        }
     }
 
     return false;

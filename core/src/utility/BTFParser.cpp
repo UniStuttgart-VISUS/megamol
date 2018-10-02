@@ -15,7 +15,8 @@
 #include "vislib/VersionNumber.h"
 #include "vislib/sys/Log.h"
 #include "vislib/xmlUtils.h"
-
+#include <sstream>
+#include <fstream>
 
 using namespace megamol::core;
 using namespace megamol::core::utility::xml;
@@ -65,7 +66,7 @@ void utility::BTFParser::SetRootElement(
 /*
  * utility::BTFParser::CharacterData
  */
-void utility::BTFParser::CharacterData(unsigned int level, const MMXML_CHAR *text,
+void utility::BTFParser::CharacterData(unsigned int level, const XML_Char *text,
         int len, utility::xml::XmlReader::ParserState state) {
     if (state != XMLSTATE_CONTENT) return;
 
@@ -87,7 +88,7 @@ void utility::BTFParser::CharacterData(unsigned int level, const MMXML_CHAR *tex
 /*
  * utility::BTFParser::Comment
  */
-void utility::BTFParser::Comment(unsigned int level, const MMXML_CHAR *text,
+void utility::BTFParser::Comment(unsigned int level, const XML_Char *text,
         utility::xml::XmlReader::ParserState state) {
     if (state != XMLSTATE_CONTENT) return;
 
@@ -179,7 +180,7 @@ bool utility::BTFParser::CheckBaseTag(const utility::xml::XmlReader& reader) {
  * utility::BTFParser::StartTag
  */
 bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+        const XML_Char * name, const XML_Char ** attrib,
         utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outChildState,
         utility::xml::XmlReader::ParserState& outEndTagState,
@@ -206,7 +207,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
 
     vislib::SmartPtr<BTFElement> newEl;
     if (MMXML_STRING("include").Equals(name)) {
-        const MMXML_CHAR *filename = NULL;
+        const XML_Char *filename = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("file").Equals(attrib[i])) {
                 if (filename == NULL) {
@@ -237,7 +238,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
     } else
     if (MMXML_STRING("namespace").Equals(name)) {
         if (nmspc != NULL) {
-            const MMXML_CHAR *nname = NULL;
+            const XML_Char *nname = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
                     if (nname == NULL) {
@@ -262,8 +263,8 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         SIZE_T line = this->Reader().XmlLine();
         vislib::StringA file = this->root->Name();
         if (nmspc != NULL) {
-            const MMXML_CHAR *sname = NULL;
-            const MMXML_CHAR *stype = NULL;
+            const XML_Char *sname = NULL;
+            const XML_Char *stype = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -297,6 +298,8 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                         newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::STRING_SNIPPET);
                     } else if (MMXML_STRING("version").Equals(stype)) {
                         newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::VERSION_SNIPPET);
+                    } else if (MMXML_STRING("file").Equals(stype)) {
+                        newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::FILE_SNIPPET);
                     } else {
                         if (!MMXML_STRING("string").Equals(stype)) {
                             this->Warning("\"snippet\" with unknown type: using \"string\".");
@@ -312,9 +315,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                 }
             }
         } else if (shader != NULL) {
-            const MMXML_CHAR *sname = NULL;
-            const MMXML_CHAR *stype = NULL;
-            const MMXML_CHAR *sid = NULL;
+            const XML_Char *sname = NULL;
+            const XML_Char *stype = NULL;
+            const XML_Char *sid = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -347,6 +350,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
             } else if (MMXML_STRING("version").Equals(stype)) {
                 newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::VERSION_SNIPPET);
                 outChildState = XMLSTATE_CONTENT;
+            } else if (MMXML_STRING("file").Equals(stype)) {
+                newEl.DynamicCast<BTFSnippet>()->SetType(BTFSnippet::FILE_SNIPPET);
+                outChildState = XMLSTATE_CONTENT;
             } else {
                 if (!MMXML_STRING("string").Equals(stype)) {
                     this->Warning("\"snippet\" with unknown type: using \"string\".");
@@ -371,7 +377,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         }
     } else
     if (MMXML_STRING("shader").Equals(name)) {
-        const MMXML_CHAR *sname = NULL;
+        const XML_Char *sname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 if (sname == NULL) {
@@ -470,7 +476,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
  * utility::BTFParser::EndTag
  */
 bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, utility::xml::XmlReader::ParserState state,
+        const XML_Char * name, utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outPostEndTagState) {
     if (ConditionalParser::EndTag(num, level, name, state, 
             outPostEndTagState)) {
@@ -504,6 +510,36 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
                 pn->Children().RemoveAll(e);
             }
             return true;
+        } else if (s->Type() == BTFSnippet::FILE_SNIPPET) {
+            vislib::StringA str = s->Content();
+
+            s->SetType(BTFSnippet::STRING_SNIPPET);
+            s->SetFile(str);
+            s->SetLine(0);
+            try {
+                if (!this->Reader().GetPath().IsEmpty()) {
+                    auto path = this->Reader().GetPath();
+                    std::ifstream infile(path + "/" + str);
+                    if (infile.is_open()) {
+                        std::stringstream cont;
+                        cont << infile.rdbuf();
+                        s->SetContent(cont.str().c_str());
+                    } else {
+                        std::stringstream msg;
+                        msg << "cannot open include '" << str << "' for snippet '" << s->Name() << "'";
+                        this->Error(msg.str().c_str());
+                    }
+                } else {
+                    std::stringstream msg;
+                    msg << "cannot find include '" << str << "' for snippet '" << s->Name() << "' : path is unknown";
+                    this->Error(msg.str().c_str());
+                }
+            } catch (...) {
+                std::stringstream msg;
+                msg << "cannot load referenced snippet file " << str;
+                this->Error(msg.str().c_str());
+                s->SetContent("");
+            }
         }
 
         BTFShader *ps = p.DynamicCast<BTFShader>();

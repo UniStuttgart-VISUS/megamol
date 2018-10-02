@@ -16,7 +16,7 @@
 
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
 #include <pthread.h>
 #endif /* _WIN32 */

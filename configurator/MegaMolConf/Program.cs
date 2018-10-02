@@ -176,7 +176,9 @@ namespace MegaMolConf
             if (File.Exists(path)) {
                 try {
                     Io.ProjectFile pf = Io.ProjectFile.Load(path);
-                    mainForm.LoadProjectFile(pf, path);
+                    if (pf != null) {
+                        mainForm.LoadProjectFile(pf, path);
+                    }
                 } catch(Exception ex) {
                     return ex.ToString();
                 }

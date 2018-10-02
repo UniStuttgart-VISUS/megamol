@@ -77,14 +77,14 @@ vislib::graphics::CameraParamsStore::~CameraParamsStore(void) {
 /*
  * vislib::graphics::CameraParamsStore::ApplyLimits
  */
-void vislib::graphics::CameraParamsStore::ApplyLimits(void) {
+void vislib::graphics::CameraParamsStore::ApplyLimits(bool autoFocus) {
     // copy parameters to avoid aliasing
     math::AngleRad aa = this->ApertureAngle();
     SceneSpaceType nc = this->NearClip();
     SceneSpaceType fc = this->FarClip();
     SceneSpaceType sd = this->StereoDisparity();
     StereoEye e = this->Eye();
-    SceneSpaceType fd = this->FocalDistance();
+    SceneSpaceType fd = this->FocalDistance(autoFocus);
     math::Point<SceneSpaceType, 3> p = this->Position();
     math::Point<SceneSpaceType, 3> la = this->LookAt();
     math::Vector<SceneSpaceType, 3> up = this->Up();
@@ -452,10 +452,11 @@ void vislib::graphics::CameraParamsStore::SetFocalDistance(
  * vislib::graphics::CameraParamsStore::SetLimits
  */
 void vislib::graphics::CameraParamsStore::SetLimits(
-        const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& limits) {
+        const vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& limits,
+        bool autoFocus) {
     if (!limits.IsNull()) {
         this->limits = limits;
-        this->ApplyLimits(); // this will also increase syncNumber
+        this->ApplyLimits(autoFocus); // this will also increase syncNumber
     }
 }
 
@@ -617,8 +618,12 @@ void vislib::graphics::CameraParamsStore::SetView(const
     this->lookAt = this->position + dir;
     this->right = this->front.Cross(up);
     this->right.Normalise();
-    this->up = this->right.Cross(this->front);
-    this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
+    // TODO: this was not good, it caused immense drift after only a single rotation, so I just got rid of it.
+    // BUG? might backfire in other situations, but I did not find any yet
+    //this->up = this->right.Cross(this->front);
+    //this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
+    this->up = up;
+    this->up.Normalise();
     if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
         this->right *= static_cast<SceneSpaceType>(-1);
     }

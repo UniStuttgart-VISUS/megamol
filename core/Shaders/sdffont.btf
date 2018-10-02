@@ -1,69 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sdffont">
-    <include file="common"/>
-
-    <shader name="vertex">
-        <snippet type="version">400</snippet>
+    <!-- <include file="common"/> -->
+        
+    <shader name="vertex">   
+        <snippet name="version" type="version">400</snippet>    
+        
+        <snippet name="globalColor" type="string">
+<![CDATA[
+uniform vec4  inColor;
+]]>
+        </snippet>
+    
+        <snippet name="vertexColor" type="string">
+<![CDATA[
+in      vec4  inColor;
+]]>
+        </snippet>    
+        
         <snippet name="main" type="string">
 <![CDATA[
-
-in      vec3  inVertPos;
-in      vec2  inVertTexCoord;
+in      vec3  inPos;
+in      vec2  inTexCoord;
 
 uniform float fontSize;
-uniform int   billboard = 0;
-uniform mat4  pMat;          // ProjectionMatrix
-uniform mat4  mvpMat;        // ModelViewProjection-Matrix
+uniform mat4  mvpMat;
 
 out     vec2  texCoord;
+out     vec4  color;
 
-
-/*
-* MAIN
-*/
+/** MAIN **/
 void main() {
 
-    texCoord = inVertTexCoord;
+    texCoord    = inTexCoord;
+    color       = inColor;
     
-    if (billboard == 1) {   
-        gl_Position = pMat * vec4(inVertPos, 1.0);
-    }
-    else {
-        gl_Position = mvpMat * vec4(inVertPos, 1.0);
-    }
+    gl_Position = mvpMat * vec4(inPos, 1.0);
 }
-
 ]]>
         </snippet>
     </shader>
-
+    
     <shader name="fragment">
-        <snippet type="version">400</snippet>
+        <snippet name="version" type="version">400</snippet>
+        
         <snippet name="main" type="string">
-<![CDATA[
-         
-// Must be the same as defined in SDFFont.h
+<![CDATA[ 
+// !!! Same defines as in SDFFont.h
 #define RENDERTYPE_FILL    1
 #define RENDERTYPE_OUTLINE 2
 
 in      vec2      texCoord;
+in      vec4      color;
 
-uniform vec4      color;
 uniform sampler2D fontTex;
 uniform int       renderType = 1;
 
 layout(location = 0) out vec4 outFragColor;
 
-
-/*
-* MAIN
-*/
+/** MAIN **/
 void main(void) {
 
     float outlineWidth = 0.05; 
     float sdfBorder    = 0.5; 
      
-    float distance = texture(fontTex, texCoord).g;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
+    float distance = texture(fontTex, texCoord).a;  // Distance value is stored in green channel, see SDFFont::loadFontTexture()
 
     if (distance == 0.0)  {
         discard;
@@ -96,7 +96,6 @@ void main(void) {
     
     outFragColor = vec4(color.rgb, color.a * alpha);
 }
-
 ]]>
         </snippet>
     </shader>

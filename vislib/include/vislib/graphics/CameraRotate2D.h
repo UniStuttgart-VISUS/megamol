@@ -86,6 +86,31 @@ namespace graphics {
             return this->altMod;
         }
 
+        /** Set x inversion. Default is on (weird but true) */
+        inline void SetInvertX(bool inv) {
+            this->invertX = inv;
+        }
+
+        /** Set 'airplane mode'. Default is on */
+        inline void SetInvertY(bool inv) {
+            this->invertY = inv;
+        }
+
+        inline void SetMouseSensitivity(float s) {
+            this->mouseSensitivity = s;
+        }
+
+        inline bool GetInvertX() const {
+            return this->invertX;
+        }
+
+        inline bool GetInvertY() const {
+            return this->invertY;
+        }
+
+        inline float GetMouseSensitivity() const {
+            return this->mouseSensitivity;
+        }
     private:
 
         /** The modifier for alternate rotation */
@@ -93,6 +118,14 @@ namespace graphics {
 
         /** Flag whether the mouse draggs. */
         bool drag;
+
+        /** weird tbh */
+        bool invertX = true;
+
+        /** airplane mode is default */
+        bool invertY = true;
+
+        float mouseSensitivity = 1.0f;
 
     };
     
