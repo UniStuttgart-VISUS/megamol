@@ -55,7 +55,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 {
 	this->particleDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
 	this->particleDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
-	this->particleDataSlot.SetCompatibleCall<VolumeticDataCallDescription>();
+	this->particleDataSlot.SetCompatibleCall<VolumetricDataCallDescription>();
 	this->MakeSlotAvailable(&this->particleDataSlot);
 
 	this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();

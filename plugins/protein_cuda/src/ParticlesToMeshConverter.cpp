@@ -97,7 +97,7 @@ ParticlesToMeshConverter::ParticlesToMeshConverter(void) : Module(),
 {
     this->particleDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->particleDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
-    this->particleDataSlot.SetCompatibleCall<VolumeticDataCallDescription>();
+    this->particleDataSlot.SetCompatibleCall<VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->particleDataSlot);
 
     this->qualityParam.SetParameter(new param::IntParam(1, 0, 4));
