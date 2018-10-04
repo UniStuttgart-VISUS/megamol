@@ -74,66 +74,93 @@ namespace megamol {
 		private:
 
             /**********************************************************************
+            * typedefs
+            **********************************************************************/
+
+            typedef vislib::math::Vector<float, 3> v3f;
+            typedef vislib::math::Point<float, 3>  p3f;
+
+            /**********************************************************************
             * variables
             **********************************************************************/
 
             // Variables shared/updated with call
-            vislib::Array<vislib::math::Point<float, 3> > interpolCamPos;
-            vislib::Array<Keyframe>              keyframes;
-            vislib::math::Cuboid<float>          boundingBox;
-            Keyframe                             selectedKeyframe;
-            Keyframe                             dragDropKeyframe;
-            vislib::math::Vector<float, 3>       firstCtrllPos;
-            vislib::math::Vector<float, 3>       lastCtrllPos;
-            float                                totalAnimTime;
-            float                                totalSimTime;
-            unsigned int                         interpolSteps;
-            vislib::math::Point<float, 3>        modelBboxCenter;
-            unsigned int                         fps;
+            vislib::Array<p3f >          interpolCamPos;
+            vislib::Array<Keyframe>      keyframes;
+            vislib::math::Cuboid<float>  boundingBox;
+            Keyframe                     selectedKeyframe;
+            Keyframe                     dragDropKeyframe;
+            v3f                          startCtrllPos;
+            v3f                          endCtrllPos;
+            float                        totalAnimTime;
+            float                        totalSimTime;
+            unsigned int                 interpolSteps;
+            p3f                          modelBboxCenter;
+            unsigned int                 fps;
 
-            vislib::math::Vector<float, 3>       camViewUp;
-            vislib::math::Point<float, 3>        camViewPosition;
-            vislib::math::Point<float, 3>        camViewLookat;
-            float                                camViewApertureangle;
+            v3f                          camViewUp;
+            p3f                          camViewPosition;
+            p3f                          camViewLookat;
+            float                        camViewApertureangle;
             
             // Variables only used in keyframe keeper
-            vislib::StringA                      filename;
-            bool                                 simTangentStatus;
-            float                                tl; // Global interpolation spline tangent length of keyframes
+            vislib::StringA             filename;
+            bool                        simTangentStatus;
+            float                       tl; // Global interpolation spline tangent length of keyframes
 
             // undo queue stuff -----------------------------------------------
 
             enum UndoActionEnum {
-                UNDO_NONE   = 0,
-                UNDO_ADD    = 1,
-                UNDO_DELETE = 2,
-                UNDO_MODIFY = 3
+                UNDO_NONE      = 0,
+                UNDO_KF_ADD    = 1,
+                UNDO_KF_DELETE = 2,
+                UNDO_KF_MODIFY = 3,
+                UNDO_CP_MODIFY = 4
             };
 
             class UndoAction {  
                 public:
                     /** functions **/
                     UndoAction() {
-                        this->action       = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
-                        this->keyframe     = Keyframe();
-                        this->prevKeyframe = Keyframe();
+                        this->action        = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
+                        this->keyframe      = Keyframe();
+                        this->prev_keyframe = Keyframe();
+                        this->startcp       = v3f();
+                        this->endcp         = v3f();
+                        this->prev_startcp  = v3f();
+                        this->prev_endcp    = v3f();
                     }
-                    UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf) {
-                        this->action       = act;
-                        this->keyframe     = kf;
-                        this->prevKeyframe = prevkf;
+
+                    UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f scp, v3f ecp, v3f prev_scp, v3f prev_ecp) {
+                        this->action        = act;
+                        this->keyframe      = kf;
+                        this->prev_keyframe = prev_kf;
+                        this->startcp       = scp;
+                        this->endcp         = ecp;
+                        this->prev_startcp  = prev_scp;
+                        this->prev_endcp    = prev_ecp;
                     }
+
                     ~UndoAction() { }
+
                     inline bool operator==(UndoAction const& rhs) {
-                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prevKeyframe == rhs.prevKeyframe));
+                        return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prev_keyframe == rhs.prev_keyframe) && 
+                                (this->startcp == rhs.startcp) && (this->endcp == rhs.endcp) && (this->prev_startcp == rhs.prev_startcp) && (this->prev_endcp == rhs.prev_endcp));
                     }
+
                     inline bool operator!=(UndoAction const& rhs) {
-                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prevKeyframe != rhs.prevKeyframe));
+                        return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prev_keyframe != rhs.prev_keyframe) || 
+                                 (this->startcp != rhs.startcp) || (this->endcp != rhs.endcp) || (this->prev_startcp != rhs.prev_startcp) || (this->prev_endcp != rhs.prev_endcp));
                     }
+
                     /** variables **/
                    UndoActionEnum action;
                    Keyframe       keyframe;
-                   Keyframe       prevKeyframe;
+                   Keyframe       prev_keyframe;
+                   v3f            startcp;
+                   v3f            endcp;
+                   v3f            prev_startcp;
+                   v3f            prev_endcp;
             };
 
             /** */
@@ -185,17 +212,21 @@ namespace megamol {
             void snapKeyframe2SimFrame(Keyframe *kf);
 
             /**   */
-            bool undo();
+            bool undoAction();
 
             /**   */
-            bool redo();
+            bool redoAction();
 
             /**   */
-            bool addNewUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prevkf);
+            bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
+            bool addKfUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe pre_vkf);
+            bool addCpUndoAction(KeyframeKeeper::UndoActionEnum act, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
 
             /** */
-            vislib::math::Vector<float, 3> interpolation(float u, vislib::math::Vector<float, 3> v0, vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3);
-            float interpolation(float u, float f0, float f1, float f2, float f3);
+            float interpolate_f(float u, float f0, float f1, float f2, float f3);
+            /** */
+            vislib::math::Vector<float, 3> interpolate_v3f(float u, v3f v0, v3f v1, v3f v2, v3f v3);
+
 
             /**********************************************************************
             * callback stuff

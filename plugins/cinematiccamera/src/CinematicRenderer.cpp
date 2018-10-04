@@ -415,7 +415,7 @@ bool CinematicRenderer::Render(Call& call) {
             (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
             (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
-            this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
+            this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
         // Draw manipulators
         this->manipulator.Draw();
     }
@@ -450,9 +450,9 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA midLabel = "";
     if (cr3d_in->MouseSelection()) {
         if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (keyframe position, spline control point)";
+            midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
         } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat, up, keyframe position along lookat)";
+            midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
         }
     } else {
         midLabel = "SCENE manipulation";
@@ -503,19 +503,19 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
         helpText += "[tab] Toggle keyframe/scene manipulation mode. \n";
         helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
-        helpText += "[w] Keep manipulators always outside of model bounding box. \n";
+        helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
         helpText += "[l] Reset Look-At of selected keyframe. \n";
         helpText += "-----[ CINEMATIC VIEW ]----- \n";
         helpText += "[r] Start/Stop rendering complete animation. \n";
-        helpText += "[space] Toggle animation preview. \n";
+        helpText += "[space] Start/Stop animation preview. \n";
         helpText += "-----[ TIME LINE VIEW ]----- \n";
-        helpText += "[right/left] Move keyframe selection to right/left on animation time axis. \n";
+        helpText += "[right/left] Move selected keyframe on animation time axis. \n";
         helpText += "[f] Snap all keyframes to animation frames. \n";
         helpText += "[g] Snap all keyframes to simulation frames. \n";
         helpText += "[t] Linearize simulation time between two keyframes. \n";
         helpText += "[left mouse button] Select keyframe. \n";
         helpText += "[middle mouse button] Axes scaling in mouse direction. \n";
-        helpText += "[right mouse button] Pan axes OR drag & drop keyframe. \n";
+        helpText += "[right mouse button] Drag & drop keyframe / pan axes. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
@@ -523,7 +523,7 @@ bool CinematicRenderer::Render(Call& call) {
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
-        float htNumOfRows = 21.0f; // Number of rows the help text has
+        float htNumOfRows = 22.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
             htFontSize -= 0.5f;
