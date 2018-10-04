@@ -37,9 +37,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports. Leave empty if no screen space subdivision is applied."} 
 #ifdef WITH_MPI
+    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
 #endif // WITH_MPI
     , aggregate_{false}
@@ -65,9 +65,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->target_machine_slot_);
     this->force_localhost_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&this->force_localhost_slot_);
+#ifdef WITH_MPI
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
-#ifdef WITH_MPI
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&toggle_aggregate_slot_);
 #endif // WITH_MPI
@@ -97,6 +97,8 @@ void megamol::pbs::FBOTransmitter2::release() {
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
+
+    megamol::core::utility::timelog::time_point t0 = std::chrono::system_clock::now();
 
     // extract viewport or get if from opengl context
     int viewport[4]      = { 0, 0, 1, 1 };
@@ -172,12 +174,12 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
-        float backgroundColor[3] = {0.0f, 0.0f, 0.0f};
+        std::array<IceTFloat, 4> backgroundColor = { 0, 0, 0, 0 };
         if (!this->extractBackgroundColor(backgroundColor)) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract background color\n");
         }
         auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor);
+            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor.data());
 
         if (mpiRank == 0) {
             icet_col_buf   = icetImageGetColorub(icet_comp_image);
@@ -233,7 +235,10 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
 
-            this->fbo_msg_read_->send_time = std::chrono::system_clock::now();
+            megamol::core::utility::timelog::time_point t1 = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = t1 - t0;
+            this->fbo_msg_read_->create_time = diff.count();
+            this->fbo_msg_read_->send_time   = t1;
         }
 
         this->swapBuffers();
@@ -512,7 +517,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(float bkgnd_color[3]) {
+bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color) {
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     this->ModuleGraphLock().LockExclusive();
@@ -524,7 +529,8 @@ bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(float bkgnd_color[3])
         if (bkgndCol != nullptr) {
             bkgnd_color[0] = bkgndCol[0];
             bkgnd_color[1] = bkgndCol[1];
-            bkgnd_color[2] = bkgndCol[2];                
+            bkgnd_color[2] = bkgndCol[2];
+            bkgnd_color[3] = 0.0f;
         }
     }
     else {

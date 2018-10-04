@@ -88,7 +88,7 @@ private:
 
     bool extractCameraParams(float cam_params[9]);
 
-    bool extractBackgroundColor(float bkgnd_color[3]);
+    bool extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color);
 
     bool extractViewport(int vvpt[6]);
 

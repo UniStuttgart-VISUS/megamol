@@ -94,6 +94,8 @@ struct fbo_msg_header {
     float cam_params[9];  /// [0]-[2] position, [3]-[5] up, [6]-[8] lookat
     // send_time
     megamol::core::utility::timelog::time_point send_time;
+    // create_time
+    double create_time;
     // viewport
     int screen_area[4];
     // updated viewport

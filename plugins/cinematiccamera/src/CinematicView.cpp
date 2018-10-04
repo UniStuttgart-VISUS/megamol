@@ -630,6 +630,8 @@ bool CinematicView::render2file_setup() {
     this->render_log.write_time_line(line);
     line = "------------------------------------------";
     this->render_log.write_time_line(line);
+    line.Format("FRAME[%d]", this->pngdata.cnt);
+    this->render_log.write_time_line(line);
 
     // Set current time stamp to file name
     this->pngdata.filename = "frames";
@@ -661,8 +663,6 @@ bool CinematicView::render2file_write_png() {
         // Log render time
         this->render_log.set_time(timelog::TIME::WRITE);
         vislib::StringA line;
-        line.Format("FRAME[%d]", this->pngdata.cnt);
-        this->render_log.write_time_line(line);
         line.Format("          %f seconds: [CinematicView] Timespan waited for requested frame.", this->render_log.delta_time(timelog::TIME::REQUEST));
         this->render_log.write_line(line);
 
@@ -759,8 +759,11 @@ bool CinematicView::render2file_write_png() {
             return false;
         }
 
-        this->render_log.set_time(timelog::TIME::REQUEST);
         this->pngdata.cnt++;
+
+        line.Format("FRAME[%d]", this->pngdata.cnt);
+        this->render_log.write_time_line(line);
+        this->render_log.set_time(timelog::TIME::REQUEST);
     }
 
     return true;

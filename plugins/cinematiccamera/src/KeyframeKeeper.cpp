@@ -368,7 +368,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
     if (ccc == nullptr) return false;
 
     this->firstCtrllPos = ccc->getFirstControlPointPosition();
-    this->lastCtrllPos = ccc->getLastControlPointPosition();
+    this->lastCtrllPos  = ccc->getLastControlPointPosition();
 
     // Refresh interoplated camera positions
     this->refreshInterpolCamPos(this->interpolSteps);
@@ -659,7 +659,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
     return true;
 }
-
 
 
 /*
