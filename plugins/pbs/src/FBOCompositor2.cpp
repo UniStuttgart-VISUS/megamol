@@ -289,16 +289,6 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             cr3d->ResetOutputBuffer();
             return false;
         }
-        else {
-            // Write time difference between sending and receiving requested frame
-            std::chrono::duration<double> t = std::chrono::system_clock::now() - (*this->fbo_msg_write_)[0].fbo_msg_header.send_time;
-            this->render_log_.set_filename(vislib::StringA("cc_rendering.log"));
-            vislib::StringA line;
-            line.Format("          %f seconds: [FBOTransmitter] Timespan needed for after rendering.", (*this->fbo_msg_write_)[0].fbo_msg_header.create_time);
-            this->render_log_.write_line(line);
-            line.Format("          %f seconds: [FBOCompositor] Timespan between sending and receiving requested fbo.", t);
-            this->render_log_.write_line(line);
-        }
     }
 
     // constantly render current texture set

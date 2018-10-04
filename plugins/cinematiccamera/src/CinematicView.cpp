@@ -619,20 +619,6 @@ bool CinematicView::render2file_setup() {
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 
-    // Starting logfile
-    this->render_log.clear(vislib::StringA("cc_rendering.log"));
-    vislib::StringA line;
-    line.Format("Started rendering to \"%s\".", this->pngdata.path.PeekBuffer());
-    this->render_log.write_time_line(line);
-    line.Format("FPS: %d - Width: %d px - Height: %d px.", this->fps, this->pngdata.width, this->pngdata.height);
-    this->render_log.write_time_line(line);
-    line.Format("Waiting %f seconds for first frame.", this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value());
-    this->render_log.write_time_line(line);
-    line = "------------------------------------------";
-    this->render_log.write_time_line(line);
-    line.Format("FRAME[%d]", this->pngdata.cnt);
-    this->render_log.write_time_line(line);
-
     // Set current time stamp to file name
     this->pngdata.filename = "frames";
 
@@ -659,12 +645,6 @@ bool CinematicView::render2file_setup() {
 bool CinematicView::render2file_write_png() {
 
     if (this->pngdata.write_lock == 0) {
-
-        // Log render time
-        this->render_log.set_time(timelog::TIME::WRITE);
-        vislib::StringA line;
-        line.Format("          %f seconds: [CinematicView] Timespan waited for requested frame.", this->render_log.delta_time(timelog::TIME::REQUEST));
-        this->render_log.write_line(line);
 
         vislib::StringA tmpFilename, tmpStr;
         tmpStr.Format(".%i", this->expFrameCnt);
@@ -730,10 +710,6 @@ bool CinematicView::render2file_write_png() {
 
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Wrote png file %d for animation time %f ...\n", this->pngdata.cnt, this->pngdata.animTime);
 
-        // Log render time
-        line.Format("          %f seconds: [CinematicView] Timespan written frame to file.", this->render_log.delta_time(timelog::TIME::WRITE));
-        this->render_log.write_line(line);
-
         // --------------------------------------------------------------------
 
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
@@ -760,10 +736,6 @@ bool CinematicView::render2file_write_png() {
         }
 
         this->pngdata.cnt++;
-
-        line.Format("FRAME[%d]", this->pngdata.cnt);
-        this->render_log.write_time_line(line);
-        this->render_log.set_time(timelog::TIME::REQUEST);
     }
 
     return true;
@@ -792,10 +764,6 @@ bool CinematicView::render2file_finish() {
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
     this->rendering = false;
-
-    // Log render time
-    vislib::StringA line("Finished rendering.");
-    this->render_log.write_time_line(line);
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
     return true;

@@ -3,7 +3,6 @@
 #include <cmath>
 #include <memory>
 
-#include "mmcore/utility/timelog.h"
 
 namespace megamol {
 namespace pbs {
@@ -92,10 +91,6 @@ struct fbo_msg_header {
     float frame_times[2]; /// [0] requested time, [1] time frames count
     // cam_params
     float cam_params[9];  /// [0]-[2] position, [3]-[5] up, [6]-[8] lookat
-    // send_time
-    megamol::core::utility::timelog::time_point send_time;
-    // create_time
-    double create_time;
     // viewport
     int screen_area[4];
     // updated viewport

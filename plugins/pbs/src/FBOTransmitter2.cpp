@@ -96,8 +96,6 @@ void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    megamol::core::utility::timelog::time_point t0 = std::chrono::system_clock::now();
-
     // extract viewport or get if from opengl context
     int viewport[4]      = { 0, 0, 1, 1 };
     int width            = 1;
@@ -234,11 +232,6 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
-
-            megamol::core::utility::timelog::time_point t1 = std::chrono::system_clock::now();
-            std::chrono::duration<double> diff = t1 - t0;
-            this->fbo_msg_read_->create_time = diff.count();
-            this->fbo_msg_read_->send_time   = t1;
         }
 
         this->swapBuffers();

@@ -20,7 +20,6 @@
 
 #include "image_calls/Image2DCall.h"
 
-#include "mmcore/utility/timelog.h"
 
 namespace megamol {
 namespace pbs {
@@ -208,8 +207,6 @@ private:
     bool shutdown_ = false;
 
     bool register_done_ = false;
-
-    megamol::core::utility::timelog  render_log_;
 
 }; // end class FBOCompositor2
 

@@ -46,8 +46,6 @@
 #include "Keyframe.h"
 #include "png.h"
 
-#include "mmcore/utility/timelog.h"
-
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -144,8 +142,6 @@ namespace megamol {
             bool                                    rendering;
             unsigned int                            fps;
             unsigned int                            expFrameCnt;
-
-            megamol::core::utility::timelog         render_log;
 
             struct pngData {
                 BYTE                  *buffer;
