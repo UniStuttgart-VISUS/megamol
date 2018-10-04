@@ -158,13 +158,8 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
             if (lineA.StartsWith("#")) continue;                             // this is a comment, move on
             auto result = vislib::StringTokeniserA::Split(lineA, ",", true); // split the line string by commas
             if (result.Count() < 4) {
-#ifdef WIN32
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
-                    static_cast<unsigned int>(lineNum), T2A(filename));
-#else
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
                     static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
-#endif
                 continue;
             }
             float values[4];
@@ -174,14 +169,9 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
 
                 if (resString.Contains("#")) { // check if the line contains a comment after the values
                     if (i != 3) {
-#ifdef WIN32
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                            "Line %u of '%s' is malformed", static_cast<unsigned int>(lineNum), T2A(filename));
-#else
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                             "Line %u of '%s' is malformed", static_cast<unsigned int>(lineNum),
                             T2A(filename).PeekBuffer());
-#endif
                         error = true;
                     }
                     resString = resString.Substring(0, resString.Find("#") - 1);
@@ -190,15 +180,9 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
                 try {
                     values[i] = std::stof(std::string(resString));
                 } catch (...) {
-#ifdef WIN32
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                        "The value with index %i in line %u of '%s' is malformed", i,
-                        static_cast<unsigned int>(lineNum), T2A(filename));
-#else
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                         "The value with index %i in line %u of '%s' is malformed", i,
                         static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
-#endif
                     error = true;
                 }
             }
