@@ -14,16 +14,16 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/cluster/simple/View.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
 
 #ifdef __unix__
-#include <limits.h>
-#include <unistd.h>
+#    include <limits.h>
+#    include <unistd.h>
 #endif
 
 //#define _DEBUG 1
@@ -90,9 +90,7 @@ bool megamol::pbs::FBOTransmitter2::create() {
 }
 
 
-void megamol::pbs::FBOTransmitter2::release() {
-    shutdownThreads();
-}
+void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
@@ -171,7 +169,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
-#if _DEBUG
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
         std::array<IceTFloat, 4> backgroundColor = { 0, 0, 0, 0 };
@@ -226,12 +224,14 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
                 this->fbo_msg_read_->cam_params[i] = camera[i];
             }
 
+#ifdef WITH_MPI
             this->color_buf_read_->resize(col_buf.size());
             // std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
             memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             this->depth_buf_read_->resize(depth_buf.size());
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
+#endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
 
@@ -262,7 +262,8 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
                 }
 /*#if _DEBUG
@@ -582,7 +583,7 @@ bool megamol::pbs::FBOTransmitter2::initMPI() {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot &p) {
+bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot& p) {
     shutdownThreads();
     initThreads();
 
@@ -605,9 +606,9 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
         }
 
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-#ifdef _DEBUG
+#    ifdef _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
-#endif
+#    endif
 #endif // WITH_MPI
             auto const address =
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
@@ -619,6 +620,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
+
 #if _DEBUG	    
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
 #endif
@@ -704,7 +706,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
         connected_ = true;
 #ifdef WITH_MPI
         if (aggregate_) {
-#if _DEBUG
+#    if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
             // icet setup
@@ -751,7 +753,7 @@ bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
 
     if (this->transmitter_thread_.joinable()) this->transmitter_thread_.join();
 
-    #ifdef WITH_MPI
+#ifdef WITH_MPI
     if (useMpi) {
         icetDestroyMPICommunicator(icet_comm_);
         icetDestroyContext(icet_ctx_);

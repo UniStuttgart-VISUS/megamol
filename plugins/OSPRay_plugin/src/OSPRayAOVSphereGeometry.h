@@ -64,8 +64,6 @@ protected:
 
     bool InterfaceIsDirty();
 
-    core::param::ParamSlot particleList;
-
     core::param::ParamSlot samplingRateSlot;
 
     core::param::ParamSlot aoThresholdSlot;
@@ -92,6 +90,10 @@ private:
     std::vector<float> gridspacing;
 
     std::vector<int> dimensions;
+
+    std::vector<std::pair<void*, structureTypeEnum>> ospStructures;
+
+    long long int ispcLimit = 1ULL << 30;
 };
 
 } // namespace ospray

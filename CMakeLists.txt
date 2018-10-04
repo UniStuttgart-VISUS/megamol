@@ -1,15 +1,22 @@
+#
+# MegaMol™ Core
+# Copyright 2017, by MegaMol Team
+# Alle Rechte vorbehalten. All rights reserved.
+#
+
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 if(POLICY CMP0054)
-    cmake_policy(SET CMP0054 NEW)
+  cmake_policy(SET CMP0054 NEW)
 endif()
 
 project(megamol)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "default install path" FORCE)
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}
+    CACHE PATH "default install path" FORCE)
 endif()
 
 # Directories
@@ -20,16 +27,16 @@ set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 if(UNIX)
-    option(USE_EGL "Use EGL instead of GLFW" OFF)
-    if(USE_EGL)
-        add_definitions("-DUSE_EGL")
-    endif()
+  option(USE_EGL "Use EGL instead of GLFW" OFF)
+  if(USE_EGL)
+    add_definitions("-DUSE_EGL")
+  endif()
 endif()
 
 # Global definitions
-if(WIN32)
-  #add_definitions(-DGL_LOAD_DLL)
-endif()
+#if(WIN32)
+#  add_definitions(-DGL_LOAD_DLL)
+#endif()
 
 # Versions
 include(global_versioninfo)
@@ -43,8 +50,12 @@ include(check_mmdep)
 # Clang-format
 include(ClangFormat)
 
+# External
+include(External)
+
 # NuGet
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.config ${CMAKE_CURRENT_BINARY_DIR}/NuGet.config COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
+  ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
 
 ###############################
 # Vislib
@@ -90,7 +101,7 @@ foreach(d ${DEP_LIST})
   string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
   list(GET SINGLE_LIST 0 plugin)
   list(REMOVE_AT SINGLE_LIST 0)
-  CHECK_MMDEP(${plugin} "${SINGLE_LIST}")
+  check_mmdep(${plugin} "${SINGLE_LIST}")
 endforeach()
 
 unset(DEP_LIST CACHE)

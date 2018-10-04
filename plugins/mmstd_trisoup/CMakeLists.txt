@@ -8,13 +8,11 @@ option(BUILD_MMSTD_TRISOUP_PLUGIN "Option to build mmstd_trisoup" ON)
 if(BUILD_MMSTD_TRISOUP_PLUGIN)
   project(mmstd_trisoup)
 
+  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_TRISOUP_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN" CACHE INTERNAL "")
-
-  set(LIBS vislib core glad geometry_calls)
-  include_directories("include" "src")
-
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -24,23 +22,17 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
   if(UNIX)
     list(REMOVE_ITEM source_files
       "src/dllmain.cpp"
-      "src/volumetrics/Voxelizer.cpp"
-      )
+      "src/volumetrics/Voxelizer.cpp")
   endif()
-
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core geometry_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-
-  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-  
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls)
+
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
@@ -58,5 +50,4 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
-
-endif(BUILD_MMSTD_TRISOUP_PLUGIN)
+endif()
