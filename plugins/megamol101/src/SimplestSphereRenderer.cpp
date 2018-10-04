@@ -35,10 +35,10 @@ SimplestSphereRenderer::SimplestSphereRenderer(void)
     this->MakeSlotAvailable(&this->sphereDataSlot);
 
     // TUTORIAL: For each ParamSlot a default value has to be set
-    this->sphereModeSlot.SetParameter(new core::param::BoolParam(false));
+    this->sphereModeSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->sphereModeSlot);
 
-    this->sizeScalingSlot.SetParameter(new core::param::IntParam(1, 1, 1000));
+    this->sizeScalingSlot.SetParameter(new core::param::FloatParam(1.0f, 0.01f, 1000.0f));
     this->MakeSlotAvailable(&this->sizeScalingSlot);
 
     // TUTORIAL: Each slot that shall be visible in the GUI has to be made available by this->MakeSlotAvailable(...)
@@ -265,7 +265,7 @@ bool SimplestSphereRenderer::Render(core::Call& call) {
     // start the rendering
 
     // Scale the point size with the parameter
-    glPointSize(1.0f * static_cast<float>(this->sizeScalingSlot.Param<core::param::IntParam>()->Value()));
+    glPointSize(this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
 
     // Switch between shaders for rendering simple flat points or shaded spheres
     if (this->sphereModeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -304,6 +304,7 @@ bool SimplestSphereRenderer::Render(core::Call& call) {
         glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, camUp.PeekComponents());
         glUniform3fv(this->sphereShader.ParameterLocation("camPos"), 1, camPos.PeekCoordinates());
         glUniform3fv(this->sphereShader.ParameterLocation("camDir"), 1, camDir.PeekComponents());
+        glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"), this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
     } else {
         glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, mvp.PeekComponents());
     }

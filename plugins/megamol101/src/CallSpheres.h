@@ -23,7 +23,7 @@ namespace megamol101 {
  */
 class CallSpheres : public core::AbstractGetData3DCall {
 public:
-    // TUTORIAL: These const values should be set for each call that offers callback functionality.
+    // TUTORIAL: These static const values should be set for each call that offers callback functionality.
     // This provides a guidance which callback function gets called.
 
     /** Index of the 'GetData' function */
