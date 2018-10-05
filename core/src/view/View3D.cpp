@@ -417,7 +417,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
     }
 
-    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->bkgndColour();
+    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->BkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
