@@ -345,7 +345,9 @@ bool io::PLYDataSource::assertData() {
         }
     }
 
-    this->boundingBox.Set(FLT_MAX, FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+    auto const flt_max = std::numeric_limits<float>::max();
+    auto const flt_min = std::numeric_limits<float>::lowest();
+    this->boundingBox.Set(flt_max, flt_max, flt_max, flt_min, flt_min, flt_min);
     float* bbPointer = const_cast<float*>(boundingBox.PeekBounds()); // hackedihack
 
     if (this->hasBinaryFormat) {
