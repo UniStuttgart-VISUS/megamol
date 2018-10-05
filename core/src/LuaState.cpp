@@ -55,6 +55,7 @@ bool iequals(const std::string& one, const std::string& other) {
     return true;
 }
 
+// clang-format off
 #define MMC_LUA_MMLOG "mmLog"
 #define MMC_LUA_MMLOGINFO "mmLogInfo"
 #define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
@@ -94,6 +95,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
 #define MMC_LUA_MMQUIT "mmQuit"
+#define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -142,10 +144,10 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
     { MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
     { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
-    { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."}
+    { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
+    {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."}
 };
 
-// clang-format off
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = " MMC_LUA_MMLOGINFO ","
 "  error = error,"
@@ -188,7 +190,9 @@ MMC_LUA_MMLISTCALLS "=" MMC_LUA_MMLISTCALLS ","
 MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
+MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
 "  ipairs = ipairs,"
+"  load = load,"
 "  next = next,"
 "  pairs = pairs,"
 "  pcall = pcall,"
@@ -383,6 +387,8 @@ void megamol::core::LuaState::commonInit() {
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
         lua_register(L, MMC_LUA_MMQUIT, &dispatch<&LuaState::Quit>);
+
+        lua_register(L, MMC_LUA_MMREADTEXTFILE, &dispatch<&LuaState::ReadTextFile>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -1630,6 +1636,47 @@ int megamol::core::LuaState::Help(lua_State *L) {
 int megamol::core::LuaState::Quit(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
         this->coreInst->Shutdown();
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::ReadTextFile(lua_State* L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        const auto filename = luaL_checkstring(L, 1);
+        std::ifstream t(filename);
+        if (t.good()) {
+            std::stringstream buffer;
+            buffer << t.rdbuf();
+
+            //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename, buffer.str().c_str());
+
+            lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
+            lua_pushstring(L, buffer.str().c_str()); // put string parameter on top of stack
+            // call the function pointer
+            lua_pcall(L, 1, 1, 0);
+            n = lua_gettop(L);
+            if (n != 1) {
+                std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
+                lua_pushstring(L, err.c_str());
+                lua_error(L);
+            } else {
+                const auto newString = luaL_checkstring(L, 1);
+                //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n", newString);
+                return 1;
+            }
+        } else {
+            std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
+            err += filename;
+            err += "'.";
+            lua_pushstring(L, err.c_str());
+            lua_error(L);
+        }
+    } else {
+        std::string err =
+            MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
     }
     return 0;
 }
