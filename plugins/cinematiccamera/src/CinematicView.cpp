@@ -29,7 +29,8 @@ CinematicView::CinematicView(void) : View3D(),
     resWidthParam(              "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
     resHeightParam(             "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
     fpsParam(                   "06_fps", "Frames per second the animation should be rendered."),
-    delayFirstRenderFrameParam( "07_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
+    startRenderFrameParam(      "07_firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning)."), 
+    delayFirstRenderFrameParam( "08_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
     eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
     projectionParam(            "stereo::projection", "Select camera projection.")
     {
@@ -48,7 +49,6 @@ CinematicView::CinematicView(void) : View3D(),
     this->vpHLast         = 0;
     this->rendering       = false;
     this->fps             = 24;
-    this->expFrameCnt     = 1;
 
     // init parameters
     param::EnumParam *sbs = new param::EnumParam(this->sbSide);
@@ -94,6 +94,9 @@ CinematicView::CinematicView(void) : View3D(),
 
     this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
+
+    this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
+    this->MakeSlotAvailable(&this->startRenderFrameParam);
 }
 
 
@@ -587,20 +590,27 @@ bool CinematicView::render2file_setup() {
     this->pngdata.bpp               = 3;
     this->pngdata.width             = static_cast<unsigned int>(this->cineWidth);
     this->pngdata.height            = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.cnt               = 0;
-    this->pngdata.animTime          = 0.0f;
     this->pngdata.buffer            = nullptr;
     this->pngdata.ptr               = nullptr;
     this->pngdata.infoptr           = nullptr;
     this->pngdata.write_lock        = 1;
     this->pngdata.start_time        = std::chrono::system_clock::now();
 
+    unsigned int startFrameCnt = static_cast<unsigned int>(this->startRenderFrameParam.Param<param::IntParam>()->Value());
+    unsigned int maxFrameCnt   = (unsigned int)(this->pngdata.animTime * (float)this->fps);
+    if (startFrameCnt > maxFrameCnt) {
+        startFrameCnt = maxFrameCnt;
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
+    }
+    this->pngdata.cnt               = startFrameCnt;
+    this->pngdata.animTime          = (float)this->pngdata.cnt / (float)this->fps;
+
     // Calculate pre-decimal point positions for frame counter in filename
-    this->expFrameCnt = 1;
+    this->pngdata.exp_frame_cnt = 1;
     float frameCnt = (float)(this->fps) * ccc->getTotalAnimTime();
     while (frameCnt > 1.0f) {
         frameCnt /= 10.0f;
-        this->expFrameCnt++;
+        this->pngdata.exp_frame_cnt++;
     }
 
     // Creating new folder
@@ -646,8 +656,11 @@ bool CinematicView::render2file_write_png() {
 
     if (this->pngdata.write_lock == 0) {
 
+        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        if (ccc == nullptr) return false;
+
         vislib::StringA tmpFilename, tmpStr;
-        tmpStr.Format(".%i", this->expFrameCnt);
+        tmpStr.Format(".%i", this->pngdata.exp_frame_cnt);
         tmpStr.Prepend("%0");
         tmpStr.Append("i.png");
         tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
@@ -711,9 +724,6 @@ bool CinematicView::render2file_write_png() {
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Wrote png file %d for animation time %f ...\n", this->pngdata.cnt, this->pngdata.animTime);
 
         // --------------------------------------------------------------------
-
-        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-        if (ccc == nullptr) return false;
 
         // Increase to next time step
         float fpsFrac = (1.0f / static_cast<float>(this->fps));

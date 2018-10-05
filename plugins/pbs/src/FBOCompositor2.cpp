@@ -251,8 +251,10 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
             }
         }
 
-        auto const width  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
-        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
+        auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
+            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
+        auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
+            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
 
         if (this->width_ != width || this->height_ != height) {
             this->width_ = width;
@@ -341,8 +343,11 @@ bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     if (data_has_changed_.load()) {
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
 
-        this->width_  = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2];
-        this->height_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3];
+
+        this->width_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
+                       (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
+        this->height_ = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
+                        (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
 
         // TODO For now, we only provide FBO 0
         auto const& fbo = (*this->fbo_msg_write_)[0];

@@ -141,7 +141,6 @@ namespace megamol {
             vislib::graphics::gl::FramebufferObject fbo;
             bool                                    rendering;
             unsigned int                            fps;
-            unsigned int                            expFrameCnt;
 
             struct pngData {
                 BYTE                  *buffer;
@@ -157,6 +156,7 @@ namespace megamol {
                 float                  animTime;
                 unsigned int           write_lock;
                 time_point             start_time;
+                unsigned int           exp_frame_cnt;
             } pngdata;
 
 
@@ -234,6 +234,8 @@ namespace megamol {
             core::param::ParamSlot renderParam;
             /** */
             core::param::ParamSlot delayFirstRenderFrameParam;
+            /** */
+            core::param::ParamSlot startRenderFrameParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
             /** */
