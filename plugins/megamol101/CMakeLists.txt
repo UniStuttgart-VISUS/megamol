@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER megamol101 EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build megamol101" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build megamol101" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(megamol101)

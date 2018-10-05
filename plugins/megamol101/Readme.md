@@ -440,18 +440,26 @@ From ``src/SphereColoringModule.cpp``:
 
 ```cpp
 bool SphereColoringModule::getExtentCallback(core::Call& call) {
-	CallSpheres * csOut = dynamic_cast<CallSpheres*>(&call);
-	if (csOut == nullptr) return false;
+    CallSpheres* csOut = dynamic_cast<CallSpheres*>(&call);
+    if (csOut == nullptr) return false;
 
-	CallSpheres *csIn = this->inSlot.CallAs<CallSpheres>();
-	if (csIn == nullptr) return false;
+    CallSpheres* csIn = this->inSlot.CallAs<CallSpheres>();
+    if (csIn == nullptr) return false;
 
-	if (!(*csIn)(CallSpheres::CallForGetExtent)) return false;
+    if (!(*csIn)(CallSpheres::CallForGetExtent)) return false;
 
-	csOut->operator=(*csIn); // deep copy
-	csOut->SetDataHash(csOut->DataHash() + hashOffset);
+    bool slotsDirty = this->areSlotsDirty();
+    if (lastHash != csIn->DataHash() || slotsDirty) {
+        lastHash = csIn->DataHash();
+        if (slotsDirty) hashOffset++;
+        resetDirtySlots();
+        isDirty = true;
+    }
 
-	return true;
+    csOut->operator=(*csIn); // deep copy
+    csOut->SetDataHash(csOut->DataHash() + hashOffset);
+
+    return true;
 }
 ```
 
@@ -459,24 +467,22 @@ The code just copies the incoming Call from the right to the left. Additionally,
 
 ```cpp
 bool SphereColoringModule::getDataCallback(core::Call& call) {
-    CallSpheres * csOut = dynamic_cast<CallSpheres*>(&call);
+    CallSpheres* csOut = dynamic_cast<CallSpheres*>(&call);
     if (csOut == nullptr) return false;
 
-    CallSpheres *csIn = this->inSlot.CallAs<CallSpheres>();
+    CallSpheres* csIn = this->inSlot.CallAs<CallSpheres>();
     if (csIn == nullptr) return false;
+
     if (!(*csIn)(CallSpheres::CallForGetData)) return false;
 
     csOut->operator=(*csIn); // deep copy
 
-    if (this->lastHash != csIn->DataHash() || this->areSlotsDirty()) {
-        this->lastHash = csIn->DataHash();
-        if (this->isActiveSlot.Param<core::param::BoolParam>()->Value()) {
-	        this->modifyColors(csOut); // compute and write colors, if necessary 
-        }
-        this->hashOffset++; // something has changed --> increment hash value
-        this->resetDirtySlots();
+    if (isDirty) {
+        modifyColors(csOut);
     }
+
     csOut->SetDataHash(csOut->DataHash() + hashOffset);
+
     return true;
 }
 ```

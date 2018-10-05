@@ -62,6 +62,7 @@ SphereColoringModule::SphereColoringModule(void)
     hashOffset = 0;
     numColor = 0;
     colors = nullptr;
+    isDirty = true;
 }
 
 /*
@@ -101,15 +102,8 @@ bool SphereColoringModule::getDataCallback(core::Call& call) {
 
     csOut->operator=(*csIn); // deep copy
 
-    if (lastHash != csIn->DataHash() || areSlotsDirty()) {
-        lastHash = csIn->DataHash();
-
-        if (this->isActiveSlot.Param<core::param::BoolParam>()->Value()) {
-            modifyColors(csOut);
-        }
-
-        hashOffset++;
-        resetDirtySlots();
+    if (isDirty) {
+        modifyColors(csOut);
     }
 
     csOut->SetDataHash(csOut->DataHash() + hashOffset);
@@ -129,6 +123,14 @@ bool SphereColoringModule::getExtentCallback(core::Call& call) {
 
     if (!(*csIn)(CallSpheres::CallForGetExtent)) return false;
 
+    bool slotsDirty = this->areSlotsDirty();
+    if (lastHash != csIn->DataHash() || slotsDirty) {
+        lastHash = csIn->DataHash();
+        if (slotsDirty) hashOffset++;
+        resetDirtySlots();
+        isDirty = true;
+    }
+
     csOut->operator=(*csIn); // deep copy
     csOut->SetDataHash(csOut->DataHash() + hashOffset);
 
@@ -139,6 +141,15 @@ bool SphereColoringModule::getExtentCallback(core::Call& call) {
  * SphereColoringModule::modifyColors
  */
 void SphereColoringModule::modifyColors(CallSpheres* cs) {
+
+    if (!this->isActiveSlot.Param<core::param::BoolParam>()->Value()) {
+        if (this->colors != nullptr) {
+            delete[] this->colors;
+            this->colors = nullptr;
+        }
+        this->numColor = 0;
+        return;
+    }
 
     this->numColor = cs->Count();
 

@@ -122,6 +122,9 @@ private:
     /** The last hash from the source data */
     SIZE_T lastHash;
 
+    /** Internal dirtyness flag */
+    bool isDirty;
+
     /** The slot for the minimum color */
     core::param::ParamSlot minColorSlot;
 
