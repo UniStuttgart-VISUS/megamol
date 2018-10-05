@@ -3,16 +3,18 @@ The megamol101 plugin provides provides some basic examples how to write your ow
 
 ### Content
 
-1. [Design Principles](#design)
+1. [Design Principles](#design-principles)
 2. [Modules](#modules)
-3. [Data Loading Example](#dataloading)
-   1. [Parameter Slots](#paramslots)
-   2. [Data Loading](#datload)
-   3. [Caller Slots / Callee Slots](#callslots)
+3. [Data Loading Example](#data-loading-example)
+   1. [Parameter Slots](#parameter-slots)
+   2. [Data Loading](#data-loading)
+   3. [Module Connection](#module-connection)
 4. [Calls](#calls)
 5. [Renderer](#renderer)
-6. [Data Manipulation](#manipulation)
-7. [Building this Plugin](#build)
+6. [Data Manipulation](#data-manipulation)
+7. [Building this Plugin](#building-this-plugin)
+8. [Summary](#summary)
+9. [Example Data](#example-data)
 
 ---
 
@@ -30,7 +32,7 @@ MegaMol is mainly designed to be a rapid prototyping tool for new visualization 
 
 A minimal MegaMol program usually consists of **loader**, a **renderer** and a **view**
 
-<img src="images/basic_graph.png" width="720">
+![Basic MegaMol Graph](images/basic_graph.png)
 
 * Loaders read and store data
 
@@ -180,7 +182,7 @@ Every possible parameter type has its own include file. Initial values have to b
 
 In the following, we give a short guidance where the parameter slots can be found: 
 
-<img src="images/gui.png" width="400"><img src="images/configurator_gui.png" width="400">
+![MegaMol GUI](images/gui.png)![Configurator GUI](images/configurator_gui.png)
 
 ### Data Loading
 
@@ -210,7 +212,7 @@ if (this->filenameSlot.IsDirty()) {
 	} catch (vislib::Exception ex) {
 		// a known vislib exception was raised
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), 						ex.GetLine());
+			"Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), 	               ex.GetLine());
 		retval = false;
 	} catch (...) {
 		// an unknown exception was raised
@@ -228,11 +230,11 @@ After the data is loaded, it can be transferred to other modules via Caller Slot
 
 
 
-### Caller Slots / Callee Slots
+### Module Connection
 
 The address of the loaded data has to be passed to other modules via Calls. These are connected via Caller Slots / Callee Slots. In the configurator these are depicted via red and green arrows:
 
-<img src="images/caller_callee.png" width="520">
+![Call Principle](images/caller_callee.png)
 
 For each Callee slot, the hosting Module can provide callback functions. The following code links the right side of the Call to the CalleeSlot in the data loader ``ASCIISphereLoader``:
 
@@ -240,7 +242,7 @@ For each Callee slot, the hosting Module can provide callback functions. The fol
 ASCIISphereLoader::ASCIISphereLoader(void): core::Module(),
     getDataSlot("getdata", "The slot publishing the loaded data") {
 
-    this->getDataSlot.SetCallback(CallSpheres::ClassName(), "GetData",                               					 &ASCIISphereLoader::getDataCallback);
+    this->getDataSlot.SetCallback(CallSpheres::ClassName(), "GetData",                                                   &ASCIISphereLoader::getDataCallback);
     this->getDataSlot.SetCallback(CallSpheres::ClassName(), "GetExtent",
                                   &ASCIISphereLoader::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -313,7 +315,7 @@ static const char * FunctionName(unsigned int idx) {
 Additionally, each Call should have a description typedef outside of the class definition. For ``CallSpheres`` it looks like this:
 
 ```cpp
-typedef megamol::core::factories::CallAutoDescription<CallSpheres> 		                                                                            CallSpheresDescription;
+typedef megamol::core::factories::CallAutoDescription<CallSpheres> CallSpheresDescription;
 ```
 
 The rest of the call consists mainly of getter and setter functions for the transported data.
@@ -426,7 +428,7 @@ GLSL shader programs can be stored in simple text files or so called ``.btf`` fi
 
 The example in ``SimplestSphereRenderer`` uses a boolean Parameter Slot to switch between two different shader programs that are stored in ``Shaders/simplePoints.bft`` and ``Shaders/prettyPoints.btf`` respectively. Changing the slot value switches between the rendering of simple, unshaded points, or lit spheres:
 
-<img src="images/ugly.png" width="400"><img src="images/pretty.png" width="400">
+![Unshaded Points](images/ugly.png)![Lit Spheres](images/pretty.png)
 
 The rendering code looks the same in both cases, only the used shader varies.
 
@@ -495,10 +497,17 @@ The For details how the colors are added to the Call, please consider the provid
 
 A summary of the whole pipeline provided by this plugin is shown in the following figure:
 
-<img src="images/summary.png" width="800">
+![MegaMol Pipeline summary](images/summary.png)
 
 
 
 ## Building this Plugin
 
 This plugin is switched off by default. If you want to use the plugin, please turn it on during the CMAKE configuration process. This plugin has no additional dependencies
+
+
+
+## Example Data
+
+This plugin comes with example data. It can be found in the ``exampledata/`` folder. ``dataexample.csv`` is mainly there to test some of the warnings the ``ASCIISphereLoader`` is able to throw. ``1m40.csv`` is the csv-version of ``1M40.pdb`` which can be found in the global samples folder of MegaMol.
+
