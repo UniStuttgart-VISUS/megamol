@@ -120,6 +120,60 @@ namespace simple {
             return this->getConnectedView();
         }
 
+        /**
+        * Answer the height of the rendering tile
+        *
+        * @return The height of the rendering tile
+        */
+        VISLIB_FORCEINLINE float getTileH(void) const {
+            return view::AbstractTileView::getTileH();
+        }
+
+        /**
+        * Answer the width of the rendering tile
+        *
+        * @return The width of the rendering tile
+        */
+        VISLIB_FORCEINLINE float getTileW(void) const {
+            return view::AbstractTileView::getTileW();
+        }
+
+        /**
+        * Answer the x coordinate of the rendering tile
+        *
+        * @return The x coordinate of the rendering tile
+        */
+        VISLIB_FORCEINLINE float getTileX(void) const {
+            return view::AbstractTileView::getTileX();
+        }
+
+        /**
+        * Answer the y coordinate of the rendering tile
+        *
+        * @return The y coordinate of the rendering tile
+        */
+        VISLIB_FORCEINLINE float getTileY(void) const {
+            return view::AbstractTileView::getTileY();
+        }
+
+        /**
+        * Answer the height of the virtual viewport
+        *
+        * @return The height of the virtual viewport
+        */
+        VISLIB_FORCEINLINE float getVirtHeight(void) const {
+            return view::AbstractTileView::getVirtHeight();
+        }
+
+        /**
+        * Answer the width of the virtual viewport
+        *
+        * @return The width of the virtual viewport
+        */
+        VISLIB_FORCEINLINE float getVirtWidth(void) const {
+            return view::AbstractTileView::getVirtWidth();
+        }
+
     protected:
 
         /**

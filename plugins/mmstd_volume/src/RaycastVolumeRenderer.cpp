@@ -68,17 +68,17 @@ bool RaycastVolumeRenderer::create()
 			"Unable to compile shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
 				ce.FailedAction()), ce.GetMsgA());
-		return nullptr;
+                return false;
 	}
 	catch (vislib::Exception e) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 			"Unable to compile shader: %s\n", e.GetMsgA());
-		return nullptr;
+                return false;
 	}
 	catch (...) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 			"Unable to compile shader: Unknown exception\n");
-		return nullptr;
+                return false;
 	}
 		
 

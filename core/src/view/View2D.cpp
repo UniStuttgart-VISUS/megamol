@@ -134,7 +134,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     }
 
     const float *bkgndCol = (this->overrideBkgndCol != NULL)
-        ? this->overrideBkgndCol : this->bkgndColour();
+        ? this->overrideBkgndCol : this->BkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
 
     if (cr2d == NULL) {

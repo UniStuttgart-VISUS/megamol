@@ -1,0 +1,20 @@
+-- Standard MegaMol Configuration File --
+
+print("I am the Standard MegaMol configuration!")
+
+basePath = "${CMAKE_SOURCE_DIR}/"
+
+mmSetLogLevel(0)
+mmSetEchoLevel("*")
+mmSetAppDir(basePath .. "${MMPLG_DIR}")
+mmAddShaderDir(basePath .. "share/shaders")
+mmAddResourceDir(basePath .. "share/resources")
+mmPluginLoaderInfo(basePath .. "${MMPLG_DIR}", "*.mmplg", "include")
+
+computer = mmGetMachineName()
+
+mmSetConfigValue("*-window",   "x5y35w1280h720")
+mmSetConfigValue("consolegui", "on")
+mmSetConfigValue("topmost",    "off")
+mmSetConfigValue("fullscreen", "off")
+mmSetConfigValue("vsync",      "off")
