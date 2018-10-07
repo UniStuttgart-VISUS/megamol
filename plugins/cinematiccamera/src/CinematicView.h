@@ -143,7 +143,7 @@ namespace megamol {
             unsigned int                            fps;
 
             struct pngData {
-                BYTE                  *buffer;
+                BYTE                  *buffer = nullptr;
                 vislib::sys::FastFile  file;
                 unsigned int           width;
                 unsigned int           height;
@@ -151,8 +151,8 @@ namespace megamol {
                 vislib::TString        path;
                 vislib::TString        filename;
                 unsigned int           cnt;
-                png_structp            ptr;
-                png_infop              infoptr;
+                png_structp            ptr = nullptr;
+                png_infop              infoptr = nullptr;
                 float                  animTime;
                 unsigned int           write_lock;
                 time_point             start_time;
