@@ -12,7 +12,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -126,7 +126,7 @@ bool SimplestSphereRenderer_2::create(void) {
  * SimplestSphereRenderer_2::GetExtents
  */
 bool SimplestSphereRenderer_2::GetExtents(core::Call& call) {
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
@@ -164,7 +164,7 @@ void SimplestSphereRenderer_2::release(void) {
  * SimplestSphereRenderer_2::Render
  */
 bool SimplestSphereRenderer_2::Render(core::Call& call) {
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     // before rendering, call all necessary data

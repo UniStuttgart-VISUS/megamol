@@ -101,12 +101,175 @@ View3D_2::View3D_2(void)
 
     using vislib::sys::KeyCode;
 
-    // TODO implement
+    // this->camParams = this->cam.Parameters();
+    // this->camOverrides = new CameraParamOverride(this->camParams);
+
+    // vislib::graphics::ImageSpaceType defWidth(static_cast<vislib::graphics::ImageSpaceType>(100));
+    // vislib::graphics::ImageSpaceType defHeight(static_cast<vislib::graphics::ImageSpaceType>(100));
+
+    // this->camParams->SetVirtualViewSize(defWidth, defHeight);
+    // this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, defWidth, defHeight));
 
     this->rendererSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    // TODO implement
+    // this triggers the initialization
+    this->bboxs.Clear();
+
+    this->showBBox.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->showBBox);
+
+    this->showLookAt.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->showLookAt);
+
+    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->MakeSlotAvailable(&this->cameraSettingsSlot);
+
+    this->storeCameraSettingsSlot.SetParameter(
+        new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | vislib::sys::KeyCode::KEY_MOD_SHIFT | 'C'));
+    this->storeCameraSettingsSlot.SetUpdateCallback(&View3D_2::onStoreCamera);
+    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
+
+    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 'c'));
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D_2::onRestoreCamera);
+    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+
+    this->resetViewSlot.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME));
+    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    /*this->isCamLightSlot << new param::BoolParam(this->isCamLight);
+    this->MakeSlotAvailable(&this->isCamLightSlot);
+
+    this->lightDirSlot << new param::Vector3fParam(this->lightDir);
+    this->MakeSlotAvailable(&this->lightDirSlot);
+
+    this->lightColDif[0] = this->lightColDif[1] = this->lightColDif[2] = 1.0f;
+    this->lightColDif[3] = 1.0f;
+
+    this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
+    this->lightColAmb[3] = 1.0f;
+
+    this->lightColDifSlot << new param::StringParam(
+        utility::ColourParser::ToString(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
+    this->MakeSlotAvailable(&this->lightColDifSlot);
+
+    this->lightColAmbSlot << new param::StringParam(
+        utility::ColourParser::ToString(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
+    this->MakeSlotAvailable(&this->lightColAmbSlot);
+    */
+
+    this->ResetView();
+
+    // TODO
+    // this->stereoEyeDistSlot << new param::FloatParam(this->camParams->StereoDisparity(), 0.0f);
+    // this->MakeSlotAvailable(&this->stereoEyeDistSlot);
+
+    // TODO
+    // this->stereoFocusDistSlot << new param::FloatParam(this->camParams->FocalDistance(false), 0.0f);
+    // this->MakeSlotAvailable(&this->stereoFocusDistSlot);
+
+    this->viewKeyMoveStepSlot.SetParameter(new param::FloatParam(0.1f, 0.001f));
+    this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
+
+    this->viewKeyRunFactorSlot.SetParameter(new param::FloatParam(2.0f, 0.1f));
+    this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
+
+    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(15.0f, 0.001f, 360.0f));
+    this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
+    this->mouseSensitivitySlot.SetUpdateCallback(&View3D_2::mouseSensitivityChanged);
+    this->MakeSlotAvailable(&this->mouseSensitivitySlot);
+
+    // TODO clean up vrpsev memory after use
+    param::EnumParam* vrpsev = new param::EnumParam(1);
+    vrpsev->SetTypePair(0, "Position");
+    vrpsev->SetTypePair(1, "Look-At");
+    this->viewKeyRotPointSlot.SetParameter(vrpsev);
+    this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
+
+    this->viewKeyRotLeftSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
+
+    this->viewKeyRotRightSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
+
+    this->viewKeyRotUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
+
+    this->viewKeyRotDownSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
+
+    this->viewKeyRollLeftSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
+
+    this->viewKeyRollRightSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
+
+    this->viewKeyZoomInSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyZoomInSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
+
+    this->viewKeyZoomOutSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
+
+    this->viewKeyMoveLeftSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
+
+    this->viewKeyMoveRightSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
+
+    this->viewKeyMoveUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
+
+    this->viewKeyMoveDownSlot.SetParameter(new param::ButtonParam(
+        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
+
+    this->toggleBBoxSlot.SetParameter(new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT));
+    this->toggleBBoxSlot.SetUpdateCallback(&View3D_2::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleBBoxSlot);
+
+    this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_TAB));
+    this->enableMouseSelectionSlot.SetUpdateCallback(&View3D_2::onToggleButton);
+    this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
+
+    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
+    this->bboxColSlot.SetParameter(new param::StringParam(
+        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3])));
+    this->MakeSlotAvailable(&this->bboxColSlot);
+
+    this->showViewCubeSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->showViewCubeSlot);
+
+    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    }
+
+    this->MakeSlotAvailable(&this->slotGetCamParams);
+    this->MakeSlotAvailable(&this->slotSetCamParams);
+
+    this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
 }
 
 /*
@@ -327,3 +490,4 @@ bool View3D_2::onToggleButton(param::ParamSlot& p) {
 void View3D_2::renderViewCube(void) {
     // TODO implement
 }
+
