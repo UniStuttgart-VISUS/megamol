@@ -1,5 +1,5 @@
 ﻿
-fileToRender = "../project_files/testNGspheres.lua"
+fileToRender = "../project_files/testspheres.lua"
 keyframeFile = "../project_files/cinematic_keyframes.kf"
 
 
@@ -14,7 +14,7 @@ function trafo(str)
   print("viewmoduleinst = " .. viewmoduleinst)
 
   newcontent = newcontent:gsub('mmCreateCall%([\"\']CallRender3D[\'\"],%s*[\'\"]' 
-      .. viewmoduleinst .. '::rendering[\'\"],([^,]+)%)', 'mmCreateCall("CallRender3D", "::project::ReplacementRenderer1::renderer",%1)'
+      .. '.-' .. viewmoduleinst .. '::rendering[\'\"],([^,]+)%)', 'mmCreateCall("CallRender3D", "::project::ReplacementRenderer1::renderer",%1)'
       .. "\n" .. 'mmCreateCall("CallRender3D", "::project::ReplacementRenderer2::renderer",%1)')
   
   return newcontent
@@ -60,9 +60,11 @@ mmSetParamValue("::project::CinematicView1::stereo::projection", "2")
 
 mmCreateModule("ReplacementRenderer", "::project::ReplacementRenderer1")
 mmSetParamValue("::project::ReplacementRenderer1::03_replacmentKeyAssign", "6")
+mmSetParamValue("::project::ReplacementRenderer1::01_replacementRendering", "on")
 
 mmCreateModule("ReplacementRenderer", "::project::ReplacementRenderer2")
 mmSetParamValue("::project::ReplacementRenderer2::03_replacmentKeyAssign", "5")
+mmSetParamValue("::project::ReplacementRenderer2::01_replacementRendering", "on")
 
 
 mmCreateCall("CallRenderView", "::project::SplitView1::render1", "::project::SplitView2::render")
