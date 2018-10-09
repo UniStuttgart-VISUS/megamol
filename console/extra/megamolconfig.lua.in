@@ -2,7 +2,7 @@
 
 print("I am the Standard MegaMol configuration!")
 
-basePath = "${CMAKE_SOURCE_DIR}/"
+basePath = "${CMAKE_INSTALL_PREFIX}/"
 
 mmSetLogLevel(0)
 mmSetEchoLevel("*")
