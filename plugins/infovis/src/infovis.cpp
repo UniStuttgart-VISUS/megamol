@@ -19,6 +19,7 @@
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
+#include "TSNEProjection.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -47,6 +48,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:
