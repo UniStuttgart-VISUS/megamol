@@ -18,7 +18,7 @@
 #include <climits>
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #include <Lmcons.h>
 #define VISLIB_USE_VERSION_HELPERS
 #include <VersionHelpers.h>

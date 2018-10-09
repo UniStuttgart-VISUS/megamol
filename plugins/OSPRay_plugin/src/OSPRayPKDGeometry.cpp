@@ -112,7 +112,7 @@ bool OSPRayPKDGeometry::readData(megamol::core::Call& call) {
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::PKD;
-    this->structureContainer.raw = std::make_shared<const void*>(std::move(parts.GetVertexData()));
+    this->structureContainer.raw = std::move(parts.GetVertexData());
     this->structureContainer.vertexLength = vertexLength;
     this->structureContainer.colorLength = colorLength;
     this->structureContainer.partCount = partCount;

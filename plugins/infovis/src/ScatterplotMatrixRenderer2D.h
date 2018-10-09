@@ -75,6 +75,8 @@ protected:
 
 private:
     enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
+    enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
+    enum AxisMode { AXIS_MODE_MINIMALISTIC = 0, AXIS_MODE_SCIENTIFIC };
 
     struct ParamState {
         size_t colorIdx;
@@ -99,6 +101,8 @@ private:
         GLfloat minY;
         GLfloat maxX;
         GLfloat maxY;
+        GLfloat smallTickX;
+        GLfloat smallTickY;
     };
 
     /**
@@ -128,7 +132,9 @@ private:
 
     void updateColumns(void);
 
-    void drawAxes(void);
+    void drawMinimalisticAxis(void);
+
+    void drawScientificAxis(void);
 
     void drawPoints(void);
 
@@ -153,6 +159,10 @@ private:
     core::param::ParamSlot geometryTypeParam;
 
     core::param::ParamSlot kernelWidthParam;
+
+    core::param::ParamSlot kernelTypeParam;
+
+    core::param::ParamSlot axisModeParam;
 
     core::param::ParamSlot axisColorParam;
 
@@ -194,7 +204,9 @@ private:
 
     megamol::core::utility::SDFFont axisFont;
 
-    vislib::graphics::gl::GLSLShader axisShader;
+    vislib::graphics::gl::GLSLShader minimalisticAxisShader;
+
+    vislib::graphics::gl::GLSLShader scientificAxisShader;
 
     vislib::graphics::gl::GLSLShader pointShader;
 

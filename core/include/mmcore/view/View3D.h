@@ -222,7 +222,11 @@ namespace view {
         /** The complete scene bounding box */
         BoundingBoxes bboxs;
 
-    //private:
+        /** keeping track of changes in the camera between frames */
+        vislib::SmartPtr<vislib::graphics::CameraParamsStore> lastFrameParams = new vislib::graphics::CameraParamsStore();
+        bool frameIsNew = false;
+
+        //private:
     protected:
 
         /**
@@ -514,6 +518,8 @@ namespace view {
         param::ParamSlot toggleBBoxSlot;
 
         param::ParamSlot toggleSoftCursorSlot;
+
+        param::ParamSlot hookOnChangeOnlySlot;
 
         /** The colour of the bounding box */
         float bboxCol[4];

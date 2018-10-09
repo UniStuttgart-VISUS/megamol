@@ -297,7 +297,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
                 ct = 5;
                 cs = 16;
                 break;
-            case MultiParticleDataCall::Particles::COLDATA_SHORT_RGBA:
+            case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
                 ct = 6;
                 cs = 8;
                 break;
@@ -319,7 +319,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             if (ct == 3) { // VERTDATA_DOUBLE_XYZ needs COLDATA_DOUBLE_I instead of COLDATA_FLOAT_I to be aligned for modern renderers (NG and OPSRay)
                 UINT8 x = 7;
                 ASSERT_WRITEOUT(&x, 1);
-            } else { // VERTDATA_DOUBLE_XYZ needs COLDATA_SHORT_RGBA to be aligned for modern renderers (NG and OPSRay)
+            } else { // VERTDATA_DOUBLE_XYZ needs COLDATA_USHORT_RGBA to be aligned for modern renderers (NG and OPSRay)
                 UINT8 x = 6;
                 ASSERT_WRITEOUT(&x, 1);
             }
@@ -338,7 +338,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             co = cs;
         }
 
-        if ((vt == 1) || (vt == 3)) {
+        if ((vt == 1) || (vt == 3) || (vt == 4)) {
             float f = points.GetGlobalRadius();
             ASSERT_WRITEOUT(&f, 4);
         }

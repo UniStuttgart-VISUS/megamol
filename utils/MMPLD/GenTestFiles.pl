@@ -273,14 +273,14 @@ AddEdgeLists();
 $m->OverrideBBox(-2,-2,-2,2,2,2);
 $m->Close();
 
-$outfile = "test_xyz_double_rgba_short.mmpld";
+$outfile = "test_xyz_double_rgba_ushort.mmpld";
 print "writing $outfile\n";
 push @outfiles, $outfile;
 $m = MMPLD->new({filename=>$outfile, numframes=>1});
 $m->StartFrame({frametime=>1.23, numlists=>$numLists});
 
 $m->StartList({
-            vertextype=>$VERTEX_XYZ_DOUBLE, colortype=>$COLOR_RGBA_SHORT, globalradius=>0.1,
+            vertextype=>$VERTEX_XYZ_DOUBLE, colortype=>$COLOR_RGBA_USHORT, globalradius=>0.1,
             minintensity=>0.0, maxintensity=>255, particlecount=>$numPoints
             });
 AddParticles(65535.0);

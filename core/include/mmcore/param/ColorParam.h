@@ -83,7 +83,7 @@ public:
     *
     * @return The value of the parameter
     */
-    inline const ColorParam::Type& ColorParam::Value(void) const {
+    inline const Type& Value(void) const {
         return this->val;
     }
 

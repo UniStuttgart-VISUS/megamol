@@ -103,7 +103,7 @@ bool utility::ProjectParser::CheckBaseTag(const utility::xml::XmlReader& reader)
  * utility::ProjectParser::StartTag
  */
 bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+        const XML_Char * name, const XML_Char ** attrib,
         utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outChildState,
         utility::xml::XmlReader::ParserState& outEndTagState,
@@ -123,8 +123,8 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"view\" tag nested within \"job\" tag ignored");
             return true;
         }
-        const MMXML_CHAR *vdname = NULL;
-        const MMXML_CHAR *viewmodname = NULL;
+        const XML_Char *vdname = NULL;
+        const XML_Char *viewmodname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 vdname = attrib[i + 1];
@@ -160,8 +160,8 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"job\" tag nested within \"view\" tag ignored");
             return true;
         }
-        const MMXML_CHAR *jdname = NULL;
-        const MMXML_CHAR *jobmodname = NULL;
+        const XML_Char *jdname = NULL;
+        const XML_Char *jobmodname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 jdname = attrib[i + 1];
@@ -193,8 +193,8 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"module\" tag outside a \"view\" tag or a \"job\" tag ignored");
             return true;
         }
-        const MMXML_CHAR *className = NULL;
-        const MMXML_CHAR *instName = NULL;
+        const XML_Char *className = NULL;
+        const XML_Char *instName = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("class").Equals(attrib[i])) {
                 className = attrib[i + 1];
@@ -236,10 +236,10 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"call\" tag outside a \"view\" tag or a \"job\" tag ignored");
             return true;
         }
-        const MMXML_CHAR *className = NULL;
-        const MMXML_CHAR *fromName = NULL;
-        const MMXML_CHAR *toName = NULL;
-        const MMXML_CHAR *profilingSetting = NULL;
+        const XML_Char *className = NULL;
+        const XML_Char *fromName = NULL;
+        const XML_Char *toName = NULL;
+        const XML_Char *profilingSetting = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("class").Equals(attrib[i])) {
                 className = attrib[i + 1];
@@ -275,7 +275,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
         }
         bool doProfiling = false;
         try {
-            doProfiling = vislib::CharTraits<MMXML_CHAR>::ParseBool(profilingSetting);
+            doProfiling = vislib::CharTraits<XML_Char>::ParseBool(profilingSetting);
         } catch(...) {
         }
         if (this->vd != NULL) {
@@ -292,8 +292,8 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"param\" tag outside a \"view\" tag a \"job\" tag ignored");
             return true;
         }
-        const MMXML_CHAR *name = NULL;
-        const MMXML_CHAR *value = NULL;
+        const XML_Char *name = NULL;
+        const XML_Char *value = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 name = attrib[i + 1];
@@ -346,7 +346,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
  * utility::ProjectParser::EndTag
  */
 bool utility::ProjectParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, utility::xml::XmlReader::ParserState state,
+        const XML_Char * name, utility::xml::XmlReader::ParserState state,
         utility::xml::XmlReader::ParserState& outPostEndTagState) {
     if (ConditionalParser::EndTag(num, level, name, state, 
             outPostEndTagState)) {

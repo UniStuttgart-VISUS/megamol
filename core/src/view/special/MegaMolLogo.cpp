@@ -8,9 +8,6 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/special/MegaMolLogo.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif /* _WIN32 */
 #include "MegaMolLogoData.inl"
 #include "vislib/assert.h"
 #include "vislib/Array.h"

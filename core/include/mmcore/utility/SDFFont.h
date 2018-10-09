@@ -67,6 +67,10 @@ namespace utility {
      *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
      *     - Billboard:          this->sdfFont.SetBillboard(true);
      *
+     *     - BATCH-rendering     ...
+     *
+     *
+     *
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Predefined FONTS: (free for commercial use) 
      *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
@@ -342,6 +346,24 @@ namespace utility {
         virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
+        * Draws a text into a specified rectangular area, and performs
+        * soft-breaks if necessary.
+        *
+        * @param c     The color as RGBA.
+        * @param x     The left coordinate of the rectangle.
+        * @param y     The upper coordinate of the rectangle.
+        * @param z     The z coordinate of the position.
+        * @param w     The width of the rectangle.
+        * @param h     The height of the rectangle.
+        * @param size  The size to use.
+        * @param flipY The flag controlling the direction of the y-axis.
+        * @param txt   The zero-terminated string to draw.
+        * @param align The alignment of the text inside the area.
+        */
+        virtual void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+
+        /**
          * Draws a text at the specified position.
          *
          * @param c     The color as RGBA.
@@ -416,17 +438,10 @@ namespace utility {
         }
 
         /**
-         * Enables billboard mode.
+         * Enable/Disable billboard mode.
          */
-        inline void EnableBillboard(void) { 
-            this->billboard = true; 
-        }
-
-        /**
-         * Disbales billboard mode.
-         */
-        inline void DisableBillboard(void) { 
-            this->billboard = false; 
+        inline void SetBillboardMode(bool state) { 
+            this->billboard = state; 
         }
 
         /**
@@ -434,7 +449,7 @@ namespace utility {
         *
         * @return True if billboard mode is enabled, false otherwise.
         */
-        inline bool IsBillboardEnabled(void) const {
+        inline bool GetBillboardMode(void) const {
             return this->billboard;
         }
 
@@ -445,7 +460,7 @@ namespace utility {
         * @param v The rotation axis.
         */
         inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
-            this->rotation.Set((a * 3.141592653589f / 180.0f), v);
+            this->rotation.Set((a * (float)M_PI / 180.0f), v);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {
@@ -468,23 +483,15 @@ namespace utility {
         */
         inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
             this->rotation.AngleAndAxis(a, v);
-            a = (a / 3.141592653589f * 180.0f);
+            a = (a / (float)M_PI * 180.0f);
         }
 
         /**
-         * Enable batch draw. 
+         * Enable/Disable batch draw mode.  
          * Determines that all DrawString() calls are cached for later batch draw.
          */
-        inline void EnableBatchDraw(void) { 
-            this->useBatchDraw = true;
-        }
-
-        /**
-         * Disable batch draw.
-         * Determines that all DrawString() calls are rendered instantly (default).
-         */
-        inline void DisableBatchDraw(void) { 
-            this->useBatchDraw = false;
+        inline void SetBatchDrawMode(bool state) { 
+            this->useBatchDraw = state;
         }
 
         /**
@@ -492,14 +499,14 @@ namespace utility {
          * 
          * @return True if batch draw is enabled, false otherwise.
          */
-        inline bool IsBatchDrawEnabled(void) const { 
+        inline bool GetBatchDrawMode(void) const { 
             return this->useBatchDraw;
         }
 
         /**
          * Clears the batch draw caches.
          */
-        inline void ClearBatchCache(void) {
+        inline void ClearBatchDrawCache(void) {
             this->posBatchCache.clear();
             this->texBatchCache.clear();
             this->colBatchCache.clear();

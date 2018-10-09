@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <windows.h>
+#include <Windows.h>
 
 #include "vislib/Exception.h"
 

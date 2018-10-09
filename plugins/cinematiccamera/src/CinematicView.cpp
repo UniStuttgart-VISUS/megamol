@@ -7,24 +7,7 @@
 
 #include "stdafx.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/FilePathParam.h"
-
-#include "vislib/math/Rectangle.h"
-#include "vislib/Trace.h"
-#include "vislib/sys/Path.h"
-
-#include <ctime>
-
 #include "CinematicView.h"
-#include "CallCinematicCamera.h"
-
 
 using namespace megamol;
 using namespace megamol::core;
@@ -40,14 +23,16 @@ using namespace vislib;
 CinematicView::CinematicView(void) : View3D(),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    renderParam(              "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
-    toggleAnimPlayParam(      "02_playPreview", "Toggle playing animation as preview"),
-    selectedSkyboxSideParam(  "03_skyboxSide", "Select the skybox side."),
-    resWidthParam(            "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
-    resHeightParam(           "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    fpsParam(                 "06_fps", "Frames per second the animation should be rendered."),
-    eyeParam(                 "stereo::eye", "Select eye position (for stereo view)."),
-    projectionParam(          "stereo::projection", "Select camera projection.")
+    renderParam(                "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
+    toggleAnimPlayParam(        "02_playPreview", "Toggle playing animation as preview"),
+    selectedSkyboxSideParam(    "03_skyboxSide", "Select the skybox side."),
+    resWidthParam(              "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
+    resHeightParam(             "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    fpsParam(                   "06_fps", "Frames per second the animation should be rendered."),
+    startRenderFrameParam(      "07_firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning)."), 
+    delayFirstRenderFrameParam( "08_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
+    eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
+    projectionParam(            "stereo::projection", "Select camera projection.")
     {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -63,23 +48,7 @@ CinematicView::CinematicView(void) : View3D(),
     this->vpWLast         = 0;
     this->vpHLast         = 0;
     this->rendering       = false;
-    this->resetFbo        = true;
     this->fps             = 24;
-    this->expFrameCnt     = 1;
-
-    // init png data struct
-    this->pngdata.bpp      = 3;
-    this->pngdata.width    = static_cast<unsigned int>(this->cineWidth);
-    this->pngdata.height   = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.filename = "";
-    this->pngdata.cnt      = 0;
-    this->pngdata.animTime = 0.0f;
-    this->pngdata.buffer   = nullptr;
-    this->pngdata.ptr      = nullptr;
-    this->pngdata.infoptr  = nullptr;
-    this->pngdata.filename = "";
-    this->pngdata.lock     = true;
-    //this->pngdata.file;
 
     // init parameters
     param::EnumParam *sbs = new param::EnumParam(this->sbSide);
@@ -123,21 +92,11 @@ CinematicView::CinematicView(void) : View3D(),
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
 
+    this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
 
-    // TEMPORARY HACK #########################################################
-    // Disable enableMouseSelectionSlot for this view
-    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer 
-    //    mouse selection for manipulatiors
-    this->enableMouseSelectionSlot.MakeUnavailable();
-    /// The right way doesn't work if (child->Parent().get() != this) ...
-    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
-
-    // Disable toggleAnimPlaySlot in this view(3d)
-    // -> 'SPACE'-key is needed to be active in the View3D of the CinematicRenderer
-    param::ParamSlot* toggleAnimPlaySlot = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(3)); // toggleAnimPlaySlot
-    toggleAnimPlaySlot->MakeUnavailable();
-    /// The right way doesn't work if (child->Parent().get() != this) ...
-    ///this->SetSlotUnavailable(static_cast<AbstractSlot*>(toggleAnimPlaySlot));
+    this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
+    this->MakeSlotAvailable(&this->startRenderFrameParam);
 }
 
 
@@ -198,6 +157,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     bool loadNewCamParams = false;
 
+    // Disabling enableMouseSelectionSlot for this view
+    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer for mouse selection of manipulators
+    this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
+    // Disabling toggleAnimPlaySlot in the parent view3d
+    // -> 'SPACE'-key is needed to be available here for own control of animation time
+    this->SetSlotUnavailable(static_cast<AbstractSlot*>(this->timeCtrl.GetSlot(3)));
+
     // Update parameters ------------------------------------------------------
     if (this->toggleAnimPlayParam.IsDirty()) {
         this->toggleAnimPlayParam.ResetDirty();
@@ -225,7 +191,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
         else {
             this->cineHeight = this->resHeightParam.Param<param::IntParam>()->Value();
-            this->resetFbo = true;
         }
     }
     if (this->resWidthParam.IsDirty()) {
@@ -236,7 +201,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
         else {
             this->cineWidth = this->resWidthParam.Param<param::IntParam>()->Value();
-            this->resetFbo = true;
         }
     }
     if (this->fpsParam.IsDirty()) {
@@ -251,11 +215,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
     if (this->renderParam.IsDirty()) {
         this->renderParam.ResetDirty();
-        if (!this->rendering) {
-            this->rtf_setup();
+        this->rendering = !this->rendering;
+        if (this->rendering) {
+            this->render2file_setup();
         }
         else {
-            this->rtf_finish();
+            this->render2file_finish();
         }
     }
     // Set (mono/stereo) projection for camera
@@ -269,10 +234,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
-
-    // Time settings -----------------------------------------------
+    // Time settings ----------------------------------------------------------
+    // Load animation time
     if (this->rendering) {
-        this->rtf_set_time_and_camera();
+        if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
+            throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
+        }
+        ccc->setSelectedKeyframeTime(this->pngdata.animTime);
+        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
         loadNewCamParams = true;
     }
     else {
@@ -283,46 +252,88 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             this->deltaAnimTime = tmpTime;
 
             float animTime = ccc->getSelectedKeyframe().GetAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
-            if (animTime > ccc->getTotalAnimTime()) { // Reset time if max animation time is reached
+            if ((animTime < 0.0f) || (animTime > ccc->getTotalAnimTime())) { // Reset time if max animation time is reached
                 animTime = 0.0f;
             }
             ccc->setSelectedKeyframeTime(animTime);
-            // Update selected keyframe
             if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
-            
             loadNewCamParams = true;
         }
-        this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
     }
+    // Load simulation time
+    this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
+
+    // Viewport stuff ---------------------------------------------------------
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    int   vpW_int = (vp[2] - vp[0]);
+    int   vpH_int = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
+    float vpH_flt = static_cast<float>(vpH_int);
+    float vpW_flt = static_cast<float>(vpW_int);
+    int   fboWidth = vpW_int;
+    int   fboHeight = vpH_int;
+    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+
+    if (this->rendering) {
+        fboWidth = this->cineWidth;
+        fboHeight = this->cineHeight;
+    }
+    else {
+        float vpRatio = vpW_flt / vpH_flt;
+
+        // Check for viewport changes
+        if ((this->vpWLast != vpW_int) || (this->vpHLast != vpH_int)) {
+            this->vpWLast = vpW_int;
+            this->vpHLast = vpH_int;
+        }
+
+        // Calculate reduced fbo width and height
+        if ((this->cineWidth < vpW_int) && (this->cineHeight < vpH_int)) {
+            fboWidth = this->cineWidth;
+            fboHeight = this->cineHeight;
+        }
+        else {
+            fboWidth = vpW_int;
+            fboHeight = vpH_int;
+
+            if (cineRatio > vpRatio) {
+                fboHeight = (static_cast<int>(vpW_flt / cineRatio));
+            }
+            else if (cineRatio < vpRatio) {
+                fboWidth = (static_cast<int>(vpH_flt * cineRatio));
+            }
+        }
+    }
+
+    // Camera settings --------------------------------------------------------
+
+    // Set new viewport settings for camera
+    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
 
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering 
     // or animation loaded new slected keyframe.
     Keyframe skf = ccc->getSelectedKeyframe();
-    if ((this->shownKeyframe != skf) || loadNewCamParams) {
+    if (loadNewCamParams || (this->shownKeyframe != skf)) {
+
         this->shownKeyframe = skf;
 
         this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
         this->cam.Parameters()->SetApertureAngle(skf.GetCamApertureAngle());
 
-        loadNewCamParams = true;
-    }
-
-    // Apply showing skybox side ONLY if new camera parameters are set
-    if (loadNewCamParams) {
-
-        // Adjust cam to selected skybox side
+        // Apply showing skybox side ONLY if new camera parameters are set
         if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
             // Get camera parameters
             vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
-            vislib::math::Point<float, 3>  camPos    = cp->Position();
-            vislib::math::Vector<float, 3> camRight  = cp->Right();
-            vislib::math::Vector<float, 3> camUp     = cp->Up();
-            vislib::math::Vector<float, 3> camFront  = cp->Front();
+            vislib::math::Point<float, 3>  camPos = cp->Position();
+            vislib::math::Vector<float, 3> camRight = cp->Right();
+            vislib::math::Vector<float, 3> camUp = cp->Up();
+            vislib::math::Vector<float, 3> camFront = cp->Front();
             vislib::math::Point<float, 3>  camLookAt = cp->LookAt();
-            float                          tmpDist   = cp->FocalDistance();
+            float                          tmpDist = cp->FocalDistance();
 
+            // Adjust cam to selected skybox side
             // set aperture angle to 90 deg
             cp->SetApertureAngle(90.0f);
             if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
@@ -347,70 +358,15 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     ccc->setCameraParameters(this->cam.Parameters());
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
-    // Viewport stuff ---------------------------------------------------------
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    int   vpWidth  = (vp[2] - vp[0]);
-    int   vpHeight = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
-    float vpH      = static_cast<float>(vpHeight);
-    float vpW      = static_cast<float>(vpWidth);
-
-    float vpRatio = vpW / vpH;
-    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
-    int   fboWidth = vpWidth;
-    int   fboHeight = vpHeight;
-
-    if (this->rendering) {
-        fboWidth = this->cineWidth;
-        fboHeight = this->cineHeight;
-    }
-    else {
-
-        // Check for viewport changes
-        if ((this->vpWLast != vpWidth) || (this->vpHLast != vpHeight)) {
-            this->vpWLast = vpWidth;
-            this->vpHLast = vpHeight;
-            this->resetFbo = true;
-        }
-
-        // Calculate reduced fbo width and height
-        if ((this->cineWidth < vpWidth) && (this->cineHeight < vpHeight)) {
-            fboWidth  = this->cineWidth;
-            fboHeight = this->cineHeight;
-        }
-        else {
-            fboWidth = vpWidth;
-            fboHeight = vpHeight;
-
-            if (cineRatio > vpRatio) {
-                fboHeight = (static_cast<int>(vpW / cineRatio));
-            }
-            else if (cineRatio < vpRatio) {
-                fboWidth = (static_cast<int>(vpH * cineRatio));
-            }
-        }
-    }
-    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
-    this->overrideViewport = fboVp;
-    // Set new viewport settings for camera
-    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
-   
-
     // Render to texture ------------------------------------------------------------
 
-    // Create new frame for file
-    if (this->rendering) {
-        this->rtf_create_frame();
-    }
-
-        // Suppress TRACE output of fbo.Enable() and fbo.Create()
+    // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif // DEBUG || _DEBUG 
 
-    if (this->resetFbo || (!this->fbo.IsValid())) {
+    if ((!this->fbo.IsValid()) || (this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
         if (this->fbo.IsValid()) {
             this->fbo.Release();
         }
@@ -418,38 +374,54 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             throw vislib::Exception("[CINEMATIC VIEW] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
-        this->resetFbo = false;
     }
     if (this->fbo.Enable() != GL_NO_ERROR) {
         throw vislib::Exception("[CINEMATIC VIEW] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
-        // Reset TRACE output level
+
+    // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
+    Base::overrideCall = cr3d;
 
-    this->overrideCall = cr3d;
+    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
+    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
+    Base::overrideViewport = fboVp;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
 
+    // Reset override render call
+    Base::overrideCall = nullptr;
+    // Reset override viewport 
+    Base::overrideViewport = nullptr;
+
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
     }
-
-    // Reset override render call
-    this->overrideCall = nullptr;
-    // Reset override viewport
-    this->overrideViewport = nullptr;
-
-
+     
     // Write frame to file
     if (this->rendering) {
-        this->rtf_write_frame();
+
+        // Check if fbo in cr3d was reset by renderer
+        this->pngdata.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
+        if (this->pngdata.write_lock > 0) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping empty FBO ...\n");
+        }
+        // Lock writing frame to file for specific tim
+        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->pngdata.start_time);
+        if (diff.count() < static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
+            this->pngdata.write_lock = 1;
+        }
+
+        // Write frame to PNG file
+        this->render2file_write_png();
+
     }
 
     // Draw final image -------------------------------------------------------
@@ -464,14 +436,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glLoadIdentity();
     // Reset viewport
     glViewport(vp[0], vp[1], vp[2], vp[3]);
-    glOrtho(0.0f, vpW, 0.0f, (vpH + (CC_MENU_HEIGHT)), -1.0, 1.0); // Reset to true viewport size including menue height
+    glOrtho(0.0f, vpW_flt, 0.0f, (vpH_flt + (CC_MENU_HEIGHT)), -1.0, 1.0); // Reset to true viewport size including menue height
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
 
     // Color stuff 
-    const float *bgColor = this->bkgndColour();
+    const float *bgColor = Base::BkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -490,20 +462,20 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Adjust fbo viewport size if it is greater than viewport
-    int fboVpWidth  = fboWidth;
-    int fboVpHeight = fboHeight;
-    if ((fboVpWidth > vpWidth) || ((fboVpWidth < vpWidth) && (fboVpHeight < vpHeight))) {
-        fboVpWidth  = vpWidth;
-        fboVpHeight = static_cast<int>(vpW / cineRatio);
+    int fbovpW_int  = fboWidth;
+    int fbovpH_int = fboHeight;
+    if ((fbovpW_int > vpW_int) || ((fbovpW_int < vpW_int) && (fbovpH_int < vpH_int))) {
+        fbovpW_int  = vpW_int;
+        fbovpH_int = static_cast<int>(vpW_flt / cineRatio);
     }
-    if ((fboVpHeight > vpHeight) || ((fboVpWidth < vpWidth) && (fboVpHeight < vpHeight))) {
-        fboVpHeight = vpHeight;
-        fboVpWidth  = static_cast<int>(vpH * cineRatio);
+    if ((fbovpH_int > vpH_int) || ((fbovpW_int < vpW_int) && (fbovpH_int < vpH_int))) {
+        fbovpH_int = vpH_int;
+        fbovpW_int  = static_cast<int>(vpH_flt * cineRatio);
     }
-    float right  = (vpWidth + static_cast<float>(fboVpWidth)) / 2.0f;
-    float left   = (vpWidth - static_cast<float>(fboVpWidth)) / 2.0f;
-    float bottom = (vpHeight - static_cast<float>(fboVpHeight)) / 2.0f;
-    float up     = (vpHeight + static_cast<float>(fboVpHeight)) / 2.0f;
+    float right  = (vpW_int + static_cast<float>(fbovpW_int)) / 2.0f;
+    float left   = (vpW_int - static_cast<float>(fbovpW_int)) / 2.0f;
+    float bottom = (vpH_int - static_cast<float>(fbovpH_int)) / 2.0f;
+    float up     = (vpH_int + static_cast<float>(fbovpH_int)) / 2.0f;
 
     // Draw texture
     glActiveTexture(GL_TEXTURE0);
@@ -530,13 +502,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Calculate position of texture
     int x = 0;
     int y = 0;
-    if (fboVpWidth < vpWidth) {
-        x = (static_cast<int>((vpWidth - static_cast<float>(fboVpWidth)) / 2.0f));
-        y = vpHeight;
+    if (fbovpW_int < vpW_int) {
+        x = (static_cast<int>((vpW_int - static_cast<float>(fbovpW_int)) / 2.0f));
+        y = vpH_int;
     }
-    else if (fboVpHeight < vpHeight) {
-        x = vpWidth;
-        y = (static_cast<int>((vpHeight - static_cast<float>(fboVpHeight)) / 2.0f));
+    else if (fbovpH_int < vpH_int) {
+        x = vpW_int;
+        y = (static_cast<int>((vpH_int - static_cast<float>(fbovpH_int)) / 2.0f));
     }
     // Draw letter box quads in letter box Color
     glColor4fv(lbColor);
@@ -545,10 +517,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         glVertex2i(x, 0);
         glVertex2i(x, y);
         glVertex2i(0, y);
-        glVertex2i(vpWidth,     vpHeight);
-        glVertex2i(vpWidth - x, vpHeight);
-        glVertex2i(vpWidth - x, vpHeight - y);
-        glVertex2i(vpWidth,     vpHeight - y);
+        glVertex2i(vpW_int,     vpH_int);
+        glVertex2i(vpW_int - x, vpH_int);
+        glVertex2i(vpW_int - x, vpH_int - y);
+        glVertex2i(vpW_int,     vpH_int - y);
     glEnd();
 
     // DRAW MENU --------------------------------------------------------------
@@ -572,7 +544,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     float rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
 
     // Adapt font size if height of menu text is greater than menu height
-    float vpWhalf = vpW / 2.0f;
+    float vpWhalf = vpW_flt / 2.0f;
     while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
         lbFontSize        -= 0.5f;
         leftLabelWidth     = this->theFont.LineWidth(lbFontSize, leftLabel);
@@ -583,17 +555,17 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw menu background
     glColor4fv(menu);
     glBegin(GL_QUADS);
-        glVertex2f(0.0f, vpH + (CC_MENU_HEIGHT));
-        glVertex2f(0.0f, vpH);
-        glVertex2f(vpW,  vpH);
-        glVertex2f(vpW,  vpH + (CC_MENU_HEIGHT));
+        glVertex2f(0.0f, vpH_flt + (CC_MENU_HEIGHT));
+        glVertex2f(0.0f, vpH_flt);
+        glVertex2f(vpW_flt,  vpH_flt);
+        glVertex2f(vpW_flt,  vpH_flt + (CC_MENU_HEIGHT));
     glEnd();
 
     // Draw menu labels
-    float labelPosY = vpH + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    float labelPosY = vpH_flt + (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
     this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(yellow, (vpW_flt - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->theFont.DrawString(white, (vpW_flt - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 
     // ------------------------------------------------------------------------
     glMatrixMode(GL_PROJECTION);
@@ -603,42 +575,45 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Reset opengl
     glDisable(GL_BLEND);
-
-    // Unlock renderer after first frame
-    if (this->rendering && this->pngdata.lock) {
-        this->pngdata.lock = false;
-    }
 }
 
 
 /*
-* CinematicView::rtf_setup
+* CinematicView::render2file_setup
 */
-bool CinematicView::rtf_setup() {
+bool CinematicView::render2file_setup() {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
 
     // init png data struct
-    this->pngdata.bpp       = 3;
-    this->pngdata.width     = static_cast<unsigned int>(this->cineWidth);
-    this->pngdata.height    = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.cnt       = 0;
-    this->pngdata.animTime  = 0.0f;
-    this->pngdata.buffer    = nullptr;
-    this->pngdata.ptr       = nullptr;
-    this->pngdata.infoptr   = nullptr;
-    //this->pngdata.file;
+    this->pngdata.bpp               = 3;
+    this->pngdata.width             = static_cast<unsigned int>(this->cineWidth);
+    this->pngdata.height            = static_cast<unsigned int>(this->cineHeight);
+    this->pngdata.buffer            = nullptr;
+    this->pngdata.ptr               = nullptr;
+    this->pngdata.infoptr           = nullptr;
+    this->pngdata.write_lock        = 1;
+    this->pngdata.start_time        = std::chrono::system_clock::now();
+
+    unsigned int startFrameCnt = static_cast<unsigned int>(this->startRenderFrameParam.Param<param::IntParam>()->Value());
+    unsigned int maxFrameCnt   = (unsigned int)(this->pngdata.animTime * (float)this->fps);
+    if (startFrameCnt > maxFrameCnt) {
+        startFrameCnt = maxFrameCnt;
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
+    }
+    this->pngdata.cnt               = startFrameCnt;
+    this->pngdata.animTime          = (float)this->pngdata.cnt / (float)this->fps;
 
     // Calculate pre-decimal point positions for frame counter in filename
-    this->expFrameCnt = 1;
+    this->pngdata.exp_frame_cnt = 1;
     float frameCnt = (float)(this->fps) * ccc->getTotalAnimTime();
     while (frameCnt > 1.0f) {
         frameCnt /= 10.0f;
-        this->expFrameCnt++;
+        this->pngdata.exp_frame_cnt++;
     }
 
-    // Create new folder
+    // Creating new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
     struct tm *now = nullptr;
@@ -649,7 +624,6 @@ bool CinematicView::rtf_setup() {
 #else /* defined(_WIN32) && (_MSC_VER >= 1400) */
     now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
@@ -657,7 +631,6 @@ bool CinematicView::rtf_setup() {
 
     // Set current time stamp to file name
     this->pngdata.filename = "frames";
-    // this->pngdata.filename.Format("frame_%i%i%i-%i%i%i_-_", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Create new byte buffer
     this->pngdata.buffer = new BYTE[this->pngdata.width * this->pngdata.height * this->pngdata.bpp];
@@ -665,72 +638,29 @@ bool CinematicView::rtf_setup() {
         throw vislib::Exception("[CINEMATIC VIEW] [startAnimRendering] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
-    // Reset animation time to zero
-    ccc->setSelectedKeyframeTime(0.0f);
-    // Update selected keyframe
-    if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-    // Set current simulation time
-    this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
-    
-    // Lock rendering and wait for one frame to get the new animation time applied. 
-    // Otherwise first frame is not set right -> just for high resolutions ?
-    this->pngdata.lock = true;
+    // Disable showing BBOX and CUBE (Uniform backCol is needed for being able to detect changes written to fbo.)
+    Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
+    Base::showBBox.Param<param::BoolParam>()->SetValue(false);
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Hiding Bbox and Cube rendering of complete animation.");
 
-    this->rendering = true;
-    this->resetFbo  = true;
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
 
-    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendnering of complete animation.");
     return true;
 }
 
 
 /*
-* CinematicView::rtf_set_time_and_camera
+* CinematicView::render2file_write_png
 */
-bool CinematicView::rtf_set_time_and_camera() {
+bool CinematicView::render2file_write_png() {
 
-    if (!this->pngdata.lock) {
+    if (this->pngdata.write_lock == 0) {
+
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
         if (ccc == nullptr) return false;
 
-        if ((this->pngdata.animTime < 0.0f) || (this->pngdata.animTime > ccc->getTotalAnimTime())) {
-            throw vislib::Exception("[CINEMATIC VIEW] [rtf_set_time_and_camera] Invalid animation time.", __FILE__, __LINE__);
-        }
-
-        // Get selected keyframe for current animation time
-        ccc->setSelectedKeyframeTime(this->pngdata.animTime);
-        // Update selected keyframe
-        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-
-        // Set current simulation time
-        this->setSimTime(ccc->getSelectedKeyframe().GetSimTime());
-
-        // Increase to next time step
-        float fpsFrac = (1.0f / static_cast<float>(this->fps));
-        this->pngdata.animTime += fpsFrac;
-
-        // Fit animTime to exact full seconds (removing rounding error)
-        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
-            this->pngdata.animTime = std::round(this->pngdata.animTime);
-        }
-
-        // Finish rendering if max anim time is reached
-        if (this->pngdata.animTime > ccc->getTotalAnimTime()) {
-            this->rtf_finish();
-        }
-    }
-    return true;
-}
-
-
-/*
-* CinematicView::rtf_create_frame
-*/
-bool CinematicView::rtf_create_frame() {
-
-    if (!this->pngdata.lock) {
         vislib::StringA tmpFilename, tmpStr;
-        tmpStr.Format(".%i", this->expFrameCnt);
+        tmpStr.Format(".%i", this->pngdata.exp_frame_cnt);
         tmpStr.Prepend("%0");
         tmpStr.Append("i.png");
         tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
@@ -754,19 +684,6 @@ bool CinematicView::rtf_create_frame() {
         png_set_write_fn(this->pngdata.ptr, static_cast<void*>(&this->pngdata.file), &this->pngWrite, &this->pngFlush);
         png_set_IHDR(this->pngdata.ptr, this->pngdata.infoptr, this->pngdata.width, this->pngdata.height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        this->pngdata.cnt++;
-    }
-
-    return true;
-}
-
-
-/*
-* CinematicView::rtf_write_frame
-*/
-bool CinematicView::rtf_write_frame() {
-
-    if (!this->pngdata.lock) {
         if (fbo.GetColourTexture(this->pngdata.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception("[CINEMATIC VIEW] [writeTextureToPng] Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
         }
@@ -799,17 +716,46 @@ bool CinematicView::rtf_write_frame() {
             }
         }
 
-        try { this->pngdata.file.Flush(); }  catch (...) {}
-        try { this->pngdata.file.Close(); }  catch (...) {}
+        try { this->pngdata.file.Flush(); }  
+        catch (...) {}
+        try { this->pngdata.file.Close(); }  
+        catch (...) {}
+
+        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] [render2file_write_png] Wrote png file %d for animation time %f ...\n", this->pngdata.cnt, this->pngdata.animTime);
+
+        // --------------------------------------------------------------------
+
+        // Increase to next time step
+        float fpsFrac = (1.0f / static_cast<float>(this->fps));
+        this->pngdata.animTime += fpsFrac;
+
+        // Fit animTime to exact full seconds (removing rounding error)
+        if (std::abs(this->pngdata.animTime - std::round(this->pngdata.animTime)) < (fpsFrac / 2.0)) {
+            this->pngdata.animTime = std::round(this->pngdata.animTime);
+        }
+
+        if (this->pngdata.animTime == ccc->getTotalAnimTime()) {
+            /// Handling this case is actually only necessary when rendering is done via FBOCompositor => Rndering crashes > WHY ?
+            /// Rendering last frame with animation time = total animation time is otherwise no problem.
+            this->pngdata.animTime -= 0.000005f;
+        }
+        else if (this->pngdata.animTime >= ccc->getTotalAnimTime()) {
+            // Stop rendering if max anim time is reached
+            this->render2file_finish();
+            return false;
+        }
+
+        this->pngdata.cnt++;
     }
+
     return true;
 }
 
 
 /*
-* CinematicView::rtf_finish
+* CinematicView::render2file_finish
 */
-bool CinematicView::rtf_finish() {
+bool CinematicView::render2file_finish() {
 
     if (this->pngdata.ptr != nullptr) {
         if (this->pngdata.infoptr != nullptr) {
@@ -820,18 +766,13 @@ bool CinematicView::rtf_finish() {
         }
     }
 
-    try { this->pngdata.file.Flush(); } catch (...) {}
-    try { this->pngdata.file.Close(); } catch (...) {}
+    try { this->pngdata.file.Flush(); } 
+    catch (...) {}
+    try { this->pngdata.file.Close(); } 
+    catch (...) {}
 
     ARY_SAFE_DELETE(this->pngdata.buffer);
 
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
-    }
-
-    this->fbo.Release();
-
-    this->resetFbo = true;
     this->rendering = false;
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
@@ -851,6 +792,7 @@ bool CinematicView::setSimTime(float st) {
     }
 
     float simTime = st;
+
     param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 

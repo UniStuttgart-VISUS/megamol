@@ -78,7 +78,7 @@ const unsigned int megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA
  * megamol::core::misc::VolumetricDataCall::VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
-        : cntFrames(0), data(nullptr), metadata(nullptr) {
+        : cntFrames(0), data(nullptr), metadata(nullptr), vram_volume_name(0) {
 }
 
 
@@ -86,7 +86,7 @@ megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
  * megamol::core::misc::VolumetricDataCall::VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(
-        const VolumetricDataCall& rhs) : data(nullptr), metadata(nullptr) {
+        const VolumetricDataCall& rhs) : data(nullptr), metadata(nullptr), vram_volume_name(0) {
     *this = rhs;
 }
 

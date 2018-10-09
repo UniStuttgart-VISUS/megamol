@@ -109,7 +109,7 @@ namespace xml {
          *         'false' if the tag was not handled.
          */
         virtual bool StartTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+            const XML_Char * name, const XML_Char ** attrib,
             XmlReader::ParserState state,
             XmlReader::ParserState& outChildState,
             XmlReader::ParserState& outEndTagState,
@@ -132,7 +132,7 @@ namespace xml {
          *         'false' if the tag was not handled.
          */
         virtual bool EndTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, XmlReader::ParserState state,
+            const XML_Char * name, XmlReader::ParserState state,
             XmlReader::ParserState& outPostEndTagState);
 
         /**
@@ -152,7 +152,7 @@ namespace xml {
          *
          * @return The level value.
          */
-        UINT parseLevelAttribute(const MMXML_CHAR *attr, UINT def);
+        UINT parseLevelAttribute(const XML_Char *attr, UINT def);
 
         /** to configuration to be loaded */
         Configuration& config;

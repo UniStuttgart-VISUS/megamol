@@ -48,6 +48,10 @@ def getFloat(file):
     stuff = file.read(4)
     return struct.unpack("<f", stuff)[0]
 
+def getDouble(file):
+    stuff = file.read(8)
+    return struct.unpack("<d", stuff)[0]
+
 def getUInt64(file):
     stuff = file.read(8)
     return struct.unpack("<Q", stuff)[0]
@@ -61,10 +65,51 @@ def pluralTuple(thingy):
 def listFramedata(parseResult, frame):
     return parseResult.v and (parseResult.v > 1) or (parseResult.v == 1 and frame == 0)
 
+def readParticles(number, vertType, colType, file):
+    for p in range(number):
+        if (vertType == 0):
+            print("        no position", end ='')
+        elif (vertType == 1):
+            pos = [getFloat(file) for x in range(3)]
+            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+        elif (vertType == 2):
+            pos = [getFloat(file) for x in range(4)]
+            print("        pos = (%f, %f, %f), rad = %f" % (tuple(pos)), end ='')
+        elif (vertType == 3):            
+            pos = [getUShort(file) for x in range(3)]
+            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+        elif (vertType == 4):
+            pos = [getDouble(file) for x in range(3)]
+            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+
+        if (colType == 0):
+            print(", no color")
+        elif (colType == 1):
+            col = [getByte(file) for x in range(3)]
+            print(", col = (%d, %d, %d)" % (tuple(col)))
+        elif (colType == 2):
+            col = [getByte(file) for x in range(4)]
+            print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+        elif (colType == 3):
+            col = [getFloat(file) for x in range(1)]
+            print(", col = (%f)" % (tuple(col)))
+        elif (colType == 4):
+            col = [getFloat(file) for x in range(3)]
+            print(", col = (%f, %f, %f)" % (tuple(col)))
+        elif (colType == 5):
+            col = [getFloat(file) for x in range(4)]
+            print(", col = (%f, %f, %f, %f)" % (tuple(col)))
+        elif (colType == 6):
+            col = [getUShort(file) for x in range(4)]
+            print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+        elif (colType == 7):
+            col = [getDouble(file) for x in range(1)]
+            print(", col = (%f)" % (tuple(col)))
+
 vertexSizes = [0, 12, 16, 5, 24]
 vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
 colorSizes = [0, 3, 4, 4, 12, 16, 8, 8]
-colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_SHORT_RGBA", "COLDATA_DOUBLE_I"]
+colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_USHORT_RGBA", "COLDATA_DOUBLE_I"]
 
 print("")
 print("MMPLDinfo (v.: 1.3.1) - MegaMol Particle List Data File Information Utility")
@@ -76,6 +121,8 @@ print("")
 parser = argparse.ArgumentParser(description='display information about .mmpld file(s)')
 parser.add_argument('inputfiles', metavar='file', nargs='+', help='file to get info about')
 parser.add_argument('-v', action='count', help='show verbose frame info (add another v for more verbosity)')
+parser.add_argument('--head', action='store', help='show that many particles at the start of each shown frame)')
+parser.add_argument('--tail', action='store', help='show that many particles at the end of each shown frame)')
 parseResult = parser.parse_args()
 
 for filename in parseResult.inputfiles:
@@ -180,7 +227,7 @@ for filename in parseResult.inputfiles:
                 if (colType == 0):
                     col = [getByte(f) for x in range(4)]
                     listFramedata(parseResult, fi) and print("        global color: (%u, %u, %u, %u)" % (tuple(col)))
-                elif (colType == 3):
+                elif (colType == 3 or colType == 7):
                     intensity = [getFloat(f) for x in range(2)]
                     listFramedata(parseResult, fi) and print("        intensity color range: [%f, %f]" % (tuple(intensity)))
 
@@ -193,7 +240,27 @@ for filename in parseResult.inputfiles:
                     box = [getFloat(f) for x in range(6)]
                     listFramedata(parseResult, fi) and print("list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
 
-                f.seek(listNumParts * stride, os.SEEK_CUR)
+                if (listFramedata(parseResult, fi)):
+                    if (parseResult.head):
+                        numHead = min(int(parseResult.head), listNumParts)
+                    else:
+                        numHead = 0
+                    if (parseResult.tail):
+                        numTail = min(int(parseResult.tail), listNumParts)
+                    else:
+                        numTail = 0
+                    if (numHead > 0):
+                        print("        list head (%d):" % numHead)
+                    readParticles(numHead, vertType, colType, f)
+                    if (numTail + numHead > listNumParts):
+                        print("        not enough particles to also list tail")
+                        numTail = 0
+                    f.seek((listNumParts - numHead - numTail) * stride, os.SEEK_CUR)
+                    if (numTail > 0):
+                        print("        list tail (%d):" % numTail)
+                    readParticles(numTail, vertType, colType, f)
+                else:
+                    f.seek(listNumParts * stride, os.SEEK_CUR)
 
             if (f.tell() != frameTable[fi + 1]):
                 print("warning: trailing data after frame %u or frame table corrupted" % (fi))
