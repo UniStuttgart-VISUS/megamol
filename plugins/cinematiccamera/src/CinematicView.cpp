@@ -31,6 +31,7 @@ CinematicView::CinematicView(void) : View3D(),
     fpsParam(                   "06_fps", "Frames per second the animation should be rendered."),
     startRenderFrameParam(      "07_firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning)."), 
     delayFirstRenderFrameParam( "08_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
+    frameFolderParam(           "09_frameFolder", "Specify folder where the frame files should be stored."),
     eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
     projectionParam(            "stereo::projection", "Select camera projection.")
     {
@@ -83,7 +84,7 @@ CinematicView::CinematicView(void) : View3D(),
     this->eyeParam << enp;
     this->MakeSlotAvailable(&this->eyeParam);
 
-    param::EnumParam *pep = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
+    param::EnumParam *pep = new param::EnumParam(vislib::graphics::CameraParameters::ProjectionType::MONO_PERSPECTIVE);
     pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::MONO_ORTHOGRAPHIC, "Mono Orthographic");
     pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::MONO_PERSPECTIVE, "Mono Perspective");
     pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::STEREO_OFF_AXIS, "Stereo Off-Axis");
@@ -97,6 +98,9 @@ CinematicView::CinematicView(void) : View3D(),
 
     this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
     this->MakeSlotAvailable(&this->startRenderFrameParam);
+
+    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->frameFolderParam);
 }
 
 
@@ -385,6 +389,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -411,8 +419,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         // Check if fbo in cr3d was reset by renderer
         this->pngdata.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
         if (this->pngdata.write_lock > 0) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERING] Skipping empty FBO ...\n");
+            //vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC RENDERING] Received empty FBO ...\n");
         }
+
         // Lock writing frame to file for specific tim
         std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->pngdata.start_time);
         if (diff.count() < static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
@@ -421,7 +430,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         // Write frame to PNG file
         this->render2file_write_png();
-
     }
 
     // Draw final image -------------------------------------------------------
@@ -442,7 +450,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glPushMatrix();
     glLoadIdentity();
 
-    // Color stuff 
+    // Background color 
     const float *bgColor = Base::BkgndColour();
     // COLORS
     float lbColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -587,14 +595,14 @@ bool CinematicView::render2file_setup() {
     if (ccc == nullptr) return false;
 
     // init png data struct
-    this->pngdata.bpp               = 3;
-    this->pngdata.width             = static_cast<unsigned int>(this->cineWidth);
-    this->pngdata.height            = static_cast<unsigned int>(this->cineHeight);
-    this->pngdata.buffer            = nullptr;
-    this->pngdata.ptr               = nullptr;
-    this->pngdata.infoptr           = nullptr;
-    this->pngdata.write_lock        = 1;
-    this->pngdata.start_time        = std::chrono::system_clock::now();
+    this->pngdata.bpp         = 3;
+    this->pngdata.width       = static_cast<unsigned int>(this->cineWidth);
+    this->pngdata.height      = static_cast<unsigned int>(this->cineHeight);
+    this->pngdata.buffer      = nullptr;
+    this->pngdata.ptr         = nullptr;
+    this->pngdata.infoptr     = nullptr;
+    this->pngdata.write_lock  = 1;
+    this->pngdata.start_time  = std::chrono::system_clock::now();
 
     unsigned int startFrameCnt = static_cast<unsigned int>(this->startRenderFrameParam.Param<param::IntParam>()->Value());
     unsigned int maxFrameCnt   = (unsigned int)(this->pngdata.animTime * (float)this->fps);
@@ -602,8 +610,8 @@ bool CinematicView::render2file_setup() {
         startFrameCnt = maxFrameCnt;
         vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
     }
-    this->pngdata.cnt               = startFrameCnt;
-    this->pngdata.animTime          = (float)this->pngdata.cnt / (float)this->fps;
+    this->pngdata.cnt      = startFrameCnt;
+    this->pngdata.animTime = (float)this->pngdata.cnt / (float)this->fps;
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->pngdata.exp_frame_cnt = 1;
@@ -625,7 +633,10 @@ bool CinematicView::render2file_setup() {
     now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps",  (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, this->fps);
-    this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
+    this->pngdata.path = static_cast<vislib::StringA>(this->frameFolderParam.Param<param::FilePathParam>()->Value());
+    if (this->pngdata.path.IsEmpty()) {
+        this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
+    }
     this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 

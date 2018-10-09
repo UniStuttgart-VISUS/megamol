@@ -51,7 +51,7 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(keyAssignment::KEY_ASSIGN_NONE));
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_NONE, "Choose key assignment for button.");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_O, "o");
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_P, "p");
+    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_I, "i");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_J, "j");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_K, "k");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_X, "x");
@@ -154,7 +154,7 @@ bool ReplacementRenderer::Render(Call& call) {
         WORD newKeyWord = 0;
         switch (newKey) {
             case(keyAssignment::KEY_ASSIGN_O): newKeyWord = 'o'; break;
-            case(keyAssignment::KEY_ASSIGN_P): newKeyWord = 'p'; break;
+            case(keyAssignment::KEY_ASSIGN_I): newKeyWord = 'i'; break;
             case(keyAssignment::KEY_ASSIGN_J): newKeyWord = 'j'; break;
             case(keyAssignment::KEY_ASSIGN_K): newKeyWord = 'k'; break;
             case(keyAssignment::KEY_ASSIGN_X): newKeyWord = 'x'; break;

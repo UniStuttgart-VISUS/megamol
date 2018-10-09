@@ -44,9 +44,10 @@ using namespace vislib;
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam( "01_fontSize", "The font size."),
-    moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
-    moveLeftFrame( "03_leftFrame", "Move to left animation time frame.")
+    rulerFontParam(      "01_fontSize", "The font size."),
+    moveRightFrameParam ("02_rightFrame", "Move to right animation time frame."),
+    moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
+    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes.")
 	{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -96,11 +97,14 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
 
-    this->moveRightFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
-    this->MakeSlotAvailable(&this->moveRightFrame);
+    this->moveRightFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
+    this->MakeSlotAvailable(&this->moveRightFrameParam);
 
-    this->moveLeftFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
-    this->MakeSlotAvailable(&this->moveLeftFrame);
+    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
+    this->MakeSlotAvailable(&this->moveLeftFrameParam);
+
+    this->resetPanScaleParam.SetParameter(new param::ButtonParam('p'));
+    this->MakeSlotAvailable(&this->resetPanScaleParam);
 }
 
 
@@ -359,8 +363,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
     }
-    if (this->moveRightFrame.IsDirty()) {
-        this->moveRightFrame.ResetDirty();
+    if (this->moveRightFrameParam.IsDirty()) {
+        this->moveRightFrameParam.ResetDirty();
         // Set selected animation time to right animation time frame
         float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
@@ -374,8 +378,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "right: " << t << std::endl;
     }
-    if (this->moveLeftFrame.IsDirty()) {
-        this->moveLeftFrame.ResetDirty();
+    if (this->moveLeftFrameParam.IsDirty()) {
+        this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
         float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
@@ -389,6 +393,15 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "left: " << t << std::endl;
     }
+    if (this->resetPanScaleParam.IsDirty()) {
+        this->resetPanScaleParam.ResetDirty();
+        this->simScaleFac = 1.0f;
+        this->simScaleOffset  = 0.0f;
+        this->animScaleFac = 1.0f;
+        this->animScaleOffset = 0.0f;
+        this->axisAdaptation();
+    }
+
 
     // Get the foreground color (inverse background color)
     float bgColor[4];

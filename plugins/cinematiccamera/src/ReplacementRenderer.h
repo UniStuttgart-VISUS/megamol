@@ -118,7 +118,7 @@ namespace megamol {
         enum keyAssignment {
             KEY_ASSIGN_NONE = 0,
             KEY_ASSIGN_O = 1,
-            KEY_ASSIGN_P = 2,
+            KEY_ASSIGN_I = 2,
             KEY_ASSIGN_J = 3,
             KEY_ASSIGN_K = 4,
             KEY_ASSIGN_X = 5,

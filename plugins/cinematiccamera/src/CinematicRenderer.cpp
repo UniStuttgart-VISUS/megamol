@@ -497,7 +497,8 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "-----[ GLOBAL ]-----\n";
         helpText += "[a] Apply current settings to selected/new keyframe. \n";
         helpText += "[d] Delete selected keyframe. \n";
-        helpText += "[s] Save keyframes to file. \n";
+        helpText += "[ctrl+s] Save keyframes to file. \n";
+        helpText += "[ctrl+l] Load keyframes from file. \n";
         helpText += "[ctrl+z] Undo keyframe changes. \n";
         helpText += "[ctrl+y] Redo keyframe changes. \n";
         helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
@@ -513,17 +514,19 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "[f] Snap all keyframes to animation frames. \n";
         helpText += "[g] Snap all keyframes to simulation frames. \n";
         helpText += "[t] Linearize simulation time between two keyframes. \n";
+        helpText += "[p] Reset shifted and scaled time axes. \n";
         helpText += "[left mouse button] Select keyframe. \n";
         helpText += "[middle mouse button] Axes scaling in mouse direction. \n";
         helpText += "[right mouse button] Drag & drop keyframe / pan axes. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
+        float htNumOfRows = 24.0f; // Number of rows the help text has
+
         float htFontSize  = vpW*0.027f; // max % of viewport width
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
-        float htNumOfRows = 22.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
             htFontSize -= 0.5f;

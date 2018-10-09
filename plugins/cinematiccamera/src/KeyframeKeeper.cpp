@@ -61,7 +61,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     editCurrentApertureParam(      "editSelected::07_apertureAngle", "Edit apperture angle of the selected keyframe."),
     fileNameParam(                 "storage::01_filename", "The name of the file to load or save keyframes."),
     saveKeyframesParam(            "storage::02_save", "Save keyframes to file."),
-    loadKeyframesParam(            "storage::03_autoLoad", "Load keyframes from file when filename changes.")
+    loadKeyframesParam(            "storage::03_load", "Load keyframes from file.")
     {
 
     // setting up callback
@@ -155,12 +155,12 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
     this->MakeSlotAvailable(&this->fileNameParam);
 
-    this->saveKeyframesParam.SetParameter(new param::ButtonParam('s'));
+    this->saveKeyframesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 's'));
     this->MakeSlotAvailable(&this->saveKeyframesParam);
 
-    this->loadKeyframesParam.SetParameter(new param::BoolParam(true));
+    this->loadKeyframesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 'l'));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
-    this->loadKeyframesParam.ForceSetDirty(); 
+    this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
 
     this->snapAnimFramesParam.SetParameter(new param::ButtonParam('f'));
     this->MakeSlotAvailable(&this->snapAnimFramesParam);
@@ -626,9 +626,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->loadKeyframesParam.IsDirty()) {
         this->loadKeyframesParam.ResetDirty();
 
-        if (this->loadKeyframesParam.Param<param::BoolParam>()->Value()) {
-            this->loadKeyframes();
-        }
+        this->loadKeyframes();
     }
 
     // snapAnimFramesParam -----------------------------------------------------

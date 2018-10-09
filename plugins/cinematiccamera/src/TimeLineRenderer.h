@@ -188,9 +188,11 @@ namespace megamol {
             /**  */
             megamol::core::param::ParamSlot rulerFontParam;
             /**  */
-            megamol::core::param::ParamSlot moveRightFrame;
+            megamol::core::param::ParamSlot moveRightFrameParam;
             /**  */
-            megamol::core::param::ParamSlot moveLeftFrame;
+            megamol::core::param::ParamSlot moveLeftFrameParam;
+            /**  */
+            megamol::core::param::ParamSlot resetPanScaleParam;
 		};
 
 	} /* end namespace cinematiccamera */
