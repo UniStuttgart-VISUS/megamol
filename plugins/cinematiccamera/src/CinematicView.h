@@ -18,9 +18,23 @@
 
 #include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
+
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderView.h"
+
 #include "mmcore/utility/SDFFont.h"
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
+
+#include "vislib/math/Rectangle.h"
+#include "vislib/Trace.h"
+#include "vislib/sys/Path.h"
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
@@ -28,6 +42,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/sys/FastFile.h"
 
+#include "CallCinematicCamera.h"
 #include "Keyframe.h"
 #include "png.h"
 
@@ -92,6 +107,8 @@ namespace megamol {
 
 		private:
 
+            typedef std::chrono::system_clock::time_point time_point;
+
             /**********************************************************************
             * variables
             **********************************************************************/
@@ -122,13 +139,11 @@ namespace megamol {
             CinematicView::SkyboxSides              sbSide;
 
             vislib::graphics::gl::FramebufferObject fbo;
-            bool                                    resetFbo;
             bool                                    rendering;
             unsigned int                            fps;
-            unsigned int                            expFrameCnt;
 
             struct pngData {
-                BYTE                  *buffer;
+                BYTE                  *buffer = nullptr;
                 vislib::sys::FastFile  file;
                 unsigned int           width;
                 unsigned int           height;
@@ -136,33 +151,30 @@ namespace megamol {
                 vislib::TString        path;
                 vislib::TString        filename;
                 unsigned int           cnt;
-                png_structp            ptr;
-                png_infop              infoptr;
+                png_structp            ptr = nullptr;
+                png_infop              infoptr = nullptr;
                 float                  animTime;
-                bool                   lock;
+                unsigned int           write_lock;
+                time_point             start_time;
+                unsigned int           exp_frame_cnt;
             } pngdata;
+
 
             /**********************************************************************
             * functions
             **********************************************************************/
 
+            /** Render to file functions */
+            bool render2file_setup();
+
+            /** */
+            bool render2file_write_png();
+
+            /** */
+            bool render2file_finish();
+
             /** */
             bool setSimTime(float st);
-
-            /** Render to file functions */
-            bool rtf_setup();
-
-            /** */
-            bool rtf_set_time_and_camera();
-
-            /** */
-            bool rtf_create_frame();
-
-            /** */
-            bool rtf_write_frame();
-
-            /** */
-            bool rtf_finish();
 
             /**
             * My error handling function for png export
@@ -220,6 +232,10 @@ namespace megamol {
 
             /** */
             core::param::ParamSlot renderParam;
+            /** */
+            core::param::ParamSlot delayFirstRenderFrameParam;
+            /** */
+            core::param::ParamSlot startRenderFrameParam;
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
             /** */

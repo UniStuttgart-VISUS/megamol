@@ -601,7 +601,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     vislib::StringA leftLabel = " TIME LINE VIEW ";
     vislib::StringA midLabel = "";
-    midLabel.Format("animation time: %.3f | animation frame: %.3f | simulation time: %.3f ", aT, aF, sT);
+    midLabel.Format("animation time: %.3f | animation frame: %.0f | simulation time: %.3f ", aT, std::floor(aF), sT);
     vislib::StringA rightLabel = "";
     
     float lbFontSize = (CC_MENU_HEIGHT);

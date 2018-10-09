@@ -347,14 +347,6 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
     }
 
-//#define PTD_DEBUG_OUTPUT
-#ifdef PTD_DEBUG_OUTPUT
-    std::ofstream raw_file{"lasercross.raw", std::ios::binary};
-    raw_file.write(reinterpret_cast<char const*>(vol[0].data()), vol[0].size() * sizeof(float));
-    raw_file.close();
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
-#endif
-
     maxDens = *std::max_element(localMax.begin(), localMax.end());
     minDens = *std::min_element(localMin.begin(), localMin.end());
 
@@ -368,6 +360,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         maxDens = 1.0f;
         minDens = 0.0f;
     }
+
+//#define PTD_DEBUG_OUTPUT
+#ifdef PTD_DEBUG_OUTPUT
+    std::ofstream raw_file{"lasercross.raw", std::ios::binary};
+    raw_file.write(reinterpret_cast<char const*>(vol[0].data()), vol[0].size() * sizeof(float));
+    raw_file.close();
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
+#endif
 
     // Cleanup
     vol.resize(1);
