@@ -1,6 +1,5 @@
 #include "stdafx.h"
-
-#include "PrincipalComponentAnalysis.h"
+#include "PCAProjection.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -8,7 +7,6 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
-
 #include <sstream>
 
 
@@ -17,7 +15,7 @@ using namespace megamol::infovis;
 using namespace Eigen;
 
 
-PrincipalComponentAnalysis::PrincipalComponentAnalysis(void)
+PCAProjection::PCAProjection(void)
     : megamol::core::Module()
     , dataOutSlot("dataOut", "Ouput")
     , dataInSlot("dataIn", "Input")
@@ -33,10 +31,10 @@ PrincipalComponentAnalysis::PrincipalComponentAnalysis(void)
 
     this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
         megamol::stdplugin::datatools::floattable::CallFloatTableData::FunctionName(0),
-        &PrincipalComponentAnalysis::getDataCallback);
+        &PCAProjection::getDataCallback);
     this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
         megamol::stdplugin::datatools::floattable::CallFloatTableData::FunctionName(1),
-        &PrincipalComponentAnalysis::getHashCallback);
+        &PCAProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -50,13 +48,13 @@ PrincipalComponentAnalysis::PrincipalComponentAnalysis(void)
 }
 
 
-PrincipalComponentAnalysis::~PrincipalComponentAnalysis(void) { this->Release(); }
+PCAProjection::~PCAProjection(void) { this->Release(); }
 
-bool PrincipalComponentAnalysis::create(void) { return true; }
+bool PCAProjection::create(void) { return true; }
 
-void PrincipalComponentAnalysis::release(void) {}
+void PCAProjection::release(void) {}
 
-bool PrincipalComponentAnalysis::getDataCallback(core::Call& c) {
+bool PCAProjection::getDataCallback(core::Call& c) {
 
     try {
         megamol::stdplugin::datatools::floattable::CallFloatTableData* outCall =
@@ -92,7 +90,7 @@ bool PrincipalComponentAnalysis::getDataCallback(core::Call& c) {
     return true;
 }
 
-bool PrincipalComponentAnalysis::getHashCallback(core::Call& c) {
+bool PCAProjection::getHashCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::floattable::CallFloatTableData* outCall =
             dynamic_cast<megamol::stdplugin::datatools::floattable::CallFloatTableData*>(&c);
@@ -115,7 +113,7 @@ bool PrincipalComponentAnalysis::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::PrincipalComponentAnalysis::computePCA(
+bool megamol::infovis::PCAProjection::computePCA(
     megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall) {
 
     // check if inData has changed and if Slots have changed
