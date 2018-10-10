@@ -17,7 +17,6 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -525,9 +524,6 @@ namespace view {
 
         /** The mouse y coordinate */
         float mouseY;
-
-        /** The mouse flags */
-        MouseFlags mouseFlags;
 
         /** The time control */
         TimeControl timeCtrl;
