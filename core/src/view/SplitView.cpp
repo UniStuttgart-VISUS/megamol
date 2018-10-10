@@ -405,57 +405,57 @@ void view::SplitView::UpdateFreeze(bool freeze) {
 
 
 bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->renderFocused();
-    if (cr == NULL) return false;
+    auto* crv = this->renderFocused();
+    if (crv == NULL) return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Key;
     evt.keyData.key = key;
     evt.keyData.action = action;
     evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnKey)) return false;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnKey)) return false;
 
     return true;
 }
 
 
 bool view::SplitView::OnChar(unsigned int codePoint) {
-    auto* cr = this->renderFocused();
-    if (cr == NULL) return false;
+    auto* crv = this->renderFocused();
+    if (crv == NULL) return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnChar)) return false;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnChar)) return false;
 
     return true;
 }
 
 
 bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-    auto* cr = this->renderHovered();
-    auto* cr1 = this->render1();
-    auto* cr2 = this->render2();
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
 
     auto down = action == MouseButtonAction::PRESS;
-    if (cr == cr1 && this->focus == 0 && down) {
+    if (crv == crv1 && this->focus == 0 && down) {
         this->focus = 1;
-    } else if (cr == cr2 && this->focus == 0 && down) {
+    } else if (crv == crv2 && this->focus == 0 && down) {
         this->focus = 2;
     } else {
         this->focus = 0;
     }
 
-	if (cr) {
+	if (crv) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRenderView::FnOnMouseButton)) return false;
+        crv->SetInputEvent(evt);
+        if (!(*crv)(view::CallRenderView::FnOnMouseButton)) return false;
     }
 
     return true;
@@ -467,16 +467,16 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     this->mouseX = x;
     this->mouseY = y;
 
-    auto* cr = this->renderHovered();
-    auto* cr1 = this->render1();
-    auto* cr2 = this->render2();
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
 
     float mx;
     float my;
-    if (cr == cr1) {
+    if (crv == crv1) {
         mx = (x - this->client1Area.Left()) / this->client1Area.Width();
         my = (y - this->client1Area.Bottom()) / this->client1Area.Height();
-    } else if (cr == cr2) {
+    } else if (crv == crv2) {
         mx = (x - this->client2Area.Left()) / this->client2Area.Width();
         my = (y - this->client2Area.Bottom()) / this->client2Area.Height();
     } else {
@@ -487,23 +487,23 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     evt.tag = InputEvent::Tag::MouseMove;
     evt.mouseMoveData.x = mx;
     evt.mouseMoveData.y = my;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnMouseMove)) return false;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
 
     return true;
 }
 
 
 bool view::SplitView::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->renderHovered();
-    if (cr == NULL) return false;
+    auto* crv = this->renderHovered();
+    if (crv == NULL) return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::MouseScroll;
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnMouseScroll)) return false;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnMouseScroll)) return false;
 
     return true;
 }
