@@ -11,7 +11,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CallRender2D.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
@@ -27,7 +26,7 @@ using namespace megamol::core;
  */
 view::View2D::View2D(void) : view::AbstractRenderingView(),
         firstImg(false), height(1.0f),
-        mouseMode(MouseMode::Propagate), mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
+        mouseMode(MouseMode::Propagate), mouseX(0.0f), mouseY(0.0f),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"), 

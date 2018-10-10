@@ -202,9 +202,6 @@ namespace view {
         /** The mouse y coordinate */
         float mouseY;
 
-        /** The mouse flags */
-        MouseFlags mouseFlags;
-
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
 
