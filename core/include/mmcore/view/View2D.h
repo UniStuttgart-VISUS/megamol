@@ -161,6 +161,8 @@ namespace view {
 
     private:
 
+		enum MouseMode : uint8_t { Propagate, Pan, Zoom };
+
         /**
          * Implementation of 'Create'.
          *
@@ -192,7 +194,7 @@ namespace view {
         float height;
 
         /** The mouse drag mode */
-        unsigned int mouseMode;
+        MouseMode mouseMode;
 
         /** The mouse x coordinate */
         float mouseX;
