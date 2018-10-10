@@ -28,28 +28,30 @@ using vislib::sys::Log;
 view::AbstractView::AbstractView(void) : Module(),
         renderSlot("render", "Connects modules requesting renderings"),
         hooks() {
-
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RENDER),
-        &AbstractView::OnRenderView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE),
-        &AbstractView::OnFreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE),
-        &AbstractView::OnUnfreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE),
-        &AbstractView::onSetCursor2DButtonState);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETCURSOR2DPOSITION),
-        &AbstractView::onSetCursor2DPosition);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETINPUTMODIFIER),
-        &AbstractView::onSetInputModifier);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW),
-        &AbstractView::onResetView);
+   static auto shutup = [](Call& call) -> bool { return false; };
+    // InputCall
+    this->renderSlot.SetCallback(
+        view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->renderSlot.SetCallback(
+        view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+        &AbstractView::OnMouseMoveCallback);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
+    // AbstractCallRender
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtentsCallback);
+    // CallRenderView
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
@@ -244,52 +246,76 @@ void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
     // do something smart in the derived classes
 }
 
-
-/*
- * view::AbstractView::onSetCursor2DButtonState
- */
-bool view::AbstractView::onSetCursor2DButtonState(Call& call) {
-    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
-    if (crv == NULL) return false;
-	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
-    //this->SetCursor2DButtonState(crv->MouseButton(), crv->MouseButtonDown());
-    return true;
-}
-
-
-/*
- * view::AbstractView::onSetCursor2DPosition
- */
-bool view::AbstractView::onSetCursor2DPosition(Call& call) {
-    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
-    if (crv == NULL) return false;
-
-	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
-    //float x = crv->MouseX();
-    //float y = crv->MouseY();
-    //this->unpackMouseCoordinates(x, y);
-    //this->SetCursor2DPosition(x, y);
-
-    return true;
-}
-
-
-/*
- * view::AbstractView::onSetInputModifier
- */
-bool view::AbstractView::onSetInputModifier(Call& call) {
-    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
-    if (crv == NULL) return false;
-	//TODO: migrate this stuff to AbstractInputScope (see AbstractCallRender)
-    //this->SetInputModifier(crv->InputModifier(), crv->MouseButtonDown());
-    return true;
-}
-
-
 /*
  * view::AbstractView::onResetView
  */
 bool view::AbstractView::onResetView(Call& call) {
     this->ResetView();
     return true;
+}
+
+
+bool view::AbstractView::GetExtentsCallback(Call& call) {
+	// NOP, because thats the way it was before.
+	return false; 
+}
+
+bool view::AbstractView::OnKeyCallback(Call& call) {
+    try {
+        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
+        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+    } catch (...) {
+        ASSERT("OnKeyCallback call cast failed\n");
+    }
+    return false;
+}
+
+bool view::AbstractView::OnCharCallback(Call& call) {
+    try {
+        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
+        return this->OnChar(evt.charData.codePoint);
+    } catch (...) {
+        ASSERT("OnCharCallback call cast failed\n");
+    }
+    return false;
+}
+
+bool view::AbstractView::OnMouseButtonCallback(Call& call) {
+    try {
+        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
+        return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
+    } catch (...) {
+        ASSERT("OnMouseButtonCallback call cast failed\n");
+    }
+    return false;
+}
+
+bool view::AbstractView::OnMouseMoveCallback(Call& call) {
+    try {
+        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+    } catch (...) {
+        ASSERT("OnMouseMoveCallback call cast failed\n");
+    }
+    return false;
+}
+
+bool view::AbstractView::OnMouseScrollCallback(Call& call) {
+    try {
+        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
+        return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
+    } catch (...) {
+        ASSERT("OnMouseScrollCallback call cast failed\n");
+    }
+    return false;
 }

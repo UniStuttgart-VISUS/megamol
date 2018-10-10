@@ -474,11 +474,11 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     float mx;
     float my;
     if (crv == crv1) {
-        mx = (x - this->client1Area.Left()) / this->client1Area.Width();
-        my = (y - this->client1Area.Bottom()) / this->client1Area.Height();
+        mx = x - this->client1Area.Left();
+        my = y - this->client1Area.Bottom();
     } else if (crv == crv2) {
-        mx = (x - this->client2Area.Left()) / this->client2Area.Width();
-        my = (y - this->client2Area.Bottom()) / this->client2Area.Height();
+        mx = x - this->client2Area.Left();
+        my = y - this->client2Area.Bottom();
     } else {
         return false;
     }
