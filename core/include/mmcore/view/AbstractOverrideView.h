@@ -86,6 +86,16 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
+        virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+
+        virtual bool OnChar(unsigned int codePoint) override;
+
+        virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+
+        virtual bool OnMouseMove(double x, double y) override;
+
+        virtual bool OnMouseScroll(double dx, double dy) override;
+
     protected:
 
         /**
