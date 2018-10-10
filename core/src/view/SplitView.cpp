@@ -33,7 +33,7 @@ view::SplitView::SplitView(void) : AbstractView(),
         splitColourSlot("split.colour", "The split border colour"),
         splitColour(192, 192, 192, 255), overrideCall(NULL),
         clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
-        focus(-1), mouseX(0.0f), mouseY(0.0f) {
+        focus(0), mouseX(0.0f), mouseY(0.0f) {
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
