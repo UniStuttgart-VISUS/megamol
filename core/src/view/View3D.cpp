@@ -881,35 +881,29 @@ bool view::View3D::OnChar(unsigned int codePoint) {
 
 bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 	// This mouse handling/mapping is so utterly weird and should die!
-    unsigned int modId = 0;
-    if (mods.test(Modifier::SHIFT)) {
-        modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
-    } else if (mods.test(Modifier::CTRL)) {
-        modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
-    } else if (mods.test(Modifier::ALT)) {
-        modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
-    }
     auto down = action == MouseButtonAction::PRESS;
-    this->modkeys.SetModifierState(modId, down);
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    } else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    } else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
 
     if (!this->toggleMouseSelection) {
-        unsigned int btn;
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
-            btn = 0;
-            break;
-        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
-            btn = 2;
+            this->cursor2d.SetButtonState(0, down);
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
-            btn = 1;
+            this->cursor2d.SetButtonState(1, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
+            this->cursor2d.SetButtonState(2, down);
             break;
         default:
-            btn = 0xBEEF;
             break;
         }
-        auto down = action == MouseButtonAction::PRESS;
-        this->cursor2d.SetButtonState(btn, down);
     } else {
         auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
         if (cr == NULL) return false;
@@ -927,23 +921,23 @@ bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, M
 
 
 bool view::View3D::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
 	// This mouse handling/mapping is so utterly weird and should die!
 	if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
     } else {
         auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
         if (cr) {
-
             InputEvent evt;
             evt.tag = InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender3D::FnOnMouseMove)) {
-                this->mouseX = (float)static_cast<int>(x);
-                this->mouseY = (float)static_cast<int>(y);
-                return true;
-            }
+            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
+                return false;
+			}
         }
     }
 
