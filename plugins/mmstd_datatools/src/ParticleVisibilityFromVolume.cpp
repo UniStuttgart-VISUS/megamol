@@ -144,8 +144,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
 
             // relative coordinates in volume
             const auto rx = (x - volMeta->Origin[0]) / volMeta->SliceDists[0][0];
-            const auto ry = (x - volMeta->Origin[1]) / volMeta->SliceDists[1][0];
-            const auto rz = (x - volMeta->Origin[2]) / volMeta->SliceDists[2][0];
+            const auto ry = (y - volMeta->Origin[1]) / volMeta->SliceDists[1][0];
+            const auto rz = (z - volMeta->Origin[2]) / volMeta->SliceDists[2][0];
 
             if (rx > 0 && rx < volMeta->Resolution[0] && ry > 0 && ry < volMeta->Resolution[1] && rz > 0 &&
                 rz < volMeta->Resolution[2]) {
