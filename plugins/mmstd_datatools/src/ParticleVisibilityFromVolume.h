@@ -67,6 +67,10 @@ private:
     /** epsilon for equality */
     core::param::ParamSlot epsilonSlot;
 
+    core::param::ParamSlot absoluteSlot;
+
+    core::param::ParamSlot minSlot, maxSlot;
+
     core::CallerSlot volumeSlot;
 
     std::vector<std::vector<uint8_t>> theVertexData;

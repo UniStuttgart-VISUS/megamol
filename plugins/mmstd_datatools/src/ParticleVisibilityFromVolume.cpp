@@ -8,6 +8,7 @@
 #include "ParticleVisibilityFromVolume.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -21,12 +22,21 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
     , operatorSlot("operator", "what to do with the reference value")
     , valueSlot("ref", "the value for the operator")
     , epsilonSlot("epsilon", "the tolerance for equality")
+    , absoluteSlot("absolute", "use absolute values instead of relative")
+    , minSlot("min", "the minimum value in the volume (read only)")
+    , maxSlot("max", "the maximum value in the volume (read only)")
     , volumeSlot("volume", "the volume we the operation is based on") {
 
     this->valueSlot.SetParameter(new core::param::FloatParam(0.5, -5000.0f, 5000.0f));
     this->MakeSlotAvailable(&this->valueSlot);
     this->epsilonSlot.SetParameter(new core::param::FloatParam(0.001, 0.0f, 5000.0f));
     this->MakeSlotAvailable(&this->epsilonSlot);
+    this->absoluteSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->absoluteSlot);
+    this->minSlot.SetParameter(new core::param::FloatParam(0.0f));
+    this->MakeSlotAvailable(&this->minSlot);
+    this->maxSlot.SetParameter(new core::param::FloatParam(0.0f));
+    this->MakeSlotAvailable(&this->maxSlot);
 
     auto ep = new megamol::core::param::EnumParam(0);
     ep->SetTypePair(0, "smaller");
@@ -57,6 +67,7 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     float theVal = this->valueSlot.Param<core::param::FloatParam>()->Value();
     float epsilon = this->epsilonSlot.Param<core::param::FloatParam>()->Value();
     auto op = this->operatorSlot.Param<core::param::EnumParam>()->Value();
+    auto absolute = this->absoluteSlot.Param<core::param::BoolParam>()->Value();
 
     auto* inVol = this->volumeSlot.CallAs<VolumetricDataCall>();
     inVol->SetFrameID(outData.FrameID());
@@ -80,7 +91,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     }
 
     if (inData.FrameID() == this->lastTime && inData.DataHash() == this->lastParticleHash &&
-        inVol->DataHash() == this->lastVolumeHash && !operatorSlot.IsDirty() && !valueSlot.IsDirty() && !epsilonSlot.IsDirty()) {
+        inVol->DataHash() == this->lastVolumeHash && !operatorSlot.IsDirty() && !valueSlot.IsDirty() && !epsilonSlot.IsDirty()
+        && !absoluteSlot.IsDirty()) {
         // everything should already be correct
         return true;
     }
@@ -95,6 +107,19 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         vislib::sys::Log::DefaultLog.WriteError(
             "ParticleVisibilityFromVolume: input Volume has to be cartesian or rectilinear!");
         return false;
+    }
+
+    const uint32_t channel = 0;
+
+    this->minSlot.Param<core::param::FloatParam>()->SetValue(volMeta->MinValues[channel]);
+    this->maxSlot.Param<core::param::FloatParam>()->SetValue(volMeta->MaxValues[channel]);
+
+    typedef const float (VolumetricDataCall::*getter)(const uint32_t, const uint32_t, const uint32_t, const uint32_t) const;
+    getter getFun;
+    if (absolute) {
+        getFun = &VolumetricDataCall::GetAbsoluteVoxelValue;
+    } else {
+        getFun = &VolumetricDataCall::GetRelativeVoxelValue;
     }
 
     unsigned int plc = inData.GetParticleListCount();
@@ -157,14 +182,14 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
                 const float diffY = ry - quantY;
                 const float diffZ = rz - quantZ;
 
-                const float c000 = inVol->GetRelativeVoxelValue(quantX, quantY, quantZ);
-                const float c100 = inVol->GetRelativeVoxelValue(quantX + 1, quantY, quantZ);
-                const float c010 = inVol->GetRelativeVoxelValue(quantX, quantY + 1, quantZ);
-                const float c110 = inVol->GetRelativeVoxelValue(quantX + 1, quantY + 1, quantZ);
-                const float c001 = inVol->GetRelativeVoxelValue(quantX, quantY, quantZ + 1);
-                const float c101 = inVol->GetRelativeVoxelValue(quantX + 1, quantY, quantZ + 1);
-                const float c011 = inVol->GetRelativeVoxelValue(quantX, quantY + 1, quantZ + 1);
-                const float c111 = inVol->GetRelativeVoxelValue(quantX + 1, quantY + 1, quantZ + 1);
+                const float c000 = ((inVol)->*(getFun))(quantX, quantY, quantZ, channel);
+                const float c100 = ((inVol)->*(getFun))(quantX + 1, quantY, quantZ, channel);
+                const float c010 = ((inVol)->*(getFun))(quantX, quantY + 1, quantZ, channel);
+                const float c110 = ((inVol)->*(getFun))(quantX + 1, quantY + 1, quantZ, channel);
+                const float c001 = ((inVol)->*(getFun))(quantX, quantY, quantZ + 1, channel);
+                const float c101 = ((inVol)->*(getFun))(quantX + 1, quantY, quantZ + 1, channel);
+                const float c011 = ((inVol)->*(getFun))(quantX, quantY + 1, quantZ + 1, channel);
+                const float c111 = ((inVol)->*(getFun))(quantX + 1, quantY + 1, quantZ + 1, channel);
 
                 float volVal = (1.0f - diffX) * (1.0f - diffY) * (1.0f - diffZ) * c000 +
                                diffX * (1.0f - diffY) * (1.0f - diffZ) * c100 +
@@ -225,9 +250,10 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     this->lastParticleHash = inData.DataHash();
     this->lastVolumeHash = inVol->DataHash();
 
-    operatorSlot.ResetDirty();
-    valueSlot.ResetDirty();
-    epsilonSlot.ResetDirty();
+    this->operatorSlot.ResetDirty();
+    this->valueSlot.ResetDirty();
+    this->epsilonSlot.ResetDirty();
+    this->absoluteSlot.ResetDirty();
 
     return true;
 }
