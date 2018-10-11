@@ -370,10 +370,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(0);
 #endif // DEBUG || _DEBUG 
 
-    if ((!this->fbo.IsValid()) || (this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
-        if (this->fbo.IsValid()) {
+    if (this->fbo.IsValid()) {
+        if ((this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
             this->fbo.Release();
         }
+    }
+    if (!this->fbo.IsValid()) {
         if (!this->fbo.Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception("[CINEMATIC VIEW] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
@@ -388,10 +390,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
@@ -435,9 +433,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw final image -------------------------------------------------------
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -495,17 +496,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glColor4fv(white);
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(left,  bottom);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(right, bottom);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(right, up);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(left,  up);
+        glTexCoord3f(0.0f, 0.0f, 0.0f); glVertex2f(left,  bottom);
+        glTexCoord3f(1.0f, 0.0f, 0.0f); glVertex2f(right, bottom);
+        glTexCoord3f(1.0f, 1.0f, 0.0f); glVertex2f(right, up);
+        glTexCoord3f(0.0f, 1.0f, 0.0f); glVertex2f(left,  up);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
     // Draw letter box  -------------------------------------------------------
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
 
     // Calculate position of texture
     int x = 0;
@@ -583,6 +583,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Reset opengl
     glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 

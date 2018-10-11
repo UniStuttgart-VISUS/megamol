@@ -321,11 +321,11 @@ bool CinematicRenderer::Render(Call& call) {
             return false;
         }
     }
-
     if (this->fbo.Enable() != GL_NO_ERROR) {
         throw vislib::Exception("[CINEMATIC RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return false;
     }
+
     // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
      vislib::Trace::GetInstance().SetLevel(otl);
