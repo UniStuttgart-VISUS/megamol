@@ -32,7 +32,7 @@ megamol::console::utility::AboutInfo::LibFileNameFormatString(void) {
 #endif /* _WIN32 */
         "%s" // MEGAMOL_FILENAME_BITSD 
 #if !defined(_WIN32) && (defined(DEBUG) || defined(_DEBUG))
-	"d"
+    "d"
 #endif
         MEGAMOL_DLL_FILENAME_EXT;
 }
@@ -43,7 +43,7 @@ megamol::console::utility::AboutInfo::LibFileNameFormatString(void) {
  */
 void megamol::console::utility::AboutInfo::PrintGreeting(void) {
     std::cout << std::endl
-        << "    MegaMol" << ASCIIStringTM() << " Console" << std::endl;
+        << "    MegaMol Console" << std::endl;
     vislib::StringA cr(MEGAMOL_CONSOLE_COPYRIGHT);
     cr.Replace("\n", "\n    ");
     cr.Prepend("    ");
@@ -55,7 +55,7 @@ void megamol::console::utility::AboutInfo::PrintGreeting(void) {
  * megamol::console::utility::AboutInfo::LogGreeting
  */
 void megamol::console::utility::AboutInfo::LogGreeting(void) {
-    vislib::sys::Log::DefaultLog.WriteInfo("MegaMol%s Console", ASCIIStringTM());
+    vislib::sys::Log::DefaultLog.WriteInfo("MegaMol Console");
 }
 
 
