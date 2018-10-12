@@ -81,7 +81,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     }
     if (inVol->FrameID() != inData.FrameID()) {
         vislib::sys::Log::DefaultLog.WriteError(
-            "ParticleVisibilityFromVolume: frameIDs of particles and volume do not match");
+            "ParticleVisibilityFromVolume: frameIDs of particles and volume do not match: %u (vol) - %u (parts)", inVol->FrameID(),
+            inData.FrameID());
         return false;
     }
 
@@ -158,8 +159,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             isInterleaved = true;
             theVertexData[i].reserve(cnt * vdstride);
         } else {
-            theVertexData[i].reserve(cnt * vdsize);
-            theColorData[i].reserve(cnt * cdsize);
+            theVertexData[i].resize(cnt * vdsize);
+            theColorData[i].resize(cnt * cdsize);
         }
 
         for (INT64 j = 0; j < cnt; ++j) {
@@ -232,6 +233,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         outp.SetCount(cntLeft);
         vislib::sys::Log::DefaultLog.WriteInfo(
             "ParticleVisibilityFromVolume: list %d: %lu / %lu particles left", i, cntLeft, cnt);
+        theVertexData[i].resize(cntLeft * vdsize);
+        theColorData[i].resize(cntLeft * cdsize);
         if (isInterleaved) {
             if (colorIsFirst) {
                 outp.SetColourData(cdt, theVertexData[i].data(), cdstride);
