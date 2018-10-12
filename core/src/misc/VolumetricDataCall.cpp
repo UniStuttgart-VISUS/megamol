@@ -198,7 +198,7 @@ const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const
 
     } else {
         uint64_t idx =
-            z * this->metadata->Resolution[0] * this->metadata->Resolution[1] + y * this->metadata->Resolution[0] + x;
+            (z * this->metadata->Resolution[1] + y) * this->metadata->Resolution[0] + x;
         idx *= this->metadata->Components;
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
