@@ -391,6 +391,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -490,16 +494,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     this->fbo.BindColourTexture();
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glColor4fv(white);
     glBegin(GL_QUADS);
-        glTexCoord3f(0.0f, 0.0f, 0.0f); glVertex2f(left,  bottom);
-        glTexCoord3f(1.0f, 0.0f, 0.0f); glVertex2f(right, bottom);
-        glTexCoord3f(1.0f, 1.0f, 0.0f); glVertex2f(right, up);
-        glTexCoord3f(0.0f, 1.0f, 0.0f); glVertex2f(left,  up);
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(left,  bottom, 0.0f);
+        glTexCoord2f(1.0f, 0.0f); glVertex3f(right, bottom, 0.0f);
+        glTexCoord2f(1.0f, 1.0f); glVertex3f(right, up, 0.0f);
+        glTexCoord2f(0.0f, 1.0f); glVertex3f(left,  up, 0.0f);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
