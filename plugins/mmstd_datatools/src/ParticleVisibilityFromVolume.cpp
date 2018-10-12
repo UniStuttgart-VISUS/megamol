@@ -137,7 +137,7 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         const unsigned int cdsize = MultiParticleDataCall::Particles::ColorDataSize[cdt];
 
         const void* vd = p.GetVertexData();
-        const unsigned int vdstride = p.GetVertexDataStride();
+        unsigned int vdstride = p.GetVertexDataStride();
         const MultiParticleDataCall::Particles::VertexDataType vdt = p.GetVertexDataType();
         const auto vdsize = MultiParticleDataCall::Particles::VertexDataSize[vdt];
 
@@ -157,7 +157,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             commonBasePointer = vertexBasePointer < colorBasePointer ? vertexBasePointer : colorBasePointer;
             colorIsFirst = vertexBasePointer > colorBasePointer;
             isInterleaved = true;
-            theVertexData[i].reserve(cnt * vdstride);
+            vdstride = vdsize + cdsize;
+            theVertexData[i].resize(cnt * vdstride);
         } else {
             theVertexData[i].resize(cnt * vdsize);
             theColorData[i].resize(cnt * cdsize);
@@ -233,8 +234,17 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         outp.SetCount(cntLeft);
         vislib::sys::Log::DefaultLog.WriteInfo(
             "ParticleVisibilityFromVolume: list %d: %lu / %lu particles left", i, cntLeft, cnt);
-        theVertexData[i].resize(cntLeft * vdsize);
-        theColorData[i].resize(cntLeft * cdsize);
+        if (isInterleaved) {
+            theVertexData[i].resize(cntLeft * vdstride);
+            //theColorData[i].resize(cntLeft * cdsize);
+        } else {
+            theVertexData[i].resize(cntLeft * vdsize);
+            theColorData[i].resize(cntLeft * cdsize);
+        }
+        auto col = p.GetGlobalColour();
+        outp.SetGlobalColour(col[0], col[1], col[2], col[3]);
+        outp.SetGlobalRadius(p.GetGlobalRadius());
+        outp.SetGlobalType(p.GetGlobalType());
         if (isInterleaved) {
             if (colorIsFirst) {
                 outp.SetColourData(cdt, theVertexData[i].data(), cdstride);
