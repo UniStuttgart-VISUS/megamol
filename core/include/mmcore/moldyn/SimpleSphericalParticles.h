@@ -15,7 +15,9 @@ namespace core {
 namespace moldyn {
 
 
-template <class T> T* access(char* ptr, size_t idx, size_t stride) { return reinterpret_cast<T*>(ptr + idx * stride); }
+template <class T> T* access(char const* ptr, size_t idx, size_t stride) {
+    return reinterpret_cast<T*>(ptr + idx * stride);
+}
 
 
 class Accessor {
@@ -26,13 +28,13 @@ public:
     virtual unsigned int Get_u32(size_t idx) const = 0;
     virtual unsigned short Get_u16(size_t idx) const = 0;
     virtual unsigned char Get_u8(size_t idx) const = 0;
-    virtual ~Accessor();
+    virtual ~Accessor() = default;
 };
 
 
 class Accessor_f : public Accessor {
 public:
-    Accessor_f(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_f(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return *access<float>(ptr_, idx, stride_); }
 
@@ -46,17 +48,17 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_f(idx)); }
 
-    virtual ~Accessor_f();
+    virtual ~Accessor_f() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
 
 class Accessor_d : public Accessor {
 public:
-    Accessor_d(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_d(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return static_cast<float>(Get_d(idx)); }
 
@@ -70,17 +72,17 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_d(idx)); }
 
-    virtual ~Accessor_d();
+    virtual ~Accessor_d() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
 
 class Accessor_u64 : public Accessor {
 public:
-    Accessor_u64(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_u64(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return static_cast<float>(Get_u64(idx)); }
 
@@ -94,17 +96,17 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u64(idx)); }
 
-    virtual ~Accessor_u64();
+    virtual ~Accessor_u64() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
 
 class Accessor_u32 : public Accessor {
 public:
-    Accessor_u32(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_u32(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return static_cast<float>(Get_u32(idx)); }
 
@@ -118,17 +120,17 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u32(idx)); }
 
-    virtual ~Accessor_u32();
+    virtual ~Accessor_u32() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
 
 class Accessor_u16 : public Accessor {
 public:
-    Accessor_u16(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_u16(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return static_cast<float>(Get_u16(idx)); }
 
@@ -142,17 +144,17 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u16(idx)); }
 
-    virtual ~Accessor_u16();
+    virtual ~Accessor_u16() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
 
 class Accessor_u8 : public Accessor {
 public:
-    Accessor_u8(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+    Accessor_u8(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
     float Get_f(size_t idx) const override { return static_cast<float>(Get_u8(idx)); }
 
@@ -166,10 +168,10 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return *access<unsigned short>(ptr_, idx, stride_); }
 
-    virtual ~Accessor_u8();
+    virtual ~Accessor_u8() = default;
 
 private:
-    char* ptr_;
+    char const* ptr_;
     size_t stride_;
 };
 
@@ -190,27 +192,9 @@ public:
 
     unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(0); }
 
-    virtual ~Accessor_0();
+    virtual ~Accessor_0() = default;
 
 private:
-};
-
-
-class ParticleStore {
-public:
-    explicit ParticleStore(
-        void* vert_ptr, size_t vert_stride, void* col_ptr, size_t col_stride, void* id_ptr, size_t id_stride);
-
-private:
-    std::unique_ptr<Accessor> x_acc_;
-    std::unique_ptr<Accessor> y_acc_;
-    std::unique_ptr<Accessor> z_acc_;
-    std::unique_ptr<Accessor> r_acc_;
-    std::unique_ptr<Accessor> cr_acc_;
-    std::unique_ptr<Accessor> cg_acc_;
-    std::unique_ptr<Accessor> cb_acc_;
-    std::unique_ptr<Accessor> ca_acc_;
-    std::unique_ptr<Accessor> id_acc_;
 };
 
 
@@ -223,6 +207,49 @@ private:
  */
 class MEGAMOLCORE_API SimpleSphericalParticles {
 public:
+    enum VertexDataType;
+
+    class ParticleStore {
+    public:
+        explicit ParticleStore(
+            void* vert_ptr, size_t vert_stride, void* col_ptr, size_t col_stride, void* id_ptr, size_t id_stride);
+
+        void SetVertexData(SimpleSphericalParticles::VertexDataType t, const void* p, unsigned int s = 0) {
+            switch (t) {
+            case SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ: {
+                this->x_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p) + sizeof(double), s));
+                this->z_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p) + 2 * sizeof(double), s));
+                this->r_acc_.reset(new Accessor_0());
+            } break;
+            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: {
+                this->x_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + sizeof(float), s));
+                this->z_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
+                this->r_acc_.reset(new Accessor_0());
+            } break;
+            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: {
+                this->x_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + sizeof(float), s));
+                this->z_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
+                this->r_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 3 * sizeof(float), s));
+            } break;
+            }
+        }
+
+    private:
+        std::unique_ptr<Accessor> x_acc_;
+        std::unique_ptr<Accessor> y_acc_;
+        std::unique_ptr<Accessor> z_acc_;
+        std::unique_ptr<Accessor> r_acc_;
+        std::unique_ptr<Accessor> cr_acc_;
+        std::unique_ptr<Accessor> cg_acc_;
+        std::unique_ptr<Accessor> cb_acc_;
+        std::unique_ptr<Accessor> ca_acc_;
+        std::unique_ptr<Accessor> id_acc_;
+    };
+
+
     class VertexData_Detail {
     public:
         virtual double GetXd() const = 0;
