@@ -3,13 +3,28 @@
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
+include(CheckLanguage)
+
 string(TOUPPER sombreros EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build sombreros" ON)
+
+check_language(CUDA)
+if(MSVC AND CMAKE_CUDA_COMPILER)
+  option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build sombreros" ON)
+else()
+  set(BUILD_${EXPORT_NAME}_PLUGIN OFF)
+endif()
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(sombreros LANGUAGES CXX CUDA)
+
+
+  string(REPLACE "." ";" CUDA_VERSION_LIST ${CMAKE_CUDA_COMPILER_VERSION})
+  list(GET CUDA_VERSION_LIST 0 CUDA_VERSION_MAJOR)
+  if(NOT CUDA_VERSION_MAJOR GREATER 7)
+    message(FATAL_ERROR "The Sombreros-Plugin needs at least CUDA version 8 to work properly. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Sombreros plugin or install the correct version of CUDA.")
+  endif()
 
   #NVCC options
   set(CMAKE_CUDA_STANDARD 11)
