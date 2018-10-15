@@ -395,6 +395,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -414,6 +417,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
     }
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
      
     // Write frame to file
     if (this->rendering) {
@@ -439,10 +445,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -494,7 +501,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     this->fbo.BindColourTexture();
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

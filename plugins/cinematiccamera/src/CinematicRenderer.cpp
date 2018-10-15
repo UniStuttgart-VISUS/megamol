@@ -359,6 +359,7 @@ bool CinematicRenderer::Render(Call& call) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -416,6 +417,7 @@ bool CinematicRenderer::Render(Call& call) {
             (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
             this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
+
         // Draw manipulators
         this->manipulator.Draw();
     }
