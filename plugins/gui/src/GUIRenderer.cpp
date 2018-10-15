@@ -102,7 +102,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
 
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(x, y);
+    io.MousePos = ImVec2(x, y); // TODO: this is broken, since x and y are transformed by View classes.
     return true;
 }
 

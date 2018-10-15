@@ -401,26 +401,24 @@ bool view::View2D::OnChar(unsigned int codePoint) {
 
 
 bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+	this->mouseMode = MouseMode::Propagate;
+
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender2D::FnOnMouseButton)) return true;
+    }
+
     auto down = action == MouseButtonAction::PRESS;
     if (button == MouseButton::BUTTON_LEFT && down) {
         this->mouseMode = MouseMode::Pan;
     } else if (button == MouseButton::BUTTON_MIDDLE && down) {
         this->mouseMode = MouseMode::Zoom;
-    } else {
-        this->mouseMode = MouseMode::Propagate;
-    }
-
-    if (this->mouseMode == MouseMode::Propagate) {
-        auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
-        if (cr) {
-            InputEvent evt;
-            evt.tag = InputEvent::Tag::MouseButton;
-            evt.mouseButtonData.button = button;
-            evt.mouseButtonData.action = action;
-            evt.mouseButtonData.mods = mods;
-            cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender2D::FnOnMouseButton)) return true;
-        }
     }
 
     return true;
