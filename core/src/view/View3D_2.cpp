@@ -205,41 +205,43 @@ View3D_2::View3D_2(void)
     this->viewKeyRotDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
 
-    this->viewKeyRollLeftSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollLeftSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
     this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
 
-    this->viewKeyRollRightSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollRightSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
     this->viewKeyRollRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
 
-    this->viewKeyZoomInSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyZoomInSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
     this->viewKeyZoomInSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
 
-    this->viewKeyZoomOutSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyZoomOutSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
     this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
 
-    this->viewKeyMoveLeftSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveLeftSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
     this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
 
-    this->viewKeyMoveRightSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveRightSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
     this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
 
-    this->viewKeyMoveUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveUpSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
     this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
 
-    this->viewKeyMoveDownSlot.SetParameter(new param::ButtonParam(
-        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
+    this->viewKeyMoveDownSlot.SetParameter(
+        new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
     this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
 
@@ -308,9 +310,148 @@ void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
  * View3D_2::Render
  */
 void View3D_2::Render(const mmcRenderViewContext& context) {
+    float time = static_cast<float>(context.Time);
+    float instTime = static_cast<float>(context.InstanceTime);
+
+    if (this->doHookCode()) {
+        this->doBeforeRenderHook();
+    }
+
+    CallRender3D_2* cr3d = this->rendererSlot.CallAs<CallRender3D_2>();
+    if (cr3d != nullptr) {
+        cr3d->SetMouseSelection(this->toggleMouseSelection);
+    }
+
+    AbstractRenderingView::beginFrame();
+
+    // TODO Conditionally synchronise camera from somewhere else.
+    // this->SyncCamParams(this->cam.Parameters());
+
+    // clear viewport
+    if (this->overrideViewport != nullptr) {
+        if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0) &&
+            (this->overrideViewport[3] >= 0)) {
+            glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
+                this->overrideViewport[3]);
+        }
+    } else {
+        // this is correct in non-override mode,
+        //  because then the tile will be whole viewport
+        // TODO
+        // glViewport(0, 0, static_cast<GLsizei>(this->camParams->TileRect().Width()),
+        // static_cast<GLsizei>(this->camParams->TileRect().Height()));
+    }
+
+    if (this->overrideCall != nullptr) {
+        if (cr3d != nullptr) {
+            RenderOutput* ro = dynamic_cast<RenderOutput*>(overrideCall);
+            if (ro != nullptr) {
+                *static_cast<RenderOutput*>(cr3d) = *ro;
+            }
+        }
+        this->overrideCall->EnableOutputBuffer();
+    } else if (cr3d != nullptr) {
+        cr3d->SetOutputBuffer(GL_BACK);
+        cr3d->GetViewport(); // access the viewport to enforce evaluation
+    }
+
     const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();
     glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (cr3d == NULL) {
+        /*this->renderTitle(this->cam.Parameters()->TileRect().Left(), this->cam.Parameters()->TileRect().Bottom(),
+            this->cam.Parameters()->TileRect().Width(), this->cam.Parameters()->TileRect().Height(),
+            this->cam.Parameters()->VirtualViewSize().Width(), this->cam.Parameters()->VirtualViewSize().Height(),
+            (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC) &&
+            (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE, instTime);*/
+        this->endFrame(true);
+        return; // empty enought
+    } else {
+        cr3d->SetGpuAffinity(context.GpuAffinity);
+        this->removeTitleRenderer();
+    }
+
+    // mueller: I moved the following code block before clearing the back buffer,
+    // because in case the FBO is enabled here, the depth buffer is not cleared
+    // (but the one of the previous buffer) and the renderer might not create any
+    // fragment in this case - besides that the FBO content is not cleared,
+    // which could be a problem if the FBO is reused.
+    // if (this->overrideCall != NULL) {
+    //    this->overrideCall->EnableOutputBuffer();
+    //} else {
+    //    cr3d->SetOutputBuffer(GL_BACK);
+    //}
+
+    // camera settings
+    if (this->stereoEyeDistSlot.IsDirty()) {
+        // TODO
+        param::FloatParam* fp = this->stereoEyeDistSlot.Param<param::FloatParam>();
+        // this->camParams->SetStereoDisparity(fp->Value());
+        // fp->SetValue(this->camParams->StereoDisparity());
+        this->stereoEyeDistSlot.ResetDirty();
+    }
+    if (this->stereoFocusDistSlot.IsDirty()) {
+        // TODO
+        param::FloatParam* fp = this->stereoFocusDistSlot.Param<param::FloatParam>();
+        // this->camParams->SetFocalDistance(fp->Value());
+        // fp->SetValue(this->camParams->FocalDistance(false));
+        this->stereoFocusDistSlot.ResetDirty();
+    }
+
+    if (cr3d != nullptr) {
+        (*cr3d)(1); // GetExtents
+        if (this->firstImg ||
+            (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
+                !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsObjectSpaceBBoxValid() &&
+                    !this->bboxs.IsObjectSpaceClipBoxValid() && this->bboxs.IsWorldSpaceBBoxValid() &&
+                    !this->bboxs.IsWorldSpaceClipBoxValid()))) {
+            this->bboxs = cr3d->AccessBoundingBoxes();
+
+            if (this->firstImg) {
+                this->ResetView();
+                this->firstImg = false;
+
+                if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+                    this->onRestoreCamera(this->restoreCameraSettingsSlot);
+                }
+            } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
+                this->ResetView();
+            }
+        }
+
+        this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), cr3d->IsInSituTime());
+        if (time > static_cast<float>(cr3d->TimeFramesCount())) {
+            time = static_cast<float>(cr3d->TimeFramesCount());
+        }
+
+        // old code was ...SetTime(this->frozenValues ? this->frozenValues->time : time);
+        cr3d->SetTime(time);
+
+        // TODO
+        // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
+        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+    }
+
+    // TODO
+    // this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
+    // float fc = this->camParams->FarClip();
+    // float nc = this->camParams->NearClip();
+    // float fnc = fc * 0.001f;
+    // if (fnc > nc) {
+    //     this->camParams->SetClip(fnc, fc);
+    // }
+
+
+    AbstractRenderingView::endFrame();
+
+    // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
+
+    if (this->doHookCode() && frameIsNew) {
+        this->doAfterRenderHook();
+    }
 }
 
 /*
@@ -490,4 +631,3 @@ bool View3D_2::onToggleButton(param::ParamSlot& p) {
 void View3D_2::renderViewCube(void) {
     // TODO implement
 }
-
