@@ -18,6 +18,8 @@ namespace MegaMolConf.Data {
                     || Name.Equals("ColStereoDisplay")
                     || Name.Equals("View2D")
                     || Name.Equals("View3D")
+                    || Name.Equals("View3DMouse")
+                    || Name.Equals("View3DSpaceMouse")
                     || Name.Equals("SimpleClusterView")
                     || Name.Equals("TileView")
                     || Name.Equals("PowerwallView")
