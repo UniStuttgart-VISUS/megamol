@@ -96,12 +96,54 @@ protected:
      */
     virtual bool Render(core::Call& call);
 
+    /**
+     * Callback for mouse events (move, press, and release)
+     *
+     * @param x The x coordinate of the mouse in world space
+     * @param y The y coordinate of the mouse in world space
+     * @param flags The mouse flags
+     */
+    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+
 private:
+    struct lastCamState_t {
+        vislib::math::Vector<float, 3> camPos;
+        vislib::math::Vector<float, 3> camDir;
+        vislib::math::Vector<float, 3> camUp;
+        vislib::math::Vector<float, 3> camRight;
+        float zNear;
+        float zFar;
+        float fovx;
+        float fovy;
+        float aspect;
+        int width;
+        int height;
+    } lastCamState;
+
+    /**
+     * Returns the direction a pixel lies in the image plane relative to the camera
+     * This vector can then be used for picking, for example.
+     *
+     * @param x The mouse coordinate in x-direction.
+     * @param y The mouse coordinate in y-direction.
+     */
+    vislib::math::Vector<float, 3> getPixelDirection(float x, float y);
+
+    /**
+     * Performs an intersection test of a ray with a given triangle
+     */
+    bool rayTriIntersect(const vislib::math::Vector<float, 3>& pos, const vislib::math::Vector<float, 3>& dir,
+        const vislib::math::Vector<float, 3>& p1, const vislib::math::Vector<float, 3>& p2,
+        const vislib::math::Vector<float, 3>& p3, float& intersectDist);
+
     /** The slot to fetch the data */
     core::CallerSlot getDataSlot;
 
     /** The slot to fetch the volume data */
     core::CallerSlot getVolDataSlot;
+
+    /** Slot connecting this module to the flag storage */
+    core::CallerSlot getFlagDataSlot;
 
     /** Flag whether or not to show vertices */
     core::param::ParamSlot showVertices;
@@ -126,6 +168,17 @@ private:
 
     /** Slot to activate the display of the sweatband */
     core::param::ParamSlot showSweatBandSlot;
+
+    /** The last time value asked by the render routine */
+    float lastTime;
+
+    std::vector<vislib::math::Vector<float, 3>> vertexPositions;
+
+    std::vector<vislib::math::Vector<unsigned int, 3>> triangles;
+
+    std::vector<unsigned int> indexAttrib;
+
+    size_t lastDataHash;
 };
 
 

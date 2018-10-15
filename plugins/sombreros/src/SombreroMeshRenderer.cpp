@@ -14,9 +14,11 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+#include "infovis/FlagCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
+#include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
@@ -26,6 +28,7 @@
 
 #include <iterator>
 #include <set>
+#include <tuple>
 
 using namespace megamol;
 using namespace megamol::sombreros;
@@ -40,6 +43,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     : Renderer3DModule()
     , getDataSlot("getData", "The slot to fetch the tri-mesh data")
     , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
+    , getFlagDataSlot("getFlagData", "The slot to fetch the data from the flag storage")
     , showVertices("showVertices", "Flag whether to show the verices of the object")
     , lighting("lighting", "Flag whether or not use lighting for the surface")
     , surFrontStyle("frontstyle", "The rendering style for the front surface")
@@ -51,6 +55,9 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->getFlagDataSlot.SetCompatibleCall<megamol::infovis::FlagCallDescription>();
+    this->MakeSlotAvailable(&this->getFlagDataSlot);
 
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
@@ -88,6 +95,8 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 
     this->showSweatBandSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showSweatBandSlot);
+
+    this->lastTime = 0.0f;
 }
 
 
@@ -129,6 +138,7 @@ bool SombreroMeshRenderer::GetExtents(Call& call) {
     megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
+    this->lastTime = cr->Time();
     if (!(*ctmd)(1)) return false;
 
     cr->SetTimeFramesCount(ctmd->FrameCount());
@@ -153,6 +163,114 @@ void SombreroMeshRenderer::release(void) {
     // intentionally empty
 }
 
+/*
+ * SombreroMeshRenderer::MouseEvent
+ */
+bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) {
+    bool consume = false;
+
+    vislib::sys::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
+
+    auto pixelDir = getPixelDirection(x, y);
+    auto camPos = this->lastCamState.camPos;
+
+    if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) || (flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN)) {
+
+        std::tuple<float, unsigned int, unsigned int, unsigned int> mark = std::make_tuple(FLT_MAX, 0, 0, 0);
+        bool found = false;
+        for (auto& tri : this->triangles) {
+            vislib::math::Vector<float, 3> p1 = this->vertexPositions[tri.GetX()];
+            vislib::math::Vector<float, 3> p2 = this->vertexPositions[tri.GetY()];
+            vislib::math::Vector<float, 3> p3 = this->vertexPositions[tri.GetZ()];
+            float dist = 0.0f;
+            bool isect = this->rayTriIntersect(camPos, pixelDir, p1, p2, p3, dist);
+            found |= isect;
+            if (isect && dist < std::get<0>(mark)) {
+                mark = std::make_tuple(dist, this->indexAttrib[tri.GetX()], this->indexAttrib[tri.GetY()], this->indexAttrib[tri.GetZ()]);
+            }
+        }
+
+        // TODO set flags, etc.
+
+        consume = true;
+    }
+
+    return consume;
+}
+
+/*
+ * SombreroMeshRenderer::rayTriIntersect
+ */
+bool SombreroMeshRenderer::rayTriIntersect(const vislib::math::Vector<float, 3>& pos,
+    const vislib::math::Vector<float, 3>& dir, const vislib::math::Vector<float, 3>& p1,
+    const vislib::math::Vector<float, 3>& p2, const vislib::math::Vector<float, 3>& p3,
+    float& intersectDist) {
+
+    const auto& e_1 = p2 - p1;
+    const auto& e_2 = p3 - p1;
+
+    auto& n = e_1.Cross(e_2);
+    n.Normalise();
+    const auto& q = dir.Cross(e_2);
+    const float a = e_1.Dot(q);
+
+    // back facing or parallel?
+    if ((n.Dot(dir) >= 0.0f) || std::abs(a) <= 0.000001f) {
+        return false;
+    }
+
+    const auto& s = (pos - p1) / a;
+    const auto& r = s.Cross(e_1);
+
+    vislib::math::Vector<float, 3> b;
+    b[0] = s.Dot(q);
+    b[1] = r.Dot(dir);
+    b[2] = 1.0f - b[0] - b[1];
+
+    if ((b[0] < 0.0f) || (b[1] < 0.0f) || (b[2] < 0.0f)) {
+        return false;
+    }
+    intersectDist = e_2.Dot(r);
+
+    return (intersectDist >= 0.0f);
+}
+
+/*
+ * SombreroMeshRenderer::getPixelDirection
+ */
+vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, float y) {
+    vislib::math::Vector<float, 3> result(0.0f, 0.0f, 0.0f);
+    if (this->lastCamState.camDir.Length() < 0.5f) return result;
+    result = this->lastCamState.camDir;
+
+    float u = (x / static_cast<float>(this->lastCamState.width));
+    float v = (y / static_cast<float>(this->lastCamState.height));
+    float zNear = this->lastCamState.zNear;
+    float zFar = this->lastCamState.zFar;
+    float fovx = this->lastCamState.fovx;
+    float fovy = this->lastCamState.fovy;
+
+    auto& camUp = this->lastCamState.camUp;
+    auto& camRight = this->lastCamState.camRight;
+    auto& camDir = this->lastCamState.camDir;
+    auto& camPos = this->lastCamState.camPos;
+
+    auto oL = (tan(fovx * 0.5f) * zNear) * (-camRight) + (tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
+    auto uL =
+        (tan(fovx * 0.5f) * zNear) * (-camRight) + (tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
+    auto oR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
+    auto uR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
+
+    auto targetL = (1.0f - v) * uL + v * oL;
+    auto targetR = (1.0f - v) * uR + v * oR;
+
+    auto target = (1.0f - u) * targetL + u * targetR;
+
+    result = target - camPos;
+    result.Normalise();
+
+    return result;
+}
 
 /*
  * SombreroMeshRenderer::Render
@@ -175,11 +293,19 @@ bool SombreroMeshRenderer::Render(Call& call) {
         //    0.0f, 0.0f, 0.0f, 1.0f
         //};
         //::glMultMatrixf(mat);
+        glPushMatrix();
         ::glScalef(scale, scale, scale);
     }
 
+    this->lastTime = cr->Time();
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(0)) return false;
+
+    bool datadirty = false;
+    if (this->lastDataHash != ctmd->DataHash()) {
+        datadirty = true;
+        this->lastDataHash = ctmd->DataHash();
+    }
 
     // auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
     // printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
@@ -446,9 +572,24 @@ bool SombreroMeshRenderer::Render(Call& call) {
         switch (obj.GetVertexDataType()) {
         case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
+            if (datadirty && i == 0) {
+                this->vertexPositions.resize(obj.GetVertexCount());
+                for (size_t j = 0; j < obj.GetVertexCount(); j++) {
+                    this->vertexPositions[j] = vislib::math::Vector<float, 3>(&obj.GetVertexPointerFloat()[3 * j]);
+                }
+            }
             break;
         case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
+            if (datadirty && i == 0) {
+                this->vertexPositions.resize(obj.GetVertexCount());
+                for (size_t j = 0; j < obj.GetVertexCount(); j++) {
+                    this->vertexPositions[j] =
+                        vislib::math::Vector<float, 3>(static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 0]),
+                            static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 1]),
+                            static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 2]));
+                }
+            }
             break;
         default:
             continue;
@@ -564,13 +705,40 @@ bool SombreroMeshRenderer::Render(Call& call) {
             switch (obj.GetTriDataType()) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
                 ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
+                if (datadirty && i == 0) {
+                    this->triangles.resize(obj.GetTriCount());
+                    for (size_t j = 0; j < obj.GetTriCount(); j++) {
+                        this->triangles[j] =
+                            vislib::math::Vector<unsigned int, 3>(static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 0]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 1]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 2]));
+                    }
+                }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
                 ::glDrawElements(
                     GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
+                if (datadirty && i == 0) {
+                    this->triangles.resize(obj.GetTriCount());
+                    for (size_t j = 0; j < obj.GetTriCount(); j++) {
+                        this->triangles[j] =
+                            vislib::math::Vector<unsigned int, 3>(static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 0]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 1]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 2]));
+                    }
+                }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
                 ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
+                if (datadirty && i == 0) {
+                    this->triangles.resize(obj.GetTriCount());
+                    for (size_t j = 0; j < obj.GetTriCount(); j++) {
+                        this->triangles[j] =
+                            vislib::math::Vector<unsigned int, 3>(static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 0]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 1]),
+                                static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 2]));
+                    }
+                }
                 break;
             default:
                 continue;
@@ -581,6 +749,15 @@ bool SombreroMeshRenderer::Render(Call& call) {
 
         if (!doLighting) {
             ::glColor3f(r, g, b);
+        }
+
+        if (datadirty && i == 0 && obj.GetVertexAttribCount() > 0 && obj.GetVertexAttribDataType(0) == megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32) {
+            auto dt = obj.GetVertexAttribDataType(0);
+            this->indexAttrib.resize(obj.GetVertexCount());
+            auto ptr = obj.GetVertexAttribPointerUInt32(0);
+            for (size_t j = 0; j < obj.GetVertexCount(); j++) {
+                this->indexAttrib[j] = ptr[j];
+            }
         }
     }
 
@@ -644,9 +821,59 @@ bool SombreroMeshRenderer::Render(Call& call) {
         default:
             break;
         }
-        ::glDrawElements(GL_LINES, linevec.size(), GL_UNSIGNED_INT, &linevec[0]);
+        ::glDrawElements(GL_LINES, static_cast<GLsizei>(linevec.size()), GL_UNSIGNED_INT, &linevec[0]);
         ::glEnable(GL_DEPTH_TEST);
     }
+
+    // copy index attributes
+
+
+    // query the current state of the camera (needed for picking)
+    GLfloat m[16];
+    GLfloat m_proj[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    glGetFloatv(GL_PROJECTION_MATRIX, m_proj);
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
+    // TODO invert?
+
+    auto cam = cr->GetCameraParameters();
+    auto viewport = cr->GetViewport().GetSize();
+
+    // the camera position from the matrix seems to be wrong
+    /*this->lastCamState.camPos =
+        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 3), modelMatrix.GetAt(1, 3), modelMatrix.GetAt(2, 3));*/
+    this->lastCamState.camPos = cam->Position();
+    this->lastCamState.camDir =
+        vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
+    this->lastCamState.camUp =
+        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
+    this->lastCamState.camRight =
+        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0));
+    this->lastCamState.camDir.Normalise();
+    this->lastCamState.camUp.Normalise();
+    this->lastCamState.camRight.Normalise();
+    this->lastCamState.zNear = cam->NearClip();
+    this->lastCamState.zFar = cam->FarClip();
+    this->lastCamState.fovy = (float)(cam->ApertureAngle() * M_PI / 180.0f);
+    this->lastCamState.aspect = (float)viewport.GetWidth() / (float)viewport.GetHeight();
+    if (viewport.GetHeight() == 0) {
+        this->lastCamState.aspect = 0.0f;
+    }
+    this->lastCamState.fovx = 2.0f * atan(tan(this->lastCamState.fovy / 2.0f) * this->lastCamState.aspect);
+    this->lastCamState.width = viewport.GetWidth();
+    this->lastCamState.height = viewport.GetHeight();
+
+    /*vislib::sys::Log::DefaultLog.WriteInfo(
+        "dir: %f %f %f", lastCamState.camDir.GetX(), lastCamState.camDir.GetY(), lastCamState.camDir.GetZ());
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "up: %f %f %f", lastCamState.camUp.GetX(), lastCamState.camUp.GetY(), lastCamState.camUp.GetZ());
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "pos: %f %f %f", cam->Position().GetX(), cam->Position().GetY(), cam->Position().GetZ());
+
+    vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");*/
 
     ::glCullFace(cfm);
     ::glFrontFace(twr);
