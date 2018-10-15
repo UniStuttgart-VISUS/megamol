@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "DiagramSeriesCall.h"
+#include "infovis/DiagramSeriesCall.h"
 
 const unsigned int megamol::infovis::DiagramSeriesCall::IdIdx = 0;
 

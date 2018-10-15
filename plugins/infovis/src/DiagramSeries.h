@@ -12,7 +12,7 @@
 
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
-#include "DiagramSeriesCall.h"
+#include "infovis/DiagramSeriesCall.h"
 
 namespace megamol {
 namespace infovis {

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
 
-#include "FlagCall.h"
+#include "infovis/FlagCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

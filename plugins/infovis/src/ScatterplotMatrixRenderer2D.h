@@ -12,8 +12,8 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
-#include "FlagCall.h"
 #include "Renderer2D.h"
+#include "infovis/FlagCall.h"
 
 namespace megamol {
 namespace infovis {

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "FlagStorage.h"
-#include "FlagCall.h"
+#include "infovis/FlagCall.h"
 
 using namespace megamol;
 using namespace megamol::infovis;

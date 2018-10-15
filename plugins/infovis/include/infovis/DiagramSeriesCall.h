@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 
+#include "infovis/infovis.h"
 #include "mmcore/Call.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -17,7 +18,7 @@ namespace infovis {
  * Call transporting a function pointer for pushing series info
  * into info container of the renderer
  */
-class DiagramSeriesCall : public core::Call {
+class INFOVIS_API DiagramSeriesCall : public core::Call {
 public:
     /*typedef struct _DiagramSeriesTuple {
         uint32_t id;

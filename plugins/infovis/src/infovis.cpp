@@ -13,13 +13,14 @@
 #include "vislib/vislibversion.h"
 
 #include "DiagramSeries.h"
-#include "DiagramSeriesCall.h"
-#include "FlagCall.h"
 #include "FlagStorage.h"
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
 #include "TSNEProjection.h"
+
+#include "infovis/DiagramSeriesCall.h"
+#include "infovis/FlagCall.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
