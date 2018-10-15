@@ -111,23 +111,6 @@ bool WatermarkRenderer::create(void) {
 
 
 /*
-* WatermarkRenderer::GetCapabilities
-*/
-bool WatermarkRenderer::GetCapabilities(Call& call) {
-
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [GetCapabilities] Call is NULL.");
-        return false;
-    }
-
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER);
-
-    return true;
-}
-
-
-/*
 * WatermarkRenderer::GetExtents
 */
 bool WatermarkRenderer::GetExtents(Call& call) {

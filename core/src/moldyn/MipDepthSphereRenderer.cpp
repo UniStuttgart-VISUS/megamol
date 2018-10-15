@@ -136,23 +136,6 @@ bool moldyn::MipDepthSphereRenderer::create(void) {
 
 
 /*
- * moldyn::MipDepthSphereRenderer::GetCapabilities
- */
-bool moldyn::MipDepthSphereRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        //| view::CallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * moldyn::MipDepthSphereRenderer::GetExtents
  */
 bool moldyn::MipDepthSphereRenderer::GetExtents(Call& call) {

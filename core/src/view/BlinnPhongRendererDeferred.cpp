@@ -101,28 +101,6 @@ view::BlinnPhongRendererDeferred::~BlinnPhongRendererDeferred(void) {
 
 
 /*
- * view::BlinnPhongRendererDeferred::GetCapabilities
- */
-bool view::BlinnPhongRendererDeferred::GetCapabilities(Call& call) {
-
-    CallRender3D *crIn = dynamic_cast<CallRender3D*>(&call);
-    if (crIn == NULL) return false;
-
-    //CallRender3D *crOut = this->rendererSlot.CallAs<CallRender3D>();
-    CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
-    if (crOut == NULL) return false;
-
-    // Call for getCapabilities
-    if (!(*crOut)(core::view::CallRender3D::FnGetCapabilities)) return false;
-
-    // Set capabilities of for incoming render call
-    crIn->SetCapabilities(crOut->GetCapabilities());
-
-    return true;
-}
-
-
-/*
  * view::BlinnPhongRendererDeferred::GetExtents
  */
 bool view::BlinnPhongRendererDeferred::GetExtents(Call& call) {

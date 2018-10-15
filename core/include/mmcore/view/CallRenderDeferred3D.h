@@ -33,9 +33,6 @@ namespace view {
      *
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
-     *
-     * Function "GetCapabilities" asks the callee to set the capabilities
-     * flags of the call.
      */
     class MEGAMOLCORE_API CallRenderDeferred3D : public AbstractCallRender3D, public RenderDeferredOutput {
     public:
@@ -64,7 +61,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 3;
+            return 2;
         }
 
         /**
@@ -78,7 +75,6 @@ namespace view {
             switch (idx) {
                 case 0: return "Render";
                 case 1: return "GetExtents";
-                case 2: return "GetCapabilities";
                 default: return NULL;
             }
         }

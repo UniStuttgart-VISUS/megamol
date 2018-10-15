@@ -46,21 +46,6 @@ bool trisoup::LinesRenderer::create(void) {
 
 
 /*
- * trisoup::LinesRenderer::GetCapabilities
- */
-bool trisoup::LinesRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        core::view::CallRender3D::CAP_RENDER
-        );
-
-    return true;
-}
-
-
-/*
  * trisoup::LinesRenderer::GetExtents
  */
 bool trisoup::LinesRenderer::GetExtents(core::Call& call) {
