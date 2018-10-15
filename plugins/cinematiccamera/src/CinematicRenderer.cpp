@@ -448,15 +448,15 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d_in->MouseSelection()) {
-        if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
-        } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
-        }
-    } else {
-        midLabel = "SCENE manipulation";
-    }
+    //if (cr3d_in->MouseSelection()) {
+    //    if (this->toggleManipulator == 0) { 
+    //        midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
+    //    } else {// if (this->toggleManipulator == 1) { 
+    //        midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
+    //    }
+    //} else {
+    //    midLabel = "SCENE manipulation";
+    //}
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
         rightLabel = " [h] hide help text ";
