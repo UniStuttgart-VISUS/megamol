@@ -28,7 +28,6 @@ using vislib::sys::Log;
 view::AbstractView::AbstractView(void) : Module(),
         renderSlot("render", "Connects modules requesting renderings"),
         hooks() {
-   static auto shutup = [](Call& call) -> bool { return false; };
     // InputCall
     this->renderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);

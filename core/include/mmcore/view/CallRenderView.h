@@ -28,10 +28,9 @@ namespace view {
 #pragma warning(disable: 4250)  // I know what I am doing ...
 #endif /* _WIN32 */
     /**
-     * Call for registering a module at the cluster display
+     * Call for materializing a rendering module.
 	 *
-	 * HACK/APEX OF SHIT AND SHOULD DIE: views should not be used for chaining renders, i.e,
-	 * renderers should chain other renderers (allowing re-use of (non-view) render calls).
+	 * This is used for FBO-based compositing and registering a module at the cluster display.
      */
     class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
     public:
