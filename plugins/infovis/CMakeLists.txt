@@ -27,10 +27,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
-    #XXX: Change to https://github.com/lvdmaaten/bhtsne if that
-	# PR is merged https://github.com/lvdmaaten/bhtsne/pull/76
-    GIT_REPOSITORY https://github.com/schulzch/bhtsne.git
-    GIT_TAG "94c042fe2b5bcd7e55f2e62013253521aa271b22" 
+    GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
+    GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt")
