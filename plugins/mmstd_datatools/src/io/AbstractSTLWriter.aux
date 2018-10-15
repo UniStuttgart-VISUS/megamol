@@ -22,9 +22,9 @@ namespace
     };
 
     template<>
-    struct pointer_or_identity<nullptr_t>
+    struct pointer_or_identity<std::nullptr_t>
     {
-        pointer_or_identity(const nullptr_t *) {}
+        pointer_or_identity(const std::nullptr_t *) {}
 
         std::size_t operator[](const std::size_t i) const
         {

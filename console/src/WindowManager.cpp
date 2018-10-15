@@ -25,8 +25,8 @@
 #include "utility/KHR.h"
 #include "JobManager.h"
 
-const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol\xE2\x84\xA2 - ";
-const int megamol::console::WindowManager::TitlePrefixLength = 13;
+const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol - ";
+const int megamol::console::WindowManager::TitlePrefixLength = 10;
 
 /*
  * megamol::console::WindowManager::Instance
@@ -221,9 +221,9 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     if (conGuiData != nullptr) {
         try {
             if (conGuiDataType == MMC_TYPE_CSTR) {
-				showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
+                showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
             } else if (conGuiDataType == MMC_TYPE_WSTR) {
-				showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
+                showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
             }
         } catch(...) {}
     }

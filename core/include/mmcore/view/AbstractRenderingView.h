@@ -79,6 +79,13 @@ namespace view {
         /** Dtor. */
         virtual ~AbstractRenderingView(void);
 
+        /**
+        * Answer the background colour for the view
+        *
+        * @return The background colour for the view
+        */
+        const float *BkgndColour(void) const;
+
     protected:
 
         /**
@@ -99,13 +106,6 @@ namespace view {
          * @return The last frame rendering time
          */
         double lastFrameTime(void) const;
-
-        /**
-         * Answer the background colour for the view
-         *
-         * @return The background colour for the view
-         */
-        const float *bkgndColour(void) const;
 
         /**
          * Answer if the soft cursor should be shown

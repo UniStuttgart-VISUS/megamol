@@ -24,7 +24,10 @@ function(add_external_project TARGET)
   
   # Compile arguments for ExternalProject_Add.
   set(ARGN_EXT "${ARGN}")
-  list(APPEND ARGN_EXT CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>)
+  list(APPEND ARGN_EXT CMAKE_ARGS 
+    "-G${CMAKE_GENERATOR}"
+    "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+    "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>")
   
   # Add external project.
   ExternalProject_Add(${TARGET} "${ARGN_EXT}")
@@ -42,7 +45,7 @@ endfunction(add_external_project)
 #     INTERFACE_LIBRARIES <external_library>*")
 #
 function(add_external_library TARGET LINKAGE)
-  set(ARGS_ONE_VALUE DEPENDS COMPILE_DEFINITIONS INCLUDE_DIR LIBRARY_DEBUG LIBRARY_RELEASE IMPORT_LIBRARY_DEBUG IMPORT_LIBRARY_RELEASE INTERFACE_LIBRARIES)
+  set(ARGS_ONE_VALUE DEPENDS COMPILE_DEFINITIONS INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE IMPORT_LIBRARY IMPORT_LIBRARY_DEBUG IMPORT_LIBRARY_RELEASE INTERFACE_LIBRARIES)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "" ${ARGN})
  
    if(NOT args_DEPENDS)
@@ -54,10 +57,12 @@ function(add_external_library TARGET LINKAGE)
   ExternalProject_Get_Property(${DEPENDS} INSTALL_DIR)
   _argument_default(COMPILE_DEFINITIONS "")
   _argument_default(INCLUDE_DIR include)
-  _argument_default(LIBRARY_DEBUG "NOTFOUND")
-  _argument_default(LIBRARY_RELEASE "NOTFOUND")
-  _argument_default(IMPORT_LIBRARY_DEBUG "NOTFOUND")
-  _argument_default(IMPORT_LIBRARY_RELEASE "NOTFOUND")
+  _argument_default(LIBRARY "NOTFOUND")
+  _argument_default(LIBRARY_DEBUG "${LIBRARY}")
+  _argument_default(LIBRARY_RELEASE "${LIBRARY}")
+  _argument_default(IMPORT_LIBRARY "NOTFOUND")
+  _argument_default(IMPORT_LIBRARY_DEBUG "${IMPORT_LIBRARY}")
+  _argument_default(IMPORT_LIBRARY_RELEASE "${IMPORT_LIBRARY}")
 
   # Create include directory as required by INTERFACE_INCLUDE_DIRECTORIES.
   file(MAKE_DIRECTORY "${INSTALL_DIR}/${INCLUDE_DIR}")

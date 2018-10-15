@@ -131,6 +131,8 @@ namespace view {
         /** convenience for serializing a ParamSlot */
         void writeParameterFileParameter(param::ParamSlot& param,
             vislib::sys::BufferedFile &outFile);
+        bool InterfaceIsDirty(Call& call);
+        bool InterfaceResetDirty(Call& call);
 
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;

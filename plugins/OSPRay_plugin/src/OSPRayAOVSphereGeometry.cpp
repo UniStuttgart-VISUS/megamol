@@ -5,12 +5,14 @@
  */
 
 #include "stdafx.h"
+#include "../../protein/src/Color.h"
 #include "OSPRayAOVSphereGeometry.h"
 #include "mmcore/Call.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "ospray/ospray.h"
 #include "vislib/sys/Log.h"
 
 
@@ -23,8 +25,7 @@ typedef unsigned char (*byteFromArrayFunc)(
 
 
 OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
-    : particleList("ParticleList", "Switches between particle lists")
-    , samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
+    : samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
     , aoThresholdSlot(
           "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
     , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
@@ -36,9 +37,6 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
 
     this->getVolSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
-
-    this->particleList << new core::param::IntParam(0);
-    this->MakeSlotAvailable(&this->particleList);
 
     this->samplingRateSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->samplingRateSlot);
@@ -105,114 +103,223 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
 
     if (cd->GetParticleListCount() == 0) return false;
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    static bool isInitAOV = false;
+
+    ospStructures.clear();
+
+    // START OSPRAY STUFF
+
+    if (!isInitAOV) {
+        auto error = ospLoadModule("aovspheres");
+        if (error != OSP_NO_ERROR) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
+        } else {
+            isInitAOV = true;
+        }
     }
 
-    core::moldyn::MultiParticleDataCall::Particles& parts =
-        cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+    OSPVolume aovol = NULL;
 
-    unsigned int const partCount = parts.GetCount();
-    float const globalRadius = parts.GetGlobalRadius();
+    for (unsigned int plist = 0; plist < cd->GetParticleListCount(); ++plist) {
 
-    size_t vertexLength;
-    size_t colorLength;
+        core::moldyn::MultiParticleDataCall::Particles& parts =
+            cd->AccessParticles(plist);
 
-    // Vertex data type check
-    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
-        vertexLength = 3;
-    } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-        vertexLength = 4;
-    }
+        unsigned int const partCount = parts.GetCount();
+        float const globalRadius = parts.GetGlobalRadius();
 
-    // Color data type check
-    if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-        colorLength = 4;
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-        colorLength = 1;
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-        colorLength = 3;
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-        colorLength = 4;
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        colorLength = 0;
-    }
+        size_t colorLength;
+        size_t vertexLength;
 
-    int vstride = parts.GetVertexDataStride();
-    if (vstride == 0) {
-        vstride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
-    }
+        // Vertex data type check
+        if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+            vertexLength = 3;
+        } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+            vertexLength = 4;
+        }
 
-    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
-        parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
-    }
+        // Color data type check
+        if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+            colorLength = 4;
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            colorLength = 1;
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+            colorLength = 3;
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+            colorLength = 4;
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            colorLength = 0;
+        }
 
-    // get the volume stuff
-    auto const volSDT = vd->GetScalarType(); //< unfortunately only float is part of the intersection
-    if (volSDT != core::misc::VolumetricDataCall::ScalarType::FLOATING_POINT) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "OSPRayAOVSphereGeometry: Only float is supported as AOVol data type\n");
-        return false;
-    }
-    auto const volGT = vd->GetGridType();
-    if (volGT != core::misc::VolumetricDataCall::GridType::CARTESIAN &&
-        volGT != core::misc::VolumetricDataCall::GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "OSPRayAOVSphereGeometry: Currently only grids are supported as AOVol grid type\n");
-        return false;
-    }
-    auto const volCom = vd->GetComponents();
-    if (volCom != 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "OSPRayAOVSphereGeometry: Only one component per cell is allowed as AOVol\n");
-        return false;
-    }
-    auto const metadata = vd->GetMetadata();
-    if (metadata->MinValues == nullptr || metadata->MaxValues == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayAOVSphereGeometry: AOVol requires a specified value range\n");
-        return false;
-    }
-    float const minV = metadata->MinValues[0];
-    float const maxV = metadata->MaxValues[0];
-    this->valuerange = std::make_pair(minV, maxV);
-    this->gridorigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
-    this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
-    this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
-        static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
+        int vertStride = parts.GetVertexDataStride();
+        if (vertStride == 0) {
+            vertStride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+        }
 
-    float cellVol = metadata->SliceDists[0][0] * metadata->SliceDists[1][0] * metadata->SliceDists[2][0];
-    float valRange = maxV - minV;
+        if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
+            parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+        }
+
+        // get the volume stuff
+        auto const volSDT = vd->GetScalarType(); //< unfortunately only float is part of the intersection
+        if (volSDT != core::misc::VolumetricDataCall::ScalarType::FLOATING_POINT) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "OSPRayAOVSphereGeometry: Only float is supported as AOVol data type\n");
+            return false;
+        }
+        auto const volGT = vd->GetGridType();
+        if (volGT != core::misc::VolumetricDataCall::GridType::CARTESIAN &&
+            volGT != core::misc::VolumetricDataCall::GridType::RECTILINEAR) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "OSPRayAOVSphereGeometry: Currently only grids are supported as AOVol grid type\n");
+            return false;
+        }
+        auto const volCom = vd->GetComponents();
+        if (volCom != 1) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "OSPRayAOVSphereGeometry: Only one component per cell is allowed as AOVol\n");
+            return false;
+        }
+        auto const metadata = vd->GetMetadata();
+        if (metadata->MinValues == nullptr || metadata->MaxValues == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "OSPRayAOVSphereGeometry: AOVol requires a specified value range\n");
+            return false;
+        }
+        float const minV = metadata->MinValues[0];
+        float const maxV = metadata->MaxValues[0];
+        this->valuerange = std::make_pair(minV, maxV);
+        this->gridorigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
+        this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
+        this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
+            static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
+
+        float cellVol = metadata->SliceDists[0][0] * metadata->SliceDists[1][0] * metadata->SliceDists[2][0];
+        float valRange = maxV - minV;
+
+
+        auto numCreateGeo = parts.GetCount() * vertStride / ispcLimit + 1;
+
+
+        for (unsigned int i = 0; i < numCreateGeo; i++) {
+            auto geo = ospNewGeometry("aovspheres_geometry");
+
+            long long int floatsToRead =
+                parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
+            floatsToRead -= floatsToRead % (vertStride / sizeof(float));
+
+            auto vertexData = ospNewData(floatsToRead/3, OSP_FLOAT3,
+                &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+
+            ospCommit(vertexData);
+            ospSet1i(geo, "bytes_per_sphere", vertStride);
+            ospSetData(geo, "spheres", vertexData);
+            ospSetData(geo, "color", nullptr);
+
+            if (vertexLength > 3) {
+                ospSet1f(geo, "offset_radius", 3 * sizeof(float));
+            } else {
+                ospSet1f(geo, "radius", globalRadius);
+            }
+            if (parts.GetColourDataType() ==
+                    core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                parts.GetColourDataType() ==
+                    core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+
+                ospSet1i(geo, "color_offset",
+                    vertexLength * sizeof(float)); // TODO: This won't work if there are radii in the array
+                ospSet1i(geo, "color_stride", parts.GetColourDataStride());
+                ospSetData(geo, "color", vertexData);
+                if (parts.GetColourDataType() ==
+                    core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                    // ospSet1i(geo.back(), "color_components", 3);
+                    ospSet1i(geo, "color_format", OSP_FLOAT3);
+                } else {
+                    // ospSet1i(geo.back(), "color_components", 4);
+                    ospSet1i(geo, "color_format", OSP_FLOAT4);
+                }
+            }
+
+            float fixedSpacing[3];
+            for (auto x = 0; x < 3; ++x) {
+                fixedSpacing[x] = this->gridorigin.at(x) / (this->dimensions.at(x) - 1) + this->gridorigin.at(x);
+            }
+            float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
+            // aovol
+            // auto const aovol = ospNewVolume("block_bricked_volume");
+            if (aovol == NULL) {
+                aovol = ospNewVolume("shared_structured_volume");
+                ospSet2f(aovol, "voxelRange", this->valuerange.first, this->valuerange.second);
+                ospSet1f(aovol, "samplingRate", this->samplingRateSlot.Param<core::param::FloatParam>()->Value());
+                // ospSet1b(aovol, "adaptiveSampling", false);
+                ospSet3iv(aovol, "dimensions", this->dimensions.data());
+                ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(voxelDataType::FLOAT)].c_str());
+                ospSet3fv(aovol, "gridOrigin", this->gridorigin.data());
+
+                ospSet3fv(aovol, "gridSpacing", fixedSpacing);
+
+                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                std::vector<float> faketf = {
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                    1.0f,
+                };
+                std::vector<float> fakeopa = {1.0f, 1.0f};
+
+                OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
+                OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
+                ospSetData(tf, "colors", tf_rgb);
+                ospSetData(tf, "opacities", tf_opa);
+                ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+
+                ospCommit(tf);
+
+                ospSetObject(aovol, "transferFunction", tf);
+                ospRelease(tf);
+
+                // add data
+                auto voxelcount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
+                auto voxels = ospNewData(voxelcount,
+                    static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(voxelDataType::FLOAT)]),
+                    vd->GetData(), OSP_DATA_SHARED_BUFFER);
+                ospCommit(voxels);
+                ospSetData(aovol, "voxelData", voxels);
+
+                /*auto ptr = element.raw2.get();
+                ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
+                    osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
+
+                ospCommit(aovol);
+
+                //ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));
+            }
+
+            assert(aovol);
+
+            ospSet1f(geo, "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
+            ospSet1f(geo, "aoRayOffset",
+                maxGridSpacing * this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value());
+            ospSetObject(geo, "aovol", aovol);
+            //ospCommit(geo);
+
+            ospStructures.emplace_back(reinterpret_cast<void*>(geo), structureTypeEnum::GEOMETRY);
+        }  // geometries
+    } // particle lists
 
     // Write stuff into the structureContainer
-    this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::AOVSPHERES;
-    this->structureContainer.raw = std::make_shared<const void*>(parts.GetVertexData());
-    this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.vertexStride = vstride;
-    this->structureContainer.colorLength = colorLength;
-    this->structureContainer.colorStride = parts.GetColourDataStride();
-    this->structureContainer.partCount = partCount;
-    this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.mmpldColor = parts.GetColourDataType();
+    this->structureContainer.type = structureTypeEnum::OSPRAY_API_STRUCTURES;
+    this->structureContainer.ospStructures = ospStructures;
 
-    this->structureContainer.raw2 = std::make_shared<void const*>(vd->GetData());
-    this->structureContainer.valueRange =
-        std::make_shared<std::pair<float, float>>(this->valuerange); //< TODO HAZARD potential dangling shared pointer
-    this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(this->gridorigin);   //<
-    this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(this->gridspacing); //<
-    this->structureContainer.dimensions = std::make_shared<std::vector<int>>(this->dimensions);     //<
-    this->structureContainer.voxelDType = voxelDataType::FLOAT;
-    this->structureContainer.samplingRate = this->samplingRateSlot.Param<core::param::FloatParam>()->Value();
-    // this->structureContainer.aoThreshold = cellVol*this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
-    this->structureContainer.aoThreshold = valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
-    // this->structureContainer.aoThreshold = this->aoThresholdSlot.Param<core::param::FloatParam>()->Value();
-    this->structureContainer.voxelCount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
-    this->structureContainer.aoRayOffsetFactor = this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value();
+    //ospRelease(aovol);
 
     return true;
 }
-
 
 OSPRayAOVSphereGeometry::~OSPRayAOVSphereGeometry() { this->Release(); }
 
@@ -224,9 +331,8 @@ void OSPRayAOVSphereGeometry::release() {}
 
 
 bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
-    if (this->particleList.IsDirty() || this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty() ||
+    if (this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty() ||
         this->aoRayOffsetFactorSlot.IsDirty()) {
-        this->particleList.ResetDirty();
         this->aoThresholdSlot.ResetDirty();
         this->samplingRateSlot.ResetDirty();
         this->aoRayOffsetFactorSlot.ResetDirty();

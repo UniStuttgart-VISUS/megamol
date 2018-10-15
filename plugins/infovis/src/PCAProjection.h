@@ -13,24 +13,24 @@ namespace infovis {
 
 using namespace megamol::core;
 
-class PrincipalComponentAnalysis : public core::Module {
+class PCAProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) { return "PrincipalComponentAnalysis"; }
+    static inline const char* ClassName(void) { return "PCAProjection"; }
 
     /** Return module class description */
     static inline const char* Description(void) {
-        return "Principal component analysis: Orthogonal transformation to reduce dimensions.";
+        return "Principal component analysis, i.e., a linear and orthogonal dimensionality reduction technique";
     }
 
     /** Module is always available */
     static inline bool IsAvailable(void) { return true; }
 
     /** Constructor */
-    PrincipalComponentAnalysis(void);
+    PCAProjection(void);
 
     /** Destructor */
-    virtual ~PrincipalComponentAnalysis(void);
+    virtual ~PCAProjection(void);
 
 protected:
     /** Lazy initialization of the module */

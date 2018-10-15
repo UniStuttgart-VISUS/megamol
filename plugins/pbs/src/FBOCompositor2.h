@@ -20,6 +20,7 @@
 
 #include "image_calls/Image2DCall.h"
 
+
 namespace megamol {
 namespace pbs {
 
@@ -117,6 +118,8 @@ private:
 
     megamol::core::param::ParamSlot restartSlot_;
 
+    megamol::core::param::ParamSlot renderOnlyRequestedFramesSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;
@@ -171,6 +174,10 @@ private:
 
     GLsizei height_;
 
+    float frame_times_[2];
+
+    float camera_params_[9];
+
     std::vector<GLuint> color_textures_;
 
     std::vector<GLuint> depth_textures_;
@@ -200,6 +207,7 @@ private:
     bool shutdown_ = false;
 
     bool register_done_ = false;
+
 }; // end class FBOCompositor2
 
 } // end namespace pbs

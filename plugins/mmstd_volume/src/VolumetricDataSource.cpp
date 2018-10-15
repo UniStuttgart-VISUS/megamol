@@ -660,7 +660,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
 #if (defined(DEBUG) || defined(_DEBUG))
                 Log::DefaultLog.WriteInfo(_T("Loading frame %u in format ")
                                           _T("%hs to 0x%p"),
-                    frameID, ::datRaw_getDataFormatName(format), dst);
+                    frameID, ::datRaw_getDataFormatName(format), dst.PeekElements());
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
                 retval = (::datRaw_loadStep(this->fileInfo, static_cast<int>(frameID), &buffer, format) != 0);
                 ::datRaw_close(this->fileInfo);

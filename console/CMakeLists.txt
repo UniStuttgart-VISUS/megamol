@@ -18,14 +18,13 @@ if(BUILD_CONSOLE)
 
   # Add target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core)
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE
     ${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR}
     "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
@@ -65,7 +64,7 @@ if(BUILD_CONSOLE)
   endif()
   
   # AntTweakBar
-  if(NOT USE_EGL)
+  if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
     if(USE_INTERNAL_ANTTWEAKBAR)
       add_subdirectory(AntTweakBar)
@@ -81,7 +80,6 @@ if(BUILD_CONSOLE)
   
   target_link_libraries(${PROJECT_NAME} PRIVATE
     ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
-
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
@@ -116,7 +114,7 @@ if(BUILD_CONSOLE)
     set(MMPLG_DIR "bin")
   endif()
 
-  configure_file(extra/megamol.cfg.in ${CMAKE_BINARY_DIR}/megamol.cfg)
-  configure_file(extra/install_megamol_cfg.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake @ONLY)
-  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake)
+  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
+  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
+  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
 endif()

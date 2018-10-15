@@ -7,7 +7,6 @@
 #include "stdafx.h"
 #ifdef _WIN32
 #include "utility/WindowsUtils.h"
-#include <Windows.h>
 #include "vislib/String.h"
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/VersionNumber.h"

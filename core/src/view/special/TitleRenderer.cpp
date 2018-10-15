@@ -19,9 +19,6 @@
 #include "vislib/graphics/gl/OpenGLVISLogo.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Vector.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif /* _WIN32 */
 
 using namespace megamol::core;
 

@@ -12,16 +12,14 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "DiagramSeries.h"
+#include "DiagramSeriesCall.h"
 #include "FlagCall.h"
 #include "FlagStorage.h"
+#include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
-#include "PrincipalComponentAnalysis.h"
 #include "ScatterplotMatrixRenderer2D.h"
-
-//#include "NVGDiagramRenderer.h"
-#include "DiagramSeries.h"
-
-#include "DiagramSeriesCall.h"
+#include "TSNEProjection.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -31,12 +29,11 @@ public:
     /** ctor */
     plugin_instance(void)
         : ::megamol::core::utility::plugins::Plugin200Instance(
-
               /* machine-readable plugin assembly name */
-              "infovis", // TODO: Change this!
+              "infovis",
 
               /* human-readable plugin description */
-              "Describing infovis (TODO: Change this!)"){
+              "Information visualization"){
 
               // here we could perform addition initialization
           };
@@ -50,7 +47,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::PrincipalComponentAnalysis>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:

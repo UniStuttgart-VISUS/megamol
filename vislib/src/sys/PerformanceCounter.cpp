@@ -8,7 +8,7 @@
 #include "vislib/sys/PerformanceCounter.h"
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
 #include <sys/time.h>
 #endif /* _WIN32 */

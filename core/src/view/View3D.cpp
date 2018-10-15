@@ -8,9 +8,6 @@
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#ifdef _WIN32
-#    include <windows.h>
-#endif /* _WIN32 */
 #include <GL/glu.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -420,7 +417,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
     }
 
-    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->bkgndColour();
+    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->BkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
