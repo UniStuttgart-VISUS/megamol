@@ -17,6 +17,8 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
+#include <set>
+
 
 namespace megamol {
 namespace sombreros {
@@ -136,6 +138,11 @@ private:
         const vislib::math::Vector<float, 3>& p1, const vislib::math::Vector<float, 3>& p2,
         const vislib::math::Vector<float, 3>& p3, float& intersectDist);
 
+    /**
+     * Overrides the selected colors
+     */
+    void overrideColors(const vislib::math::Vector<float, 3>& color);
+
     /** The slot to fetch the data */
     core::CallerSlot getDataSlot;
 
@@ -163,6 +170,9 @@ private:
     /** The Triangle color */
     core::param::ParamSlot colorSlot;
 
+    /** The color for the brushing */
+    core::param::ParamSlot brushColorSlot;
+
     /** Slot to activate scaling */
     core::param::ParamSlot doScaleSlot;
 
@@ -177,6 +187,12 @@ private:
     std::vector<vislib::math::Vector<unsigned int, 3>> triangles;
 
     std::vector<unsigned int> indexAttrib;
+
+    std::vector<unsigned int> flagVector;
+
+    std::set<unsigned int> flagSet;
+
+    std::vector<float> newColors;
 
     size_t lastDataHash;
 };
