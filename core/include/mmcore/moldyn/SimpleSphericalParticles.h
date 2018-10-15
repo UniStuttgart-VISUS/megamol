@@ -14,6 +14,206 @@ namespace megamol {
 namespace core {
 namespace moldyn {
 
+
+template <class T> T* access(char* ptr, size_t idx, size_t stride) { return reinterpret_cast<T*>(ptr + idx * stride); }
+
+
+class Accessor {
+public:
+    virtual float Get_f(size_t idx) const = 0;
+    virtual double Get_d(size_t idx) const = 0;
+    virtual uint64_t Get_u64(size_t idx) const = 0;
+    virtual unsigned int Get_u32(size_t idx) const = 0;
+    virtual unsigned short Get_u16(size_t idx) const = 0;
+    virtual unsigned char Get_u8(size_t idx) const = 0;
+    virtual ~Accessor();
+};
+
+
+class Accessor_f : public Accessor {
+public:
+    Accessor_f(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return *access<float>(ptr_, idx, stride_); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(Get_f(idx)); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(Get_f(idx)); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(Get_f(idx)); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(Get_f(idx)); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_f(idx)); }
+
+    virtual ~Accessor_f();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_d : public Accessor {
+public:
+    Accessor_d(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return static_cast<float>(Get_d(idx)); }
+
+    double Get_d(size_t idx) const override { return *access<double>(ptr_, idx, stride_); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(Get_d(idx)); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(Get_d(idx)); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(Get_d(idx)); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_d(idx)); }
+
+    virtual ~Accessor_d();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_u64 : public Accessor {
+public:
+    Accessor_u64(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return static_cast<float>(Get_u64(idx)); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(Get_u64(idx)); }
+
+    uint64_t Get_u64(size_t idx) const override { return *access<uint64_t>(ptr_, idx, stride_); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(Get_u64(idx)); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(Get_u64(idx)); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u64(idx)); }
+
+    virtual ~Accessor_u64();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_u32 : public Accessor {
+public:
+    Accessor_u32(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return static_cast<float>(Get_u32(idx)); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(Get_u32(idx)); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(Get_u32(idx)); }
+
+    unsigned int Get_u32(size_t idx) const override { return *access<unsigned int>(ptr_, idx, stride_); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(Get_u32(idx)); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u32(idx)); }
+
+    virtual ~Accessor_u32();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_u16 : public Accessor {
+public:
+    Accessor_u16(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return static_cast<float>(Get_u16(idx)); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(Get_u16(idx)); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(Get_u16(idx)); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(Get_u16(idx)); }
+
+    unsigned short Get_u16(size_t idx) const override { return *access<unsigned short>(ptr_, idx, stride_); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(Get_u16(idx)); }
+
+    virtual ~Accessor_u16();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_u8 : public Accessor {
+public:
+    Accessor_u8(char* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    float Get_f(size_t idx) const override { return static_cast<float>(Get_u8(idx)); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(Get_u8(idx)); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(Get_u8(idx)); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(Get_u8(idx)); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(Get_u8(idx)); }
+
+    unsigned char Get_u8(size_t idx) const override { return *access<unsigned short>(ptr_, idx, stride_); }
+
+    virtual ~Accessor_u8();
+
+private:
+    char* ptr_;
+    size_t stride_;
+};
+
+
+class Accessor_0 : public Accessor {
+public:
+    Accessor_0() = default;
+
+    float Get_f(size_t idx) const override { return static_cast<float>(0); }
+
+    double Get_d(size_t idx) const override { return static_cast<double>(0); }
+
+    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(0); }
+
+    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(0); }
+
+    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(0); }
+
+    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(0); }
+
+    virtual ~Accessor_0();
+
+private:
+};
+
+
+class ParticleStore {
+public:
+    explicit ParticleStore(
+        void* vert_ptr, size_t vert_stride, void* col_ptr, size_t col_stride, void* id_ptr, size_t id_stride);
+
+private:
+    std::unique_ptr<Accessor> x_acc_;
+    std::unique_ptr<Accessor> y_acc_;
+    std::unique_ptr<Accessor> z_acc_;
+    std::unique_ptr<Accessor> r_acc_;
+    std::unique_ptr<Accessor> cr_acc_;
+    std::unique_ptr<Accessor> cg_acc_;
+    std::unique_ptr<Accessor> cb_acc_;
+    std::unique_ptr<Accessor> ca_acc_;
+    std::unique_ptr<Accessor> id_acc_;
+};
+
+
 /**
  * Class holding all data of a single particle type
  *
