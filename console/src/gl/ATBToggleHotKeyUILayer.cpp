@@ -24,8 +24,8 @@ bool gl::ATBToggleHotKeyUILayer::Enabled() {
     return !atbLayer.Enabled();
 }
 
-bool gl::ATBToggleHotKeyUILayer::onKey(Key key, int scancode, KeyAction action, Modifiers mods) {
-    if ((key == KEY_F12) && (action == KeyAction::PRESS) && (static_cast<int>(mods) == 0)) {
+bool gl::ATBToggleHotKeyUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+    if ((key == core::view::Key::KEY_F12) && (action == core::view::KeyAction::PRESS) && mods.none()) {
         atbLayer.ToggleEnable();
         return true;
     }

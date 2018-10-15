@@ -11,7 +11,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CallRender2D.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
@@ -27,7 +26,7 @@ using namespace megamol::core;
  */
 view::View2D::View2D(void) : view::AbstractRenderingView(),
         firstImg(false), height(1.0f),
-        mouseMode(0), mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
+        mouseMode(MouseMode::Propagate), mouseX(0.0f), mouseY(0.0f),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"), 
@@ -150,7 +149,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         this->ResetView();
     }
 
-    if ((*cr2d)(1)) {
+    if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
         if (this->bbox != cr2d->GetBoundingBox()
             && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
             this->ResetView();
@@ -255,7 +254,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glLineWidth(1.0f);
     }
 
-    (*cr2d)(0); // render
+    (*cr2d)(AbstractCallRender::FnRender);
 
     if (this->showSoftCursor()) {
         ::glMatrixMode(GL_PROJECTION);
@@ -284,7 +283,7 @@ void view::View2D::ResetView(void) {
     VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
 
     CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-    if ((cr2d != NULL) && ((*cr2d)(1))) {
+    if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
         this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
         this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
         if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBox().AspectRatio())) {
@@ -310,142 +309,6 @@ void view::View2D::Resize(unsigned int width, unsigned int height) {
     this->width = static_cast<float>(width);
     this->height = static_cast<float>(height);
     // intentionally empty ATM
-}
-
-
-/*
- * view::View2D::SetCursor2DButtonState
- */
-void view::View2D::SetCursor2DButtonState(unsigned int btn, bool down) {
-    switch (btn) {
-        case 0 : // left
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
-            break;
-        case 1 : // right
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
-            break;
-        case 2 : // middle
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
-            break;
-    }
-
-    if (this->mouseMode == 0) {
-        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-        if (cr2d) {
-            float mx, my;
-            mx = ((this->mouseX * 2.0f / this->width) - 1.0f) * this->width / this->height;
-            my = 1.0f - (this->mouseY * 2.0f / this->height);
-            mx /= this->viewZoom;
-            my /= this->viewZoom;
-            mx -= this->viewX;
-            my -= this->viewY;
-            cr2d->SetMouseInfo(mx, my, this->mouseFlags);
-            if ((*cr2d)(2)) {
-                view::MouseFlagsResetAllChanged(this->mouseFlags);
-                // mouse event consumed
-                return;
-            }
-            view::MouseFlagsResetAllChanged(this->mouseFlags);
-        }
-    }
-
-    if (down) {
-
-        if (btn == 0) {
-            this->mouseMode = 1; // pan
-        } else if (btn == 2) {
-            this->mouseMode = 2; // zoom
-        }
-
-    } else {
-
-        this->mouseMode = 0;
-
-    }
-}
-
-
-/*
- * view::View2D::SetCursor2DPosition
- */
-void view::View2D::SetCursor2DPosition(float x, float y) {
-    if (this->mouseMode == 0) {
-        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-        if (cr2d) {
-            float mx, my;
-            mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
-            my = 1.0f - (y * 2.0f / this->height);
-            mx /= this->viewZoom;
-            my /= this->viewZoom;
-            mx -= this->viewX;
-            my -= this->viewY;
-            cr2d->SetMouseInfo(mx, my, this->mouseFlags);
-            if ((*cr2d)(2)) {
-                this->mouseX = x;
-                this->mouseY = y;
-                view::MouseFlagsResetAllChanged(this->mouseFlags);
-                // mouse event consumed
-                return;
-            }
-            view::MouseFlagsResetAllChanged(this->mouseFlags);
-        }
-    }
-
-    if (this->mouseMode == 1) { // pan
-        float movSpeed = 2.0f / (this->viewZoom * this->height);
-        this->viewX -= (this->mouseX - x) * movSpeed;
-        this->viewY += (this->mouseY - y) * movSpeed;
-        if (((this->mouseX - x) > 0.0f) || ((this->mouseY - y) > 0.0f)) {
-            this->viewUpdateCnt++;
-        }
-
-    } else if (this->mouseMode == 2) { // zoom
-        const double spd = 2.0;
-        const double logSpd = log(spd);
-        float base = 1.0f;
-
-        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-        if ((cr2d != NULL) && ((*cr2d)(1))) {
-            base = cr2d->GetBoundingBox().Height();
-        }
-
-        float newZoom = static_cast<float>(
-            pow(spd,
-            log(static_cast<double>(this->viewZoom / base)) / logSpd
-            + static_cast<double>(((this->mouseY - y) * 1.0f / this->height)))) * base;
-
-        if (!vislib::math::IsEqual(newZoom, this->viewZoom)) {
-            this->viewUpdateCnt++;
-        }
-        this->viewZoom = newZoom;
-
-    }
-    this->mouseX = x;
-    this->mouseY = y;
-}
-
-
-/*
- * view::View2D::SetInputModifier
- */
-void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
-    switch (mod) {
-        case MMC_INMOD_SHIFT:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_SHIFT_DOWN, down);
-            break;
-        case MMC_INMOD_CTRL:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_CTRL_DOWN, down);
-            break;
-        case MMC_INMOD_ALT:
-            view::MouseFlagsSetFlag(this->mouseFlags,
-                view::MOUSEFLAG_MODKEY_ALT_DOWN, down);
-            break;
-    }
 }
 
 
@@ -503,9 +366,131 @@ bool view::View2D::OnRenderView(Call& call) {
  * view::View2D::UpdateFreeze
  */
 void view::View2D::UpdateFreeze(bool freeze) {
-
     // currently not supported
+}
 
+
+bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender2D::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool view::View2D::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender2D::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+	this->mouseMode = MouseMode::Propagate;
+
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender2D::FnOnMouseButton)) return true;
+    }
+
+    auto down = action == MouseButtonAction::PRESS;
+    if (button == MouseButton::BUTTON_LEFT && down) {
+        this->mouseMode = MouseMode::Pan;
+    } else if (button == MouseButton::BUTTON_MIDDLE && down) {
+        this->mouseMode = MouseMode::Zoom;
+    }
+
+    return true;
+}
+
+
+bool view::View2D::OnMouseMove(double x, double y) {
+    if (this->mouseMode == MouseMode::Propagate) {
+        float mx, my;
+        mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
+        my = 1.0f - (y * 2.0f / this->height);
+        mx /= this->viewZoom;
+        my /= this->viewZoom;
+        mx -= this->viewX;
+        my -= this->viewY;
+
+        auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+        if (cr) {
+            InputEvent evt;
+            evt.tag = InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = mx;
+            evt.mouseMoveData.y = my;
+            cr->SetInputEvent(evt);
+            if ((*cr)(view::CallRender2D::FnOnMouseMove)) return true;
+        }
+    } else if (this->mouseMode == MouseMode::Pan) {
+        float movSpeed = 2.0f / (this->viewZoom * this->height);
+        this->viewX -= (this->mouseX - x) * movSpeed;
+        this->viewY += (this->mouseY - y) * movSpeed;
+        if (((this->mouseX - x) > 0.0f) || ((this->mouseY - y) > 0.0f)) {
+            this->viewUpdateCnt++;
+        }
+    } else if (this->mouseMode == MouseMode::Zoom) {
+        const double spd = 2.0;
+        const double logSpd = log(spd);
+        float base = 1.0f;
+
+        CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
+            base = cr2d->GetBoundingBox().Height();
+        }
+
+        float newZoom =
+            static_cast<float>(pow(spd, log(static_cast<double>(this->viewZoom / base)) / logSpd +
+                                            static_cast<double>(((this->mouseY - y) * 1.0f / this->height)))) *
+            base;
+
+        if (!vislib::math::IsEqual(newZoom, this->viewZoom)) {
+            this->viewUpdateCnt++;
+        }
+        this->viewZoom = newZoom;
+    }
+
+    this->mouseX = x;
+    this->mouseY = y;
+
+    return true;
+}
+
+
+bool view::View2D::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender2D::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 

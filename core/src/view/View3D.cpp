@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -24,6 +23,7 @@
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/graphics/CameraParamsStore.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
@@ -50,7 +50,7 @@ using namespace megamol::core;
  * view::View3D::View3D
  */
 view::View3D::View3D(void)
-    : view::AbstractView3D()
+    : view::AbstractRenderingView()
     , AbstractCamParamSync()
     , cam()
     , camParams()
@@ -113,7 +113,6 @@ view::View3D::View3D(void)
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , mouseX(0.0f)
     , mouseY(0.0f)
-    , mouseFlags(0)
     , timeCtrl()
     , toggleMouseSelection(false)
     , paramAlpha("watermark::01_alpha", "The alpha value for the watermarks.")
@@ -383,7 +382,6 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
-    cr3d->SetMouseSelection(this->toggleMouseSelection);
 
     AbstractRenderingView::beginFrame();
 
@@ -460,7 +458,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->stereoFocusDistSlot.ResetDirty();
     }
     if (cr3d != NULL) {
-        (*cr3d)(1); // GetExtents
+        (*cr3d)(AbstractCallRender::FnGetExtents);
         if (this->firstImg ||
             (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                 !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsObjectSpaceBBoxValid() &&
@@ -504,9 +502,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (! (*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
+    if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.", this->FullName().PeekBuffer());
+        // vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
+        // this->FullName().PeekBuffer());
         frameIsNew = true;
     } else {
         frameIsNew = false;
@@ -594,7 +593,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     // call for render
     if (cr3d != NULL) {
-        (*cr3d)(0);
+        (*cr3d)(AbstractCallRender::FnRender);
     }
 
     // render bounding box front
@@ -770,76 +769,6 @@ void view::View3D::Resize(unsigned int width, unsigned int height) {
 
 
 /*
- * view::View3D::SetCursor2DButtonState
- */
-void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
-    if (!this->toggleMouseSelection) {
-        this->cursor2d.SetButtonState(btn, down);
-    } else {
-        // stuff from protein::View3DMouse
-        switch (btn) {
-        case 0: // left
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
-            break;
-        case 1: // right
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
-            break;
-        case 2: // middle
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
-            break;
-        }
-    }
-}
-
-
-/*
- * view::View3D::SetCursor2DPosition
- */
-void view::View3D::SetCursor2DPosition(float x, float y) {
-    if (!this->toggleMouseSelection) {
-        this->cursor2d.SetPosition(x, y, true);
-    } else {
-        // stuff from protein::View3DMouse
-        CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
-        if (cr3d) {
-            cr3d->SetMouseInfo(
-                static_cast<float>(static_cast<int>(x)), static_cast<float>(static_cast<int>(y)), this->mouseFlags);
-            if ((*cr3d)(3)) {
-                this->mouseX = (float)static_cast<int>(x);
-                this->mouseY = (float)static_cast<int>(y);
-                view::MouseFlagsResetAllChanged(this->mouseFlags);
-                // mouse event consumed
-                return;
-            }
-            view::MouseFlagsResetAllChanged(this->mouseFlags);
-        }
-    }
-}
-
-
-/*
- * view::View3D::SetInputModifier
- */
-void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
-    unsigned int modId = 0;
-    switch (mod) {
-    case MMC_INMOD_SHIFT:
-        modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
-        break;
-    case MMC_INMOD_CTRL:
-        modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
-        break;
-    case MMC_INMOD_ALT:
-        modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
-        break;
-    default:
-        return;
-    }
-    this->modkeys.SetModifierState(modId, down);
-}
-
-
-/*
  * view::View3D::OnRenderView
  */
 bool view::View3D::OnRenderView(Call& call) {
@@ -917,6 +846,117 @@ void view::View3D::UpdateFreeze(bool freeze) {
         this->cam.SetParameters(this->camParams);
         SAFE_DELETE(this->frozenValues);
     }
+}
+
+
+bool view::View3D::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool view::View3D::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+	// This mouse handling/mapping is so utterly weird and should die!
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    } else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    } else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    if (!this->toggleMouseSelection) {
+        switch (button) {
+        case megamol::core::view::MouseButton::BUTTON_LEFT:
+            this->cursor2d.SetButtonState(0, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_RIGHT:
+            this->cursor2d.SetButtonState(1, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
+            this->cursor2d.SetButtonState(2, down);
+            break;
+        default:
+            break;
+        }
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+        if (cr == NULL) return false;
+
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
+    }
+    return true;
+}
+
+
+bool view::View3D::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+	// This mouse handling/mapping is so utterly weird and should die!
+	if (!this->toggleMouseSelection) {
+        this->cursor2d.SetPosition(x, y, true);
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+        if (cr) {
+            InputEvent evt;
+            evt.tag = InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
+                return false;
+			}
+        }
+    }
+
+    return true;
+}
+
+
+bool view::View3D::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 
