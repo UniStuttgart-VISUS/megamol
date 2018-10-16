@@ -47,32 +47,6 @@ namespace special {
         virtual void Resize(unsigned int width, unsigned int height);
 
         /**
-         * Sets the button state of a button of the 2d cursor. See
-         * 'vislib::graphics::Cursor2D' for additional information.
-         *
-         * @param button The button.
-         * @param down Flag whether the button is pressed, or not.
-         */
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down);
-
-        /**
-         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-         * for additional information.
-         *
-         * @param x The x coordinate
-         * @param y The y coordinate
-         */
-        virtual void SetCursor2DPosition(float x, float y);
-
-        /**
-         * Sets the state of an input modifier.
-         *
-         * @param mod The input modifier to be set.
-         * @param down The new state of the input modifier.
-         */
-        virtual void SetInputModifier(mmcInputModifier mod, bool down);
-
-        /**
          * Freezes, updates, or unfreezes the view onto the scene (not the
          * rendering, but camera settings, timing, etc).
          *

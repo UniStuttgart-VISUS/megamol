@@ -421,6 +421,17 @@ namespace plugins {
          */
         void LoadProject(const vislib::StringW& filename);
 
+		/**
+         * Enumerates all parameters. The callback function is called for each
+         * parameter slot.
+         *
+         * @param cb The callback function.
+         */
+        inline void EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb)
+                const {
+			 this->enumParameters(this->namespaceRoot, cb);
+		}
+
         /**
          * Enumerates all parameters. The callback function is called for each
          * parameter name.
@@ -431,7 +442,13 @@ namespace plugins {
          */
         inline void EnumParameters(mmcEnumStringAFunction func, void *data)
                 const {
-            this->enumParameters(this->namespaceRoot, func, data);
+            auto toStringFunction = [func, data](const Module& mod, const param::ParamSlot& slot) {
+				vislib::StringA name(mod.FullName());
+				name.Append("::");
+				name.Append(slot.Name());
+				func(name.PeekBuffer(), data);
+			};
+            this->enumParameters(this->namespaceRoot, toStringFunction);
         }
 
         /**
@@ -908,7 +925,7 @@ namespace plugins {
          *             function.
          */
         void enumParameters(ModuleNamespace::const_ptr_type path,
-            mmcEnumStringAFunction func, void *data) const;
+			std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
         /**
          * Answer the full name of the paramter 'param' if it is bound to a

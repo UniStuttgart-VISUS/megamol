@@ -33,7 +33,7 @@ view::SplitView::SplitView(void) : AbstractView(),
         splitColourSlot("split.colour", "The split border colour"),
         splitColour(192, 192, 192, 255), overrideCall(NULL),
         clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
-        mouseFocus(-1), mouseBtnDown(0), mouseX(0.0f), mouseY(0.0f) {
+        focus(0), mouseX(0.0f), mouseY(0.0f) {
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
@@ -372,92 +372,6 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
 
 
 /*
- * view::SplitView::SetCursor2DButtonState
- */
-void view::SplitView::SetCursor2DButtonState(unsigned int btn, bool down) {
-    unsigned int mouseBtn = 1 << btn;
-    if (down) this->mouseBtnDown |= mouseBtn;
-    else this->mouseBtnDown &= ~mouseBtn;
-
-    if ((this->mouseBtnDown != 0) && (this->mouseFocus < 0)) {
-        // take focus!
-        if (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
-            this->mouseFocus = 1;
-        } else if (this->client2Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
-            this->mouseFocus = 2;
-        } else {
-            this->mouseFocus = 0;
-        }
-    }
-
-    CallRenderView *crv = NULL;
-    if (this->mouseFocus == 1) {
-        crv = this->render1();
-    } else if (this->mouseFocus == 2) {
-        crv = this->render2();
-    }
-    if (crv != NULL) {
-        SetCursor2DPosition(this->mouseX, this->mouseY);
-        crv->SetMouseButton(btn, down);
-        (*crv)(CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
-    }
-
-    if ((this->mouseBtnDown == 0) && (this->mouseFocus >= 0)) {
-        // release focus!
-        this->mouseFocus = -1;
-    }
-}
-
-
-/*
- * view::SplitView::SetCursor2DPosition
- */
-void view::SplitView::SetCursor2DPosition(float x, float y) {
-    // x, y are coordinates in pixel
-    this->mouseX = x;
-    this->mouseY = y;
-
-    CallRenderView *crv = this->render1();
-    if (crv != NULL) {
-        crv->SetMousePosition(
-            (x - this->client1Area.Left()) / this->client1Area.Width(),
-            (y - this->client1Area.Bottom()) / this->client1Area.Height());
-        if ((this->mouseFocus == 1)
-            || ((this->mouseFocus == 0) && (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))))) {
-            (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
-        }
-    }
-    crv = this->render2();
-    if (crv != NULL) {
-        crv->SetMousePosition(
-            (x - this->client2Area.Left()) / this->client2Area.Width(),
-            (y - this->client2Area.Bottom()) / this->client2Area.Height());
-        if ((this->mouseFocus == 2)
-            || ((this->mouseFocus == 0) && (this->client2Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))))) {
-            (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
-        }
-    }
-}
-
-
-/*
- * view::SplitView::SetInputModifier
- */
-void view::SplitView::SetInputModifier(mmcInputModifier mod, bool down) {
-    CallRenderView *crv = this->render1();
-    if (crv != NULL) {
-        crv->SetInputModifier(mod, down);
-        (*crv)(CallRenderView::CALL_SETINPUTMODIFIER);
-    }
-    crv = this->render2();
-    if (crv != NULL) {
-        crv->SetInputModifier(mod, down);
-        (*crv)(CallRenderView::CALL_SETINPUTMODIFIER);
-    }
-}
-
-
-/*
  * view::SplitView::OnRenderView
  */
 bool view::SplitView::OnRenderView(Call& call) {
@@ -487,6 +401,111 @@ void view::SplitView::UpdateFreeze(bool freeze) {
     if (crv != NULL) (*crv)(freeze ? CallRenderView::CALL_FREEZE : CallRenderView::CALL_UNFREEZE);
     crv = this->render2();
     if (crv != NULL) (*crv)(freeze ? CallRenderView::CALL_FREEZE : CallRenderView::CALL_UNFREEZE);
+}
+
+
+bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* crv = this->renderFocused();
+    if (crv == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool view::SplitView::OnChar(unsigned int codePoint) {
+    auto* crv = this->renderFocused();
+    if (crv == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
+
+    auto down = action == MouseButtonAction::PRESS;
+    if (crv == crv1 && this->focus == 0 && down) {
+        this->focus = 1;
+    } else if (crv == crv2 && this->focus == 0 && down) {
+        this->focus = 2;
+    } else {
+        this->focus = 0;
+    }
+
+	if (crv) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        crv->SetInputEvent(evt);
+        if (!(*crv)(view::CallRenderView::FnOnMouseButton)) return false;
+    }
+
+    return true;
+}
+
+
+bool view::SplitView::OnMouseMove(double x, double y) {
+    // x, y are coordinates in pixel
+    this->mouseX = x;
+    this->mouseY = y;
+
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
+
+    float mx;
+    float my;
+    if (crv == crv1) {
+        mx = x - this->client1Area.Left();
+        my = y - this->client1Area.Bottom();
+    } else if (crv == crv2) {
+        mx = x - this->client2Area.Left();
+        my = y - this->client2Area.Bottom();
+    } else {
+        return false;
+    }
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseMove;
+    evt.mouseMoveData.x = mx;
+    evt.mouseMoveData.y = my;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+
+    return true;
+}
+
+
+bool view::SplitView::OnMouseScroll(double dx, double dy) {
+    auto* crv = this->renderHovered();
+    if (crv == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    crv->SetInputEvent(evt);
+    if (!(*crv)(view::CallRenderView::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 

@@ -207,6 +207,8 @@ namespace megamol {
             /**  */
             core::param::ParamSlot toggleManipOusideBboxParam;
 
+			bool isSelecting;
+
 		};
 
 	} /* end namespace cinematiccamera */
