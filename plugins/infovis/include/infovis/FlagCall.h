@@ -47,12 +47,14 @@ public:
 
     static const unsigned int CallForSetFlags;
 
+    static const unsigned int CallForResetDirty;
+
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 2; }
+    static unsigned int FunctionCount(void) { return 3; }
 
     /**
      * Answer the name of the function used for this call.
@@ -67,6 +69,8 @@ public:
             return "getFlags";
         case 1:
             return "setFlags";
+        case 2:
+            return "resetDirty";
         }
         return "";
     }
@@ -85,6 +89,8 @@ public:
     virtual ~FlagCall(void);
 
 private:
+    bool isDirty;
+
     std::shared_ptr<const FlagStorage::FlagVectorType> flags;
     // TODO less yucky
     friend class FlagStorage;

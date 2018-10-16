@@ -19,6 +19,8 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/CriticalSection.h"
 
+#include <map>
+
 
 namespace megamol {
 namespace infovis {
@@ -96,6 +98,14 @@ private:
      */
     bool setFlagsCallback(core::Call& caller);
 
+    /**
+     * Resets the dirty flag of the caller
+     *
+     * @param caller The calling call.
+     * @return True on success, false otherwise.
+     */
+    bool resetDirtyCallback(core::Call& caller);
+
     /** The slot for requesting data */
     core::CalleeSlot getFlagsSlot;
 
@@ -103,6 +113,9 @@ private:
     std::shared_ptr<const FlagVectorType> flags;
 
     vislib::sys::CriticalSection crit;
+
+    /** Map storing the dirty flags for each module */
+    std::map<uintptr_t, bool> dirtyFlags;
 };
 
 } // namespace infovis
