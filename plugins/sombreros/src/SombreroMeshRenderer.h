@@ -188,11 +188,11 @@ private:
 
     std::vector<unsigned int> indexAttrib;
 
-    std::vector<unsigned int> flagVector;
-
     std::set<unsigned int> flagSet;
 
     std::vector<float> newColors;
+
+    bool changedFlags;
 
     size_t lastDataHash;
 };

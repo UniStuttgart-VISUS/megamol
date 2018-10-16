@@ -205,10 +205,8 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
         }
 
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
-        if (flagsc->has_data()) {
-            const auto& fl = flagsc->GetFlags();
-            this->flagSet.insert(fl.begin(), fl.end());
-        }
+        const auto& fl = flagsc->GetFlags();
+        this->flagSet.insert(fl.begin(), fl.end());
 
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
             if (found) {
@@ -223,7 +221,15 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
                 this->flagSet.erase(std::get<3>(mark));
             }
         }
-        this->flagVector = std::vector<unsigned int>(this->flagSet.begin(), this->flagSet.end());
+        std::shared_ptr<infovis::FlagStorage::FlagVectorType> v;
+        v = std::make_shared<infovis::FlagStorage::FlagVectorType>();
+        v->assign(this->vertexPositions.size(), infovis::FlagStorage::ENABLED);
+        for (const auto& smem : this->flagSet) {
+            v->operator[](smem) = infovis::FlagStorage::SELECTED;
+        }
+
+        flagsc->SetFlags(v);
+        (*flagsc)(infovis::FlagCall::CallForSetFlags);
 
         consume = true;
     }
