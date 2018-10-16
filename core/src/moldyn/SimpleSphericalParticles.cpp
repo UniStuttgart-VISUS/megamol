@@ -84,6 +84,7 @@ moldyn::SimpleSphericalParticles::operator=(
     this->vertexAccessor = rhs.vertexAccessor->Clone();
     this->colorAccessor = rhs.colorAccessor->Clone();
     this->idAccessor = rhs.idAccessor->Clone();
+    this->par_store_ = rhs.par_store_;
     return *this;
 }
 

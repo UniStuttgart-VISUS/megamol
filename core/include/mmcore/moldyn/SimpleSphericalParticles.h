@@ -318,34 +318,34 @@ public:
             }
         }
 
-        std::unique_ptr<Accessor> const& GetXAcc() const { return this->x_acc_; }
+        std::shared_ptr<Accessor> const& GetXAcc() const { return this->x_acc_; }
 
-        std::unique_ptr<Accessor> const& GetYAcc() const { return this->y_acc_; }
+        std::shared_ptr<Accessor> const& GetYAcc() const { return this->y_acc_; }
 
-        std::unique_ptr<Accessor> const& GetZAcc() const { return this->z_acc_; }
+        std::shared_ptr<Accessor> const& GetZAcc() const { return this->z_acc_; }
 
-        std::unique_ptr<Accessor> const& GetRAcc() const { return this->r_acc_; }
+        std::shared_ptr<Accessor> const& GetRAcc() const { return this->r_acc_; }
 
-        std::unique_ptr<Accessor> const& GetCRAcc() const { return this->cr_acc_; }
+        std::shared_ptr<Accessor> const& GetCRAcc() const { return this->cr_acc_; }
 
-        std::unique_ptr<Accessor> const& GetCGAcc() const { return this->cg_acc_; }
+        std::shared_ptr<Accessor> const& GetCGAcc() const { return this->cg_acc_; }
 
-        std::unique_ptr<Accessor> const& GetCBAcc() const { return this->cb_acc_; }
+        std::shared_ptr<Accessor> const& GetCBAcc() const { return this->cb_acc_; }
 
-        std::unique_ptr<Accessor> const& GetCAAcc() const { return this->ca_acc_; }
+        std::shared_ptr<Accessor> const& GetCAAcc() const { return this->ca_acc_; }
 
-        std::unique_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
+        std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
 
     private:
-        std::unique_ptr<Accessor> x_acc_;
-        std::unique_ptr<Accessor> y_acc_;
-        std::unique_ptr<Accessor> z_acc_;
-        std::unique_ptr<Accessor> r_acc_;
-        std::unique_ptr<Accessor> cr_acc_;
-        std::unique_ptr<Accessor> cg_acc_;
-        std::unique_ptr<Accessor> cb_acc_;
-        std::unique_ptr<Accessor> ca_acc_;
-        std::unique_ptr<Accessor> id_acc_;
+        std::shared_ptr<Accessor> x_acc_;
+        std::shared_ptr<Accessor> y_acc_;
+        std::shared_ptr<Accessor> z_acc_;
+        std::shared_ptr<Accessor> r_acc_;
+        std::shared_ptr<Accessor> cr_acc_;
+        std::shared_ptr<Accessor> cg_acc_;
+        std::shared_ptr<Accessor> cb_acc_;
+        std::shared_ptr<Accessor> ca_acc_;
+        std::shared_ptr<Accessor> id_acc_;
     };
 
 
@@ -1018,6 +1018,8 @@ public:
         default:
             this->colorAccessor.reset(new ColorData_None{});
         }
+
+        this->par_store_.SetColorData(t, p, this->colStride);
     }
 
     /**
@@ -1107,6 +1109,8 @@ public:
         default:
             this->vertexAccessor.reset(new VertexData_None{});
         }
+
+        this->par_store_.SetVertexData(t, p, this->vertStride);
     }
 
     /**
@@ -1134,6 +1138,8 @@ public:
         default:
             this->idAccessor.reset(new IDData_None{});
         }
+
+        this->par_store_.SetIDData(t, p, this->idStride);
     }
 
     /**
@@ -1194,6 +1200,8 @@ public:
             throw std::out_of_range("Idx larger than particle count.");
         }
     }
+
+    ParticleStore const& GetParticleStore() const { return this->par_store_; }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
@@ -1334,6 +1342,8 @@ private:
 
     /** Polymorphic id access object */
     std::unique_ptr<IDData_Detail> idAccessor;
+
+    ParticleStore par_store_;
 };
 
 } // namespace moldyn
