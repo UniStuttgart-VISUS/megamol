@@ -15,8 +15,8 @@ namespace core {
 namespace moldyn {
 
 
-template <class T> T* access(char const* ptr, size_t idx, size_t stride) {
-    return reinterpret_cast<T*>(ptr + idx * stride);
+template <class T> T const* access(char const* ptr, size_t idx, size_t stride) {
+    return reinterpret_cast<T const*>(ptr + idx * stride);
 }
 
 
