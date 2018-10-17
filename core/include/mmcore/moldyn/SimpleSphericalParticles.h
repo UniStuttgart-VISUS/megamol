@@ -32,6 +32,38 @@ public:
 };
 
 
+template<class T> class Accessor_Impl : public Accessor {
+public:
+    Accessor_Impl(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    template <class R> std::enable_if_t<std::is_same_v<T, R>, R> Get(size_t const idx) const {
+        return *access<T>(ptr_, idx, stride_);
+    }
+
+    template <class R> std::enable_if_t<!std::is_same_v<T, R>, R> Get(size_t const idx) const {
+        return static_cast<R>(Get<T>(idx));
+    }
+
+    float Get_f(size_t idx) const override { return Get<float>(idx); }
+
+    double Get_d(size_t idx) const override { return Get<double>(idx); }
+
+    uint64_t Get_u64(size_t idx) const override { return Get<uint64_t>(idx); }
+
+    unsigned int Get_u32(size_t idx) const override { return Get<unsigned int>(idx); }
+
+    unsigned short Get_u16(size_t idx) const override { return Get<unsigned short>(idx); }
+
+    unsigned char Get_u8(size_t idx) const override { return Get<unsigned char>(idx); }
+
+    virtual ~Accessor_Impl() = default;
+
+private:
+    char const* ptr_;
+    size_t stride_;
+};
+
+
 class Accessor_f : public Accessor {
 public:
     Accessor_f(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
@@ -218,27 +250,27 @@ public:
         void SetVertexData(SimpleSphericalParticles::VertexDataType const t, const void* p, unsigned int const s = 0) {
             switch (t) {
             case SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ: {
-                this->x_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p), s));
-                this->y_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p) + sizeof(double), s));
-                this->z_acc_.reset(new Accessor_d(reinterpret_cast<const char*>(p) + 2 * sizeof(double), s));
+                this->x_acc_.reset(new Accessor_Impl<double>(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_Impl<double>(reinterpret_cast<const char*>(p) + sizeof(double), s));
+                this->z_acc_.reset(new Accessor_Impl<double>(reinterpret_cast<const char*>(p) + 2 * sizeof(double), s));
                 this->r_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: {
-                this->x_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p), s));
-                this->y_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + sizeof(float), s));
-                this->z_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
+                this->x_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p) + sizeof(float), s));
+                this->z_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
                 this->r_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: {
-                this->x_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p), s));
-                this->y_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + sizeof(float), s));
-                this->z_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
-                this->r_acc_.reset(new Accessor_f(reinterpret_cast<const char*>(p) + 3 * sizeof(float), s));
+                this->x_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p) + sizeof(float), s));
+                this->z_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s));
+                this->r_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<const char*>(p) + 3 * sizeof(float), s));
             } break;
             case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: {
-                this->x_acc_.reset(new Accessor_u16(reinterpret_cast<const char*>(p), s));
-                this->y_acc_.reset(new Accessor_u16(reinterpret_cast<const char*>(p) + sizeof(unsigned short), s));
-                this->z_acc_.reset(new Accessor_u16(reinterpret_cast<const char*>(p) + 2 * sizeof(unsigned short), s));
+                this->x_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<const char*>(p), s));
+                this->y_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<const char*>(p) + sizeof(unsigned short), s));
+                this->z_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<const char*>(p) + 2 * sizeof(unsigned short), s));
                 this->r_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::VERTDATA_NONE:
@@ -254,46 +286,46 @@ public:
         void SetColorData(SimpleSphericalParticles::ColourDataType const t, void const* p, unsigned int const s = 0) {
             switch (t) {
             case SimpleSphericalParticles::COLDATA_DOUBLE_I: {
-                this->cr_acc_.reset(new Accessor_d(reinterpret_cast<char const*>(p), s));
+                this->cr_acc_.reset(new Accessor_Impl<double>(reinterpret_cast<char const*>(p), s));
                 this->cg_acc_.reset(new Accessor_0());
                 this->cb_acc_.reset(new Accessor_0());
                 this->ca_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::COLDATA_FLOAT_I: {
-                this->cr_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p), s));
+                this->cr_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p), s));
                 this->cg_acc_.reset(new Accessor_0());
                 this->cb_acc_.reset(new Accessor_0());
                 this->ca_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::COLDATA_FLOAT_RGB: {
-                this->cr_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p), s));
-                this->cg_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p) + sizeof(float), s));
-                this->cb_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
+                this->cr_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p), s));
+                this->cg_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + sizeof(float), s));
+                this->cb_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
                 this->ca_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: {
-                this->cr_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p), s));
-                this->cg_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p) + sizeof(float), s));
-                this->cb_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
-                this->ca_acc_.reset(new Accessor_f(reinterpret_cast<char const*>(p) + 3 * sizeof(float), s));
+                this->cr_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p), s));
+                this->cg_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + sizeof(float), s));
+                this->cb_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
+                this->ca_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + 3 * sizeof(float), s));
             } break;
             case SimpleSphericalParticles::COLDATA_UINT8_RGB: {
-                this->cr_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p), s));
-                this->cg_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p) + sizeof(unsigned char), s));
-                this->cb_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned char), s));
+                this->cr_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p), s));
+                this->cg_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p) + sizeof(unsigned char), s));
+                this->cb_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned char), s));
                 this->ca_acc_.reset(new Accessor_0());
             } break;
             case SimpleSphericalParticles::COLDATA_UINT8_RGBA: {
-                this->cr_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p), s));
-                this->cg_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p) + sizeof(unsigned char), s));
-                this->cb_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned char), s));
-                this->ca_acc_.reset(new Accessor_u8(reinterpret_cast<char const*>(p) + 3 * sizeof(unsigned char), s));
+                this->cr_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p), s));
+                this->cg_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p) + sizeof(unsigned char), s));
+                this->cb_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned char), s));
+                this->ca_acc_.reset(new Accessor_Impl<unsigned char>(reinterpret_cast<char const*>(p) + 3 * sizeof(unsigned char), s));
             } break;
             case SimpleSphericalParticles::COLDATA_USHORT_RGBA: {
-                this->cr_acc_.reset(new Accessor_u16(reinterpret_cast<char const*>(p), s));
-                this->cg_acc_.reset(new Accessor_u16(reinterpret_cast<char const*>(p) + sizeof(unsigned short), s));
-                this->cb_acc_.reset(new Accessor_u16(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned short), s));
-                this->ca_acc_.reset(new Accessor_u16(reinterpret_cast<char const*>(p) + 3 * sizeof(unsigned short), s));
+                this->cr_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<char const*>(p), s));
+                this->cg_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<char const*>(p) + sizeof(unsigned short), s));
+                this->cb_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned short), s));
+                this->ca_acc_.reset(new Accessor_Impl<unsigned short>(reinterpret_cast<char const*>(p) + 3 * sizeof(unsigned short), s));
             } break;
             case SimpleSphericalParticles::COLDATA_NONE:
             default: {
@@ -308,10 +340,10 @@ public:
         void SetIDData(SimpleSphericalParticles::IDDataType const t, void const* p, unsigned int const s = 0) {
             switch (t) {
             case SimpleSphericalParticles::IDDATA_UINT32: {
-                this->id_acc_.reset(new Accessor_u32(reinterpret_cast<char const*>(p), s));
+                this->id_acc_.reset(new Accessor_Impl<unsigned int>(reinterpret_cast<char const*>(p), s));
             } break;
             case SimpleSphericalParticles::IDDATA_UINT64: {
-                this->id_acc_.reset(new Accessor_u64(reinterpret_cast<char const*>(p), s));
+                this->id_acc_.reset(new Accessor_Impl<uint64_t>(reinterpret_cast<char const*>(p), s));
             } break;
             case SimpleSphericalParticles::IDDATA_NONE:
             default: { this->id_acc_.reset(new Accessor_0()); }
