@@ -70,6 +70,10 @@ private:
     /** use absolute values instead */
     core::param::ParamSlot absoluteSlot;
 
+    //core::param::ParamSlot cyclXSlot;
+    //core::param::ParamSlot cyclYSlot;
+    //core::param::ParamSlot cyclZSlot;
+
     /** "read-only" slots that show the actual range of values available */
     core::param::ParamSlot minSlot, maxSlot;
 

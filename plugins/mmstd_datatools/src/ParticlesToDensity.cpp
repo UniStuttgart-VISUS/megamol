@@ -178,13 +178,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.MinValues[0] = this->minDens;
     metadata.MaxValues = new double[1];
     metadata.MaxValues[0] = this->maxDens;
-    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceClipBox();
     metadata.Extents[0] = bbox.Width();
     metadata.Extents[1] = bbox.Height();
     metadata.Extents[2] = bbox.Depth();
-    metadata.Origin[0] = bbox.Left();
-    metadata.Origin[1] = bbox.Bottom();
-    metadata.Origin[2] = bbox.Back();
     metadata.NumberOfFrames = 1;
     metadata.SliceDists[0] = new float[1];
     metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
@@ -192,6 +189,14 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
     metadata.SliceDists[2] = new float[1];
     metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
+
+    metadata.Origin[0] = bbox.Left();
+    //-metadata.SliceDists[0][0] / 4.0f;
+    metadata.Origin[1] = bbox.Bottom();
+    //-metadata.SliceDists[1][0] / 4.0f;
+    metadata.Origin[2] = bbox.Back();
+    //-metadata.SliceDists[2][0] / 4.0f;
+
     metadata.IsUniform[0] = true;
     metadata.IsUniform[1] = true;
     metadata.IsUniform[2] = true;
@@ -231,20 +236,23 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         weights[init].resize(sx * sy * sz, 0);
     }
 
-    auto const minOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Left();
-    auto const minOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Bottom();
-    auto const minOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Back();
-    auto const rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceBBox().Width();
-    auto const rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height();
-    auto const rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+    // TODO: the whole code is wrong since we do not have the bounding box for the actual
+    // cyclic boundary conditions. Also, these CBC are not applied currently.
 
-    float const cellSizex = rangeOSx / static_cast<float>(sx - 1);
-    float const cellSizey = rangeOSy / static_cast<float>(sy - 1);
-    float const cellSizez = rangeOSz / static_cast<float>(sz - 1);
+    auto const minOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Left();
+    auto const minOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom();
+    auto const minOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Back();
+    auto const rangeOSx = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
+    auto const rangeOSy = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
+    auto const rangeOSz = c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
-    float const d = std::sqrt(cellSizex*cellSizex+cellSizey*cellSizey+cellSizez*cellSizez);
+    float const sliceDistX = rangeOSx / static_cast<float>(sx - 1);
+    float const sliceDistY = rangeOSy / static_cast<float>(sy - 1);
+    float const sliceDistZ = rangeOSz / static_cast<float>(sz - 1);
 
-    float const maxCellSize = std::max(cellSizex, std::max(cellSizey, cellSizez));
+    float const d = std::sqrt(sliceDistX*sliceDistX+sliceDistY*sliceDistY+sliceDistZ*sliceDistZ);
+
+    float const maxCellSize = std::max(sliceDistX, std::max(sliceDistY, sliceDistZ));
     float const disThreshold = 0.5f * maxCellSize;
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
@@ -270,19 +278,19 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         for (int j = 0; j < parts.GetCount(); ++j) {
             auto ppos = parts[j];
             auto const x_base = ppos.vert.GetXf();
-            auto x = static_cast<int>(((x_base - minOSx) / rangeOSx) * static_cast<float>(sx));
+            auto x = static_cast<int>((x_base - minOSx) / sliceDistX);
             if (x < 0)
                 x = 0;
             else if (x >= sx)
                 x = sx - 1;
             auto const y_base = ppos.vert.GetYf();
-            auto y = static_cast<int>(((y_base - minOSy) / rangeOSy) * static_cast<float>(sy));
+            auto y = static_cast<int>((y_base - minOSy) / sliceDistY);
             if (y < 0)
                 y = 0;
             else if (y >= sy)
                 y = sy - 1;
             auto const z_base = ppos.vert.GetZf();
-            auto z = static_cast<int>(((z_base - minOSz) / rangeOSz) * static_cast<float>(sz));
+            auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
             if (z < 0)
                 z = 0;
             else if (z >= sz)
@@ -294,14 +302,11 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
                         if (hx >= 0 && hx < sx && hy >= 0 && hy < sy && hz >= 0 && hz < sz) {
-                            float x_diff = static_cast<float>(hx) / static_cast<float>(sx) * rangeOSx + minOSx +
-                                           0.5f * cellSizex;
+                            float x_diff = static_cast<float>(hx) * sliceDistX + minOSx;
                             x_diff = std::fabs(x_diff - x_base);
-                            float y_diff = static_cast<float>(hy) / static_cast<float>(sy) * rangeOSy + minOSy +
-                                           0.5f * cellSizey;
+                            float y_diff = static_cast<float>(hy) * sliceDistY + minOSy;
                             y_diff = std::fabs(y_diff - y_base);
-                            float z_diff = static_cast<float>(hz) / static_cast<float>(sz) * rangeOSz + minOSz +
-                                           0.5f * cellSizez;
+                            float z_diff = static_cast<float>(hz) * sliceDistZ + minOSz;
                             z_diff = std::fabs(z_diff - z_base);
                             float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                             //if (dis == 0.0f) dis = 1.0f;

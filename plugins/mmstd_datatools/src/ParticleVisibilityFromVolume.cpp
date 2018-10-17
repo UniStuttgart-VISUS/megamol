@@ -9,6 +9,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -23,6 +24,9 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
     , valueSlot("ref", "the value for the operator")
     , epsilonSlot("epsilon", "the tolerance for equality")
     , absoluteSlot("absolute", "use absolute values instead of relative")
+    //, cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+    //, cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+    //, cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , minSlot("min", "the minimum value in the volume (read only)")
     , maxSlot("max", "the maximum value in the volume (read only)")
     , volumeSlot("volume", "the volume we the operation is based on") {
@@ -37,6 +41,13 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
     this->MakeSlotAvailable(&this->minSlot);
     this->maxSlot.SetParameter(new core::param::FloatParam(0.0f));
     this->MakeSlotAvailable(&this->maxSlot);
+
+    //this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
+    //this->MakeSlotAvailable(&this->cyclXSlot);
+    //this->cyclYSlot.SetParameter(new core::param::BoolParam(true));
+    //this->MakeSlotAvailable(&this->cyclYSlot);
+    //this->cyclZSlot.SetParameter(new core::param::BoolParam(true));
+    //this->MakeSlotAvailable(&this->cyclZSlot);
 
     auto ep = new megamol::core::param::EnumParam(0);
     ep->SetTypePair(0, "smaller");
@@ -115,6 +126,12 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     this->minSlot.Param<core::param::FloatParam>()->SetValue(volMeta->MinValues[channel]);
     this->maxSlot.Param<core::param::FloatParam>()->SetValue(volMeta->MaxValues[channel]);
 
+    bool volumeIsNotBBoxAligned = false;
+
+    //bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+    //bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+    //bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+
     typedef const float (VolumetricDataCall::*getter)(const uint32_t, const uint32_t, const uint32_t, const uint32_t) const;
     getter getFun;
     if (absolute) {
@@ -164,6 +181,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             theColorData[i].resize(cnt * cdsize);
         }
 
+        // todo: is this OK?
+        //#pragma omp parallel for
         for (INT64 j = 0; j < cnt; ++j) {
             const auto x = p[j].vert.GetXf();
             const auto y = p[j].vert.GetYf();
@@ -174,59 +193,70 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             const auto ry = (y - volMeta->Origin[1]) / volMeta->SliceDists[1][0];
             const auto rz = (z - volMeta->Origin[2]) / volMeta->SliceDists[2][0];
 
-            if (rx > 0 && rx < volMeta->Resolution[0] && ry > 0 && ry < volMeta->Resolution[1] && rz > 0 &&
-                rz < volMeta->Resolution[2]) {
+            const int quantX = static_cast<int>(rx);
+            const int quantY = static_cast<int>(ry);
+            const int quantZ = static_cast<int>(rz);
+            int quantX2 = quantX;
+            int quantY2 = quantY;
+            int quantZ2 = quantZ;
+            const float diffX = rx - quantX;
+            const float diffY = ry - quantY;
+            const float diffZ = rz - quantZ;
 
-                const int quantX = static_cast<int>(rx);
-                const int quantY = static_cast<int>(ry);
-                const int quantZ = static_cast<int>(rz);
-                const float diffX = rx - quantX;
-                const float diffY = ry - quantY;
-                const float diffZ = rz - quantZ;
+            if (quantX >= 0 || quantX < static_cast<int>(volMeta->Resolution[0]) || quantY >= 0 ||
+                quantY < static_cast<int>(volMeta->Resolution[1]) || quantZ >= 0 ||
+                quantZ < static_cast<int>(volMeta->Resolution[2])) {
+                // OK actually
+            } else {
+                volumeIsNotBBoxAligned = true;
+                continue;
+            }
 
-                const float c000 = ((inVol)->*(getFun))(quantX, quantY, quantZ, channel);
-                const float c100 = ((inVol)->*(getFun))(quantX + 1, quantY, quantZ, channel);
-                const float c010 = ((inVol)->*(getFun))(quantX, quantY + 1, quantZ, channel);
-                const float c110 = ((inVol)->*(getFun))(quantX + 1, quantY + 1, quantZ, channel);
-                const float c001 = ((inVol)->*(getFun))(quantX, quantY, quantZ + 1, channel);
-                const float c101 = ((inVol)->*(getFun))(quantX + 1, quantY, quantZ + 1, channel);
-                const float c011 = ((inVol)->*(getFun))(quantX, quantY + 1, quantZ + 1, channel);
-                const float c111 = ((inVol)->*(getFun))(quantX + 1, quantY + 1, quantZ + 1, channel);
+            // warning: we fake CBC here which has no relevance since at the right border,
+            // the right neighbor influence should be pulled to 0 anyway
+            quantX2 = std::max<size_t>(0, std::min<size_t>(volMeta->Resolution[0] - 1, quantX + 1));
+            quantY2 = std::max<size_t>(0, std::min<size_t>(volMeta->Resolution[1] - 1, quantY + 1));
+            quantZ2 = std::max<size_t>(0, std::min<size_t>(volMeta->Resolution[2] - 1, quantZ + 1));
 
-                float volVal = (1.0f - diffX) * (1.0f - diffY) * (1.0f - diffZ) * c000 +
-                               diffX * (1.0f - diffY) * (1.0f - diffZ) * c100 +
-                               (1.0f - diffX) * diffY * (1.0f - diffZ) * c010 + diffX * diffY * (1.0f - diffZ) * c110 +
-                               (1.0f - diffX) * (1.0f - diffY) * diffZ * c001 + diffX * (1.0f - diffY) * diffZ * c101 +
-                               (1.0f - diffX) * diffY * diffZ * c011 + diffX * diffY * diffZ * c111;
+            const float c000 = ((inVol)->*(getFun))(quantX, quantY, quantZ, channel);
+            const float c100 = ((inVol)->*(getFun))(quantX2, quantY, quantZ, channel);
+            const float c010 = ((inVol)->*(getFun))(quantX, quantY2, quantZ, channel);
+            const float c110 = ((inVol)->*(getFun))(quantX2, quantY2, quantZ, channel);
+            const float c001 = ((inVol)->*(getFun))(quantX, quantY, quantZ2, channel);
+            const float c101 = ((inVol)->*(getFun))(quantX2, quantY, quantZ2, channel);
+            const float c011 = ((inVol)->*(getFun))(quantX, quantY2, quantZ2, channel);
+            const float c111 = ((inVol)->*(getFun))(quantX2, quantY2, quantZ2, channel);
 
-                bool isOK = false;
-                switch (op) {
-                case 0:
-                    // smaller
-                    isOK = volVal < theVal;
-                    break;
-                case 1:
-                    // larger
-                    isOK = volVal > theVal;
-                    break;
-                case 2:
-                    // equal
-                    isOK = std::abs(volVal - theVal) < epsilon;
-                    break;
+            float volVal = (1.0f - diffX) * (1.0f - diffY) * (1.0f - diffZ) * c000 +
+                           diffX * (1.0f - diffY) * (1.0f - diffZ) * c100 +
+                           (1.0f - diffX) * diffY * (1.0f - diffZ) * c010 + diffX * diffY * (1.0f - diffZ) * c110 +
+                           (1.0f - diffX) * (1.0f - diffY) * diffZ * c001 + diffX * (1.0f - diffY) * diffZ * c101 +
+                           (1.0f - diffX) * diffY * diffZ * c011 + diffX * diffY * diffZ * c111;
+
+            bool isOK = false;
+            switch (op) {
+            case 0:
+                // smaller
+                isOK = volVal < theVal;
+                break;
+            case 1:
+                // larger
+                isOK = volVal > theVal;
+                break;
+            case 2:
+                // equal
+                isOK = std::abs(volVal - theVal) < epsilon;
+                break;
+            }
+
+            if (isOK) {
+                if (isInterleaved) {
+                    memcpy(theVertexData[i].data() + vdstride * cntLeft, commonBasePointer + vdstride * j, vdstride);
+                } else {
+                    memcpy(theVertexData[i].data() + vdsize * cntLeft, vertexBasePointer + vdstride * j, vdsize);
+                    memcpy(theColorData[i].data() + cdsize * cntLeft, colorBasePointer + cdstride * j, cdsize);
                 }
-
-                if (isOK) {
-                    if (isInterleaved) {
-                        memcpy(theVertexData[i].data() + vdstride * cntLeft,
-                            commonBasePointer + vdstride * j, vdstride);
-                    } else {
-                        memcpy(theVertexData[i].data() + vdsize * cntLeft,
-                            vertexBasePointer + vdstride * j, vdsize);
-                        memcpy(theColorData[i].data() + cdsize * cntLeft,
-                            colorBasePointer + cdstride * j, cdsize);
-                    }
-                    cntLeft++;
-                }
+                cntLeft++;
             }
         }
 
@@ -257,6 +287,11 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             outp.SetVertexData(vdt, theVertexData[i].data(), vdsize);
             outp.SetColourData(cdt, theColorData[i].data(), cdsize);
         }
+    }
+
+    if (volumeIsNotBBoxAligned) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "ParticleVisibilityFromVolume: Volume does not cover all of the domain!");
     }
 
     this->lastTime = inData.FrameID();
