@@ -283,7 +283,7 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
     if (this->lastCamState.camDir.Length() < 0.5f) return result;
     result = this->lastCamState.camDir;
 
-    // TODO get direction correct   
+    // TODO get direction correct
 
     float u = (x / static_cast<float>(this->lastCamState.width));
     float v = (y / static_cast<float>(this->lastCamState.height));
@@ -318,6 +318,7 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
  * SombreroMeshRenderer::overrideColors
  */
 void SombreroMeshRenderer::overrideColors(const vislib::math::Vector<float, 3>& color) {
+    if (this->flagSet.empty()) return;
     for (size_t i = 0; i < this->indexAttrib.size(); i++) {
         if (this->flagSet.count(this->indexAttrib[i]) > 0) {
             this->newColors[3 * i + 0] = color[0];
@@ -680,34 +681,47 @@ bool SombreroMeshRenderer::Render(Call& call) {
             }
             switch (obj.GetColourDataType()) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                if (i == 0) {
+                if (i == 0 && !this->flagSet.empty()) {
                     this->newColors.resize(this->vertexPositions.size() * 3);
                     for (size_t j = 0; j < this->newColors.size(); j++) {
                         this->newColors[j] = static_cast<float>(obj.GetColourPointerByte()[j]) / 255.0f;
                     }
                 }
                 overrideColors(brushCol);
-                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                if (flagSet.empty()) {
+                    ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+                } else {
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                if (i == 0) {
+                if (i == 0 && !this->flagSet.empty()) {
                     this->newColors.resize(this->vertexPositions.size() * 3);
                     for (size_t j = 0; j < this->newColors.size(); j++) {
                         this->newColors[j] = obj.GetColourPointerFloat()[j];
                     }
                 }
                 overrideColors(brushCol);
-                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                if (flagSet.empty()) {
+                    ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+                } else {
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                if (i == 0) {
+                if (i == 0 && !this->flagSet.empty()) {
                     this->newColors.resize(this->vertexPositions.size() * 3);
                     for (size_t j = 0; j < this->newColors.size(); j++) {
                         this->newColors[j] = static_cast<float>(obj.GetColourPointerDouble()[j]);
                     }
                 }
                 overrideColors(brushCol);
-                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                if (flagSet.empty()) {
+                    ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+                } else {
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                }
+
                 break;
             default:
                 continue;
@@ -925,7 +939,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 3), modelMatrix.GetAt(1, 3), modelMatrix.GetAt(2, 3));*/
     this->lastCamState.camPos = cam->Position();
     this->lastCamState.camDir =
-        vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
+        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 2), modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
     this->lastCamState.camUp =
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
     this->lastCamState.camRight =
@@ -944,16 +958,16 @@ bool SombreroMeshRenderer::Render(Call& call) {
     this->lastCamState.width = viewport.GetWidth();
     this->lastCamState.height = viewport.GetHeight();
 
-    /*vislib::sys::Log::DefaultLog.WriteInfo(
+    vislib::sys::Log::DefaultLog.WriteInfo(
         "dir: %f %f %f", lastCamState.camDir.GetX(), lastCamState.camDir.GetY(), lastCamState.camDir.GetZ());
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "up: %f %f %f", lastCamState.camUp.GetX(), lastCamState.camUp.GetY(), lastCamState.camUp.GetZ());
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "pos: %f %f %f", cam->Position().GetX(), cam->Position().GetY(), cam->Position().GetZ());
+    /*vislib::sys::Log::DefaultLog.WriteInfo(
+        "up: %f %f %f", lastCamState.camUp.GetX(), lastCamState.camUp.GetY(), lastCamState.camUp.GetZ());*/
+    /*vislib::sys::Log::DefaultLog.WriteInfo(
+        "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());*/
+    /*vislib::sys::Log::DefaultLog.WriteInfo(
+        "right: %f %f %f", lastCamState.camRight.GetX(), lastCamState.camRight.GetY(), lastCamState.camRight.GetZ());*/
 
-    vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");*/
+    // vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");
 
     ::glCullFace(cfm);
     ::glFrontFace(twr);
