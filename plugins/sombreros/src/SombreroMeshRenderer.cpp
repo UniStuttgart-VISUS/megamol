@@ -205,8 +205,10 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
         }
 
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
-        const auto& fl = flagsc->GetFlags();
-        this->flagSet.insert(fl.begin(), fl.end());
+        if (flagsc->has_data()) {
+            const auto& fl = flagsc->GetFlags();
+            this->flagSet.insert(fl.begin(), fl.end());
+        }
 
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
             if (found) {
@@ -315,7 +317,15 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
 /*
  * SombreroMeshRenderer::overrideColors
  */
-void SombreroMeshRenderer::overrideColors(const vislib::math::Vector<float, 3>& color) {}
+void SombreroMeshRenderer::overrideColors(const vislib::math::Vector<float, 3>& color) {
+    for (size_t i = 0; i < this->indexAttrib.size(); i++) {
+        if (this->flagSet.count(this->indexAttrib[i]) > 0) {
+            this->newColors[3 * i + 0] = color[0];
+            this->newColors[3 * i + 1] = color[1];
+            this->newColors[3 * i + 2] = color[2];
+        }
+    }
+}
 
 /*
  * SombreroMeshRenderer::Render
@@ -670,16 +680,34 @@ bool SombreroMeshRenderer::Render(Call& call) {
             }
             switch (obj.GetColourDataType()) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                if (datadirty && i == 0) {
+                if (i == 0) {
+                    this->newColors.resize(this->vertexPositions.size() * 3);
+                    for (size_t j = 0; j < this->newColors.size(); j++) {
+                        this->newColors[j] = static_cast<float>(obj.GetColourPointerByte()[j]) / 255.0f;
+                    }
                 }
                 overrideColors(brushCol);
-                ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+                if (i == 0) {
+                    this->newColors.resize(this->vertexPositions.size() * 3);
+                    for (size_t j = 0; j < this->newColors.size(); j++) {
+                        this->newColors[j] = obj.GetColourPointerFloat()[j];
+                    }
+                }
+                overrideColors(brushCol);
+                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+                if (i == 0) {
+                    this->newColors.resize(this->vertexPositions.size() * 3);
+                    for (size_t j = 0; j < this->newColors.size(); j++) {
+                        this->newColors[j] = static_cast<float>(obj.GetColourPointerDouble()[j]);
+                    }
+                }
+                overrideColors(brushCol);
+                ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
                 break;
             default:
                 continue;
