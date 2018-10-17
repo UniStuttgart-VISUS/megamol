@@ -85,10 +85,14 @@ public:
         f.reset();
     }
 
+    inline bool isDataDirty(void) const { return this->isDirty; }
+
     FlagCall(void);
     virtual ~FlagCall(void);
 
 private:
+    inline void setDataDirty(bool dirt = true) { this->isDirty = dirt; }
+
     bool isDirty;
 
     std::shared_ptr<const FlagStorage::FlagVectorType> flags;

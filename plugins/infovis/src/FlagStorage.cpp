@@ -48,6 +48,14 @@ bool FlagStorage::getFlagsCallback(core::Call& caller) {
     // fc->SetFlags(this->flags);
     // TODO less yucky
     fc->flags = this->flags;
+
+    auto cl = fc->PeekCallerSlot();
+    uintptr_t val = reinterpret_cast<uintptr_t>(cl);
+    bool res = std::any_of(this->dirtyFlags.begin(), this->dirtyFlags.end(), [val](const auto& elem) {
+        if (elem.first == val) return false;
+        return elem.second;
+    });
+
     crit.Unlock();
 
     return true;
@@ -64,6 +72,14 @@ bool FlagStorage::setFlagsCallback(core::Call& caller) {
     // this->flags = fc->GetFlags();
     // TODO less yucky
     this->flags = fc->flags;
+
+    auto cl = fc->PeekCallerSlot();
+    uintptr_t val = reinterpret_cast<uintptr_t>(cl);
+    // set all dirty flags to true, except the own
+    for (auto& m : this->dirtyFlags) {
+        m.second = true;
+    }
+    this->dirtyFlags[val] = false;
     crit.Unlock();
 
     return true;
