@@ -947,6 +947,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
     // TODO invert?
+    modelMatrix.Invert();
+    projectionMatrix.Invert();
 
     auto cam = cr->GetCameraParameters();
     auto viewport = cr->GetViewport().GetSize();
@@ -956,11 +958,13 @@ bool SombreroMeshRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 3), modelMatrix.GetAt(1, 3), modelMatrix.GetAt(2, 3));*/
     this->lastCamState.camPos = cam->Position();
     this->lastCamState.camDir =
-        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 2), modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
+        vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
     this->lastCamState.camUp =
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
     this->lastCamState.camRight =
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0));
+    //this->lastCamState.camUp = this->lastCamState.camDir.Cross(this->lastCamState.camRight);
+    //this->lastCamState.camRight = this->lastCamState.camDir.Cross(this->lastCamState.camUp);
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();
@@ -975,14 +979,15 @@ bool SombreroMeshRenderer::Render(Call& call) {
     this->lastCamState.width = viewport.GetWidth();
     this->lastCamState.height = viewport.GetHeight();
 
-    vislib::sys::Log::DefaultLog.WriteInfo(
-        "dir: %f %f %f", lastCamState.camDir.GetX(), lastCamState.camDir.GetY(), lastCamState.camDir.GetZ());
+    /*vislib::sys::Log::DefaultLog.WriteInfo(
+        "dir: %f %f %f", lastCamState.camDir.GetX(), lastCamState.camDir.GetY(), lastCamState.camDir.GetZ());*/
     /*vislib::sys::Log::DefaultLog.WriteInfo(
         "up: %f %f %f", lastCamState.camUp.GetX(), lastCamState.camUp.GetY(), lastCamState.camUp.GetZ());*/
     /*vislib::sys::Log::DefaultLog.WriteInfo(
         "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());*/
     /*vislib::sys::Log::DefaultLog.WriteInfo(
         "right: %f %f %f", lastCamState.camRight.GetX(), lastCamState.camRight.GetY(), lastCamState.camRight.GetZ());*/
+    //vislib::sys::Log::DefaultLog.WriteInfo("%f", this->lastCamState.camRight.Dot(this->lastCamState.camDir));
 
     // vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");
 
