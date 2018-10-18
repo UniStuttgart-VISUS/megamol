@@ -936,9 +936,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 geo.push_back(ospNewGeometry("mmpkd_geometry"));
 
                 if (element.doublePrecision) {
-                    vertexData = ospNewData(element.partCount * 4, OSP_DOUBLE, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    vertexData = ospNewData(element.partCount * 4, OSP_DOUBLE, element.raw, OSP_DATA_SHARED_BUFFER);
                 } else {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
                 }
                 ospCommit(vertexData);
 
