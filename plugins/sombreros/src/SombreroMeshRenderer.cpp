@@ -207,7 +207,11 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
         if (flagsc->has_data()) {
             const auto& fl = flagsc->GetFlags();
-            this->flagSet.insert(fl.begin(), fl.end());
+            for (size_t j = 0; j < fl.size(); j++) {
+                if (fl[j] == infovis::FlagStorage::SELECTED) {
+                    this->flagSet.insert(j);
+                }
+            }
         }
 
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
@@ -361,6 +365,19 @@ bool SombreroMeshRenderer::Render(Call& call) {
     if (this->lastDataHash != ctmd->DataHash()) {
         datadirty = true;
         this->lastDataHash = ctmd->DataHash();
+    }
+
+    auto flagsc = this->getFlagDataSlot.CallAs<infovis::FlagCall>();
+    if (flagsc != nullptr) {
+        (*flagsc)(infovis::FlagCall::CallForGetFlags);
+        if (flagsc->has_data()) {
+            const auto& fl = flagsc->GetFlags();
+            for (size_t j = 0; j < fl.size(); j++) {
+                if (fl[j] == infovis::FlagStorage::SELECTED) {
+                    this->flagSet.insert(j);
+                }
+            }
+        }
     }
 
     // auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
