@@ -13,27 +13,29 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  # Add "Eigen" External
-  include(ExternalProject)
-  set(EIGEN_VER "3_3_4")
-  string(REPLACE "_" "." EIGEN_TAG ${EIGEN_VER})
-  set(EIGEN_INSTALL_CMD ${CMAKE_COMMAND})
-  set(EIGEN_INSTALL_ARGS -E copy_directory ${PROJECT_BINARY_DIR}/extlibeigen-prefix/src/extlibeigen/Eigen ${EXTERNAL_INSTALL_LOCATION}/include/Eigen)
-  
-  ExternalProject_Add(extlibeigen
+  # Add Eigen.
+  add_external_project(Eigen_ext
     GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-    GIT_TAG ${EIGEN_TAG}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    GIT_TAG "3.3.4"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${EIGEN_INSTALL_CMD} ${EIGEN_INSTALL_ARGS})
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(Eigen INTERFACE
+    DEPENDS Eigen_ext
+    INCLUDE_DIR "src/Eigen_ext")
 
-  add_library(Eigen INTERFACE)
-  add_dependencies(Eigen extlibeigen)
-
-  
-  set(LIBS vislib core glad mmstd_datatools Eigen)
-  include_directories(${EXTERNAL_INSTALL_LOCATION}/include "include" "src")
+  # Add Barnes-Hut t-SNE.
+  add_external_project(bhtsne_ext
+    GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
+    GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
+      "<SOURCE_DIR>/CMakeLists.txt")
+  add_external_library(bhtsne STATIC
+    DEPENDS bhtsne_ext
+    INCLUDE_DIR "src/bhtsne_ext"
+    LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -42,14 +44,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glad core mmstd_datatools)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -57,6 +58,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
@@ -69,8 +71,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Shaders" FILES ${shader_files})
 
   # Format
-  add_clang_format(${PROJECT_NAME} 
-    STYLE "${CMAKE_SOURCE_DIR}/.clang-format" 
+  add_clang_format(${PROJECT_NAME}
+    STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
     FILES ${public_header_files} ${header_files} ${source_files})
-
-endif(BUILD_${EXPORT_NAME}_PLUGIN)
+endif()

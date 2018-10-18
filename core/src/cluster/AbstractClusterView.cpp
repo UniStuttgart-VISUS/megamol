@@ -119,30 +119,6 @@ void cluster::AbstractClusterView::ResetView(void) {
 
 
 /*
- * cluster::AbstractClusterView::SetCursor2DButtonState
- */
-void cluster::AbstractClusterView::SetCursor2DButtonState(unsigned int btn, bool down) {
-    // intentionally empty to disallow local user input
-}
-
-
-/*
- * cluster::AbstractClusterView::SetCursor2DPosition
- */
-void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
-    // intentionally empty to disallow local user input
-}
-
-
-/*
- * cluster::AbstractClusterView::SetInputModifier
- */
-void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
-    // intentionally empty to disallow local user input
-}
-
-
-/*
  * cluster::AbstractClusterView::initClusterViewParameters
  */
 void cluster::AbstractClusterView::initClusterViewParameters(void) {

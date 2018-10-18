@@ -121,32 +121,6 @@ namespace view {
         virtual void Resize(unsigned int width, unsigned int height);
 
         /**
-         * Sets the button state of a button of the 2d cursor. See
-         * 'vislib::graphics::Cursor2D' for additional information.
-         *
-         * @param button The button.
-         * @param down Flag whether the button is pressed, or not.
-         */
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down);
-
-        /**
-         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-         * for additional information.
-         *
-         * @param x The x coordinate
-         * @param y The y coordinate
-         */
-        virtual void SetCursor2DPosition(float x, float y);
-
-        /**
-         * Sets the state of an input modifier.
-         *
-         * @param mod The input modifier to be set.
-         * @param down The new state of the input modifier.
-         */
-        virtual void SetInputModifier(mmcInputModifier mod, bool down);
-
-        /**
          * Callback requesting a rendering of this view
          *
          * @param call The calling call
@@ -164,6 +138,16 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
+	    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+
+        virtual bool OnChar(unsigned int codePoint) override;
+
+        virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+
+        virtual bool OnMouseMove(double x, double y) override;
+
+        virtual bool OnMouseScroll(double dx, double dy) override;
+
     protected:
 
         /**
@@ -176,6 +160,8 @@ namespace view {
         virtual void unpackMouseCoordinates(float &x, float &y);
 
     private:
+
+		enum MouseMode : uint8_t { Propagate, Pan, Zoom };
 
         /**
          * Implementation of 'Create'.
@@ -208,16 +194,13 @@ namespace view {
         float height;
 
         /** The mouse drag mode */
-        unsigned int mouseMode;
+        MouseMode mouseMode;
 
         /** The mouse x coordinate */
         float mouseX;
 
         /** The mouse y coordinate */
         float mouseY;
-
-        /** The mouse flags */
-        MouseFlags mouseFlags;
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;

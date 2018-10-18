@@ -688,44 +688,68 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
 
 
 /*
- * mmcSetInputModifier
+ * mmcSendKeyEvent
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
-        mmcInputModifier mod, bool down) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
+        mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->SetInputModifier(mod, down);
+        return view->View()->OnKey(static_cast<megamol::core::view::Key>(key),
+            static_cast<megamol::core::view::KeyAction>(act), megamol::core::view::Modifiers(mods));
     }
+    return false;
 }
 
 
 /*
- * mmcSet2DMouseButton
+ * mmcSendCharEvent
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMouseButton(void *hView,
-        unsigned int btn, bool down) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void *hView, unsigned int cp) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->SetCursor2DButtonState(btn, down);
+        return view->View()->OnChar(cp);
     }
+    return false;
 }
 
 
 /*
- * mmcSet2DMousePosition
+ * mmcSendMouseButtonEvent
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMousePosition(void *hView,
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
+        mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
+    if ((view != NULL) && (view->View() != NULL)) {
+        return view->View()->OnMouseButton(static_cast<megamol::core::view::MouseButton>(btn),
+            static_cast<megamol::core::view::MouseButtonAction>(act), megamol::core::view::Modifiers(mods));
+    }
+    return false;
+}
+
+
+/*
+ * mmcSendMouseMoveEvent
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
         float x, float y) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->SetCursor2DPosition(x, y);
+        return view->View()->OnMouseMove(x, y);
     }
+    return false;
+}
+
+
+/*
+ * mmcSendMouseScrollEvent
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
+	float dx, float dy) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
+    if ((view != NULL) && (view->View() != NULL)) {
+        return view->View()->OnMouseScroll(dx, dy);
+    }
+    return false;
 }
 
 

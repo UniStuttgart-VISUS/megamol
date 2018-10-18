@@ -94,13 +94,6 @@ namespace io {
         virtual bool getCapabilities(core::DataWriterCtrlCall& call);
     
     private:
-
-        /**
-         * Callback function called when the trigger button is pressed.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool triggerButtonCallback(core::param::ParamSlot& slot);
     
         /** The file name of the file to be written */
         core::param::ParamSlot filenameSlot;

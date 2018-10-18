@@ -13,7 +13,6 @@
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/AbstractView3D.h"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"

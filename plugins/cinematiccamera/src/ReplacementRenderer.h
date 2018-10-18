@@ -114,7 +114,7 @@ namespace megamol {
          * variables
          **********************************************************************/
         
-        // Anum of available key assignments
+        // Enum of available key assignments
         enum keyAssignment {
             KEY_ASSIGN_NONE = 0,
             KEY_ASSIGN_O = 1,
@@ -125,7 +125,6 @@ namespace megamol {
             KEY_ASSIGN_Y = 6
         };
 
-        float alpha;
         vislib::math::Cuboid<float> bbox;
         bool toggleReplacementRendering;
 
@@ -141,22 +140,15 @@ namespace megamol {
         **********************************************************************/
 
         /** The renderer caller slot */
-        core::CallerSlot slaveRendererSlot;
+        core::CallerSlot rendererCallerSlot;
 
         /**********************************************************************
         * parameters
         **********************************************************************/
 
-        /**  */
         core::param::ParamSlot replacementRenderingParam;
-
-        /**  */
         core::param::ParamSlot toggleReplacementRenderingParam;
-
-        /**  */
         core::param::ParamSlot replacementKeyParam;
-
-        /**  */
         core::param::ParamSlot alphaParam;
 
     };

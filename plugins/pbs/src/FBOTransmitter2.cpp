@@ -14,15 +14,16 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/cluster/simple/View.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
 
 #ifdef __unix__
-#include <limits.h>
-#include <unistd.h>
+#    include <limits.h>
+#    include <unistd.h>
 #endif
 
 //#define _DEBUG 1
@@ -36,14 +37,13 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports. Leave empty if no screen space subdivision is applied."} 
 #ifdef WITH_MPI
+    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
-    , aggregate_ {
-    false
-}
 #endif // WITH_MPI
-, frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
+    , aggregate_{false}
+    , frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
     color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
     color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
     depth_buf_el_size_{4}, connected_{false} {
@@ -56,7 +56,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     ep->SetTypePair(FBOCommFabric::MPI_COMM, "MPI");
     commSelectSlot_ << ep;
     this->MakeSlotAvailable(&commSelectSlot_);
-    this->view_name_slot_ << new megamol::core::param::StringParam{"inst"};
+    this->view_name_slot_ << new megamol::core::param::StringParam{"::inst::view"};
     this->MakeSlotAvailable(&this->view_name_slot_);
     this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
@@ -65,15 +65,17 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->target_machine_slot_);
     this->force_localhost_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&this->force_localhost_slot_);
+#ifdef WITH_MPI
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
-#ifdef WITH_MPI
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&toggle_aggregate_slot_);
 #endif // WITH_MPI
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
+    this->mpiclusterview_name_slot_ << new megamol::core::param::StringParam{""};
+    this->MakeSlotAvailable(&this->mpiclusterview_name_slot_);
 }
 
 
@@ -88,77 +90,146 @@ bool megamol::pbs::FBOTransmitter2::create() {
 }
 
 
-void megamol::pbs::FBOTransmitter2::release() {
-    shutdownThreads();
-}
+void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    // get viewport of current render context
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
+    // extract viewport or get if from opengl context
+    int viewport[4]      = { 0, 0, 1, 1 };
+    int width            = 1;
+    int height           = 1;
+    int tile_viewport[4] = { 0, 0, 1, 1 };
+    auto tile_width      = width;
+    auto tile_height     = height;
+    int vvpt[6]          = { 0, 0, 1, 1, 1, 1 };
+    if (this->extractViewport(vvpt)) {
+        for (int i = 0; i < 4; ++i) {
+            tile_viewport[i] = vvpt[i];
+        }
+        tile_width  = vvpt[2];
+        tile_height = vvpt[3];
+        width  = viewport[2] = vvpt[4];
+        height = viewport[3] = vvpt[5];
 
-    auto const width = viewport[2] - viewport[0];
-    auto const height = viewport[3] - viewport[1];
+        // Check if tile viewport lies outside global viewport
+        if ((tile_viewport[0] < viewport[0]) ||
+            (tile_viewport[1] < viewport[1]) ||
+            (tile_viewport[0] + tile_viewport[2]) > (viewport[0] + viewport[2]) ||
+            (tile_viewport[1] + tile_viewport[3]) > (viewport[1] + viewport[3])) {
+            vislib::StringA e;
+            e.Format("[FBOTransmitter2] [AfterRender] Tile viewport (%d, %d, %d, %d) lies outside global viewport (%d, %d, %d, %d).",
+                tile_viewport[0], tile_viewport[1], tile_viewport[2], tile_viewport[3],
+                viewport[0], viewport[1], viewport[2], viewport[3]);
+            throw vislib::Exception(e.PeekBuffer(), __FILE__, __LINE__);
+        }
+    }
+    else {
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        for (int i = 0; i < 4; ++i) {
+            tile_viewport[i] = viewport[i];
+        }
+        width  = tile_width  = viewport[2];
+        height = tile_height = viewport[3];
+    }
 
     // read FBO
     std::vector<char> col_buf(width * height * col_buf_el_size_);
     std::vector<char> depth_buf(width * height * depth_buf_el_size_);
 
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
-    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
+    if ((tile_width == width) && (tile_height == height)) {
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
+        glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
+    }
+    else {
+        std::vector<char> col_buf_tile(tile_width * tile_height * col_buf_el_size_);
+        std::vector<char> depth_buf_tile(tile_width * tile_height * depth_buf_el_size_);
 
-    float bbox[6];
-    if (!this->extractBoundingBox(bbox)) {
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
+        glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf_tile.data());
+        glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf_tile.data());
+
+        int row_offset           = tile_viewport[1]  * width; // y * width = row offset * tile width
+        int colomn_offset        = tile_viewport[0];          // x  = column offset 
+        int color_row_tile_width = col_buf_el_size_   * tile_width;
+        int depth_row_tile_width = depth_buf_el_size_ * tile_width;
+
+        // Copy tile rows to right position to fit row major format
+        for (int i = 0; i < tile_height; ++i) {
+            int offset = row_offset + (i * width) + colomn_offset;
+            memcpy(col_buf.data()   + (col_buf_el_size_   * offset), col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
+            memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
+        }
     }
 
 #ifdef WITH_MPI
-    IceTUByte* icet_col_buf = reinterpret_cast<IceTUByte*>(col_buf.data());
+    IceTUByte* icet_col_buf   = reinterpret_cast<IceTUByte*>(col_buf.data());
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
-#if _DEBUG
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
-        std::array<IceTFloat, 4> backgroundColor = {0, 0, 0, 0};
+        std::array<IceTFloat, 4> backgroundColor = { 0, 0, 0, 0 };
+        if (!this->extractBackgroundColor(backgroundColor)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract background color\n");
+        }
         auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), nullptr, nullptr, nullptr, backgroundColor.data());
+            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, backgroundColor.data());
+
         if (mpiRank == 0) {
-            icet_col_buf = icetImageGetColorub(icet_comp_image);
+            icet_col_buf   = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
         }
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
+
+        // extract bbox 
+        float bbox[6];
+        if (!this->extractBoundingBox(bbox)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract bounding box\n");
+        }
+        // extract times 
+        float times[2];
+        if (!this->extractFrameTimes(times)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract frame times\n");
+        }
+        // extract camera params 
+        float camera[9];
+        if (!this->extractCameraParams(camera)) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract camera parameters\n");
+        }
+
 #endif // WITH_MPI
        // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
-            float lower[] = {viewport[0], viewport[2]};
-            float upper[] = {viewport[1], viewport[3]};
             for (int i = 0; i < 4; ++i) {
                 this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = viewport[i];
             }
-            // this->fbo_msg_read_->screen_area = {viewport[0], viewport[1], viewport[2], viewport[3]};
-            // this->fbo_msg_read_->updated_area = viewp_t{lower, upper};
             this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
             this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
             for (int i = 0; i < 6; ++i) {
                 this->fbo_msg_read_->os_bbox[i] = this->fbo_msg_read_->cs_bbox[i] = bbox[i];
             }
-            // this->fbo_msg_read_->os_bbox = bbox;
-            // this->fbo_msg_read_->cs_bbox = bbox;
+            for (int i = 0; i < 2; ++i) {
+                this->fbo_msg_read_->frame_times[i] = times[i];
+            }
 
+            for (int i = 0; i < 9; ++i) {
+                this->fbo_msg_read_->cam_params[i] = camera[i];
+            }
+
+#ifdef WITH_MPI
             this->color_buf_read_->resize(col_buf.size());
             // std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
             memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             this->depth_buf_read_->resize(depth_buf.size());
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
+#endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
         }
@@ -183,9 +254,12 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Error during recv in 'transmitterJob'\n");
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
-                    vislib::sys::Log::DefaultLog.WriteWarn("FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+#if _DEBUG
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+#endif
                 }
-                /*#if _DEBUG
+/*#if _DEBUG
                 else {
                     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
                 }
@@ -296,7 +370,8 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
     auto vi = dynamic_cast<megamol::core::view::AbstractView*>(ano.get());
     if (vi != nullptr) {
         vi->RegisterHook(this);
-    } else {
+    }
+    else {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to find view \"%s\" for transmission", mvn.c_str());
     }
     this->ModuleGraphLock().UnlockExclusive();
@@ -328,7 +403,134 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
                 }
             }
         }
-    } else {
+    } 
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractFrameTimes(float frame_times[2]) {
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
+    if (vi != nullptr) {
+        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
+            if (sl != nullptr) {
+                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
+                if (r != nullptr) {
+                    frame_times[0] = r->Time();
+                    frame_times[1] = static_cast<float>(r->TimeFramesCount());
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractCameraParams(float cam_params[9]) {
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
+    if (vi != nullptr) {
+        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
+            if (sl != nullptr) {
+                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
+                if (r != nullptr) {
+                    cam_params[0] = r->GetCameraParameters()->Position()[0];
+                    cam_params[1] = r->GetCameraParameters()->Position()[1];
+                    cam_params[2] = r->GetCameraParameters()->Position()[2];
+                    cam_params[3] = r->GetCameraParameters()->Up()[0];
+                    cam_params[4] = r->GetCameraParameters()->Up()[1];
+                    cam_params[5] = r->GetCameraParameters()->Up()[2];
+                    cam_params[6] = r->GetCameraParameters()->LookAt()[0];
+                    cam_params[7] = r->GetCameraParameters()->LookAt()[1];
+                    cam_params[8] = r->GetCameraParameters()->LookAt()[2];
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
+    bool success = true;
+    std::string mcvvn(mpiclusterview_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mcvvn.c_str());
+    auto sv = dynamic_cast<megamol::core::cluster::simple::View*>(ano.get());
+    if (sv != nullptr) {
+        // MPIClusterView keeps virtual viewport stuff
+        vvpt[0] = static_cast<int>(sv->getTileX());
+        vvpt[1] = static_cast<int>(sv->getTileY());
+        vvpt[2] = static_cast<int>(sv->getTileW());
+        vvpt[3] = static_cast<int>(sv->getTileH());
+        vvpt[4] = static_cast<int>(sv->getVirtWidth());
+        vvpt[5] = static_cast<int>(sv->getVirtHeight());
+    }
+    else {
+        if (!mcvvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW name\n");
+        }
+        success = false;
+    }
+    this->ModuleGraphLock().UnlockExclusive();
+    return success;
+}
+
+
+bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color) {
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    this->ModuleGraphLock().LockExclusive();
+    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    auto ano = anoc->FindNamedObject(mvn.c_str());
+    auto arv = dynamic_cast<core::view::AbstractRenderingView*>(ano.get());
+    if (arv != nullptr) {
+        const float * bkgndCol = arv->BkgndColour();
+        if (bkgndCol != nullptr) {
+            bkgnd_color[0] = bkgndCol[0];
+            bkgnd_color[1] = bkgndCol[1];
+            bkgnd_color[2] = bkgndCol[2];
+            bkgnd_color[3] = 0.0f;
+        }
+    }
+    else {
+        if (!mvn.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+        }
         success = false;
     }
     this->ModuleGraphLock().UnlockExclusive();
@@ -374,7 +576,7 @@ bool megamol::pbs::FBOTransmitter2::initMPI() {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot &p) {
+bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot& p) {
     shutdownThreads();
     initThreads();
 
@@ -397,9 +599,9 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
         }
 
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-#ifdef _DEBUG
+#    ifdef _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
-#endif
+#    endif
 #endif // WITH_MPI
             auto const address =
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
@@ -411,7 +613,10 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
-            printf("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+
+#if _DEBUG	    
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+#endif
             registerComm.Connect(registerAddress);
 
             std::string hostname = std::string{"127.0.0.1"};
@@ -444,8 +649,11 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Receiving client ack\n");
 #endif
                 while (!registerComm.Recv(buf)) {
+#if _DEBUG
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+#endif
+
                 }
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
@@ -483,21 +691,20 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 
             this->transmitter_thread_ = std::thread(&FBOTransmitter2::transmitterJob, this);
 
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
+
 #ifdef WITH_MPI
         }
 #endif // WITH_MPI
         connected_ = true;
 #ifdef WITH_MPI
-        // aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        // get viewport of current render context
         if (aggregate_) {
-#if _DEBUG
+#    if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
-            // MPI_Comm *heinz = (MPI_Comm *)malloc(sizeof(MPI_Comm));
-            // MPI_Comm_dup(MPI_COMM_WORLD, heinz);
+            // icet setup
             icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
-            icet_ctx_ = icetCreateContext(icet_comm_);
+            icet_ctx_  = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
             icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
@@ -505,18 +712,26 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            auto const width = viewport[2] - viewport[0];
-            auto const height = viewport[3] - viewport[1];
-
+            // extract viewport or get if from opengl context
+            auto width  = 1;
+            auto height = 1;
+            int vvpt[6] = { 0, 0, 0, 0, 0, 0 };
+            if (this->extractViewport(vvpt)) {
+                width  = vvpt[4];
+                height = vvpt[5];
+            }
+            else {
+                GLint viewport[4];
+                glGetIntegerv(GL_VIEWPORT, viewport);
+                width  = viewport[2];
+                height = viewport[3];
+            }
+            int displayRank = 0;
+            icetPhysicalRenderSize(width, height);
             icetResetTiles();
-            icetAddTile(
-                viewport[0], viewport[1], width, height, 0); //< might not be necessary due to IceT's OpenGL layer
-#if _DEBUG
+            icetAddTile(0, 0, width, height, displayRank);
+
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#endif
         }
 #endif // WITH_MPI
     }
@@ -531,7 +746,7 @@ bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
 
     if (this->transmitter_thread_.joinable()) this->transmitter_thread_.join();
 
-    #ifdef WITH_MPI
+#ifdef WITH_MPI
     if (useMpi) {
         icetDestroyMPICommunicator(icet_comm_);
         icetDestroyContext(icet_ctx_);

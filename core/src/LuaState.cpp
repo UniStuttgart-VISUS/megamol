@@ -55,6 +55,7 @@ bool iequals(const std::string& one, const std::string& other) {
     return true;
 }
 
+// clang-format off
 #define MMC_LUA_MMLOG "mmLog"
 #define MMC_LUA_MMLOGINFO "mmLogInfo"
 #define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
@@ -76,6 +77,8 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMGETPARAMDESCRIPTION "mmGetParamDescription"
 #define MMC_LUA_MMGETPARAMVALUE "mmGetParamValue"
 #define MMC_LUA_MMSETPARAMVALUE "mmSetParamValue"
+#define MMC_LUA_MMCREATEPARAMGROUP "mmCreateParamGroup"
+#define MMC_LUA_MMSETPARAMGROUPVALUE "mmSetParamGroupValue"
 #define MMC_LUA_MMCREATEMODULE "mmCreateModule"
 #define MMC_LUA_MMDELETEMODULE "mmDeleteModule"
 #define MMC_LUA_MMCREATECALL "mmCreateCall"
@@ -91,6 +94,8 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMLISTINSTANTIATIONS "mmListInstantiations"
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
+#define MMC_LUA_MMQUIT "mmQuit"
+#define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -101,45 +106,48 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMGETOS, MMC_LUA_MMGETOS"()\n\tReturns the operating system ('windows', 'linux', or 'unknown')."},
     { MMC_LUA_MMGETPROCESSID, MMC_LUA_MMGETPROCESSID"()\n\tReturns the process id of the running MegaMol." },
     { MMC_LUA_MMGETMACHINENAME, MMC_LUA_MMGETMACHINENAME"()\n\tReturns the machine name." },
-    {MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR "(string dir)\n\tSets the path where the mmconsole.exe is located."},
-    {MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR "(string dir)\n\tAdds a shader/btf search path."},
-    {MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR "(string dir)\n\tAdds a resource search path."},
+    { MMC_LUA_MMSETAPPDIR, MMC_LUA_MMSETAPPDIR "(string dir)\n\tSets the path where the mmconsole.exe is located."},
+    { MMC_LUA_MMADDSHADERDIR, MMC_LUA_MMADDSHADERDIR "(string dir)\n\tAdds a shader/btf search path."},
+    { MMC_LUA_MMADDRESOURCEDIR, MMC_LUA_MMADDRESOURCEDIR "(string dir)\n\tAdds a resource search path."},
     { MMC_LUA_MMPLUGINLOADERINFO, MMC_LUA_MMPLUGINLOADERINFO"(string glob, string action)\n\tTell the core how to load plugins. Glob a path and ('include' | 'exclude') it." },
-    {MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE "(string path)\n\tSets the full path of the log file."},
+    { MMC_LUA_MMSETLOGFILE, MMC_LUA_MMSETLOGFILE "(string path)\n\tSets the full path of the log file."},
     { MMC_LUA_MMSETLOGLEVEL, MMC_LUA_MMSETLOGLEVEL"(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR." },
     { MMC_LUA_MMSETECHOLEVEL, MMC_LUA_MMSETECHOLEVEL"(int level)\n\tSets the level of log events to output to the console (see above)." },
     { MMC_LUA_MMSETCONFIGVALUE, MMC_LUA_MMSETCONFIGVALUE"(string name, string value)\n\tSets the config value <name> to <value>." },
-    {MMC_LUA_MMGETCONFIGVALUE, MMC_LUA_MMGETCONFIGVALUE "(string name)\n\tGets the value of config value <name>."},
+    { MMC_LUA_MMGETCONFIGVALUE, MMC_LUA_MMGETCONFIGVALUE "(string name)\n\tGets the value of config value <name>."},
     { MMC_LUA_MMGETMODULEPARAMS, MMC_LUA_MMGETMODULEPARAMS"(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
                                   "\n\tFor each parameter the name, description, definition, and value are returned."},
     { MMC_LUA_MMGETPARAMTYPE, MMC_LUA_MMGETPARAMTYPE"(string name)\n\tReturn the HEX type descriptor of a parameter slot." },
     { MMC_LUA_MMGETPARAMDESCRIPTION, MMC_LUA_MMGETPARAMDESCRIPTION"(string name)\n\tReturn the description of a parameter slot." },
-    {MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE "(string name)\n\tReturn the value of a parameter slot."},
+    { MMC_LUA_MMGETPARAMVALUE, MMC_LUA_MMGETPARAMVALUE "(string name)\n\tReturn the value of a parameter slot."},
     { MMC_LUA_MMSETPARAMVALUE, MMC_LUA_MMSETPARAMVALUE"(string name, string value)\n\tSet the value of a parameter slot." },
+    { MMC_LUA_MMCREATEPARAMGROUP, MMC_LUA_MMCREATEPARAMGROUP "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size is reached."},
+    {MMC_LUA_MMSETPARAMGROUPVALUE, MMC_LUA_MMSETPARAMGROUPVALUE "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter."},
     { MMC_LUA_MMCREATEMODULE, MMC_LUA_MMCREATEMODULE"(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>." },
-    {MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE "(string name)\n\tDelete the module called <name>."},
+    { MMC_LUA_MMDELETEMODULE, MMC_LUA_MMDELETEMODULE "(string name)\n\tDelete the module called <name>."},
     { MMC_LUA_MMCREATECALL, MMC_LUA_MMCREATECALL"(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>." },
     { MMC_LUA_MMDELETECALL, MMC_LUA_MMDELETECALL"(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>." },
-    {MMC_LUA_MMCREATECHAINCALL, MMC_LUA_MMCREATECHAINCALL
+    { MMC_LUA_MMCREATECHAINCALL, MMC_LUA_MMCREATECHAINCALL
         "(string className, string chainStart, string to)\n\tAppend a call of type "
         "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>."},
-    {MMC_LUA_MMQUERYMODULEGRAPH, MMC_LUA_MMQUERYMODULEGRAPH "()\n\tShow the instantiated modules and their children."},
-    {MMC_LUA_MMHELP, MMC_LUA_MMHELP "()\n\tShow this help."},
+    { MMC_LUA_MMQUERYMODULEGRAPH, MMC_LUA_MMQUERYMODULEGRAPH "()\n\tShow the instantiated modules and their children."},
+    { MMC_LUA_MMHELP, MMC_LUA_MMHELP "()\n\tShow this help."},
     { MMC_LUA_MMCREATEVIEW, MMC_LUA_MMCREATEVIEW"(string viewName, string viewModuleClass, string viewModuleName)"
         "\n\tCreate a new window/view and the according namespace <viewName> alongside it."
         "\n\tAlso, instantiate a view module called <viewModuleName> of <viewModuleClass> inside that window."},
-    {MMC_LUA_MMDELETEVIEW, MMC_LUA_MMDELETEVIEW "TODO"},
+    { MMC_LUA_MMDELETEVIEW, MMC_LUA_MMDELETEVIEW "TODO"},
     { MMC_LUA_MMCREATEJOB, MMC_LUA_MMCREATEJOB"(string jobName, string jobModuleClass, string jobModuleName)"
         "\n\tCreate a new background job and the according namespace <jobName> alongside it."
         "\n\tAlso, instantiate a job module called <jobModuleName> of <jobModuleClass> inside that window."},
-    {MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB "TODO"},
-    {MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE "(string name)\n\tReturn the value of env variable <name>."},
-    {MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
-    {MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
-    {MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."}
+    { MMC_LUA_MMDELETEJOB, MMC_LUA_MMDELETEJOB "TODO"},
+    { MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE "(string name)\n\tReturn the value of env variable <name>."},
+    { MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
+    { MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
+    { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
+    { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
+    {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."}
 };
 
-// clang-format off
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = " MMC_LUA_MMLOGINFO ","
 "  error = error,"
@@ -164,6 +172,8 @@ MMC_LUA_MMGETPARAMTYPE "=" MMC_LUA_MMGETPARAMTYPE ","
 MMC_LUA_MMGETPARAMDESCRIPTION "=" MMC_LUA_MMGETPARAMDESCRIPTION ","
 MMC_LUA_MMGETPARAMVALUE "=" MMC_LUA_MMGETPARAMVALUE ","
 MMC_LUA_MMSETPARAMVALUE "=" MMC_LUA_MMSETPARAMVALUE ","
+MMC_LUA_MMCREATEPARAMGROUP "=" MMC_LUA_MMCREATEPARAMGROUP ","
+MMC_LUA_MMSETPARAMGROUPVALUE "=" MMC_LUA_MMSETPARAMGROUPVALUE ","
 MMC_LUA_MMCREATEMODULE "=" MMC_LUA_MMCREATEMODULE ","
 MMC_LUA_MMDELETEMODULE "=" MMC_LUA_MMDELETEMODULE ","
 MMC_LUA_MMCREATECALL "=" MMC_LUA_MMCREATECALL ","
@@ -179,7 +189,10 @@ MMC_LUA_MMGETENVVALUE "=" MMC_LUA_MMGETENVVALUE ","
 MMC_LUA_MMLISTCALLS "=" MMC_LUA_MMLISTCALLS ","
 MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
+MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
+MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
 "  ipairs = ipairs,"
+"  load = load,"
 "  next = next,"
 "  pairs = pairs,"
 "  pcall = pcall,"
@@ -349,6 +362,8 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMGETPARAMDESCRIPTION, &dispatch<&LuaState::GetParamDescription>);
         lua_register(L, MMC_LUA_MMGETPARAMVALUE, &dispatch<&LuaState::GetParamValue>);
         lua_register(L, MMC_LUA_MMSETPARAMVALUE, &dispatch<&LuaState::SetParamValue>);
+        lua_register(L, MMC_LUA_MMCREATEPARAMGROUP, &dispatch<&LuaState::CreateParamGroup>);
+        lua_register(L, MMC_LUA_MMSETPARAMGROUPVALUE, &dispatch<&LuaState::SetParamGroupValue>);
 
         lua_register(L, MMC_LUA_MMCREATEMODULE, &dispatch<&LuaState::CreateModule>);
         lua_register(L, MMC_LUA_MMDELETEMODULE, &dispatch<&LuaState::DeleteModule>);
@@ -371,6 +386,9 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
+        lua_register(L, MMC_LUA_MMQUIT, &dispatch<&LuaState::Quit>);
+
+        lua_register(L, MMC_LUA_MMREADTEXTFILE, &dispatch<&LuaState::ReadTextFile>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -499,13 +517,15 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wst
 
 
 bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
+    // no two threads can touch L at the same time
+    std::lock_guard<std::mutex> stateGuard(this->stateLock);
     if (L != nullptr) {
         //vislib::sys::Log::DefaultLog.WriteInfo("trying to execute: %s", script.c_str());
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
         int old_n = lua_gettop(L);
-        int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
+        const int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
             const char *err = lua_tostring(L, -1); // get error from top of stack...
             //vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
@@ -857,7 +877,9 @@ int megamol::core::LuaState::GetModuleParams(lua_State *L) {
         }
         Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName));
         if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": module not found");
+            std::stringstream ss;
+            ss << MMC_LUA_MMGETMODULEPARAMS ": module " << moduleName << " not found";
+            lua_pushstring(L, ss.str().c_str());
             lua_error(L);
             return 0;
         }
@@ -1099,6 +1121,51 @@ int megamol::core::LuaState::SetParamValue(lua_State *L) {
 }
 
 
+int megamol::core::LuaState::CreateParamGroup(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMCREATEPARAMGROUP)) {
+        auto groupName = luaL_checkstring(L, 1);
+        auto groupSize = luaL_checkinteger(L, 2);
+
+        if (!this->coreInst->CreateParamGroup(groupName, groupSize)) {
+            std::stringstream out;
+            out << "could not create param group \"";
+            out << groupName;
+            out << "\" with size \"";
+            out << groupSize;
+            out << "\" (check MegaMol log)";
+            lua_pushstring(L, out.str().c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+int megamol::core::LuaState::SetParamGroupValue(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMSETPARAMGROUPVALUE)) {
+        auto paramGroup = luaL_checkstring(L, 1);
+        auto paramName = luaL_checkstring(L, 2);
+        auto paramValue = luaL_checkstring(L, 3);
+
+        if (!this->coreInst->RequestParamGroupValue(paramGroup, paramName, paramValue)) {
+            std::stringstream out;
+            out << "could not set \"";
+            out << paramName;
+            out << "\" in group \"";
+            out << paramGroup;
+            out << "\" to \"";
+            out << paramValue;
+            out << "\" (check MegaMol log)";
+            lua_pushstring(L, out.str().c_str());
+            lua_error(L);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
 int megamol::core::LuaState::CreateModule(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMCREATEMODULE)) {
         //auto viewjobName = luaL_checkstring(L, 1);
@@ -1186,63 +1253,63 @@ int megamol::core::LuaState::CreateChainCall(lua_State* L) {
             lua_error(L);
             return 0;
         }
-        Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
-            lua_error(L);
-            return 0;
-        }
+        //Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
-        auto se = mod->ChildList_End();
-        bool foundSlot = false;
-        for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-            auto *slot = dynamic_cast<CallerSlot*>((*si).get());
-            if (slot != NULL) {
-                if (slot->Name() == slotName.c_str()) {
-                    foundSlot = true;
-                    break;
-                }
-            }
-        }
-        if (!foundSlot) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
-            lua_error(L);
-            return 0;
-        }
+        //auto se = mod->ChildList_End();
+        //bool foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CallerSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
 
-        pos = to.find_last_of("::");
-        if (pos < 4 || to.length() < pos + 2) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
-            lua_error(L);
-            return 0;
-        }
-        moduleName = to.substr(0, pos - 1);
-        slotName = to.substr(pos + 1, -1);
+        //pos = to.find_last_of("::");
+        //if (pos < 4 || to.length() < pos + 2) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
+        //    lua_error(L);
+        //    return 0;
+        //}
+        //moduleName = to.substr(0, pos - 1);
+        //slotName = to.substr(pos + 1, -1);
 
-        mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        if (!mod) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
-            lua_error(L);
-            return 0;
-        }
+        //mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
+        //if (!mod) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
-        se = mod->ChildList_End();
-        foundSlot = false;
-        for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-            auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
-            if (slot != NULL) {
-                if (slot->Name() == slotName.c_str()) {
-                    foundSlot = true;
-                    break;
-                }
-            }
-        }
-        if (!foundSlot) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
-            lua_error(L);
-            return 0;
-        }
+        //se = mod->ChildList_End();
+        //foundSlot = false;
+        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
+        //    auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
+        //    if (slot != NULL) {
+        //        if (slot->Name() == slotName.c_str()) {
+        //            foundSlot = true;
+        //            break;
+        //        }
+        //    }
+        //}
+        //if (!foundSlot) {
+        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
+        //    lua_error(L);
+        //    return 0;
+        //}
 
         if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
             std::stringstream out;
@@ -1564,4 +1631,52 @@ int megamol::core::LuaState::Help(lua_State *L) {
     }
     lua_pushstring(L, out.str().c_str());
     return 1;
+}
+
+int megamol::core::LuaState::Quit(lua_State *L) {
+    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+        this->coreInst->Shutdown();
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::ReadTextFile(lua_State* L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        const auto filename = luaL_checkstring(L, 1);
+        std::ifstream t(filename);
+        if (t.good()) {
+            std::stringstream buffer;
+            buffer << t.rdbuf();
+
+            //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename, buffer.str().c_str());
+
+            lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
+            lua_pushstring(L, buffer.str().c_str()); // put string parameter on top of stack
+            // call the function pointer
+            lua_pcall(L, 1, 1, 0);
+            n = lua_gettop(L);
+            if (n != 1) {
+                std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
+                lua_pushstring(L, err.c_str());
+                lua_error(L);
+            } else {
+                const auto newString = luaL_checkstring(L, 1);
+                //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n", newString);
+                return 1;
+            }
+        } else {
+            std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
+            err += filename;
+            err += "'.";
+            lua_pushstring(L, err.c_str());
+            lua_error(L);
+        }
+    } else {
+        std::string err =
+            MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+    }
+    return 0;
 }

@@ -1,29 +1,30 @@
 /*
-* OSPRayTriangleMesh.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayTriangleMesh.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
+#include <functional>
 #include "OSPRayTriangleMesh.h"
 #include "geometry_calls/CallTriMeshData.h"
+#include "mmcore/Call.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
-#include "mmcore/Call.h"
 
 
 using namespace megamol::ospray;
 
 
-OSPRayTriangleMesh::OSPRayTriangleMesh(void) :
-    AbstractOSPRayStructure(),
-    getDataSlot("getdata", "Connects to the data source"),
+OSPRayTriangleMesh::OSPRayTriangleMesh(void)
+    : AbstractOSPRayStructure()
+    , getDataSlot("getdata", "Connects to the data source")
+    ,
 
-    objectID("objectID", "Switches between objects")
-{
+    objectID("objectID", "Switches between objects") {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -34,14 +35,14 @@ OSPRayTriangleMesh::OSPRayTriangleMesh(void) :
 }
 
 
-bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
+bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
 
     // fill material container
     this->processMaterial();
 
     // read Data, calculate  shape parameters, fill data vectors
-    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::geocalls::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
+    megamol::geocalls::CallTriMeshData* cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
@@ -61,7 +62,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     unsigned int objectCount = cd->Count();
 
 
-    if (this->objectID.Param<core::param::IntParam>()->Value() >(objectCount - 1)) {
+    if (this->objectID.Param<core::param::IntParam>()->Value() > (objectCount - 1)) {
         this->objectID.Param<core::param::IntParam>()->SetValue(0);
     }
 
@@ -86,10 +87,12 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
         auto vertexPointer = obj.GetVertexPointerFloat();
         vertexD.resize(obj.GetVertexCount() * 3);
         vertexD.assign(vertexPointer, vertexPointer + obj.GetVertexCount() * 3);
+        //std::transform(vertexD.begin(), vertexD.end(), vertexD.begin(),
+        //    std::bind(std::multiplies<float>(), std::placeholders::_1, 3));
         break;
-        //case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+        // case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
         // ospray does not support double vectors/arrays
-        //OSPData vertexdata = ospNewData(obj.GetVertexCount, OSP_DOUBLE3, obj.GetVertexPointerFloat());
+        // OSPData vertexdata = ospNewData(obj.GetVertexCount, OSP_DOUBLE3, obj.GetVertexPointerFloat());
         //    break;
     }
 
@@ -101,7 +104,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
             normalD.resize(obj.GetVertexCount() * 3);
             normalD.assign(normalPointer, normalPointer + obj.GetVertexCount() * 3);
             break;
-            //case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+            // case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
             //    break;
         }
     }
@@ -128,7 +131,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
                 }
             }
             break;
-            //case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+            // case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
             //    break;
         }
     }
@@ -142,7 +145,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
             texD.resize(obj.GetTriCount() * 2);
             texD.assign(texPointer, texPointer + obj.GetTriCount() * 2);
             break;
-            //case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
+            // case trisoup::CallTriMeshData::Mesh::DT_DOUBLE:
             //    break;
         }
     }
@@ -150,9 +153,9 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
     // check index pointer
     if (obj.HasTriIndexPointer() != NULL) {
         switch (obj.GetTriDataType()) {
-            //case trisoup::CallTriMeshData::Mesh::DT_BYTE:
+            // case trisoup::CallTriMeshData::Mesh::DT_BYTE:
             //    break;
-            //case trisoup::CallTriMeshData::Mesh::DT_UINT16:
+            // case trisoup::CallTriMeshData::Mesh::DT_UINT16:
             //    break;
         case geocalls::CallTriMeshData::Mesh::DT_UINT32:
             auto indexPointer = obj.GetTriIndexPointerUInt32();
@@ -178,25 +181,17 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
 }
 
 
-OSPRayTriangleMesh::~OSPRayTriangleMesh() {
-    this->Release();
-}
+OSPRayTriangleMesh::~OSPRayTriangleMesh() { this->Release(); }
 
-bool OSPRayTriangleMesh::create() {
-    return true;
-}
+bool OSPRayTriangleMesh::create() { return true; }
 
-void OSPRayTriangleMesh::release() {
-
-}
+void OSPRayTriangleMesh::release() {}
 
 /*
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayTriangleMesh::InterfaceIsDirty() {
-    if (
-        this->objectID.IsDirty()
-        ) {
+    if (this->objectID.IsDirty()) {
         this->objectID.ResetDirty();
         return true;
     } else {
@@ -205,14 +200,13 @@ bool OSPRayTriangleMesh::InterfaceIsDirty() {
 }
 
 
+bool OSPRayTriangleMesh::getExtends(megamol::core::Call& call) {
+    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
+    megamol::geocalls::CallTriMeshData* cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
 
-bool OSPRayTriangleMesh::getExtends(megamol::core::Call &call) {
-    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::geocalls::CallTriMeshData *cd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
-    
     if (cd == NULL) return false;
     if (os->getTime() > cd->FrameCount()) {
-        cd->SetFrameID(cd->FrameCount() - 1, true);  // isTimeForced flag set to true
+        cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }

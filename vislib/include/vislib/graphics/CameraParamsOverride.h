@@ -65,7 +65,7 @@ namespace graphics {
          * limits, the parameter values may be clipped to valid values or the
          * new values will not be set.
          */
-        virtual void ApplyLimits(void);
+        virtual void ApplyLimits(bool autoFocus = true);
 
         /**
          * Answers the auto focus offset
@@ -299,7 +299,7 @@ namespace graphics {
          *
          * @param limits The new limits object.
          */
-        virtual void SetLimits(const SmartPtr<CameraParameterLimits>& limits);
+        virtual void SetLimits(const SmartPtr<CameraParameterLimits>& limits, bool autoFocus = true);
 
         /**
          * Sets the look-at-point of the camera in world coordinates.

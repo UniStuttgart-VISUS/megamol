@@ -137,12 +137,40 @@ typedef enum _mmcInitValueEnum : int {
     MMC_INITVAL_CFGOVERRIDE // a config value to override from the command line
 } mmcInitValue;
 
-/** Possible input modifier values */
-typedef enum _mmcInputModifierEnum : int {
-    MMC_INMOD_SHIFT,
-    MMC_INMOD_CTRL,
-    MMC_INMOD_ALT
-} mmcInputModifier;
+/**
+ * Possible input modifier values.
+ *
+ * See megamol::core::view::Modifiers
+ */
+typedef int mmcInputModifiers;
+
+/**
+ * Possible input key codes.
+ *
+ * See megamol::core::view::Key
+ */
+typedef int mmcInputKey;
+
+/**
+ * Possible input key states.
+ *
+ * See megamol::core::view::KeyAction
+ */
+typedef int mmcInputKeyAction;
+
+/**
+ * Possible input mouse buttons.
+ *
+ * See megamol::core::view::MouseButton
+ */
+typedef int mmcInputButton;
+
+/**
+ * Possible input mouse action states.
+ *
+ * See megamol::core::view::MouseButtonAction
+ */
+typedef int mmcInputButtonAction;
 
 /** User context for mmcRenderView function. */
 typedef struct _mmcRenderViewContext {
@@ -580,34 +608,65 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
     unsigned int width, unsigned int height);
 
 /**
- * Sets the state of an input modifier.
+ * Emits a key event.
  *
  * @param hView The view instance handle.
- * @param mod The input modifier.
- * @param down The new state of the input modifier.
+ * @param key The key code.
+ * @param act The key action.
+ * @param mods The input modifiers.
+ *
+ * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
-    mmcInputModifier mod, bool down);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
+	mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods);
 
 /**
- * Sets the state of a button of the 2d mouse.
+ * Emits a character event.
+ *
+ * @param hView The view instance handle.
+ * @param cp The unicode code point.
+ *
+ * @return True if the event was consumed, otherwise false.
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void* hView, 
+	unsigned int cp);
+
+/**
+ * Emits a mouse button event.
  *
  * @param hView The view instance handle.
  * @param btn The mouse button.
- * @param down The new state of the mouse button.
+ * @param act The mouse button action.
+ * @param mods The input modifiers.
+ *
+ * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMouseButton(void *hView,
-    unsigned int btn, bool down);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
+    mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods);
 
 /**
- * Sets the state of a button of the 2d mouse.
+ * Emits a mouse move event.
  *
  * @param hView The view instance handle.
  * @param x The x coordinate of the mouse.
  * @param y The y coordinate of the mouse.
+ *
+ * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMousePosition(void *hView,
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
     float x, float y);
+
+/**
+ * Sets the state of a button of the 2d mouse.
+ *
+ * @param hView The view instance handle.
+ * @param dx The x coordinate offset of the mouse.
+ * @param dy The y coordinate offset of the mouse.
+ *
+ * @return True if the event was consumed, otherwise false.
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
+    float dx, float dy);
 
 /**
  * Answers the desired window position configuration of this view.
