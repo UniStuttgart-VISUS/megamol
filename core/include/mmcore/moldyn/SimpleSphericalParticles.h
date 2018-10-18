@@ -4,87 +4,17 @@
 #include <type_traits>
 
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/moldyn/Accessor.h"
 
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
 
+
 namespace megamol {
 namespace core {
 namespace moldyn {
-
-
-template <class T> T const* access(char const* ptr, size_t idx, size_t stride) {
-    return reinterpret_cast<T const*>(ptr + idx * stride);
-}
-
-
-class Accessor {
-public:
-    virtual float Get_f(size_t idx) const = 0;
-    virtual double Get_d(size_t idx) const = 0;
-    virtual uint64_t Get_u64(size_t idx) const = 0;
-    virtual unsigned int Get_u32(size_t idx) const = 0;
-    virtual unsigned short Get_u16(size_t idx) const = 0;
-    virtual unsigned char Get_u8(size_t idx) const = 0;
-    virtual ~Accessor() = default;
-};
-
-
-template<class T> class Accessor_Impl : public Accessor {
-public:
-    Accessor_Impl(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
-
-    template <class R> std::enable_if_t<std::is_same_v<T, R>, R> Get(size_t const idx) const {
-        return *access<T>(ptr_, idx, stride_);
-    }
-
-    template <class R> std::enable_if_t<!std::is_same_v<T, R>, R> Get(size_t const idx) const {
-        return static_cast<R>(Get<T>(idx));
-    }
-
-    float Get_f(size_t idx) const override { return Get<float>(idx); }
-
-    double Get_d(size_t idx) const override { return Get<double>(idx); }
-
-    uint64_t Get_u64(size_t idx) const override { return Get<uint64_t>(idx); }
-
-    unsigned int Get_u32(size_t idx) const override { return Get<unsigned int>(idx); }
-
-    unsigned short Get_u16(size_t idx) const override { return Get<unsigned short>(idx); }
-
-    unsigned char Get_u8(size_t idx) const override { return Get<unsigned char>(idx); }
-
-    virtual ~Accessor_Impl() = default;
-
-private:
-    char const* ptr_;
-    size_t stride_;
-};
-
-
-class Accessor_0 : public Accessor {
-public:
-    Accessor_0() = default;
-
-    float Get_f(size_t idx) const override { return static_cast<float>(0); }
-
-    double Get_d(size_t idx) const override { return static_cast<double>(0); }
-
-    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(0); }
-
-    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(0); }
-
-    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(0); }
-
-    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(0); }
-
-    virtual ~Accessor_0() = default;
-
-private:
-};
-
 
 /**
  * Class holding all data of a single particle type
@@ -95,9 +25,29 @@ private:
  */
 class MEGAMOLCORE_API SimpleSphericalParticles {
 public:
-    enum VertexDataType;
-    enum ColourDataType;
-    enum IDDataType;
+    /** possible values for the vertex data */
+    enum VertexDataType {
+        VERTDATA_NONE = 0,      //< indicates that this object is void
+        VERTDATA_FLOAT_XYZ = 1, //< use global radius
+        VERTDATA_FLOAT_XYZR = 2,
+        VERTDATA_SHORT_XYZ = 3, //< quantized positions and global radius
+        VERTDATA_DOUBLE_XYZ = 4
+    };
+
+    /** possible values for the colour data */
+    enum ColourDataType {
+        COLDATA_NONE = 0, //< use global colour
+        COLDATA_UINT8_RGB = 1,
+        COLDATA_UINT8_RGBA = 2,
+        COLDATA_FLOAT_RGB = 3,
+        COLDATA_FLOAT_RGBA = 4,
+        COLDATA_FLOAT_I = 5, //< single float value to be mapped by a transfer function
+        COLDATA_USHORT_RGBA = 6,
+        COLDATA_DOUBLE_I = 7
+    };
+
+    /** possible values for the id data */
+    enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
 
     class ParticleStore {
     public:
@@ -700,30 +650,6 @@ public:
         void const* colPtr;
         void const* idPtr;*/
     };
-
-    /** possible values for the vertex data */
-    enum VertexDataType {
-        VERTDATA_NONE = 0,      //< indicates that this object is void
-        VERTDATA_FLOAT_XYZ = 1, //< use global radius
-        VERTDATA_FLOAT_XYZR = 2,
-        VERTDATA_SHORT_XYZ = 3, //< quantized positions and global radius
-        VERTDATA_DOUBLE_XYZ = 4
-    };
-
-    /** possible values for the colour data */
-    enum ColourDataType {
-        COLDATA_NONE = 0, //< use global colour
-        COLDATA_UINT8_RGB = 1,
-        COLDATA_UINT8_RGBA = 2,
-        COLDATA_FLOAT_RGB = 3,
-        COLDATA_FLOAT_RGBA = 4,
-        COLDATA_FLOAT_I = 5, //< single float value to be mapped by a transfer function
-        COLDATA_USHORT_RGBA = 6,
-        COLDATA_DOUBLE_I = 7
-    };
-
-    /** possible values for the id data */
-    enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
 
     /** possible values of accumulated data sizes over all vertex coordinates */
     static unsigned int VertexDataSize[5];
