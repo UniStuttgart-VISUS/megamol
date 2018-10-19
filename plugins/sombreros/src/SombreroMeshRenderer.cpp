@@ -365,6 +365,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
         if (flagsc->has_data()) {
             const auto& fl = flagsc->GetFlags();
+            this->flagSet.clear();
             this->flagSet.insert(fl.begin(), fl.end());
         }
     }
