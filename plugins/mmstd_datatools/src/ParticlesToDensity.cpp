@@ -187,7 +187,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.MinValues[0] = this->minDens;
     metadata.MaxValues = new double[1];
     metadata.MaxValues[0] = this->maxDens;
-    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceClipBox();
+    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
     metadata.Extents[0] = bbox.Width();
     metadata.Extents[1] = bbox.Height();
     metadata.Extents[2] = bbox.Depth();
