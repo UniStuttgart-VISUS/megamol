@@ -1310,14 +1310,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 auto type = static_cast<uint8_t>(element.voxelDType);
 
                 ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
-                float fixedSpacing[3];
-                for (auto x = 0; x < 3; ++x) {
-                    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
-                }
+                //float fixedSpacing[3];
+                //for (auto x = 0; x < 3; ++x) {
+                //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                //}
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", fixedSpacing);
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
                 ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
 
                 ospSet1b(vol.back(), "singleShade", element.useMIP);
