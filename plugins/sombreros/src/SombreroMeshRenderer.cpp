@@ -184,30 +184,29 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
     auto camPos = this->lastCamState.camPos;
 
     if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) || (flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN)) {
-
         std::tuple<float, unsigned int, unsigned int, unsigned int> mark = std::make_tuple(FLT_MAX, 0, 0, 0);
         bool found = false;
-        for (auto& tri : this->triangles) {
-            vislib::math::Vector<float, 3> p1 = this->vertexPositions[tri.GetX()];
-            vislib::math::Vector<float, 3> p2 = this->vertexPositions[tri.GetY()];
-            vislib::math::Vector<float, 3> p3 = this->vertexPositions[tri.GetZ()];
-            float dist = 0.0f;
-            bool isect = this->rayTriIntersect(camPos, pixelDir, p1, p2, p3, dist);
-            found |= isect;
-            if (isect && dist < std::get<0>(mark)) {
-                mark = std::make_tuple(
-                    dist, this->indexAttrib[tri.GetX()], this->indexAttrib[tri.GetY()], this->indexAttrib[tri.GetZ()]);
+        for (size_t o = 0; o < this->triangles.size(); o++) {
+            for (auto& tri : this->triangles[o]) {
+                vislib::math::Vector<float, 3> p1 = this->vertexPositions[o][tri.GetX()];
+                vislib::math::Vector<float, 3> p2 = this->vertexPositions[o][tri.GetY()];
+                vislib::math::Vector<float, 3> p3 = this->vertexPositions[o][tri.GetZ()];
+                float dist = 0.0f;
+                bool isect = this->rayTriIntersect(camPos, pixelDir, p1, p2, p3, dist);
+                found |= isect;
+                if (isect && dist < std::get<0>(mark)) {
+                    mark = std::make_tuple(dist, this->indexAttrib[o][tri.GetX()], this->indexAttrib[o][tri.GetY()],
+                        this->indexAttrib[o][tri.GetZ()]);
+                }
             }
         }
 
+        // this stuff kinda rapes the flag storage because we use arbitrary flags.
+        // but hey, it works ;-)
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
         if (flagsc->has_data()) {
             const auto& fl = flagsc->GetFlags();
-            for (size_t j = 0; j < fl.size(); j++) {
-                if (fl[j] == infovis::FlagStorage::SELECTED) {
-                    this->flagSet.insert(j);
-                }
-            }
+            this->flagSet.insert(fl.cbegin(), fl.cend());
         }
 
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
@@ -225,10 +224,8 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
         }
         std::shared_ptr<infovis::FlagStorage::FlagVectorType> v;
         v = std::make_shared<infovis::FlagStorage::FlagVectorType>();
-        v->assign(this->vertexPositions.size(), infovis::FlagStorage::ENABLED);
-        for (const auto& smem : this->flagSet) {
-            v->operator[](smem) = infovis::FlagStorage::SELECTED;
-        }
+        v->resize(this->flagSet.size());
+        v->assign(this->flagSet.begin(), this->flagSet.end());
 
         flagsc->SetFlags(v);
         (*flagsc)(infovis::FlagCall::CallForSetFlags);
@@ -317,13 +314,13 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
 /*
  * SombreroMeshRenderer::overrideColors
  */
-void SombreroMeshRenderer::overrideColors(const vislib::math::Vector<float, 3>& color) {
+void SombreroMeshRenderer::overrideColors(const int meshIdx, const vislib::math::Vector<float, 3>& color) {
     if (this->flagSet.empty()) return;
-    for (size_t i = 0; i < this->indexAttrib.size(); i++) {
-        if (this->flagSet.count(this->indexAttrib[i]) > 0) {
-            this->newColors[3 * i + 0] = color[0];
-            this->newColors[3 * i + 1] = color[1];
-            this->newColors[3 * i + 2] = color[2];
+    for (size_t i = 0; i < this->indexAttrib[meshIdx].size(); i++) {
+        if (this->flagSet.count(this->indexAttrib[meshIdx][i]) > 0) {
+            this->newColors[meshIdx][3 * i + 0] = color[0];
+            this->newColors[meshIdx][3 * i + 1] = color[1];
+            this->newColors[meshIdx][3 * i + 2] = color[2];
         }
     }
 }
@@ -368,11 +365,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
         if (flagsc->has_data()) {
             const auto& fl = flagsc->GetFlags();
-            for (size_t j = 0; j < fl.size(); j++) {
-                if (fl[j] == infovis::FlagStorage::SELECTED) {
-                    this->flagSet.insert(j);
-                }
-            }
+            this->flagSet.insert(fl.begin(), fl.end());
         }
     }
 
@@ -638,25 +631,32 @@ bool SombreroMeshRenderer::Render(Call& call) {
         linevec.push_back(p.second);
     }
 
+    if (this->vertexPositions.size() != ctmd->Count()) {
+        this->vertexPositions.resize(ctmd->Count());
+        this->triangles.resize(ctmd->Count());
+        this->indexAttrib.resize(ctmd->Count());
+        this->newColors.resize(ctmd->Count());
+    }
+
     for (unsigned int i = 0; i < ctmd->Count(); i++) {
         const megamol::geocalls::CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
         switch (obj.GetVertexDataType()) {
         case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
-            if (datadirty && i == 0) {
-                this->vertexPositions.resize(obj.GetVertexCount());
+            if (datadirty) {
+                this->vertexPositions[i].resize(obj.GetVertexCount());
                 for (size_t j = 0; j < obj.GetVertexCount(); j++) {
-                    this->vertexPositions[j] = vislib::math::Vector<float, 3>(&obj.GetVertexPointerFloat()[3 * j]);
+                    this->vertexPositions[i][j] = vislib::math::Vector<float, 3>(&obj.GetVertexPointerFloat()[3 * j]);
                 }
             }
             break;
         case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
-            if (datadirty && i == 0) {
-                this->vertexPositions.resize(obj.GetVertexCount());
+            if (datadirty) {
+                this->vertexPositions[i].resize(obj.GetVertexCount());
                 for (size_t j = 0; j < obj.GetVertexCount(); j++) {
-                    this->vertexPositions[j] =
+                    this->vertexPositions[i][j] =
                         vislib::math::Vector<float, 3>(static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 0]),
                             static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 1]),
                             static_cast<float>(obj.GetVertexPointerDouble()[3 * j + 2]));
@@ -694,45 +694,45 @@ bool SombreroMeshRenderer::Render(Call& call) {
             }
             switch (obj.GetColourDataType()) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                if (i == 0 && !this->flagSet.empty()) {
-                    this->newColors.resize(this->vertexPositions.size() * 3);
-                    for (size_t j = 0; j < this->newColors.size(); j++) {
-                        this->newColors[j] = static_cast<float>(obj.GetColourPointerByte()[j]) / 255.0f;
+                if (!this->flagSet.empty()) {
+                    this->newColors[i].resize(this->vertexPositions[i].size() * 3);
+                    for (size_t j = 0; j < this->newColors[i].size(); j++) {
+                        this->newColors[i][j] = static_cast<float>(obj.GetColourPointerByte()[j]) / 255.0f;
                     }
                 }
-                overrideColors(brushCol);
+                overrideColors(i, brushCol);
                 if (flagSet.empty()) {
                     ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
                 } else {
-                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors[i].data());
                 }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                if (i == 0 && !this->flagSet.empty()) {
-                    this->newColors.resize(this->vertexPositions.size() * 3);
-                    for (size_t j = 0; j < this->newColors.size(); j++) {
-                        this->newColors[j] = obj.GetColourPointerFloat()[j];
+                if (!this->flagSet.empty()) {
+                    this->newColors[i].resize(this->vertexPositions[i].size() * 3);
+                    for (size_t j = 0; j < this->newColors[i].size(); j++) {
+                        this->newColors[i][j] = obj.GetColourPointerFloat()[j];
                     }
                 }
-                overrideColors(brushCol);
+                overrideColors(i, brushCol);
                 if (flagSet.empty()) {
                     ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
                 } else {
-                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors[i].data());
                 }
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                if (i == 0 && !this->flagSet.empty()) {
-                    this->newColors.resize(this->vertexPositions.size() * 3);
-                    for (size_t j = 0; j < this->newColors.size(); j++) {
-                        this->newColors[j] = static_cast<float>(obj.GetColourPointerDouble()[j]);
+                if (!this->flagSet.empty()) {
+                    this->newColors[i].resize(this->vertexPositions[i].size() * 3);
+                    for (size_t j = 0; j < this->newColors[i].size(); j++) {
+                        this->newColors[i][j] = static_cast<float>(obj.GetColourPointerDouble()[j]);
                     }
                 }
-                overrideColors(brushCol);
+                overrideColors(i, brushCol);
                 if (flagSet.empty()) {
                     ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
                 } else {
-                    ::glColorPointer(3, GL_FLOAT, 0, newColors.data());
+                    ::glColorPointer(3, GL_FLOAT, 0, newColors[i].data());
                 }
 
                 break;
@@ -811,10 +811,10 @@ bool SombreroMeshRenderer::Render(Call& call) {
             switch (obj.GetTriDataType()) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
                 ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
-                if (datadirty && i == 0) {
-                    this->triangles.resize(obj.GetTriCount());
+                if (datadirty) {
+                    this->triangles[i].resize(obj.GetTriCount());
                     for (size_t j = 0; j < obj.GetTriCount(); j++) {
-                        this->triangles[j] = vislib::math::Vector<unsigned int, 3>(
+                        this->triangles[i][j] = vislib::math::Vector<unsigned int, 3>(
                             static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 0]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 1]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerByte()[3 * j + 2]));
@@ -824,10 +824,10 @@ bool SombreroMeshRenderer::Render(Call& call) {
             case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
                 ::glDrawElements(
                     GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
-                if (datadirty && i == 0) {
-                    this->triangles.resize(obj.GetTriCount());
+                if (datadirty) {
+                    this->triangles[i].resize(obj.GetTriCount());
                     for (size_t j = 0; j < obj.GetTriCount(); j++) {
-                        this->triangles[j] = vislib::math::Vector<unsigned int, 3>(
+                        this->triangles[i][j] = vislib::math::Vector<unsigned int, 3>(
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 0]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 1]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt16()[3 * j + 2]));
@@ -836,10 +836,10 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 break;
             case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
                 ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
-                if (datadirty && i == 0) {
-                    this->triangles.resize(obj.GetTriCount());
+                if (datadirty) {
+                    this->triangles[i].resize(obj.GetTriCount());
                     for (size_t j = 0; j < obj.GetTriCount(); j++) {
-                        this->triangles[j] = vislib::math::Vector<unsigned int, 3>(
+                        this->triangles[i][j] = vislib::math::Vector<unsigned int, 3>(
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 0]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 1]),
                             static_cast<unsigned int>(obj.GetTriIndexPointerUInt32()[3 * j + 2]));
@@ -857,13 +857,13 @@ bool SombreroMeshRenderer::Render(Call& call) {
             ::glColor3f(r, g, b);
         }
 
-        if (datadirty && i == 0 && obj.GetVertexAttribCount() > 0 &&
+        if (datadirty && obj.GetVertexAttribCount() > 0 &&
             obj.GetVertexAttribDataType(0) == megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32) {
             auto dt = obj.GetVertexAttribDataType(0);
-            this->indexAttrib.resize(obj.GetVertexCount());
+            this->indexAttrib[i].resize(obj.GetVertexCount());
             auto ptr = obj.GetVertexAttribPointerUInt32(0);
             for (size_t j = 0; j < obj.GetVertexCount(); j++) {
-                this->indexAttrib[j] = ptr[j];
+                this->indexAttrib[i][j] = ptr[j];
             }
         }
     }
@@ -959,8 +959,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
     this->lastCamState.camRight =
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0));
-    //this->lastCamState.camUp = this->lastCamState.camDir.Cross(this->lastCamState.camRight);
-    //this->lastCamState.camRight = this->lastCamState.camDir.Cross(this->lastCamState.camUp);
+    // this->lastCamState.camUp = this->lastCamState.camDir.Cross(this->lastCamState.camRight);
+    // this->lastCamState.camRight = this->lastCamState.camDir.Cross(this->lastCamState.camUp);
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();
@@ -983,7 +983,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());*/
     /*vislib::sys::Log::DefaultLog.WriteInfo(
         "right: %f %f %f", lastCamState.camRight.GetX(), lastCamState.camRight.GetY(), lastCamState.camRight.GetZ());*/
-    //vislib::sys::Log::DefaultLog.WriteInfo("%f", this->lastCamState.camRight.Dot(this->lastCamState.camDir));
+    // vislib::sys::Log::DefaultLog.WriteInfo("%f", this->lastCamState.camRight.Dot(this->lastCamState.camDir));
 
     // vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");
 

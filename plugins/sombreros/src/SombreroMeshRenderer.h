@@ -141,7 +141,7 @@ private:
     /**
      * Overrides the selected colors
      */
-    void overrideColors(const vislib::math::Vector<float, 3>& color);
+    void overrideColors(const int meshIdx, const vislib::math::Vector<float, 3>& color);
 
     /** The slot to fetch the data */
     core::CallerSlot getDataSlot;
@@ -182,15 +182,15 @@ private:
     /** The last time value asked by the render routine */
     float lastTime;
 
-    std::vector<vislib::math::Vector<float, 3>> vertexPositions;
+    std::vector<std::vector<vislib::math::Vector<float, 3>>> vertexPositions;
 
-    std::vector<vislib::math::Vector<unsigned int, 3>> triangles;
+    std::vector<std::vector<vislib::math::Vector<unsigned int, 3>>> triangles;
 
-    std::vector<unsigned int> indexAttrib;
+    std::vector<std::vector<unsigned int>> indexAttrib;
 
     std::set<unsigned int> flagSet;
 
-    std::vector<float> newColors;
+    std::vector<std::vector<float>> newColors;
 
     bool changedFlags;
 
