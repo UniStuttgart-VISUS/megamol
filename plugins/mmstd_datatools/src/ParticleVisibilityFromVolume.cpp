@@ -10,6 +10,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include <algorithm>
+#include <chrono>
+#include <omp.h>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -140,6 +142,9 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         getFun = &VolumetricDataCall::GetRelativeVoxelValue;
     }
 
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume: starting filtering");
+    const auto startTime = std::chrono::high_resolution_clock::now();
+
     unsigned int plc = inData.GetParticleListCount();
     this->theVertexData.resize(plc);
     this->theColorData.resize(plc);
@@ -181,8 +186,11 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             theColorData[i].resize(cnt * cdsize);
         }
 
+#ifdef _OPENMP
+        const auto numThreads = omp_get_num_threads();
+#endif
         // todo: is this OK?
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (INT64 j = 0; j < cnt; ++j) {
             const auto x = p[j].vert.GetXf();
             const auto y = p[j].vert.GetYf();
@@ -250,12 +258,18 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             }
 
             if (isOK) {
+#ifdef _OPENMP
+                const UINT64 localIdx = cntLeft + omp_get_thread_num();
+#else
+                const UINT64 localIdx = cntLeft;
+#endif
                 if (isInterleaved) {
-                    memcpy(theVertexData[i].data() + vdstride * cntLeft, commonBasePointer + vdstride * j, vdstride);
+                    memcpy(theVertexData[i].data() + vdstride * localIdx, commonBasePointer + vdstride * j, vdstride);
                 } else {
-                    memcpy(theVertexData[i].data() + vdsize * cntLeft, vertexBasePointer + vdstride * j, vdsize);
-                    memcpy(theColorData[i].data() + cdsize * cntLeft, colorBasePointer + cdstride * j, cdsize);
+                    memcpy(theVertexData[i].data() + vdsize * localIdx, vertexBasePointer + vdstride * j, vdsize);
+                    memcpy(theColorData[i].data() + cdsize * localIdx, colorBasePointer + cdstride * j, cdsize);
                 }
+                #pragma omp atomic
                 cntLeft++;
             }
         }
@@ -287,7 +301,13 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             outp.SetVertexData(vdt, theVertexData[i].data(), vdsize);
             outp.SetColourData(cdt, theColorData[i].data(), cdsize);
         }
+
     }
+
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume took %f ms.", diffMillis.count());
+
 
     if (volumeIsNotBBoxAligned) {
         vislib::sys::Log::DefaultLog.WriteWarn(

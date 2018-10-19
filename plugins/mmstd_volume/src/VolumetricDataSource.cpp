@@ -373,16 +373,16 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(core::p
             switch (this->fileInfo->gridType) {
             case DatRawGridType::DR_GRID_CARTESIAN:
                 this->metadata.Extents[d] =
-                    this->fileInfo->sliceDist[d] * static_cast<float>(this->fileInfo->resolution[d]);
+                    this->fileInfo->sliceDist[d] * static_cast<float>(this->fileInfo->resolution[d] - 1);
                 break;
 
             case DatRawGridType::DR_GRID_RECTILINEAR:
                 if (this->metadata.IsUniform[d]) {
                     this->metadata.Extents[d] =
-                        this->fileInfo->sliceDist[d] * static_cast<float>(this->fileInfo->resolution[d]);
+                        this->fileInfo->sliceDist[d] * static_cast<float>(this->fileInfo->resolution[d] - 1);
                 } else {
                     int r = this->fileInfo->resolution[d];
-                    this->metadata.Extents[d] = this->fileInfo->sliceDist[r - 1] * static_cast<float>(r);
+                    this->metadata.Extents[d] = this->fileInfo->sliceDist[r - 1] * static_cast<float>(r - 1);
                 }
 
             case DatRawGridType::DR_GRID_NONE:
