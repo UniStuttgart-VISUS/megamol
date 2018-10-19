@@ -48,16 +48,8 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   endif()
 
   # Install binaries and libraries
-  if(BITS EQUAL 64)
-    set(arch_dir "amd64")
-  else()
-    set(arch_dir "i386")
-  endif()
   install(CODE " \
-    file(INSTALL ${CMAKE_CURRENT_BINARY_DIR}/bin \
+    file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/bin\" \
       DESTINATION ${CMAKE_INSTALL_PREFIX} \
-	  FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")\n \
-    file(INSTALL ${CMAKE_CURRENT_BINARY_DIR}/bin/${arch_dir} \
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/${arch_dir} \
-	  FILES_MATCHING REGEX \"\\.(dll)$\")")
+	  FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")")
 endif()
