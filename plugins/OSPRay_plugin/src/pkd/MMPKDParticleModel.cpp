@@ -83,10 +83,10 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
 
             double color = 0.0;
             auto const ptr = reinterpret_cast<unsigned short*>(&color);
-            ptr[0] = static_cast<unsigned short>(col.x) * 257;
-            ptr[1] = static_cast<unsigned short>(col.y) * 257;
-            ptr[2] = static_cast<unsigned short>(col.z) * 257;
-            ptr[3] = static_cast<unsigned short>(col.w) * 257;
+            ptr[0] = static_cast<unsigned short>(col.x);// * 257;
+            ptr[1] = static_cast<unsigned short>(col.y);// * 257;
+            ptr[2] = static_cast<unsigned short>(col.z);// * 257;
+            ptr[3] = static_cast<unsigned short>(col.w);// * 257;
 
             this->positiond.emplace_back(pos, color);
         }

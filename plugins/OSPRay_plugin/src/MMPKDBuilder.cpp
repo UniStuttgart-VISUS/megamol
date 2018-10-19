@@ -9,7 +9,6 @@
 using namespace megamol;
 
 
-
 ospray::MMPKDBuilder::MMPKDBuilder()
     : megamol::stdplugin::datatools::AbstractParticleManipulator("outData", "inData")
     , inDataHash(0)
@@ -19,7 +18,9 @@ ospray::MMPKDBuilder::MMPKDBuilder()
     model = std::make_shared<MMPKDParticleModel>();
 }
 
+
 ospray::MMPKDBuilder::~MMPKDBuilder() { Release(); }
+
 
 bool ospray::MMPKDBuilder::manipulateData(
     core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
@@ -40,7 +41,7 @@ bool ospray::MMPKDBuilder::manipulateData(
         auto& out = outData.AccessParticles(i);
 
         //// empty the model
-        //if (this->model->IsDoublePrecision()) {
+        // if (this->model->IsDoublePrecision()) {
         //    this->model->positiond.clear();
         //} else {
         //    this->model->positionf.clear();
@@ -54,14 +55,17 @@ bool ospray::MMPKDBuilder::manipulateData(
         if (this->model->IsDoublePrecision()) {
             out.SetVertexData(
                 megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, &this->model->positiond[0].x, 32);
-            out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA, &this->model->positiond[0].w, 32);
+            out.SetColourData(
+                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA, &this->model->positiond[0].w, 32);
         } else {
             out.SetVertexData(
                 megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &this->model->positionf[0].x, 16);
-            out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &this->model->positionf[0].w, 16);
+            out.SetColourData(
+                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &this->model->positionf[0].w, 16);
         }
         auto const lbbox = this->model->GetLocalBBox();
-        out.SetBBox(vislib::math::Cuboid<float>(lbbox.lower.x, lbbox.lower.y, lbbox.lower.z, lbbox.upper.x, lbbox.upper.y, lbbox.upper.z));
+        out.SetBBox(vislib::math::Cuboid<float>(
+            lbbox.lower.x, lbbox.lower.y, lbbox.lower.z, lbbox.upper.x, lbbox.upper.y, lbbox.upper.z));
     }
 
     return true;
@@ -79,6 +83,7 @@ void ospray::MMPKDBuilder::setDim(size_t ID, int dim) const {
         pxAsInt = (pxAsInt & ~3) | dim;
     }
 }
+
 
 inline size_t ospray::MMPKDBuilder::maxDim(const ospcommon::vec3f& v) const {
     const float maxVal = ospcommon::reduce_max(v);
@@ -239,4 +244,3 @@ void ospray::MMPKDBuilder::buildRec(const size_t nodeID, const ospcommon::box3f&
         buildRec(rightChildOf(nodeID), rBounds, depth + 1);
     }
 }
-
