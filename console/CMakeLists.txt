@@ -56,12 +56,12 @@ if(BUILD_CONSOLE)
         -DBUILD_SHARED_LIBS=OFF
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF
-        -DCMAKE_BUILD_TYPE=Release)
+        -DGLFW_BUILD_DOCS=OFF)
     add_external_library(glfw STATIC
       DEPENDS glfw_ext
       INCLUDE_DIR "include"
-      LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      INTERFACE_LIBRARIES "${CMAKE_DL_LIBS}")
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
   
@@ -81,7 +81,7 @@ if(BUILD_CONSOLE)
   endif()
   
   target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
+	  ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)

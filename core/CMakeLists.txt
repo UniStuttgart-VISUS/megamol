@@ -101,7 +101,8 @@ if(BUILD_CORE)
     CMAKE_ARGS
       -DPNG_SHARED=OFF
       -DPNG_TESTS=OFF
-      -DCMAKE_PREFIX_PATH=${INSTALL_DIR})
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+      -DCMAKE_PREFIX_PATH:PATH=${INSTALL_DIR})
   add_external_library(libpng STATIC
     DEPENDS libpng_ext
     INCLUDE_DIR "include"
@@ -172,7 +173,7 @@ if(BUILD_CORE)
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
-    PRIVATE lua libzmq libcppzmq ${CMAKE_THREAD_LIBS_INIT})
+    PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
