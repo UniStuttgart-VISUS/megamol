@@ -200,10 +200,6 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
             }
         }
 
-        if (found) {
-            vislib::sys::Log::DefaultLog.WriteWarn("Hit");
-        }
-
         (*flagsc)(infovis::FlagCall::CallForGetFlags);
         if (flagsc->has_data()) {
             const auto& fl = flagsc->GetFlags();
@@ -258,8 +254,8 @@ bool SombreroMeshRenderer::rayTriIntersect(const vislib::math::Vector<float, 3>&
     const auto& q = dir.Cross(e_2);
     const float a = e_1.Dot(q);
 
-    // back facing or parallel?
-    if ((n.Dot(dir) >= 0.0f) || std::abs(a) <= 0.000001f) {
+    // parallel?
+    if (std::abs(a) <= 0.000001f) {
         return false;
     }
 
@@ -307,8 +303,8 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
     auto oR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
     auto uR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
 
-    auto targetL = (1.0f - v) * uL + v * oL;
-    auto targetR = (1.0f - v) * uR + v * oR;
+    auto targetL = v * uL + (1.0f - v) * oL;
+    auto targetR = v * uR + (1.0f - v) * oR;
 
     auto target = (1.0f - u) * targetL + u * targetR;
 
