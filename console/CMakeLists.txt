@@ -22,8 +22,7 @@ if(BUILD_CONSOLE)
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE
-    ${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR}
-    "src" "include")
+    ${LIBUNWIND_INCLUDE_DIR} "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
   if(UNIX)
@@ -40,6 +39,8 @@ if(BUILD_CONSOLE)
     endif()
     if(USE_EGL)
       find_package(EGL REQUIRED)
+      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
     endif()
   endif()
 
@@ -47,20 +48,21 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
 
-  if(NOT USE_EGL)
-    option(USE_INTERNAL_GLFW "use internal GLFW" ON)
-    if(USE_INTERNAL_GLFW)
-      add_subdirectory(glfw)
-      set(GLFW3_LIBRARIES glfw)
-    else()
-      find_package(glfw3 3.2 MODULE)
-      if(NOT GLFW3_FOUND)
-        find_package(glfw3 3.2 CONFIG REQUIRED)
-        set(GLFW3_LIBRARIES glfw)
-        # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
-        set(GLFW3_INCLUDE_DIRS "")
-      endif()
-    endif()
+  if(NOT USE_EGL)  
+    add_external_project(glfw_ext
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG "3.2.1"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=OFF
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF
+        -DCMAKE_BUILD_TYPE=Release)
+    add_external_library(glfw STATIC
+      DEPENDS glfw_ext
+      INCLUDE_DIR "include"
+      LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
   
   # AntTweakBar
@@ -79,7 +81,7 @@ if(BUILD_CONSOLE)
   endif()
   
   target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
+    ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
