@@ -118,7 +118,7 @@ bool RaycastVolumeRenderer::create()
 
 	// create empty transfer function texture
 	TextureLayout tf(
-		GL_RGBA,
+		GL_RGBA8,
 		1,
 		1,
 		1,
