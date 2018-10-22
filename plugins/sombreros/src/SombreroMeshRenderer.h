@@ -16,6 +16,7 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
+#include "mmcore/utility/SDFFont.h"
 
 #include <set>
 
@@ -178,6 +179,12 @@ private:
 
     /** Slot to activate the display of the sweatband */
     core::param::ParamSlot showSweatBandSlot;
+
+    /** Slot controlling the annotation of radii */
+    core::param::ParamSlot showRadiiSlot;
+
+    /** The font used to render text */
+    core::utility::SDFFont theFont;
 
     /** The last time value asked by the render routine */
     float lastTime;

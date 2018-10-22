@@ -29,6 +29,8 @@
 #include <iterator>
 #include <set>
 #include <tuple>
+#include <climits>
+#include <array>
 
 using namespace megamol;
 using namespace megamol::sombreros;
@@ -52,7 +54,9 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     , colorSlot("color", "The triangle color (if not colors are read from file)")
     , brushColorSlot("brushColor", "The color for the brushing")
     , doScaleSlot("doScale", "Do Scaling of model data")
-    , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line") {
+    , showRadiiSlot("showRadii", "Enable the textual annotation of the radii")
+    , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line") 
+    , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS) {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -62,6 +66,9 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
+
+    this->showRadiiSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->showRadiiSlot);
 
     this->lighting.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->lighting);
@@ -370,7 +377,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         }
     }
 
-    // auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
     // printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
 
     bool normals = false;
@@ -471,13 +478,14 @@ bool SombreroMeshRenderer::Render(Call& call) {
 
     // construct the lines for the sweatband
     std::vector<std::pair<uint, uint>> lines;
-    if (ctmd->Count() >= 2 && this->showSweatBandSlot.Param<param::BoolParam>()->Value()) {
+    if (ctmd->Count() >= 2) {
         std::set<uint> firstset, secondset;
         const megamol::geocalls::CallTriMeshData::Mesh& obj0 = ctmd->Objects()[0];
         const megamol::geocalls::CallTriMeshData::Mesh& obj1 = ctmd->Objects()[1];
 
         switch (obj0.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+        {
             auto ptrb = obj0.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -486,7 +494,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 firstset.insert(static_cast<uint>(ptrb[j * 3 + 2]));
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
+        {
             auto ptr16 = obj0.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -495,7 +504,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 firstset.insert(static_cast<uint>(ptr16[j * 3 + 2]));
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
+        {
             auto ptr32 = obj0.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -509,7 +519,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         }
 
         switch (obj1.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+        {
             auto ptrb = obj1.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -518,7 +529,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 secondset.insert(static_cast<uint>(ptrb[j * 3 + 2]));
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
+        {
             auto ptr16 = obj1.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -527,7 +539,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 secondset.insert(static_cast<uint>(ptr16[j * 3 + 2]));
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
+        {
             auto ptr32 = obj1.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj1.GetTriCount(); j++) {
@@ -546,7 +559,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         std::set<uint> resset(resvec.begin(), resvec.end());
 
         switch (obj0.GetTriDataType()) {
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+        {
             auto ptrb = obj0.GetTriIndexPointerByte();
             if (ptrb == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -571,7 +585,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 }
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
+        {
             auto ptr16 = obj0.GetTriIndexPointerUInt16();
             if (ptr16 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -596,7 +611,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
                 }
             }
         } break;
-        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32: {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
+        {
             auto ptr32 = obj0.GetTriIndexPointerUInt32();
             if (ptr32 == nullptr) break;
             for (size_t j = 0; j < obj0.GetTriCount(); j++) {
@@ -933,6 +949,60 @@ bool SombreroMeshRenderer::Render(Call& call) {
         ::glEnable(GL_DEPTH_TEST);
     }
 
+    auto bbCenter = bb.CalcCenter();
+
+    if (this->showRadiiSlot.Param<param::BoolParam>()->Value()) {
+        // find closest line vertex location
+        vislib::math::Point<float, 3> closest;
+        float closestDist = FLT_MAX;
+        switch (ctmd->Objects()[0].GetVertexDataType()) {
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+        {
+            auto ptr = ctmd->Objects()[0].GetVertexPointerFloat();
+            for (size_t i = 0; i < linevec.size(); i++) {
+                vislib::math::Point<float, 3> pp(&ptr[3 * linevec[i] + 0]);
+                if (pp.GetX() > bbCenter.GetX() && std::abs(pp.GetY() - bbCenter.GetY()) < closestDist) {
+                    closest = pp;
+                    closestDist = std::abs(pp.GetY() - bbCenter.GetY());
+                }
+            }
+        }
+            break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+        {
+            auto ptr = ctmd->Objects()[0].GetVertexPointerDouble();
+            break;
+        }
+        default:
+            break;
+        }
+
+        ::glLineWidth(3.0f);
+        ::glDisable(GL_LIGHTING);
+        ::glDisable(GL_DEPTH_TEST);
+        ::glColor3f(1.0f, 0.0f, 0.0f);
+
+        glBegin(GL_LINES);
+        glVertex3f(bbCenter.GetX(), bbCenter.GetY(), bbCenter.GetZ());
+        glVertex3f(closest.GetX(), closest.GetY(), closest.GetZ());
+        glColor3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(closest.GetX(), closest.GetY(), closest.GetZ());
+        glVertex3f(bb.Right(), closest.GetY(), closest.GetZ());
+        glEnd();
+
+        // TODO render font
+        if (this->theFont.Initialise(this->GetCoreInstance())) {
+            float distleft = std::abs(bbCenter.GetX() - closest.GetX());
+            vislib::StringA textleft = std::to_string(distleft).c_str();
+            vislib::StringA textright = "Test";
+
+            float fontCol[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            this->theFont.DrawString(fontCol, bbCenter.GetX(), bbCenter.GetY() + 10.0f, bbCenter.GetZ(), std::abs(bbCenter.GetX() - closest.GetX()), 10.0f, 4.0f, false, textleft, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
+        }
+
+        ::glEnable(GL_DEPTH_TEST);
+    }
+
     // copy index attributes
 
 
@@ -943,7 +1013,6 @@ bool SombreroMeshRenderer::Render(Call& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, m_proj);
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
-    // TODO invert?
     modelMatrix.Invert();
     projectionMatrix.Invert();
 
@@ -951,8 +1020,6 @@ bool SombreroMeshRenderer::Render(Call& call) {
     auto viewport = cr->GetViewport().GetSize();
 
     // the camera position from the matrix seems to be wrong
-    /*this->lastCamState.camPos =
-        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 3), modelMatrix.GetAt(1, 3), modelMatrix.GetAt(2, 3));*/
     this->lastCamState.camPos = cam->Position();
     this->lastCamState.camDir =
         vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
@@ -960,8 +1027,6 @@ bool SombreroMeshRenderer::Render(Call& call) {
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
     this->lastCamState.camRight =
         vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0));
-    // this->lastCamState.camUp = this->lastCamState.camDir.Cross(this->lastCamState.camRight);
-    // this->lastCamState.camRight = this->lastCamState.camDir.Cross(this->lastCamState.camUp);
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();
@@ -976,18 +1041,6 @@ bool SombreroMeshRenderer::Render(Call& call) {
     this->lastCamState.width = viewport.GetWidth();
     this->lastCamState.height = viewport.GetHeight();
 
-    /*vislib::sys::Log::DefaultLog.WriteInfo(
-        "dir: %f %f %f", lastCamState.camDir.GetX(), lastCamState.camDir.GetY(), lastCamState.camDir.GetZ());*/
-    /*vislib::sys::Log::DefaultLog.WriteInfo(
-        "up: %f %f %f", lastCamState.camUp.GetX(), lastCamState.camUp.GetY(), lastCamState.camUp.GetZ());*/
-    /*vislib::sys::Log::DefaultLog.WriteInfo(
-        "pos: %f %f %f", lastCamState.camPos.GetX(), lastCamState.camPos.GetY(), lastCamState.camPos.GetZ());*/
-    /*vislib::sys::Log::DefaultLog.WriteInfo(
-        "right: %f %f %f", lastCamState.camRight.GetX(), lastCamState.camRight.GetY(), lastCamState.camRight.GetZ());*/
-    // vislib::sys::Log::DefaultLog.WriteInfo("%f", this->lastCamState.camRight.Dot(this->lastCamState.camDir));
-
-    // vislib::sys::Log::DefaultLog.WriteInfo("-------------------------");
-
     ::glCullFace(cfm);
     ::glFrontFace(twr);
     ::glPolygonMode(GL_FRONT, pm[0]);
@@ -995,7 +1048,6 @@ bool SombreroMeshRenderer::Render(Call& call) {
 
     ::glEnable(GL_CULL_FACE);
     ::glDisableClientState(GL_VERTEX_ARRAY);
-    //::glDisable(GL_POINT_SIZE);
     ::glEnable(GL_BLEND);
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))

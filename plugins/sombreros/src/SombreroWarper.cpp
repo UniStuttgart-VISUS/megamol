@@ -917,6 +917,9 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         }
         this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
 
+        vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
+        vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
+
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timebegin - timeend);
