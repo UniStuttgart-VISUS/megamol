@@ -993,7 +993,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
         // TODO render font
         if (this->theFont.Initialise(this->GetCoreInstance())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
-            vislib::StringA textleft = std::to_string(distleft).c_str();
+            vislib::StringA textleft = (trunc(distleft, 2) + " A").c_str();
             vislib::StringA textright = "Test";
 
             float fontCol[4] = {0.0f, 0.0f, 0.0f, 1.0f};

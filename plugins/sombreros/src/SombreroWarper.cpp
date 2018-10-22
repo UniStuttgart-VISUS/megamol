@@ -1451,6 +1451,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         float sombrad = lengthSum / (2.0f * thePi);
         this->sombreroRadiusNew[i] = sombrad;
 
+        vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
+
 #if 0 // switch for the colouring of the sweatedges
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
         for (auto e : sweatedges) {

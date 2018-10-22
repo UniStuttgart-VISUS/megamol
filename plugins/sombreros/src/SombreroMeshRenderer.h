@@ -123,6 +123,15 @@ private:
         int height;
     } lastCamState;
 
+    inline std::string trunc(const float val, const unsigned int numDigits = 2) {
+        std::string t = std::to_string(static_cast<int>(val));
+        std::string output = std::to_string(val).substr(0, numDigits + t.length() + 1);
+        if (output.find('.') == std::string::npos || output.back() == '.') {
+            output.pop_back();
+        }
+        return output;
+    }
+
     /**
      * Returns the direction a pixel lies in the image plane relative to the camera
      * This vector can then be used for picking, for example.
