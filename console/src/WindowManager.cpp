@@ -13,7 +13,7 @@
 #include "vislib/sys/Log.h"
 #include "utility/ConfigHelper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "ViewMouseUILayer.h"
+#include "ViewUILayer.h"
 #include "ButtonParamUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
 #ifdef HAS_ANTTWEAKBAR
@@ -25,8 +25,8 @@
 #include "utility/KHR.h"
 #include "JobManager.h"
 
-const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol\xE2\x84\xA2 - ";
-const int megamol::console::WindowManager::TitlePrefixLength = 13;
+const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol - ";
+const int megamol::console::WindowManager::TitlePrefixLength = 10;
 
 /*
  * megamol::console::WindowManager::Instance
@@ -221,9 +221,9 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     if (conGuiData != nullptr) {
         try {
             if (conGuiDataType == MMC_TYPE_CSTR) {
-				showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
+                showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
             } else if (conGuiDataType == MMC_TYPE_WSTR) {
-				showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
+                showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
             }
         } catch(...) {}
     }
@@ -234,7 +234,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     w->AddUILayer(atbLayer);
     w->AddUILayer(std::make_shared<gl::ATBToggleHotKeyUILayer>(*w.get(), *atbLayer.get()));
 #endif /* HAS_ANTTWEAKBAR */
-    w->AddUILayer(std::make_shared<ViewMouseUILayer>(*w.get(), w->Handle()));
+    w->AddUILayer(std::make_shared<ViewUILayer>(*w.get(), w->Handle()));
     std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(*w.get(), hCore, w->Handle());
     w->AddUILayer(btnLayer);
 #ifdef HAS_ANTTWEAKBAR

@@ -10,7 +10,7 @@
 #include <cstdio>
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #include "vislib/sys/Path.h"
 
 #include "DynamicFunctionPointer.h"

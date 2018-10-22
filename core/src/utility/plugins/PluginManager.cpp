@@ -242,7 +242,9 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
     plugin200->SetAssemblyFileName(path);
 
     // connect static objects
-    plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
+    //plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
+    plugin200->connectStatics(
+        Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&coreInst.Log()));
 
     // initialize factories
     plugin200->GetModuleDescriptionManager();

@@ -214,7 +214,7 @@ namespace view {
         for (unsigned int i = 0; i < T; i++) {
             if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
             CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
-            if ((oc == NULL) || (!(*oc)(2))) continue;
+            if ((oc == NULL) || (!(*oc)(CallRender3D::FnGetCapabilities))) continue;
             cr3d->AddCapability(oc->GetCapabilities());
         }
 
@@ -235,7 +235,7 @@ namespace view {
         for (unsigned int i = 0; i < T; i++) {
             if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
             CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
-            if ((oc == NULL) || (!(*oc)(1))) continue;
+            if ((oc == NULL) || (!(*oc)(AbstractCallRender::FnGetExtents))) continue;
             if (this->frameCnt == 0) {
                 if (oc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
                     this->bboxs.SetObjectSpaceBBox(oc->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -310,7 +310,7 @@ namespace view {
             CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
             if (oc == NULL) continue;
             *oc = *cr3d;
-            if (!(*oc)(1)) continue;
+            if (!(*oc)(view::AbstractCallRender::FnGetExtents)) continue;
 
             // Back translation ocWS -> ocOS
             float sx, sy, sz, tx, ty, tz;
@@ -350,7 +350,7 @@ namespace view {
             ::glTranslatef(tx, ty, tz); // TODO: Not sure about the ordering here!
             ::glScalef(this->scale, this->scale, this->scale);
 
-            (*oc)(0);
+            (*oc)(view::AbstractCallRender::FnRender);
 
             ::glMatrixMode(GL_MODELVIEW);
             ::glPopMatrix();

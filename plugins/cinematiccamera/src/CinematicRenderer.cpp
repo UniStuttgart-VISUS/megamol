@@ -6,33 +6,7 @@
 */
 
 #include "stdafx.h"
-
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore/CoreInstance.h"
-
-#include "vislib/Array.h"
-#include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
-#include "vislib/String.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/StringSerialiser.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/CriticalSection.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/Trace.h"
-
 #include "CinematicRenderer.h"
-#include "CallCinematicCamera.h"
-#include "ReplacementRenderer.h"
-
 
 using namespace megamol;
 using namespace megamol::core;
@@ -48,7 +22,7 @@ using namespace vislib;
 */
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), manipulator(), textureShader(),
-    slaveRendererSlot("renderer", "outgoing renderer"),
+    rendererCallerSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
@@ -63,8 +37,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->manipOutsideModel = false;
 
     // init parameters
-    this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->slaveRendererSlot);
+    this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererCallerSlot);
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -161,13 +135,16 @@ void CinematicRenderer::release(void) {
 */
 bool CinematicRenderer::GetCapabilities(Call& call) {
 
-	CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
+    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
 
-	CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (!(oc == nullptr) || (!(*oc)(2))) {
-		cr3d->AddCapability(oc->GetCapabilities());
-	}
+    // Propagate changes made in GetCapabilities() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if ((cr3d_out != nullptr) && (*cr3d_out)(2)) {
+        cr3d_in->AddCapability(cr3d_out->GetCapabilities());
+    }
+
+    cr3d_in->AddCapability(view::CallRender3D::CAP_RENDER);
 
 	return true;
 }
@@ -178,47 +155,53 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 */
 bool CinematicRenderer::GetExtents(Call& call) {
 
-    view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
+    view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
 
-	view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (oc == nullptr) return false;
+    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
 
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == nullptr) return false;
-	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+        CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        if (ccc == nullptr) return false;
+        if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
-	// Get bounding box of renderer.
-	if (!(*oc)(1)) return false;
-	*cr3d = *oc;
+        // Compute bounding box including spline (in world space) and object (in world space).
+        vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
+        // Set bounding box center of model
+        ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
-    // Compute bounding box including spline (in world space) and object (in world space).
-    vislib::math::Cuboid<float> bboxCR3D = oc->AccessBoundingBoxes().WorldSpaceBBox();
-    // Set bounding box center of model
-    ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+        // Grow bounding box to manipulators and get information of bbox of model
+        this->manipulator.SetExtents(&bbox);
 
-    // Grow bounding box to manipulators and get information of bbox of model
-    this->manipulator.SetExtents(&bboxCR3D);
+        vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().WorldSpaceClipBox();
 
-    vislib::math::Cuboid<float> cboxCR3D = oc->AccessBoundingBoxes().WorldSpaceClipBox();
+        // Get bounding box of spline.
+        vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
+        if (bboxCCC == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
+            return false;
+        }
 
-    // Get bounding box of spline.
-    vislib::math::Cuboid<float> *bboxCCC = ccc->getBoundingBox();
-    if (bboxCCC == nullptr)  {
-        vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
-        return false;
+        bbox.Union(*bboxCCC);
+        cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
+
+        // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
+        ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+        if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
+
+        // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
+        // => Bboxes and times.
+
+        unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
+        cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
+        cr3d_in->SetTime(cr3d_out->Time());
+        cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
+
+        // Apply modified boundingbox 
+        cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(bbox);
+        cr3d_in->AccessBoundingBoxes().SetWorldSpaceClipBox(cbox);
     }
-
-    bboxCR3D.Union(*bboxCCC);
-    cboxCR3D.Union(*bboxCCC); // use boundingbox to get new clipbox
-
-    // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-    ccc->setBboxCenter(oc->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
-    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
-
-    // Apply new boundingbox 
-	cr3d->AccessBoundingBoxes().SetWorldSpaceBBox(bboxCR3D);
-    cr3d->AccessBoundingBoxes().SetWorldSpaceClipBox(cboxCR3D);
 
 	return true;
 }
@@ -229,11 +212,11 @@ bool CinematicRenderer::GetExtents(Call& call) {
 */
 bool CinematicRenderer::Render(Call& call) {
 
-    view::CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
+    view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
+    if (cr3d_in == nullptr) return false;
 
-    view::CallRender3D *oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-    if (oc == nullptr) return false;
+    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<CallRender3D>();
+    if (cr3d_out == nullptr) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -261,17 +244,15 @@ bool CinematicRenderer::Render(Call& call) {
     }
 
     // Set total simulation time of call
-    float totalSimTime = static_cast<float>(oc->TimeFramesCount());
+    float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
     ccc->setTotalSimTime(totalSimTime);
     if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return false;
 
-    *oc = *cr3d;
-
     Keyframe skf = ccc->getSelectedKeyframe();
 
-    // Set simulation time based on selected keyframe ('disables' animation via view3d)
+    // Set simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
-    oc->SetTime(simTime * totalSimTime);
+    cr3d_in->SetTime(simTime * totalSimTime);
 
     // Get the foreground color (inverse background color)
     float bgColor[4];
@@ -354,14 +335,17 @@ bool CinematicRenderer::Render(Call& call) {
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    oc->SetOutputBuffer(&this->fbo);
-
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
+    // Set data of outgoing cr3d to data of incoming cr3d
+    *cr3d_out = *cr3d_in;
+
+    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+    cr3d_out->SetOutputBuffer(&this->fbo);
+
     // Call render function of slave renderer
-    (*oc)(0);
+    (*cr3d_out)(0);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
@@ -427,11 +411,11 @@ bool CinematicRenderer::Render(Call& call) {
 
         // Update manipulator data
         this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
-            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
-            (cr3d->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
-            (cr3d->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+            (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
             (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
-            this->manipOutsideModel, ccc->getFirstControlPointPosition(), ccc->getLastControlPointPosition());
+            this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
         // Draw manipulators
         this->manipulator.Draw();
     }
@@ -464,15 +448,15 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d->MouseSelection()) {
-        if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (keyframe position, spline control point)";
-        } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat, up, keyframe position along lookat)";
-        }
-    } else {
-        midLabel = "SCENE manipulation";
-    }
+    //if (cr3d_in->MouseSelection()) {
+    //    if (this->toggleManipulator == 0) { 
+    //        midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
+    //    } else {// if (this->toggleManipulator == 1) { 
+    //        midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
+    //    }
+    //} else {
+    //    midLabel = "SCENE manipulation";
+    //}
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
         rightLabel = " [h] hide help text ";
@@ -519,19 +503,19 @@ bool CinematicRenderer::Render(Call& call) {
         helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
         helpText += "[tab] Toggle keyframe/scene manipulation mode. \n";
         helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
-        helpText += "[w] Keep manipulators always outside of model bounding box. \n";
+        helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
         helpText += "[l] Reset Look-At of selected keyframe. \n";
         helpText += "-----[ CINEMATIC VIEW ]----- \n";
         helpText += "[r] Start/Stop rendering complete animation. \n";
-        helpText += "[space] Toggle animation preview. \n";
+        helpText += "[space] Start/Stop animation preview. \n";
         helpText += "-----[ TIME LINE VIEW ]----- \n";
-        helpText += "[right/left] Move keyframe selection to right/left on animation time axis. \n";
+        helpText += "[right/left] Move selected keyframe on animation time axis. \n";
         helpText += "[f] Snap all keyframes to animation frames. \n";
         helpText += "[g] Snap all keyframes to simulation frames. \n";
         helpText += "[t] Linearize simulation time between two keyframes. \n";
         helpText += "[left mouse button] Select keyframe. \n";
         helpText += "[middle mouse button] Axes scaling in mouse direction. \n";
-        helpText += "[right mouse button] Pan axes OR drag & drop keyframe. \n";
+        helpText += "[right mouse button] Drag & drop keyframe / pan axes. \n";
         //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
         //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematiccamera)
 
@@ -539,7 +523,7 @@ bool CinematicRenderer::Render(Call& call) {
         float htStrHeight = this->theFont.LineHeight(htFontSize);
         float htX         = 5.0f;
         float htY         = htX + htStrHeight;
-        float htNumOfRows = 21.0f; // Number of rows the help text has
+        float htNumOfRows = 22.0f; // Number of rows the help text has
         // Adapt font size if height of help text is greater than viewport height
         while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
             htFontSize -= 0.5f;

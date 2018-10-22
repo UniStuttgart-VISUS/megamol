@@ -107,7 +107,7 @@ bool RendererRegistration::GetCapabilities(Call& call) {
 
     auto oc = rendererSlot.CallAs<CallRender3D>();
     cr3d->SetCapabilities(0);
-    if ((oc == NULL) || (!(*oc)(2))) return true;
+    if ((oc == NULL) || (!(*oc)(core::view::CallRender3D::FnGetCapabilities))) return true;
     cr3d->SetCapabilities(oc->GetCapabilities());
 
     return true;
@@ -124,7 +124,7 @@ bool RendererRegistration::GetExtents(Call& call) {
     this->bboxs.Clear();
     this->frameCnt = 0;
     CallRender3D *oc = this->rendererSlot.CallAs<CallRender3D>();
-    if ((oc == NULL) || (!(*oc)(1))) return false;
+    if ((oc == NULL) || (!(*oc)(core::view::AbstractCallRender::FnGetExtents))) return false;
     if (oc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
         this->bboxs.SetObjectSpaceBBox(oc->AccessBoundingBoxes().ObjectSpaceBBox());
     } else if (oc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
@@ -172,7 +172,7 @@ bool RendererRegistration::Render(Call& call) {
     CallRender3D *oc = this->rendererSlot.CallAs<CallRender3D>();
     if (oc == NULL) return false;
     *oc = *cr3d;
-    if (!(*oc)(1)) return false;
+    if (!(*oc)(core::view::AbstractCallRender::FnGetExtents)) return false;
 
     // Back translation ocWS -> ocOS
     //float sx, sy, sz, tx, ty, tz;
@@ -238,7 +238,7 @@ bool RendererRegistration::Render(Call& call) {
     //glLoadMatrixf(aMatrix);
     glMultMatrixf(theMat.PeekComponents());
 
-    (*oc)(0);
+    (*oc)(AbstractCallRender::FnRender);
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glPopMatrix();

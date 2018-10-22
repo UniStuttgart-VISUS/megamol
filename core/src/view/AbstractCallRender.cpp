@@ -18,15 +18,6 @@ using namespace megamol::core;
 const view::AbstractCallRender::GpuHandleType
 view::AbstractCallRender::NO_GPU_AFFINITY = nullptr;
 
-
-/*
- * view::AbstractCallRender::~AbstractCallRender
- */
-view::AbstractCallRender::~AbstractCallRender(void) {
-    // intentionally empty
-}
-
-
 /*
  * view::AbstractCallRender::operator=
  */
@@ -44,7 +35,7 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
 /*
  * view::AbstractCallRender::AbstractCallRender
  */
-view::AbstractCallRender::AbstractCallRender(void) : Call(), cntTimeFrames(1),
+view::AbstractCallRender::AbstractCallRender(void) : InputCall(), cntTimeFrames(1),
         gpuAffinity(NO_GPU_AFFINITY), time(0.0f), instTime(0.0f), isInSituTime(false) {
     // intentionally empty
 }

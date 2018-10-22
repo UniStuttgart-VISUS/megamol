@@ -21,6 +21,7 @@ namespace param {
  */
 class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
+	//XXX: this sucks pretty hard, because coping array requires memcpy or loops. Replace with a class that has an assignment operator!
     typedef float Type[4];
 
     /**

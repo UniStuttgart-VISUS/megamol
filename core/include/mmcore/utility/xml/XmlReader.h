@@ -11,22 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
-#ifndef XMLCALL
-#define XMLCALL
-#endif /* XMLCALL */
 #include <vislib/sys/Path.h>
-
-#ifndef XMLCHAR
-#ifdef _WIN32
-#define MMXML_CHAR wchar_t
-#else /* _WIN32 */
-#define MMXML_CHAR char
-#endif /* _WIN32 */
-
-typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
-#endif /* XMLCHAR */
-
 
 #include "vislib/Array.h"
 #include "vislib/sys/FastFile.h"
@@ -35,6 +20,14 @@ typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 #include "vislib/Stack.h"
 #include "vislib/String.h"
 
+#ifdef WIN32
+#define XML_UNICODE
+#define XML_UNICODE_WCHAR_T
+#endif
+#define XML_STATIC // We're linking expat as static library
+#include <expat.h>
+
+typedef vislib::String<vislib::CharTraits<XML_Char> > MMXML_STRING;
 
 namespace megamol {
 namespace core {
@@ -54,12 +47,6 @@ namespace xml {
         typedef vislib::sys::FastFile FileType;
 
     public:
-
-        /** friend declaration of xml parser callbacks */
-        friend void XMLCALL xmlStartTag(void *, const MMXML_CHAR *, const MMXML_CHAR **);
-        friend void XMLCALL xmlEndTag(void *, const MMXML_CHAR *);
-        friend void XMLCALL xmlCharData(void *, const MMXML_CHAR *, int);
-        friend void XMLCALL xmlComment(void *, const MMXML_CHAR *);
 
         /** 
          * friend declaration of abstract xml parser of calling the parse 
@@ -252,6 +239,11 @@ namespace xml {
         void StopParsing(void);
 
     private:
+        /** declaration of xml parser callbacks */
+        static void XMLCALL xmlStartTag(void *, const XML_Char *, const XML_Char **);
+        static void XMLCALL xmlEndTag(void *, const XML_Char *);
+        static void XMLCALL xmlCharData(void *, const XML_Char *, int);
+        static void XMLCALL xmlComment(void *, const XML_Char *);
 
         /**
          * Callback handler for the character data.
@@ -260,21 +252,21 @@ namespace xml {
          *             zero-terminated.
          * @param len Length of the character data.
          */
-        void charData(const MMXML_CHAR *text, int len);
+        void charData(const XML_Char *text, int len);
 
         /**
          * Callback handler for comment data.
          *
          * @param text Pointer to the zero-terminated comment string.
          */
-        void comment(const MMXML_CHAR *text);
+        void comment(const XML_Char *text);
 
         /**
          * Callback handler for the ending xml tags.
          *
          * @param tag The name of the tag.
          */
-        void endTag(const MMXML_CHAR *tag);
+        void endTag(const XML_Char *tag);
 
         /**
          * Parses the xml structure.
@@ -297,7 +289,7 @@ namespace xml {
          * @param tag The name of the tag.
          * @param attributes The attributes of the tag.
          */
-        void startTag(const MMXML_CHAR *tag, const MMXML_CHAR **attributes);
+        void startTag(const XML_Char *tag, const XML_Char **attributes);
 
         /**
          * Answers the position within the xml file if possible.

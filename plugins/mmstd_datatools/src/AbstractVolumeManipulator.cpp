@@ -38,6 +38,7 @@ datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outS
     this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
         &AbstractVolumeManipulator::tryGetDataCallback);
+    this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);

@@ -95,15 +95,20 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
+    if (cgtf == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: no transferfunction connected.");
+        return false;
+    }
     if (os->getTime() >= cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->isDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -117,6 +122,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     auto const metadata = cd->GetMetadata();
+
+    if (!metadata->GridType == core::misc::CARTESIAN) {
+        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+        return false;
+    }
 
     /*unsigned int voxelCount =
         cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/
@@ -177,8 +187,8 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if (cgtf != nullptr && ((*cgtf)())) {
+
+    if ((*cgtf)(0)) {
         if (cgtf->OpenGLTextureFormat() ==
             megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
             auto const numColors = cgtf->TextureSize();
@@ -211,7 +221,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
-
+    cgtf->resetDirty();
 
     // Write stuff into the structureContainer
 
