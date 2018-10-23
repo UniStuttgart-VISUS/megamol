@@ -848,14 +848,36 @@ bool AbstractOSPRayRenderer::fillWorld() {
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
             break;
+
+        case structureTypeEnum::OSPRAY_API_STRUCTURES:
+             if (element.ospStructures.empty()) {
+                returnValue = false;
+                break;
+            }
+            for (auto structure : element.ospStructures) {
+                if (structure.second == structureTypeEnum::GEOMETRY) {
+                    geo.push_back(static_cast<OSPGeometry>(structure.first));
+                } else if (structure.second == structureTypeEnum::GEOMETRY) {
+                    vol.push_back(static_cast<OSPVolume>(structure.first));
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
+                }
+            }
+            // General geometry execution
+            for (unsigned int i = 0; i < element.ospStructures.size(); i++) {
+                auto idx = geo.size() - 1 - i;
+                if (material != NULL && geo.size() > 0) {
+                    ospSetMaterial(geo[idx], material);
+                }
+
+                if (geo.size() > 0) {
+                    ospCommit(geo[idx]);
+                    ospAddGeometry(world, geo[idx]);
+                }
+            }
+            break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
-            case geometryTypeEnum::OSPRAY_API_GEOMETRY:
-                if (element.ospstructure == NULL) {
-                    returnValue = false;
-                    break;
-                }
-                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
             case geometryTypeEnum::PKD: {
                 if (element.raw == NULL) {
                     returnValue = false;
@@ -870,7 +892,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("pkd_geometry"));
 
-                vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
                 // set bbox
@@ -974,7 +996,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                     if (vertexData != NULL) ospRelease(vertexData);
                     vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                        &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                        &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                     ospCommit(vertexData);
                     ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospSetData(geo.back(), "spheres", vertexData);
@@ -1090,7 +1112,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                         if (vertexData != nullptr) ospRelease(vertexData);
                         vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                         ospCommit(vertexData);
                         ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                         ospSetData(geo.back(), "spheres", vertexData);
@@ -1278,15 +1300,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::VOLUME:
 
-            if (element.volumeType == volumeTypeEnum::OSPRAY_API_VOLUME) {
-                if (element.ospstructure == NULL) {
-                    returnValue = false;
-                    break;
-                }
-                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
-                break;
-            } else {
-
                 if (element.voxels == NULL) {
                     returnValue = false;
                     break;
@@ -1297,14 +1310,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 auto type = static_cast<uint8_t>(element.voxelDType);
 
                 ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
-                float fixedSpacing[3];
-                for (auto x = 0; x < 3; ++x) {
-                    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
-                }
+                //float fixedSpacing[3];
+                //for (auto x = 0; x < 3; ++x) {
+                //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                //}
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", fixedSpacing);
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
                 ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
 
                 ospSet1b(vol.back(), "singleShade", element.useMIP);
@@ -1344,7 +1357,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSetObject(vol.back(), "transferFunction", tf);
                 ospCommit(vol.back());
                 ospRelease(tf);
-            }
+            
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());

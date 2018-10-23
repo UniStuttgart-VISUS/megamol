@@ -96,7 +96,7 @@ namespace megamol {
                 *
                 * @return The return value of the function.
                 */
-                virtual bool GetCapabilities(Call& call);
+                virtual bool GetCapabilities(megamol::core::view::CallRender3D& call);
 
                 /**
                 * The get extents callback. The module should set the members of
@@ -107,7 +107,7 @@ namespace megamol {
                 *
                 * @return The return value of the function.
                 */
-                virtual bool GetExtents(Call& call);
+                virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
                 /**
                 * Implementation of 'Release'.
@@ -121,7 +121,7 @@ namespace megamol {
                 *
                 * @return The return value of the function.
                 */
-                virtual bool Render(Call& call);
+                virtual bool Render(megamol::core::view::CallRender3D& call);
 
             private:
 

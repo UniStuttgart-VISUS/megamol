@@ -97,41 +97,41 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 }
 
 
-/*
- * view::AbstractOverrideView::SetCursor2DButtonState
- */
-void view::AbstractOverrideView::SetCursor2DButtonState(unsigned int btn, bool down) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        crv->SetMouseButton(btn, down);
-        (*crv)(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
-    }
-}
-
-
-/*
- * view::AbstractOverrideView::SetCursor2DPosition
- */
-void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        this->packMouseCoordinates(x, y);
-        crv->SetMousePosition(x, y);
-        (*crv)(view::CallRenderView::CALL_SETCURSOR2DPOSITION);
-    }
-}
-
-
-/*
- * view::AbstractOverrideView::SetInputModifier
- */
-void view::AbstractOverrideView::SetInputModifier(mmcInputModifier mod, bool down) {
-    view::CallRenderView *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        crv->SetInputModifier(mod, down);
-        (*crv)(view::CallRenderView::CALL_SETINPUTMODIFIER);
-    }
-}
+///*
+// * view::AbstractOverrideView::SetCursor2DButtonState
+// */
+//void view::AbstractOverrideView::SetCursor2DButtonState(unsigned int btn, bool down) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        crv->SetMouseButton(btn, down);
+//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
+//    }
+//}
+//
+//
+///*
+// * view::AbstractOverrideView::SetCursor2DPosition
+// */
+//void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        this->packMouseCoordinates(x, y);
+//        crv->SetMousePosition(x, y);
+//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DPOSITION);
+//    }
+//}
+//
+//
+///*
+// * view::AbstractOverrideView::SetInputModifier
+// */
+//void view::AbstractOverrideView::SetInputModifier(view::Modifier mod, bool down) {
+//    view::CallRenderView *crv = this->getCallRenderView();
+//    if (crv != NULL) {
+//        crv->SetInputModifier(mod, down);
+//        (*crv)(view::CallRenderView::CALL_SETINPUTMODIFIER);
+//    }
+//}
 
 
 /*
@@ -144,6 +144,82 @@ void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
             ? view::CallRenderView::CALL_FREEZE
             : view::CallRenderView::CALL_UNFREEZE);
     }
+}
+
+
+bool view::AbstractOverrideView::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* cr = this->getCallRenderView();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRenderView::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool view::AbstractOverrideView::OnChar(unsigned int codePoint) {
+    auto* cr = this->getCallRenderView();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRenderView::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool view::AbstractOverrideView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+    auto* cr = this->getCallRenderView();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseButton;
+    evt.mouseButtonData.button = button;
+    evt.mouseButtonData.action = action;
+    evt.mouseButtonData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRenderView::FnOnMouseButton)) return false;
+
+    return true;
+}
+
+
+bool view::AbstractOverrideView::OnMouseMove(double x, double y) {
+    auto* cr = this->getCallRenderView();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseMove;
+    evt.mouseMoveData.x = x;
+    evt.mouseMoveData.y = y;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRenderView::FnOnMouseMove)) return false;
+
+    return true;
+}
+
+
+bool view::AbstractOverrideView::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->getCallRenderView();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRenderView::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 

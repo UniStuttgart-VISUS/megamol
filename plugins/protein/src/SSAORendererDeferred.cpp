@@ -234,7 +234,7 @@ bool SSAORendererDeferred::GetCapabilities(megamol::core::Call& call) {
     if(crOut == NULL) return false;
 
     // Call for getCapabilities
-    if(!(*crOut)(2)) return false;
+    if(!(*crOut)(core::view::CallRender3D::FnGetCapabilities)) return false;
 
     // Set capabilities of for incoming render call
     crIn->SetCapabilities(crOut->GetCapabilities());
@@ -257,7 +257,7 @@ bool SSAORendererDeferred::GetExtents(megamol::core::Call& call) {
     if(crOut == NULL) return false;
 
     // Call for getExtends
-    if(!(*crOut)(1)) return false;
+    if(!(*crOut)(core::view::AbstractCallRender::FnGetExtents)) return false;
 
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
@@ -327,7 +327,7 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
     //glGetFloatv(GL_PROJECTION_MATRIX, projMat);
 
     // Call for render
-    (*crOut)(0);
+    (*crOut)(core::view::AbstractCallRender::FnRender);
 
     // Detach textures that are not needed anymore
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);

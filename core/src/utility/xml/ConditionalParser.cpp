@@ -63,7 +63,7 @@ void ConditionalParser::setConditionalParserVersion(int ver) {
  * ConditionalParser::StartTag
  */
 bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, const MMXML_CHAR ** attrib, XmlReader::ParserState state,
+        const XML_Char * name, const XML_Char ** attrib, XmlReader::ParserState state,
         XmlReader::ParserState& outChildState,
         XmlReader::ParserState& outEndTagState,
         XmlReader::ParserState& outPostEndTagState) {
@@ -85,7 +85,7 @@ bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
         case VERSION_1_1:
             if (level > 0) {
                 if (MMXML_STRING("if").Equals(name)) {
-                    const MMXML_CHAR *cond = NULL;
+                    const XML_Char *cond = NULL;
 
                     for (int i = 0; attrib[i]; i += 2) {
                         if (MMXML_STRING("cond").Equals(attrib[i])) {
@@ -107,8 +107,8 @@ bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
                 }
 
                 if (MMXML_STRING("cond").Equals(name)) {
-                    const MMXML_CHAR *name = NULL;
-                    const MMXML_CHAR *value = NULL;
+                    const XML_Char *name = NULL;
+                    const XML_Char *value = NULL;
 
                     for (int i = 0; attrib[i]; i += 2) {
                         if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -147,7 +147,7 @@ bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
  * ConditionalParser::EndTag
  */
 bool ConditionalParser::EndTag(unsigned int num, unsigned int level,
-        const MMXML_CHAR * name, XmlReader::ParserState state,
+        const XML_Char * name, XmlReader::ParserState state,
         XmlReader::ParserState& outPostEndTagState) {
     if (XmlParser::EndTag(num, level, name, state, outPostEndTagState)) {
         return true; // handled by base class
@@ -177,7 +177,7 @@ bool ConditionalParser::EndTag(unsigned int num, unsigned int level,
 /*
  * ConditionalParser::evaluateIf
  */
-bool ConditionalParser::evaluateIf(const MMXML_CHAR** attrib) const {
+bool ConditionalParser::evaluateIf(const XML_Char** attrib) const {
     bool oneTrue = false;
     bool allTrue = true;
 
@@ -185,7 +185,7 @@ bool ConditionalParser::evaluateIf(const MMXML_CHAR** attrib) const {
         if (MMXML_STRING("bitwidth").Equals(attrib[i])) {
             int bitwidth;
             try {
-                bitwidth = vislib::CharTraits<MMXML_CHAR>::ParseInt(attrib[i + 1]);
+                bitwidth = vislib::CharTraits<XML_Char>::ParseInt(attrib[i + 1]);
             } catch(...) { // format exception
                 this->Error("Cannot evaluate \"bitwidth\". Test failed.");
                 bitwidth = 0; 
@@ -211,7 +211,7 @@ bool ConditionalParser::evaluateIf(const MMXML_CHAR** attrib) const {
 
             bool debug = false;
             try {
-                debug = vislib::CharTraits<MMXML_CHAR>::ParseBool(attrib[i + 1]);
+                debug = vislib::CharTraits<XML_Char>::ParseBool(attrib[i + 1]);
 #ifndef _DEBUG
                 debug = !debug;
 #endif /* !_DEBUG */
@@ -265,7 +265,7 @@ bool ConditionalParser::evaluateIf(const MMXML_CHAR** attrib) const {
 /*
  * ConditionalParser::evaluateCondition
  */
-bool ConditionalParser::evaluateCondition(const MMXML_CHAR* expression) const {
+bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
     vislib::StringA exp(expression);
 #ifdef DO_SOME_BULB_TEXT
     VLTRACE(VISLIB_TRCELVL_INFO, "Evaluating expression \"%s\"\n", exp.PeekBuffer());

@@ -2,12 +2,11 @@ project(AntTweakBar)
 
 set(AntTweakBar_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE INTERNAL "")
 
-include_directories(${AntTweakBar_INCLUDE_DIR})
-
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE TW_EXPORTS)
+target_include_directories(${PROJECT_NAME} PUBLIC ${AntTweakBar_INCLUDE_DIR})
 
 if(UNIX)
   target_compile_definitions(${PROJECT_NAME} PRIVATE _UNIX)
@@ -23,5 +22,3 @@ else()
 endif()
 
 set(AntTweakBar_LIBRARIES ${PROJECT_NAME} CACHE INTERNAL "")
-
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER external)

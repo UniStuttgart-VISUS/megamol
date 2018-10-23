@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 
+
 namespace megamol {
 namespace pbs {
 
@@ -86,6 +87,10 @@ struct fbo_msg_header {
     float os_bbox[6];
     // cbbox
     float cs_bbox[6];
+    // frame_times
+    float frame_times[2]; /// [0] requested time, [1] time frames count
+    // cam_params
+    float cam_params[9];  /// [0]-[2] position, [3]-[5] up, [6]-[8] lookat
     // viewport
     int screen_area[4];
     // updated viewport

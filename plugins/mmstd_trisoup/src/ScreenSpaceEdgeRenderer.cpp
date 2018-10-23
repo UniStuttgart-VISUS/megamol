@@ -99,7 +99,7 @@ bool ScreenSpaceEdgeRenderer::GetCapabilities(Call& call) {
 
     *outCall = *inCall;
 
-    if (!(*outCall)(2)) return false;
+    if (!(*outCall)(core::view::CallRender3D::FnGetCapabilities)) return false;
 
     *inCall = *outCall;
 
@@ -166,7 +166,7 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
     *outCall = *inCall;
     outCall->SetOutputBuffer(&fbo);
 
-    bool renderValid = (*outCall)(0);
+    bool renderValid = (*outCall)(core::view::AbstractCallRender::FnRender);
 
     fbo.Disable();
 

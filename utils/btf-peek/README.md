@@ -33,6 +33,10 @@ Add the vsce package:
 
     npm install -g vsce
 
+Add all possible dependencies of this package (paranoid):
+
+    npm install
+
 generate the vsix:
 
     vsce package
