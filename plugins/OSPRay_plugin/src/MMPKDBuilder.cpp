@@ -31,10 +31,16 @@ bool ospray::MMPKDBuilder::manipulateData(
         frameID = inData.FrameID();
     }
 
+    data_f.clear();
+    data_d.clear();
+
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     outData.SetFrameID(frameID);
     outData.SetDataHash(outDataHash);
+
+    data_f.resize(inData.GetParticleListCount());
+    data_d.resize(inData.GetParticleListCount());
 
     for (unsigned int i = 0; i < inData.GetParticleListCount(); ++i) {
         auto& parts = inData.AccessParticles(i);
@@ -53,15 +59,17 @@ bool ospray::MMPKDBuilder::manipulateData(
         this->build();
 
         if (this->model->IsDoublePrecision()) {
+            data_d[i].resize(this->model->positiond.size());
+            std::copy(this->model->positiond.begin(), this->model->positiond.end(), data_d[i].begin());
             out.SetVertexData(
-                megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, &this->model->positiond[0].x, 32);
+                megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, &data_d[i][0].x, 32);
             out.SetColourData(
-                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA, &this->model->positiond[0].w, 32);
+                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA, &data_d[i][0].w, 32);
         } else {
-            out.SetVertexData(
-                megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &this->model->positionf[0].x, 16);
-            out.SetColourData(
-                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &this->model->positionf[0].w, 16);
+            data_f[i].resize(this->model->positionf.size());
+            std::copy(this->model->positionf.begin(), this->model->positionf.end(), data_f[i].begin());
+            out.SetVertexData(megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &data_f[i][0].x, 16);
+            out.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &data_f[i][0].w, 16);
         }
         auto const lbbox = this->model->GetLocalBBox();
         out.SetBBox(vislib::math::Cuboid<float>(

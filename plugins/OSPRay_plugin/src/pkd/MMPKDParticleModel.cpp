@@ -9,9 +9,28 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
     auto const vtype = parts.GetVertexDataType();
     auto const ctype = parts.GetColourDataType();
 
+    this->positionf.clear();
+    this->positiond.clear();
+
     if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR ||
         vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
         throw std::runtime_error("MMPKDParticleModel does not support FLOAT_XYZR or SHORT_XYZ");
+    }
+
+    bool globCol = false;
+    uint8_t globalColor_u8[] = {0, 0, 0, 0};
+    uint16_t globalColor_u16[] = {0, 0, 0, 0};
+    auto gc = parts.GetGlobalColour();
+    if (ctype == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+        globalColor_u8[0] = gc[0];
+        globalColor_u8[1] = gc[1];
+        globalColor_u8[2] = gc[2];
+        globalColor_u8[3] = gc[3];
+        globalColor_u16[0] = gc[0] * 257;
+        globalColor_u16[1] = gc[1] * 257;
+        globalColor_u16[2] = gc[2] * 257;
+        globalColor_u16[3] = gc[3] * 257;
+        globCol = true;
     }
 
     auto mmbbox = parts.GetBBox();
@@ -28,7 +47,6 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         }
 
         doublePrecision = false;
-        this->positionf.clear();
 
         // in this case use positionf
         auto const pcount = parts.GetCount();
@@ -41,10 +59,17 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
             pos.z = part.vert.GetZf();
 
             ospcommon::vec4uc col;
-            col.x = part.col.GetRu8();
-            col.y = part.col.GetGu8();
-            col.z = part.col.GetBu8();
-            col.w = part.col.GetAu8();
+            if (!globCol) {
+                col.x = part.col.GetRu8();
+                col.y = part.col.GetGu8();
+                col.z = part.col.GetBu8();
+                col.w = part.col.GetAu8();
+            } else {
+                col.x = globalColor_u8[0];
+                col.y = globalColor_u8[1];
+                col.z = globalColor_u8[2];
+                col.w = globalColor_u8[3];
+            }
 
             float color = 0.0f;
             auto const ptr = reinterpret_cast<unsigned char*>(&color);
@@ -63,7 +88,6 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         }
 
         doublePrecision = true;
-        this->positiond.clear();
 
         // in this case use positiond
         auto const pcount = parts.GetCount();
@@ -76,10 +100,17 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
             pos.z = part.vert.GetZd();
 
             ospcommon::vec4ui col;
-            col.x = part.col.GetRu16();
-            col.y = part.col.GetGu16();
-            col.z = part.col.GetBu16();
-            col.w = part.col.GetAu16();
+            if (globCol) {
+                col.x = part.col.GetRu16();
+                col.y = part.col.GetGu16();
+                col.z = part.col.GetBu16();
+                col.w = part.col.GetAu16();
+            } else {
+                col.x = globalColor_u16[0];
+                col.y = globalColor_u16[1];
+                col.z = globalColor_u16[2];
+                col.w = globalColor_u16[3];
+            }
 
             double color = 0.0;
             auto const ptr = reinterpret_cast<unsigned short*>(&color);

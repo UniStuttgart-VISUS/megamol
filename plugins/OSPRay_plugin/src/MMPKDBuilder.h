@@ -46,6 +46,9 @@ private:
     size_t numInnerNodes;
     size_t numLevels;
 
+    std::vector<std::vector<ospcommon::vec4f>> data_f;
+    std::vector<std::vector<ospcommon::vec4d>> data_d;
+
     __forceinline size_t isInnerNode(const size_t nodeID) const { return nodeID < numInnerNodes; }
     __forceinline size_t isLeafNode(const size_t nodeID) const { return nodeID >= numInnerNodes; }
     __forceinline size_t isValidNode(const size_t nodeID) const { return nodeID < numParticles; }

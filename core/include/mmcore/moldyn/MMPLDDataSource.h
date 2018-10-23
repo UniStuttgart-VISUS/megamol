@@ -140,6 +140,11 @@ namespace moldyn {
              */
             void SetData(MultiParticleDataCall& call);
 
+            /**
+             * Set the global bbox
+             */
+            void SetBBox(vislib::math::Cuboid<float> const& bbox);
+
         private:
 
             /** position data per type */
@@ -147,6 +152,9 @@ namespace moldyn {
 
             /** file version */
             unsigned int fileVersion;
+
+            /** global bounding box */
+            vislib::math::Cuboid<float> bbox;
 
         };
 
