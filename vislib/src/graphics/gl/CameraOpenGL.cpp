@@ -155,9 +155,15 @@ void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) const {
     zAxis.Normalise();
 
     SceneSpaceVector3D xAxis = this->Parameters()->EyeUpVector().Cross(zAxis);
+    // TODO side effects from CameraRotate2D. either this code or the other one. but the other one desyncs the camera
+    // parameters and matrix contents.
+    xAxis = this->Parameters()->EyeRightVector();
     xAxis.Normalise();
 
     SceneSpaceVector3D yAxis = zAxis.Cross(xAxis);
+    // TODO side effects from CameraRotate2D. either this code or the other one. but the other one desyncs the camera
+    // parameters and matrix contents.
+    yAxis = this->Parameters()->EyeUpVector();
     yAxis.Normalise();
 
     ::ZeroMemory(mat, sizeof(float) * 16);
