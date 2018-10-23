@@ -18,7 +18,6 @@
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/AbstractView3D.h"
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FilePathParam.h"
