@@ -112,7 +112,7 @@ bool ReplacementRenderer::GetExtents(Call& call) {
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(view::CallRender3D::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
         cr3d_in->SetTime(cr3d_out->Time());
@@ -196,7 +196,7 @@ bool ReplacementRenderer::Render(Call& call) {
         view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
         if (cr3d_out != nullptr) {
             *cr3d_out = *cr3d_in;
-            (*cr3d_out)(0);
+            (*cr3d_out)(view::CallRender3D::FnRender);
         }
     }
 
