@@ -86,8 +86,10 @@ bool ReplacementRenderer::create(void) {
 /*
  * ReplacementRenderer::GetCapabilities
  */
-bool ReplacementRenderer::GetCapabilities(Call& call) {
+bool ReplacementRenderer::GetCapabilities(megamol::core::view::CallRender3D& call) {
 
+    /* DEPRECATED */
+    /*
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
@@ -98,6 +100,7 @@ bool ReplacementRenderer::GetCapabilities(Call& call) {
     }
 
     cr3d_in->AddCapability(view::CallRender3D::CAP_RENDER);
+    */
 
     return true;
 }
@@ -105,20 +108,28 @@ bool ReplacementRenderer::GetCapabilities(Call& call) {
 /*
  * ReplacementRenderer::GetExtents
  */
-bool ReplacementRenderer::GetExtents(Call& call) {
+bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
         cr3d_in->SetTime(cr3d_out->Time());
         cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
 
         this->bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
+    }
+    else {
+        cr3d_in->SetTimeFramesCount(1);
+        cr3d_in->SetTime(1.0f);
+
+        this->bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        cr3d_in->AccessBoundingBoxes().Clear();
+        cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(this->bbox);
     }
 
     return true;
@@ -128,7 +139,7 @@ bool ReplacementRenderer::GetExtents(Call& call) {
 /*
  * ReplacementRenderer::Render
  */
-bool ReplacementRenderer::Render(Call& call) {
+bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d_in == nullptr)  return false;
@@ -196,7 +207,7 @@ bool ReplacementRenderer::Render(Call& call) {
         view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
         if (cr3d_out != nullptr) {
             *cr3d_out = *cr3d_in;
-            (*cr3d_out)(0);
+            (*cr3d_out)(core::view::AbstractCallRender::FnRender);
         }
     }
 

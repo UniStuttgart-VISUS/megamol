@@ -27,7 +27,11 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box.")
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
+    cursor2d(),
+    modkeys(),
+    mouseX(0.0f),
+    mouseY(0.0f)
     {
 
     // init variables
@@ -35,6 +39,8 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleManipulator = 0;
     this->showHelpText      = false;
     this->manipOutsideModel = false;
+
+
 
     // init parameters
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -133,18 +139,21 @@ void CinematicRenderer::release(void) {
 /*
 * CinematicRenderer::GetCapabilities
 */
-bool CinematicRenderer::GetCapabilities(Call& call) {
+bool CinematicRenderer::GetCapabilities(megamol::core::view::CallRender3D& call) {
 
+    /* DEPRECATED */
+    /*
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
     // Propagate changes made in GetCapabilities() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(2)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetCapabilities)) {
         cr3d_in->AddCapability(cr3d_out->GetCapabilities());
     }
 
     cr3d_in->AddCapability(view::CallRender3D::CAP_RENDER);
+    */
 
 	return true;
 }
@@ -153,14 +162,14 @@ bool CinematicRenderer::GetCapabilities(Call& call) {
 /*
 * CinematicRenderer::GetExtents
 */
-bool CinematicRenderer::GetExtents(Call& call) {
+bool CinematicRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
 
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
         if (ccc == nullptr) return false;
@@ -210,7 +219,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
 /*
 * CinematicRenderer::Render
 */
-bool CinematicRenderer::Render(Call& call) {
+bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
     if (cr3d_in == nullptr) return false;
@@ -345,7 +354,7 @@ bool CinematicRenderer::Render(Call& call) {
     cr3d_out->SetOutputBuffer(&this->fbo);
 
     // Call render function of slave renderer
-    (*cr3d_out)(0);
+    (*cr3d_out)(core::view::AbstractCallRender::FnRender);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
@@ -618,12 +627,109 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
             //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
         }
     }
-    /* Is not recognised ... so manipulated keyframes have to be updated each small step ... ;-(
-    else if (!(flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
-        
-        consume = true;
-    }
-    */
+    // Is not recognised ... so manipulated keyframes have to be updated each small step ... ;-(
+    //else if (!(flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
+    //    consume = true;
+    //}
+    
     
     return consume;
+}
+
+
+
+
+
+
+bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool CinematicRenderer::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+    // This mouse handling/mapping is so utterly weird and should die!
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    }
+    else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    }
+    else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseButton;
+    evt.mouseButtonData.button = button;
+    evt.mouseButtonData.action = action;
+    evt.mouseButtonData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
+
+    return true;
+}
+
+
+bool CinematicRenderer::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool CinematicRenderer::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnMouseScroll)) return false;
+
+    return true;
 }

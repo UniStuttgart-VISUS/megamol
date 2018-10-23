@@ -32,6 +32,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::view;
 using namespace megamol::core::utility;
 using namespace megamol::cinematiccamera;
 
@@ -964,4 +965,53 @@ bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
         vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;
+}
+
+
+
+
+
+
+
+
+bool TimeLineRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+
+    return true;
+}
+
+
+bool TimeLineRenderer::OnChar(unsigned int codePoint) {
+
+    return true;
+}
+
+
+bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+    // This mouse handling/mapping is so utterly weird and should die!
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    }
+    else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    }
+    else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    return true;
+}
+
+
+bool TimeLineRenderer::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+    return true;
+}
+
+
+bool TimeLineRenderer::OnMouseScroll(double dx, double dy) {
+
+    return true;
 }

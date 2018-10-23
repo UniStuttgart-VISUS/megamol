@@ -19,7 +19,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 
+#include "vislib/graphics/InputModifiers.h"
+#include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
@@ -80,15 +83,6 @@ namespace megamol {
 			* Implementation of 'Release'.
 			*/
 			virtual void release(void);
-
-			/**
-			* Callback for mouse events (move, press, and release)
-			*
-			* @param x The x coordinate of the mouse in world space
-			* @param y The y coordinate of the mouse in world space
-			* @param flags The mouse flags
-			*/
-			virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 			
             /**
             * The get extents callback. The module should set the members of
@@ -109,6 +103,27 @@ namespace megamol {
             * @return The return value of the function.
             */
             virtual bool Render(core::view::CallRender2D& call);
+
+            /**
+            * Callback for mouse events (move, press, and release)
+            *
+            * @param x The x coordinate of the mouse in world space
+            * @param y The y coordinate of the mouse in world space
+            * @param flags The mouse flags
+            */
+            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+
+
+
+            virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
+
+            virtual bool OnChar(unsigned int codePoint) override;
+
+            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+
+            virtual bool OnMouseMove(double x, double y) override;
+
+            virtual bool OnMouseScroll(double dx, double dy) override;
 
 		private:
 			
@@ -160,6 +175,20 @@ namespace megamol {
             float                          rulerMarkSize;
             unsigned int                   fps;
             vislib::math::Vector<float, 2> viewport;
+
+            /*** INPUT ********************************************************/
+
+            /** the input modifiers corresponding to this cursor. */
+            vislib::graphics::InputModifiers modkeys;
+
+            /** the 2d cursor of this view */
+            vislib::graphics::Cursor2D cursor2d;
+
+            /** The mouse x coordinate */
+            float mouseX;
+
+            /** The mouse y coordinate */
+            float mouseY;
 
             /**********************************************************************
             * functions
