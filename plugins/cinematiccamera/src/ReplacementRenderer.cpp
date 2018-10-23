@@ -95,7 +95,7 @@ bool ReplacementRenderer::GetCapabilities(megamol::core::view::CallRender3D& cal
 
     // Propagate changes made in GetCapabilities() from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(2)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetCapabilities)) {
         cr3d_in->AddCapability(cr3d_out->GetCapabilities());
     }
 
