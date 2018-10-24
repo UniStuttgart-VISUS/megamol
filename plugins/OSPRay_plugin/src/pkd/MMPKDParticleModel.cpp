@@ -5,7 +5,7 @@
 
 using namespace megamol;
 
-void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphericalParticles const& parts) {
+void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphericalParticles const& parts, bool upgradeToDouble) {
     auto const vtype = parts.GetVertexDataType();
     auto const ctype = parts.GetColourDataType();
 
@@ -41,7 +41,7 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
     lbbox.upper.y = mmbbox.GetTop();
     lbbox.upper.z = mmbbox.GetFront();
 
-    if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+    if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ && !upgradeToDouble) {
         if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
             vislib::sys::Log::DefaultLog.WriteWarn("MMPKDParticleModel only supports UINT8_RGBA for FLOAT_XYZ, falling back to UINT8_RGBA");
         }
@@ -82,9 +82,9 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
         }
 
         numParticles = this->positionf.size();
-    } else if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
+    } else if (vtype == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ || upgradeToDouble) {
         if (ctype != megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA) {
-            vislib::sys::Log::DefaultLog.WriteWarn("MMPKDParticleModel only supports SHORT_RGBA for FLOAT_XYZ, falling back to SHORT_RGBA");
+            vislib::sys::Log::DefaultLog.WriteWarn("MMPKDParticleModel only supports SHORT_RGBA for DOUBLE_XYZ, falling back to SHORT_RGBA");
         }
 
         doublePrecision = true;
@@ -114,10 +114,10 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
 
             double color = 0.0;
             auto const ptr = reinterpret_cast<unsigned short*>(&color);
-            ptr[0] = static_cast<unsigned short>(col.x);// * 257;
-            ptr[1] = static_cast<unsigned short>(col.y);// * 257;
-            ptr[2] = static_cast<unsigned short>(col.z);// * 257;
-            ptr[3] = static_cast<unsigned short>(col.w);// * 257;
+            ptr[0] = static_cast<unsigned short>(col.x); // * 257;
+            ptr[1] = static_cast<unsigned short>(col.y); // * 257;
+            ptr[2] = static_cast<unsigned short>(col.z); // * 257;
+            ptr[3] = static_cast<unsigned short>(col.w); // * 257;
 
             this->positiond.emplace_back(pos, color);
         }

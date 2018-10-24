@@ -8,6 +8,7 @@
 #include "ospray/ospcommon/vec.h"
 
 #include "pkd/MMPKDParticleModel.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace ospray {
@@ -48,6 +49,8 @@ private:
 
     std::vector<std::vector<ospcommon::vec4f>> data_f;
     std::vector<std::vector<ospcommon::vec4d>> data_d;
+
+    megamol::core::param::ParamSlot upgradeToDoubleSlot;
 
     __forceinline size_t isInnerNode(const size_t nodeID) const { return nodeID < numInnerNodes; }
     __forceinline size_t isLeafNode(const size_t nodeID) const { return nodeID >= numInnerNodes; }

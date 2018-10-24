@@ -24,7 +24,7 @@ struct MMPKDParticleModel {
     std::vector<ospcommon::vec4f> positionf; //!< particle position in float + color encoded in 'w'
     std::vector<ospcommon::vec4d> positiond; //!< particle position in double + color encoded in 'w'
 
-    void fill(megamol::core::moldyn::SimpleSphericalParticles const& parts);
+    void fill(megamol::core::moldyn::SimpleSphericalParticles const& parts, bool upgradeToDouble);
 
     double GetCoord(size_t const idx, size_t const dim) { if (doublePrecision) return positiond[idx][dim]; else return static_cast<double>(positionf[idx][dim]); }
 

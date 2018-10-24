@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <thread>
+#include "mmcore/param/BoolParam.h"
 
 #define POS(idx, dim) pos(idx, dim)
 
@@ -14,8 +15,12 @@ ospray::MMPKDBuilder::MMPKDBuilder()
     , inDataHash(0)
     , outDataHash(0)
     , numParticles(0)
-    , numInnerNodes(0) {
+    , numInnerNodes(0)
+    , upgradeToDoubleSlot("upgrade_to_double", "Upgrades the data to double precision") {
     model = std::make_shared<MMPKDParticleModel>();
+
+    upgradeToDoubleSlot << new megamol::core::param::BoolParam(false);
+    MakeSlotAvailable(&upgradeToDoubleSlot);
 }
 
 
@@ -55,7 +60,7 @@ bool ospray::MMPKDBuilder::manipulateData(
 
         // put data the data into the model
         // and build the pkd tree
-        this->model->fill(parts);
+        this->model->fill(parts, upgradeToDoubleSlot.Param<megamol::core::param::BoolParam>()->Value());
         this->build();
 
         if (this->model->IsDoublePrecision()) {
