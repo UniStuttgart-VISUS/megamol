@@ -16,6 +16,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "tesselator.h"
 #include "vislib/math/Matrix.h"
@@ -53,7 +54,7 @@ SombreroWarper::SombreroWarper(void)
     , invertNormalParam("invertNormals", "Inverts the surface normals")
     , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
     , meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier")
-    , useNewRadius("newRadius", "Use the radius computed from geometry instead of the caver radii") {
+    , radiusSelectionSlot("radiusVariant", "Select the radius computation method") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(
@@ -100,8 +101,12 @@ SombreroWarper::SombreroWarper(void)
     this->fixMeshParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->fixMeshParam);
 
-    this->useNewRadius.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->useNewRadius);
+    param::EnumParam * ep = new param::EnumParam(0);
+    ep->SetTypePair(0, "Geometry-based");
+    ep->SetTypePair(1, "Exit radius");
+    ep->SetTypePair(2, "Bottleneck radius");
+    this->radiusSelectionSlot << ep;
+    this->MakeSlotAvailable(&this->radiusSelectionSlot);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -235,7 +240,7 @@ bool SombreroWarper::getExtent(Call& call) {
         timebegin = std::chrono::steady_clock::now();
 #endif
         // set the surface normals to correct values
-        if (!this->recomputeVertexNormals()) return false;
+        if (!this->recomputeVertexNormals(*tunnelCall)) return false;
 
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
@@ -308,8 +313,8 @@ void SombreroWarper::checkParameters(void) {
         this->fixMeshParam.ResetDirty();
         this->dirtyFlag = true;
     }
-    if (this->useNewRadius.IsDirty()) {
-        this->useNewRadius.ResetDirty();
+    if (this->radiusSelectionSlot.IsDirty()) {
+        this->radiusSelectionSlot.ResetDirty();
         this->dirtyFlag = true;
     }
 }
@@ -941,7 +946,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         timebegin = std::chrono::steady_clock::now();
 #    endif
 
-        bool xzResult = this->computeXZCoordinatePerVertex();
+        bool xzResult = this->computeXZCoordinatePerVertex(tunnelCall);
         if (!xzResult) return false;
 
 #    ifdef SOMBRERO_TIMING
@@ -2249,15 +2254,32 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
 /**
  * SombreroWarper::computeXZCoordinatePerVertex
  */
-bool SombreroWarper::computeXZCoordinatePerVertex(void) {
+bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelCall) {
 
     bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
 
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
         float minRad = this->sombreroRadius[i];
-        if (useNewRadius.Param<param::BoolParam>()->Value()) {
+        switch (radiusSelectionSlot.Param<param::EnumParam>()->Value()) {
+        case 0: // Geometry-based
             minRad = this->sombreroRadiusNew[i];
+            break;
+        case 1: // Exit radius
+            // do nothing since the radius is already correct
+            break; 
+        case 2: // Bottleneck radius
+            if (tunnelCall.getTunnelNumber() > 0) {
+                minRad = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn("No tunnel descriptions given, falling back to geometry-based radius computation");
+                minRad = this->sombreroRadiusNew[i];
+            }
+            break;
+        default:
+            minRad = this->sombreroRadiusNew[i];
+            break;
         }
+
         float maxRad = minRad + this->brimWidth[i];
 
         std::set<uint> innerBorderSet;
@@ -2395,7 +2417,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(void) {
 /*
  * SombreroWarper::recomputeVertexNormals
  */
-bool SombreroWarper::recomputeVertexNormals(void) {
+bool SombreroWarper::recomputeVertexNormals(TunnelResidueDataCall& tunnelCall) {
 #ifdef NO_DEFORMATION // exit early if we want no new normals
     return true;
 #endif
@@ -2407,9 +2429,26 @@ bool SombreroWarper::recomputeVertexNormals(void) {
 
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
-        if (useNewRadius.Param<param::BoolParam>()->Value()) {
+        switch (radiusSelectionSlot.Param<param::EnumParam>()->Value()) {
+        case 0: // Geometry-based
             s_radius = this->sombreroRadiusNew[i];
+            break;
+        case 1: // Exit radius
+                // do nothing since the radius is already correct
+            break;
+        case 2: // Bottleneck radius
+            if (tunnelCall.getTunnelNumber() > 0) {
+                s_radius = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn("No tunnel descriptions given, falling back to geometry-based radius computation");
+                s_radius = this->sombreroRadiusNew[i];
+            }
+            break;
+        default:
+            s_radius = this->sombreroRadiusNew[i];
+            break;
         }
+
         auto s_length = this->sombreroLength[i];
         auto vert_cnt = this->vertices[i].size() / 3;
 

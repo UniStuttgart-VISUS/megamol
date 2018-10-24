@@ -167,7 +167,7 @@ private:
      *
      * @return True on success, false otherwise
      */
-    bool recomputeVertexNormals(void);
+    bool recomputeVertexNormals(TunnelResidueDataCall& tunnelCall);
 
     /**
      * Fixes the broken parts of the mesh
@@ -209,7 +209,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool computeXZCoordinatePerVertex(void);
+    bool computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelCall);
 
     /**
      * Divides the mesh in the brim and crown parts so that the lighting looks correct.
@@ -264,7 +264,7 @@ private:
     core::param::ParamSlot meshFixDistanceParam;
 
     /** New radius computed param */
-    core::param::ParamSlot useNewRadius;
+    core::param::ParamSlot radiusSelectionSlot;
 
     /** Vector containing the modified mesh data */
     std::vector<geocalls::CallTriMeshData::Mesh> meshVector;

@@ -67,7 +67,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
 
-    this->showRadiiSlot.SetParameter(new param::BoolParam(true));
+    this->showRadiiSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showRadiiSlot);
 
     this->lighting.SetParameter(new param::BoolParam(true));
