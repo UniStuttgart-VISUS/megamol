@@ -25,7 +25,7 @@ namespace MegaMolConf {
         static int slotHeight_ = 10;
         static int slotSpacing_ = 16;
         static int slotBorder = (slotSpacing - slotHeight) / 2;
-        //static float slotScale = 1.8f;
+        //static float BslotScale = 1.8f;
         static int moduleBorder = 10;
         static Pen selectedModulPen1 = makeMyPen1();
         static Pen selectedModulPen2 = makeMyPen2();
@@ -33,8 +33,8 @@ namespace MegaMolConf {
 
         public static float DpiFactor
         {
-            get => _dpiFactor;
-            set => _dpiFactor = value;
+            get { return _dpiFactor; }
+            set { _dpiFactor = value; }
         }
 
         static Pen makeMyPen1() {

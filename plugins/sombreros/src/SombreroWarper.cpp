@@ -917,8 +917,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         }
         this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
 
-        vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
-        vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
+        //vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
+        //vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
 
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
@@ -1451,7 +1451,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         float sombrad = lengthSum / (2.0f * thePi);
         this->sombreroRadiusNew[i] = sombrad;
 
-        vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
+        //vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
 
 #if 0 // switch for the colouring of the sweatedges
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);

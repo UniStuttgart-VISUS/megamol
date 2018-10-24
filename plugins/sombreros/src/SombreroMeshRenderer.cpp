@@ -990,21 +990,40 @@ bool SombreroMeshRenderer::Render(Call& call) {
         glVertex3f(bb.Right(), closest.GetY(), closest.GetZ());
         glEnd();
 
-        // TODO render font
         if (this->theFont.Initialise(this->GetCoreInstance())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
+            float distright = std::abs(closest.GetX() - bb.Right());
             vislib::StringA textleft = (trunc(distleft, 2) + " A").c_str();
-            vislib::StringA textright = "Test";
+            vislib::StringA textright = (trunc(distright, 2) + " A").c_str();
+
+            float sizeleft = 5.0f;
+            float sizeright = 5.0f;
+
+            while (theFont.LineWidth(sizeleft, textleft) > distleft && sizeleft > 1.0f) {
+                sizeleft -= 0.5f;
+            }
+            while (theFont.LineWidth(sizeright, textright) > distright && sizeright > 1.0f) {
+                sizeright -= 0.5f;
+            }
+
+            sizeleft = std::min(sizeleft, sizeright);
+            sizeright = sizeleft;
+
+            float leftwidth = theFont.LineWidth(sizeleft, textleft);
+            float rightwidth = theFont.LineWidth(sizeright, textright);
+            float leftheight = theFont.LineHeight(sizeleft);
+            float rightheight = theFont.LineHeight(sizeright);
+
+            float remainleft = distleft - leftwidth;
+            float remainright = distright - rightwidth;
 
             float fontCol[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-            this->theFont.DrawString(fontCol, bbCenter.GetX(), bbCenter.GetY() + 10.0f, bbCenter.GetZ(), std::abs(bbCenter.GetX() - closest.GetX()), 10.0f, 4.0f, false, textleft, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
+            this->theFont.DrawString(fontCol, bbCenter.GetX() + (remainleft / 2.0f), bbCenter.GetY() + 1.0 * leftheight, bbCenter.GetZ(), leftwidth, leftheight, sizeleft, false, textleft, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
+            this->theFont.DrawString(fontCol, closest.GetX() + (remainright / 2.0f), closest.GetY() + 1.0 * rightheight, closest.GetZ(), rightwidth, rightheight, sizeright, false, textright, megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
         }
 
         ::glEnable(GL_DEPTH_TEST);
     }
-
-    // copy index attributes
-
 
     // query the current state of the camera (needed for picking)
     GLfloat m[16];
