@@ -194,6 +194,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
             // read tunnel number
             int tunnelNum = std::stoi(values[2].PeekBuffer());
 
+            float bottleneckRadius = std::stof(values[5].PeekBuffer());
+
             if (tunnelNum > static_cast<int>(this->tunnelVector.size())) {
                 // no tunnel exists
                 Log::DefaultLog.WriteWarn(
@@ -201,6 +203,7 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
                 continue;
             }
 
+            this->tunnelVector[tunnelNum - 1].bottleneckRadius = bottleneckRadius;
             std::vector<float>* tp = &this->tunnelVector[tunnelNum - 1].coordinates;
             if (tp->size() != (values.size() - 12) * 4) { // 4 entries for each vertex
                 tp->resize((values.size() - 12) * 4, 0.0f);

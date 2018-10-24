@@ -38,6 +38,9 @@ public:
 
         /** The length of the tunnel */
         float tunnelLength;
+
+        /** The bottleneck radius of the tunnel */
+        float bottleneckRadius;
     };
 
     /**
