@@ -48,7 +48,11 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     rulerFontParam(      "01_fontSize", "The font size."),
     moveRightFrameParam ("02_rightFrame", "Move to right animation time frame."),
     moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
-    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes.")
+    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes."),
+    cursor2d(),
+    modkeys(),
+    mouseX(0.0f),
+    mouseY(0.0f)
 	{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -404,14 +408,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
 
-    // Get the foreground color (inverse background color)
+    // COLORS
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
     for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
     }
-    // COLORS
     float kColor[4]    = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME 
     float dkmColor[4]  = { 0.5f, 0.5f, 1.0f, 1.0f }; // Color for DRAGGED KEYFRAME MARKER 
     float skColor[4]   = { 0.2f, 0.2f, 1.0f, 1.0f }; // Color for SELECTED KEYFRAME 
@@ -419,14 +422,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float fColor[4]    = { 1.0f, 0.6f, 0.6f, 1.0f }; // Color for FRAME MARKER
     float white[4]     = { 1.0f, 1.0f, 1.0f, 1.0f };
     float menu[4]      = { 0.0f, 0.0f, 0.3f, 1.0f };
-    //float yellow[4]    = { 1.0f, 1.0f, 0.0f, 1.0f };
-    //float armColor[4]  = { 0.8f, 0.0f, 0.0f, 1.0f }; // Color for ANIMATION REPEAT MARKER
-    
-    // Adapt colors depending on  Lightness
+    // Swap keyframe colors depending on lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
         float tmp;
-        // Swap keyframe colors
         for (unsigned int i = 0; i < 4; i++) {
             tmp        = kColor[i];
             kColor[i]  = skColor[i];
@@ -690,8 +689,57 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 
 
 /*
+* cinematiccamera::TimeLineRenderer::loadTexture
+*/
+bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
+    static vislib::graphics::BitmapImage img;
+    static sg::graphics::PngBitmapCodec pbc;
+    pbc.Image() = &img;
+    ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    BYTE *buf = nullptr;
+    SIZE_T size = 0;
+
+    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf))) > 0) {
+        if (pbc.Load(buf, size)) {
+            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
+            for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
+                BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
+                BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
+                BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
+                if (r + g + b > 0) {
+                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
+                }
+                else {
+                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
+                }
+            }
+            markerTextures.Add(vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
+            markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
+            if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+                vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not load \"%s\" texture.", filename.PeekBuffer());
+                ARY_SAFE_DELETE(buf);
+                return false;
+            }
+            markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
+            ARY_SAFE_DELETE(buf);
+            return true;
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not read \"%s\" texture.", filename.PeekBuffer());
+        }
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
+    }
+    return false;
+}
+
+
+/*
 * cinematiccamera::TimeLineRenderer::MouseEvent
 */
+//*** DEPRECATED ***
+/*
 bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
@@ -707,22 +755,22 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
     }
 
 // LEFT-CLICK --- keyframe selection
-	if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) { 
+    if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
         // Do not snap to keyframe when mouse movement is continuous
         float offset = 0.0f;
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED || ((x == this->lastMousePos.X()) && (y == this->lastMousePos.Y()))) {
             offset = this->keyfMarkSize / 2.0f;
         }
         float animAxisX, posX;
-		//Check all keyframes if they are hit
+        //Check all keyframes if they are hit
         bool hit = false;
-		for (unsigned int i = 0; i < keyframes->Count(); i++){
+        for (unsigned int i = 0; i < keyframes->Count(); i++){
             animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                 posX = this->axisStartPos.X() + animAxisX;
                 if ((x < (posX + offset)) && (x > (posX - offset))) {
                     // If another keyframe is already hit, check which keyframe is closer to mouse position
-                    if (hit) { 
+                    if (hit) {
                         float deltaX = vislib::math::Abs(posX - x);
                         animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
                         if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
@@ -738,7 +786,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                     hit = true;
                 }
             }
-		}
+        }
         if (hit) {
             // Set hit keyframe as selected
             if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
@@ -749,12 +797,12 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             // Set an interpolated keyframe as selected
             float at = (((-1.0f)*this->animScaleOffset + (x - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
             ccc->setSelectedKeyframeTime(at);
-			if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         }
 
         // Store current mouse position for detecting continuous mouse movement
         this->lastMousePos.Set(x, y);
-	} 
+    }
 // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
     else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
         //Check all keyframes if they are hit
@@ -794,7 +842,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
             this->dragDropAxis = 0;
             this->lastMousePos.Set(x, y);
             if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
-        } 
+        }
 
         this->lastMousePos.Set(x, y);
     }
@@ -829,7 +877,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
                 }
                 this->dragDropKeyframe.SetSimTime(st);
             }
-        } 
+        }
         else {
             // Pan axes ...
             float panFac = 0.5f;
@@ -916,76 +964,43 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
         this->lastMousePos.Set(x, y);
     }
 
-	// If true is returned, manipulator cannot move camera
-	return true; // Consume all mouse events;
+    // If true is returned, manipulator cannot move camera
+    return true; // Consume all mouse events;
+}
+*/
+
+
+/*
+* cinematiccamera::TimeLineRenderer::OnKey
+*/
+bool TimeLineRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnKey].");
+
+
+
+
+    return true;
 }
 
 
 /*
-* cinematiccamera::TimeLineRenderer::loadTexture
+* cinematiccamera::TimeLineRenderer::OnChar
 */
-bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
-    static vislib::graphics::BitmapImage img;
-    static sg::graphics::PngBitmapCodec pbc;
-    pbc.Image() = &img;
-    ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    BYTE *buf = nullptr;
-    SIZE_T size = 0;
-
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf))) > 0) {
-        if (pbc.Load(buf, size)) {
-            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-            for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
-                BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
-                BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
-                BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
-                if (r + g + b > 0) {
-                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
-                }
-                else {
-                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
-                }
-            }
-            markerTextures.Add(vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
-            markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
-            if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not load \"%s\" texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
-                return false;
-            }
-            markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
-            return true;
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not read \"%s\" texture.", filename.PeekBuffer());
-        }
-    }
-    else {
-        vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
-    }
-    return false;
-}
-
-
-
-
-
-
-
-
-bool TimeLineRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
-
-    return true;
-}
-
-
 bool TimeLineRenderer::OnChar(unsigned int codePoint) {
 
+    vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnChar].");
+
+
+
+
     return true;
 }
 
 
+/*
+* cinematiccamera::TimeLineRenderer::OnMouseButton
+*/
 bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == MouseButtonAction::PRESS;
@@ -999,19 +1014,40 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
+    vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton].");
+
+
+
+
     return true;
 }
 
 
+/*
+* cinematiccamera::TimeLineRenderer::OnMouseMove
+*/
 bool TimeLineRenderer::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
+    vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseMove].");
+
+
+
+
     return true;
 }
 
 
+/*
+* cinematiccamera::TimeLineRenderer::OnMouseScroll
+*/
 bool TimeLineRenderer::OnMouseScroll(double dx, double dy) {
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseScroll].");
+
+
+
 
     return true;
 }

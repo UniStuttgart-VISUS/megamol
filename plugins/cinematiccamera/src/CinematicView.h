@@ -107,19 +107,6 @@ namespace megamol {
             */
             virtual void Render(const mmcRenderViewContext& context);
 
-
-
-
-            virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
-
-            virtual bool OnChar(unsigned int codePoint) override;
-
-            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
-
-            virtual bool OnMouseMove(double x, double y) override;
-
-            virtual bool OnMouseScroll(double dx, double dy) override;
-
 		private:
 
             typedef std::chrono::system_clock::time_point time_point;
@@ -173,20 +160,6 @@ namespace megamol {
                 time_point             start_time;
                 unsigned int           exp_frame_cnt;
             } pngdata;
-
-            /*** INPUT ********************************************************/
-
-            /** the input modifiers corresponding to this cursor. */
-            vislib::graphics::InputModifiers modkeys;
-
-            /** the 2d cursor of this view */
-            vislib::graphics::Cursor2D cursor2d;
-
-            /** The mouse x coordinate */
-            float mouseX;
-
-            /** The mouse y coordinate */
-            float mouseY;
 
             /**********************************************************************
             * functions

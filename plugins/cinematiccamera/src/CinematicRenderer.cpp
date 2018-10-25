@@ -40,8 +40,6 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->showHelpText      = false;
     this->manipOutsideModel = false;
 
-
-
     // init parameters
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
@@ -81,7 +79,7 @@ bool CinematicRenderer::create(void) {
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
-    const char *shaderName = "textureShader";
+    const char *shaderName = "CinematicRenderer_Render2Texture_Shader";
 
     try {
         if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("CinematicRenderer::vertex", vert)) {
@@ -569,6 +567,7 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     // Reset opengl
     glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glLineWidth(tmpLw);
     glPointSize(tmpPs);
 
@@ -582,6 +581,8 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
 * !!! ONLY triggered when "TAB" is pressed = > parameter 'enableMouseSelection' in View3D
 *
 */
+//*** DEPRECATED ***
+/*
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
 
     bool consume = false;
@@ -635,16 +636,19 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
     
     return consume;
 }
+*/
 
 
-
-
-
-
+/*
+* CinematicRenderer::OnKey
+*/
 bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnKey].");
+
+
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
-
     InputEvent evt;
     evt.tag = InputEvent::Tag::Key;
     evt.keyData.key = key;
@@ -657,10 +661,17 @@ bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view:
 }
 
 
+/*
+* CinematicRenderer::OnChar
+*/
 bool CinematicRenderer::OnChar(unsigned int codePoint) {
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnChar].");
+
+
+
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
-
     InputEvent evt;
     evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
@@ -671,6 +682,9 @@ bool CinematicRenderer::OnChar(unsigned int codePoint) {
 }
 
 
+/*
+* CinematicRenderer::OnMouseButton
+*/
 bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == MouseButtonAction::PRESS;
@@ -684,9 +698,12 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
+    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseButton].");
+
+
+
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
-
     InputEvent evt;
     evt.tag = InputEvent::Tag::MouseButton;
     evt.mouseButtonData.button = button;
@@ -699,9 +716,15 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
 }
 
 
+/*
+* CinematicRenderer::OnMouseMove
+*/
 bool CinematicRenderer::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseMove].");
+
 
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
@@ -720,10 +743,17 @@ bool CinematicRenderer::OnMouseMove(double x, double y) {
 }
 
 
+/*
+* CinematicRenderer::OnMouseScroll
+*/
 bool CinematicRenderer::OnMouseScroll(double dx, double dy) {
+
+    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseScroll].");
+
+
+
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
-
     InputEvent evt;
     evt.tag = InputEvent::Tag::MouseScroll;
     evt.mouseScrollData.dx = dx;

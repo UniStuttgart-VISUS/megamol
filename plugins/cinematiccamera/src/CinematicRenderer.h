@@ -162,9 +162,8 @@ namespace megamol {
             * @param y The y coordinate of the mouse in world space
             * @param flags The mouse flags
             */
-            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
-
-
+            //*** DEPRECATED ***
+            //virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
             virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
 
@@ -193,7 +192,7 @@ namespace megamol {
             KeyframeManipulator              manipulator;
             vislib::graphics::gl::FramebufferObject fbo;
 
-            /** The render to texture */
+            /** The render to texture shader */
             vislib::graphics::gl::GLSLShader textureShader;
 
             /*** INPUT ********************************************************/
@@ -202,13 +201,13 @@ namespace megamol {
             vislib::graphics::InputModifiers modkeys;
 
             /** the 2d cursor of this view */
-            vislib::graphics::Cursor2D cursor2d;
+            vislib::graphics::Cursor2D       cursor2d;
 
             /** The mouse x coordinate */
-            float mouseX;
+            float                            mouseX;
 
             /** The mouse y coordinate */
-            float mouseY;
+            float                             mouseY;
 
             /**********************************************************************
             * callback stuff

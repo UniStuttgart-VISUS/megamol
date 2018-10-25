@@ -392,13 +392,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -418,9 +411,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
     }
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
      
     // Write frame to file
     if (this->rendering) {
@@ -446,8 +436,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_BLEND);
 
     glEnable(GL_DEPTH_TEST);
@@ -819,106 +807,6 @@ bool CinematicView::setSimTime(float st) {
 
     param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
-
-    return true;
-}
-
-
-
-
-
-
-
-
-bool CinematicView::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
-
-    return true;
-}
-
-
-bool CinematicView::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Char;
-    evt.charData.codePoint = codePoint;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnChar)) return false;
-
-    return true;
-}
-
-
-bool CinematicView::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
-    // This mouse handling/mapping is so utterly weird and should die!
-    auto down = action == MouseButtonAction::PRESS;
-    if (mods.test(Modifier::SHIFT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    }
-    else if (mods.test(Modifier::CTRL)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    }
-    else if (mods.test(Modifier::ALT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
-    }
-
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseButton;
-    evt.mouseButtonData.button = button;
-    evt.mouseButtonData.action = action;
-    evt.mouseButtonData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
-
-    return true;
-}
-
-
-bool CinematicView::OnMouseMove(double x, double y) {
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
-
-
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (cr) {
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-bool CinematicView::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnMouseScroll)) return false;
 
     return true;
 }

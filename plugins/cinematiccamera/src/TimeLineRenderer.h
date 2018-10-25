@@ -111,9 +111,8 @@ namespace megamol {
             * @param y The y coordinate of the mouse in world space
             * @param flags The mouse flags
             */
-            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
-
-
+            //*** DEPRECATED ***
+            //virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
             virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
 
