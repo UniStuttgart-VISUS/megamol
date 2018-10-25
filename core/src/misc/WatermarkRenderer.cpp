@@ -30,7 +30,9 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     paramScaleBottomLeft( "08_scaleBottomLeft", "The scale factor for the botttom left watermark."),
     paramImgBottomRight(  "09_imageBottomRight", "The image file name for the bottom right watermark."),
     paramScaleBottomRight("10_scaleBottomRight", "The scale factor for the bottom right watermark."),
-    textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight(),
+    paramImgCenter(       "11_imageCenter", "The image file name for the center watermark."),
+    paramScaleCenter(     "12_scaleCenter", "The scale factor for the center watermark."),
+    textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight(), textureCenter(),
     shader(), vbos() {
 
     this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
@@ -49,6 +51,9 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     this->paramImgBottomRight.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->paramImgBottomRight);
 
+    this->paramImgCenter.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->paramImgCenter);
+
     // Init scale params
     this->paramScaleAll.SetParameter(new param::FloatParam(1.0, 0.0000001f));
     this->MakeSlotAvailable(&this->paramScaleAll);
@@ -64,6 +69,9 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
 
     this->paramScaleBottomRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
     this->MakeSlotAvailable(&this->paramScaleBottomRight);
+
+    this->paramScaleCenter.SetParameter(new param::FloatParam(1.0, 0.0000001f));
+    this->MakeSlotAvailable(&this->paramScaleCenter);
 
     // Init alpha param 
     this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
@@ -94,6 +102,7 @@ void WatermarkRenderer::release(void) {
     this->textureBottomRight.Release();
     this->textureTopLeft.Release();
     this->textureTopRight.Release();
+    this->textureCenter.Release();
     // Shader
     this->shader.Release();
     // VBOs
@@ -188,6 +197,10 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
         this->paramImgBottomRight.ResetDirty();
         this->loadTexture(WatermarkRenderer::BOTTOM_RIGHT, static_cast<vislib::StringA>(this->paramImgBottomRight.Param<param::FilePathParam>()->Value()));
     }
+    if (this->paramImgCenter.IsDirty()) {
+        this->paramImgCenter.ResetDirty();
+        this->loadTexture(WatermarkRenderer::CENTER, static_cast<vislib::StringA>(this->paramImgCenter.Param<param::FilePathParam>()->Value()));
+    }
     if (this->paramScaleAll.IsDirty()) {
         this->paramScaleAll.ResetDirty();
         float scaleAll = this->paramScaleAll.Param<param::FloatParam>()->Value();
@@ -197,6 +210,7 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
             this->paramScaleTopRight.Param<param::FloatParam>()->SetValue(this->paramScaleTopRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
             this->paramScaleBottomLeft.Param<param::FloatParam>()->SetValue(this->paramScaleBottomLeft.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
             this->paramScaleBottomRight.Param<param::FloatParam>()->SetValue(this->paramScaleBottomRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
+            this->paramScaleCenter.Param<param::FloatParam>()->SetValue(this->paramScaleCenter.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
         }
         else {
             this->firstParamChange = true;
@@ -245,6 +259,7 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
     this->renderWatermark(WatermarkRenderer::TOP_RIGHT,    vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_LEFT,  vpHeight, vpWidth);
     this->renderWatermark(WatermarkRenderer::BOTTOM_RIGHT, vpHeight, vpWidth);
+    this->renderWatermark(WatermarkRenderer::CENTER,       vpHeight, vpWidth);
     glBindVertexArray(0);
 
     // Reset opengl states
@@ -312,12 +327,22 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
         top         = imageHeight;
         bottom      = 0.0f;
         break;
+    case(WatermarkRenderer::CENTER):
+        tex         = &this->textureCenter;
+        scale       = this->paramScaleCenter.Param<param::FloatParam>()->Value();
+        imageWidth  = fixImgWidth * scale;
+        imageHeight = fixImgWidth * (this->sizeCenter.Y() / this->sizeCenter.X()) * scale;
+        left        = vpW / 2.0f - imageWidth / 2.0f;
+        right       = vpW / 2.0f + imageWidth / 2.0f;
+        top         = vpH / 2.0f + imageHeight / 2.0f;
+        bottom      = vpH / 2.0f - imageHeight / 2.0f;
+        break;
     default: vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Unknown corner -> BUG.");
         return false;
     }
 
     if (!tex->IsValid()) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Texture is not valid.");
+        //vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [renderWatermark] Texture is not valid.");
         return false;
     }
 
@@ -477,6 +502,10 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
     case(WatermarkRenderer::BOTTOM_RIGHT):
         tex = &this->textureBottomRight;
         texSize = &this->sizeBottomRight;
+        break;
+    case(WatermarkRenderer::CENTER):
+        tex = &this->textureCenter;
+        texSize = &this->sizeCenter;
         break;
     default: vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Unknown corner -> BUG.");
         return false;

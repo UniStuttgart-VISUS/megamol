@@ -138,17 +138,20 @@ namespace megamol {
                     TOP_RIGHT    = 1,
                     BOTTOM_LEFT  = 2,
                     BOTTOM_RIGHT = 3,
+                    CENTER       = 4
                 };
 
                 vislib::graphics::gl::OpenGLTexture2D textureTopLeft;
                 vislib::graphics::gl::OpenGLTexture2D textureTopRight;
                 vislib::graphics::gl::OpenGLTexture2D textureBottomLeft;
                 vislib::graphics::gl::OpenGLTexture2D textureBottomRight;
+                vislib::graphics::gl::OpenGLTexture2D textureCenter;
 
                 vislib::math::Vector<float, 2> sizeTopLeft;
                 vislib::math::Vector<float, 2> sizeTopRight;
                 vislib::math::Vector<float, 2> sizeBottomLeft;
                 vislib::math::Vector<float, 2> sizeBottomRight;
+                vislib::math::Vector<float, 2> sizeCenter;
 
                 float lastScaleAll;
                 bool  firstParamChange;
@@ -219,12 +222,14 @@ namespace megamol {
                 core::param::ParamSlot paramImgTopRight;
                 core::param::ParamSlot paramImgBottomLeft;
                 core::param::ParamSlot paramImgBottomRight;
+                core::param::ParamSlot paramImgCenter;
 
                 /** Scaling parameters for each watermark. */
                 core::param::ParamSlot paramScaleTopLeft;
                 core::param::ParamSlot paramScaleTopRight;
                 core::param::ParamSlot paramScaleBottomLeft;
                 core::param::ParamSlot paramScaleBottomRight;
+                core::param::ParamSlot paramScaleCenter;
 
                 /**********************************************************************
                 * callback slots
