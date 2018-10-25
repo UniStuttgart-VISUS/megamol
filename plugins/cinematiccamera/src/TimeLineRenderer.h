@@ -104,25 +104,11 @@ namespace megamol {
             */
             virtual bool Render(core::view::CallRender2D& call);
 
-            /**
-            * Callback for mouse events (move, press, and release)
-            *
-            * @param x The x coordinate of the mouse in world space
-            * @param y The y coordinate of the mouse in world space
-            * @param flags The mouse flags
-            */
-            //*** DEPRECATED ***
-            //virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
-
-            virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
-
-            virtual bool OnChar(unsigned int codePoint) override;
-
+            /** The mouse button pressed/released callback. */
             virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
 
+            /** The mouse movement callback. */
             virtual bool OnMouseMove(double x, double y) override;
-
-            virtual bool OnMouseScroll(double dx, double dy) override;
 
 		private:
 			
@@ -133,7 +119,6 @@ namespace megamol {
             // font rendering
             megamol::core::utility::SDFFont theFont;
 
-            // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
             vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
@@ -162,7 +147,7 @@ namespace megamol {
             float                          simScaleDelta;
             vislib::StringA                simFormatStr;
 
-            vislib::math::Vector<float, 2> lastMousePos;
+
             unsigned int                   scaleAxis;
 
             Keyframe                       dragDropKeyframe;
@@ -177,17 +162,16 @@ namespace megamol {
 
             /*** INPUT ********************************************************/
 
-            /** the input modifiers corresponding to this cursor. */
-            vislib::graphics::InputModifiers modkeys;
-
-            /** the 2d cursor of this view */
-            vislib::graphics::Cursor2D cursor2d;
-
-            /** The mouse x coordinate */
+            /** The current mouse coordinates */
             float mouseX;
-
-            /** The mouse y coordinate */
             float mouseY;
+
+            /** The last mouse coordinates */
+            float lastMouseX;
+            float lastMouseY;
+
+            core::view::MouseButton       mouseButton;
+            core::view::MouseButtonAction mouseAction;
 
             /**********************************************************************
             * functions

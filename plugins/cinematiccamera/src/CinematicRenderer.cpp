@@ -27,18 +27,18 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
-    cursor2d(),
-    modkeys(),
-    mouseX(0.0f),
-    mouseY(0.0f)
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box.")
     {
 
     // init variables
-    this->interpolSteps     = 20;
-    this->toggleManipulator = 0;
-    this->showHelpText      = false;
-    this->manipOutsideModel = false;
+    this->mouseX             = 0.0f;
+    this->mouseY             = 0.0f;
+    this->interpolSteps      = 20;
+    this->toggleManipulator  = 0;
+    this->manipulatorGrabbed = false;
+    this->showMode           = false;
+    this->showHelpText       = false;
+    this->manipOutsideModel  = false;
 
     // init parameters
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -396,34 +396,40 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
     GLfloat tmpPs;
     glGetFloatv(GL_POINT_SIZE, &tmpPs);
 
+    // MANIPULATORS
     if (keyframes->Count() > 0) {
-        // Manipulators
-        vislib::Array<KeyframeManipulator::manipType> availManip;
-        availManip.Clear();
-        availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
-        if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
-            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
-            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
-            availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
-        }
-        else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
-            availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
-        }
 
-        // Update manipulator data
-        this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
-            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
-            (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
-            (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
-            (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()), 
-            this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
+        // Update manipulator data only if currently no manipulator is grabbed
+        if (!this->manipulatorGrabbed) {
+
+            // Available manipulators
+            vislib::Array<KeyframeManipulator::manipType> availManip;
+            availManip.Clear();
+            availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
+
+            if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+                availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+                availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+                availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
+            }
+            else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
+                availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
+            }
+
+            this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+                (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+                (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+                (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
+                (ccc->getBboxCenter().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
+                this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
+        }
 
         // Draw manipulators
         this->manipulator.Draw();
@@ -457,13 +463,15 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    //if (cr3d_in->MouseSelection()) {
-    //    if (this->toggleManipulator == 0) { 
-    //        midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
-    //    } else {// if (this->toggleManipulator == 1) { 
-    //        midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
-    //    }
-    //} else {
+///TODO:  Detect whether mouse interaction is consumed by view or not.
+    if (this->showMode) {
+        if (this->toggleManipulator == 0) { 
+            midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
+        } else {// if (this->toggleManipulator == 1) { 
+            midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
+        }
+    } 
+    //else {
     //    midLabel = "SCENE manipulation";
     //}
     vislib::StringA rightLabel = " [h] show help text ";
@@ -576,16 +584,14 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
 
 
 /*
-* CinematicRenderer::MouseEvent
-*
-* !!! ONLY triggered when "TAB" is pressed = > parameter 'enableMouseSelection' in View3D
-*
+* CinematicRenderer::OnMouseButton
 */
-//*** DEPRECATED ***
-/*
-bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+// !!!ONLY triggered when "TAB" is pressed => parameter 'enableMouseSelection' in View3D
+bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
-    bool consume = false;
+    auto down = (action == MouseButtonAction::PRESS);
+
+    bool consumed = false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -595,57 +601,104 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
         return false;
     }
 
-    // on leftclick
-    if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
+    if (button == MouseButton::BUTTON_LEFT) {
+        if (down) {
+            this->showMode = true;
 
-        // Check if new keyframe position is selected
-        int index = this->manipulator.CheckKeyframePositionHit(x, y);
-        if (index >= 0) {
-            ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
-            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-            consume = true;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] KEYFRAME SELECT.");
+            // Check if manipulator is selected
+            if (this->manipulator.CheckManipulatorHit(this->mouseX, this->mouseY)) {
+                this->manipulatorGrabbed = true;
+                consumed = true;
+                //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
+            }
+            else {
+                // Check if new keyframe position is selected
+                int index = this->manipulator.CheckKeyframePositionHit(this->mouseX, this->mouseY);
+                if (index >= 0) {
+                    ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
+                    if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+                    consumed = true;
+                    //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] KEYFRAME SELECT.");
+                }
+            }
         }
-        
-        // Check if manipulator is selected
-        if (this->manipulator.CheckManipulatorHit(x, y)) {
-            consume = true;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
-        }        
-    }
-    else if ((flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
-        
-        // Apply changes on selected manipulator
-        if (this->manipulator.ProcessManipulatorHit(x, y)) {
+        else {
+            this->showMode = false;
 
-            ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
-            if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+            // Apply changes of selected manipulator and control points
+            if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
 
-            ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
-            if (!(*ccc)(CallCinematicCamera::CallForSetCtrlPoints)) return false;
+                ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
+                if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
 
-            consume = true;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
+                ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
+                if (!(*ccc)(CallCinematicCamera::CallForSetCtrlPoints)) return false;
+
+                this->manipulatorGrabbed = false;
+                consumed = true;
+                //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
+            }
         }
     }
-    // Is not recognised ... so manipulated keyframes have to be updated each small step ... ;-(
-    //else if (!(flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED)) {
-    //    consume = true;
-    //}
-    
-    
-    return consume;
+
+    if (!consumed) {
+        // Propagate only if event is not consumed 
+        auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+        if (cr == NULL) return false;
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
+    }
+
+    return true;
 }
+
+
+/*
+* CinematicRenderer::OnMouseMove
 */
+// !!!ONLY triggered when "TAB" is pressed => parameter 'enableMouseSelection' in View3D
+bool CinematicRenderer::OnMouseMove(double x, double y) {
+
+    bool consumed = false;
+
+    // Just store current mouse position
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+    // Update position of grabbed manipulator
+    if (this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
+        consumed = true;
+    }
+
+    if (!consumed) {
+        auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+        if (cr) {
+            InputEvent evt;
+                evt.tag = InputEvent::Tag::MouseMove;
+                evt.mouseMoveData.x = x;
+                evt.mouseMoveData.y = y;
+                cr->SetInputEvent(evt);
+            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 
 
 /*
 * CinematicRenderer::OnKey
-*/
+*//*
 bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
 
-    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnKey].");
-
+    // Unused
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
@@ -659,16 +712,14 @@ bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view:
 
     return true;
 }
-
+*/
 
 /*
 * CinematicRenderer::OnChar
-*/
+*//*
 bool CinematicRenderer::OnChar(unsigned int codePoint) {
 
-    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnChar].");
-
-
+    // Unused
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
@@ -680,77 +731,14 @@ bool CinematicRenderer::OnChar(unsigned int codePoint) {
 
     return true;
 }
-
-
-/*
-* CinematicRenderer::OnMouseButton
 */
-bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
-    // This mouse handling/mapping is so utterly weird and should die!
-    auto down = action == MouseButtonAction::PRESS;
-    if (mods.test(Modifier::SHIFT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    }
-    else if (mods.test(Modifier::CTRL)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    }
-    else if (mods.test(Modifier::ALT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
-    }
-
-    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseButton].");
-
-
-
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseButton;
-    evt.mouseButtonData.button = button;
-    evt.mouseButtonData.action = action;
-    evt.mouseButtonData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
-
-    return true;
-}
-
-
-/*
-* CinematicRenderer::OnMouseMove
-*/
-bool CinematicRenderer::OnMouseMove(double x, double y) {
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
-
-    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseMove].");
-
-
-
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if (cr) {
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 
 /*
 * CinematicRenderer::OnMouseScroll
-*/
+*//*
 bool CinematicRenderer::OnMouseScroll(double dx, double dy) {
 
-    vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [OnMouseScroll].");
-
-
+    // Unused
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
@@ -763,3 +751,4 @@ bool CinematicRenderer::OnMouseScroll(double dx, double dy) {
 
     return true;
 }
+*/

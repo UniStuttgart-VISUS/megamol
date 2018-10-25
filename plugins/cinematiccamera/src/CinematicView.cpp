@@ -439,6 +439,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_BLEND);
 
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();

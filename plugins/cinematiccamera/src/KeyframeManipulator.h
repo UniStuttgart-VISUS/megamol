@@ -178,7 +178,7 @@ namespace megamol {
             vislib::math::Vector<float, 2> getScreenSpace(vislib::math::Vector<float, 3> wp);
 
             /** */
-            bool updateManipulators(void);
+            bool updateManipulatorPositions(void);
 
             /** Convert Vector to Point*/
             inline vislib::math::Point<float, 3> V2P(vislib::math::Vector<float, 3> v) {
