@@ -113,6 +113,7 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));

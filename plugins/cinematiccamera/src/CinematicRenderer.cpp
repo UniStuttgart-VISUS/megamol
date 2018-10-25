@@ -167,8 +167,8 @@ bool CinematicRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
 
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
         if (ccc == nullptr) return false;
         if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
