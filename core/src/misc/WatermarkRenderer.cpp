@@ -342,6 +342,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     }
 
     if (!tex->IsValid()) {
+        // e.g. no filename is given ..
         //vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [renderWatermark] Texture is not valid.");
         return false;
     }
