@@ -30,7 +30,10 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
   else()
     include(GNUInstallDirs)
-    set(TNY_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyply.so")
+    set(TNY_IMPORT_LIB_DEBUG "lib/libtinyply.so")
+    set(TNY_IMPORT_LIB "lib/libtinyply.so")
+    set(TNY_LIB_DEBUG "lib/libtinyply.so")
+    set(TNY_LIB "lib/libtinyply.so")
   endif()
 
   add_external_library(tinyply SHARED

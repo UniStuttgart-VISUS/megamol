@@ -230,6 +230,8 @@ namespace utility {
         int Help(lua_State *L);
         int Quit(lua_State *L);
 
+        int ReadTextFile(lua_State* L);
+
     private:
 
         /** error handler */

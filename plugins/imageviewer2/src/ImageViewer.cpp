@@ -21,7 +21,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"

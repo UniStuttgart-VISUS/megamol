@@ -154,8 +154,8 @@ namespace megamol {
             vislib::math::Cuboid<float>      modelBbox;
             bool                             manipOusideBbox;
 
-            vislib::math::Vector<float, 3>   firstCtrllPos;
-            vislib::math::Vector<float, 3>   lastCtrllPos;
+            vislib::math::Vector<float, 3>   startCtrllPos;
+            vislib::math::Vector<float, 3>   endCtrllPos;
             bool                             selectedIsFirst;
             bool                             selectedIsLast;
 

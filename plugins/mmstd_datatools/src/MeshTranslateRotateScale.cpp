@@ -140,7 +140,7 @@ bool datatools::MeshTranslateRotateScale::manipulateData(
     finalData = new float*[mlc];
     this->mesh = new geocalls::CallTriMeshData::Mesh[mlc];
     for (unsigned int i = 0; i < mlc; i++) {
-        geocalls::CallTriMeshData::Mesh& m = static_cast<geocalls::CallTriMeshData::Mesh>(outData.Objects()[i]);
+        auto& m = outData.Objects()[i];
 
         uint64_t vcnt = m.GetVertexCount();
         uint64_t fcnt = m.GetTriCount();
