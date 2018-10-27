@@ -620,10 +620,10 @@ void ThrustScanWrapper(unsigned int* output, unsigned int* input, unsigned int n
 
 void ThrustScanWrapperUint2(uint2* output, uint2* input, unsigned int numElements) {
     const uint2 zero = make_uint2(0, 0);
-    /*thrust::exclusive_scan(thrust::device_ptr<uint2>(input),
+    thrust::exclusive_scan(thrust::device_ptr<uint2>(input),
                            thrust::device_ptr<uint2>(input + numElements),
                            thrust::device_ptr<uint2>(output),
-                           zero);*/
+                           zero);
 }
 
 
