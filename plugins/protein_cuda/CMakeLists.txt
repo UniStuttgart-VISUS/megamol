@@ -19,7 +19,7 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
 
   string(REPLACE "." ";" CUDA_VERSION_LIST ${CMAKE_CUDA_COMPILER_VERSION})
   list(GET CUDA_VERSION_LIST 0 CUDA_VERSION_MAJOR)
-  if(NOT CUDA_VERSION_MAJOR MATCHES 8)
+  if(NOT CUDA_VERSION_MAJOR GREATER 7)
     message(FATAL_ERROR "Protein_CUDA currently only supports CUDA 8. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Protein_CUDA plugin or install the correct version of CUDA." )
   endif()
 

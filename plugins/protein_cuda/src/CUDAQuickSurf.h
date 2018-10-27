@@ -21,6 +21,8 @@
 #define CUDAQUICKSURF_H
 
 #include <vector_types.h>
+#include <driver_types.h>
+
 
 // Write file for Daniel Kauker (puxel)
 //#define WRITE_FILE

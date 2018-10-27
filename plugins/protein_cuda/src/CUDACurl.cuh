@@ -11,6 +11,8 @@
 #define MMPROTEINCUDAPLUGIN_CUDACURL_CUH
 
 #include <vector_types.h>
+#include <driver_types.h>
+
 
 /** Struct holding several grid params */
 struct CurlGridParams {

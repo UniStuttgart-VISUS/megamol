@@ -9,6 +9,7 @@
 #define MMPROTEINCUDAPLUGIN_CUDAFIELDTOPOLOGY_CUH
 
 #include <vector_types.h>
+#include <driver_types.h>
 
 typedef unsigned int uint;
 
