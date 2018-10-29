@@ -100,7 +100,7 @@ void megamol::ospray::MMPKDParticleModel::fill(megamol::core::moldyn::SimpleSphe
             pos.z = part.vert.GetZd();
 
             ospcommon::vec4ui col;
-            if (globCol) {
+            if (!globCol) {
                 col.x = part.col.GetRu16();
                 col.y = part.col.GetGu16();
                 col.z = part.col.GetBu16();
