@@ -203,7 +203,8 @@ private:
 
 #ifdef WITH_MPI
     /** The communicator that the view uses. */
-    MPI_Comm comm;
+    MPI_Comm comm = MPI_COMM_NULL;
+    MPI_Comm roleComm;
 #endif /* WITH_MPI */
 
     int mpiRank = 0;
@@ -212,7 +213,6 @@ private:
 
     enum mpiRole { IMG_BLANK = 10, IMG_LEFT = 11, IMG_RIGHT = 12};
 
-    MPI_Comm roleComm;
     int roleRank = -1, roleSize = -1;
     int rank = -1;
     mpiRole myRole;

@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #endif /* _WIN32 */
 #include "vislib/graphics/gl/IncludeAllGL.h"
 

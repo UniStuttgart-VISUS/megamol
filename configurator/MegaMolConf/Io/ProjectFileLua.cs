@@ -22,7 +22,7 @@ namespace MegaMolConf.Io {
         }
 
         public override void Save(string filename) {
-            using (StreamWriter w = new StreamWriter(filename, false, Encoding.UTF8)) {
+            using (StreamWriter w = new StreamWriter(filename, false, Encoding.ASCII)) {
                 if (!string.IsNullOrEmpty(GeneratorComment)) {
                     w.WriteLine("--[[ " + GeneratorComment + " --]]");
                     w.WriteLine();

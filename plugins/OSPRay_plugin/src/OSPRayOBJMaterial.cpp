@@ -16,6 +16,7 @@ OSPRayOBJMaterial::OSPRayOBJMaterial(void) :
     AbstractOSPRayMaterial(),
     // Distant light parameters
     // OBJMATERIAL
+
     Kd("DiffuseColor", "Diffuse color"),
     Ks("SpecularColor", "Specular color"),
     Ns("Shininess", "Phong exponent"),

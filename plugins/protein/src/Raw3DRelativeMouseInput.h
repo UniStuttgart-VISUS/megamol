@@ -26,6 +26,8 @@
 
 #include <shlwapi.h>
 #include <Windows.h>
+#undef min
+#undef max
 
 /**
 * This class creates a hidden message window and establishes a connection with a six

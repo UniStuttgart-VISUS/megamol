@@ -34,7 +34,7 @@ OSPRayStructureContainer::OSPRayStructureContainer() :
  xData(NULL),
  yData(NULL),
  zData(NULL),
- ospstructure(NULL),
+ ospStructures(NULL),
  type(structureTypeEnum::UNINITIALIZED) { }
 
 OSPRayStructureContainer::~OSPRayStructureContainer() {

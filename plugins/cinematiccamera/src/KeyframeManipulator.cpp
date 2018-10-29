@@ -34,8 +34,8 @@ KeyframeManipulator::KeyframeManipulator(void) {
     this->viewportSize        = vislib::math::Dimension<int, 2>();
     this->worldCamLaDir       = vislib::math::Vector<float, 3>();
     this->worldCamModDir      = vislib::math::Vector<float, 3>();
-    this->firstCtrllPos       = vislib::math::Vector<float, 3>();
-    this->lastCtrllPos        = vislib::math::Vector<float, 3>();
+    this->startCtrllPos       = vislib::math::Vector<float, 3>();
+    this->endCtrllPos         = vislib::math::Vector<float, 3>();
     this->selectedIsFirst     = false;
     this->selectedIsLast      = false;
     this->isDataDirty         = true;
@@ -62,7 +62,7 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 */
 bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob,
-    vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp) {
+    vislib::math::Vector<float, 3> scp, vislib::math::Vector<float, 3> ecp) {
 
     if (kfa == NULL) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [Update] Pointer to keyframe array is NULL.");
@@ -74,10 +74,10 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
 
     // Update ModelViewPorjectionMatrix ---------------------------------------
     // and position of world camera 
-    bool recalcKf = false;
+    bool worldChanged = false;
     if ((this->modelViewProjMatrix != mvpm) || (this->worldCamLaDir != wclad) || (this->worldCamModDir != wcmd)) {
         this->calculateCircleVertices();
-        recalcKf = true;
+        worldChanged = true;
     }
     this->modelViewProjMatrix = mvpm;
     this->worldCamLaDir       = wclad;
@@ -89,7 +89,7 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
-    if ((this->selectedKf != skf) || recalcKf) {
+    if ((this->selectedKf != skf) || (this->startCtrllPos != scp) || (this->endCtrllPos != ecp) || worldChanged) {
         this->selectedKf = skf;
 
         // Check if selected keyframe exists in keyframe array
@@ -101,8 +101,8 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
 
         this->selectedIsFirst = (this->selectedKf == kfa->First())?(true):(false);
         this->selectedIsLast  = (this->selectedKf == kfa->Last())?(true):(false);
-        this->firstCtrllPos   = fcp;
-        this->lastCtrllPos    = lcp;
+        this->startCtrllPos   = scp;
+        this->endCtrllPos     = ecp;
 
         this->updateManipulators();
     }
@@ -110,7 +110,7 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     // Update  keyframe positions of array ------------------------------------
     unsigned int kfACnt     = static_cast<unsigned int>(kfa->Count());
     unsigned int kfArrayCnt = static_cast<unsigned int>(this->kfArray.Count());
-    if ((kfACnt != kfArrayCnt) || recalcKf) {
+    if ((kfACnt != kfArrayCnt) || worldChanged) {
         this->kfArray.Clear();
         this->kfArray.AssertCapacity(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
@@ -152,7 +152,6 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
 }
 
 
-
 /*
 * KeyframeManipulator::updateManipulators
 */
@@ -180,13 +179,14 @@ bool KeyframeManipulator::updateManipulators() {
     float len;
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
+        tmpV = vislib::math::Vector<float, 3>();
         switch (static_cast<manipType>(i)) {
             case (manipType::CTRL_POINT_POS_X):
                 if (this->selectedIsFirst) {
-                    tmpV = this->firstCtrllPos;
+                    tmpV = this->startCtrllPos;
                 }
                 else if (this->selectedIsLast) {
-                    tmpV = this->lastCtrllPos;
+                    tmpV = this->endCtrllPos;
                 }
                 tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(length*0.5f, 0.0f, 0.0f);
                 if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
@@ -195,10 +195,10 @@ bool KeyframeManipulator::updateManipulators() {
              break;
             case (manipType::CTRL_POINT_POS_Y):
                 if (this->selectedIsFirst) {
-                    tmpV = this->firstCtrllPos;
+                    tmpV = this->startCtrllPos;
                 }
                 else if (this->selectedIsLast) {
-                    tmpV = this->lastCtrllPos;
+                    tmpV = this->endCtrllPos;
                 }
                 tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, length*0.5f, 0.0f);
                 if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
@@ -207,10 +207,10 @@ bool KeyframeManipulator::updateManipulators() {
                 break;
             case (manipType::CTRL_POINT_POS_Z):
                 if (this->selectedIsFirst) {
-                    tmpV = this->firstCtrllPos;
+                    tmpV = this->startCtrllPos;
                 }
                 else if (this->selectedIsLast) {
-                    tmpV = this->lastCtrllPos;
+                    tmpV = this->endCtrllPos;
                 }
                 tmpkfS.wsPos = tmpV + vislib::math::Vector<float, 3>(0.0f, 0.0f, length*0.5f);
                 if (this->manipOusideBbox && this->modelBbox.Contains(this->V2P(tmpkfS.wsPos))) {
@@ -418,10 +418,10 @@ bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
         (this->activeType == manipType::CTRL_POINT_POS_Z)) {
 
         if (this->selectedIsFirst) {
-            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->firstCtrllPos);
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->startCtrllPos);
         }
         else if (this->selectedIsLast) {
-            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->lastCtrllPos);
+            ssVec = this->manipArray[index].ssPos - this->getScreenSpace(this->endCtrllPos);
         }
     }
 
@@ -445,26 +445,26 @@ bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
     switch (this->activeType) {
         case (manipType::CTRL_POINT_POS_X):                  
             if (this->selectedIsFirst) {
-                this->firstCtrllPos.SetX(this->firstCtrllPos.X() + lineDiff);
+                this->startCtrllPos.SetX(this->startCtrllPos.X() + lineDiff);
             }
             else if (this->selectedIsLast) {
-               this->lastCtrllPos.SetX(this->lastCtrllPos.X() + lineDiff);
+               this->endCtrllPos.SetX(this->endCtrllPos.X() + lineDiff);
             }
             break;
         case (manipType::CTRL_POINT_POS_Y):      
             if (this->selectedIsFirst) {
-                this->firstCtrllPos.SetY(this->firstCtrllPos.Y() + lineDiff);
+                this->startCtrllPos.SetY(this->startCtrllPos.Y() + lineDiff);
             }
             else if (this->selectedIsLast) {
-                this->lastCtrllPos.SetY(this->lastCtrllPos.Y() + lineDiff);
+                this->endCtrllPos.SetY(this->endCtrllPos.Y() + lineDiff);
             }
             break;
         case (manipType::CTRL_POINT_POS_Z):      
             if (this->selectedIsFirst) {
-                this->firstCtrllPos.SetZ(this->firstCtrllPos.Z() + lineDiff);
+                this->startCtrllPos.SetZ(this->startCtrllPos.Z() + lineDiff);
             }
             else if (this->selectedIsLast) {
-                this->lastCtrllPos.SetZ(this->lastCtrllPos.Z() + lineDiff);
+                this->endCtrllPos.SetZ(this->endCtrllPos.Z() + lineDiff);
             }
             break;
         case (manipType::SELECTED_KF_POS_X):      skfPosV.SetX(skfPosV.X() + lineDiff); break;
@@ -533,7 +533,7 @@ Keyframe KeyframeManipulator::GetManipulatedKeyframe(void) {
 */
 vislib::math::Vector<float, 3> KeyframeManipulator::GetFirstControlPointPosition() {
 
-    return this->firstCtrllPos;
+    return this->startCtrllPos;
 }
 
 
@@ -542,7 +542,7 @@ vislib::math::Vector<float, 3> KeyframeManipulator::GetFirstControlPointPosition
 */
 vislib::math::Vector<float, 3> KeyframeManipulator::GetLastControlPointPosition() {
 
-    return this->lastCtrllPos;
+    return this->endCtrllPos;
 }
 
 
@@ -664,10 +664,10 @@ bool KeyframeManipulator::Draw(void) {
 
     vislib::math::Vector<float, 3> tmpCtrlPos;
     if (this->selectedIsFirst) {
-        tmpCtrlPos = this->firstCtrllPos;
+        tmpCtrlPos = this->startCtrllPos;
     }
     else if (this->selectedIsLast) {
-        tmpCtrlPos = this->lastCtrllPos;
+        tmpCtrlPos = this->endCtrllPos;
     }
 
     // Draw manipulators
