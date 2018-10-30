@@ -21,24 +21,26 @@ using namespace vislib;
 * CinematicRenderer::CinematicRenderer
 */
 CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), manipulator(), textureShader(),
     rendererCallerSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
     toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box.")
-    {
+    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
 
-    // init variables
-    this->mouseX             = 0.0f;
-    this->mouseY             = 0.0f;
-    this->interpolSteps      = 20;
-    this->toggleManipulator  = 0;
-    this->manipulatorGrabbed = false;
-    this->showMode           = false;
-    this->showHelpText       = false;
-    this->manipOutsideModel  = false;
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), 
+    interpolSteps(20),
+    toggleManipulator(0),
+    manipOutsideModel(false),
+    showHelpText(false),
+    manipulator(), 
+    manipulatorGrabbed(false),
+    showMode(false),
+    textureShader(),
+    fbo(),
+    mouseX(0.0f),
+    mouseY(0.0f)
+{
 
     // init parameters
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();

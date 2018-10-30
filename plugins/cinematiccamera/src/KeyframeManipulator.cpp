@@ -21,31 +21,38 @@ using namespace megamol::cinematiccamera;
 /*
 * KeyframeManipulator::KeyframeManipulator
 */
-KeyframeManipulator::KeyframeManipulator(void) {
+KeyframeManipulator::KeyframeManipulator(void) :
 
-    // init variables
-    this->selectedKf          = Keyframe();
-    this->activeType          = manipType::NONE;
-    this->lastMousePos        = vislib::math::Vector<float, 2>();
-    this->sKfSsPos            = vislib::math::Vector<float, 2>();
-    this->sKfSsLookAt         = vislib::math::Vector<float, 2>();
-    this->sKfInArray          = false;;
-    this->modelViewProjMatrix = vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>();
-    this->viewportSize        = vislib::math::Dimension<int, 2>();
-    this->worldCamLaDir       = vislib::math::Vector<float, 3>();
-    this->worldCamModDir      = vislib::math::Vector<float, 3>();
-    this->startCtrllPos       = vislib::math::Vector<float, 3>();
-    this->endCtrllPos         = vislib::math::Vector<float, 3>();
-    this->selectedIsFirst     = false;
-    this->selectedIsLast      = false;
-    this->isDataDirty         = true;
-    this->manipOusideBbox     = false;
-    this->kfArray.Clear();
-    this->manipArray.Clear();
-    this->circleVertices.Clear();
-    this->modelBbox.SetNull();
+    circleRadiusFac(0.0075f), // const
+    axisLengthFac(0.06f),     // const
+    circleSubDiv(20),         // const
+    lineWidth(2.5),           // const
+    sensitivity(0.01f),       // const
 
-    this->isDataSet = false;
+    kfArray(),
+    selectedKf(),
+    manipArray(),
+    sKfSsPos(),
+    sKfSsLookAt(),
+    sKfInArray(false),
+    activeType(manipType::NONE),
+    lastMousePos(),
+    modelViewProjMatrix(),
+    viewportSize(),
+    worldCamLaDir(),
+    worldCamModDir(),
+    isDataSet(false),
+    isDataDirty(true),
+    modelBbox(),
+    manipOusideBbox(false),
+    startCtrllPos(),
+    endCtrllPos(),
+    selectedIsFirst(false),
+    selectedIsLast(false),
+    circleVertices()
+{
+
+
 }
 
 

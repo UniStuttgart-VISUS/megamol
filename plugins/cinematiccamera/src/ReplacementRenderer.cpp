@@ -32,12 +32,11 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     replacementRenderingParam(      "01_replacementRendering", "Show/hide replacement rendering for the model."),
     toggleReplacementRenderingParam("02_toggleReplacement", "Toggle replacement rendering."),
     replacementKeyParam(            "03_replacmentKeyAssign", "Assign a key to replacement rendering button."),
-    alphaParam(                     "04_alpha", "The alpha value of the replacement rendering.")
-    {
+    alphaParam(                     "04_alpha", "The alpha value of the replacement rendering."),
 
-    // init variables
-    this->toggleReplacementRendering = false;
-    this->bbox.SetNull();
+    bbox(),
+    toggleReplacementRendering(false)
+{
 
     this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
@@ -58,7 +57,6 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_Y, "y");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
-
 }
 
 /*

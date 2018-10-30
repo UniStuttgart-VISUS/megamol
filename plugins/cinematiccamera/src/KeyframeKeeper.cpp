@@ -40,7 +40,6 @@ using namespace megamol::core;
 * KeyframeKeeper::KeyframeKeeper
 */
 KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
-    selectedKeyframe(), dragDropKeyframe(),
     cinematicCallSlot("scene3D", "holds keyframe data"),
     applyKeyframeParam(            "01_applyKeyframe", "Apply current settings to selected/new keyframe."),
     undoChangesParam(              "02_undoChanges", "Undo changes."),
@@ -61,8 +60,30 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     editCurrentApertureParam(      "editSelected::07_apertureAngle", "Edit apperture angle of the selected keyframe."),
     fileNameParam(                 "storage::01_filename", "The name of the file to load or save keyframes."),
     saveKeyframesParam(            "storage::02_save", "Save keyframes to file."),
-    loadKeyframesParam(            "storage::03_load", "Load keyframes from file.")
-    {
+    loadKeyframesParam(            "storage::03_load", "Load keyframes from file."),
+
+    interpolCamPos(),
+    keyframes(),
+    boundingBox(),
+    selectedKeyframe(), 
+    dragDropKeyframe(),
+    startCtrllPos(),
+    endCtrllPos(),
+    totalAnimTime(1.0f),
+    totalSimTime(1.0f),
+    interpolSteps(10),
+    modelBboxCenter(),
+    fps(24),
+    camViewUp(0.0f, 1.0f, 0.0f),
+    camViewPosition(1.0f, 0.0f, 0.0f),
+    camViewLookat(),
+    camViewApertureangle(30.0f),
+    filename("keyframes.kf"),
+    simTangentStatus(false),
+    tl(0.5f),
+    undoQueue(),
+    undoQueueIndex(0)
+{
 
     // setting up callback
     this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
@@ -94,26 +115,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
     this->MakeSlotAvailable(&this->cinematicCallSlot);
 
-    // init variables
-    this->keyframes.Clear();
-    this->interpolCamPos.Clear();
-    this->boundingBox.SetNull();
-    this->totalAnimTime        = 1.0f;
-    this->interpolSteps        = 10;
-    this->fps                  = 24;
-    this->totalSimTime         = 1.0f;
-    this->modelBboxCenter      = p3f(); 
-    this->filename             = "keyframes.kf";
-    this->camViewUp            = v3f(0.0f, 1.0f, 0.0f);
-    this->camViewPosition      = p3f(1.0f, 0.0f, 0.0f);
-    this->camViewLookat        = p3f();
-    this->startCtrllPos        = p3f();
-    this->endCtrllPos          = p3f();
-    this->camViewApertureangle = 30.0f;
-    this->simTangentStatus     = false;
-    this->undoQueueIndex       = 0;
-    this->undoQueue.Clear();
-    this->tl                   = 0.5f;
 
     // init parameters
     this->applyKeyframeParam.SetParameter(new param::ButtonParam('a'));

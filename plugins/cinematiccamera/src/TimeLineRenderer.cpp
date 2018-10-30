@@ -43,63 +43,57 @@ using namespace vislib;
 * cinematiccamera::TimeLineRenderer::TimeLineRenderer
 */
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
     rulerFontParam(      "01_fontSize", "The font size."),
     moveRightFrameParam ("02_rightFrame", "Move to right animation time frame."),
     moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
-    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes.")
-	{
+    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes."),
+
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+    markerTextures(),
+    axisStartPos(),
+    animAxisEndPos(0.0f, 0.0f),
+    animAxisLen(0.0f),
+    animSegmSize(0.0f),
+    animTotalTime(1.0f),
+    animSegmValue(0.0f),
+    animScaleFac(0.0f),
+    animScaleOffset(0.0f),
+    animLenTimeFrac(0.0f),
+    animScalePos(0.0f),
+    animScaleDelta(0.0f),
+    animFormatStr("%.5f "),
+    simAxisEndPos(0.0f, 0.0f),
+    simAxisLen(0.0f),
+    simSegmSize(0.0f),
+    simTotalTime(1.0f),
+    simSegmValue(0.0f),
+    simScaleFac(0.0f),
+    simScaleOffset(0.0f),
+    simLenTimeFrac(0.0f),
+    simScalePos(0.0f),
+    simScaleDelta(0.0f),
+    simFormatStr("%.5f "),
+    scaleAxis(0),
+    dragDropKeyframe(),
+    dragDropActive(false),
+    dragDropAxis(0),
+    fontSize(22.0f),
+    keyfMarkSize(1.0f),
+    rulerMarkSize(1.0f),
+    fps(24),
+    viewport(1.0f, 1.0f),
+    mouseX(0.0f),
+    mouseY(0.0f),
+    lastMouseX(0.0f),
+    lastMouseY(0.0f),
+    mouseButton(MouseButton::BUTTON_LEFT),
+    mouseAction(MouseButtonAction::RELEASE)
+{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
-
-    // init variables
-    this->fontSize          = 22.0f;
-
-    this->markerTextures.Clear();
-
-    this->mouseX            = 0.0f;
-    this->mouseY            = 0.0f;
-    this->mouseAction       = MouseButtonAction::RELEASE;
-    this->mouseButton       = MouseButton::BUTTON_LEFT;
-    this->lastMouseX        = 0.0f;
-    this->lastMouseY        = 0.0f;
-
-    this->dragDropKeyframe  = Keyframe();
-    this->viewport          = vislib::math::Vector<float, 2>(1.0f, 1.0f);
-    this->axisStartPos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-
-    this->scaleAxis         = 0;
-    this->dragDropActive    = false;
-    this->dragDropAxis      = 0;
-    this->rulerMarkSize     = 1.0f;
-    this->keyfMarkSize      = 1.0f;
-    this->fps               = 24;
-
-    this->animAxisEndPos    = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->animAxisLen       = 0.0f;
-    this->animSegmSize      = 0.0f;
-    this->animTotalTime     = 1.0f;
-    this->animSegmValue     = 0.0f;
-    this->animScaleFac      = 0.0f;
-    this->animScaleOffset   = 0.0f;
-    this->animLenTimeFrac   = 0.0f;
-    this->animScalePos      = 0.0f;
-    this->animScaleDelta    = 0.0f;
-    this->animFormatStr     = "%.5f ";
-
-    this->simAxisEndPos     = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->simAxisLen        = 0.0f;
-    this->simSegmSize       = 0.0f;
-    this->simTotalTime      = 1.0f;
-    this->simSegmValue      = 0.0f;
-    this->simScaleFac       = 0.0f;
-    this->simScaleOffset    = 0.0f;
-    this->simLenTimeFrac    = 0.0f;
-    this->simScalePos       = 0.0f;
-    this->simScaleDelta     = 0.0f;
-    this->simFormatStr      = "%.5f ";
 
     // init parameters
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));

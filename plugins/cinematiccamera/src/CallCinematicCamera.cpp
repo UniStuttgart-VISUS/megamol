@@ -19,22 +19,24 @@ using namespace megamol::cinematiccamera;
 /*
 * CallCinematicCamera::CallCinematicCamera
 */
-CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall()  {
+CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
+    cameraParam(nullptr),
+    interpolCamPos(nullptr),
+    keyframes(nullptr),
+    boundingbox(nullptr),
+    interpolSteps(10),
+    selectedKeyframe(),
+    dropAnimTime(0.0f),
+    dropSimTime(0.0f),
+    totalAnimTime(1.0f),
+    totalSimTime(1.0f),
+    bboxCenter(0.0f, 0.0f, 0.0f),
+    fps(24),
+    startCtrllPos(0.0f, 0.0f, 0.0f),
+    endCtrllPos(0.0f, 0.0f, 0.0f)
+{
 
-    this->keyframes         = nullptr;
-    this->boundingbox       = nullptr;
-    this->interpolCamPos    = nullptr;
-    this->cameraParam       = nullptr;
-    this->selectedKeyframe  = Keyframe();
-    this->totalAnimTime     = 1.0f;
-    this->totalSimTime      = 1.0f;
-    this->dropAnimTime      = 0.0f;
-    this->dropSimTime       = 0.0f;
-    this->interpolSteps     = 10;
-    this->fps               = 24;
-    this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->startCtrllPos     = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
-    this->endCtrllPos       = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+
 }
 
 

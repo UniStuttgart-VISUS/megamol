@@ -22,7 +22,6 @@ using namespace vislib;
 * CinematicView::CinematicView
 */
 CinematicView::CinematicView(void) : View3D(),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
     renderParam(                "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(        "02_playPreview", "Toggle playing animation as preview"),
@@ -34,23 +33,25 @@ CinematicView::CinematicView(void) : View3D(),
     delayFirstRenderFrameParam( "08_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
     frameFolderParam(           "09_frameFolder", "Specify folder where the frame files should be stored."),
     eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
-    projectionParam(            "stereo::projection", "Select camera projection.")
-    {
+    projectionParam(            "stereo::projection", "Select camera projection."),
 
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+    deltaAnimTime(clock()),
+    shownKeyframe(),
+    playAnim(false),
+    cineWidth(1920),
+    cineHeight(1080),
+    vpWLast(0),
+    vpHLast(0),
+    sbSide(CinematicView::SkyboxSides::SKYBOX_NONE),
+    fbo(),
+     rendering(false),
+     fps(24),
+    pngdata()
+{
+    // init callback
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
-
-    // init variables
-    this->shownKeyframe   = Keyframe();
-    this->deltaAnimTime   = clock();
-    this->playAnim        = false;
-    this->sbSide          = CinematicView::SkyboxSides::SKYBOX_NONE;
-    this->cineWidth       = 1920;
-    this->cineHeight      = 1080;
-    this->vpWLast         = 0;
-    this->vpHLast         = 0;
-    this->rendering       = false;
-    this->fps             = 24;
 
     // init parameters
     param::EnumParam *sbs = new param::EnumParam(this->sbSide);
