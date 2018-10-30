@@ -32,8 +32,23 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     paramScaleBottomRight("10_scaleBottomRight", "The scale factor for the bottom right watermark."),
     paramImgCenter(       "11_imageCenter", "The image file name for the center watermark."),
     paramScaleCenter(     "12_scaleCenter", "The scale factor for the center watermark."),
-    textureBottomLeft(), textureBottomRight(), textureTopLeft(), textureTopRight(), textureCenter(),
-    shader(), vbos() {
+
+    textureTopLeft(),
+    textureTopRight(),
+    textureBottomLeft(), 
+    textureBottomRight(), 
+    textureCenter(),
+    sizeTopLeft(),
+    sizeTopRight(),
+    sizeBottomLeft(),
+    sizeBottomRight(),
+    sizeCenter(),
+    lastScaleAll(1.0f),
+    firstParamChange(false),
+    shader(),
+    vaoHandle(),
+    vbos()
+{
 
     this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
@@ -76,10 +91,6 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     // Init alpha param 
     this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->paramAlpha);
-
-    // Init variables 
-    this->lastScaleAll     = 1.0f;
-    this->firstParamChange = false;
 }
 
 
