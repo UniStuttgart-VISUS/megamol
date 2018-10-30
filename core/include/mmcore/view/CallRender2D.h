@@ -67,7 +67,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 3;
+            return AbstractCallRender::FunctionCount();
         }
 
         /**
@@ -78,19 +78,14 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
-            switch (idx) {
-                case 0: return "Render";
-                case 1: return "GetExtents";
-                case 2: return "MouseEvent";
-                default: return NULL;
-            }
+            return AbstractCallRender::FunctionName(idx);
         }
 
         /** Ctor. */
-        CallRender2D(void);
+        CallRender2D(void) = default;
 
         /** Dtor. */
-        virtual ~CallRender2D(void);
+        virtual ~CallRender2D(void) = default;
 
         /**
          * Gets the bounding box. As an answer to an 'GetExtents' call this
@@ -112,51 +107,6 @@ namespace view {
          */
         inline const unsigned char * GetBackgroundColour(void) const {
             return this->bkgndCol;
-        }
-
-        /**
-         * Answer the viewport height in pixel
-         *
-         * @return The viewport height in pixel
-         */
-        inline unsigned int GetHeight(void) const {
-            return this->GetViewport().Height();
-        }
-
-        /**
-         * Answer the mouse flags
-         *
-         * @return The mouse flags
-         */
-        inline MouseFlags GetMouseFlags(void) const {
-            return this->mouseFlags;
-        }
-
-        /**
-         * Answer the mouse x coordinate in world space
-         *
-         * @return The mouse x coordinate in world space
-         */
-        inline float GetMouseX(void) const {
-            return this->mouseX;
-        }
-
-        /**
-         * Answer the mouse y coordinate in world space
-         *
-         * @return The mouse y coordinate in world space
-         */
-        inline float GetMouseY(void) const {
-            return this->mouseY;
-        }
-
-        /**
-         * Answer the viewport width in pixel
-         *
-         * @return The viewport width in pixel
-         */
-        inline unsigned int GetWidth(void) const {
-            return this->GetViewport().Width();
         }
 
         /**
@@ -206,26 +156,19 @@ namespace view {
         }
 
         /**
-         * Sets the mouse informations.
-         *
-         * @param x The mouse x coordinate in world space
-         * @param y The mouse y coordinate in world space
-         * @param flags The mouse flags
-         */
-        inline void SetMouseInfo(float x, float y, MouseFlags flags) {
-            this->mouseX = x;
-            this->mouseY = y;
-            this->mouseFlags = flags;
-        }
-
-        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
          *
          * @return A reference to this
          */
-        CallRender2D& operator=(const CallRender2D& rhs);
+        CallRender2D& operator=(const CallRender2D& rhs) {
+            AbstractCallRender::operator=(rhs);
+            RenderOutput::operator=(rhs);
+            this->bbox = rhs.bbox;
+            this->bkgndCol[0] = rhs.bkgndCol[0];
+            return *this;
+        }
 
     private:
 
@@ -240,13 +183,6 @@ namespace view {
 
         /** The background colour in RGB (bytes) */
         unsigned char bkgndCol[3];
-
-        /** The mouse coordinates for the mouse event */
-        float mouseX, mouseY;
-
-        /** The mouse flags for the mouse event */
-        MouseFlags mouseFlags;
-
     };
 #ifdef _WIN32
 #pragma warning(default: 4250)

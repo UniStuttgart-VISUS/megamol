@@ -113,7 +113,7 @@ bool view::BlinnPhongRendererDeferred::GetCapabilities(Call& call) {
     if (crOut == NULL) return false;
 
     // Call for getCapabilities
-    if (!(*crOut)(2)) return false;
+    if (!(*crOut)(core::view::CallRender3D::FnGetCapabilities)) return false;
 
     // Set capabilities of for incoming render call
     crIn->SetCapabilities(crOut->GetCapabilities());
@@ -133,8 +133,7 @@ bool view::BlinnPhongRendererDeferred::GetExtents(Call& call) {
     CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
     if (crOut == NULL) return false;
 
-    // Call for getExtends
-    if (!(*crOut)(1)) return false;
+    if (!(*crOut)(CallRender3D::FnGetExtents)) return false;
 
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
@@ -182,7 +181,7 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Call for render
-    (*crOut)(0);
+    (*crOut)(AbstractCallRender::FnRender);
 
     crOut->DisableOutputBuffer();
 

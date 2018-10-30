@@ -210,7 +210,7 @@ bool ToonRendererDeferred::GetCapabilities(megamol::core::Call& call) {
     if(crOut == NULL) return false;
 
     // Call for getCapabilities
-    if(!(*crOut)(2)) return false;
+    if(!(*crOut)(core::view::CallRender3D::FnGetCapabilities)) return false;
 
     // Set capabilities of for incoming render call
     crIn->SetCapabilities(crOut->GetCapabilities());
@@ -233,7 +233,7 @@ bool ToonRendererDeferred::GetExtents(megamol::core::Call& call) {
     if(crOut == NULL) return false;
 
     // Call for getExtends
-    if(!(*crOut)(1)) return false;
+    if(!(*crOut)(core::view::AbstractCallRender::FnGetExtents)) return false;
 
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();
@@ -301,7 +301,7 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Call for render
-    (*crOut)(0);
+    (*crOut)(core::view::AbstractCallRender::FnRender);
 
     // Detach texture that are not needed anymore
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, 0, 0);

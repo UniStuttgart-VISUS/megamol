@@ -444,9 +444,14 @@ namespace MegaMolConf {
         string GetAnswer(ref string answer) {
             string err = "";
             bool good = false;
-            while (!(good = TryGetAnswer(ref answer, ref err))) {
+            int numTries = 500;
+            while (!(good = TryGetAnswer(ref answer, ref err)) && numTries > 0) {
+                numTries--;
                 System.Threading.Thread.Sleep(10);
             }
+
+            if (!good)
+                err = "timeout";
             return err;
         }
 

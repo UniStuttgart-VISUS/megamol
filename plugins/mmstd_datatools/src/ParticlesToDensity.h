@@ -77,11 +77,33 @@ private:
      */
     bool getExtentCallback(megamol::core::Call& c);
 
+    inline bool anythingDirty() const {
+        return this->aggregatorSlot.IsDirty() || this->xResSlot.IsDirty() || this->yResSlot.IsDirty() ||
+               this->zResSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
+               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->filterSizeSlot.IsDirty();
+    }
+
+    inline void resetDirty() {
+        this->aggregatorSlot.ResetDirty();
+        this->xResSlot.ResetDirty();
+        this->yResSlot.ResetDirty();
+        this->zResSlot.ResetDirty();
+        this->cyclXSlot.ResetDirty();
+        this->cyclYSlot.ResetDirty();
+        this->cyclZSlot.ResetDirty();
+        this->normalizeSlot.ResetDirty();
+        this->filterSizeSlot.ResetDirty();
+    }
+
     core::param::ParamSlot aggregatorSlot;
 
     core::param::ParamSlot xResSlot;
     core::param::ParamSlot yResSlot;
     core::param::ParamSlot zResSlot;
+
+    core::param::ParamSlot cyclXSlot;
+    core::param::ParamSlot cyclYSlot;
+    core::param::ParamSlot cyclZSlot;
 
     core::param::ParamSlot normalizeSlot;
     core::param::ParamSlot filterSizeSlot;

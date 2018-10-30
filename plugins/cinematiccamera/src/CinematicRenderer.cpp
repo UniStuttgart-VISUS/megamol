@@ -160,7 +160,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
 
     // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
     view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if ((cr3d_out != nullptr) && (*cr3d_out)(1)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(AbstractCallRender::FnGetExtents)) {
 
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
         if (ccc == nullptr) return false;
@@ -345,7 +345,7 @@ bool CinematicRenderer::Render(Call& call) {
     cr3d_out->SetOutputBuffer(&this->fbo);
 
     // Call render function of slave renderer
-    (*cr3d_out)(0);
+    (*cr3d_out)(CallRender3D::FnRender);
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
@@ -448,15 +448,15 @@ bool CinematicRenderer::Render(Call& call) {
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
 
     vislib::StringA midLabel = "";
-    if (cr3d_in->MouseSelection()) {
-        if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
-        } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
-        }
-    } else {
-        midLabel = "SCENE manipulation";
-    }
+    //if (cr3d_in->MouseSelection()) {
+    //    if (this->toggleManipulator == 0) { 
+    //        midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
+    //    } else {// if (this->toggleManipulator == 1) { 
+    //        midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
+    //    }
+    //} else {
+    //    midLabel = "SCENE manipulation";
+    //}
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
         rightLabel = " [h] hide help text ";

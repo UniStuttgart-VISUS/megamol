@@ -21,7 +21,7 @@ namespace gl {
     public:
         WindowEscapeHotKeysUILayer(Window& wnd);
         virtual ~WindowEscapeHotKeysUILayer();
-        virtual bool onKey(Key key, int scancode, KeyAction action, Modifiers mods);
+        virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
     };
 
 } /* end namespace gl */
