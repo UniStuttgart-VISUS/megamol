@@ -19,7 +19,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/CameraLookAtDist.h"
@@ -43,7 +43,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3D_2 : public AbstractView3D, public AbstractCamParamSync {
+class MEGAMOLCORE_API View3D_2 : public AbstractRenderingView, public AbstractCamParamSync {
 
 public:
     /**
@@ -125,32 +125,6 @@ public:
     virtual void Resize(unsigned int width, unsigned int height);
 
     /**
-     * Sets the button state of a button of the 2d cursor. See
-     * 'vislib::graphics::Cursor2D' for additional information.
-     *
-     * @param button The button.
-     * @param down Flag whether the button is pressed, or not.
-     */
-    virtual void SetCursor2DButtonState(unsigned int btn, bool down);
-
-    /**
-     * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-     * for additional information.
-     *
-     * @param x The x coordinate
-     * @param y The y coordinate
-     */
-    virtual void SetCursor2DPosition(float x, float y);
-
-    /**
-     * Sets the state of an input modifier.
-     *
-     * @param mod The input modifier to be set.
-     * @param down The new state of the input modifier.
-     */
-    virtual void SetInputModifier(mmcInputModifier mod, bool down);
-
-    /**
      * Callback requesting a rendering of this view
      *
      * @param call The calling call
@@ -167,6 +141,16 @@ public:
      *               false means unfreeze
      */
     virtual void UpdateFreeze(bool freeze);
+
+    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+
+    virtual bool OnChar(unsigned int codePoint) override;
+
+    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+
+    virtual bool OnMouseMove(double x, double y) override;
+
+    virtual bool OnMouseScroll(double dx, double dy) override;
 
 protected:
     /**
@@ -191,6 +175,15 @@ protected:
     virtual void release(void);
 
     // protected variables //
+
+#ifdef _WIN32
+#    pragma warning(disable : 4251)
+#endif /* _WIN32 */
+    /** the input modifiers corresponding to this cursor. */
+    vislib::graphics::InputModifiers modkeys;
+#ifdef _WIN32
+#    pragma warning(default : 4251)
+#endif /* _WIN32 */
 
     /** The complete scene bounding box */
     BoundingBoxes bboxs;

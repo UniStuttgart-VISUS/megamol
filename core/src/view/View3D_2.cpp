@@ -47,7 +47,7 @@ using namespace megamol::core::view;
  * View3D_2::View3D_2
  */
 View3D_2::View3D_2(void)
-    : view::AbstractView3D()
+    : view::AbstractRenderingView()
     , AbstractCamParamSync()
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
@@ -469,27 +469,6 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
 }
 
 /*
- * View3D_2::SetCursor2DButtonState
- */
-void View3D_2::SetCursor2DButtonState(unsigned int btn, bool down) {
-    // TODO implement
-}
-
-/*
- * View3D_2::SetCursor2DPosition
- */
-void View3D_2::SetCursor2DPosition(float x, float y) {
-    // TODO implement
-}
-
-/*
- * View3D_2::SetInputModifier
- */
-void View3D_2::SetInputModifier(mmcInputModifier mod, bool down) {
-    // TODO implement
-}
-
-/*
  * View3D_2::OnRenderView
  */
 bool View3D_2::OnRenderView(Call& call) {
@@ -502,6 +481,127 @@ bool View3D_2::OnRenderView(Call& call) {
  */
 void View3D_2::UpdateFreeze(bool freeze) {
     // intentionally empty?
+}
+
+/*
+ * View3D_2::OnKey
+ */
+bool view::View3D_2::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D_2::FnOnKey)) return false;
+
+    return true;
+}
+
+/*
+ * View3D_2::OnChar
+ */
+bool view::View3D_2::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D_2::FnOnChar)) return false;
+
+    return true;
+}
+
+/*
+ * View3D_2::OnMouseButton
+ */
+bool view::View3D_2::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+    // This mouse handling/mapping is so utterly weird and should die!
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    } else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    } else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    if (!this->toggleMouseSelection) {
+        switch (button) {
+        case megamol::core::view::MouseButton::BUTTON_LEFT:
+            this->cursor2d.SetButtonState(0, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_RIGHT:
+            this->cursor2d.SetButtonState(1, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
+            this->cursor2d.SetButtonState(2, down);
+            break;
+        default:
+            break;
+        }
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+        if (cr == NULL) return false;
+
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D_2::FnOnMouseButton)) return false;
+    }
+    return true;
+}
+
+/*
+ * View3D_2::OnMouseMove
+ */
+bool view::View3D_2::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+    // This mouse handling/mapping is so utterly weird and should die!
+    if (!this->toggleMouseSelection) {
+        this->cursor2d.SetPosition(x, y, true);
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+        if (cr) {
+            InputEvent evt;
+            evt.tag = InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if (!(*cr)(view::CallRender3D_2::FnOnMouseMove)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/*
+ * View3D_2::OnMouseScroll
+ */
+bool view::View3D_2::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D_2::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 /*
