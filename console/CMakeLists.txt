@@ -57,11 +57,7 @@ if(BUILD_CONSOLE)
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
-    add_external_library(glfw STATIC
-      DEPENDS glfw_ext
-      INCLUDE_DIR "include"
-      LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      INTERFACE_LIBRARIES "${CMAKE_DL_LIBS}")
+    include_external_config("lib/cmake/glfw3/glfw3Config.cmake" DEPENDS glfw_ext)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
   
