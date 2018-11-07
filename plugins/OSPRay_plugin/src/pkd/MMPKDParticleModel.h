@@ -43,5 +43,33 @@ struct MMPKDParticleModel {
     size_t numParticles;
 };
 
+using HMMPKDPosition_t = uint32_t;
+
+using HMMPKDColor_t = uint32_t;
+
+struct HMMPKDParticle {
+    /*
+     * dim : 2;
+     * x : 10;
+     * y : 10;
+     * z : 10;
+     */
+    HMMPKDPosition_t position;
+
+    /*
+     * r : 8;
+     * g : 8:
+     * b : 8;
+     * a : 8;
+     */
+    HMMPKDColor_t color;
+};
+
+using HMMPKDParticle_t = HMMPKDParticle;
+
+struct HMMPKDParticleModel {
+    std::vector<HMMPKDParticle_t> particles;
+};
+
 } /* end namespace ospray */
 } /* end namespace megamol */
