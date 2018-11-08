@@ -111,8 +111,7 @@ bool view::BlinnPhongRendererDeferred::GetExtents(Call& call) {
     CallRenderDeferred3D *crOut = this->rendererSlot.CallAs<CallRenderDeferred3D>();
     if (crOut == NULL) return false;
 
-    // Call for getExtends
-    if (!(*crOut)(1)) return false;
+    if (!(*crOut)(CallRender3D::FnGetExtents)) return false;
 
     // Set extends of for incoming render call
     crIn->AccessBoundingBoxes() = crOut->GetBoundingBoxes();

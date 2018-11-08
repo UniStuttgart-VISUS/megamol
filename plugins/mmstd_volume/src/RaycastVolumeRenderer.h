@@ -474,6 +474,7 @@ namespace volume {
 		size_t m_volume_datahash;
 		float m_volume_origin[3];
 		float m_volume_extents[3];
+        float m_volume_resolution[3];
 
 		/** caller slot */
 		megamol::core::CallerSlot m_volumetricData_callerSlot;

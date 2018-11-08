@@ -487,8 +487,10 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     evt.tag = InputEvent::Tag::MouseMove;
     evt.mouseMoveData.x = mx;
     evt.mouseMoveData.y = my;
-    crv->SetInputEvent(evt);
-    if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+    if (crv != nullptr) {
+        crv->SetInputEvent(evt);
+        if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+    }
 
     return true;
 }

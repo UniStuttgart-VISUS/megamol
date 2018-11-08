@@ -100,10 +100,12 @@ namespace megamol {
 			/** Dtor. */
 			virtual ~CinematicView(void);
 
-			/**
-			* Renders this AbstractView3D in the currently active OpenGL context.
-			*/
-			virtual void Render(const mmcRenderViewContext& context);
+        protected:
+
+            /**
+            * Renders this AbstractView3D in the currently active OpenGL context.
+            */
+            virtual void Render(const mmcRenderViewContext& context);
 
 		private:
 
@@ -143,7 +145,7 @@ namespace megamol {
             unsigned int                            fps;
 
             struct pngData {
-                BYTE                  *buffer = nullptr;
+                BYTE                  *buffer        = nullptr;
                 vislib::sys::FastFile  file;
                 unsigned int           width;
                 unsigned int           height;
@@ -151,14 +153,13 @@ namespace megamol {
                 vislib::TString        path;
                 vislib::TString        filename;
                 unsigned int           cnt;
-                png_structp            ptr = nullptr;
-                png_infop              infoptr = nullptr;
+                png_structp            ptr           = nullptr;
+                png_infop              infoptr       = nullptr;
                 float                  animTime;
                 unsigned int           write_lock;
                 time_point             start_time;
                 unsigned int           exp_frame_cnt;
             } pngdata;
-
 
             /**********************************************************************
             * functions
@@ -251,6 +252,9 @@ namespace megamol {
             core::param::ParamSlot eyeParam;
             /** */
             core::param::ParamSlot projectionParam;
+
+            /** */
+            core::param::ParamSlot frameFolderParam;
 		};
 
 	} /* end namespace cinematiccamera */
