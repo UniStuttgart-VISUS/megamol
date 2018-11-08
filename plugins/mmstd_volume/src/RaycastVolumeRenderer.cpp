@@ -141,12 +141,6 @@ void RaycastVolumeRenderer::release()
 	m_render_target.reset(nullptr);
 }
 
-bool RaycastVolumeRenderer::GetCapabilities(megamol::core::Call& call)
-{
-
-	return true;
-}
-
 bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call)
 {
 	auto cr = dynamic_cast<core::view::CallRender3D*>(&call);

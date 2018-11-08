@@ -113,23 +113,6 @@ bool moldyn::AbstractSimpleSphereRenderer::create(void) {
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::GetCapabilities
- */
-bool moldyn::AbstractSimpleSphereRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * moldyn::AbstractSimpleSphereRenderer::GetExtents
  */
 bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {

@@ -11,8 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <unordered_map>
-
 #include "mmcore/ApiHandle.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
@@ -52,8 +50,9 @@
 #include "mmcore/factories/AbstractAssemblyInstance.h"
 #include "mmcore/LuaState.h"
 
+#include <functional>
 #include <memory>
-
+#include <unordered_map>
 
 namespace megamol {
 namespace core {

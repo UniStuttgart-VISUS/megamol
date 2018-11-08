@@ -51,22 +51,6 @@ QuartzTexRenderer::~QuartzTexRenderer(void) {
 
 
 /*
- * QuartzTexRenderer::GetCapabilities
- */
-bool QuartzTexRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        core::view::CallRender3D::CAP_RENDER
-        | core::view::CallRender3D::CAP_LIGHTING
-    );
-
-    return true;
-}
-
-
-/*
  * QuartzTexRenderer::GetExtents
  */
 bool QuartzTexRenderer::GetExtents(core::Call& call) {
