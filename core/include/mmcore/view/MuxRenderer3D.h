@@ -99,16 +99,6 @@ namespace view {
     protected:
 
         /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(Call& call);
-
-        /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
          * and times).
@@ -199,26 +189,6 @@ namespace view {
     template<unsigned int T>
     void MuxRenderer3D<T>::release(void) {
         // intentionally empty
-    }
-
-
-    /*
-     * MuxRenderer3D<T>::GetCapabilities
-     */
-    template<unsigned int T>
-    bool MuxRenderer3D<T>::GetCapabilities(Call& call) {
-        CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-        if (cr3d == NULL) return false;
-
-        cr3d->SetCapabilities(0);
-        for (unsigned int i = 0; i < T; i++) {
-            if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
-            CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
-            if ((oc == NULL) || (!(*oc)(CallRender3D::FnGetCapabilities))) continue;
-            cr3d->AddCapability(oc->GetCapabilities());
-        }
-
-        return true;
     }
 
 

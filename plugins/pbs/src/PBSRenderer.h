@@ -77,7 +77,6 @@ protected:
     virtual bool Render(core::Call &call);
 
     // Inherited via Renderer3DModule
-    virtual bool GetCapabilities(core::Call &call) override;
     virtual bool GetExtents(core::Call &call) override;
 
 private:

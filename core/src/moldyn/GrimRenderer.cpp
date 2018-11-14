@@ -292,23 +292,6 @@ bool moldyn::GrimRenderer::create(void) {
 
 
 /*
- * moldyn::GrimRenderer::GetCapabilities
- */
-bool moldyn::GrimRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * moldyn::GrimRenderer::GetExtents
  */
 bool moldyn::GrimRenderer::GetExtents(Call& call) {

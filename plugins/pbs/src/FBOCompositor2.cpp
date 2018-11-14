@@ -138,18 +138,6 @@ bool megamol::pbs::FBOCompositor2::create() {
 void megamol::pbs::FBOCompositor2::release() { shutdownThreads(); }
 
 
-bool megamol::pbs::FBOCompositor2::GetCapabilities(megamol::core::Call& call) {
-    auto* cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr == nullptr) return false;
-
-    cr->SetCapabilities(megamol::core::view::CallRender3D::CAP_RENDER |
-                        megamol::core::view::CallRender3D::CAP_LIGHTING |
-                        megamol::core::view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
 bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
     auto cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
