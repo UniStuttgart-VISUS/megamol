@@ -189,6 +189,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             loadNewCamParams = true;
         }
     }
+
     if (this->resHeightParam.IsDirty()) {
         this->resHeightParam.ResetDirty();
         if (this->rendering) {
@@ -325,19 +326,24 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         this->shownKeyframe = skf;
 
-        this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
-        this->cam.Parameters()->SetApertureAngle(skf.GetCamApertureAngle());
-
+        // Apply selected keyframe parameters only, if at least one valid keyframe exists.
+        if (!ccc->getKeyframes()->IsEmpty()) {
+            this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
+            this->cam.Parameters()->SetApertureAngle(skf.GetCamApertureAngle());
+        }
+        else {
+            this->ResetView();
+        }
         // Apply showing skybox side ONLY if new camera parameters are set
         if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
             // Get camera parameters
             vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
-            vislib::math::Point<float, 3>  camPos = cp->Position();
-            vislib::math::Vector<float, 3> camRight = cp->Right();
-            vislib::math::Vector<float, 3> camUp = cp->Up();
-            vislib::math::Vector<float, 3> camFront = cp->Front();
+            vislib::math::Point<float, 3>  camPos    = cp->Position();
+            vislib::math::Vector<float, 3> camRight  = cp->Right();
+            vislib::math::Vector<float, 3> camUp     = cp->Up();
+            vislib::math::Vector<float, 3> camFront  = cp->Front();
             vislib::math::Point<float, 3>  camLookAt = cp->LookAt();
-            float                          tmpDist = cp->FocalDistance();
+            float                          tmpDist   = cp->FocalDistance();
 
             // Adjust cam to selected skybox side
             // set aperture angle to 90 deg
@@ -639,8 +645,8 @@ bool CinematicView::render2file_setup() {
     this->pngdata.path = static_cast<vislib::StringA>(this->frameFolderParam.Param<param::FilePathParam>()->Value());
     if (this->pngdata.path.IsEmpty()) {
         this->pngdata.path = vislib::sys::Path::GetCurrentDirectoryA();
+        this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     }
-    this->pngdata.path = vislib::sys::Path::Concatenate(this->pngdata.path, frameFolder);
     vislib::sys::Path::MakeDirectory(this->pngdata.path);
 
     // Set current time stamp to file name
