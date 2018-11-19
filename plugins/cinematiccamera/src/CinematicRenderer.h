@@ -125,16 +125,6 @@ namespace megamol {
             */
             virtual void release(void);
 
-  			/**
-			* The get capabilities callback. The module should set the members
-			* of 'call' to tell the caller its capabilities.
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool GetCapabilities(core::Call& call);
-
 			/**
 			* The get extents callback. The module should set the members of
 			* 'call' to tell the caller the extents of its data (bounding boxes
@@ -144,7 +134,7 @@ namespace megamol {
 			*
 			* @return The return value of the function.
 			*/
-			virtual bool GetExtents(core::Call& call);
+			virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
 			/**
 			* The render callback.
@@ -153,16 +143,19 @@ namespace megamol {
 			*
 			* @return The return value of the function.
 			*/
-			virtual bool Render(core::Call& call);
+			virtual bool Render(megamol::core::view::CallRender3D& call);
 
-            /**
-            * Callback for mouse events (move, press, and release)
-            *
-            * @param x The x coordinate of the mouse in world space
-            * @param y The y coordinate of the mouse in world space
-            * @param flags The mouse flags
-            */
-            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+            /** The mouse button pressed/released callback. */
+            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+
+            /** The mouse movement callback. */
+            virtual bool OnMouseMove(double x, double y) override;
+
+            //virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
+
+            //virtual bool OnChar(unsigned int codePoint) override;
+
+            //virtual bool OnMouseScroll(double dx, double dy) override;
 
 		private:
 
@@ -179,10 +172,19 @@ namespace megamol {
             bool                             showHelpText;
 
             KeyframeManipulator              manipulator;
+            bool                             manipulatorGrabbed;
+            bool                             showMode;
+
             vislib::graphics::gl::FramebufferObject fbo;
 
-            /** The render to texture */
+            /** The render to texture shader */
             vislib::graphics::gl::GLSLShader textureShader;
+
+            /*** INPUT ********************************************************/
+
+            /** The mouse coordinates */
+            float                            mouseX;
+            float                            mouseY;
 
             /**********************************************************************
             * callback stuff

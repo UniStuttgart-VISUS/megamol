@@ -33,8 +33,8 @@ namespace MegaMolConf {
 
         public static float DpiFactor
         {
-            get => _dpiFactor;
-            set => _dpiFactor = value;
+            get { return _dpiFactor; }
+            set { _dpiFactor = value; }
         }
 
         static Pen makeMyPen1() {

@@ -118,7 +118,7 @@ bool RaycastVolumeRenderer::create()
 
 	// create empty transfer function texture
 	TextureLayout tf(
-		GL_RGBA,
+		GL_RGBA8,
 		1,
 		1,
 		1,
@@ -139,12 +139,6 @@ void RaycastVolumeRenderer::release()
 {
 	m_raycast_volume_compute_shdr.reset(nullptr);
 	m_render_target.reset(nullptr);
-}
-
-bool RaycastVolumeRenderer::GetCapabilities(megamol::core::Call& call)
-{
-
-	return true;
 }
 
 bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call)
@@ -277,11 +271,13 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call)
 	box_min[2] = m_volume_origin[2];
 	vec3 box_max;
 	box_max[0] = m_volume_origin[0] + m_volume_extents[0];
-	box_max[1] = m_volume_origin[1] + m_volume_extents[0];
-	box_max[2] = m_volume_origin[2] + m_volume_extents[0];
+	box_max[1] = m_volume_origin[1] + m_volume_extents[1];
+	box_max[2] = m_volume_origin[2] + m_volume_extents[2];
 	glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMin"), 1, box_min);
 	glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("boxMax"), 1, box_max);
 
+    glUniform3f(m_raycast_volume_compute_shdr->ParameterLocation("halfVoxelSize"), 1.0f / (2.0f * (m_volume_resolution[0] - 1))
+        , 1.0f / (2.0f * (m_volume_resolution[1] - 1)), 1.0f / (2.0f * (m_volume_resolution[2] - 1)));
 	glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), 1.0);
 	glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"), this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
 	glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
@@ -328,7 +324,12 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call)
 
 
 	glUseProgram(0);
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -373,6 +374,9 @@ bool RaycastVolumeRenderer::updateVolumeData()
 	m_volume_extents[0] = metadata->Extents[0];
 	m_volume_extents[1] = metadata->Extents[1];
 	m_volume_extents[2] = metadata->Extents[2];
+    m_volume_resolution[0] = metadata->Resolution[0];
+    m_volume_resolution[1] = metadata->Resolution[1];
+    m_volume_resolution[2] = metadata->Resolution[2];
 
 	GLenum internal_format;
 	GLenum format;

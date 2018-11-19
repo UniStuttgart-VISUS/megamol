@@ -99,22 +99,6 @@ void RendererRegistration::release(void) {
 
 
 /*
-* MuxRenderer3D<T>::GetCapabilities
-*/
-bool RendererRegistration::GetCapabilities(Call& call) {
-    CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
-
-    auto oc = rendererSlot.CallAs<CallRender3D>();
-    cr3d->SetCapabilities(0);
-    if ((oc == NULL) || (!(*oc)(core::view::CallRender3D::FnGetCapabilities))) return true;
-    cr3d->SetCapabilities(oc->GetCapabilities());
-
-    return true;
-}
-
-
-/*
 * MuxRenderer3D<T>::GetExtents
 */
 bool RendererRegistration::GetExtents(Call& call) {

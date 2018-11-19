@@ -39,11 +39,6 @@ void view::TransferFunctionRenderer::release(void)
 {
 }
 
-bool view::TransferFunctionRenderer::GetCapabilities(CallRender2D& call)
-{
-	return true;
-}
-
 bool view::TransferFunctionRenderer::GetExtents(CallRender2D& call)
 {
 	call.SetBoundingBox( 0.0f, 0.0f, 1.0f, 5.0f);

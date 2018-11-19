@@ -126,11 +126,11 @@ namespace megamol {
             };
 
             // Some fixed values
-            const float                      circleRadiusFac = 0.0075f;    // Factor for world cam lookat direction which is used as adaptive circle radius
-            const float                      axisLengthFac   = 0.06f;      // Factor for world cam lookat direction which is used as adaptive axis length
-            const unsigned int               circleSubDiv    = 20;         // Amount of subdivisions of an circle primitive
-            const float                      lineWidth       = 2.5;
-            const float                      sensitivity     = 0.01f;      // Relationship between mouse movement and length changes of coordinates
+            const float                      circleRadiusFac;  // Factor for world cam lookat direction which is used as adaptive circle radius
+            const float                      axisLengthFac;    // Factor for world cam lookat direction which is used as adaptive axis length
+            const unsigned int               circleSubDiv;     // Amount of subdivisions of an circle primitive
+            const float                      lineWidth;
+            const float                      sensitivity;      // Relationship between mouse movement and length changes of coordinates
 
             // Positions of keyframes
             vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions
@@ -178,7 +178,7 @@ namespace megamol {
             vislib::math::Vector<float, 2> getScreenSpace(vislib::math::Vector<float, 3> wp);
 
             /** */
-            bool updateManipulators(void);
+            bool updateManipulatorPositions(void);
 
             /** Convert Vector to Point*/
             inline vislib::math::Point<float, 3> V2P(vislib::math::Vector<float, 3> v) {

@@ -122,20 +122,6 @@ bool SimplestSphereRenderer::create(void) {
     return true;
 }
 
-/*
- * SimplestSphereRenderer::GetCapabilities
- */
-bool SimplestSphereRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
-
-    // TUTORIAL: Sets what this renderer is capable of
-    // This should be done in each renderer
-    cr3d->SetCapabilities(core::view::CallRender3D::CAP_RENDER | core::view::CallRender3D::CAP_LIGHTING |
-                          core::view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
 
 /*
  * SimplestSphereRenderer::GetExtents

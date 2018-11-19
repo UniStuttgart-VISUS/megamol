@@ -244,6 +244,17 @@ namespace misc {
         }
 
         /**
+         * Gets the voxel value relative to [min, max] from channel c.
+         */
+        const float GetRelativeVoxelValue(const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c = 0) const;
+
+        /**
+         * Gets the voxel value relative to [min, max] from channel c.
+         */
+        const float GetAbsoluteVoxelValue(
+            const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c = 0) const;
+
+        /**
          * Answer whether the given axis is uniform or has
          * this->GetResolution(axis) entries in the slice distance area.
          *
