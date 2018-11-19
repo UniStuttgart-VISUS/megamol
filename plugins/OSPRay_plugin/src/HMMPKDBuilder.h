@@ -23,7 +23,7 @@ public:
     static __forceinline size_t parentOf(const size_t nodeID) { return (nodeID - 1) / 2; }
 
     static const char* ClassName(void) { return "HMMPKDBuilder"; }
-    static const char* Description(void) { return "Converts MMPLD files to MegaMol-specific PkD sorted MMPLD files."; }
+    static const char* Description(void) { return "Converts MMPLD files to MegaMol-specific hierarchical PkD sorted MPDC streams."; }
     static bool IsAvailable(void) { return true; }
 
     HMMPKDBuilder();
@@ -108,17 +108,17 @@ struct HMMPKDSubtreeIterator {
     }
 };
 
-struct MMPKDBuildJob {
+struct HMMPKDBuildJob {
     const HMMPKDBuilder* const pkd;
     const size_t nodeID;
     const ospcommon::box3f bounds;
     const size_t depth;
-    __forceinline MMPKDBuildJob(const HMMPKDBuilder* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
+    __forceinline HMMPKDBuildJob(const HMMPKDBuilder* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
         : pkd(pkd), nodeID(nodeID), bounds(bounds), depth(depth){};
 };
 
-static void mmpkdBuildThread(void* arg) {
-    MMPKDBuildJob* job = (MMPKDBuildJob*)arg;
+static void hmmpkdBuildThread(void* arg) {
+    HMMPKDBuildJob* job = (HMMPKDBuildJob*)arg;
     job->pkd->buildRec(job->nodeID, job->bounds, job->depth);
     delete job;
 }

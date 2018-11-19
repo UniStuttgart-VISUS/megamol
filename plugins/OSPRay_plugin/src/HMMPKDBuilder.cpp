@@ -270,7 +270,7 @@ void ospray::HMMPKDBuilder::buildRec(const size_t nodeID, const ospcommon::box3f
     lBounds.upper[dim] = rBounds.lower[dim] = pos(nodeID, dim);
 
     if ((numLevels - depth) > 20) {
-        std::thread lThread(&mmpkdBuildThread, new MMPKDBuildJob(this, leftChildOf(nodeID), lBounds, depth + 1));
+        std::thread lThread(&hmmpkdBuildThread, new HMMPKDBuildJob(this, leftChildOf(nodeID), lBounds, depth + 1));
         buildRec(rightChildOf(nodeID), rBounds, depth + 1);
         lThread.join();
     } else {
