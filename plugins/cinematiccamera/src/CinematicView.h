@@ -48,57 +48,57 @@
 
 
 namespace megamol {
-	namespace cinematiccamera {
+    namespace cinematiccamera {
 
-		class CinematicView : public core::view::View3D {
+        class CinematicView : public core::view::View3D {
 
-		public:
+        public:
 
-			typedef core::view::View3D Base;
+            typedef core::view::View3D Base;
 
-			/**
-			* Answer the name of this module.
-			*
-			* @return The name of this module.
-			*/
-			static const char *ClassName(void) {
-				return "CinematicView";
-			}
+            /**
+            * Answer the name of this module.
+            *
+            * @return The name of this module.
+            */
+            static const char *ClassName(void) {
+                return "CinematicView";
+            }
 
-			/**
-			* Answer a human readable description of this module.
-			*
-			* @return A human readable description of this module.
-			*/
-			static const char *Description(void) {
-				return "Screenshot View Module";
-			}
+            /**
+            * Answer a human readable description of this module.
+            *
+            * @return A human readable description of this module.
+            */
+            static const char *Description(void) {
+                return "Screenshot View Module";
+            }
 
-			/**
-			* Answers whether this module is available on the current system.
-			*
-			* @return 'true' if the module is available, 'false' otherwise.
-			*/
-			static bool IsAvailable(void) {
+            /**
+            * Answers whether this module is available on the current system.
+            *
+            * @return 'true' if the module is available, 'false' otherwise.
+            */
+            static bool IsAvailable(void) {
                 if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
                     return false;
-				return true;
-			}
+                return true;
+            }
 
-			/**
-			* Disallow usage in quickstarts
-			*
-			* @return false
-			*/
-			static bool SupportQuickstart(void) {
-				return false;
-			}
+            /**
+            * Disallow usage in quickstarts
+            *
+            * @return false
+            */
+            static bool SupportQuickstart(void) {
+                return false;
+            }
 
-			/** Ctor. */
-			CinematicView(void);
+            /** Ctor. */
+            CinematicView(void);
 
-			/** Dtor. */
-			virtual ~CinematicView(void);
+            /** Dtor. */
+            virtual ~CinematicView(void);
 
         protected:
 
@@ -107,7 +107,7 @@ namespace megamol {
             */
             virtual void Render(const mmcRenderViewContext& context);
 
-		private:
+        private:
 
             typedef std::chrono::system_clock::time_point time_point;
 
@@ -224,8 +224,8 @@ namespace megamol {
             * callback
             **********************************************************************/
 
-			/** The keyframe keeper caller slot */
-			core::CallerSlot keyframeKeeperSlot;
+            /** The keyframe keeper caller slot */
+            core::CallerSlot keyframeKeeperSlot;
 
             /**********************************************************************
             * parameters
@@ -240,7 +240,9 @@ namespace megamol {
             /** */
             core::param::ParamSlot toggleAnimPlayParam;
             /** */
-			core::param::ParamSlot selectedSkyboxSideParam;
+            core::param::ParamSlot selectedSkyboxSideParam;
+            /** */
+            core::param::ParamSlot cubeModeRenderParam;
             /** */
             core::param::ParamSlot resWidthParam;
             /** */
@@ -257,7 +259,7 @@ namespace megamol {
             core::param::ParamSlot frameFolderParam;
 		};
 
-	} /* end namespace cinematiccamera */
+    } /* end namespace cinematiccamera */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED */

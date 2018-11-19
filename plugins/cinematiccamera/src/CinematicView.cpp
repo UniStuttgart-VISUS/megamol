@@ -26,12 +26,13 @@ CinematicView::CinematicView(void) : View3D(),
     renderParam(                "01_renderAnim", "Toggle rendering of complete animation to PNG files."),
     toggleAnimPlayParam(        "02_playPreview", "Toggle playing animation as preview"),
     selectedSkyboxSideParam(    "03_skyboxSide", "Select the skybox side."),
-    resWidthParam(              "04_cinematicWidth", "The width resolution of the cineamtic view to render."),
-    resHeightParam(             "05_cinematicHeight", "The height resolution of the cineamtic view to render."), 
-    fpsParam(                   "06_fps", "Frames per second the animation should be rendered."),
-    startRenderFrameParam(      "07_firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning)."), 
-    delayFirstRenderFrameParam( "08_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
-    frameFolderParam(           "09_frameFolder", "Specify folder where the frame files should be stored."),
+    cubeModeRenderParam(        "04_cubeMode", "Render cube around dataset with skyboxSide as side selector."),
+    resWidthParam(              "05_cinematicWidth", "The width resolution of the cineamtic view to render."),
+    resHeightParam(             "06_cinematicHeight", "The height resolution of the cineamtic view to render."), 
+    fpsParam(                   "07_fps", "Frames per second the animation should be rendered."),
+    startRenderFrameParam(      "08_firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning)."), 
+    delayFirstRenderFrameParam( "09_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering)."),
+    frameFolderParam(           "10_frameFolder", "Specify folder where the frame files should be stored."),
     eyeParam(                   "stereo::eye", "Select eye position (for stereo view)."),
     projectionParam(            "stereo::projection", "Select camera projection."),
 
@@ -64,6 +65,9 @@ CinematicView::CinematicView(void) : View3D(),
     sbs->SetTypePair(CinematicView::SkyboxSides::SKYBOX_DOWN,  "Down");
     this->selectedSkyboxSideParam << sbs;
     this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
+
+    this->cubeModeRenderParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->cubeModeRenderParam);
 
     this->resHeightParam.SetParameter(new param::IntParam(this->cineHeight, 1));
     this->MakeSlotAvailable(&this->resHeightParam);
@@ -348,20 +352,42 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             // Adjust cam to selected skybox side
             // set aperture angle to 90 deg
             cp->SetApertureAngle(90.0f);
-            if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
-            }
-            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
-            }
-            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
-            }
-            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
-            }
-            else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+            if (!this->cubeModeRenderParam.Param<param::BoolParam>()->Value()) {
+                if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                    cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                    cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                    cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                    cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                    cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+                }
+            } else {
+                auto const center = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
+                auto const width = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Width();
+                auto const height = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Height();
+                auto const depth = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Depth();
+                if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
+                    auto const tmpCamPos = center + depth * camFront;
+                    cp->SetView(tmpCamPos, tmpCamPos - camFront * depth, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                    auto const tmpCamPos = center - depth * camFront;
+                    cp->SetView(tmpCamPos, tmpCamPos + camFront * depth, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                    auto const tmpCamPos = center + width * camRight;
+                    cp->SetView(tmpCamPos, tmpCamPos - camRight * width, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                    auto const tmpCamPos = center - width * camRight;
+                    cp->SetView(tmpCamPos, tmpCamPos + camRight * width, camUp);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                    auto const tmpCamPos = center + height * camUp;
+                    cp->SetView(tmpCamPos, tmpCamPos - camUp * height, -camFront);
+                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                    auto const tmpCamPos = center - height * camUp;
+                    cp->SetView(tmpCamPos, tmpCamPos + camUp * height, camFront);
+                }
             }
         }
     }
