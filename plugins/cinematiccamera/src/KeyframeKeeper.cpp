@@ -129,7 +129,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam('d'));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
-    this->editCurrentAnimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetAnimTime(), 0.0f));
+    this->editCurrentAnimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetAnimTime(), 0.000001f));
     this->MakeSlotAvailable(&this->editCurrentAnimTimeParam);
 
     this->editCurrentSimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetSimTime()*this->totalSimTime, 0.0f));
@@ -150,7 +150,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetCamApertureAngle(), 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 1.0f));
+    this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 0.0f));
     this->MakeSlotAvailable(&this->setTotalAnimTimeParam);
 
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
