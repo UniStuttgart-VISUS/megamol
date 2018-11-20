@@ -377,23 +377,23 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
                 auto const height = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Height();
                 auto const depth = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Depth();
                 if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
-                    auto const tmpCamPos = center + depth * camFront;
-                    cp->SetView(tmpCamPos, tmpCamPos - camFront * depth, camUp);
+                    auto const tmpCamPos = center - 0.5f * (depth + width) * camFront;
+                    cp->SetView(tmpCamPos, tmpCamPos + camFront * 0.5f * (depth + width), camUp);
                 } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                    auto const tmpCamPos = center - depth * camFront;
-                    cp->SetView(tmpCamPos, tmpCamPos + camFront * depth, camUp);
+                    auto const tmpCamPos = center + 0.5f * (depth + width) * camFront;
+                    cp->SetView(tmpCamPos, tmpCamPos - camFront * 0.5f * (depth + width), camUp);
                 } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                    auto const tmpCamPos = center + width * camRight;
-                    cp->SetView(tmpCamPos, tmpCamPos - camRight * width, camUp);
+                    auto const tmpCamPos = center + 0.5f * (depth + width) * camRight;
+                    cp->SetView(tmpCamPos, tmpCamPos - camRight * 0.5f * (depth + width), camUp);
                 } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                    auto const tmpCamPos = center - width * camRight;
-                    cp->SetView(tmpCamPos, tmpCamPos + camRight * width, camUp);
+                    auto const tmpCamPos = center - 0.5f * (depth + width) * camRight;
+                    cp->SetView(tmpCamPos, tmpCamPos + camRight * 0.5f * (depth + width), camUp);
                 } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                    auto const tmpCamPos = center + height * camUp;
-                    cp->SetView(tmpCamPos, tmpCamPos - camUp * height, -camFront);
+                    auto const tmpCamPos = center + 0.5f * (height + width) * camUp;
+                    cp->SetView(tmpCamPos, tmpCamPos - camUp * 0.5f * (height + width), -camFront);
                 } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                    auto const tmpCamPos = center - height * camUp;
-                    cp->SetView(tmpCamPos, tmpCamPos + camUp * height, camFront);
+                    auto const tmpCamPos = center - 0.5f * (height + width) * camUp;
+                    cp->SetView(tmpCamPos, tmpCamPos + camUp * 0.5f * (height + width), camFront);
                 }
             }
         }
