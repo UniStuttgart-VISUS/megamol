@@ -1,0 +1,12 @@
+uniform float difference = 0.1;
+
+varying vec2 texCoord;
+
+void main()
+{
+	gl_Position.xy = gl_Vertex.xy * 2.0 - 1.0;
+	gl_Position.zw = vec2( -1.0, 1.0);
+	gl_FrontColor = gl_Color;
+
+	texCoord = gl_Vertex.xy;
+}

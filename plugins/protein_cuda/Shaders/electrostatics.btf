@@ -1,0 +1,1070 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="electrostatics">    
+
+    <include file="colormaps"/>
+
+    <snippet name="ppLighting" type="string">
+<!--
+// ray:      the eye to fragment ray vector
+// normal:   the normal of this fragment
+// lightPos: the position of the light source
+// color:    the base material color
+vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightPos, 
+    const in vec3 color, const vec4 lightparams) {
+
+    vec3 lightDir = normalize(lightPos);
+
+//    vec4 lightparams = vec4(0.2, 0.8, 0.4, 10.0);
+#define LIGHT_AMBIENT lightparams.x
+#define LIGHT_DIFFUSE lightparams.y
+#define LIGHT_SPECULAR lightparams.z
+#define LIGHT_EXPONENT lightparams.w
+    float nDOTl = dot(normal, lightDir);
+
+    vec3 r = normalize(2.0 * vec3(nDOTl) * normal - lightDir);
+    return 
+        LIGHT_AMBIENT * color +
+        LIGHT_DIFFUSE * color * max(nDOTl, 0.0) +
+        LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
+}
+-->
+    </snippet>
+    
+    <snippet name="colorMix" type="string">
+<!--
+
+/* Mix three colors (RGBA) */
+vec4 MixColors (float val, 
+                float min, 
+                float thresh, 
+                float max,
+                vec4 colorMin,
+                vec4 colorThresh,
+                vec4 colorMax) {
+    val = clamp(val, min, max);
+    if (val < thresh) {
+        return (val-min)/(thresh-min)*colorThresh + 
+            (1.0f - (val-min)/(thresh-min))*colorMin;
+    } 
+    else {
+        return ((val-thresh)/(max-thresh))*colorMax + 
+            (1.0f - ((val-thresh)/(max-thresh)))*colorThresh;
+    }
+}
+
+/* Mix three colors (RGB) */
+vec3 MixColors (float val, 
+                float min, 
+                float thresh, 
+                float max,
+                vec3 colorMin,
+                vec3 colorThresh,
+                vec3 colorMax) {
+    val = clamp(val, min, max);
+    if (val < thresh) {
+        return (val-min)/(thresh-min)*colorThresh + 
+            (1.0f - (val-min)/(thresh-min))*colorMin;
+    } 
+    else {
+        return ((val-thresh)/(max-thresh))*colorMax + 
+            (1.0f - ((val-thresh)/(max-thresh)))*colorThresh;
+    }
+}
+
+/* Mix two colors (RGBA) */
+vec4 MixColors(float val, 
+               float min, 
+               float max,
+               vec4 colorMin,
+               vec4 colorMax) {
+    val = clamp(val, min, max);
+    return colorMin*(1.0f - (abs(val-min)/abs(max-min)))+
+        colorMax*(abs(val-min)/abs(max-min));
+}
+
+/* Mix two colors (RGB) */
+vec3 MixColors(float val, 
+               float min, 
+               float max,
+               vec3 colorMin,
+               vec3 colorMax) {
+    val = clamp(val, min, max);
+    return colorMin*(1.0f - (abs(val-min)/abs(max-min)))+
+        colorMax*(abs(val-min)/abs(max-min));
+}
+    
+-->
+    </snippet>
+    
+    <namespace name="pplsurface">
+    
+        <shader name="vertexMapped">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+
+uniform sampler3D potentialTex0;
+uniform sampler3D potentialTex1;
+
+attribute vec3 posNew;
+attribute vec3 normal;
+attribute vec3 texCoordNew;
+attribute float corruptTriangleFlag;
+attribute float pathLen;
+attribute float surfAttrib;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 normalFrag; 
+varying vec3 posNewFrag; 
+varying float pathLenFrag;
+varying float surfAttribFrag;
+varying float corruptFrag;
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(posNew, 1.0);
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(posNew, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    // Note: is already transformed using the modelview matrix when calling glLight
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Texture coordinates
+    gl_TexCoord[0].stp = texCoordNew;
+    
+    // Object space positions
+    posNewFrag = posNew; 
+    
+    // Path length
+    pathLenFrag = pathLen;
+    
+    // Surface attribute
+    surfAttribFrag = surfAttrib;
+    
+    corruptFrag =corruptTriangleFlag;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragmentMapped">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+uniform sampler3D potentialTex0;
+uniform sampler3D potentialTex1;
+uniform int colorMode;
+uniform int renderMode;
+uniform int unmappedTrisColorMode;
+uniform vec3 colorMin;
+uniform vec3 colorMax;
+uniform vec3 colorUniform;
+uniform float minPotential;
+uniform float maxPotential;
+uniform float alphaScl;
+uniform float maxPosDiff;
+uniform int uncertaintyMeasurement;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 normalFrag;
+varying vec3 posNewFrag; // Interpolated WS position
+varying float pathLenFrag;
+varying float surfAttribFrag;
+varying float corruptFrag;
+
+void main() {
+    
+    vec4 lightparams, color;
+    
+    if (renderMode == 1) { // Points
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (renderMode == 2) { // Wireframe
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (renderMode == 3) { // Surface
+        lightparams = vec4(0.2, 0.8, 0.0, 10.0);
+    }
+    
+    // Determine color
+    if (colorMode == 0) { // Uniform color
+        
+        //color = vec4(colorUniform, 1.0 - pathLenFrag/maxPosDiff);
+        color = vec4(colorUniform, 1.0);
+        
+    } else if (colorMode == 1) { // Normal
+        //lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+        color = vec4(normalize(normalFrag), 1.0);
+        color = vec4(colorUniform, 1.0 - pathLenFrag/maxPosDiff); // DEBUG
+    } else if (colorMode == 2) { // Texture coordinates
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+        color = vec4(gl_TexCoord[0].stp, 1.0);
+    } else if (colorMode == 4) { // Uncertainty
+        float diff;
+  //      if (uncertaintyMeasurement == 0) { // Euclidean distance
+  //          diff = length(posOldFrag-posNewFrag);
+  //      } else if (uncertaintyMeasurement == 1) { // Path length
+            diff = pathLenFrag;
+  //      }
+        color = MixColors(diff, 0.0, maxPosDiff*0.5, 
+            maxPosDiff, 
+            vec4(1.0, 1.0, 1.0, 1.0), 
+            vec4(1.0, 1.0, 0.0, 1.0), 
+            vec4(1.0, 0.0, 0.0, 1.0));
+            
+        float potDiff = diff;        
+        
+        //vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*potDiff/maxPosDiff, 1.5393);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/maxPosDiff, -1.1);
+    
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
+
+    } else if (colorMode == 5) { // Surface potential 0
+            
+        // Interpolation in MSH color space
+        vec3 colMsh = CoolWarmMsh(texture3D(potentialTex0, gl_TexCoord[0].stp).a, 
+                        minPotential, 0.0, maxPotential);
+        color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
+        
+    } else if (colorMode == 6) { // Surface potential 1
+            
+        // Interpolation in MSH color space
+        vec3 colMsh = CoolWarmMsh(surfAttribFrag, 
+              minPotential, 0.0, maxPotential);
+        color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
+
+    } else if (colorMode == 7) { // Surface potential difference
+      
+        float potDiff = surfAttribFrag;        
+        
+        //vec3 colOrangeMsh = vec3(100, 0.9746*potDiff/(maxPotential-minPotential), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*potDiff/(maxPotential-minPotential), 1.5393);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
+    
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0 - pathLenFrag/maxPosDiff);
+        
+    } else if (colorMode == 8) { // Surface potential sign switch
+      
+        //lightparams = vec4(0.7, 0.4, 0.0, 1.0);
+        //float potOld = texture3D(potentialTex1, gl_TexCoord[1].stp).a;
+        //float potNew = texture3D(potentialTex0, gl_TexCoord[0].stp).a;
+        //float potDiff = abs(potOld-potNew); 
+        // Calc euclidian distance
+        // Calc euclidian distance
+        float posDiff;
+//        if (uncertaintyMeasurement == 0) { // Euclidean distance
+//            posDiff = length(posOldFrag-posNewFrag);
+//        } else if (uncertaintyMeasurement == 1) { // Path length
+            posDiff = pathLenFrag;
+//        }
+        
+        float signSwitchedFlag = surfAttribFrag;
+        
+        
+        //vec3 colTurquoiseMsh = vec3(109.81, 0.9746*signSwitchedFlag, 0.8968);
+        //vec3 colDiffMsh = (1.0 - posDiff/maxPosDiff)*colOrangeMsh + (posDiff/maxPosDiff)*colWhiteMsh;
+        
+        // Green
+        //vec3 colorSign = vec3(0.57, 0.76, 0.0)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+        
+        // Yellow
+        //vec3 colorSign = vec3(1.0, 0.84, 0.0)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+        vec3 colorSign = vec3(0.96, 0.74, 0.06)*signSwitchedFlag + (1.0-signSwitchedFlag)*vec3(1.0, 1.0, 1.0);
+
+        color = vec4(colorSign, 1.0 - posDiff/maxPosDiff);
+        
+        // Draw interior darker
+        //if (dot(view, normalFrag) > 0) {
+        //    colDiff *= 0.75;
+        //}
+        
+        //color = vec4(colDiff, 1.0 - posDiff/maxPosDiff);
+        //color = vec4(colDiff, 1.0);
+        
+        // Set for corrupt triangles
+        //color = color*(1.0 - corruptTriangleFlagFrag) + 
+        //        vec4(1.0, 0.0, 1.0, 1.0)*corruptTriangleFlagFrag;
+        //color.a *= (1.0 - corruptTriangleFlagFrag);
+        //color.rgb *= 1.0 - corruptTriangleFlagFrag;
+    } else if (colorMode == 9) { // Mesh laplacian
+        float potDiff = surfAttribFrag;        
+        
+        //vec3 colOrangeMsh = vec3(100, 0.9746*(1.0-potDiff/(maxPotential-minPotential)), 0.8968);
+        vec3 colYellowMsh = vec3(102.44, 0.6965*(potDiff/(maxPotential-minPotential)), 1.5393);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
+    
+        color = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
+    } else { // Invalid color mode
+        color = vec4(0.5, 1.0, 1.0, 1.0);
+    }
+   
+   //color.a *= (1.0 - corruptFrag);
+   // Alpha scaling by the user
+    color.a *= alphaScl;
+    vec3 n = normalFrag;
+    
+    vec4 corruptColor;
+    if (unmappedTrisColorMode == 0) {
+        corruptColor = color;
+    } else if (unmappedTrisColorMode == 1) {
+        corruptColor = vec4(color.rgb, 0.0);
+    } else if (unmappedTrisColorMode == 2) {
+        corruptColor = vec4(0.0, 0.458823529, 0.650980392, 1.0);
+    }
+    color = corruptFrag*corruptColor + (1.0-corruptFrag)*color;
+    //color = vec4(0.0, 0.458823529, 0.650980392, 1.0);
+    
+    /*if (corruptFrag > 0) {
+        // 230,97,1
+        //color.rgb = vec3(0.90, 0.38, 0.0);
+        
+        //#e7be40
+        // 231, 190, 64
+        //color.rgb = vec3(0.905882353, 0.745098039, 0.250980392);
+//        color.rgb = vec3(0.654901961, 0.494117647, 0.0);
+        //color.rgb = vec3(0.0, 0.458823529, 0.650980392);
+//        color.rgb = vec3(0.0, 0.5, 0.7);
+    }*/
+    
+    if (gl_FrontFacing) {
+        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(n), 
+            normalize(lightDir), color.rgb, lightparams), color.a);
+    } else {
+        gl_FragColor = vec4(LocalLighting(normalize(view), normalize(-n), 
+            normalize(lightDir), color.rgb*0.7, lightparams), color.a);
+    }
+    
+    
+    
+    
+            
+
+}
+-->
+            </snippet>
+        </shader>
+    
+        <shader name="vertex">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute vec3 pos;
+attribute vec3 normal;
+attribute vec3 texCoord;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 normalFrag; 
+varying vec3 posWS;
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
+    //gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex; // Vertex positions
+    posWS = pos;
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Texture coordinate
+    gl_TexCoord[0].stp = texCoord;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragment">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+uniform sampler3D potentialTex;
+uniform int colorMode;
+uniform int renderMode;
+uniform vec3 colorMin;
+uniform vec3 colorMax;
+uniform vec3 colorUniform;
+uniform float minPotential;
+uniform float maxPotential;
+uniform float alphaScl;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 normalFrag; 
+varying vec3 posWS;
+
+void main() {
+
+	// DEBUG clipping planes
+	//if (posWS.z < 49) return;
+	//if (posWS.z > 50) return;
+    
+    //if (posWS.z > 50) return;
+    
+    vec4 lightparams, color;
+    
+    // Determine lighting parameters
+    if (renderMode == 1) { // Points
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (renderMode == 2) { // Wireframe
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (renderMode == 3) { // Surface
+        lightparams = vec4(0.2, 0.8, 0.0, 10.0);
+    }
+    
+    // Determine color
+    if (colorMode == 0) { // Uniform color
+        color = vec4(colorUniform, 1.0);
+        //color = vec4(0.0, 0.0, 0.0, 1.0);
+    } else if (colorMode == 1) { // Normal
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+        color = vec4(normalize(normalFrag), 1.0);
+    } else if (colorMode == 2) { // Texture coordinates
+        lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+        color = vec4(gl_TexCoord[0].stp, 1.0);
+    } else if (colorMode == 3) { // Surface potential
+            
+        // Interpolation in MSH color space
+        vec3 colMsh = CoolWarmMsh(texture3D(potentialTex, gl_TexCoord[0].stp).a, 
+                        minPotential, 0.0, maxPotential);
+        //vec3 colMsh = vec3(1.0, 1.0, 0.0);
+        color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
+            
+    } else { // Invalid color mode
+        color = vec4(0.5, 1.0, 1.0, 1.0);
+    }
+   
+    // Apply scaling of alpha value
+    color.a *= alphaScl;
+    
+    gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+            normalize(lightDir), color.rgb, lightparams), color.a);
+}
+
+-->
+            </snippet>
+        </shader>
+        
+                <shader name="vertexWithFlag">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute vec3 pos;
+attribute float flag;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float flagFrag;
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
+    posWS = pos;
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    //normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Vertex flag
+    flagFrag = flag;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragmentWithFlag">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float flagFrag;
+
+void main() {
+    
+    vec4 lightparams;
+    vec3 color;
+
+    lightparams = vec4(1.0, 0.0, 0.0, 1.0);
+    
+    color = flagFrag*(vec3(1.0, 0.0, 0.0)) + (1.0-flagFrag)*vec3(0.7, 0.8, 1.0);
+    //color = vec3(1.0, 0.0, 0.0);
+    
+    //gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+    //        normalize(lightDir), color.rgb, lightparams), 1.0);
+    
+            
+    gl_FragColor = vec4(color.rgb, 1.0);
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        
+        
+    <shader name="vertexUncertainty">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute vec3 pos;
+attribute vec3 normal;
+attribute float uncertainty;
+
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float uncertaintyFrag;
+varying vec3 normalFrag; 
+
+void main() {   
+    
+    // Vertex positions
+    gl_Position = gl_ModelViewProjectionMatrix*vec4(pos, 1.0);
+    posWS = pos;
+    
+    // Get view vector in eye space
+    view = (gl_ModelViewMatrix*vec4(pos, 1.0)).xyz;
+    
+    // Transformation of normal into eye space
+    normalFrag = gl_NormalMatrix*normal;
+    
+    // Get the direction of the light
+    //lightDir = vec3(gl_LightSource[0].position)-view;
+    lightDir = gl_LightSource[0].position.xyz;
+    
+    // Vertex flag
+    uncertaintyFrag = uncertainty;
+}
+-->
+        </snippet>
+        </shader>
+
+        <shader name="fragmentUncertainty">
+        <snippet type="version">120</snippet>
+        <snippet name="colorMix" />
+        <snippet name="ppLighting" />
+        <snippet name="colormaps::RGB2MSH" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet name="colormaps::COOLWARM" />
+        <snippet name="colormaps::HSV2RGB" />
+        <snippet type="string">
+<!--
+varying vec3 lightDir;
+varying vec3 view;
+varying vec3 posWS;
+varying float uncertaintyFrag;
+varying vec3 normalFrag; 
+
+uniform float maxUncertainty;
+
+void main() {
+    
+    vec4 lightparams;
+    vec4 color;
+
+    //lightparams = vec4(0.2, 0.8, 0.0, 10.0);
+    //lightparams = vec4(0.2, 0.0, 0.0, 10.0);
+    vec3 colOrangeMsh = vec3(100, 0.9746*uncertaintyFrag/maxUncertainty, 0.8968);
+        //vec3 colYellowMsh = vec3(100, 0.81*potDiff/(maxPotential-minPotential), 1.7951);
+        //vec3 blueMsh = vec3(90, 1.08*potDiff/(maxPotential-minPotential), -1.1);
+    
+    color = vec4(MSH2RGB(colOrangeMsh.r, colOrangeMsh.g, colOrangeMsh.b), 1.0);
+    
+    //vec3 colMsh = CoolWarmMsh(uncertaintyFrag, 0.0, maxUncertainty/2.0, maxUncertainty);
+    //color = MSH2RGB(colMsh.x, colMsh.y, colMsh.z);
+    
+    //gl_FragColor = vec4(LocalLighting(normalize(view), normalize(normalFrag), 
+    //        normalize(lightDir), color.rgb, lightparams), 1.0);
+    
+    gl_FragColor = color;
+
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        
+    </namespace>
+    
+    <namespace name="streamline">
+        <shader name="vertex">
+        <snippet type="version">150</snippet>
+        <snippet type="string">
+        <!--
+uniform mat4 modelview;
+uniform mat4 proj;
+uniform vec4 lightPos;
+uniform int shading;
+
+in vec3 vertex;
+in vec3 tc;
+in vec3 tangent;
+
+out vec3 fragTangent;
+out vec3 fragView;
+out vec3 fragTC;
+
+void main(void) {
+    gl_Position = (proj*modelview)*vec4(vertex, 1.0);
+    fragTangent = tangent;
+    fragView = (modelview*vec4(vertex, 1.0)).xyz;
+    fragTC = tc;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">150</snippet>
+            <snippet type="string">
+        <!--
+uniform mat4 modelview;
+uniform mat4 proj;
+uniform vec4 lightPos;
+uniform vec4 viewAttr;
+uniform int shading;
+uniform float fogZ;
+uniform sampler3D potentialTex;
+uniform float minPot;
+uniform float maxPot;
+uniform int vecFieldIdx; // 0 or 1
+
+in vec3 fragTangent;
+in vec3 fragView;
+in vec3 fragTC;
+
+vec3 GetColor(float val, float min, float max) {
+
+    vec3 minColor, maxColor;
+
+    if(vecFieldIdx == 0) {
+        minColor = vec3(0.23f, 0.29f, 0.75f); // blue
+        maxColor = vec3(0.75f, 0.01f, 0.15f); // red
+    }
+    else {
+        minColor = vec3(0.5f, 0.7f, 1.0f); // light blue
+        maxColor = vec3(1.0f, 0.6f, 0.7f); // light red
+    }
+
+    if(val < min) val = min;
+    if(val > max) val = max;
+
+    float alpha = abs(val-min)/abs(max-min);
+
+    return minColor*(1.0f - alpha)+maxColor*alpha;
+}
+
+void main() {  
+    
+    // Fog params
+    vec3 fogColor = vec3(0.0, 0.0, 0.0);
+    float fogdensity = 0.7;
+    const float LOG2 = 1.442695;
+    float z = gl_FragCoord.z/gl_FragCoord.w;
+    float fogFactor = clamp((1.0 - gl_FragCoord.z)/(1.0 -fogZ), 0.0, 1.0);
+    
+    // Lighting params
+    float k_ambient = 0.0;
+    float k_diffuse = 0.8;
+    float k_specular = 0.3;
+    float k_exp = 50.0;
+
+    vec4 colOut = vec4(GetColor(texture(potentialTex, fragTC).a, minPot, maxPot), 1.0);
+    
+    if(shading == 0) { // Uniform color
+        vec3 t = normalize(fragTangent);
+        float l_T = t.x*dot(normalize(lightPos.xyz), t);
+        float v_T = t.x*dot(normalize(-fragView.xyz), t);
+        float diff = k_diffuse*sqrt(1.0-l_T*l_T);
+        float spec = k_specular*pow(-v_T*l_T + sqrt(1.0-l_T*l_T)*sqrt(1.0-v_T*v_T), k_exp);
+        if(vecFieldIdx == 0) {
+            gl_FragColor =  vec4(vec3(0.88, 0.86, 0.39)*(k_ambient + diff + spec), 1.0);
+        }
+        else {
+            gl_FragColor =  vec4(vec3(0.2, 0.86, 0.39)*(k_ambient + diff + spec), 1.0);
+        }
+        gl_FragColor.rgb = mix(fogColor, gl_FragColor.rgb, fogFactor);
+    }
+    else if(shading == 1) { // Potential map
+        vec3 t = normalize(fragTangent);
+        float l_T = t.x*dot(normalize(lightPos.xyz), t);
+        float v_T = t.x*dot(normalize(-fragView.xyz), t);
+        float diff = k_diffuse*sqrt(1.0-l_T*l_T);
+        float spec = k_specular*pow(-v_T*l_T + sqrt(1.0-l_T*l_T)*sqrt(1.0-v_T*v_T), k_exp);
+        gl_FragColor =  vec4(colOut.rgb*(k_ambient + diff + spec), 1.0);
+        gl_FragColor.rgb = mix(fogColor, gl_FragColor.rgb, fogFactor);
+    }
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <namespace name="slice">
+        <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet type="string">
+        <!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_TexCoord[1] = gl_MultiTexCoord1;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="colorMix" />
+            <snippet name="colormaps::MSH2RGB" />
+            <snippet name="colormaps::COOLWARM" />
+            <snippet type="string">
+        <!--
+uniform sampler3D potentialTex;
+uniform sampler3D densityMap;
+uniform sampler3D distField;
+uniform float colorMinVal;
+uniform float colorMaxVal;
+uniform float minPotential;
+uniform float maxPotential;
+uniform float isoval;
+uniform int renderMode;
+
+void main() {
+    if(renderMode == 0) { // Potential texture
+    
+        // Interpolation in MSH color space
+        vec3 colMsh = CoolWarmMsh(texture3D(potentialTex, gl_TexCoord[0].stp).a, 
+                        minPotential, 0.0, maxPotential);
+        
+        gl_FragColor = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
+        
+    } else if(renderMode == 1) { // Density map
+        /*gl_FragColor =  vec4(MixColors(texture3D(densityMap, gl_TexCoord[1].stp).a, 
+        isoval-0.1, isoval, isoval+0.1, 
+        vec3(0.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)), 1.0);        */
+        
+                gl_FragColor =  vec4(MixColors(texture3D(densityMap, gl_TexCoord[1].stp).a, 
+        colorMinVal, colorMaxVal, 
+        vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)), 1.0);
+        
+    } else if (renderMode == 2) { // Distance field
+
+        gl_FragColor =  vec4(MixColors(texture3D(distField, gl_TexCoord[1].stp).a, 
+        colorMinVal, colorMaxVal, 
+        vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)), 1.0);
+
+    } else { // Invalid color mode
+        gl_FragColor = vec4(0.5, 1.0, 0.0, 1.0);
+    }
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <namespace name="raycasting">
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 posES;
+varying vec4 pos;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    pos = gl_Position;
+    posES = (gl_ModelViewMatrix*gl_Vertex).xyz;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_TexCoord[1] = gl_MultiTexCoord1;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="colorMix" />
+            <snippet name="ppLighting" />
+            <snippet name="colormaps::MSH2RGB" />
+            <snippet name="colormaps::COOLWARM" />
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler3D densityTex;
+uniform sampler2D srcColorBuff;
+uniform sampler2D srcDepthBuff;
+uniform sampler2D tcBuff0;
+uniform sampler2D posESBuff;
+uniform sampler2D tcBuff1;
+uniform sampler3D potential;
+
+uniform float delta;
+uniform float isoVal;
+uniform float alphaScl;
+uniform int maxIt;
+uniform float gradOffset;
+
+uniform float colorMinVal;
+uniform float colorMaxVal;
+uniform vec3 colorMin;
+uniform vec3 colorZero;
+uniform vec3 colorMax;
+
+uniform vec4 viewportDim; //(width, height, near far)
+uniform vec3 potTexOrg;
+uniform vec3 potTexSize;
+uniform vec3 volTexOrg;
+uniform vec3 volTexSize;
+
+    
+    
+varying vec4 pos;
+varying vec3 posES;
+
+void main (void) {    
+    
+    vec2 texc = ((pos.xy/pos.w) + 1.0f)/2.0f; // Get normalized device coords
+    
+    //vec3 viewES =  normalize(texture2D(posESBuff, texc).rgb - posES); // For local lighting
+    vec3 viewES =  normalize(posES); // For local lighting
+
+    vec3 rayEnd0 = texture2D(tcBuff0, texc).rgb;
+    vec3 rayStart0 = gl_TexCoord[0].stp;
+    vec3 ray0 = rayEnd0 - rayStart0;    
+    
+    vec3 rayEnd1 = texture2D(tcBuff1, texc).rgb;
+    vec3 rayStart1 = gl_TexCoord[1].stp;
+    vec3 ray1 = rayEnd1 - rayStart1;    
+ 
+    vec3 rayESPosEnd = texelFetch2D(posESBuff, ivec2(gl_FragCoord.xy), 0).rgb;
+    vec3 rayESPosStart = posES;
+    vec3 rayESPos = rayESPosEnd - rayESPosStart;
+    
+    float rayLen0 = length(ray0);
+    vec3 ray_norm0 = normalize(ray0);
+    vec3 ray_delta0 = ray_norm0*delta;
+    
+    float rayLen1 = length(ray1);
+    float ray1Delta = delta * (rayLen1 / rayLen0);
+    vec3 ray_norm1 = normalize(ray1);
+    vec3 ray_delta1 = ray_norm1*ray1Delta;
+    
+    float rayESLen = length(rayESPos);
+    float esPosDelta = delta * (rayESLen / rayLen0);
+    vec3 rayESPos_norm = normalize(rayESPos);
+    vec3 rayESPosDelta = rayESPos_norm*esPosDelta;
+    
+    float ray_delta_len0 = length(ray_delta0);
+    float ray_delta_len1 = length(ray_delta1);
+    
+    vec3 vec0 = rayStart0;
+    vec3 vec1 = rayStart1;
+    vec3 vecES = rayESPosStart;
+    
+    vec4 col_acc = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float alpha_acc = 0.0f;
+    float length_acc = 0.0f;
+    
+    float tex_sample;
+    vec4 color_sample, color_sample_old;
+    float alpha_sample;
+    vec3 gradient;
+
+    float depthValComp = texelFetch2D(srcDepthBuff, ivec2(gl_FragCoord.xy), 0).r;
+   
+    float isoDiff = 0;
+    float isoDiffOld = 0;
+    float ssDepth = 0.0;
+    
+    float n = viewportDim.z;
+    float f = viewportDim.w;
+        
+    float colorMidVal = (colorMinVal+colorMaxVal)*0.5;
+    int it = 0;
+
+    while(!(length_acc > rayLen0 || alpha_acc >= 1.0 || it > maxIt)) {
+
+        tex_sample = texture3D(densityTex, vec0).a;        
+        isoDiff = tex_sample - isoVal;
+
+        if(isoDiffOld*isoDiff < 0) { // We crossed the iso surface
+                
+            alpha_sample = alphaScl;
+            
+            // Since we crossed the isosurface, we need to go back
+            //
+            //  |tex_sampleOLD| <- isoDiffOld -> |isoVal| <- isoDiff -> |tex_sample|
+            //
+            float sclOffs = abs(isoDiff)/(abs(isoDiff)+abs(isoDiffOld));
+            vec3 vecSclOffs0 = ray_delta0*(sclOffs);
+            vec3 vecSclOffs1 = ray_delta1*(sclOffs);
+            vec3 vecSclOffsES = rayESPosDelta*(sclOffs);
+            
+            // Compute gradient by central differences
+            gradient.x = texture3D(densityTex, (vec0-vecSclOffs0) + vec3(gradOffset, 0, 0)).a
+                       - texture3D(densityTex, (vec0-vecSclOffs0) + vec3(-gradOffset, 0, 0)).a;
+            gradient.y = texture3D(densityTex, (vec0-vecSclOffs0) + vec3(0, gradOffset, 0)).a
+                       - texture3D(densityTex, (vec0-vecSclOffs0) + vec3(0, -gradOffset, 0)).a;
+            gradient.z = texture3D(densityTex, (vec0-vecSclOffs0) + vec3(0, 0, gradOffset)).a
+                       - texture3D(densityTex, (vec0-vecSclOffs0) + vec3(0, 0, -gradOffset)).a;      
+
+            // Gradient is now in uvw-space -> transform it to world space
+            // Note: This works only for texture coordinates, where the z axis is (0, 0, -1) in WS
+            gradient.xyz *= -1.0;
+                       
+            // ... and then eye space
+            vec3 gradES = gl_NormalMatrix*gradient;
+            
+            // Determine color by sampling potential map
+/*            vec4 color = vec4(MixColors(texture3D(potential, vec1.stp-vecSclOffs1).a, 
+                                        colorMinVal,
+                                        0.0,
+                                        colorMaxVal,
+                                        colorMin,
+                                        colorZero,
+                                        colorMax), 
+                              1.0);*/
+            //color = vec4(normalize(gradES), 1.0); // DEBUG
+            
+            // Interpolation in MSH color space
+            vec3 colMsh = CoolWarmMsh(texture3D(potential, vec1.stp-vecSclOffs1).a, 
+                        colorMinVal, 0.0, colorMaxVal);
+            vec4 color = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z), 1.0);
+            
+            // Calculate local lighting 
+            vec3 L = normalize(vec3(gl_LightSource[0].position.xyz));
+            vec3 V = normalize(vec3(viewES.xyz));
+            
+            // Don't use lighting
+            //color_sample = color;
+            // Use lighting            
+            color_sample = vec4(LocalLighting(V, normalize(gradES), L, 
+                color.rgb, vec4(0.2, 0.8, 0.0, 10.0)), 1.0);
+            
+            // draw interior darker
+            //if(isoDiffOld > 0.0 ) 
+            //    color_sample.xyz *= 0.7;
+            ssDepth = (viewportDim.z*viewportDim.w)/(vecES.z-vecSclOffsES.z) 
+                + viewportDim.z + viewportDim.w;
+            
+            vecES += rayESPosDelta; // for z test
+        }
+        else { // We crossed empty space
+            alpha_sample = 0.0f;
+            color_sample = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            ssDepth = (viewportDim.z*viewportDim.w)/(vecES.z) 
+                + viewportDim.z + viewportDim.w;
+            vecES += rayESPosDelta; // for z test
+            
+            //ssDepth = (viewportDim.z*viewportDim.w)/vecES.z + viewportDim.z + viewportDim.w;
+        }
+        
+        // Accumulate color and alpha sample
+        col_acc   += ((1.0f - alpha_acc)*color_sample*alpha_sample);
+        alpha_acc += ((1.0f - alpha_acc)*alpha_sample);
+        
+        vec0 += ray_delta0;
+        vec1 += ray_delta1;
+        length_acc += ray_delta_len0;
+    
+        isoDiffOld = isoDiff; 
+        
+        //float n = viewportDim.z;
+        //float f = viewportDim.w;
+        //float zClip = (-vecES.z*(f+n)-2.0*f*n)/(f-n);
+        //float zNDC = zClip/-vecES.z; // Divide by wCLIP
+        
+        //ssDepth = (viewportDim.z*viewportDim.w)/vecES.z + viewportDim.z + viewportDim.w;
+        //ssDepth = (f-n)/2.0*zNDC+(f+n)/2.0;
+        // Map near ... far to 0 ... 1
+        ssDepth -= n;
+        ssDepth /= (f-n);
+        
+        if(ssDepth >= depthValComp) {
+            // Blend with source buffer
+            col_acc   += ((1.0f - alpha_acc)*vec4(texelFetch2D(srcColorBuff, 
+                ivec2(gl_FragCoord.xy), 0).rgb, 1.0));
+            alpha_acc += ((1.0f - alpha_acc));        
+        }
+        
+        it += 1;
+    }
+
+    gl_FragColor = vec4(col_acc.rgb/alpha_acc, alpha_acc);
+    //gl_FragColor = vec4(texelFetch2D(srcColorBuff, ivec2(gl_FragCoord.xy), 0).rgb, 1.0);
+}
+            -->
+            </snippet>
+        </shader>
+            <shader name="vertexRay">
+                <snippet type="version">130</snippet>
+                <snippet name="main" type="string">
+                <!--
+varying vec3 posES;
+void main(void) {
+    posES = (gl_ModelViewMatrix*gl_Vertex).xyz;
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_TexCoord[1] = gl_MultiTexCoord1;
+    
+}
+                -->
+                </snippet>
+            </shader>
+            <shader name="fragmentRay">
+                <snippet type="version">130</snippet>
+                <snippet type="string">
+                <!--
+varying vec3 posES;
+void main (void) {
+    gl_FragData[0] = vec4(gl_TexCoord[0].stp, 1.0f);
+    gl_FragData[1] = vec4(posES, 1.0f);
+    gl_FragData[2] = vec4(gl_TexCoord[1].stp, 1.0f);
+}
+                -->
+                </snippet>
+            </shader>
+    </namespace>
+</btf>
