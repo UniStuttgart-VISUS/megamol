@@ -2,6 +2,7 @@
  * AbstractSimpleSphereRenderer.h
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
+ * Copyright (C) 2018 by MegaMol Dev Team
  * Alle Rechte vorbehalten.
  */
 
@@ -109,6 +110,9 @@ namespace moldyn {
 
         /** Bool parameter slot to force time */
         param::ParamSlot forceTimeSlot;
+
+        /** Determine whether global or local bbox should be used */
+        param::ParamSlot useLocalBBoxParam;
 
     };
 
