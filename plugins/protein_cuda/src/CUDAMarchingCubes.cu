@@ -96,7 +96,6 @@ inline __host__ __device__ float length(float3 v) {
   return sqrtf(dot(v, v));
 }
 
-
 //
 // CUDA textures containing marching cubes look-up tables
 // Note: SIMD marching cubes implementations have no need for the edge table
@@ -148,8 +147,9 @@ __device__ float3 vertexInterp(float isolevel, float3 p0, float3 p1, float f0, f
 
 
 // classify voxel based on number of vertices it will generate one thread per two voxels
+// due to type system changes in CUDA, uint2 had to be replaced by myuint2
 template <int gridis3d, int subgrid>
-__global__ void classifyVoxel(uint2* voxelVerts, float *volume,
+__global__ void classifyVoxel(myuint2* voxelVerts, float *volume,
                               uint3 gridSize, unsigned int numVoxels, float3 voxelSize,
                               uint3 subGridStart, uint3 subGridEnd,
                               float isoValue) {
@@ -243,7 +243,8 @@ __global__ void classifyVoxel(uint2* voxelVerts, float *volume,
 
 
 // compact voxel array
-__global__ void compactVoxels(unsigned int *compactedVoxelArray, uint2 *voxelOccupied, unsigned int lastVoxel, unsigned int numVoxels, unsigned int numVoxelsp1) {
+// due to type system changes in CUDA, uint2 had to be replaced by myuint2
+__global__ void compactVoxels(unsigned int *compactedVoxelArray, myuint2 *voxelOccupied, unsigned int lastVoxel, unsigned int numVoxels, unsigned int numVoxelsp1) {
     unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
     unsigned int i = (blockId * blockDim.x) + threadIdx.x;
 
@@ -254,7 +255,8 @@ __global__ void compactVoxels(unsigned int *compactedVoxelArray, uint2 *voxelOcc
 
 
 // version that calculates no surface normal or color,  only triangle vertices
-__global__ void generateTriangleVerticesSMEM(float3 *pos, unsigned int *compactedVoxelArray, uint2 *numVertsScanned, float *volume,
+// due to type system changes in CUDA, uint2 had to be replaced by myuint2
+__global__ void generateTriangleVerticesSMEM(float3 *pos, unsigned int *compactedVoxelArray, myuint2 *numVertsScanned, float *volume,
                    uint3 gridSize, float3 voxelSize, float isoValue, unsigned int activeVoxels, unsigned int maxVertsM3) {
     unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
     unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
@@ -618,11 +620,15 @@ void ThrustScanWrapper(unsigned int* output, unsigned int* input, unsigned int n
 }
 #endif
 
-void ThrustScanWrapperUint2(uint2* output, uint2* input, unsigned int numElements) {
-    const uint2 zero = make_uint2(0, 0);
-    thrust::exclusive_scan(thrust::device_ptr<uint2>(input),
-                           thrust::device_ptr<uint2>(input + numElements),
-                           thrust::device_ptr<uint2>(output),
+/**
+ * This whole method used to have all uint2 instead of myuint2. Changes in the type system of CUDA made this stunt necessary,
+ * since the assignment operators of uint2 are not overloaded properly.
+ */
+void ThrustScanWrapperUint2(myuint2* output, myuint2* input, unsigned int numElements) {
+    const myuint2 zero{0, 0};
+    thrust::exclusive_scan(thrust::device_ptr<myuint2>(input),
+                           thrust::device_ptr<myuint2>(input + numElements),
+                           thrust::device_ptr<myuint2>(output),
                            zero);
 }
 
