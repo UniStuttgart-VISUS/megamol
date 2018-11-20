@@ -107,15 +107,6 @@ protected:
     void freeBuffers();
 
     /**
-     * The get capabilities callback. The module should set the members
-     * of 'call' to tell the caller its capabilities.
-     *
-     * @param[in] call The calling call.
-     * @return The return value of the function.
-     */
-    virtual bool GetCapabilities(core::Call& call);
-
-    /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
      * and times).

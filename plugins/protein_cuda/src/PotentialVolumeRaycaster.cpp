@@ -675,21 +675,6 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
 
 /*
- * megamol::protein_cuda::PotentialVolumeRaycaster::GetCapabilities
- */
-bool PotentialVolumeRaycaster::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(core::view::AbstractCallRender3D::CAP_RENDER |
-                          core::view::AbstractCallRender3D::CAP_LIGHTING |
-                          core::view::AbstractCallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * megamol::protein_cuda::PotentialVolumeRaycaster::GetExtents
  */
 bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {

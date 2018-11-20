@@ -95,16 +95,6 @@ namespace protein_cuda {
          */
         virtual void release(void);
 
-        /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(megamol::core::Call& call);
-
         virtual bool GetDiagramData(core::Call& call);
 
         virtual bool GetSplitMergeData(core::Call& call);

@@ -161,16 +161,6 @@ namespace protein_cuda {
 			return make_float3(a.x / scale, a.y / scale, a.z / scale);
 		}
 
-		/**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return True on success, false otherwise.
-         */
-        virtual bool GetCapabilities(megamol::core::Call& call);
-
         /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes

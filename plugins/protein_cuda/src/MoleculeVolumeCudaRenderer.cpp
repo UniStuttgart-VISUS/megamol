@@ -387,21 +387,6 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create ( void ) {
  **********************************************************************/
 
 /*
- * protein_cuda::ProteinRenderer::GetCapabilities
- */
-bool protein_cuda::MoleculeVolumeCudaRenderer::GetCapabilities( Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities( view::CallRender3D::CAP_RENDER | 
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * protein_cuda::ProteinRenderer::GetExtents
  */
 bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents( Call& call) {

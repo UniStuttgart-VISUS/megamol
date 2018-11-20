@@ -192,21 +192,6 @@ bool QuickSESRenderer::create(void) {
 
 
 /*
- * protein_cuda::QuickSESRenderer::GetCapabilities
- */
-bool QuickSESRenderer::GetCapabilities(Call& call) {
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(view::AbstractCallRender3D::CAP_RENDER
-        | view::AbstractCallRender3D::CAP_LIGHTING
-        | view::AbstractCallRender3D::CAP_ANIMATION );
-
-    return true;
-}
-
-
-/*
  * protein_cuda::QuickSESRenderer::GetExtents
  */
 bool QuickSESRenderer::GetExtents(Call& call) {
