@@ -167,25 +167,6 @@ template <class M, class C> bool GUIRenderer<M, C>::GetExtents(C& call) {
     return true;
 }
 
-template <>
-bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetCapabilities(core::Call& call) {
-    // Does not exist for 2D renderers.
-    return false;
-}
-
-template <>
-bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetCapabilities(core::Call& call) {
-    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender3D>();
-    auto* c = dynamic_cast<core::view::CallRender3D*>(&call);
-    assert(c != NULL && "GetCapabilities() invoked with bad call (interface shittiness)");
-    if (cr != NULL) {
-        (*cr) = *c;
-        if ((*cr)(core::view::CallRender3D::FnGetCapabilities)) {
-            (*c) = (*cr);
-        }
-    }
-    return true;
-}
 
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     auto* cr = this->decoratedRendererSlot.CallAs<C>();

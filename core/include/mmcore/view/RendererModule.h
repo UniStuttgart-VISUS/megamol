@@ -14,6 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractInputScope.h"
 #include "mmcore/view/MouseFlags.h"
 

@@ -133,19 +133,6 @@ bool imageviewer2::ImageViewer::create(void) {
 
 
 /*
- * misc::ImageViewer::GetCapabilities
- */
-bool imageviewer2::ImageViewer::GetCapabilities(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER);
-
-    return true;
-}
-
-
-/*
  * imageviewer2::ImageViewer::GetExtents
  */
 bool imageviewer2::ImageViewer::GetExtents(Call& call) {

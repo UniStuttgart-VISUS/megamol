@@ -31,7 +31,7 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Necessary for cinematic rendering. If true, rendering is aborted (FBO is set to nullptr!) until frame for requested camera and time is received."}
+    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Required to be set for cinematic rendering. If true, rendering is skipped until frame for requested camera and time is received."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -136,18 +136,6 @@ bool megamol::pbs::FBOCompositor2::create() {
 
 
 void megamol::pbs::FBOCompositor2::release() { shutdownThreads(); }
-
-
-bool megamol::pbs::FBOCompositor2::GetCapabilities(megamol::core::Call& call) {
-    auto* cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr == nullptr) return false;
-
-    cr->SetCapabilities(megamol::core::view::CallRender3D::CAP_RENDER |
-                        megamol::core::view::CallRender3D::CAP_LIGHTING |
-                        megamol::core::view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
 
 
 bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {

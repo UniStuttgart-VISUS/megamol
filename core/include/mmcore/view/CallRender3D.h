@@ -34,14 +34,9 @@ namespace view {
      *
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
-     *
-     * Function "GetCapabilities" asks the callee to set the capabilities
-     * flags of the call.
      */
     class MEGAMOLCORE_API CallRender3D : public AbstractCallRender3D, public RenderOutput {
     public:
-        static const unsigned int FnGetCapabilities = 7;
-
         /**
          * Answer the name of the objects of this description.
          *
@@ -66,9 +61,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            ASSERT(FnGetCapabilities == AbstractCallRender::FunctionCount()
-				&& "Enum has bad magic number");
-            return AbstractCallRender::FunctionCount() + 1;
+            return AbstractCallRender::FunctionCount();
         }
 
         /**
@@ -79,9 +72,6 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
-            if (idx == FnGetCapabilities) {
-				return "GetCapabilities";
-            } 
             return AbstractCallRender::FunctionName(idx);
         }
 

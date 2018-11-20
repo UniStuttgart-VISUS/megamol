@@ -31,7 +31,7 @@ uniform sampler2D depthtex;
 void main() {
 
     vec2  UV     = vec2(gl_FragCoord.x / vpW, gl_FragCoord.y / vpH);
-    gl_FragDepth = texture2D(depthtex, UV).r; //rgb have the same value ...
+    gl_FragDepth = texture2D(depthtex, UV).x; 
     
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 }
