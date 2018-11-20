@@ -37,6 +37,7 @@ CinematicView::CinematicView(void)
           "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame "
           "especially for high resolutions and for distributed rendering).")
     , frameFolderParam("10_frameFolder", "Specify folder where the frame files should be stored.")
+    , addSBSideToNameParam("11_addSBSideToName", "Toggle whether skybox side should be added to output filename")
     , eyeParam("stereo::eye", "Select eye position (for stereo view).")
     , projectionParam("stereo::projection", "Select camera projection.")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
@@ -109,6 +110,9 @@ CinematicView::CinematicView(void)
 
     this->frameFolderParam.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->frameFolderParam);
+
+    this->addSBSideToNameParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->addSBSideToNameParam);
 }
 
 
@@ -732,6 +736,22 @@ bool CinematicView::render2file_write_png() {
         tmpStr.Prepend("%0");
         tmpStr.Append("i.png");
         tmpFilename.Format(tmpStr.PeekBuffer(), this->pngdata.cnt);
+        if (this->sbSide != CinematicView::SKYBOX_NONE &&
+            this->addSBSideToNameParam.Param<core::param::BoolParam>()->Value()) {
+            if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
+                tmpFilename.Prepend("_front.");
+            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                tmpFilename.Prepend("_back.");
+            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                tmpFilename.Prepend("_right.");
+            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                tmpFilename.Prepend("_left.");
+            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                tmpFilename.Prepend("_up.");
+            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                tmpFilename.Prepend("_down.");
+            }
+        }
         tmpFilename.Prepend(this->pngdata.filename);
 
         // open final image file
