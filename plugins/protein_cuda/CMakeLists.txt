@@ -77,11 +77,10 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
-  add_dependencies(${PROJECT_NAME} vislib glad core mmstd_trisoup protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls cufft)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
