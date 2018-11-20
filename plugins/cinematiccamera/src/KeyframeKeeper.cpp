@@ -150,7 +150,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetCamApertureAngle(), 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 1.0f));
+    this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 0.000001f));
     this->MakeSlotAvailable(&this->setTotalAnimTimeParam);
 
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));

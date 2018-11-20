@@ -1,0 +1,43 @@
+Copy RELEASE build to \\vestastore\Entwicklung\braunms\cinematiccamera
+    => Build w/o INFOVIS plugin !!!
+    
+    \bin
+    \external
+    \inlcude
+    \lib
+    \project_files
+    \share
+    
+
+CONFIG FILES:      
+    \\vestastore\Entwicklung\braunms\cinematiccamera\bin
+        ... ngsphere.lua
+        ... ospray.lua
+        ... cinematic_cluster.lua
+        ... cinematic_data.mmpld
+        ... cinematic_keyframes.kf
+        ... cinematic_params.lua
+        ... cinematic_test.mmprj
+        ... megamolconfig.lua
+
+EDIT PARAMETERS:        
+        cinematic_params.lua
+          
+MPI JOB:
+    (see job.xml)
+    Command-Line:      
+        mpiexec \\vestastore\Entwicklung\braunms\cinematiccamera\bin\mmconsole.exe -i mpiclusterview t1 -v ::t1::mcview::useGsync false 
+    Working Directory: 
+        \\vestastore\Entwicklung\braunms\cinematiccamera
+
+MINYOU:
+    PowerShell:      
+        cd \\vestastore\Entwicklung\braunms\cinematiccamera\bin
+        .\mmconsole.exe -p \\vestastore\Entwicklung\braunms\cinematiccamera\bin\cinematic_cluster.lua -o role head
+                     
+        - Press F5 to start SimpleCLusterServer.
+        - Wait 20 seconds.
+        - Press F6 to connect FBOCompositor and -transmitter.
+        - Wait ~20 seconds until first image is rendered.
+        - Press 'r' to start rendering ....
+                       

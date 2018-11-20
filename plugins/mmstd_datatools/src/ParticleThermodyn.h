@@ -1,5 +1,5 @@
 /*
- * ParticleThermometer.h
+ * ParticleThermodyn.h
  *
  * Copyright (C) 2017 by MegaMol team
  * Alle Rechte vorbehalten.
@@ -17,6 +17,7 @@
 #include "PointcloudHelpers.h"
 #include <vector>
 #include "nanoflann.hpp"
+#include <Eigen/Eigenvalues>
 
 namespace megamol {
 namespace stdplugin {
@@ -25,7 +26,7 @@ namespace datatools {
     /**
      * Module overriding global attributes of particles
      */
-    class ParticleThermometer : public megamol::core::Module {
+    class ParticleThermodyn : public megamol::core::Module {
     public:
 
         enum searchTypeEnum {
@@ -33,14 +34,21 @@ namespace datatools {
             NUM_NEIGHBORS
         };
 
+        enum metricsEnum {
+            TEMPERATURE,
+            FRACTIONAL_ANISOTROPY,
+            DENSITY,
+            PRESSURE
+        };
+
         /** Return module class name */
         static const char *ClassName(void) {
-            return "ParticleThermometer";
+            return "ParticleThermodyn";
         }
 
         /** Return module class description */
         static const char *Description(void) {
-            return "Computes an intensity from the kinetic energy of a particle (compared to its surroundings).";
+            return "Computes an intensity from some properties of a particle (compared to its surroundings).";
         }
 
         /** Module is always available */
@@ -49,10 +57,10 @@ namespace datatools {
         }
 
         /** Ctor */
-        ParticleThermometer(void);
+        ParticleThermodyn(void);
 
         /** Dtor */
-        virtual ~ParticleThermometer(void);
+        virtual ~ParticleThermodyn(void);
 
         /**
         * Called when the data is requested by this module
@@ -85,22 +93,28 @@ namespace datatools {
         bool assertData(core::moldyn::DirectionalParticleDataCall *in,
             core::moldyn::MultiParticleDataCall *outMPDC, core::moldyn::DirectionalParticleDataCall *outDPDC);
 
+        float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
+        float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);
+
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
         core::param::ParamSlot cyclZSlot;
         core::param::ParamSlot radiusSlot;
         core::param::ParamSlot numNeighborSlot;
         core::param::ParamSlot searchTypeSlot;
-        core::param::ParamSlot minTempSlot;
-        core::param::ParamSlot maxTempSlot;
+        core::param::ParamSlot minMetricSlot;
+        core::param::ParamSlot maxMetricSlot;
         core::param::ParamSlot massSlot;
         core::param::ParamSlot freedomSlot;
+        core::param::ParamSlot metricsSlot;
         
         size_t datahash;
         int lastTime;
         std::vector<float> newColors;
         std::vector<size_t> allParts;
         float maxDist;
+
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigensolver;
 
         typedef nanoflann::KDTreeSingleIndexAdaptor<
             nanoflann::L2_Simple_Adaptor<float, directionalPointcloud>,
