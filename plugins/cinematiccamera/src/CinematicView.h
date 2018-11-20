@@ -246,6 +246,9 @@ private:
 
     /** */
     core::param::ParamSlot frameFolderParam;
+
+    /** */
+    core::param::ParamSlot addSBSideToNameParam;
 };
 
 } /* end namespace cinematiccamera */
