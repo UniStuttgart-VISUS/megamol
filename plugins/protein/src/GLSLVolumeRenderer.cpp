@@ -388,20 +388,6 @@ bool protein::GLSLVolumeRenderer::create ( void ) {
  * 'render'-functions
  **********************************************************************/
 
-/*
- * protein::ProteinRenderer::GetCapabilities
- */
-bool protein::GLSLVolumeRenderer::GetCapabilities( Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities( view::CallRender3D::CAP_RENDER | 
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
 
 /*
  * protein::ProteinRenderer::GetExtents

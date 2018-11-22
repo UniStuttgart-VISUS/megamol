@@ -65,7 +65,7 @@
 #include "floattable/FloatTableColumnFilter.h"
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
-#include "ParticleThermometer.h"
+#include "ParticleThermodyn.h"
 #include "io/PLYDataSource.h"
 #include "floattable/FloatTableToLines.h"
 #include "MPIParticleCollector.h"
@@ -76,6 +76,7 @@
 #include "io/TriMeshSTLWriter.h"
 #include "ParticleTranslateRotateScale.h"
 #include "MeshTranslateRotateScale.h"
+#include "ParticleVisibilityFromVolume.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -203,7 +204,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
@@ -214,6 +215,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleTranslateRotateScale>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

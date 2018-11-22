@@ -84,16 +84,6 @@ namespace protein {
         /**********************************************************************
          * 'render'-functions
          **********************************************************************/
-        
-        /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(megamol::core::Call& call);
 
         /**
          * The get extents callback. The module should set the members of

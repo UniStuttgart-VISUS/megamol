@@ -50,8 +50,8 @@
 #include "mmcore/factories/AbstractAssemblyInstance.h"
 #include "mmcore/LuaState.h"
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 
 namespace megamol {

@@ -61,8 +61,6 @@ protected:
 
     virtual bool GetExtents(C& call) override;
 
-    virtual bool GetCapabilities(core::Call& call) /* override (only for 3D) */;
-
     virtual bool Render(C& call) override;
 
 

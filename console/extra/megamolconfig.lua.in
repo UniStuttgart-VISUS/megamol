@@ -8,6 +8,7 @@ mmSetLogLevel(0)
 mmSetEchoLevel("*")
 mmSetAppDir(basePath .. "${MMPLG_DIR}")
 mmAddShaderDir(basePath .. "share/shaders")
+mmAddResourceDir(basePath .. "share/shaders")
 mmAddResourceDir(basePath .. "share/resources")
 mmPluginLoaderInfo(basePath .. "${MMPLG_DIR}", "*.mmplg", "include")
 

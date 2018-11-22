@@ -1,23 +1,23 @@
 /*
-*CinematicView.h
-*
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*
-* DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
-*/
+ *CinematicView.h
+ *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ *
+ * DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
+ */
 
 
 #ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CinematicCamera/CinematicCamera.h"
 
-#include "mmcore/view/View3D.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/view/View3D.h"
 
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/CallRenderView.h"
@@ -25,22 +25,22 @@
 #include "mmcore/utility/SDFFont.h"
 
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/view/CallRender3D.h"
 
-#include "vislib/math/Rectangle.h"
-#include "vislib/Trace.h"
-#include "vislib/sys/Path.h"
-#include "vislib/graphics/Camera.h"
-#include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
+#include "vislib/Trace.h"
+#include "vislib/graphics/Camera.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Rectangle.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Path.h"
 
 #include "CallCinematicCamera.h"
 #include "Keyframe.h"
@@ -48,212 +48,210 @@
 
 
 namespace megamol {
-	namespace cinematiccamera {
+namespace cinematiccamera {
 
-		class CinematicView : public core::view::View3D {
+class CinematicView : public core::view::View3D {
 
-		public:
+public:
+    typedef core::view::View3D Base;
 
-			typedef core::view::View3D Base;
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "CinematicView"; }
 
-			/**
-			* Answer the name of this module.
-			*
-			* @return The name of this module.
-			*/
-			static const char *ClassName(void) {
-				return "CinematicView";
-			}
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Screenshot View Module"; }
 
-			/**
-			* Answer a human readable description of this module.
-			*
-			* @return A human readable description of this module.
-			*/
-			static const char *Description(void) {
-				return "Screenshot View Module";
-			}
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()) return false;
+        return true;
+    }
 
-			/**
-			* Answers whether this module is available on the current system.
-			*
-			* @return 'true' if the module is available, 'false' otherwise.
-			*/
-			static bool IsAvailable(void) {
-                if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
-                    return false;
-				return true;
-			}
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) { return false; }
 
-			/**
-			* Disallow usage in quickstarts
-			*
-			* @return false
-			*/
-			static bool SupportQuickstart(void) {
-				return false;
-			}
+    /** Ctor. */
+    CinematicView(void);
 
-			/** Ctor. */
-			CinematicView(void);
+    /** Dtor. */
+    virtual ~CinematicView(void);
 
-			/** Dtor. */
-			virtual ~CinematicView(void);
+protected:
+    /**
+     * Renders this AbstractView3D in the currently active OpenGL context.
+     */
+    virtual void Render(const mmcRenderViewContext& context);
 
-			/**
-			* Renders this AbstractView3D in the currently active OpenGL context.
-			*/
-			virtual void Render(const mmcRenderViewContext& context);
+private:
+    typedef std::chrono::system_clock::time_point time_point;
 
-		private:
+    /**********************************************************************
+     * variables
+     **********************************************************************/
 
-            typedef std::chrono::system_clock::time_point time_point;
+    // font rendering
+    megamol::core::utility::SDFFont theFont;
 
-            /**********************************************************************
-            * variables
-            **********************************************************************/
+    enum SkyboxSides {
+        SKYBOX_NONE = 0,
+        SKYBOX_FRONT = 1,
+        SKYBOX_BACK = 2,
+        SKYBOX_LEFT = 4,
+        SKYBOX_RIGHT = 8,
+        SKYBOX_UP = 16,
+        SKYBOX_DOWN = 32
+    };
 
-            // font rendering
-            megamol::core::utility::SDFFont theFont;
+    clock_t deltaAnimTime;
 
-            enum SkyboxSides {
-                SKYBOX_NONE = 0,
-                SKYBOX_FRONT = 1,
-                SKYBOX_BACK = 2,
-                SKYBOX_LEFT = 4,
-                SKYBOX_RIGHT = 8,
-                SKYBOX_UP = 16,
-                SKYBOX_DOWN = 32
-            };
+    Keyframe shownKeyframe;
+    bool playAnim;
 
-            clock_t                                 deltaAnimTime;
+    int cineWidth;
+    int cineHeight;
+    int vpHLast;
+    int vpWLast;
 
-            Keyframe                                shownKeyframe;
-            bool                                    playAnim;
+    CinematicView::SkyboxSides sbSide;
 
-            int                                     cineWidth;
-            int                                     cineHeight;
-            int                                     vpHLast;
-            int                                     vpWLast;
+    vislib::graphics::gl::FramebufferObject fbo;
+    bool rendering;
+    unsigned int fps;
 
-            CinematicView::SkyboxSides              sbSide;
+    struct pngData {
+        BYTE* buffer = nullptr;
+        vislib::sys::FastFile file;
+        unsigned int width;
+        unsigned int height;
+        unsigned int bpp;
+        vislib::TString path;
+        vislib::TString filename;
+        unsigned int cnt;
+        png_structp ptr = nullptr;
+        png_infop infoptr = nullptr;
+        float animTime;
+        unsigned int write_lock;
+        time_point start_time;
+        unsigned int exp_frame_cnt;
+    } pngdata;
 
-            vislib::graphics::gl::FramebufferObject fbo;
-            bool                                    rendering;
-            unsigned int                            fps;
+    /**********************************************************************
+     * functions
+     **********************************************************************/
 
-            struct pngData {
-                BYTE                  *buffer = nullptr;
-                vislib::sys::FastFile  file;
-                unsigned int           width;
-                unsigned int           height;
-                unsigned int           bpp; 
-                vislib::TString        path;
-                vislib::TString        filename;
-                unsigned int           cnt;
-                png_structp            ptr = nullptr;
-                png_infop              infoptr = nullptr;
-                float                  animTime;
-                unsigned int           write_lock;
-                time_point             start_time;
-                unsigned int           exp_frame_cnt;
-            } pngdata;
+    /** Render to file functions */
+    bool render2file_setup();
 
+    /** */
+    bool render2file_write_png();
 
-            /**********************************************************************
-            * functions
-            **********************************************************************/
+    /** */
+    bool render2file_finish();
 
-            /** Render to file functions */
-            bool render2file_setup();
+    /** */
+    bool setSimTime(float st);
 
-            /** */
-            bool render2file_write_png();
+    /**
+     * My error handling function for png export
+     *
+     * @param pngPtr The png structure pointer
+     * @param msg The error message
+     */
+    static void PNGAPI pngError(png_structp pngPtr, png_const_charp msg) {
+        throw vislib::Exception(msg, __FILE__, __LINE__);
+    }
 
-            /** */
-            bool render2file_finish();
+    /**
+     * My error handling function for png export
+     *
+     * @param pngPtr The png structure pointer
+     * @param msg The error message
+     */
+    static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+    }
 
-            /** */
-            bool setSimTime(float st);
+    /**
+     * My write function for png export
+     *
+     * @param pngPtr The png structure pointer
+     * @param buf The pointer to the buffer to be written
+     * @param size The number of bytes to be written
+     */
+    static void PNGAPI pngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
+        vislib::sys::File* f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+        f->Write(buf, size);
+    }
 
-            /**
-            * My error handling function for png export
-            *
-            * @param pngPtr The png structure pointer
-            * @param msg The error message
-            */
-            static void PNGAPI pngError(png_structp pngPtr, png_const_charp msg) {
-                throw vislib::Exception(msg, __FILE__, __LINE__);
-            }
+    /**
+     * My flush function for png export
+     *
+     * @param pngPtr The png structure pointer
+     */
+    static void PNGAPI pngFlush(png_structp pngPtr) {
+        vislib::sys::File* f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+        f->Flush();
+    }
 
-            /**
-            * My error handling function for png export
-            *
-            * @param pngPtr The png structure pointer
-            * @param msg The error message
-            */
-            static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "Png-Warning: %s\n", msg);
-            }
+    /**********************************************************************
+     * callback
+     **********************************************************************/
 
-            /**
-            * My write function for png export
-            *
-            * @param pngPtr The png structure pointer
-            * @param buf The pointer to the buffer to be written
-            * @param size The number of bytes to be written
-            */
-            static void PNGAPI pngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
-                vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
-                f->Write(buf, size);
-            }
+    /** The keyframe keeper caller slot */
+    core::CallerSlot keyframeKeeperSlot;
 
-            /**
-            * My flush function for png export
-            *
-            * @param pngPtr The png structure pointer
-            */
-            static void PNGAPI pngFlush(png_structp pngPtr) {
-                vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
-                f->Flush();
-            }
+    /**********************************************************************
+     * parameters
+     **********************************************************************/
 
-            /**********************************************************************
-            * callback
-            **********************************************************************/
+    /** */
+    core::param::ParamSlot renderParam;
+    /** */
+    core::param::ParamSlot delayFirstRenderFrameParam;
+    /** */
+    core::param::ParamSlot startRenderFrameParam;
+    /** */
+    core::param::ParamSlot toggleAnimPlayParam;
+    /** */
+    core::param::ParamSlot selectedSkyboxSideParam;
+    /** */
+    core::param::ParamSlot cubeModeRenderParam;
+    /** */
+    core::param::ParamSlot resWidthParam;
+    /** */
+    core::param::ParamSlot resHeightParam;
+    /** */
+    core::param::ParamSlot fpsParam;
 
-			/** The keyframe keeper caller slot */
-			core::CallerSlot keyframeKeeperSlot;
+    /** */
+    core::param::ParamSlot eyeParam;
+    /** */
+    core::param::ParamSlot projectionParam;
 
-            /**********************************************************************
-            * parameters
-            **********************************************************************/
+    /** */
+    core::param::ParamSlot frameFolderParam;
 
-            /** */
-            core::param::ParamSlot renderParam;
-            /** */
-            core::param::ParamSlot delayFirstRenderFrameParam;
-            /** */
-            core::param::ParamSlot startRenderFrameParam;
-            /** */
-            core::param::ParamSlot toggleAnimPlayParam;
-            /** */
-			core::param::ParamSlot selectedSkyboxSideParam;
-            /** */
-            core::param::ParamSlot resWidthParam;
-            /** */
-            core::param::ParamSlot resHeightParam;
-            /** */
-            core::param::ParamSlot fpsParam;
+    /** */
+    core::param::ParamSlot addSBSideToNameParam;
+};
 
-            /** */
-            core::param::ParamSlot eyeParam;
-            /** */
-            core::param::ParamSlot projectionParam;
-		};
-
-	} /* end namespace cinematiccamera */
+} /* end namespace cinematiccamera */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED */

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="linetessellation">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="attributes" type="string">
+<!--
+#extension GL_ARB_shader_storage_buffer_object : require
+#extension GL_EXT_gpu_shader4 : require
+uniform vec4 viewAttr;
+
+uniform float scaling;
+
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+uniform int instanceOffset;
+
+uniform mat4 MVinv;
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
+uniform vec4 inConsts1;
+uniform sampler1D colTab;
+
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec4 vertColor;
+
+#define CONSTRAD inConsts1.x
+#define MIN_COLV inConsts1.y
+#define MAX_COLV inConsts1.z
+#define COLTAB_SIZE inConsts1.w
+-->
+        </snippet>
+        <snippet name="MainParams" type="string">
+<!--
+void main(void) {
+    float theColIdx;
+    vec4 theColor;
+    vec4 inPos;
+-->
+        </snippet>
+        <!-- here comes the injected snippet -->
+        <snippet name="MainRest" type="string">
+<!--
+    vertColor = theColor;
+        
+    rad *= scaling;
+    squarRad = rad * rad;
+-->        
+        </snippet>
+        <snippet name="posTrans" type="string">
+<!--
+    // object pivot point in object space    
+    objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
+
+    // calculate cam position
+    camPos = MVinv[3]; // (C) by Christoph
+    camPos.xyz -= objPos.xyz; // cam pos to glyph space
+
+    // calculate light position in glyph space
+    lightPos = MVinv * gl_LightSource[0].position;
+    
+    gl_Position = objPos;
+    gl_PointSize = 2.0;
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="tesscontrol">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+#extension GL_ARB_shader_storage_buffer_object : require
+#extension GL_EXT_gpu_shader4 : require
+
+uniform int uOuter0 = 1;
+uniform int uOuter1 = 16;
+
+uniform int instanceOffset;
+
+out vec4 myColor[];
+
+layout( vertices = 4 ) out;
+
+struct CAType {
+    float x, y, z;
+    int type;
+};
+
+layout(std430, binding = 2) buffer shader_data {
+    CAType cAlphas[];
+};
+
+void main() {
+    CAType ca = cAlphas[gl_PrimitiveID + gl_InvocationID + instanceOffset];
+    myColor[gl_InvocationID] = vec4(0, 0, 0, 1);
+    if (ca.type == 1) {
+        myColor[gl_InvocationID] = vec4(0, 0, 1, 1);
+    } else if (ca.type == 2) {
+        myColor[gl_InvocationID] = vec4(1, 0, 0, 1);
+    } else if (ca.type == 3) {
+        myColor[gl_InvocationID] = vec4(0, 1, 0, 1);
+    }
+    gl_out[gl_InvocationID].gl_Position = vec4(ca.x, ca.y, ca.z, 1.0f);
+    gl_TessLevelOuter[0] = float( uOuter0);
+    gl_TessLevelOuter[1] = float( uOuter1);
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="tesseval">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+layout(isolines, equal_spacing) in;
+
+in vec4 myColor[];
+out vec4 vertColor;
+
+void main() {
+    vec4 p0 = gl_in[0].gl_Position;
+    vec4 p1 = gl_in[1].gl_Position;
+    vec4 p2 = gl_in[2].gl_Position;
+    vec4 p3 = gl_in[3].gl_Position;
+    
+    vertColor = myColor[1];
+
+    float u = gl_TessCoord.x;
+    
+    // Catmull-Rom Spline
+    //gl_Position = 0.5 *( (2.0 * p1) + (-p0 + p2) * u + ( 2.0 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1- 3 * p2 + p3) * u*u*u);
+    
+    // Cubic B-Spline
+    u += 3;
+    float q = ( u - 1.0) / 3.0;
+    vec4 d10 = p0 * ( 1.0 - q) + p1 * q;
+    q = ( u - 2.0) / 3.0;
+    vec4 d11 =  p1 * ( 1.0 - q) + p2 * q;
+    q = ( u - 3.0) / 3.0; 
+    vec4 d12 =  p2 * ( 1.0 - q) + p3 * q;
+    
+    q = ( u - 2.0) / 2.0; 
+    vec4 d20 = d10 * ( 1.0 - q) + d11 * q;
+    q = ( u - 3.0) / 2.0; 
+    vec4 d21 = d11 * ( 1.0 - q) + d12 * q;
+
+    q = ( u - 3.0); 
+    gl_Position =  d20 * ( 1.0 - q) + d21 * q;
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="geometry">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+uniform mat4 MVP;
+
+layout(lines) in;
+layout(line_strip, max_vertices = 4) out;
+
+in vec4 vertColor[];
+out vec4 myColor;
+
+void main() {
+  for(int i = 0; i < gl_in.length(); i++) {
+    vec4 h = gl_in[i].gl_Position;
+    h.z = 0.0;
+    gl_Position = MVP * h;
+    myColor = vertColor[i];
+    EmitVertex();
+  }
+  EndPrimitive();
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">140</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="common::lighting::simple"/>
+        <snippet name="body1" type="string">
+<!--
+#extension GL_ARB_conservative_depth:require
+layout (depth_greater) out float gl_FragDepth; // we think this is right
+// this should be wrong //layout (depth_less) out float gl_FragDepth;
+#extension GL_ARB_explicit_attrib_location : enable
+
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
+uniform vec4 viewAttr;
+
+FLACH in vec4 objPos;
+FLACH in vec4 camPos;
+FLACH in vec4 lightPos;
+FLACH in float squarRad;
+FLACH in float rad;
+FLACH in vec4 vertColor;
+
+in vec4 myColor;
+
+out layout(location = 0) vec4 outCol;
+
+void main(void) {
+    outCol = myColor;
+}
+-->
+</snippet>
+    </shader>
+
+</btf>
