@@ -70,10 +70,10 @@ before_install:
   - sudo apt-get install -y libxinerama-dev
   - sudo apt-get install -y libxcursor-dev
   - sudo apt-get install -y libxi-dev
+  - sudo ./cmake/install-cmake.sh
   - mkdir build
   - cd build
   - cmake ..
 
 install:
   - make install
-  
