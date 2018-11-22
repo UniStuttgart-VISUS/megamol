@@ -77,7 +77,9 @@ if(BUILD_CORE)
   endif()
   add_external_project(zlib_ext
     GIT_REPOSITORY https://github.com/madler/zlib.git
-    GIT_TAG "v1.2.11")
+    GIT_TAG "v1.2.11"
+    CMAKE_ARGS
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
   add_external_library(zlib STATIC
     DEPENDS zlib_ext
     INCLUDE_DIR "include"
