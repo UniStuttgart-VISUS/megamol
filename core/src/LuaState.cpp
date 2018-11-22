@@ -96,6 +96,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMHELP "mmHelp"
 #define MMC_LUA_MMQUIT "mmQuit"
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
+#define MMC_LUA_MMFLUSH "mmFlush"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -145,7 +146,8 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
     { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
     { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
-    {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."}
+    {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."},
+    {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."}
 };
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
@@ -191,6 +193,7 @@ MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
 MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
+MMC_LUA_MMFLUSH "=" MMC_LUA_MMFLUSH ","
 "  ipairs = ipairs,"
 "  load = load,"
 "  next = next,"
@@ -389,6 +392,8 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMQUIT, &dispatch<&LuaState::Quit>);
 
         lua_register(L, MMC_LUA_MMREADTEXTFILE, &dispatch<&LuaState::ReadTextFile>);
+
+        lua_register(L, MMC_LUA_MMFLUSH, &dispatch<&LuaState::Flush>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -1678,5 +1683,13 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
         lua_pushstring(L, err.c_str());
         lua_error(L);
     }
+    return 0;
+}
+
+int megamol::core::LuaState::Flush(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMFLUSH)) {
+        this->coreInst->FlushGraphUpdates();
+    }
+
     return 0;
 }

@@ -298,6 +298,11 @@ namespace plugins {
         bool RequestParamGroupValue(
             const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value);
 
+        /**
+         * Inserts a flush event into the graph update queues
+         */
+        bool FlushGraphUpdates();
+
         //** do everything that is queued w.r.t. modules and calls */
         void PerformGraphUpdates();
 
@@ -1019,6 +1024,32 @@ namespace plugins {
         void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
                 const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
 
+        /**
+         * Updates flush index list after flush has been performed
+         * 
+         * @param processedCount Number of processed events
+         * @param list Index list to be updated
+         */
+        void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
+
+        /**
+         * Check if current event is after flush event
+         * 
+         * @param eventIdx Index in queue of current event
+         * @param list List of flush events
+         * 
+         * @return True, if current event is after flush event
+         */
+        bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list);
+
+        /**
+         * Removes all unreachable flushes
+         * 
+         * @param eventCount Number of events in the respective queue
+         * @param list The flush index list to update
+         */
+        void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
+
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
@@ -1094,6 +1125,33 @@ namespace plugins {
         };
 
         vislib::Map<vislib::StringA, ParamGroup> pendingGroupParamSetRequests;
+
+        /** list of indices into view instantiation requests pointing to flush events */
+        std::vector<size_t> viewInstRequestsFlushIndices;
+
+        /** list of indices into job instantiation requests pointing to flush events */
+        std::vector<size_t> jobInstRequestsFlushIndices;
+
+        /** list of indices into call instantiation requests pointing to flush events */
+        std::vector<size_t> callInstRequestsFlushIndices;
+
+        /** list of indices into chain call instantiation requests pointing to flush events */
+        std::vector<size_t> chainCallInstRequestsFlushIndices;
+
+        /** list of indices into module instantiation requests pointing to flush events */
+        std::vector<size_t> moduleInstRequestsFlushIndices;
+
+        /** list of indices into call deletion requests pointing to flush events */
+        std::vector<size_t> callDelRequestsFlushIndices;
+
+        /** list of indices into module deletion requests pointing to flush events */
+        std::vector<size_t> moduleDelRequestsFlushIndices;
+
+        /** list of indices into param set requests pointing to flush events */
+        std::vector<size_t> paramSetRequestsFlushIndices;
+
+        /** list of indices into group param set requests pointing to flush events */
+        std::vector<size_t> groupParamSetRequestsFlushIndices;
 
         /**
          * You need to lock this if you manipulate any pending* lists. The lists
