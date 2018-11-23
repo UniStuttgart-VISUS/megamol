@@ -27,7 +27,9 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
+    OSPRAY_API_GEOMETRY,
     PKD,
+    MMPKD,
     AOVSPHERES
 };
 
@@ -105,6 +107,7 @@ public:
     bool parameterChanged;
     bool isValid;
     bool smooth; //< valid for lines
+    bool doublePrecision;
 
     // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
     // TODO: both actually.

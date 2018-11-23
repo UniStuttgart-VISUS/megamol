@@ -84,6 +84,7 @@ moldyn::SimpleSphericalParticles::operator=(
     this->vertexAccessor = rhs.vertexAccessor->Clone();
     this->colorAccessor = rhs.colorAccessor->Clone();
     this->idAccessor = rhs.idAccessor->Clone();
+    this->wsBBox = rhs.wsBBox;
     return *this;
 }
 
@@ -110,5 +111,6 @@ bool moldyn::SimpleSphericalParticles::operator==(
         && (this->clusterInfos == rhs.clusterInfos)
         && (this->idDataType == rhs.idDataType)
         && (this->idPtr == rhs.idPtr)
-        && (this->idStride == rhs.idStride));
+        && (this->idStride == rhs.idStride)
+        && (this->wsBBox == rhs.wsBBox));
 }

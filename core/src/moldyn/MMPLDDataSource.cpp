@@ -59,6 +59,12 @@ bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned
 
 
 /*
+ * moldyn::MMPLDDataSource::Frame::SetBBox
+ */
+void moldyn::MMPLDDataSource::Frame::SetBBox(vislib::math::Cuboid<float> const &bbox) { this->bbox = bbox; }
+
+
+/*
  * moldyn::MMPLDDataSource::Frame::SetData
  */
 void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
@@ -143,6 +149,8 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
             bbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
             pts.SetBBox(bbox);
             p += 24;
+        } else {
+            pts.SetBBox(this->bbox);
         }
 
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
@@ -244,6 +252,7 @@ void moldyn::MMPLDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
     //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Requesting frame %u of %u frames\n", idx, this->FrameCount());
     ASSERT(idx < this->FrameCount());
     this->file->Seek(this->frameIdx[idx]);
+    f->SetBBox(this->bbox);
     if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
         // failed
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
