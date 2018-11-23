@@ -932,6 +932,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     while (this->pendingModuleDelRequests.Count() > 0) {
         // flush mechanism
         if (this->checkForFlushEvent(counter, this->moduleDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->moduleDelRequestsFlushIndices);
             break;
         }
 
@@ -1056,7 +1057,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     // delete calls
     while (this->pendingCallDelRequests.Count() > 0) {
         // flush mechanism
-        if (!this->checkForFlushEvent(counter, this->callDelRequestsFlushIndices)) {
+        if (this->checkForFlushEvent(counter, this->callDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->callDelRequestsFlushIndices);
             break;
         }
 
@@ -1119,6 +1121,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     while (this->pendingModuleInstRequests.Count() > 0) {
         // flush mechanism
         if (this->checkForFlushEvent(counter, this->moduleInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->moduleInstRequestsFlushIndices);
             break;
         }
 
@@ -1142,6 +1145,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     while (this->pendingCallInstRequests.Count() > 0) {
         // flush mechanism
         if (this->checkForFlushEvent(counter, this->callInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->callInstRequestsFlushIndices);
             break;
         }
 
@@ -1165,6 +1169,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     while (this->pendingChainCallInstRequests.Count() > 0) {
         // flush mechanism
         if (this->checkForFlushEvent(counter, this->chainCallInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->chainCallInstRequestsFlushIndices);
             break;
         }
 
@@ -1339,6 +1344,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     while (this->pendingParamSetRequests.Count() > 0) {
         // flush mechanism
         if (this->checkForFlushEvent(counter, this->paramSetRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->paramSetRequestsFlushIndices);
             break;
         }
 
@@ -1377,6 +1383,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         if (pg.GroupSize == pg.Requests.Count()) {
             // flush mechanism
             if (this->checkForFlushEvent(counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
+                this->updateFlushIdxList(counter, this->groupParamSetRequestsFlushIndices);
                 break;
             }
 
@@ -3824,17 +3831,16 @@ void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& fr
 
 
 void megamol::core::CoreInstance::updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list) {
+    list.erase(list.begin());
     std::transform(list.begin(), list.end(), list.begin(), [processedCount](size_t el) { return el - processedCount; });
 }
 
 
-bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) {
+bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const {
     if (!list.empty()) {
         auto const idx = list.front();
 
         if (eventIdx > idx) {
-            list.erase(list.begin());
-            this->updateFlushIdxList(eventIdx, list);
             return true;
         }
     }

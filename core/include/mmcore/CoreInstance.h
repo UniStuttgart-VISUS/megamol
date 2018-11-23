@@ -1040,7 +1040,7 @@ namespace plugins {
          * 
          * @return True, if current event is after flush event
          */
-        bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list);
+        bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
 
         /**
          * Removes all unreachable flushes
