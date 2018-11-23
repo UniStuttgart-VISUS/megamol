@@ -63,6 +63,8 @@ matrix:
         - CXX=clang++-6.0
 
 before_install:
+  - wget https://cmake.org/files/v3.12/cmake-3.12.4-Linux-x86_64.sh
+  - sh cmake-3.12.4-Linux-x86_64.sh --prefix=. --exclude-subdir
   - sudo apt-get -qq update
   - sudo apt-get install -y uuid-dev
   - sudo apt-get install -y libunwind8-dev
@@ -70,10 +72,8 @@ before_install:
   - sudo apt-get install -y libxinerama-dev
   - sudo apt-get install -y libxcursor-dev
   - sudo apt-get install -y libxi-dev
-  - mkdir build
-  - cd build
-  - cmake ..
+  - mkdir build && cd build
+  - ../bin/cmake ..
 
 install:
   - make install
-  

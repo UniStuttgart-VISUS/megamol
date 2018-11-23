@@ -66,21 +66,51 @@ if(BUILD_CORE)
     DEPENDS libcppzmq_ext
     INCLUDE_DIR "src/libcppzmq_ext/")
 
-  option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
-  if(USE_INTERNAL_LIBPNG)
-    add_subdirectory(zlib)
-    add_subdirectory(libpng)
+  # Add zlib.
+  if(MSVC)
+    set(ZLIB_DEBUG "lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(ZLIB_RELEASE "lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
   else()
-    find_package(ZLIB MODULE)
-    find_package(PNG MODULE)
-    if(NOT PNG_FOUND)
-      find_package(libpng16 CONFIG REQUIRED CONFIGS "libpng16.cmake")
-      get_target_property(PNG_LIB_FILE png_static LOCATION)
-      get_filename_component(PNG_LIB_PATH ${PNG_LIB_FILE} DIRECTORY)
-      set(PNG_LIBRARIES png_static CACHE INTERNAL "")
-      set(PNG_INCLUDE_DIRS "${PNG_LIB_PATH}/../include" CACHE INTERNAL "")
-    endif()
+    include(GNUInstallDirs)
+    set(ZLIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
   endif()
+  add_external_project(zlib_ext
+    GIT_REPOSITORY https://github.com/madler/zlib.git
+    GIT_TAG "v1.2.11"
+    CMAKE_ARGS
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
+  add_external_library(zlib STATIC
+    DEPENDS zlib_ext
+    INCLUDE_DIR "include"
+    LIBRARY_DEBUG ${ZLIB_DEBUG}
+    LIBRARY_RELEASE ${ZLIB_RELEASE})
+    
+  # Add libpng.
+  if(MSVC)
+    set(LIBPNG_DEBUG "lib/libpng16_staticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  else()
+    include(GNUInstallDirs)
+    set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  endif()
+  ExternalProject_Get_Property(zlib_ext INSTALL_DIR)
+  add_external_project(libpng_ext
+    GIT_REPOSITORY https://git.code.sf.net/p/libpng/code
+    GIT_TAG "v1.6.34"
+    DEPENDS zlib_ext
+    CMAKE_ARGS
+      -DPNG_SHARED=OFF
+      -DPNG_TESTS=OFF
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+      -DCMAKE_PREFIX_PATH:PATH=${INSTALL_DIR})
+  add_external_library(libpng STATIC
+    DEPENDS libpng_ext
+    INCLUDE_DIR "include"
+    LIBRARY_DEBUG ${LIBPNG_DEBUG}
+    LIBRARY_RELEASE ${LIBPNG_RELEASE}
+    INTERFACE_LIBRARIES zlib)
 
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
@@ -102,7 +132,6 @@ if(BUILD_CORE)
     include(GNUInstallDirs)
     set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
-
   add_external_project(zfp_ext
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
     GIT_TAG "0.5.2"
@@ -115,8 +144,7 @@ if(BUILD_CORE)
       -DCMAKE_BUILD_TYPE=Release)
   add_external_library(zfp STATIC
     DEPENDS zfp_ext
-    LIBRARY_DEBUG ${ZFP_LIB}
-    LIBRARY_RELEASE ${ZFP_LIB})
+    LIBRARY ${ZFP_LIB})
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -144,10 +172,10 @@ if(BUILD_CORE)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
-    PUBLIC ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+    PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad ${EXPAT_LIBRARIES}
-    PRIVATE lua libzmq libcppzmq ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+    PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
+    PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")

@@ -17,6 +17,8 @@
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractInputScope.h"
 #include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/InputCall.h"
+#include "mmcore/view/AbstractCallRender.h"
 
 namespace megamol {
 namespace core {
