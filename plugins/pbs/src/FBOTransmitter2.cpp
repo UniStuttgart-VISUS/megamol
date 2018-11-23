@@ -37,7 +37,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
-    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports. Leave empty if no screen space subdivision is applied."} 
+    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports for screen space subdivision."} 
 #ifdef WITH_MPI
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -184,7 +184,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-
+#endif // WITH_MPI
         // extract bbox 
         float bbox[6];
         if (!this->extractBoundingBox(bbox)) {
@@ -201,7 +201,6 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not extract camera parameters\n");
         }
 
-#endif // WITH_MPI
        // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
@@ -511,7 +510,11 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
+#ifdef WITH_MPI
 bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color) {
+#else
+bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<float, 4> bkgnd_color) {
+#endif
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     this->ModuleGraphLock().LockExclusive();

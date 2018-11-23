@@ -13,18 +13,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  # Add Eigen.
-  add_external_project(Eigen_ext
-    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-    GIT_TAG "3.3.4"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(Eigen INTERFACE
-    DEPENDS Eigen_ext
-    INCLUDE_DIR "src/Eigen_ext")
-
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
     GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git

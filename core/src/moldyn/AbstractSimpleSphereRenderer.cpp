@@ -26,7 +26,8 @@ moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Rende
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0),
-        forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.") {
+        forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video."),
+        useLocalBBoxParam("useLocalBBox", "Enforce usage of local bbox for camera setup") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -39,6 +40,9 @@ moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Rende
 
     this->forceTimeSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->forceTimeSlot);
+
+    this->useLocalBBoxParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useLocalBBoxParam);
 }
 
 
@@ -113,23 +117,6 @@ bool moldyn::AbstractSimpleSphereRenderer::create(void) {
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::GetCapabilities
- */
-bool moldyn::AbstractSimpleSphereRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * moldyn::AbstractSimpleSphereRenderer::GetExtents
  */
 bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
@@ -141,7 +128,22 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->isTimeForced());
         if (!(*c2)(1)) return false;
         cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        auto const plcount = c2->GetParticleListCount();
+        if (this->useLocalBBoxParam.Param<param::BoolParam>()->Value() && plcount > 0) {
+            auto bbox = c2->AccessParticles(0).GetBBox();
+            auto cbbox = bbox;
+            cbbox.Grow(c2->AccessParticles(0).GetGlobalRadius());
+            for (unsigned pidx = 1; pidx < plcount; ++pidx) {
+                auto temp = c2->AccessParticles(pidx).GetBBox();
+                bbox.Union(temp);
+                temp.Grow(c2->AccessParticles(pidx).GetGlobalRadius());
+                cbbox.Union(temp);
+            }
+            cr->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+            cr->AccessBoundingBoxes().SetObjectSpaceClipBox(cbbox);
+        } else {
+            cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        }
 
         float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         if (scaling > 0.0000001) {
@@ -179,7 +181,18 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(uns
         if (!(*c2)(1)) return NULL;
 
         // calculate scaling
-        outScaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        auto const plcount = c2->GetParticleListCount();
+        if (this->useLocalBBoxParam.Param<param::BoolParam>()->Value() && plcount > 0) {
+            outScaling = c2->AccessParticles(0).GetBBox().LongestEdge();
+            for (unsigned pidx = 0; pidx < plcount; ++pidx) {
+                auto const temp = c2->AccessParticles(pidx).GetBBox().LongestEdge();
+                if (outScaling < temp) {
+                    outScaling = temp;
+                }
+            }
+        } else {
+            outScaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        }
         if (outScaling > 0.0000001) {
             outScaling = 10.0f / outScaling;
         } else {

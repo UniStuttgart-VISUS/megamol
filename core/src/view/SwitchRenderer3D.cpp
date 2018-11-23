@@ -72,20 +72,6 @@ void view::SwitchRenderer3D::release(void) {
 
 
 /*
- * view::SwitchRenderer3D::GetCapabilities
- */
-bool view::SwitchRenderer3D::GetCapabilities(Call& call) {
-    CallRender3D *src = dynamic_cast<CallRender3D*>(&call);
-    CallRender3D *cr3d = this->callToRenderer(src);
-    if ((cr3d != NULL) && (*cr3d)(core::view::CallRender3D::FnGetCapabilities)) {
-        *src = *cr3d;
-        return true;
-    }
-    return false;
-}
-
-
-/*
  * view::SwitchRenderer3D::GetExtents
  */
 bool view::SwitchRenderer3D::GetExtents(Call& call) {

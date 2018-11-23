@@ -26,39 +26,39 @@ namespace view {
  * See also megamol::core::view::AbstractInputScope.
  */
 struct InputEvent {
-    enum class Tag : unsigned char { None, Key, Char, MouseButton, MouseMove, MouseScroll } tag;
+    enum class Tag : unsigned char { Empty, Key, Char, MouseButton, MouseMove, MouseScroll } tag;
     union {
-        struct NoData {
-        } noData;
+        struct {
+        } emptyData;
 
-        struct KeyData {
+        struct {
             Key key;
             KeyAction action;
             Modifiers mods;
         } keyData;
 
-        struct CharData {
+        struct {
             unsigned int codePoint;
         } charData;
 
-        struct MouseButtonData {
+        struct {
             MouseButton button;
             MouseButtonAction action;
             Modifiers mods;
         } mouseButtonData;
 
-        struct MouseMoveData {
+        struct {
             double x;
             double y;
         } mouseMoveData;
 
-        struct MouseScrollData {
+        struct {
             double dx;
             double dy;
         } mouseScrollData;
     };
 
-    InputEvent() : tag(Tag::None), noData() {}
+    InputEvent() : tag(Tag::Empty), emptyData() {}
 };
 
 /**

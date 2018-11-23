@@ -1,0 +1,28 @@
+uniform sampler2D tex;
+uniform sampler2D colorTex;
+
+uniform float difference = 0.1;
+
+varying vec2 texCoord;
+
+void main()
+{
+	vec2 size = vec2( textureSize2D( tex, 0));
+	vec2 offset = 1.0 / size; 
+
+	if( abs( texture2D( tex, texCoord).x - texture2D( tex, texCoord + vec2( 1.0, 0.0) * offset).x ) > difference ||
+			abs( texture2D( tex, texCoord).x - texture2D( tex, texCoord - vec2( 1.0, 0.0) * offset).x ) > difference ||
+			abs( texture2D( tex, texCoord).x - texture2D( tex, texCoord + vec2( 0.0, 1.0) * offset).x ) > difference ||
+			abs( texture2D( tex, texCoord).x - texture2D( tex, texCoord - vec2( 0.0, 1.0) * offset).x ) > difference ||
+			( texture2D( tex, texCoord).x < 0.99 && texture2D( tex, texCoord + vec2( 1.0, 0.0) * offset).x > 0.99 ) ||
+			( texture2D( tex, texCoord).x < 0.99 && texture2D( tex, texCoord - vec2( 1.0, 0.0) * offset).x > 0.99 ) ||
+			( texture2D( tex, texCoord).x < 0.99 && texture2D( tex, texCoord + vec2( 0.0, 1.0) * offset).x > 0.99 ) ||
+			( texture2D( tex, texCoord).x < 0.99 && texture2D( tex, texCoord - vec2( 0.0, 1.0) * offset).x > 0.99 ) )
+	{
+		gl_FragColor = gl_Color;
+	}
+	else
+	{
+		gl_FragColor = texture2D( colorTex, texCoord);
+	}
+}

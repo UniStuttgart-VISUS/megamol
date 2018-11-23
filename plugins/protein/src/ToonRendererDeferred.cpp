@@ -197,29 +197,6 @@ ToonRendererDeferred::~ToonRendererDeferred(void) {
 
 
 /*
- * ToonRendererDeferred::GetCapabilities
- */
-bool ToonRendererDeferred::GetCapabilities(megamol::core::Call& call) {
-
-    megamol::core::view::CallRender3D *crIn =
-        dynamic_cast< megamol::core::view::CallRender3D*>(&call);
-    if(crIn == NULL) return false;
-
-     megamol::core::view::CallRenderDeferred3D *crOut =
-        this->rendererSlot.CallAs< megamol::core::view::CallRenderDeferred3D>();
-    if(crOut == NULL) return false;
-
-    // Call for getCapabilities
-    if(!(*crOut)(core::view::CallRender3D::FnGetCapabilities)) return false;
-
-    // Set capabilities of for incoming render call
-    crIn->SetCapabilities(crOut->GetCapabilities());
-
-    return true;
-}
-
-
-/*
  * ToonRendererDeferred::GetExtents
  */
 bool ToonRendererDeferred::GetExtents(megamol::core::Call& call) {

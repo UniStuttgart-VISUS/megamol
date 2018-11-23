@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="puxels">
+  <include file="common"/>
+
+  <snippet name="puxeluniform" type="string">
+    <!--
+#define PUXELS 1
+uniform unsigned int puxels_use;
+    -->
+  </snippet>
+
+  <snippet name="version" type="string">
+    <!--
+#version 430 compatibility 
+    -->
+  </snippet>
+
+  <shader name="pass_120">
+    <snippet type="version">120</snippet>
+    <snippet type="string">
+      <!--
+
+void main(void) {
+
+    gl_Position  = ftransform();
+
+}
+-->
+    </snippet>
+  </shader>
+
+  <snippet name="header" type="string">
+    <!--
+layout(std430, binding = 0) buffer Header
+{
+  unsigned int entry[];
+};
+    -->
+  </snippet>
+
+  <snippet name="sespayload" type="string">
+    <!--
+struct Puxel
+{
+    uint 	c;
+    vec3 normal;
+    float 	z;
+};
+
+Puxel makePuxel(uint c, vec3 n, float z)
+{
+  Puxel ret;
+  ret.c = c;
+  ret.normal = n;
+  ret.z = z;
+  return ret;
+}
+
+bool comparePuxel(Puxel a, Puxel b)
+{
+  return (a.z > b.z);
+}
+
+    -->
+  </snippet>
+
+  <snippet name="data" type="string">
+    <!--
+struct PuxelEntry
+{
+    Puxel	  puxel;
+    uint    prev, next;
+};
+      
+layout(binding = 1) buffer Data
+{
+	PuxelEntry puxel[];
+};
+    -->
+  </snippet>
+
+  <shader name="clear">
+    <snippet type="version">430</snippet>
+    <snippet name="puxeluniform"/>
+    <snippet name="header"/>
+    <snippet type="string">
+      <!--
+layout (local_size_x = 16, local_size_y = 16) in;
+uniform unsigned int width;
+uniform unsigned int height;
+void main(void)
+{
+  uint id = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+  if(id < width * height)
+    entry[id] = 0;
+}
+      -->
+    </snippet>
+  </shader>
+
+  <shader name="order">
+    <snippet type="version">430</snippet>
+    <snippet name="puxeluniform"/>
+    <snippet name="header"/>
+    <snippet name="data"/>
+    <snippet type="string">
+      <!--
+layout (local_size_x = 16, local_size_y = 16) in;
+uniform unsigned int width;
+uniform unsigned int height;
+
+#line 113
+
+#define ITEM(i)			  puxel[i]
+#define ITEM_COMP(i)	puxel[i].puxel.z
+#define ITEM_NEXT(i)	puxel[i].prev
+#define ITEM_PREV(i)	puxel[i].next
+
+/*
+INSERTIONSORT(A)
+1 for i = 2 to Länge(A) do
+2      einzusortierender_wert = A[i]
+3      j = i
+4      while j > 1 and A[j-1] > einzusortierender_wert do
+5           A[j] = A[j - 1]
+6           j = j − 1
+7      A[j] = einzusortierender_wert
+*/
+void insertsort(unsigned int start)
+{
+	unsigned int v = ITEM_NEXT(start);
+
+	unsigned int next = start;
+	unsigned int last = 0;
+
+	while(next > 0)
+	{
+		ITEM_PREV(next) = last;
+		last = next;
+		next = ITEM_NEXT(next);
+	}
+
+	PuxelEntry pux, puxj, puxj1;
+
+	while(v > 0)
+	{
+		pux = ITEM(v);
+		unsigned int  j = v;
+
+		unsigned int  j1 = ITEM_PREV(j);
+		puxj1 = ITEM(j1);
+		while(j1 > 0 && comparePuxel(puxj1.puxel, pux.puxel))
+		{
+			puxel[j].puxel = puxj1.puxel;
+
+			j = j1;
+			j1 = ITEM_PREV(j);
+			puxj1 = ITEM(j1);
+		}
+
+		puxel[j].puxel = pux.puxel;
+		v = ITEM_NEXT(v);
+	}
+}
+
+void main(void)
+{
+	uint id = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+	if(id < width * height)
+	  insertsort(entry[id]);
+}
+      -->
+    </snippet>
+  </shader>
+
+  <snippet name="store" type="string">
+      <!--
+in vec4 gl_FragCoord;
+out vec4 gl_FragColor;
+
+uniform unsigned int width;
+uniform unsigned int height;
+
+layout(binding = 5, offset=0) uniform atomic_uint nextEntry;
+
+#line 10136
+void puxels_store(Puxel payload)
+{
+  uvec2 p = uvec2(gl_FragCoord.xy);
+  if(p.x >= 0 && p.y >= 0 && p.x < width && p.y < height )
+  {
+    uint dataBufferSize = puxel.length();
+    uint index = p.x + width*p.y;
+    uint newEntryId = atomicCounterIncrement(nextEntry);
+    puxel[newEntryId % dataBufferSize].prev = atomicExchange(entry[index], newEntryId);
+
+    puxel[newEntryId % dataBufferSize].puxel = payload;
+  }
+  else
+		discard;
+}
+      -->
+  </snippet>
+
+  <shader name="blend">
+    <snippet type="version">430</snippet>
+    <snippet name="puxeluniform"/>
+    <snippet name="header"/>
+    <snippet name="data"/>
+    <snippet type="string">
+      <!--
+#define LOCALPUXELARRAYSIZE 32
+Puxel[LOCALPUXELARRAYSIZE]       local;
+
+in vec4 gl_FragCoord;
+out vec4 gl_FragColor;
+
+uniform unsigned int width;
+uniform unsigned int height;
+
+#line 10203
+void main()
+{
+  uvec2 p = uvec2(gl_FragCoord.xy);
+  if(p.x >= 0 && p.y >= 0 && p.x < width && p.y < height )
+  {
+    uint index = p.x + p.y*width;
+    unsigned int next = entry[index];
+
+    if(next != 0)
+    {
+      vec4 finalColor=vec4(0.0);
+	    while(next > 0)
+	    {
+        vec4 col = unpackUnorm4x8(puxel[next].puxel.c);
+        
+        col.rgb = col.rgb * col.a;
+        finalColor = finalColor+col*(1.0f-finalColor.a);
+
+		    next = puxel[next].prev;
+      }
+
+      gl_FragColor = finalColor+vec4(1.0)*(1.0f-finalColor.a);
+    }
+    else
+      gl_FragColor = vec4(1.0);
+  }
+  else
+    gl_FragColor = vec4(0.0);
+}
+       -->
+    </snippet>
+  </shader>
+
+</btf>

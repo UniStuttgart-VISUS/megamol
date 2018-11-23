@@ -40,22 +40,6 @@ CrystalRenderer::~CrystalRenderer(void) {
 
 
 /*
- * CrystalRenderer::GetCapabilities
- */
-bool CrystalRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        core::view::CallRender3D::CAP_RENDER
-        | core::view::CallRender3D::CAP_LIGHTING
-    );
-
-    return true;
-}
-
-
-/*
  * CrystalRenderer::GetExtents
  */
 bool CrystalRenderer::GetExtents(core::Call& call) {

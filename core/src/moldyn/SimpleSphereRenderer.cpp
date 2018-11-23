@@ -169,8 +169,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
                     glVertexAttribPointerARB(
                         cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
                 } else {
-                    glVertexAttribPointerARB(
-                        cial, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                    glVertexAttribLPointer(cial, 1, GL_DOUBLE, parts.GetColourDataStride(), parts.GetColourData());
                 }
                 glEnable(GL_TEXTURE_1D);
 
