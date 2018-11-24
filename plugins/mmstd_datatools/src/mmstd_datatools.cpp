@@ -65,7 +65,7 @@
 #include "floattable/FloatTableColumnFilter.h"
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
-#include "ParticleThermometer.h"
+#include "ParticleThermodyn.h"
 #include "io/PLYDataSource.h"
 #include "floattable/FloatTableToLines.h"
 #include "MPIParticleCollector.h"
@@ -204,7 +204,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();

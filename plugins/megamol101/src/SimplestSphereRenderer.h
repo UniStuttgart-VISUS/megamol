@@ -84,18 +84,6 @@ protected:
 
 private:
     /**
-     * The get capabilities callback. The module should set the members
-     * of 'call' to tell the caller its capabilities.
-     *
-     * TUTORIAL: Mandatory method for every Renderer. It tells the call what the Renderer
-     * is able to do.
-     *
-     * @param call The calling call.
-     * @return The return value of the function.
-     */
-    virtual bool GetCapabilities(core::Call& call);
-
-    /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
      * and times).

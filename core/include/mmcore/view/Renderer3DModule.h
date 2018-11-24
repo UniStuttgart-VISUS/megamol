@@ -32,20 +32,6 @@ namespace view {
         virtual ~Renderer3DModule(void) = default;
 
     protected:
-
-        /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-		[[deprecated("Use CallRender3D version instead")]]
-        virtual bool GetCapabilities(Call& call) { return false; };
-
-		virtual bool GetCapabilities(CallRender3D& call) { return this->GetCapabilities(static_cast<Call&>(call)); }
-
 		/**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
@@ -71,8 +57,6 @@ namespace view {
         virtual bool Render(Call& call) { return false; };
 
 		virtual bool Render(CallRender3D& call) override { return this->Render(static_cast<Call&>(call)); }
-
-        bool GetCapabilitiesCallback(Call& call);
     };
 
 

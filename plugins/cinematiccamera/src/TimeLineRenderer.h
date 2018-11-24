@@ -19,7 +19,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 
+#include "vislib/graphics/InputModifiers.h"
+#include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+
 #include "vislib/Array.h"
 
 #include "Keyframe.h"
@@ -80,15 +83,6 @@ namespace megamol {
 			* Implementation of 'Release'.
 			*/
 			virtual void release(void);
-
-			/**
-			* Callback for mouse events (move, press, and release)
-			*
-			* @param x The x coordinate of the mouse in world space
-			* @param y The y coordinate of the mouse in world space
-			* @param flags The mouse flags
-			*/
-			virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 			
             /**
             * The get extents callback. The module should set the members of
@@ -110,6 +104,12 @@ namespace megamol {
             */
             virtual bool Render(core::view::CallRender2D& call);
 
+            /** The mouse button pressed/released callback. */
+            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+
+            /** The mouse movement callback. */
+            virtual bool OnMouseMove(double x, double y) override;
+
 		private:
 			
             /**********************************************************************
@@ -119,7 +119,6 @@ namespace megamol {
             // font rendering
             megamol::core::utility::SDFFont theFont;
 
-            // ...
             vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
             vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
@@ -148,7 +147,7 @@ namespace megamol {
             float                          simScaleDelta;
             vislib::StringA                simFormatStr;
 
-            vislib::math::Vector<float, 2> lastMousePos;
+
             unsigned int                   scaleAxis;
 
             Keyframe                       dragDropKeyframe;
@@ -160,6 +159,19 @@ namespace megamol {
             float                          rulerMarkSize;
             unsigned int                   fps;
             vislib::math::Vector<float, 2> viewport;
+
+            /*** INPUT ********************************************************/
+
+            /** The current mouse coordinates */
+            float mouseX;
+            float mouseY;
+
+            /** The last mouse coordinates */
+            float lastMouseX;
+            float lastMouseY;
+
+            core::view::MouseButton       mouseButton;
+            core::view::MouseButtonAction mouseAction;
 
             /**********************************************************************
             * functions
@@ -188,9 +200,11 @@ namespace megamol {
             /**  */
             megamol::core::param::ParamSlot rulerFontParam;
             /**  */
-            megamol::core::param::ParamSlot moveRightFrame;
+            megamol::core::param::ParamSlot moveRightFrameParam;
             /**  */
-            megamol::core::param::ParamSlot moveLeftFrame;
+            megamol::core::param::ParamSlot moveLeftFrameParam;
+            /**  */
+            megamol::core::param::ParamSlot resetPanScaleParam;
 		};
 
 	} /* end namespace cinematiccamera */

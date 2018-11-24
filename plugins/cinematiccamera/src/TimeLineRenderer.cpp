@@ -32,6 +32,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::view;
 using namespace megamol::core::utility;
 using namespace megamol::cinematiccamera;
 
@@ -42,65 +43,70 @@ using namespace vislib;
 * cinematiccamera::TimeLineRenderer::TimeLineRenderer
 */
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam( "01_fontSize", "The font size."),
-    moveRightFrame ("02_rightFrame", "Move to right animation time frame."),
-    moveLeftFrame( "03_leftFrame", "Move to left animation time frame.")
-	{
+    rulerFontParam(      "01_fontSize", "The font size."),
+    moveRightFrameParam ("02_rightFrame", "Move to right animation time frame."),
+    moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
+    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes."),
+
+    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
+    markerTextures(),
+    axisStartPos(),
+    animAxisEndPos(0.0f, 0.0f),
+    animAxisLen(0.0f),
+    animSegmSize(0.0f),
+    animTotalTime(1.0f),
+    animSegmValue(0.0f),
+    animScaleFac(0.0f),
+    animScaleOffset(0.0f),
+    animLenTimeFrac(0.0f),
+    animScalePos(0.0f),
+    animScaleDelta(0.0f),
+    animFormatStr("%.5f "),
+    simAxisEndPos(0.0f, 0.0f),
+    simAxisLen(0.0f),
+    simSegmSize(0.0f),
+    simTotalTime(1.0f),
+    simSegmValue(0.0f),
+    simScaleFac(0.0f),
+    simScaleOffset(0.0f),
+    simLenTimeFrac(0.0f),
+    simScalePos(0.0f),
+    simScaleDelta(0.0f),
+    simFormatStr("%.5f "),
+    scaleAxis(0),
+    dragDropKeyframe(),
+    dragDropActive(false),
+    dragDropAxis(0),
+    fontSize(22.0f),
+    keyfMarkSize(1.0f),
+    rulerMarkSize(1.0f),
+    fps(24),
+    viewport(1.0f, 1.0f),
+    mouseX(0.0f),
+    mouseY(0.0f),
+    lastMouseX(0.0f),
+    lastMouseY(0.0f),
+    mouseButton(MouseButton::BUTTON_LEFT),
+    mouseAction(MouseButtonAction::RELEASE)
+{
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
-
-    // init variables
-    this->fontSize          = 22.0f;
-
-    this->markerTextures.Clear();
-
-    this->dragDropKeyframe  = Keyframe();
-    this->viewport          = vislib::math::Vector<float, 2>(1.0f, 1.0f);
-    this->axisStartPos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->lastMousePos      = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->scaleAxis         = 0;
-    this->dragDropActive    = false;
-    this->dragDropAxis      = 0;
-    this->rulerMarkSize     = 1.0f;
-    this->keyfMarkSize      = 1.0f;
-    this->fps               = 24;
-
-    this->animAxisEndPos    = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->animAxisLen       = 0.0f;
-    this->animSegmSize      = 0.0f;
-    this->animTotalTime     = 1.0f;
-    this->animSegmValue     = 0.0f;
-    this->animScaleFac      = 0.0f;
-    this->animScaleOffset   = 0.0f;
-    this->animLenTimeFrac   = 0.0f;
-    this->animScalePos      = 0.0f;
-    this->animScaleDelta    = 0.0f;
-    this->animFormatStr     = "%.5f ";
-
-    this->simAxisEndPos     = vislib::math::Vector<float, 2>(0.0f, 0.0f);
-    this->simAxisLen        = 0.0f;
-    this->simSegmSize       = 0.0f;
-    this->simTotalTime      = 1.0f;
-    this->simSegmValue      = 0.0f;
-    this->simScaleFac       = 0.0f;
-    this->simScaleOffset    = 0.0f;
-    this->simLenTimeFrac    = 0.0f;
-    this->simScalePos       = 0.0f;
-    this->simScaleDelta     = 0.0f;
-    this->simFormatStr      = "%.5f ";
 
     // init parameters
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
 
-    this->moveRightFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
-    this->MakeSlotAvailable(&this->moveRightFrame);
+    this->moveRightFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
+    this->MakeSlotAvailable(&this->moveRightFrameParam);
 
-    this->moveLeftFrame.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
-    this->MakeSlotAvailable(&this->moveLeftFrame);
+    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
+    this->MakeSlotAvailable(&this->moveLeftFrameParam);
+
+    this->resetPanScaleParam.SetParameter(new param::ButtonParam('p'));
+    this->MakeSlotAvailable(&this->resetPanScaleParam);
 }
 
 
@@ -359,8 +365,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         // Recalc extends of time line which depends on font size
         this->GetExtents(call);
     }
-    if (this->moveRightFrame.IsDirty()) {
-        this->moveRightFrame.ResetDirty();
+    if (this->moveRightFrameParam.IsDirty()) {
+        this->moveRightFrameParam.ResetDirty();
         // Set selected animation time to right animation time frame
         float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
@@ -374,8 +380,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "right: " << t << std::endl;
     }
-    if (this->moveLeftFrame.IsDirty()) {
-        this->moveLeftFrame.ResetDirty();
+    if (this->moveLeftFrameParam.IsDirty()) {
+        this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
         float at = ccc->getSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
@@ -389,15 +395,23 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "left: " << t << std::endl;
     }
+    if (this->resetPanScaleParam.IsDirty()) {
+        this->resetPanScaleParam.ResetDirty();
+        this->simScaleFac     = 1.0f;
+        this->simScaleOffset  = 0.0f;
+        this->animScaleFac    = 1.0f;
+        this->animScaleOffset = 0.0f;
+        this->axisAdaptation();
+    }
 
-    // Get the foreground color (inverse background color)
+
+    // COLORS
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
     for (unsigned int i = 0; i < 3; i++) {
         fgColor[i] -= bgColor[i];
     }
-    // COLORS
     float kColor[4]    = { 0.7f, 0.7f, 1.0f, 1.0f }; // Color for KEYFRAME 
     float dkmColor[4]  = { 0.5f, 0.5f, 1.0f, 1.0f }; // Color for DRAGGED KEYFRAME MARKER 
     float skColor[4]   = { 0.2f, 0.2f, 1.0f, 1.0f }; // Color for SELECTED KEYFRAME 
@@ -405,14 +419,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float fColor[4]    = { 1.0f, 0.6f, 0.6f, 1.0f }; // Color for FRAME MARKER
     float white[4]     = { 1.0f, 1.0f, 1.0f, 1.0f };
     float menu[4]      = { 0.0f, 0.0f, 0.3f, 1.0f };
-    //float yellow[4]    = { 1.0f, 1.0f, 0.0f, 1.0f };
-    //float armColor[4]  = { 0.8f, 0.0f, 0.0f, 1.0f }; // Color for ANIMATION REPEAT MARKER
-    
-    // Adapt colors depending on  Lightness
+    // Swap keyframe colors depending on lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
     if (L < 0.5f) {
         float tmp;
-        // Swap keyframe colors
         for (unsigned int i = 0; i < 4; i++) {
             tmp        = kColor[i];
             kColor[i]  = skColor[i];
@@ -651,6 +661,7 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
     glEnable(GL_TEXTURE_2D);
 
     this->markerTextures[0]->Bind();
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -671,238 +682,6 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
-}
-
-
-/*
-* cinematiccamera::TimeLineRenderer::MouseEvent
-*/
-bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
-
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == nullptr) return false;
-    // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
-
-    //Get keyframes
-    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is nullptr.");
-        return false;
-    }
-
-// LEFT-CLICK --- keyframe selection
-	if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) { 
-        // Do not snap to keyframe when mouse movement is continuous
-        float offset = 0.0f;
-        if (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED || ((x == this->lastMousePos.X()) && (y == this->lastMousePos.Y()))) {
-            offset = this->keyfMarkSize / 2.0f;
-        }
-        float animAxisX, posX;
-		//Check all keyframes if they are hit
-        bool hit = false;
-		for (unsigned int i = 0; i < keyframes->Count(); i++){
-            animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-            if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
-                posX = this->axisStartPos.X() + animAxisX;
-                if ((x < (posX + offset)) && (x > (posX - offset))) {
-                    // If another keyframe is already hit, check which keyframe is closer to mouse position
-                    if (hit) { 
-                        float deltaX = vislib::math::Abs(posX - x);
-                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
-                        if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
-                            posX = this->axisStartPos.X() + animAxisX;
-                            if (deltaX < vislib::math::Abs(posX - x)) {
-                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
-                            }
-                        }
-                    }
-                    else {
-                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
-                    }
-                    hit = true;
-                }
-            }
-		}
-        if (hit) {
-            // Set hit keyframe as selected
-            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-        }
-
-        // Get interpolated keyframe selection
-        if (!hit && ((x >= this->axisStartPos.X()) && (x <= this->animAxisEndPos.X()))) {
-            // Set an interpolated keyframe as selected
-            float at = (((-1.0f)*this->animScaleOffset + (x - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
-            ccc->setSelectedKeyframeTime(at);
-			if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
-        }
-
-        // Store current mouse position for detecting continuous mouse movement
-        this->lastMousePos.Set(x, y);
-	} 
-// RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
-    else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        //Check all keyframes if they are hit
-        this->dragDropActive = false;
-        float animAxisX, posX;
-
-        bool hit = false;
-        for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-            if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
-                posX = this->axisStartPos.X() + animAxisX;
-                if ((x < (posX + (this->keyfMarkSize / 2.0f))) && (x >(posX - (this->keyfMarkSize / 2.0f)))) {
-                    // If another keyframe is already hit, check which keyframe is closer to mouse position
-                    if (hit) {
-                        float deltaX = vislib::math::Abs(posX - x);
-                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
-                        if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
-                            posX = this->axisStartPos.X() + animAxisX;
-                            if (deltaX < vislib::math::Abs(posX - x)) {
-                                this->dragDropKeyframe = (*keyframes)[i];
-                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
-                            }
-                        }
-                    }
-                    else {
-                        this->dragDropKeyframe = (*keyframes)[i];
-                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
-                    }
-                    hit = true;
-                }
-            }
-        }
-
-        if (hit) {
-            // Store hit keyframe locally
-            this->dragDropActive = true;
-            this->dragDropAxis = 0;
-            this->lastMousePos.Set(x, y);
-            if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
-        } 
-
-        this->lastMousePos.Set(x, y);
-    }
-    else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        // Update time of dragged keyframe. Only for locally stored dragged keyframe -> just for drawing
-        if (this->dragDropActive) {
-            if (this->dragDropAxis == 0) { // first time after activation of dragging a keyframe
-                if (vislib::math::Abs(x - this->lastMousePos.X()) > vislib::math::Abs(y - this->lastMousePos.Y())) {
-                    this->dragDropAxis = 1;
-                }
-                else {
-                    this->dragDropAxis = 2;
-                }
-            }
-            else if (this->dragDropAxis == 1) { // animation axis - X
-                float at = this->dragDropKeyframe.GetAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
-                if (x < this->axisStartPos.X()) {
-                    at = 0.0f;
-                }
-                if (x > this->animAxisEndPos.X()) {
-                    at = this->animTotalTime;
-                }
-                this->dragDropKeyframe.SetAnimTime(at);
-            }
-            else if (this->dragDropAxis == 2) { // simulation axis - Y
-                float st = this->dragDropKeyframe.GetSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
-                if (y < this->axisStartPos.Y()) {
-                    st = 0.0f;
-                }
-                if (y > this->simAxisEndPos.Y()) {
-                    st = 1.0f;
-                }
-                this->dragDropKeyframe.SetSimTime(st);
-            }
-        } 
-        else {
-            // Pan axes ...
-            float panFac = 0.5f;
-            this->animScaleOffset += (x - this->lastMousePos.X()) * panFac;
-            this->simScaleOffset  += (y - this->lastMousePos.Y()) * panFac;
-        }
-        this->lastMousePos.Set(x, y);
-    }
-    else if (!(flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        // Drop currently dragged keyframe
-        if (this->dragDropActive) {
-
-            float at = 0.0f;
-            float st = 0.0f;
-            if (this->dragDropAxis == 1) { // animation axis - X
-                at = this->dragDropKeyframe.GetAnimTime() + ((x - this->lastMousePos.X()) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
-                if (x <= this->axisStartPos.X()) {
-                    at = 0.0f;
-                }
-                if (x >= this->animAxisEndPos.X()) {
-                    at = this->animTotalTime;
-                }
-                st = this->dragDropKeyframe.GetSimTime();
-            }
-            else if (this->dragDropAxis == 2) { // simulation axis - Y
-                st = this->dragDropKeyframe.GetSimTime() + ((y - this->lastMousePos.Y()) / this->simScaleFac) / this->simAxisLen;
-                if (y < this->axisStartPos.Y()) {
-                    st = 0.0f;
-                }
-                if (y > this->simAxisEndPos.Y()) {
-                    st = 1.0f;
-                }
-                at = this->dragDropKeyframe.GetAnimTime();
-            }
-            ccc->setDropTimes(at, st);
-            if (!(*ccc)(CallCinematicCamera::CallForSetDropKeyframe)) return false;
-            this->dragDropAxis = 0;
-            this->dragDropActive = false;
-        }
-    }
-// MIDDLE-CLICK --- Axis scaling
-    else if ((flags & view::MOUSEFLAG_BUTTON_MIDDLE_DOWN) && (flags & view::MOUSEFLAG_BUTTON_MIDDLE_CHANGED)) {
-        // Just save current mouse position
-        this->scaleAxis = 0;
-        this->lastMousePos.Set(x, y);
-
-        this->animScalePos = vislib::math::Clamp(x - this->axisStartPos.X(), 0.0f, this->animAxisLen);
-        this->simScalePos = vislib::math::Clamp(y - this->axisStartPos.Y(), 0.0f, this->simAxisLen);
-
-        this->simScaleDelta = (this->simScalePos - this->simScaleOffset) / this->simScaleFac;
-        this->animScaleDelta = (this->animScalePos - this->animScaleOffset) / this->animScaleFac;
-    }
-    else if ((flags & view::MOUSEFLAG_BUTTON_MIDDLE_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_MIDDLE_CHANGED)) {
-
-        float sensitivityX = 0.01f;
-        float sensitivityY = 0.03f;
-        float diffX = (x - this->lastMousePos.X());
-        float diffY = (y - this->lastMousePos.Y());
-
-        if (this->scaleAxis == 0) { // first time after activation of dragging a keyframe
-            if (vislib::math::Abs(diffX) > vislib::math::Abs(diffY)) {
-                this->scaleAxis = 1;
-            }
-            else {
-                this->scaleAxis = 2;
-            }
-        }
-        else if (this->scaleAxis == 1) { // animation axis - X
-
-            this->animScaleFac += diffX * sensitivityX;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[animScaleFac] %f", this->animScaleFac);
-
-            this->animScaleFac = (this->animScaleFac < 1.0f) ? (1.0f) : (this->animScaleFac);
-            this->axisAdaptation();
-        }
-        else if (this->scaleAxis == 2) { // simulation axis - Y
-
-            this->simScaleFac += diffY * sensitivityY;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[simScaleFac] %f", this->simScaleFac);
-
-            this->simScaleFac = (this->simScaleFac < 1.0f) ? (1.0f) : (this->simScaleFac);
-            this->axisAdaptation();
-        }
-        this->lastMousePos.Set(x, y);
-    }
-
-	// If true is returned, manipulator cannot move camera
-	return true; // Consume all mouse events;
 }
 
 
@@ -950,4 +729,297 @@ bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
         vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;
+}
+
+
+/*
+* cinematiccamera::TimeLineRenderer::OnMouseButton
+*/
+bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+
+    auto down         = action == MouseButtonAction::PRESS;
+    this->mouseAction = action;
+    this->mouseButton = button;
+
+    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    if (ccc == nullptr) return false;
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+
+    //Get keyframes
+    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is nullptr.");
+        return false;
+    }
+
+    // LEFT-CLICK --- keyframe selection
+    if (button == MouseButton::BUTTON_LEFT) {
+        // Do not snap to keyframe when mouse movement is continuous
+        float offset = this->keyfMarkSize / 2.0f;
+        float animAxisX, simAxisY, posX, posY;
+        //Check all keyframes if they are hit
+        bool hit = false;
+        for (unsigned int i = 0; i < keyframes->Count(); i++) {
+            animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
+            simAxisY  = this->simScaleOffset  + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+            if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                posX = this->axisStartPos.X() + animAxisX;
+                posY = this->axisStartPos.Y() + simAxisY;
+                if (((this->mouseX < (posX + offset)) && (this->mouseX > (posX - offset))) &&
+                    ((this->mouseY < (posY + 2.0*offset)) && (this->mouseY > (posY)))) {
+                    // If another keyframe is already hit, check which keyframe is closer to mouse position
+                    if (hit) {
+                        float deltaX = vislib::math::Abs(posX - this->mouseX);
+                        animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
+                        if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                            posX = this->axisStartPos.X() + animAxisX;
+                            if (deltaX < vislib::math::Abs(posX - this->mouseX)) {
+                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                            }
+                        }
+                    }
+                    else {
+                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                    }
+                    hit = true;
+                }
+            }
+        }
+        if (hit) {
+            // Set hit keyframe as selected
+            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        }
+        else {
+            // Get interpolated keyframe selection
+            if ((this->mouseX >= this->axisStartPos.X()) && (this->mouseX <= this->animAxisEndPos.X())) {
+                // Set an interpolated keyframe as selected
+                float at = (((-1.0f)*this->animScaleOffset + (this->mouseX - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                ccc->setSelectedKeyframeTime(at);
+                if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+            }
+        }
+    } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
+    else if (button == MouseButton::BUTTON_RIGHT) {
+        if (down) {
+            //Check all keyframes if they are hit
+            this->dragDropActive = false;
+            float offset = this->keyfMarkSize / 2.0f;
+            float animAxisX, simAxisY, posX, posY;
+            bool hit = false;
+            for (unsigned int i = 0; i < keyframes->Count(); i++) {
+                animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
+                simAxisY = this->simScaleOffset + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+                if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                    posX = this->axisStartPos.X() + animAxisX;
+                    posY = this->axisStartPos.Y() + simAxisY;
+                    if (((this->mouseX < (posX + offset)) && (this->mouseX > (posX - offset))) &&
+                        ((this->mouseY < (posY + 2.0*offset)) && (this->mouseY > (posY)))) {
+                        // If another keyframe is already hit, check which keyframe is closer to mouse position
+                        if (hit) {
+                            float deltaX = vislib::math::Abs(posX - this->mouseX);
+                            animAxisX = this->animScaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->animLenTimeFrac;
+                            if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
+                                posX = this->axisStartPos.X() + animAxisX;
+                                if (deltaX < vislib::math::Abs(posX - this->mouseX)) {
+                                    this->dragDropKeyframe = (*keyframes)[i];
+                                    ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                                }
+                            }
+                        }
+                        else {
+                            this->dragDropKeyframe = (*keyframes)[i];
+                            ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                        }
+                        hit = true;
+                    }
+                }
+            }
+
+            if (hit) {
+                // Store hit keyframe locally
+                this->dragDropActive = true;
+                this->dragDropAxis = 0;
+                if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
+            }
+            this->lastMouseX = this->mouseX;
+            this->lastMouseY = this->mouseY;
+        }
+        else {
+            // Drop currently dragged keyframe
+            if (this->dragDropActive) {
+                float at = this->dragDropKeyframe.GetAnimTime();
+                float st = this->dragDropKeyframe.GetSimTime();;
+                if (this->dragDropAxis == 1) { // animation axis - X
+                    at = this->dragDropKeyframe.GetAnimTime() + ((this->mouseX - this->lastMouseX) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                    if (this->mouseX <= this->axisStartPos.X()) {
+                        at = 0.0f;
+                    }
+                    if (this->mouseX >= this->animAxisEndPos.X()) {
+                        at = this->animTotalTime;
+                    }
+                    st = this->dragDropKeyframe.GetSimTime();
+                }
+                else if (this->dragDropAxis == 2) { // simulation axis - Y
+                    st = this->dragDropKeyframe.GetSimTime() + ((this->mouseY - this->lastMouseY) / this->simScaleFac) / this->simAxisLen;
+                    if (this->mouseY < this->axisStartPos.Y()) {
+                        st = 0.0f;
+                    }
+                    if (this->mouseY > this->simAxisEndPos.Y()) {
+                        st = 1.0f;
+                    }
+                    at = this->dragDropKeyframe.GetAnimTime();
+                }
+                ccc->setDropTimes(at, st);
+                if (!(*ccc)(CallCinematicCamera::CallForSetDropKeyframe)) return false;
+
+                this->dragDropActive = false;
+                this->dragDropAxis = 0;
+            }
+        }
+    } // MIDDLE-CLICK --- Axis scaling
+    else if (button == MouseButton::BUTTON_MIDDLE) {
+        if (down) {
+            // Just save current mouse position
+            this->scaleAxis  = 0;
+            this->lastMouseX = this->mouseX;
+            this->lastMouseY = this->mouseY;
+
+            this->animScalePos = vislib::math::Clamp(this->mouseX - this->axisStartPos.X(), 0.0f, this->animAxisLen);
+            this->simScalePos  = vislib::math::Clamp(this->mouseY - this->axisStartPos.Y(), 0.0f, this->simAxisLen);
+
+            this->simScaleDelta = (this->simScalePos - this->simScaleOffset) / this->simScaleFac;
+            this->animScaleDelta = (this->animScalePos - this->animScaleOffset) / this->animScaleFac;
+        }
+    }
+
+    return true;
+}
+
+
+/*
+* cinematiccamera::TimeLineRenderer::OnMouseMove
+*/
+bool TimeLineRenderer::OnMouseMove(double x, double y) {
+
+    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    if (ccc == nullptr) return false;
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+
+    bool down = (this->mouseAction == MouseButtonAction::PRESS);
+
+    // Store current mouse position
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+    // LEFT-CLICK --- keyframe selection
+    if (this->mouseButton == MouseButton::BUTTON_LEFT) {
+        if (down) {
+            // Get interpolated keyframe selection
+            if ((this->mouseX >= this->axisStartPos.X()) && (this->mouseX <= this->animAxisEndPos.X())) {
+                // Set an interpolated keyframe as selected
+                float at = (((-1.0f)*this->animScaleOffset + (this->mouseX - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                ccc->setSelectedKeyframeTime(at);
+                if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+            }
+        }
+    } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
+    else if (this->mouseButton == MouseButton::BUTTON_RIGHT) {
+        if (down) {
+            // Update time of dragged keyframe. Only for locally stored dragged keyframe -> just for drawing
+            if (this->dragDropActive) {
+                if (this->dragDropAxis == 0) { // first time after activation of dragging a keyframe
+                    if (vislib::math::Abs(this->mouseX - this->lastMouseX) > vislib::math::Abs(this->mouseY - this->lastMouseY)) {
+                        this->dragDropAxis = 1;
+                    }
+                    else {
+                        this->dragDropAxis = 2;
+                    }
+                }
+
+                if (this->dragDropAxis == 1) { // animation axis - X
+                    float at = this->dragDropKeyframe.GetAnimTime() + ((this->mouseX - this->lastMouseX) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
+                    if (this->mouseX < this->axisStartPos.X()) {
+                        at = 0.0f;
+                    }
+                    if (this->mouseX > this->animAxisEndPos.X()) {
+                        at = this->animTotalTime;
+                    }
+                    this->dragDropKeyframe.SetAnimTime(at);
+                }
+                else if (this->dragDropAxis == 2) { // simulation axis - Y
+                    float st = this->dragDropKeyframe.GetSimTime() + ((this->mouseY - this->lastMouseY) / this->simScaleFac) / this->simAxisLen;
+                    if (this->mouseY < this->axisStartPos.Y()) {
+                        st = 0.0f;
+                    }
+                    if (this->mouseY > this->simAxisEndPos.Y()) {
+                        st = 1.0f;
+                    }
+                    this->dragDropKeyframe.SetSimTime(st);
+                }
+            }
+            else {
+                // Pan axes ...
+                float panFac = 0.5f;
+                this->animScaleOffset += (this->mouseX - this->lastMouseX) * panFac;
+                this->simScaleOffset  += (this->mouseY - this->lastMouseY) * panFac;
+
+                // Limit pan
+                if (this->animScaleOffset >= 0.0f) {
+                    this->animScaleOffset = 0.0f;
+                }
+                else if ((this->animScaleOffset + (this->animTotalTime * this->animLenTimeFrac)) < this->animAxisLen) {
+                    this->animScaleOffset = this->animAxisLen - (this->animTotalTime * this->animLenTimeFrac);
+                }
+                if (this->simScaleOffset >= 0.0f) {
+                    this->simScaleOffset = 0.0f;
+                }
+                else if ((this->simScaleOffset + (this->simTotalTime * this->simLenTimeFrac)) < this->simAxisLen) {
+                    this->simScaleOffset = this->simAxisLen - (this->simTotalTime * this->simLenTimeFrac);
+                }
+
+            }
+            this->lastMouseX = this->mouseX;
+            this->lastMouseY = this->mouseY;
+        }
+    } // MIDDLE-CLICK --- Axis scaling
+    else if (this->mouseButton == MouseButton::BUTTON_MIDDLE) {
+        if (down) {
+            float sensitivityX = 0.01f;
+            float sensitivityY = 0.03f;
+            float diffX = (this->mouseX - this->lastMouseX);
+            float diffY = (this->mouseY - this->lastMouseY);
+
+            if (this->scaleAxis == 0) { // first time after activation of dragging a keyframe
+                if (vislib::math::Abs(diffX) > vislib::math::Abs(diffY)) {
+                    this->scaleAxis = 1;
+                }
+                else {
+                    this->scaleAxis = 2;
+                }
+            }
+
+            if (this->scaleAxis == 1) { // animation axis - X
+
+                this->animScaleFac += diffX * sensitivityX;
+                //vislib::sys::Log::DefaultLog.WriteWarn("[animScaleFac] %f", this->animScaleFac);
+
+                this->animScaleFac = (this->animScaleFac < 1.0f) ? (1.0f) : (this->animScaleFac);
+                this->axisAdaptation();
+            }
+            else if (this->scaleAxis == 2) { // simulation axis - Y
+
+                this->simScaleFac += diffY * sensitivityY;
+                //vislib::sys::Log::DefaultLog.WriteWarn("[simScaleFac] %f", this->simScaleFac);
+
+                this->simScaleFac = (this->simScaleFac < 1.0f) ? (1.0f) : (this->simScaleFac);
+                this->axisAdaptation();
+            }
+            this->lastMouseX = this->mouseX;
+            this->lastMouseY = this->mouseY;
+        }
+    }
+
+    return true;
 }

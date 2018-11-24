@@ -231,21 +231,6 @@ bool volume::DirectVolumeRenderer::create (void) {
  **********************************************************************/
 
 /*
- * ProteinRenderer::GetCapabilities
- */
-bool volume::DirectVolumeRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(core::view::CallRender3D::CAP_RENDER | 
-        core::view::CallRender3D::CAP_LIGHTING |
-        core::view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * ProteinRenderer::GetExtents
  */
 bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
