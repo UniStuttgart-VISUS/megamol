@@ -90,7 +90,7 @@ namespace math {
         typedef detail::vectorial_traits_base<T, D> base;
 
         /** The allocator for heap allocations of the vectors. */
-        template<class C> using allocator_type = detail::vectorial_traits_base<T, D>::allocator_type<C>;
+        template<class C> using allocator_type = typename detail::vectorial_traits_base<T, D>::allocator_type<C>;
 
         /** The native type used to store the vector. */
         typedef typename base::native_type native_type;

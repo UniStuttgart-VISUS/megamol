@@ -128,7 +128,7 @@ namespace math {
 
 
     /** Utility class for providing the value of Euler's number. */
-    template<class T> class euler_e : public not_instantiable {
+    template<class T> class euler_e : public utility::not_instantiable {
     public:
         /* The value of Euler's number. */
         static const T value;

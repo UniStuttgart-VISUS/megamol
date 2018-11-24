@@ -535,7 +535,7 @@ namespace detail {
         static void operator delete(void *ptr, const std::size_t size){
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
-            static typename traits_type::allocator_type<byte> alloc;
+            static typename traits_type::template allocator_type<byte> alloc;
             alloc.deallocate(static_cast<unsigned char *>(ptr), size);
         }
 
@@ -549,7 +549,7 @@ namespace detail {
         static void operator delete[](void *ptr, const std::size_t size) {
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
-            static typename traits_type::allocator_type<byte> alloc;
+            static typename traits_type::template allocator_type<byte> alloc;
             alloc.deallocate(static_cast<unsigned char *>(ptr), size);
         }
 
@@ -561,7 +561,7 @@ namespace detail {
         static void *operator new(const std::size_t size) {
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
-            static typename traits_type::allocator_type<byte> alloc;
+            static typename traits_type::template allocator_type<byte> alloc;
             return alloc.allocate(size);
         }
 
@@ -573,7 +573,7 @@ namespace detail {
         static void *operator new[](const std::size_t size) {
             // Note: operator new/new[]/delete/delete[] work on bytes, not on
             // number of objects!
-            static typename traits_type::allocator_type<byte> alloc;
+            static typename traits_type::template allocator_type<byte> alloc;
             return alloc.allocate(size);
         }
 

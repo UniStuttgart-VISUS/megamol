@@ -49,6 +49,7 @@
 
 #include "mmcore/thecam/math/functions.h"
 #include "mmcore/thecam/math/vector.h"
+#include "mmcore/thecam/math/quaternion.h"
 
 
 namespace megamol {

@@ -201,6 +201,17 @@ namespace math {
     };
 #endif /* WITH_THE_GLM */
 
+    /**
+     * Forward declaration of quaternion
+     */
+    template<class V, class T>
+    class quaternion;
+
+    /**
+     * Forward declaration
+     */
+    template<class V, class T>
+    inline quaternion<V, T>& set_identity(quaternion<V, T>& quat);
 
     /**
      * Implementation of a quaternion.
