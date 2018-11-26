@@ -85,12 +85,14 @@ The module `CinematicView` exposes the following parameters:
    Whenever rendering is begun a new folder holding the frame image files (png) is generated.
 * `02_playPreview` (Assigned key: `space`): Toggle playing animation as preview.
 * `03_skyboxSide` (`NONE`): Select the skybox side.
-* `04_cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
-* `05_cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
-* `06_fps` (`24`): The frames per second the animation should be rendered.
-* `07_firstRenderFrame` (`0`): Set first frame number to start rendering with.
-* `08_delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
-* `09_frameFolder` Specify folder where the frame files should be stored.
+* `04_cubeMode` (`false`): Activate mode that renders the bounding box side selected with `03_skyboxSide`.
+* `05_cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
+* `06_cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
+* `07_fps` (`24`): The frames per second the animation should be rendered.
+* `08_firstRenderFrame` (`0`): Set first frame number to start rendering with.
+* `09_delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
+* `10_frameFolder` Specify folder where the frame files should be stored.
+* `11_addSBSideToName` (`false`): If true, adds the value of `03_skyboxSide` to the filename of the written image.
 * `stereo - eye` (`Left`) Eye position (for stereo view).
 * `stereo - projection` (`Mono Perspective`) Camera projection.
 

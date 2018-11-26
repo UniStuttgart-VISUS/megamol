@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+  ProjectType="Visual C++"
+  Version="8.00"
+  Name="ExtLibs"
+  >
+  <Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(NETCDFPath)\include;$(CUDA_INC_PATH);$(CUDAPath)/C/common/inc"
+		PreprocessorDefinitions="WITH_NETCDF, WITH_CUDA"
+	/>
+  <Tool
+		Name="VCLinkerTool"
+		AdditionalLibraryDirectories="$(NETCDFPath)\lib$(BitsD);$(CUDA_LIB_PATH);$(CUDAPath)/C/common/lib"
+		AdditionalDependencies="netcdf$(Bits).lib cudart.lib cutil64D.lib cudpp64d.lib"
+	/>
+  <UserMacro
+  Name="OutputBin"
+  Value="E:/kroneml/sfb716/megamol04/bin"
+  PerformEnvironmentSet="true"
+  />
+  <UserMacro
+  Name="MegaMolCorePath"
+  Value="E:/kroneml/sfb716/megamol04/core"
+  PerformEnvironmentSet="true"
+  />
+  <UserMacro
+  Name="VISlibPath"
+  Value="E:/kroneml/sfb716/vislib"
+  PerformEnvironmentSet="true"
+  />
+  <UserMacro
+		Name="NETCDFPath"
+		Value="E:/kroneml/sfb716/netcdf-3-6-3-2008051522-MSVC2005"
+		PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+		Name="OPENCLPath"
+		Value=""
+		PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+		Name="CUDAPath"
+		Value="C:/Programme/NVIDIAGPUComputingSDK"
+		PerformEnvironmentSet="true"
+	/>
+</VisualStudioPropertySheet>

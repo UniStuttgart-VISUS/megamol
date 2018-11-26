@@ -88,7 +88,11 @@ private:
 
     bool extractCameraParams(float cam_params[9]);
 
+#ifdef WITH_MPI
     bool extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color);
+#else
+    bool extractBackgroundColor(std::array<float, 4> bkgnd_color);
+#endif // WITH_MPI
 
     bool extractViewport(int vvpt[6]);
 
@@ -118,13 +122,13 @@ private:
 
     megamol::core::param::ParamSlot reconnect_slot_;
 
+    bool aggregate_;
+
 #ifdef WITH_MPI
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
 
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
-
-    bool aggregate_;
 
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
