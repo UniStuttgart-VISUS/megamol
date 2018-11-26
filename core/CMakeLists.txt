@@ -146,6 +146,18 @@ if(BUILD_CORE)
     DEPENDS zfp_ext
     LIBRARY ${ZFP_LIB})
 
+  # include glm
+  add_external_project(glm_ext
+      GIT_REPOSITORY https://github.com/g-truc/glm.git
+      GIT_TAG "0.9.8"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      TEST_COMMAND "")
+  add_external_library(glm INTERFACE
+    DEPENDS glm_ext
+    INCLUDE_DIR "src/glm_ext/")
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
