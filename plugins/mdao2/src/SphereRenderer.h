@@ -106,7 +106,6 @@ namespace mdao {
         // bool parameter to force the time from the data set
         megamol::core::param::ParamSlot forceTimeSlot;
 
-		virtual bool GetCapabilities(megamol::core::Call& call);
 		virtual bool GetExtents(megamol::core::Call& call);
 		virtual bool Render(megamol::core::Call& call);
 		

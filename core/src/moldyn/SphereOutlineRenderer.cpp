@@ -83,22 +83,6 @@ bool moldyn::SphereOutlineRenderer::create(void) {
 
 
 /*
- * moldyn::SphereOutlineRenderer::GetCapabilities
- */
-bool moldyn::SphereOutlineRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * moldyn::SphereOutlineRenderer::GetExtents
  */
 bool moldyn::SphereOutlineRenderer::GetExtents(Call& call) {

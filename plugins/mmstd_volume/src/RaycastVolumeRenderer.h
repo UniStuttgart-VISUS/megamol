@@ -81,16 +81,6 @@ namespace volume {
 		void release();
 
 		/**
-		* The get capabilities callback. The module should set the members
-		* of 'call' to tell the caller its capabilities.
-		*
-		* @param call The calling call.
-		*
-		* @return The return value of the function.
-		*/
-		bool GetCapabilities(core::Call& call);
-
-		/**
 		* The get extents callback. The module should set the members of
 		* 'call' to tell the caller the extents of its data (bounding boxes
 		* and times).
@@ -484,6 +474,7 @@ namespace volume {
 		size_t m_volume_datahash;
 		float m_volume_origin[3];
 		float m_volume_extents[3];
+        float m_volume_resolution[3];
 
 		/** caller slot */
 		megamol::core::CallerSlot m_volumetricData_callerSlot;

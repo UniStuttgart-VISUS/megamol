@@ -154,22 +154,6 @@ bool protein::SphereRendererMouse::create(void) {
 
 
 /*
- * protein::SphereRendererMouse::GetCapabilities
- */
-bool protein::SphereRendererMouse::GetCapabilities(core::Call& call) {
-    core::view::AbstractCallRender3D *cr3d = dynamic_cast<core::view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(
-          core::view::AbstractCallRender3D::CAP_RENDER
-        | core::view::AbstractCallRender3D::CAP_LIGHTING
-        | core::view::AbstractCallRender3D::CAP_ANIMATION );
-
-    return true;
-}
-
-
-/*
  * protein::SphereRendererMouse::GetExtents
  */
 bool protein::SphereRendererMouse::GetExtents(core::Call& call) {

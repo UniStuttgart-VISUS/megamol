@@ -1,6 +1,70 @@
 language: generic
 
+git:
+  depth: 1
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - CC=gcc-5
+        - CXX=g++-5
+    
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - CC=gcc-6
+        - CXX=g++-6
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - CC=gcc-7
+        - CXX=g++-7
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-5.0
+      env:
+        - CC=clang-5.0
+        - CXX=clang++-5.0
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-6.0
+      env:
+        - CC=clang-6.0
+        - CXX=clang++-6.0
+
 before_install:
+  - wget https://cmake.org/files/v3.12/cmake-3.12.4-Linux-x86_64.sh
+  - sh cmake-3.12.4-Linux-x86_64.sh --prefix=. --exclude-subdir
   - sudo apt-get -qq update
   - sudo apt-get install -y uuid-dev
   - sudo apt-get install -y libunwind8-dev
@@ -8,7 +72,8 @@ before_install:
   - sudo apt-get install -y libxinerama-dev
   - sudo apt-get install -y libxcursor-dev
   - sudo apt-get install -y libxi-dev
+  - mkdir build && cd build
+  - ../bin/cmake ..
 
-script:
-  - ci/build.sh
-  
+install:
+  - make install

@@ -143,21 +143,6 @@ bool protein::SphereRenderer::create(void)
 
 
 /*
- * protein::SphereRenderer::GetCapabilities
- */
-bool protein::SphereRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION );
-
-    return true;
-}
-
-
-/*
  * protein::SphereRenderer::GetExtents
  */
 bool protein::SphereRenderer::GetExtents(Call& call) {

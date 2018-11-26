@@ -57,8 +57,6 @@ protected:
     void release(void) override;
 
 private:
-    bool GetCapabilities(core::Call& call) override;
-
     bool GetExtents(core::Call& call) override;
 
     bool Render(core::Call& call) override;
