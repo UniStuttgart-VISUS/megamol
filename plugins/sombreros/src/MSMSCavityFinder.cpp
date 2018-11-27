@@ -325,7 +325,7 @@ bool MSMSCavityFinder::getData(Call& call) {
                     this->cavitySubmeshes.Last().SetTriangleData(static_cast<uint>(triaCnt), tmpTrias, true);
                 }
 
-#if 1
+#if 0
                 // DEBUG COLOR HACK!!
                 if (this->cavitySubmeshes.Count() > 0) {
                     auto color = const_cast<unsigned char*>(this->cavitySubmeshes.Last().GetColourPointerByte());
