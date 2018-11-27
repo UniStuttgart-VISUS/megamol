@@ -13,10 +13,10 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
-#include "mmcore/utility/SDFFont.h"
 
 #include <set>
 
