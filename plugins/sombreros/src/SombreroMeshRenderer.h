@@ -173,6 +173,18 @@ private:
     /** The color for the brushing */
     core::param::ParamSlot brushColorSlot;
 
+    /** The color for the inner line */
+    core::param::ParamSlot innerColorSlot;
+
+    /** The color for the sweatband line */
+    core::param::ParamSlot borderColorSlot;
+
+    /** The color for the outer line */
+    core::param::ParamSlot outerColorSlot;
+
+    /** Thec color for the font */
+    core::param::ParamSlot fontColorSlot;
+
     /** Slot to activate scaling */
     core::param::ParamSlot doScaleSlot;
 

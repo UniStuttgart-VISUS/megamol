@@ -51,8 +51,12 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     , surFrontStyle("frontstyle", "The rendering style for the front surface")
     , surBackStyle("backstyle", "The rendering style for the back surface")
     , windRule("windingrule", "The triangle edge winding rule")
-    , colorSlot("color", "The triangle color (if not colors are read from file)")
-    , brushColorSlot("brushColor", "The color for the brushing")
+    , colorSlot("colors::color", "The triangle color (if not colors are read from file)")
+    , brushColorSlot("colors::brushColor", "The color for the brushing")
+    , innerColorSlot("colors::innerColor", "The color of the inner radius line")
+    , outerColorSlot("colors::outerColor", "The color of the outer radius line")
+    , borderColorSlot("colors::sweatbandColor", "The color of the sweatband line")
+    , fontColorSlot("colors::fontColor", "The color of the font")
     , doScaleSlot("doScale", "Do Scaling of model data")
     , showRadiiSlot("showRadii", "Enable the textual annotation of the radii")
     , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line")
@@ -100,6 +104,18 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 
     this->brushColorSlot.SetParameter(new param::StringParam("red"));
     this->MakeSlotAvailable(&this->brushColorSlot);
+
+    this->borderColorSlot.SetParameter(new param::StringParam("red"));
+    this->MakeSlotAvailable(&this->borderColorSlot);
+
+    this->fontColorSlot.SetParameter(new param::StringParam("black"));
+    this->MakeSlotAvailable(&this->fontColorSlot);
+
+    this->innerColorSlot.SetParameter(new param::StringParam("red"));
+    this->MakeSlotAvailable(&this->innerColorSlot);
+
+    this->outerColorSlot.SetParameter(new param::StringParam("red"));
+    this->MakeSlotAvailable(&this->outerColorSlot);
 
     this->doScaleSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->doScaleSlot);
@@ -906,12 +922,24 @@ bool SombreroMeshRenderer::Render(Call& call) {
         ::glPointSize(1.0f);
     }
 
+    utility::ColourParser::FromString(this->innerColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    vislib::math::Vector<float, 3> innerColor(r, g, b);
+
+    utility::ColourParser::FromString(this->outerColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    vislib::math::Vector<float, 3> outerColor(r, g, b);
+
+    utility::ColourParser::FromString(this->fontColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    vislib::math::Vector<float, 3> fontColor(r, g, b);
+
+    utility::ColourParser::FromString(this->borderColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    vislib::math::Vector<float, 3> borderColor(r, g, b);
+
     if (this->showSweatBandSlot.Param<param::BoolParam>()->Value() && lines.size() > 0) {
         ::glLineWidth(3.0f);
         ::glDisable(GL_LIGHTING);
         ::glDisable(GL_DEPTH_TEST);
 
-        ::glColor3f(1.0f, 0.0f, 0.0f);
+        ::glColor3f(borderColor.GetX(), borderColor.GetY(), borderColor.GetZ());
         switch (ctmd->Objects()[0].GetVertexDataType()) {
         case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
             ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[0].GetVertexPointerFloat());
@@ -957,9 +985,10 @@ bool SombreroMeshRenderer::Render(Call& call) {
         ::glColor3f(1.0f, 0.0f, 0.0f);
 
         glBegin(GL_LINES);
+        glColor3f(innerColor.GetX(), innerColor.GetY(), innerColor.GetZ());
         glVertex3f(bbCenter.GetX(), bbCenter.GetY(), bbCenter.GetZ());
         glVertex3f(closest.GetX(), closest.GetY(), closest.GetZ());
-        glColor3f(0.0f, 1.0f, 0.0f);
+        glColor3f(outerColor.GetX(), outerColor.GetY(), outerColor.GetZ());
         glVertex3f(closest.GetX(), closest.GetY(), closest.GetZ());
         glVertex3f(bb.Right(), closest.GetY(), closest.GetZ());
         glEnd();
@@ -991,7 +1020,7 @@ bool SombreroMeshRenderer::Render(Call& call) {
             float remainleft = distleft - leftwidth;
             float remainright = distright - rightwidth;
 
-            float fontCol[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            float fontCol[4] = {fontColor.GetX(), fontColor.GetY(), fontColor.GetZ(), 1.0f};
             this->theFont.DrawString(fontCol, bbCenter.GetX() + (remainleft / 2.0f), bbCenter.GetY() + 1.0 * leftheight,
                 bbCenter.GetZ(), leftwidth, leftheight, sizeleft, false, textleft,
                 megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
