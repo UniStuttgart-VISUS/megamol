@@ -967,8 +967,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         if (this->theFont.Initialise(this->GetCoreInstance())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
             float distright = std::abs(closest.GetX() - bb.Right());
-            vislib::StringA textleft = (trunc(distleft, 2) + " A").c_str();
-            vislib::StringA textright = (trunc(distright, 2) + " A").c_str();
+            vislib::StringA textleft = (trunc(distleft, 2) + " Å").c_str();
+            vislib::StringA textright = (trunc(distright, 2) + " Å").c_str();
 
             float sizeleft = 5.0f;
             float sizeright = 5.0f;
