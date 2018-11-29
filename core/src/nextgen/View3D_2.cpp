@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/view/View3D_2.h"
+#include "mmcore/nextgen/View3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #    include <windows.h>
@@ -21,7 +21,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h" // TODO new call?
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -41,14 +41,14 @@
 #include "mmcore/utility/gl/Texture2D.h"
 
 using namespace megamol::core;
-using namespace megamol::core::view;
+using namespace megamol::core::nextgen;
 
 /*
  * View3D_2::View3D_2
  */
 View3D_2::View3D_2(void)
     : view::AbstractRenderingView()
-    , AbstractCamParamSync()
+    , view::AbstractCamParamSync()
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , lightDir(0.5f, -1.0f, -1.0f)
@@ -285,7 +285,7 @@ View3D_2::~View3D_2(void) {
 /*
  * View3D_2::GetCameraSyncNumber
  */
-unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
+unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
@@ -294,7 +294,7 @@ unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
 /*
  * View3D_2::SerialiseCamera
  */
-void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO implement
 }
 
@@ -302,7 +302,7 @@ void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
 /*
  * View3D_2::DeserialiseCamera
  */
-void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void nextgen::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO implement
 }
 
@@ -344,9 +344,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     if (this->overrideCall != nullptr) {
         if (cr3d != nullptr) {
-            RenderOutput* ro = dynamic_cast<RenderOutput*>(overrideCall);
+            view::RenderOutput* ro = dynamic_cast<view::RenderOutput*>(overrideCall);
             if (ro != nullptr) {
-                *static_cast<RenderOutput*>(cr3d) = *ro;
+                *static_cast<view::RenderOutput*>(cr3d) = *ro;
             }
         }
         this->overrideCall->EnableOutputBuffer();
@@ -486,17 +486,17 @@ void View3D_2::UpdateFreeze(bool freeze) {
 /*
  * View3D_2::OnKey
  */
-bool view::View3D_2::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
+    view::InputEvent evt;
+    evt.tag = view::InputEvent::Tag::Key;
     evt.keyData.key = key;
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D_2::FnOnKey)) return false;
+    if (!(*cr)(nextgen::CallRender3D_2::FnOnKey)) return false;
 
     return true;
 }
@@ -504,15 +504,15 @@ bool view::View3D_2::OnKey(Key key, KeyAction action, Modifiers mods) {
 /*
  * View3D_2::OnChar
  */
-bool view::View3D_2::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Char;
+    view::InputEvent evt;
+    evt.tag = view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D_2::FnOnChar)) return false;
+    if (!(*cr)(nextgen::CallRender3D_2::FnOnChar)) return false;
 
     return true;
 }
@@ -520,14 +520,14 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
 /*
  * View3D_2::OnMouseButton
  */
-bool view::View3D_2::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
     // This mouse handling/mapping is so utterly weird and should die!
-    auto down = action == MouseButtonAction::PRESS;
-    if (mods.test(Modifier::SHIFT)) {
+    auto down = action == view::MouseButtonAction::PRESS;
+    if (mods.test(view::Modifier::SHIFT)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    } else if (mods.test(Modifier::CTRL)) {
+    } else if (mods.test(view::Modifier::CTRL)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    } else if (mods.test(Modifier::ALT)) {
+    } else if (mods.test(view::Modifier::ALT)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
@@ -546,16 +546,16 @@ bool view::View3D_2::OnMouseButton(MouseButton button, MouseButtonAction action,
             break;
         }
     } else {
-        auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+        auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
         if (cr == NULL) return false;
 
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseButton;
+        view::InputEvent evt;
+        evt.tag = view::InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRender3D_2::FnOnMouseButton)) return false;
+        if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseButton)) return false;
     }
     return true;
 }
@@ -563,7 +563,7 @@ bool view::View3D_2::OnMouseButton(MouseButton button, MouseButtonAction action,
 /*
  * View3D_2::OnMouseMove
  */
-bool view::View3D_2::OnMouseMove(double x, double y) {
+bool nextgen::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
@@ -571,14 +571,14 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
     } else {
-        auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+        auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
         if (cr) {
-            InputEvent evt;
-            evt.tag = InputEvent::Tag::MouseMove;
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if (!(*cr)(view::CallRender3D_2::FnOnMouseMove)) {
+            if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseMove)) {
                 return false;
             }
         }
@@ -590,16 +590,16 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
 /*
  * View3D_2::OnMouseScroll
  */
-bool view::View3D_2::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseScroll;
+    view::InputEvent evt;
+    evt.tag = view::InputEvent::Tag::MouseScroll;
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D_2::FnOnMouseScroll)) return false;
+    if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseScroll)) return false;
 
     return true;
 }
@@ -680,7 +680,7 @@ void View3D_2::renderLookAt(void) {
 /*
  * View3D_2::OnGetCamParams
  */
-bool View3D_2::OnGetCamParams(CallCamParamSync& c) {
+bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
     // TODO implement
     return true;
 }

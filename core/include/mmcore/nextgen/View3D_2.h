@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
-#include "AbstractCamParamSync.h"
+#include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -41,9 +41,9 @@
 
 namespace megamol {
 namespace core {
-namespace view {
+namespace nextgen {
 
-class MEGAMOLCORE_API View3D_2 : public AbstractRenderingView, public AbstractCamParamSync {
+class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView, public view::AbstractCamParamSync {
 
 public:
     /**
@@ -142,11 +142,11 @@ public:
      */
     virtual void UpdateFreeze(bool freeze);
 
-    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+    virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 
     virtual bool OnChar(unsigned int codePoint) override;
 
-    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+    virtual bool OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) override;
 
     virtual bool OnMouseMove(double x, double y) override;
 
@@ -219,7 +219,7 @@ protected:
      *
      * @return true in case of success, false otherwise.
      */
-    virtual bool OnGetCamParams(CallCamParamSync& c);
+    virtual bool OnGetCamParams(view::CallCamParamSync& c);
 
     /**
      * Stores the current camera settings
@@ -340,7 +340,7 @@ protected:
     float lightColAmb[4];
 
     /** The incoming call */
-    AbstractCallRender* overrideCall;
+    view::AbstractCallRender* overrideCall;
 
     /** The move step size in world coordinates */
     param::ParamSlot viewKeyMoveStepSlot;
@@ -418,10 +418,10 @@ protected:
     float mouseY;
 
     /** The mouse flags */
-    MouseFlags mouseFlags;
+    view::MouseFlags mouseFlags;
 
     /** The time control */
-    TimeControl timeCtrl;
+    view::TimeControl timeCtrl;
 
     /** Flag whether mouse control is to be handed over to the renderer */
     bool toggleMouseSelection;

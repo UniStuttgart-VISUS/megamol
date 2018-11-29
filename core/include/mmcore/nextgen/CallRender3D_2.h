@@ -13,13 +13,13 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender3D_2.h"
+#include "mmcore/nextgen/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutput.h"
 
 namespace megamol {
 namespace core {
-namespace view {
+namespace nextgen {
 #ifdef _WIN32
 #    pragma warning(disable : 4250) // I know what I am doing ...
 #endif /* _WIN32 */
@@ -35,7 +35,7 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public RenderOutput {
+class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public view::RenderOutput {
 public:
     /**
      * Answer the name of the objects of this description.
@@ -89,7 +89,7 @@ public:
      *
      * @return The mouse flags
      */
-    inline MouseFlags GetMouseFlags(void) const {
+    inline view::MouseFlags GetMouseFlags(void) const {
         return this->mouseFlags;
     }
 
@@ -118,7 +118,7 @@ public:
      * @param y The mouse y coordinate in world space
      * @param flags The mouse flags
      */
-    inline void SetMouseInfo(float x, float y, MouseFlags flags) {
+    inline void SetMouseInfo(float x, float y, view::MouseFlags flags) {
         this->mouseX = x;
         this->mouseY = y;
         this->mouseFlags = flags;
@@ -159,7 +159,7 @@ private:
     float mouseY;
 
     /** The mouse flags for the mouse event */
-    MouseFlags mouseFlags;
+    view::MouseFlags mouseFlags;
 
     /** The current state of the mouse toggle selection */
     bool mouseSelection;

@@ -20,7 +20,7 @@
 
 namespace megamol {
 namespace core {
-namespace view {
+namespace nextgen {
 
 /**
  * New and improved base class of rendering graph 3D renderer modules.
@@ -34,7 +34,6 @@ public:
     virtual ~Renderer3DModule_2(void);
 
 protected:
-
     /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
@@ -66,7 +65,7 @@ protected:
      * @return 'true' if the mouse event was consumed by the renderer and
      *         must be ignored by the view or subsequent renderer modules.
      */
-    virtual bool MouseEvent(float x, float y, MouseFlags flags);
+    virtual bool MouseEvent(float x, float y, view::MouseFlags flags);
 
     /**
      * The chained get extents callback. The module should set the members of
@@ -100,10 +99,9 @@ protected:
      * @return 'true' if the mouse event was consumed by the renderer and
      *         must be ignored by the view or subsequent renderer modules.
      */
-    virtual bool MouseEventChain(float x, float y, MouseFlags flags);
+    virtual bool MouseEventChain(float x, float y, view::MouseFlags flags);
 
 private:
-
     /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
@@ -141,7 +139,7 @@ private:
     CalleeSlot renderSlot;
 };
 
-} /* end namespace view */
+} // namespace nextgen
 } /* end namespace core */
 } /* end namespace megamol */
 

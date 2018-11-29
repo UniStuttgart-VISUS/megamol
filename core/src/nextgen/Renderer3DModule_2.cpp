@@ -6,15 +6,15 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/view/Renderer3DModule_2.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/nextgen/Renderer3DModule_2.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 
 using namespace megamol::core;
 
 /*
- * view::Renderer3DModule_2::Renderer3DModule_2
+ * nextgen::Renderer3DModule_2::Renderer3DModule_2
  */
-view::Renderer3DModule_2::Renderer3DModule_2(void)
+nextgen::Renderer3DModule_2::Renderer3DModule_2(void)
     : Module()
     , renderSlot("rendering", "Connects the renderer to a view")
     , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer") {
@@ -32,23 +32,23 @@ view::Renderer3DModule_2::Renderer3DModule_2(void)
 }
 
 /*
- * view::Renderer3DModule_2::~Renderer3DModule_2
+ * nextgen::Renderer3DModule_2::~Renderer3DModule_2
  */
-view::Renderer3DModule_2::~Renderer3DModule_2(void) {
+nextgen::Renderer3DModule_2::~Renderer3DModule_2(void) {
     // intentionally empty
 }
 
 /*
- * view::Renderer3DModule_2::MouseEvent
+ * nextgen::Renderer3DModule_2::MouseEvent
  */
-bool view::Renderer3DModule_2::MouseEvent(float x, float y, MouseFlags flags) { return false; }
+bool nextgen::Renderer3DModule_2::MouseEvent(float x, float y, view::MouseFlags flags) { return false; }
 
 /*
- * view::Renderer3DModule_2::OnMouseEventCallback
+ * nextgen::Renderer3DModule_2::OnMouseEventCallback
  */
-bool view::Renderer3DModule_2::OnMouseEventCallback(Call& call) {
+bool nextgen::Renderer3DModule_2::OnMouseEventCallback(Call& call) {
     try {
-        view::CallRender3D_2& cr3d = dynamic_cast<view::CallRender3D_2&>(call);
+        nextgen::CallRender3D_2& cr3d = dynamic_cast<nextgen::CallRender3D_2&>(call);
         return this->MouseEvent(cr3d.GetMouseX(), cr3d.GetMouseY(), cr3d.GetMouseFlags());
     } catch (...) {
         ASSERT("OnMouseEventCallback call cast failed\n");
@@ -57,13 +57,13 @@ bool view::Renderer3DModule_2::OnMouseEventCallback(Call& call) {
 }
 
 /*
- * view::Renderer3DModule_2::GetExtentsChain
+ * nextgen::Renderer3DModule_2::GetExtentsChain
  */
-bool view::Renderer3DModule_2::GetExtentsChain(Call& call) {
-    view::CallRender3D_2* cr3d = dynamic_cast<view::CallRender3D_2*>(&call);
+bool nextgen::Renderer3DModule_2::GetExtentsChain(Call& call) {
+    nextgen::CallRender3D_2* cr3d = dynamic_cast<nextgen::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
-    view::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    nextgen::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<nextgen::CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
         *chainedCall = *cr3d;
@@ -81,13 +81,13 @@ bool view::Renderer3DModule_2::GetExtentsChain(Call& call) {
 }
 
 /*
- * view::Renderer3DModule_2::RenderChain
+ * nextgen::Renderer3DModule_2::RenderChain
  */
-bool view::Renderer3DModule_2::RenderChain(Call& call) { 
-    view::CallRender3D_2* cr3d = dynamic_cast<view::CallRender3D_2*>(&call);
+bool nextgen::Renderer3DModule_2::RenderChain(Call& call) {
+    nextgen::CallRender3D_2* cr3d = dynamic_cast<nextgen::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
-    view::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    nextgen::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<nextgen::CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
         *chainedCall = *cr3d;
@@ -105,6 +105,6 @@ bool view::Renderer3DModule_2::RenderChain(Call& call) {
 }
 
 /*
- * view::Renderer3DModule_2::MouseEventChain
+ * nextgen::Renderer3DModule_2::MouseEventChain
  */
-bool view::Renderer3DModule_2::MouseEventChain(float x, float y, view::MouseFlags flags) { return false; }
+bool nextgen::Renderer3DModule_2::MouseEventChain(float x, float y, view::MouseFlags flags) { return false; }

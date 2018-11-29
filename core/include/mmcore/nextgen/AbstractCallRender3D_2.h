@@ -22,7 +22,7 @@
 
 namespace megamol {
 namespace core {
-namespace view {
+namespace nextgen {
 
 /**
  * New and improved base class of rendering graph calls
@@ -36,7 +36,7 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API AbstractCallRender3D_2 : public AbstractCallRender {
+class MEGAMOLCORE_API AbstractCallRender3D_2 : public view::AbstractCallRender {
 public:
     virtual ~AbstractCallRender3D_2(void);
 
