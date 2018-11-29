@@ -66,14 +66,6 @@ if(BUILD_CORE)
     DEPENDS libcppzmq_ext
     INCLUDE_DIR "src/libcppzmq_ext/")
 
-  add_external_project(GLM_ext
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG "0.9.6.3"
-    CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
-  add_external_library(GLM INTERFACE
-    DEPENDS GLM_ext
-    INCLUDE_DIR "src/GLM_ext")
-
   # Add zlib.
   if(MSVC)
     set(ZLIB_DEBUG "lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -162,7 +154,8 @@ if(BUILD_CORE)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
   add_external_library(glm INTERFACE
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
@@ -195,7 +188,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad GLM zlib libpng ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm zlib libpng ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
