@@ -66,7 +66,7 @@ void moldyn::MMPLDWriter::release(void) {}
 
 
 /*
- * moldyn::MMPLDWriter::run
+ * moldyn::MMPLDWriter::`
  */
 bool moldyn::MMPLDWriter::run(void) {
     using vislib::sys::Log;

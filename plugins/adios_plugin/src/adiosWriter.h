@@ -1,13 +1,11 @@
 #pragma once
 
 #include <adios2.h>
-#include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
-#include "vislib/math/Cuboid.h"
 #include "CallADIOSData.h"
+#include "mmcore/AbstractDataWriter.h"
 #ifdef WITH_MPI
 #    include <mpi.h>
 #endif
@@ -15,21 +13,21 @@
 namespace megamol {
 namespace adios {
 
-class adiosDataSource : public core::Module {
+class adiosWriter : public core::AbstractDataWriter {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "adiosDataSource"; }
+    static const char* ClassName(void) { return "adiosWriter"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source module for ADIOS-based IO."; }
+    static const char* Description(void) { return "Data writer module for ADIOS-based IO."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -39,33 +37,31 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    adiosDataSource(void);
+    adiosWriter(void);
 
     /** Dtor. */
-    virtual ~adiosDataSource(void);
+    virtual ~adiosWriter(void);
 
     bool create(void);
 
 protected:
     void release(void);
 
-    /**
-     * Loads inquired data.
+        /**
+     * The main function
      *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
+     * @return True on success
      */
-    bool getDataCallback(core::Call& caller);
+    virtual bool run(void);
 
     /**
-     * Get meta data.
+     * Function querying the writers capabilities
      *
-     * @param caller The calling call.
+     * @param call The call to receive the capabilities
      *
-     * @return 'true' on success, 'false' on failure.
+     * @return True on success
      */
-    bool getHeaderCallback(core::Call& caller);
+    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
 
 private:
     /** slot for MPIprovider */
@@ -78,38 +74,19 @@ private:
     int mpiRank = -1, mpiSize = -1;
 #endif
 
-    bool filenameChanged(core::param::ParamSlot& slot);
-
-    /** The slot for requesting data */
-    core::CalleeSlot getData;
-
-    /** The frame index table */
-    //std::vector<UINT64> frameIdx;
-
-    /** Data file load id counter */
-    size_t data_hash;
-
-    /** The file name */
+    /** The file name of the file to be written */
     core::param::ParamSlot filename;
 
-    int step = 0;
-
-    int particleCount = 0;
-
-    bool first_step = true;
-
-    size_t frameCount;
-    size_t loadedFrameID;
+    /** The slot asking for data */
+    core::CallerSlot getData;
 
     bool MpiInitialized = false;
 
     // ADIOS Stuff
     adios2::ADIOS adiosInst;
-
     std::shared_ptr<adios2::IO> io;
-    adios2::Engine reader;
-    std::map<std::string, adios2::Params> variables;
-    adiosDataMap dataMap;
+    adios2::Engine writer;
+
 };
 
 
