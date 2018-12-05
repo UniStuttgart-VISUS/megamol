@@ -49,6 +49,9 @@ public:
     /** possible values for the id data */
     enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
 
+    /**
+     * This class holds the accessors to the current data.
+     */
     class ParticleStore {
     public:
         explicit ParticleStore() = default;
@@ -1015,6 +1018,11 @@ public:
         }
     }
 
+    /**
+     * Get instance of particle store call the accessors.
+     * 
+     * @return Instance of particle store.
+     */
     ParticleStore const& GetParticleStore() const { return this->par_store_; }
 
     /**
@@ -1157,6 +1165,7 @@ private:
     /** Polymorphic id access object */
     std::unique_ptr<IDData_Detail> idAccessor;
 
+    /** Instance of the particle store */
     ParticleStore par_store_;
 };
 

@@ -10,8 +10,16 @@ template <class T> T const* access(char const* ptr, size_t idx, size_t stride) {
 }
 
 
+/**
+ * Interface for accessor classes.
+ */
 class Accessor {
 public:
+    Accessor() = default;
+    Accessor(Accessor const& rhs) = default;
+    Accessor(Accessor&& rhs) noexcept = default;
+    Accessor& operator=(Accessor const& rhs) = default;
+    Accessor& operator=(Accessor&& rhs) noexcept = default;
     virtual float Get_f(size_t idx) const = 0;
     virtual double Get_d(size_t idx) const = 0;
     virtual uint64_t Get_u64(size_t idx) const = 0;
@@ -22,9 +30,32 @@ public:
 };
 
 
+/**
+ * Implementation of an accessor into a strided array.
+ */
 template <class T> class Accessor_Impl : public Accessor {
 public:
     Accessor_Impl(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
+
+    Accessor_Impl(Accessor_Impl const& rhs) : ptr_{rhs.ptr_}, stride_{rhs.stride_} {}
+
+    Accessor_Impl(Accessor_Impl&& rhs) noexcept : ptr_{nullptr}, stride_{0} {
+        std::swap(ptr_, rhs.ptr_);
+        std::swap(stride_, rhs.stride_);
+    }
+
+    Accessor_Impl& operator=(Accessor_Impl const& rhs) {
+        ptr_ = rhs.ptr_;
+        stride_ = rhs.stride_;
+        return *this;
+    }
+
+    Accessor_Impl& operator=(Accessor_Impl&& rhs) noexcept {
+        *this = rhs;
+        rhs.ptr_ = nullptr;
+        rhs.stride_ = 0;
+        return *this;
+    }
 
     template <class R> std::enable_if_t<std::is_same_v<T, R>, R> Get(size_t const idx) const {
         return *access<T>(ptr_, idx, stride_);
@@ -54,9 +85,20 @@ private:
 };
 
 
+/**
+ * Dummy accessor for an empty array;
+ */
 class Accessor_0 : public Accessor {
 public:
     Accessor_0() = default;
+
+    Accessor_0(Accessor_0 const& rhs) = default;
+
+    Accessor_0(Accessor_0&& rhs) = default;
+
+    Accessor_0& operator=(Accessor_0 const& rhs) = default;
+
+    Accessor_0& operator=(Accessor_0&& rhs) = default;
 
     float Get_f(size_t idx) const override { return static_cast<float>(0); }
 
