@@ -21,10 +21,7 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     , maxColI(1.0f), minColI(0.0f), radius(0.5f), particleType(0)
     , vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0)
     , disabledNullChecks(false), clusterInfos(NULL)
-    , idDataType{IDDATA_NONE}, idPtr{nullptr}, idStride{0}
-    , vertexAccessor{new VertexData_None{ }}
-    , colorAccessor{new ColorData_None{ }}
-    , idAccessor{new IDData_None{ }} {
+    , idDataType{IDDATA_NONE}, idPtr{nullptr}, idStride{0} {
     this->col[0] = 255;
     this->col[1] = 0;
     this->col[2] = 0;
@@ -81,9 +78,6 @@ moldyn::SimpleSphericalParticles::operator=(
     this->idDataType = rhs.idDataType;
     this->idPtr = rhs.idPtr;
     this->idStride = rhs.idStride;
-    this->vertexAccessor = rhs.vertexAccessor->Clone();
-    this->colorAccessor = rhs.colorAccessor->Clone();
-    this->idAccessor = rhs.idAccessor->Clone();
     this->par_store_ = rhs.par_store_;
     return *this;
 }
