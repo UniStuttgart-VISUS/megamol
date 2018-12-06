@@ -49,15 +49,16 @@ namespace moldyn {
             void SetDirData(DirectionalParticles::DirDataType const t, void const* p, unsigned int const s = 0) {
                 switch (t) {
                 case DIRDATA_FLOAT_XYZ: {
-                    this->dx_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p), s));
-                    this->dy_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + sizeof(float), s));
-                    this->dz_acc_.reset(
-                        new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
+                    this->dx_acc_ = std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p), s);
+                    this->dy_acc_ =
+                        std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p) + sizeof(float), s);
+                    this->dz_acc_ =
+                        std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s);
                 } break;
                 default: {
-                    this->dx_acc_.reset(new Accessor_0());
-                    this->dy_acc_.reset(new Accessor_0());
-                    this->dz_acc_.reset(new Accessor_0());
+                    this->dx_acc_ = std::make_shared<Accessor_0>();
+                    this->dy_acc_ = std::make_shared<Accessor_0>();
+                    this->dz_acc_ = std::make_shared<Accessor_0>();
                 }
                 }
             }
