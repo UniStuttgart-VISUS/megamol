@@ -64,7 +64,7 @@ public:
 
         ParticleStore& operator=(ParticleStore&& rhs) = delete;*/
 
-        void SetVertexData(SimpleSphericalParticles::VertexDataType const t, const void* p, unsigned int const s = 0) {
+        void SetVertexData(SimpleSphericalParticles::VertexDataType const t, const void* p, unsigned int const s = 0, float const globRad = 0.5f) {
             switch (t) {
             case SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ: {
                 this->x_acc_ = std::make_shared<Accessor_Impl<double>>(reinterpret_cast<const char*>(p), s);
@@ -72,7 +72,7 @@ public:
                     std::make_shared<Accessor_Impl<double>>(reinterpret_cast<const char*>(p) + sizeof(double), s);
                 this->z_acc_ =
                     std::make_shared<Accessor_Impl<double>>(reinterpret_cast<const char*>(p) + 2 * sizeof(double), s);
-                this->r_acc_ = std::make_shared<Accessor_0>();
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: {
                 this->x_acc_ = std::make_shared<Accessor_Impl<float>>(reinterpret_cast<const char*>(p), s);
@@ -80,7 +80,7 @@ public:
                     std::make_shared<Accessor_Impl<float>>(reinterpret_cast<const char*>(p) + sizeof(float), s);
                 this->z_acc_ =
                     std::make_shared<Accessor_Impl<float>>(reinterpret_cast<const char*>(p) + 2 * sizeof(float), s);
-                this->r_acc_ = std::make_shared<Accessor_0>();
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: {
                 this->x_acc_ = std::make_shared<Accessor_Impl<float>>(reinterpret_cast<const char*>(p), s);
@@ -97,19 +97,19 @@ public:
                     reinterpret_cast<const char*>(p) + sizeof(unsigned short), s);
                 this->z_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(
                     reinterpret_cast<const char*>(p) + 2 * sizeof(unsigned short), s);
-                this->r_acc_ = std::make_shared<Accessor_0>();
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_NONE:
             default: {
                 this->x_acc_ = std::make_shared<Accessor_0>();
                 this->y_acc_ = std::make_shared<Accessor_0>();
                 this->z_acc_ = std::make_shared<Accessor_0>();
-                this->r_acc_ = std::make_shared<Accessor_0>();
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
             }
             }
         }
 
-        void SetColorData(SimpleSphericalParticles::ColourDataType const t, void const* p, unsigned int const s = 0) {
+        void SetColorData(SimpleSphericalParticles::ColourDataType const t, void const* p, unsigned int const s = 0, unsigned char const r = 255, unsigned char const g = 255, unsigned char const b = 255, unsigned char const a = 255) {
             switch (t) {
             case SimpleSphericalParticles::COLDATA_DOUBLE_I: {
                 this->cr_acc_ = std::make_shared<Accessor_Impl<double>>(reinterpret_cast<char const*>(p), s);
@@ -129,7 +129,7 @@ public:
                     std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p) + sizeof(float), s);
                 this->cb_acc_ =
                     std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s);
-                this->ca_acc_ = std::make_shared<Accessor_0>();
+                this->ca_acc_ = std::make_shared<Accessor_Val<float>>(1.0f);
             } break;
             case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: {
                 this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(reinterpret_cast<char const*>(p), s);
@@ -146,7 +146,7 @@ public:
                     reinterpret_cast<char const*>(p) + sizeof(unsigned char), s);
                 this->cb_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(
                     reinterpret_cast<char const*>(p) + 2 * sizeof(unsigned char), s);
-                this->ca_acc_ = std::make_shared<Accessor_0>();
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(255);
             } break;
             case SimpleSphericalParticles::COLDATA_UINT8_RGBA: {
                 this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(reinterpret_cast<char const*>(p), s);
@@ -168,10 +168,10 @@ public:
             } break;
             case SimpleSphericalParticles::COLDATA_NONE:
             default: {
-                this->cr_acc_ = std::make_shared<Accessor_0>();
-                this->cg_acc_ = std::make_shared<Accessor_0>();
-                this->cb_acc_ = std::make_shared<Accessor_0>();
-                this->ca_acc_ = std::make_shared<Accessor_0>();
+                this->cr_acc_ = std::make_shared<Accessor_Val<unsigned char>>(r);
+                this->cg_acc_ = std::make_shared<Accessor_Val<unsigned char>>(g);
+                this->cb_acc_ = std::make_shared<Accessor_Val<unsigned char>>(b);
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(a);
             }
             }
         }
@@ -374,7 +374,7 @@ public:
         this->colPtr = p;
         this->colStride = s == 0 ? ColorDataSize[t] : s;
 
-        this->par_store_.SetColorData(t, p, this->colStride);
+        this->par_store_.SetColorData(t, p, this->colStride, this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
     /**
@@ -421,6 +421,8 @@ public:
         this->col[1] = g;
         this->col[2] = b;
         this->col[3] = a;
+
+        this->par_store_.SetColorData(this->colDataType, this->colPtr, this->colStride, this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
     /**
@@ -428,7 +430,10 @@ public:
      *
      * @param r The global radius
      */
-    void SetGlobalRadius(float r) { this->radius = r; }
+    void SetGlobalRadius(float r) {
+        this->radius = r;
+        this->par_store_.SetVertexData(this->vertDataType, this->vertPtr, this->vertStride, this->radius);
+    }
 
     /**
      * Sets the global particle type
@@ -451,7 +456,7 @@ public:
         this->vertPtr = p;
         this->vertStride = s == 0 ? VertexDataSize[t] : s;
 
-        this->par_store_.SetVertexData(t, p, this->vertStride);
+        this->par_store_.SetVertexData(t, p, this->vertStride, this->radius);
     }
 
     /**

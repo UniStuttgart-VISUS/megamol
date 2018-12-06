@@ -101,6 +101,43 @@ private:
 
 
 /**
+ * Accessor class reporting const values, for instance globals.
+ */
+template <class T>
+class Accessor_Val : public Accessor {
+public:
+    Accessor_Val(T const val) : val_(val) {}
+
+    Accessor_Val(Accessor_Val const& rhs) = default;
+
+    Accessor_Val(Accessor_Val&& rhs) = default;
+
+    Accessor_Val& operator=(Accessor_Val const& rhs) = default;
+
+    Accessor_Val& operator=(Accessor_Val&& rhs) = default;
+
+    template <class R> R Get() const { return static_cast<R>(this->val_); }
+
+    float Get_f(size_t idx) const override { return Get<float>(); }
+
+    double Get_d(size_t idx) const override { return Get<double>(); }
+
+    uint64_t Get_u64(size_t idx) const override { return Get<uint64_t>(); }
+
+    unsigned int Get_u32(size_t idx) const override { return Get<unsigned int>(); }
+
+    unsigned short Get_u16(size_t idx) const override { return Get<unsigned short>(); }
+
+    unsigned char Get_u8(size_t idx) const override { return Get<unsigned char>(); }
+
+    virtual ~Accessor_Val() = default;
+
+private:
+    T val_;
+};
+
+
+/**
  * Dummy accessor for an empty array;
  */
 class Accessor_0 : public Accessor {
