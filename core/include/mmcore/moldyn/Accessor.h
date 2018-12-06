@@ -1,5 +1,20 @@
 #pragma once
 
+#include <type_traits>
+
+#if !defined(_MSC_VER)
+#    if (__cplusplus < 201703L)
+namespace std {
+template <class T, class U> constexpr bool is_same_v = is_same<T, U>::value;
+}
+#    endif
+#    if (__cplusplus < 201402L)
+namespace std {
+template <bool B, class T = void> using enable_if_t = typename enable_if<B, T>::type;
+}
+#    endif
+#endif
+
 namespace megamol {
 namespace core {
 namespace moldyn {
