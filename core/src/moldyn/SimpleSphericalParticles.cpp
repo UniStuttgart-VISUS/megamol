@@ -26,6 +26,10 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     this->col[1] = 0;
     this->col[2] = 0;
     this->col[3] = 255;
+
+    this->par_store_.SetVertexData(VERTDATA_NONE, nullptr);
+    this->par_store_.SetColorData(COLDATA_NONE, nullptr);
+    this->par_store_.SetIDData(IDDATA_NONE, nullptr);
 }
 
 

@@ -40,6 +40,40 @@ namespace moldyn {
         static unsigned int DirDataSize[2];
 
         /**
+         * This class holds the accessors to the current data.
+         */
+        class DirectionalParticleStore : public ParticleStore {
+        public:
+            explicit DirectionalParticleStore() = default;
+
+            void SetDirData(DirectionalParticles::DirDataType const t, void const* p, unsigned int const s = 0) {
+                switch (t) {
+                case DIRDATA_FLOAT_XYZ: {
+                    this->dx_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p), s));
+                    this->dy_acc_.reset(new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + sizeof(float), s));
+                    this->dz_acc_.reset(
+                        new Accessor_Impl<float>(reinterpret_cast<char const*>(p) + 2 * sizeof(float), s));
+                } break;
+                default: {
+                    this->dx_acc_.reset(new Accessor_0());
+                    this->dy_acc_.reset(new Accessor_0());
+                    this->dz_acc_.reset(new Accessor_0());
+                }
+                }
+            }
+
+            std::shared_ptr<Accessor> const& GetDXAcc() const { return this->dx_acc_; }
+
+            std::shared_ptr<Accessor> const& GetDYAcc() const { return this->dy_acc_; }
+
+            std::shared_ptr<Accessor> const& GetDZAcc() const { return this->dz_acc_; }
+        private:
+            std::shared_ptr<Accessor> dx_acc_;
+            std::shared_ptr<Accessor> dy_acc_;
+            std::shared_ptr<Accessor> dz_acc_;
+        };
+
+        /**
          * Ctor
          */
         DirectionalParticles(void);
@@ -96,6 +130,8 @@ namespace moldyn {
             this->dirDataType = t;
             this->dirPtr = p;
             this->dirStride = s == 0 ? DirDataSize[t] : s;
+
+            this->par_store_.SetDirData(t, p, this->dirStride);
         }
 
         /**
@@ -106,6 +142,7 @@ namespace moldyn {
         void SetCount(UINT64 cnt) {
             this->dirDataType = DIRDATA_NONE;
             this->dirPtr = NULL; // DO NOT DELETE
+            this->par_store_.SetDirData(DIRDATA_NONE, nullptr);
             SimpleSphericalParticles::SetCount(cnt);
         }
 
@@ -127,6 +164,13 @@ namespace moldyn {
          */
         bool operator==(const DirectionalParticles& rhs) const;
 
+        /**
+         * Get instance of particle store call the accessors.
+         *
+         * @return Instance of particle store.
+         */
+        DirectionalParticleStore const& GetParticleStore() const { return this->par_store_; }
+
     private:
 
         /** The direction data type */
@@ -137,6 +181,9 @@ namespace moldyn {
 
         /** The direction data stride */
         unsigned int dirStride;
+
+        /** Instance of the particle store */
+        DirectionalParticleStore par_store_;
 
     };
 

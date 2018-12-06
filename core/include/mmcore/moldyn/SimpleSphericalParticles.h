@@ -379,6 +379,10 @@ public:
         this->idDataType = IDDATA_NONE;
         this->idPtr = nullptr; // DO NOT DELETE
 
+        this->par_store_.SetVertexData(VERTDATA_NONE, nullptr);
+        this->par_store_.SetColorData(COLDATA_NONE, nullptr);
+        this->par_store_.SetIDData(IDDATA_NONE, nullptr);
+
         this->count = cnt;
     }
 
