@@ -266,6 +266,15 @@ private:
     /** New radius computed param */
     core::param::ParamSlot radiusSelectionSlot;
 
+    /** Scaling parameter for the brim radius */
+    core::param::ParamSlot brimScalingParam;
+
+    /** Scaling parameter for the sombrero radius */
+    core::param::ParamSlot radiusScalingParam;
+
+    /** Scaling parameter for the length of the sombrero */
+    core::param::ParamSlot lengthScalingParam;
+
     /** Vector containing the modified mesh data */
     std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
 

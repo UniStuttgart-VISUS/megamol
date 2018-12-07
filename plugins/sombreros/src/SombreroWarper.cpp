@@ -14,9 +14,9 @@
 #include "TunnelResidueDataCall.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "tesselator.h"
 #include "vislib/math/Matrix.h"
@@ -54,7 +54,10 @@ SombreroWarper::SombreroWarper(void)
     , invertNormalParam("invertNormals", "Inverts the surface normals")
     , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
     , meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier")
-    , radiusSelectionSlot("radiusVariant", "Select the radius computation method") {
+    , radiusSelectionSlot("radiusVariant", "Select the radius computation method")
+    , brimScalingParam("scale::brimScaling", "Scaling factor for the brim radius")
+    , radiusScalingParam("scale::radiusScaling", "Scaling factor for the sombrero radius")
+    , lengthScalingParam("scale::lengthScaling", "Scaling factor for the sombrero length") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(
@@ -101,12 +104,21 @@ SombreroWarper::SombreroWarper(void)
     this->fixMeshParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->fixMeshParam);
 
-    param::EnumParam * ep = new param::EnumParam(0);
+    param::EnumParam* ep = new param::EnumParam(0);
     ep->SetTypePair(0, "Geometry-based");
     ep->SetTypePair(1, "Exit radius");
     ep->SetTypePair(2, "Bottleneck radius");
     this->radiusSelectionSlot << ep;
     this->MakeSlotAvailable(&this->radiusSelectionSlot);
+
+    this->brimScalingParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->brimScalingParam);
+
+    this->radiusScalingParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->radiusScalingParam);
+
+    this->lengthScalingParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->lengthScalingParam);
 
     this->lastDataHash = 0;
     this->hashOffset = 0;
@@ -861,7 +873,7 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         this->sombreroLength[i] = longestLength;*/
 
         if (tunnelCall.getTunnelNumber() > 0) {
-            this->sombreroLength[i] = tunnelCall.getTunnelDescriptions()[0].tunnelLength;
+            this->sombreroLength[i] = tunnelCall.getTunnelDescriptions()[0].tunnelLength * this->lengthScalingParam.Param<param::FloatParam>()->Value();
         }
 
         // the inner radius is the median of the sphere radii
@@ -922,8 +934,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         }
         this->brimWidth[i] = avg / static_cast<float>(this->brimIndices.size());
 
-        //vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
-        //vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
+        // vislib::sys::Log::DefaultLog.WriteWarn("Radius of %i is %f", static_cast<int>(i), this->sombreroRadius[i]);
+        // vislib::sys::Log::DefaultLog.WriteWarn("Brim width of %i is %f", static_cast<int>(i), this->brimWidth[i]);
 
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
@@ -1456,7 +1468,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
         float sombrad = lengthSum / (2.0f * thePi);
         this->sombreroRadiusNew[i] = sombrad;
 
-        //vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
+        // vislib::sys::Log::DefaultLog.WriteWarn("New radius of %i is %f", static_cast<int>(i), sombrad);
 
 #if 0 // switch for the colouring of the sweatedges
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
@@ -2259,28 +2271,29 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
     bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
 
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-        float minRad = this->sombreroRadius[i];
+        float minRad = this->sombreroRadius[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
         switch (radiusSelectionSlot.Param<param::EnumParam>()->Value()) {
         case 0: // Geometry-based
-            minRad = this->sombreroRadiusNew[i];
+            minRad = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             break;
         case 1: // Exit radius
             // do nothing since the radius is already correct
-            break; 
+            break;
         case 2: // Bottleneck radius
             if (tunnelCall.getTunnelNumber() > 0) {
-                minRad = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius;
+                minRad = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn("No tunnel descriptions given, falling back to geometry-based radius computation");
-                minRad = this->sombreroRadiusNew[i];
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No tunnel descriptions given, falling back to geometry-based radius computation");
+                minRad = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             }
             break;
         default:
-            minRad = this->sombreroRadiusNew[i];
+            minRad = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             break;
         }
 
-        float maxRad = minRad + this->brimWidth[i];
+        float maxRad = minRad + this->brimWidth[i] * this->brimScalingParam.Param<param::FloatParam>()->Value();
 
         std::set<uint> innerBorderSet;
         // go through all forward edges, if one vertex is on the brim and one is not, take the second one
@@ -2384,7 +2397,7 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
                     this->vertices[i][3 * v + 1] = maxHeight;
                 }
             } else {
-                float l = this->sombreroLength[i];
+                float l = this->sombreroLength[i] * this->lengthScalingParam.Param<param::FloatParam>()->Value();
                 float t = std::asinf((this->vertices[i][3 * v + 1] - maxHeight) / l);
                 float cost = std::cosf(t);
                 float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
@@ -2418,34 +2431,35 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
  * SombreroWarper::recomputeVertexNormals
  */
 bool SombreroWarper::recomputeVertexNormals(TunnelResidueDataCall& tunnelCall) {
-#ifdef NO_DEFORMATION // exit early if we want no new normals
-    return true;
-#endif
-
     bool flatmode = this->flatteningParam.Param<param::BoolParam>()->Value();
     bool invnormmode = this->invertNormalParam.Param<param::BoolParam>()->Value();
     this->brimNormals = this->normals;
     this->crownNormals = this->normals;
 
+#ifdef NO_DEFORMATION // exit early if we want no new normals
+    return true;
+#endif
+
     for (size_t i = 0; i < this->meshVector.size(); i++) {
         auto s_radius = this->sombreroRadius[i];
         switch (radiusSelectionSlot.Param<param::EnumParam>()->Value()) {
         case 0: // Geometry-based
-            s_radius = this->sombreroRadiusNew[i];
+            s_radius = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             break;
         case 1: // Exit radius
                 // do nothing since the radius is already correct
             break;
         case 2: // Bottleneck radius
             if (tunnelCall.getTunnelNumber() > 0) {
-                s_radius = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius;
+                s_radius = tunnelCall.getTunnelDescriptions()[0].bottleneckRadius * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             } else {
-                vislib::sys::Log::DefaultLog.WriteWarn("No tunnel descriptions given, falling back to geometry-based radius computation");
-                s_radius = this->sombreroRadiusNew[i];
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "No tunnel descriptions given, falling back to geometry-based radius computation");
+                s_radius = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             }
             break;
         default:
-            s_radius = this->sombreroRadiusNew[i];
+            s_radius = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             break;
         }
 
