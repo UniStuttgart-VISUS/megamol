@@ -291,29 +291,34 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             return std::exp(-x * x / (2.0f * sigma * sigma)) / std::sqrt(2.0f * M_PI * sigma * sigma);
         };
 
+        auto const& parStore = parts.GetParticleStore();
+        auto const& xAcc = parStore.GetXAcc();
+        auto const& yAcc = parStore.GetYAcc();
+        auto const& zAcc = parStore.GetZAcc();
+        auto const& rAcc = parStore.GetRAcc();
+
 #pragma omp parallel for
         for (int j = 0; j < parts.GetCount(); ++j) {
-            auto ppos = parts[j];
-            auto const x_base = ppos.vert.GetXf();
+            auto const x_base = xAcc->Get_f(j);
             auto x = static_cast<int>((x_base - minOSx) / sliceDistX);
             if (x < 0)
                 x = 0;
             else if (x >= sx)
                 x = sx - 1;
-            auto const y_base = ppos.vert.GetYf();
+            auto const y_base = yAcc->Get_f(j);
             auto y = static_cast<int>((y_base - minOSy) / sliceDistY);
             if (y < 0)
                 y = 0;
             else if (y >= sy)
                 y = sy - 1;
-            auto const z_base = ppos.vert.GetZf();
+            auto const z_base = zAcc->Get_f(j);
             auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
             if (z < 0)
                 z = 0;
             else if (z >= sz)
                 z = sz - 1;
             auto rad = globRad;
-            if (!useGlobRad) rad = ppos.vert.GetRf();
+            if (!useGlobRad) rad = rAcc->Get_f(j);
 
             for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {

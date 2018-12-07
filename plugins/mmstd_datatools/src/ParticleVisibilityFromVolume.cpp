@@ -189,12 +189,18 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
 #ifdef _OPENMP
         const auto numThreads = omp_get_num_threads();
 #endif
+
+        auto const& parStore = p.GetParticleStore();
+        auto const& xAcc = parStore.GetXAcc();
+        auto const& yAcc = parStore.GetYAcc();
+        auto const& zAcc = parStore.GetZAcc();
+
         // todo: is this OK?
         #pragma omp parallel for
         for (INT64 j = 0; j < cnt; ++j) {
-            const auto x = p[j].vert.GetXf();
-            const auto y = p[j].vert.GetYf();
-            const auto z = p[j].vert.GetZf();
+            const auto x = xAcc->Get_f(j);
+            const auto y = yAcc->Get_f(j);
+            const auto z = zAcc->Get_f(j);
 
             // relative coordinates in volume
             const auto rx = (x - volMeta->Origin[0]) / volMeta->SliceDists[0][0];
