@@ -1,7 +1,7 @@
 //
 // VTKLegacyDataLoaderUnstructuredGrid.cpp
 //
-// Copyright (C) 2013 by University of Stuttgart (VISUS).
+// Copyright (C) 2013-2018 by University of Stuttgart (VISUS).
 // All rights reserved.
 //
 // Created on : Sep 23, 2013
