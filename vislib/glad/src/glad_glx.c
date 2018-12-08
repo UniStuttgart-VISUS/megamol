@@ -83,10 +83,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <glad/glad_glx.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+
+#include <glad/glad_glx.h>
 
 static void* get_proc(const char *namez);
 
