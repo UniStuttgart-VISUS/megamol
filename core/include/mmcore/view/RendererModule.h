@@ -82,7 +82,6 @@ protected:
     virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
         MouseFlags mouseFlags;
         // Ugly mapping to deprecated functions (can be removed some day).
-        auto down = action == core::view::MouseButtonAction::PRESS;
         if (mods.test(core::view::Modifier::SHIFT)) {
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_MODKEY_SHIFT_DOWN, true);
         } else if (mods.test(core::view::Modifier::CTRL)) {
@@ -90,6 +89,7 @@ protected:
         } else if (mods.test(core::view::Modifier::ALT)) {
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_MODKEY_ALT_DOWN, true);
         }
+        auto down = action == core::view::MouseButtonAction::PRESS;
         if (button == MouseButton::BUTTON_LEFT) {
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
         } else if (button == MouseButton::BUTTON_RIGHT) {
@@ -101,7 +101,8 @@ protected:
 		// - Could be "world space" (see View2D/View3D) instead of window space!
 		// - If so, then provide a freaking method in the Call to the the transformation instead of passing around black magic!
         this->MouseEvent(lastX, lastY, mouseFlags);
-        return down;
+		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
+        return false;
     }
 
     virtual bool OnMouseMove(double x, double y) {
@@ -109,6 +110,7 @@ protected:
         this->lastX = x;
         this->lastY = y;
         this->MouseEvent(x, y, 0);
+		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
         return false;
     }
 
