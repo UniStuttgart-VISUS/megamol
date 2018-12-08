@@ -243,7 +243,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainMenu() {
 
 
 template <class M, class C> bool GUIRenderer<M, C>::GetExtents(C& call) {
-    auto* cr = this->decoratedRendererSlot.CallAs<C>();
+    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
@@ -255,7 +255,7 @@ template <class M, class C> bool GUIRenderer<M, C>::GetExtents(C& call) {
 
 
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
-    auto* cr = this->decoratedRendererSlot.CallAs<C>();
+    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnRender)) {
