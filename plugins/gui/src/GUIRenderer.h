@@ -242,13 +242,33 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainMenu() {
 }
 
 
-template <class M, class C> bool GUIRenderer<M, C>::GetExtents(C& call) {
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+template <>
+inline bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(
+    core::view::CallRender2D& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender2D>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
             call = (*cr);
         }
+    } else {
+        call.SetBoundingBox(vislib::math::Rectangle<float>(0, 1, 1, 0));
+    }
+    return true;
+}
+
+
+template <>
+inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(
+    core::view::CallRender3D& call) {
+    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender3D>();
+    if (cr != NULL) {
+        (*cr) = call;
+        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
+            call = (*cr);
+        }
+    } else {
+        // TODO: set dummy bounding box?
     }
     return true;
 }
