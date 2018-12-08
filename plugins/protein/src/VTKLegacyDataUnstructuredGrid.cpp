@@ -17,13 +17,11 @@ using namespace megamol;
 using namespace megamol::protein;
 
 
-
 /*
  * VTKLegacyDataUnstructuredGrid::AddPointData
  */
-void VTKLegacyDataUnstructuredGrid::AddPointData(const char *data,
-        size_t nElements, size_t nComponents,
-        DataType type, vislib::StringA name) {
+void VTKLegacyDataUnstructuredGrid::AddPointData(
+    const char* data, size_t nElements, size_t nComponents, DataType type, vislib::StringA name) {
 
     // Add new element to point data array
     this->pointData.SetCount(this->pointData.Count() + 1);
@@ -34,11 +32,8 @@ void VTKLegacyDataUnstructuredGrid::AddPointData(const char *data,
 /*
  * VTKLegacyDataUnstructuredGrid::VTKLegacyDataUnstructuredGrid
  */
-VTKLegacyDataUnstructuredGrid::VTKLegacyDataUnstructuredGrid() :
-        AbstractVTKLegacyData(), points(NULL), nPoints(0), cells(NULL),
-        nCells(0), cellTypes(NULL), nCellData(0) {
-
-}
+VTKLegacyDataUnstructuredGrid::VTKLegacyDataUnstructuredGrid()
+    : AbstractVTKLegacyData(), points(NULL), nPoints(0), cells(NULL), nCells(0), cellTypes(NULL), nCellData(0) {}
 
 
 /*
@@ -58,8 +53,7 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
     using namespace vislib::sys;
 
     if (idx >= this->pointData.Count()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Requested idx out of bound, returning NULL.");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Requested idx out of bound, returning NULL.");
         return NULL;
     } else {
         return &this->pointData[idx];
@@ -70,7 +64,8 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
 /*
  * VTKLegacyDataUnstructuredGrid::PeekPointDataByName
  */
-const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByName(vislib::StringA name) const {
+const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByName(
+    vislib::StringA name) const {
 
     using namespace vislib::sys;
 
@@ -87,17 +82,9 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
 
     // If the id is not in use: return null
     if (!isUsed) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Requested id '%s' not in use, returning NULL.",
-                name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Requested id '%s' not in use, returning NULL.", name.PeekBuffer());
         return NULL;
     } else { // else: return the data array
         return &this->pointData[idx];
     }
 }
-
-
-
-
-
-
