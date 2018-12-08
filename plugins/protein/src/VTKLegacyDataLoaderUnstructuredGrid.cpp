@@ -48,7 +48,7 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid() :
         maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache"),
         mpdcAttributeSlot("mpdcAttribute", "The name of the point data attribute to be sent with MultiParticleDataCall"),
         globalRadiusParam("globalRadius", "The global radius to be sent with MultiParticleDataCall"),
-        hash(0), nFrames(0), readPointData(false), readCellData(false),
+        hash(0), filenamesDigits(0), nFrames(0), readPointData(false), readCellData(false),
         bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
 
     // Unstructured grid data
@@ -239,29 +239,29 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                             this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())->PeekData(), 0);
             }
 #else
-			std::vector<float> dataVec;
-			dataVec.resize(fr->GetNumberOfPoints() * 4);
-			
-			const float * velPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("velocity")->PeekData());
-			const float * conPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("concentration")->PeekData());
+            std::vector<float> dataVec;
+            dataVec.resize(fr->GetNumberOfPoints() * 4);
+            
+            const float * velPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("velocity")->PeekData());
+            const float * conPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("concentration")->PeekData());
 
-			/*for (int i = 0; i < fr->GetNumberOfPoints(); i++) {
-				std::cout << (int)fr->PeekPointDataByName("concentration")->PeekData()[i] << std::endl;
-			}*/
+            /*for (int i = 0; i < fr->GetNumberOfPoints(); i++) {
+                std::cout << (int)fr->PeekPointDataByName("concentration")->PeekData()[i] << std::endl;
+            }*/
 
-			for (int64_t i = 0; i < (int64_t)fr->GetNumberOfPoints(); i++) {
-				//std::cout << conPtr[i] << std::endl;
-				dataVec[(unsigned int)i * 4 + 0] = velPtr[(unsigned int)i * 3 + 0];
-				dataVec[(unsigned int)i * 4 + 1] = velPtr[(unsigned int)i * 3 + 1];
-				dataVec[(unsigned int)i * 4 + 2] = velPtr[(unsigned int)i * 3 + 2];
-				dataVec[(unsigned int)i * 4 + 3] = conPtr[(unsigned int)i];
+            for (int64_t i = 0; i < (int64_t)fr->GetNumberOfPoints(); i++) {
+                //std::cout << conPtr[i] << std::endl;
+                dataVec[(unsigned int)i * 4 + 0] = velPtr[(unsigned int)i * 3 + 0];
+                dataVec[(unsigned int)i * 4 + 1] = velPtr[(unsigned int)i * 3 + 1];
+                dataVec[(unsigned int)i * 4 + 2] = velPtr[(unsigned int)i * 3 + 2];
+                dataVec[(unsigned int)i * 4 + 3] = conPtr[(unsigned int)i];
 
-				/*if (i > 1) {
-					std::cout << dataVec[i * 4] << " " << dataVec[i * 4 + 1] << " " << dataVec[i * 4 + 2] << " " << dataVec[i * 4 + 3] << std::endl;
-				}*/
-			}
-			mpdc->AccessParticles(0).SetColourData(
-				core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
+                /*if (i > 1) {
+                    std::cout << dataVec[i * 4] << " " << dataVec[i * 4 + 1] << " " << dataVec[i * 4 + 2] << " " << dataVec[i * 4 + 3] << std::endl;
+                }*/
+            }
+            mpdc->AccessParticles(0).SetColourData(
+                core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
 #endif
             // Set vertex positions
             mpdc->AccessParticles(0).SetVertexData(
@@ -302,10 +302,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          this->resetFrameCache();
          if (this->nFrames > 0) {
              // Set number of frames
-			 this->setFrameCount((unsigned int)std::min(
+             this->setFrameCount((unsigned int)std::min(
                      static_cast<size_t>(
                              this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-							 this->nFrames));
+                             this->nFrames));
              // Start the loading thread
              this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
          }
@@ -320,10 +320,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          this->maxCacheSizeSlot.ResetDirty();
          this->resetFrameCache();
          // Set number of frames
-		 this->setFrameCount((unsigned int)std::min(
+         this->setFrameCount((unsigned int)std::min(
                  static_cast<size_t>(
                          this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-						 this->nFrames));
+                         this->nFrames));
 
          // Start the loading thread
          this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
@@ -337,7 +337,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          dc->SetFrameCount((unsigned int)std::min(
                  static_cast<size_t>(
                          this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-						 this->nFrames));
+                         this->nFrames));
 
          dc->AccessBoundingBoxes().Clear();
          dc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -348,10 +348,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
                  dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
          if (mpdc != NULL) {
              // Set frame count
-			 mpdc->SetFrameCount((unsigned int)std::min(
+             mpdc->SetFrameCount((unsigned int)std::min(
                      static_cast<size_t>(
                              this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-							 this->nFrames));
+                             this->nFrames));
 
              mpdc->AccessBoundingBoxes().Clear();
              mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -443,10 +443,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
             this->nFrames); // DEBUG
 
     // Set number of frames
-	this->setFrameCount((unsigned int)std::min(
+    this->setFrameCount((unsigned int)std::min(
             static_cast<size_t>(
                     this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-					this->nFrames));
+                    this->nFrames));
 
 
     /* Start the loading thread */
@@ -477,7 +477,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-	char *buffer = new char[(unsigned int)fileSize];
+    char *buffer = new char[(unsigned int)fileSize];
     file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
@@ -697,7 +697,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-	char *buffer = new char[(unsigned int)fileSize];
+    char *buffer = new char[(unsigned int)fileSize];
     file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
@@ -1077,13 +1077,13 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(char*& buffPt,
 
     line = this->readCurrentLine(buffPt);
     this->seekNextLine(buffPt); // Skip to next line
-	//std::cout << "Line: " << line << std::endl;
+    //std::cout << "Line: " << line << std::endl;
 
     // Loop through all field arrays
     for (size_t a = 0; a < numArrays; ++a) {
 
         fieldId = this->readNextToken(buffPt); // Read field name
-		//std::cout << "Field: " <<  fieldId << std::endl;
+        //std::cout << "Field: " <<  fieldId << std::endl;
         this->seekNextToken(buffPt);
 
         nComponentsStr = this->readNextToken(buffPt); // Read number of components
@@ -1122,8 +1122,11 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(char*& buffPt,
         // Increment buffPt
         buffPt += nComponents*nTupel*4; // Assumes float
 
-		if (a != numArrays - 1)
-			this->seekNextLine(buffPt);
+        // TODO: (gralkapk) This looks like hazard
+        // TODO: For binary files, there will be no \n at the end of an field
+        // TODO: Added fr->GetEncoding() == AbstractVTKLegacyData::ASCII as possible fix
+        if (fr->GetEncoding() == AbstractVTKLegacyData::ASCII && a != numArrays - 1)
+            this->seekNextLine(buffPt);
     }
 
 }
