@@ -295,7 +295,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow() {
 
     const core::Module* currentMod = nullptr;
     bool currentModOpen = false;
-    this->GetCoreInstance()->EnumParameters([&](const auto& mod, auto& slot) {
+    this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (currentMod != &mod) {
             currentMod = &mod;
             // Set to "open" by default.
@@ -305,7 +305,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow() {
             currentModOpen = ImGui::CollapsingHeader(mod.FullName());
         }
         if (currentModOpen) {
-            drawParameter(mod, slot);
+            this->drawParameter(mod, slot);
         }
     });
 
