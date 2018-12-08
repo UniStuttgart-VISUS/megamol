@@ -85,6 +85,9 @@
 #include <string.h>
 #include <glad/glad_glx.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 static void* get_proc(const char *namez);
 
 #ifdef _WIN32
@@ -869,4 +872,6 @@ int gladLoadGLXLoader(GLADloadproc load, Display *dpy, int screen) {
 	load_GLX_SUN_get_transparent_index(load);
 	return 1;
 }
+
+#pragma GCC diagnostic pop
 
