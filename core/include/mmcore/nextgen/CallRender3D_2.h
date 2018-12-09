@@ -16,6 +16,7 @@
 #include "mmcore/nextgen/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutput.h"
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace core {
@@ -143,6 +144,24 @@ public:
     }
 
     /**
+     * Sets the background color
+     *
+     * @param backCol The new background color
+     */
+    inline void SetBackgroundColor(glm::vec4 backCol) {
+        this->backgroundCol = backCol;
+    }
+
+    /**
+     * Gets the background color
+     * 
+     * @return The stored background color
+     */
+    inline glm::vec4 BackgroundColor(void) const {
+        return this->backgroundCol;
+    }
+
+    /**
      * Assignment operator
      *
      * @param rhs The right hand side operand
@@ -160,6 +179,9 @@ private:
 
     /** The mouse flags for the mouse event */
     view::MouseFlags mouseFlags;
+
+    /** The background color */
+    glm::vec4 backgroundCol;
 
     /** The current state of the mouse toggle selection */
     bool mouseSelection;

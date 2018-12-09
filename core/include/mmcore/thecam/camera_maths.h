@@ -227,17 +227,17 @@ megamol::core::thecam::camera_maths<W, S, F, H>::view_vector(static_cast<F>(0),
 /*
  * thecam::xmath_camera_maths<H>::up_vector
  */
-template<thecam::handedness H>
-const typename thecam::glm_camera_maths<H>::vector_type
-thecam::glm_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
+template<megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::glm_camera_maths<H>::vector_type
+megamol::core::thecam::glm_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
 
 
 /*
  * thecam::xmath_camera_maths<H>::view_vector
  */
-template<thecam::handedness H>
-const typename thecam::glm_camera_maths<H>::vector_type
-thecam::glm_camera_maths<H>::view_vector(0.0f, 0.0f,
+template<megamol::core::thecam::handedness H>
+const typename megamol::core::thecam::glm_camera_maths<H>::vector_type
+megamol::core::thecam::glm_camera_maths<H>::view_vector(0.0f, 0.0f,
     (H == thecam::handedness::right_handed) ? -1.0f : 1.0f,
     0.0f);
 #endif

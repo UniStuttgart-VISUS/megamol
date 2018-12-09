@@ -20,6 +20,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h" // TODO new call?
@@ -356,8 +357,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();
-    glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //this has to be moved to the last renderer
+    //glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (cr3d == NULL) {
         /*this->renderTitle(this->cam.Parameters()->TileRect().Left(), this->cam.Parameters()->TileRect().Bottom(),
@@ -371,6 +373,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     } else {
         cr3d->SetGpuAffinity(context.GpuAffinity);
         this->removeTitleRenderer();
+        cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
     }
 
     // mueller: I moved the following code block before clearing the back buffer,
@@ -443,6 +446,10 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     // if (fnc > nc) {
     //     this->camParams->SetClip(fnc, fc);
     // }
+
+    if (cr3d != nullptr) {
+        (*cr3d)(view::AbstractCallRender::FnRender);
+    }
 
 
     AbstractRenderingView::endFrame();

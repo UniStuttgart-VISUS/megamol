@@ -40,6 +40,7 @@
 #include "mmcore/thecam/utility/config.h"
 
 #include <type_traits>
+#include <cstdint>
 
 #include "mmcore/thecam/view_frustum.h"
 

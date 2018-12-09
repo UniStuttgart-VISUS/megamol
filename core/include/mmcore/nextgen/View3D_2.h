@@ -22,6 +22,7 @@
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
+#include "mmcore/nextgen/Camera_2.h"
 #include "vislib/graphics/CameraLookAtDist.h"
 #include "vislib/graphics/CameraMove2D.h"
 #include "vislib/graphics/CameraParamsStore.h"
@@ -267,6 +268,9 @@ protected:
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
+    /** The camera */
+    std::shared_ptr<Camera_2> cam;
+
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
 #ifdef _WIN32

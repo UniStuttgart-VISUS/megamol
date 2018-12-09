@@ -94,6 +94,11 @@ bool nextgen::Renderer3DModule_2::RenderChain(Call& call) {
 
         // chain through the the render call
         (*chainedCall)(0);
+    } else {
+        // TODO move this behind the fbo magic?
+        auto backCol = cr3d->BackgroundColor();
+        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     // TODO FBO magic

@@ -98,7 +98,7 @@ namespace math {
         typedef detail::vectorial_traits_base<T, 4> base;
 
         /** The allocator for heap allocations of the quaternions. */
-        template<class C> using allocator_type = detail::vectorial_traits_base<T, 4>::allocator_type<C>;
+        template<class C> using allocator_type = typename detail::vectorial_traits_base<T, 4>::allocator_type<C>;
 
         /** The native type used to store the quaternion. */
         typedef typename base::native_type native_type;
