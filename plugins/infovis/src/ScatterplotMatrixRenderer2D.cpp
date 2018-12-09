@@ -48,7 +48,7 @@ inline float rangeToSmallStep(double min, double max) {
     double countMidSteps = countBigSteps * 5.0;
     double countSmallSteps = countMidSteps * 5.0;
 
-    double delta = abs(max - min);
+    double delta = fabs(max - min);
 
     // Fit to decimal system: (whole number) * 10^(whole number)
     // Note: should be without -1.0. Could be floating point weirdness, i.e.,
