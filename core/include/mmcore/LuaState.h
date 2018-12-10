@@ -232,6 +232,8 @@ namespace utility {
 
         int ReadTextFile(lua_State* L);
 
+        int Flush(lua_State* L);
+
     private:
 
         /** error handler */
