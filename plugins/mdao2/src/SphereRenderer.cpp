@@ -314,21 +314,6 @@ void mdao::SphereRenderer::release(void)
 }
 
 
-bool mdao::SphereRenderer::GetCapabilities(megamol::core::Call& call)
-{
-    megamol::core::view::AbstractCallRender3D *cr = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(&call);
-    if (cr == NULL) return false;
-	
-	cr->SetCapabilities(
-        megamol::core::view::AbstractCallRender3D::CAP_RENDER
-        | megamol::core::view::AbstractCallRender3D::CAP_LIGHTING
-        | megamol::core::view::AbstractCallRender3D::CAP_ANIMATION		
-		);
-	return true;
-}
-
-
-
 bool mdao::SphereRenderer::GetExtents(megamol::core::Call& call)
 {
     megamol::core::view::AbstractCallRender3D *renderCall = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(&call);

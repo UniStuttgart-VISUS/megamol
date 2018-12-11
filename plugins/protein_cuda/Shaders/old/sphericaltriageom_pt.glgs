@@ -1,0 +1,140 @@
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform float probeRadius;
+uniform float threshold;
+
+varying vec4 col;
+
+#define probeCenter gl_FrontColorIn[1].xyz
+
+void emitTriangle( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+		gl_Position = vec4( ( v1 + probeCenter).xyz, 1.0);
+		gl_FrontColor = gl_FrontColorIn[0];
+		col = gl_FrontColorIn[0];
+		EmitVertex();
+		
+		gl_Position = vec4( ( v2 + probeCenter).xyz, 1.0);
+		gl_FrontColor = gl_FrontColorIn[1];
+		col = gl_FrontColorIn[1];
+		EmitVertex();
+		
+		gl_Position = vec4( ( v3 + probeCenter).xyz, 1.0);
+		gl_FrontColor = gl_FrontColorIn[2];
+		col = gl_FrontColorIn[2];
+		EmitVertex();
+		
+		EndPrimitive();
+}
+
+void subdivide( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+	// distances between the vertices
+	const float d12 = length( v1 - v2);
+	const float d13 = length( v1 - v3);
+	const float d23 = length( v2 - v3);
+	
+	// case 1: no edge is longer than the threshold
+	if( d12 <= threshold && d13 <= threshold && d23 <= threshold )
+	{
+		emitTriangle( v1, v2, v3);
+	}
+	// case 2: all edges are longer than the threshold
+	else if( d12 > threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v1, v12, v13);
+		emitTriangle( v12, v2, v23);
+		emitTriangle( v13, v23, v3);
+		emitTriangle( v13, v12, v23);
+	}
+	// case 3: one edge is longer than the threshold
+	// --> case 3.1: d12 is longer
+	else if( d12 > threshold && d13 < threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		emitTriangle( v1, v12, v3);
+		emitTriangle( v12, v2, v3);
+	}
+	// --> case 3.2: d13 is longer
+	else if( d12 < threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		emitTriangle( v1, v2, v13);
+		emitTriangle( v13, v2, v3);
+	}
+	// --> case 3.3: d23 is longer
+	else if( d12 < threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v1, v2, v23);
+		emitTriangle( v1, v23, v3);
+	}
+	// case 4: two edges are longer than the threshold
+	// --> case 4.1: d12 and d13 are longer
+	else if( d12 > threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		emitTriangle( v1, v12, v13);
+		// connect the smaller distance
+		if( length( v13 - v2) < length( v12 - v3) )
+		{
+			emitTriangle( v12, v2, v13);
+			emitTriangle( v13, v2, v3);
+		}
+		else
+		{
+			emitTriangle( v12, v2, v3);
+			emitTriangle( v13, v12, v3);
+		}
+	}
+	// --> case 4.2: d12 and d23 are longer
+	else if( d12 > threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v12, v2, v23);
+		// connect the smaller distance
+		if( length( v23 - v1) < length( v12 - v3) )
+		{
+			emitTriangle( v1, v23, v3);
+			emitTriangle( v1, v12, v23);
+		}
+		else
+		{
+			emitTriangle( v1, v12, v3);
+			emitTriangle( v12, v23, v3);
+		}
+	}
+	// --> case 4.3: d13 and d23 are longer
+	else // if( d12 < threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v13, v23, v3);
+		// connect the smaller distance
+		if( length( v23 - v1) < length( v13 - v2) )
+		{
+			emitTriangle( v1, v2, v23);
+			emitTriangle( v1, v23, v13);
+		}
+		else
+		{
+			emitTriangle( v1, v2, v13);
+			emitTriangle( v13, v2, v23);
+		}
+	}
+}
+
+
+void main(void)
+{	
+	subdivide( vec3(gl_PositionIn[0].xyz) - probeCenter,
+	           vec3(gl_PositionIn[1].xyz) - probeCenter, 
+	           vec3(gl_PositionIn[2].xyz) - probeCenter);
+
+}

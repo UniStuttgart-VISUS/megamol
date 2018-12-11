@@ -13,17 +13,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  # Add Eigen.
-  add_external_project(Eigen_ext
-    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
-    GIT_TAG "3.3.4"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(Eigen INTERFACE
-    DEPENDS Eigen_ext
-    INCLUDE_DIR "src/Eigen_ext")
+if(UNIX)
+  set(bhtsne_cmake_args -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
+else()
+  set(bhtsne_cmake_args "")
+endif()
 
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
@@ -31,7 +25,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt")
+      "<SOURCE_DIR>/CMakeLists.txt"
+    CMAKE_ARGS ${bhtsne_cmake_args}
+)
   add_external_library(bhtsne STATIC
     DEPENDS bhtsne_ext
     INCLUDE_DIR "src/bhtsne_ext"

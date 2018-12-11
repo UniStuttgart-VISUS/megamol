@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="tubetessellation">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="attributes" type="string">
+<!--
+#extension GL_ARB_shader_storage_buffer_object : require
+#extension GL_EXT_gpu_shader4 : require
+uniform vec4 viewAttr;
+
+uniform float scaling;
+
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+uniform int instanceOffset;
+
+uniform mat4 MVinv;
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
+uniform vec4 inConsts1;
+uniform sampler1D colTab;
+
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec4 vertColor;
+
+#define CONSTRAD inConsts1.x
+#define MIN_COLV inConsts1.y
+#define MAX_COLV inConsts1.z
+#define COLTAB_SIZE inConsts1.w
+-->
+        </snippet>
+        <snippet name="MainParams" type="string">
+<!--
+void main(void) {
+    float theColIdx;
+    vec4 theColor;
+    vec4 inPos;
+-->
+        </snippet>
+        <!-- here comes the injected snippet -->
+        <snippet name="MainRest" type="string">
+<!--
+    vertColor = theColor;
+        
+    rad *= scaling;
+    squarRad = rad * rad;
+-->        
+        </snippet>
+        <snippet name="posTrans" type="string">
+<!--
+    // object pivot point in object space    
+    objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
+
+    // calculate cam position
+    camPos = MVinv[3]; // (C) by Christoph
+    camPos.xyz -= objPos.xyz; // cam pos to glyph space
+
+    // calculate light position in glyph space
+    lightPos = MVinv * gl_LightSource[0].position;
+    
+    gl_Position = objPos;
+    gl_PointSize = 2.0;
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="tesscontrol">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+#extension GL_ARB_shader_storage_buffer_object : require
+#extension GL_EXT_gpu_shader4 : require
+
+uniform int uOuter0 = 16;
+uniform int uOuter1 = 16;
+
+uniform int instanceOffset;
+
+out vec4 myColor[];
+out int id[];
+
+layout( vertices = 4 ) out;
+
+struct CAType {
+    float x, y, z;
+    int type;
+};
+
+layout(std430, binding = 2) buffer shader_data {
+    CAType cAlphas[];
+};
+
+void main() {
+    CAType ca = cAlphas[gl_PrimitiveID + gl_InvocationID + instanceOffset];
+    myColor[gl_InvocationID] = vec4(0, 0, 0, 1);
+    if (ca.type == 1) {
+        myColor[gl_InvocationID] = vec4(0, 0, 1, 1);
+    } else if (ca.type == 2) {
+        myColor[gl_InvocationID] = vec4(1, 0, 0, 1);
+    } else if (ca.type == 3) {
+        myColor[gl_InvocationID] = vec4(0, 1, 0, 1);
+    }
+
+    gl_out[gl_InvocationID].gl_Position = vec4(ca.x, ca.y, ca.z, 1.0f);
+    id[gl_InvocationID] = gl_PrimitiveID + gl_InvocationID + instanceOffset;
+    
+    if(gl_InvocationID == 0)
+    {
+        // TODO changes tesslevels
+        gl_TessLevelOuter[0] = float( uOuter0);
+        gl_TessLevelOuter[1] = float( uOuter1);
+        gl_TessLevelOuter[2] = float( uOuter0);
+        gl_TessLevelOuter[3] = float( uOuter1);
+        
+        gl_TessLevelInner[0] = float( uOuter0);
+        gl_TessLevelInner[1] = float( uOuter1);
+    }
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="tesseval">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+#extension GL_ARB_shader_storage_buffer_object : require
+#extension GL_EXT_gpu_shader4 : require
+
+layout(quads, equal_spacing, cw) in;
+
+in int id[];
+in vec4 myColor[];
+out vec4 vertColor;
+
+uniform bool interpolateColors = false;
+uniform float tubewidth = 0.001;
+uniform float structurewidth = 0.003;
+
+struct CAType {
+    float x, y, z;
+    int type;
+};
+
+layout(std430, binding = 2) buffer shader_data {
+    CAType cAlphas[];
+};
+
+void main() {
+    CAType alph0 = cAlphas[id[0] - 1];
+    CAType alph1 = cAlphas[id[0]];
+    CAType alph2 = cAlphas[id[1]];
+    CAType alph3 = cAlphas[id[1] + 1];
+
+    vec4 p0 = gl_in[0].gl_Position;
+    vec4 p1 = gl_in[1].gl_Position;
+    vec4 p2 = gl_in[2].gl_Position;
+    vec4 p3 = gl_in[3].gl_Position;
+    
+    vertColor = myColor[1];
+
+    vec4 colors[4];
+
+    for(int i = 0; i < 4; i++) {
+        int mytype = cAlphas[id[0] + i - 1].type;
+        if(mytype == 1) // beta sheet
+        {
+            colors[i] = vec4(0, 0, 1, 1);
+        }
+        else if(mytype == 2) // alpha helix
+        {
+            colors[i] = vec4(1, 0, 0, 1);
+        }
+        else if(mytype == 3) // turn
+        {
+            colors[i] = vec4(0, 1, 0, 1);
+        }
+        else // unclassified
+        {
+            colors[i] = vec4(0, 0, 0, 1);
+        }
+    }
+
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+    
+    // Catmull-Rom Spline
+    //gl_Position = 0.5 *( (2.0 * p1) + (-p0 + p2) * u + ( 2.0 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1- 3 * p2 + p3) * u*u*u);
+    
+    // Cubic B-Spline
+    u += 3;
+    float q = ( u - 1.0) / 3.0;
+    vec4 d10 = p0 * ( 1.0 - q) + p1 * q;
+    float q1 = ( u - 2.0) / 3.0;
+    vec4 d11 =  p1 * ( 1.0 - q1) + p2 * q1;
+    float q2 = ( u - 3.0) / 3.0; 
+    vec4 d12 =  p2 * ( 1.0 - q2) + p3 * q2;
+    
+    float q3 = ( u - 2.0) / 2.0; 
+    vec4 d20 = d10 * ( 1.0 - q3) + d11 * q3;
+    float q4 = ( u - 3.0) / 2.0; 
+    vec4 d21 = d11 * ( 1.0 - q4) + d12 * q4;
+    
+    float q5 = ( u - 3.0); 
+    vec4 myPosition = d20 * ( 1.0 - q5) + d21 * q5;
+
+    if(interpolateColors)
+    {
+        vec4 c10 = colors[0] * (1.0 - q) + colors[1] * q;
+        vec4 c11 = colors[1] * (1.0 - q1) + colors[2] * q1;
+        vec4 c12 = colors[2] * (1.0 - q2) + colors[3] * q2;
+        
+        vec4 c20 = c10 * (1.0 - q3) + c11 * q3;
+        vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
+        
+        vertColor = c20 * (1.0 - q5) + c21 * q5;
+    }
+    else
+    {
+        vertColor = colors[2];
+    }
+
+    vec2 tangent = normalize(d21.xy - d20.xy); // direction of the backbone
+    vec2 normal = vec2(-tangent.y, tangent.x); // orthogonal to the backbone
+    
+    int mytype = cAlphas[id[1]].type;
+    int mytype2 = cAlphas[id[1] + 1].type;
+
+    bool change = false;
+    int where = 3;
+    int lasttype = mytype2;
+    
+    for(int i = 3; i > -1; i = i - 1 ) {
+        int mytype = cAlphas[id[0] + i - 1].type;
+        if(mytype != lasttype)
+        {
+            change = true;
+            where = i;
+        }
+        lasttype = mytype;
+    }
+
+    vec2 left = myPosition.xy + normal * tubewidth;
+    vec2 right = myPosition.xy - normal * tubewidth;
+
+    if(mytype != 0) {
+        left = myPosition.xy + normal * structurewidth;
+        right = myPosition.xy - normal * structurewidth;
+    }
+
+    if(change && (where == 2) && (mytype == 1)) { // arrow heads
+        u = gl_TessCoord.x;
+        float factor = mix(structurewidth * 2.5, tubewidth, u);
+        left = myPosition.xy + normal * factor;
+        right = myPosition.xy - normal * factor;
+    }
+
+    myPosition.xy = mix(left, right, v);
+    
+    gl_Position =  myPosition;
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="geometry">
+      <snippet type="version">400</snippet>
+      <snippet type="string">
+        <!--
+uniform mat4 MVP;
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+in vec4 vertColor[];
+out vec4 myColor;
+
+void main() {
+  for(int i = 0; i < gl_in.length(); i++) {
+    vec4 h = gl_in[i].gl_Position;
+    h.z = 0.0;
+    gl_Position = MVP * h;
+    myColor = vertColor[i];
+    EmitVertex();
+  }
+  EndPrimitive();
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">140</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="common::lighting::simple"/>
+        <snippet name="body1" type="string">
+<!--
+#extension GL_ARB_conservative_depth:require
+layout (depth_greater) out float gl_FragDepth; // we think this is right
+// this should be wrong //layout (depth_less) out float gl_FragDepth;
+#extension GL_ARB_explicit_attrib_location : enable
+
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
+uniform vec4 viewAttr;
+
+FLACH in vec4 objPos;
+FLACH in vec4 camPos;
+FLACH in vec4 lightPos;
+FLACH in float squarRad;
+FLACH in float rad;
+FLACH in vec4 vertColor;
+
+in vec4 myColor;
+
+out layout(location = 0) vec4 outCol;
+
+void main(void) {
+    outCol = myColor;
+}
+-->
+</snippet>
+    </shader>
+
+</btf>

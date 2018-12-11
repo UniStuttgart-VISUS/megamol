@@ -49,6 +49,9 @@ namespace MegaMolConf.Communication {
             if (!s.Connect(adress, out e)) {
                 throw new Exception(e.ToString());
             }
+            s.ReceiveTimeout = timeout;
+            s.SendTimeout = timeout;
+
             ZSocket s2 = new ZSocket(c, ZSocketType.PAIR);
             ZFrame f = new ZFrame("ola", Encoding.UTF8);
             s.Send(f);
@@ -64,8 +67,8 @@ namespace MegaMolConf.Communication {
                 throw new Exception(e.ToString());
             }
 
-            s.ReceiveTimeout = timeout;
-            s.SendTimeout = timeout;
+            s2.ReceiveTimeout = timeout;
+            s2.SendTimeout = timeout;
 
             return new Connection() { context = c, socket = s2 };
         }

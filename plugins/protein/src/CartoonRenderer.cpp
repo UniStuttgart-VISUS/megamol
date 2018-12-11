@@ -163,22 +163,6 @@ bool CartoonRenderer::create(void) {
     return true;
 }
 
-/*
- * protein::CartoonRenderer::GetCapabilities
- */
-bool CartoonRenderer::GetCapabilities(Call& call) {
-    view::AbstractCallRender3D *cr3d =
-            dynamic_cast<view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL)
-        return false;
-
-    cr3d->SetCapabilities(
-            view::AbstractCallRender3D::CAP_RENDER
-                    | view::AbstractCallRender3D::CAP_LIGHTING
-                    | view::AbstractCallRender3D::CAP_ANIMATION);
-
-    return true;
-}
 
 /*
  * protein::CartoonRenderer::GetExtents

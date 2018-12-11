@@ -1,0 +1,167 @@
+uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
+uniform vec2 zValues;
+
+#ifndef CALC_CAM_SYS
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+#endif // CALC_CAM_SYS
+
+attribute vec3 inParams; 	// inner and outer radius of the torus (r and R) and maximum angle
+attribute vec4 quatC; 		// conjugate quaternion
+attribute vec4 inSphere;	// everything inside this sphere (x,y,z,rad) is visible
+attribute vec4 inColors;	// coded colors (x,y) and d of plane and maximum distance from plane
+
+varying vec4 objPos;
+varying vec4 camPos;
+varying vec4 lightPos;
+varying vec4 radii;
+varying vec4 visibilitySphere;
+
+varying vec3 rotMatT0;
+varying vec3 rotMatT1; // rotation matrix from the quaternion
+varying vec3 rotMatT2;
+
+varying float maxAngle;
+
+varying vec4 colors;
+
+void main(void) {	
+	const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
+	vec4 tmp, tmp1;
+
+	// remove the sphere radius from the w coordinates to the rad varyings
+	vec4 inPos = gl_Vertex;
+
+	radii.x = inParams.x;
+	radii.y = radii.x * radii.x;
+	radii.z = inParams.y;
+	radii.w =  radii.z * radii.z;
+	
+	maxAngle = inParams.z;
+	
+	colors = inColors;
+
+	inPos.w = 1.0;
+	
+	// object pivot point in object space    
+	objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
+
+	// orientation quaternion to inverse rotation matrix conversion
+	// Begin: Holy code!
+	tmp = quatC.xzyw * quatC.yxzw;				        // tmp <- (xy, xz, yz, ww)
+	tmp1 = quatC * quatC.w;					            	// tmp1 <- (xw, yw, zw, %)
+	tmp1.w = -quatConst.z;				                // tmp1 <- (xw, yw, zw, -0.5)
+
+	rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;	// matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+	rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;				// matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+	rotMatT0 = rotMatT0 + rotMatT0;                     // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+
+	rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz; 	// matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+	rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;     		// matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+	rotMatT1 = rotMatT1 + rotMatT1;                     // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+
+	rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw; 	// matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+	rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;     		// matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+	rotMatT2 = rotMatT2 + rotMatT2;                     // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
+	// End: Holy code!
+
+	// rotate and copy the visibility sphere
+	visibilitySphere.xyz = rotMatT0 * inSphere.x + rotMatT1 * inSphere.y + rotMatT2 * inSphere.z;
+	visibilitySphere.w = inSphere.w;
+	
+	// calculate cam position
+	tmp = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+	tmp.xyz -= objPos.xyz; // cam move
+	camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
+
+	// calculate light position in glyph space
+	lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+	lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
+
+	// Sphere-Touch-Plane-Approach™
+	vec2 winHalf = 2.0 / viewAttr.zw; // window size
+
+	vec2 d, p, q, h, dd;
+
+	// get camera orthonormal coordinate system
+
+#ifdef CALC_CAM_SYS
+	// camera coordinate system in object space
+	tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+	vec3 camIn = normalize(tmp.xyz);
+	tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+	vec3 camUp = tmp.xyz;
+	vec3 camRight = normalize(cross(camIn, camUp));
+	camUp = cross(camIn, camRight);
+#endif // CALC_CAM_SYS
+
+	vec2 mins, maxs;
+	vec3 testPos;
+	vec4 projPos;
+
+	// projected camera vector
+	vec3 c2 = vec3(dot(tmp.xyz, camRight), dot(tmp.xyz, camUp), dot(tmp.xyz, camIn));
+
+	vec3 cpj1 = camIn * c2.z + camRight * c2.x;
+	vec3 cpm1 = camIn * c2.x - camRight * c2.z;
+
+	vec3 cpj2 = camIn * c2.z + camUp * c2.y;
+	vec3 cpm2 = camIn * c2.y - camUp * c2.z;
+
+	d.x = length(cpj1);
+	d.y = length(cpj2);
+
+	dd = vec2(1.0) / d;
+
+	////p = (radii.x + radii.z)*(radii.x + radii.z) * dd;
+	p = inSphere.w*inSphere.w * dd;
+	q = d - p;
+	h = sqrt(p * q);
+	//h = vec2(0.0);
+
+	p *= dd;
+	h *= dd;
+
+	cpj1 *= p.x;
+	cpm1 *= h.x;
+	cpj2 *= p.y;
+	cpm2 *= h.y;
+
+	// TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
+	////testPos = objPos.xyz + cpj1 + cpm1;
+	testPos = inSphere.xyz + objPos.xyz + cpj1 + cpm1;	
+	projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+	projPos /= projPos.w;
+	mins = projPos.xy;
+	maxs = projPos.xy;
+
+	testPos -= 2.0 * cpm1;
+	projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+	projPos /= projPos.w;
+	mins = min(mins, projPos.xy);
+	maxs = max(maxs, projPos.xy);
+
+	////testPos = objPos.xyz + cpj2 + cpm2;
+	testPos = inSphere.xyz + objPos.xyz + cpj2 + cpm2;
+	projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+	projPos /= projPos.w;
+	mins = min(mins, projPos.xy);
+	maxs = max(maxs, projPos.xy);
+
+	testPos -= 2.0 * cpm2;
+	projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+	projPos /= projPos.w;
+	mins = min(mins, projPos.xy);
+	maxs = max(maxs, projPos.xy);
+
+	// set position and point size
+	gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
+	gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
+	
+#ifdef SMALL_SPRITE_LIGHTING
+	// for normal crowbaring on very small sprites
+	lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+#endif // SMALL_SPRITE_LIGHTING
+
+}

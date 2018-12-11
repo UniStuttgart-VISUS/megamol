@@ -43,6 +43,17 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   LIBRARY_DEBUG ${TNY_LIB_DEBUG}
   LIBRARY_RELEASE ${TNY_LIB})
 
+  # Add Eigen.
+  add_external_project(Eigen_ext
+    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
+    GIT_TAG "3.3.4"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(Eigen INTERFACE
+    DEPENDS Eigen_ext
+    INCLUDE_DIR "src/Eigen_ext")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -75,7 +86,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/nanoflann")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen)
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
