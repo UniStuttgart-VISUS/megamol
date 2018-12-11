@@ -437,6 +437,101 @@ namespace plugins {
 		}
 
         /**
+         * Searches for a specific module called module_name of type A and
+         * then executes a lambda.
+         * 
+         * @param module_name name of the module
+         * @param cb the lambda
+         * 
+         * @returns true, if the module is found and of type A, false otherwise.
+         */
+        template <class A>
+        typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type
+        FindModuleNoLock(std::string module_name, std::function<void(A&)> cb) {
+            auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+            auto ano = ano_container->FindNamedObject(module_name.c_str());
+            auto vi = dynamic_cast<A*>(ano.get());
+            if (vi != nullptr) {
+                cb(*vi);
+                return true;
+            } else {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+                return false;
+            }
+        }
+
+        /**
+         * Enumerates all ParamSlots of a Module of type A and executes a lambda on them.
+         * 
+         * @param module_name name of the module
+         * @param cb the lambda
+         * 
+         * @returns true, if the module is found and of type A, false otherwise.
+         */
+        template <class A>
+        typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type
+        EnumerateParameterSlotsNoLock(std::string module_name, std::function<void(param::ParamSlot&)> cb) {
+            auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+            auto ano = ano_container->FindNamedObject(module_name.c_str());
+            auto vi = dynamic_cast<A*>(ano.get());
+            bool found = false;
+            if (vi != nullptr) {
+                for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+                    auto ps = dynamic_cast<param::ParamSlot*>((*c).get());
+                    if (ps != nullptr) {
+                        cb(*ps);
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                        "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to find module \"%s\" for processing", module_name.c_str());
+            }
+            return found;
+        }
+
+        /**
+         * Enumerates all CallerSlots of a Module of type A where a Call of type C is connected and executes a lambda on
+         * the Call.
+         * 
+         * @param module_name name of the module
+         * @param cb the lambda
+         * 
+         * @returns true, if the module is found and of type A and has a Call of type C, false otherwise.
+         */
+        template <class A, class C>
+        typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
+            bool>::type
+        EnumerateCallerSlotsNoLock(std::string module_name, std::function<void(C&)> cb) {
+            auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+            auto ano = ano_container->FindNamedObject(module_name.c_str());
+            auto vi = dynamic_cast<A*>(ano.get());
+            bool found = false;
+            if (vi != nullptr) {
+                for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
+                    auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
+                    if (sl != nullptr) {
+                        cb(*sl->CallAs<C>());
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                        "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to find module \"%s\" for processing", module_name.c_str());
+            }
+            return found;
+        }
+
+        /**
          * Enumerates all parameters. The callback function is called for each
          * parameter name.
          *
