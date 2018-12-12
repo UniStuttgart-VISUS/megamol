@@ -13,6 +13,7 @@
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/ApiHandle.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
