@@ -516,7 +516,7 @@ namespace plugins {
                 for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
                     auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
                     if (sl != nullptr) {
-                        cb(*sl->CallAs<C>());
+                        cb(*(sl-> template CallAs<C>()));
                         found = true;
                     }
                 }
