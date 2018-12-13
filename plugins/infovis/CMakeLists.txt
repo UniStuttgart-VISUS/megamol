@@ -37,15 +37,17 @@ endif()
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE glimmer_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/glimmer/*.h" "3rd/glimmer/*.cpp")
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${glimmer_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PUBLIC "include" "src")
+    PUBLIC "include" "src"
+	PRIVATE "3rd/glimmer/")
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne)
 
   # Installation rules for generated files
@@ -64,6 +66,7 @@ endif()
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
+  source_group("Glimmer Files" FILES ${glimmer_files})
   source_group("Shaders" FILES ${shader_files})
 
   # Format

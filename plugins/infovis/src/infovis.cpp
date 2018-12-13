@@ -16,6 +16,7 @@
 #include "DiagramSeriesCall.h"
 #include "FlagCall.h"
 #include "FlagStorage.h"
+#include "GlimmerMDSProjection.h"
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
@@ -47,6 +48,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::GlimmerMDSProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
