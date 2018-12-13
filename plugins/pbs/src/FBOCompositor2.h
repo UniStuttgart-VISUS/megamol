@@ -45,7 +45,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return gladLoadGL(); }
+    static bool IsAvailable(void) { return true; }//gladLoadGL(); }
 
     FBOCompositor2(void);
 
