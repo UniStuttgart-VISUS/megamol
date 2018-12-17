@@ -9,7 +9,7 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
@@ -83,6 +83,19 @@ private:
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
     bool extractBoundingBox(float bbox[6]);
+        
+    bool extractFrameTimes(float frame_times[2]);
+
+    bool extractCameraParams(float cam_params[9]);
+
+#ifdef WITH_MPI
+    bool extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color);
+#else
+    bool extractBackgroundColor(std::array<float, 4> bkgnd_color);
+#endif // WITH_MPI
+
+    bool extractViewport(int vvpt[6]);
+
     bool initMPI();
 
     bool reconnectCallback(megamol::core::param::ParamSlot& p);
@@ -97,6 +110,8 @@ private:
 
     megamol::core::param::ParamSlot view_name_slot_;
 
+    megamol::core::param::ParamSlot mpiclusterview_name_slot_;
+
     megamol::core::param::ParamSlot trigger_button_slot_;
 
     megamol::core::param::ParamSlot target_machine_slot_;
@@ -107,13 +122,13 @@ private:
 
     megamol::core::param::ParamSlot reconnect_slot_;
 
+    bool aggregate_;
+
 #ifdef WITH_MPI
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
 
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
-
-    bool aggregate_;
 
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;

@@ -110,22 +110,6 @@ bool SolPathRenderer::create(void) {
     return true;
 }
 
-
-/*
- * SolPathRenderer::GetCapabilities
- */
-bool SolPathRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(
-        core::view::CallRender3D::CAP_RENDER
-        | core::view::CallRender3D::CAP_LIGHTING);
-
-    return true;
-}
-
-
 /*
  * SolPathRenderer::GetExtents
  */

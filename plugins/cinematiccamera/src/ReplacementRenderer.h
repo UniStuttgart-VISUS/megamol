@@ -80,16 +80,6 @@ namespace megamol {
         virtual void release(void);
 
         /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities( megamol::core::Call& call);
-
-        /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
          * and times).
@@ -98,7 +88,7 @@ namespace megamol {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::Call& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
         /**
          * The Open GL Render callback.
@@ -106,7 +96,7 @@ namespace megamol {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render( megamol::core::Call& call);
+        virtual bool Render(megamol::core::view::CallRender3D& call);
 
     private:
 
@@ -114,18 +104,17 @@ namespace megamol {
          * variables
          **********************************************************************/
         
-        // Anum of available key assignments
+        // Enum of available key assignments
         enum keyAssignment {
             KEY_ASSIGN_NONE = 0,
             KEY_ASSIGN_O = 1,
-            KEY_ASSIGN_P = 2,
+            KEY_ASSIGN_I = 2,
             KEY_ASSIGN_J = 3,
             KEY_ASSIGN_K = 4,
             KEY_ASSIGN_X = 5,
             KEY_ASSIGN_Y = 6
         };
 
-        float alpha;
         vislib::math::Cuboid<float> bbox;
         bool toggleReplacementRendering;
 
@@ -141,22 +130,15 @@ namespace megamol {
         **********************************************************************/
 
         /** The renderer caller slot */
-        core::CallerSlot slaveRendererSlot;
+        core::CallerSlot rendererCallerSlot;
 
         /**********************************************************************
         * parameters
         **********************************************************************/
 
-        /**  */
         core::param::ParamSlot replacementRenderingParam;
-
-        /**  */
         core::param::ParamSlot toggleReplacementRenderingParam;
-
-        /**  */
         core::param::ParamSlot replacementKeyParam;
-
-        /**  */
         core::param::ParamSlot alphaParam;
 
     };

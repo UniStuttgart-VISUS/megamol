@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+
+    <!-- Views for PDB files using new PDB loader -->
+    <view name="pdbview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinRenderer" name="protren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="CallProteinData" from="protren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbmolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbsesview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeSESRenderer" name="sesren" />
+        <call class="CallRender3D" from="view3d::rendering" to="sesren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="sesren::getdata" to="pdbdata::dataout" />
+    </view>
+
+	<view name="pdbcartoonview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="MoleculeCartoonRenderer" name="cartoonren" />
+		<call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+		<module class="PDBLoader" name="pdbdata" />
+		<call class="MolecularDataCall" from="cartoonren::getdata" to="pdbdata::dataout" />
+	</view>
+
+	<view name="pdbcartmolview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+		<call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <call class="CallRender3D" from="cartoonren::renderMolecule" to="molren::rendering" />
+		<module class="PDBLoader" name="pdbdata" />
+		<call class="MolecularDataCall" from="cartoonren::getdata" to="pdbdata::dataout" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+	</view>
+    
+    <!-- Views for PDB files -->
+    <view name="proteinview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinRenderer" name="protren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <module class="ProteinData" name="protdata" />
+        <call class="CallProteinData" from="protren::getdata" to="protdata::providedata" />
+    </view>
+
+	<view name="proteinviewcartoon" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererCartoon" name="protrencartoon" />
+		<call class="CallRender3D" from="view3d::rendering" to="protrencartoon::rendering" />
+		<module class="ProteinData" name="protdata" />
+		<call class="CallProteinData" from="protrencartoon::getdata" to="protdata::providedata" />
+	</view>
+
+	<view name="proteinviewses" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererSES" name="protrenses" />
+		<call class="CallRender3D" from="view3d::rendering" to="protrenses::rendering" />
+		<module class="ProteinData" name="protdata" />
+		<call class="CallProteinData" from="protrenses::getdata" to="protdata::providedata" />
+	</view>
+    
+	<view name="proteinmovementview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinMovementRenderer" name="protmoveren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protmoveren::rendering" />
+		<module class="ProteinMovementData" name="protdata" />
+		<call class="CallProteinMovementData" from="protmoveren::getdata" to="protdata::providedata" />
+	</view>
+
+    <view name="proteinviewccp4" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="protrenvol" />
+        <module class="ProteinRenderer" name="protren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protrenvol::rendering" />
+        <call class="CallRender3D" from="protrenvol::renderProtein" to="protren::rendering" />
+        <module class="CCP4VolumeData" name="voldata" />
+        <module class="ProteinData" name="protdata" />
+        <call class="CallVolumeData" from="protrenvol::getdata" to="voldata::providedata" />
+        <call class="CallProteinData" from="protren::getdata" to="protdata::providedata" />
+    </view>
+    
+	<view name="volumeview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="protvolren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protvolren::rendering" />
+        <module class="ProteinData" name="protdata" />
+        <call class="CallProteinData" from="protvolren::getdata" to="protdata::providedata" />
+	</view>
+    
+	<view name="proteinviewvol" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="protvolren" />
+        <module class="ProteinRenderer" name="protren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protvolren::rendering" />
+        <call class="CallRender3D" from="protvolren::renderProtein" to="protren::rendering" />
+        <module class="ProteinData" name="protdata" />
+        <call class="CallProteinData" from="protvolren::getdata" to="protdata::providedata" />
+        <call class="CallProteinData" from="protren::getdata" to="protdata::providedata" />
+	</view>
+    
+	<view name="proteinviewvolcartoon" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinVolumeRenderer" name="protvolren" />
+        <module class="ProteinRendererCartoon" name="protrencartoon" />
+		<call class="CallRender3D" from="view3d::rendering" to="protvolren::rendering" />
+        <call class="CallRender3D" from="protvolren::renderProtein" to="protrencartoon::rendering" />
+		<module class="ProteinData" name="protdata" />
+		<call class="CallProteinData" from="protvolren::getdata" to="protdata::providedata" />
+        <call class="CallProteinData" from="protrencartoon::getdata" to="protdata::providedata" />
+	</view>
+    
+	<view name="proteinviewstickses" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinRenderer" name="protren" />
+        <module class="ProteinRendererSES" name="protrenses" />
+        <call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <call class="CallRender3D" from="protren::renderSolvent" to="protrenses::rendering" />
+        <module class="ProteinData" name="protdata" />
+        <module class="ProteinData" name="protdata2" />
+        <call class="CallProteinData" from="protren::getdata" to="protdata::providedata" />
+        <call class="CallProteinData" from="protrenses::getdata" to="protdata2::providedata" />
+	</view>
+    
+    <!-- Views for NetCDF files -->
+	<view name="netcdfview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRenderer" name="protren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfsolventview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="SolventRenderer" name="solren" />
+		<call class="CallRender3D" from="view3d::rendering" to="solren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="solren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfprotsolview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRenderer" name="protren" />
+		<module class="SolventRenderer" name="solren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <call class="CallRender3D" from="protren::renderSolvent" to="solren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protren::getdata" to="netcdfdata::provideGeneralData" />
+		<call class="CallProteinData" from="solren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfcartoonsolview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererCartoon" name="protren" />
+		<module class="SolventRenderer" name="solren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <call class="CallRender3D" from="protren::renderSolvent" to="solren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protren::getdata" to="netcdfdata::provideGeneralData" />
+		<call class="CallProteinData" from="solren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfsessolview" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererSES" name="protren" />
+		<module class="SolventRenderer" name="solren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <call class="CallRender3D" from="protren::renderSolvent" to="solren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protren::getdata" to="netcdfdata::provideGeneralData" />
+		<call class="CallProteinData" from="solren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfviewcartoon" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererCartoon" name="protrencartoon" />
+		<call class="CallRender3D" from="view3d::rendering" to="protrencartoon::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protrencartoon::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfviewses" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinRendererSES" name="protrenses" />
+		<call class="CallRender3D" from="view3d::rendering" to="protrenses::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protrenses::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfviewvol" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinVolumeRenderer" name="protvolren" />
+        <module class="ProteinRenderer" name="protren" />
+		<call class="CallRender3D" from="view3d::rendering" to="protvolren::rendering" />
+        <call class="CallRender3D" from="protvolren::renderProtein" to="protren::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protvolren::getdata" to="netcdfdata::provideGeneralData" />
+        <call class="CallProteinData" from="protren::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+	<view name="netcdfviewvolcartoon" viewmod="view3d">
+		<module class="View3d" name="view3d" />
+		<module class="ProteinVolumeRenderer" name="protvolren" />
+        <module class="ProteinRendererCartoon" name="protrencartoon" />
+		<call class="CallRender3D" from="view3d::rendering" to="protvolren::rendering" />
+        <call class="CallRender3D" from="protvolren::renderProtein" to="protrencartoon::rendering" />
+		<module class="NetCDFData" name="netcdfdata" />
+		<call class="CallProteinData" from="protvolren::getdata" to="netcdfdata::provideGeneralData" />
+        <call class="CallProteinData" from="protrencartoon::getdata" to="netcdfdata::provideGeneralData" />
+	</view>
+
+    <!-- Views for coarse grain data files -->
+    <view name="cgsphereview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="SphereRenderer" name="sphereren" />
+        <call class="CallRender3D" from="view3d::rendering" to="sphereren::rendering" />
+        <module class="CoarseGrainDataLoader" name="cgdata" />
+        <call class="SphereDataCall" from="sphereren::getdata" to="cgdata::dataout" />
+    </view>
+
+</MegaMol>

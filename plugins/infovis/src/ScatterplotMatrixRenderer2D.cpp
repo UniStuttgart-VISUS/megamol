@@ -35,12 +35,31 @@ vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProject
     return projMatrix * modelViewMatrix;
 }
 
-inline float lerp(float x, float y, float a) { return x * (1.0f - a) + y * a; }
-
 inline std::string to_string(float x) {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(2) << x;
     return stream.str();
+}
+
+inline float lerp(float x, float y, float a) { return x * (1.0f - a) + y * a; }
+
+inline float rangeToSmallStep(double min, double max) {
+    double countBigSteps = 4.0;
+    double countMidSteps = countBigSteps * 5.0;
+    double countSmallSteps = countMidSteps * 5.0;
+
+    double delta = fabs(max - min);
+
+    // Fit to decimal system: (whole number) * 10^(whole number)
+    // Note: should be without -1.0. Could be floating point weirdness, i.e.,
+    // 1.00001 being rounded to 2.0 instead to 1.0 with base 10.
+    double exponent = ceil(log2(delta / countSmallSteps) / log2(10.0)) - 1.0;
+    double power = pow(10.0, exponent);
+    double mantissa = (delta / countSmallSteps) / power;
+    mantissa = round(mantissa * 2.0);
+    mantissa = mantissa / 2.0;
+
+    return mantissa * power;
 }
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
@@ -54,6 +73,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
+    , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
     , axisTicksParam("axisTicks", "Number of ticks on the axis")
@@ -105,6 +125,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
 
+    core::param::EnumParam* axisModes = new core::param::EnumParam(0);
+    axisModes->SetTypePair(AXIS_MODE_MINIMALISTIC, "Minimalistic");
+    axisModes->SetTypePair(AXIS_MODE_SCIENTIFIC, "Scientific");
+    this->axisModeParam << axisModes;
+    this->MakeSlotAvailable(&this->axisModeParam);
+
     this->axisColorParam << new core::param::ColorParam("white");
     this->MakeSlotAvailable(&this->axisColorParam);
 
@@ -145,7 +171,8 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 bool ScatterplotMatrixRenderer2D::create(void) {
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
     if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
-    if (!makeProgram("::splom::axis", this->axisShader)) return false;
+    if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
+    if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
     if (!makeProgram("::splom::line", this->lineShader)) return false;
 
@@ -179,7 +206,15 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
         if (!this->validateData()) return false;
 
-        this->drawAxes();
+        auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
+        switch (axisMode) {
+        case AXIS_MODE_MINIMALISTIC:
+            this->drawMinimalisticAxis();
+            break;
+        case AXIS_MODE_SCIENTIFIC:
+            this->drawScientificAxis();
+            break;
+        }
 
         auto geometryType = this->geometryTypeParam.Param<core::param::EnumParam>()->Value();
         switch (geometryType) {
@@ -277,7 +312,9 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     for (GLuint y = 0; y < columnCount; ++y) {
         for (GLuint x = 0; x < y; ++x) {
             plots.push_back({x, y, x * (size + margin), y * (size + margin), size, size, columnInfos[x].MinimumValue(),
-                columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue()});
+                columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue(),
+                rangeToSmallStep(columnInfos[x].MinimumValue(), columnInfos[x].MaximumValue()),
+                rangeToSmallStep(columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue())});
         }
     }
 
@@ -294,21 +331,21 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     plotSSBO.SignalCompletion(sync);
 }
 
-void ScatterplotMatrixRenderer2D::drawAxes(void) {
-    this->axisShader.Enable();
+void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
+    this->minimalisticAxisShader.Enable();
 
     // Transformation uniform.
-    glUniformMatrix4fv(this->axisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+    glUniformMatrix4fv(this->minimalisticAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
-    glUniform4fv(this->axisShader.ParameterLocation("axisColor"), 1,
+    glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value());
-    glUniform1ui(this->axisShader.ParameterLocation("numTicks"), numTicks);
-    glUniform1f(this->axisShader.ParameterLocation("tickLength"), tickLength);
-    glUniform1i(this->axisShader.ParameterLocation("redundantTicks"),
+    glUniform1ui(this->minimalisticAxisShader.ParameterLocation("numTicks"), numTicks);
+    glUniform1f(this->minimalisticAxisShader.ParameterLocation("tickLength"), tickLength);
+    glUniform1i(this->minimalisticAxisShader.ParameterLocation("redundantTicks"),
         this->axisTicksRedundantParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     // Line width.
@@ -327,8 +364,7 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
     glDrawArraysInstanced(GL_LINES, 0, numItems, this->plots.size());
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    this->axisShader.Disable();
-
+    this->minimalisticAxisShader.Disable();
 
     this->axisFont.ClearBatchDrawCache();
 
@@ -361,6 +397,107 @@ void ScatterplotMatrixRenderer2D::drawAxes(void) {
             if (i > 0) {
                 this->axisFont.DrawString(axisColor, xyBL - margin + tickLength, p, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+            }
+        }
+    }
+
+    this->axisFont.BatchDrawString();
+}
+
+void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
+    const auto* axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
+    const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
+    const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
+    const float tickLabelSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
+
+    // Compute cell size in viewport space.
+    GLfloat viewport[4];
+    glGetFloatv(GL_VIEWPORT, viewport);
+
+    auto mvpMatrix = getModelViewProjection();
+    auto ndcSpaceSize = mvpMatrix * vislib::math::Vector<float, 4>(size, size, 0.0f, 0.0f);
+    auto screenSpaceSize =
+        vislib::math::Vector<float, 2>(viewport[2] / 2.0 * ndcSpaceSize.X(), viewport[3] / 2.0 * ndcSpaceSize.Y());
+
+    // 0: no grid <-> 3: big,mid,small grid
+    GLint recursiveDepth = 0;
+    if (screenSpaceSize.X() > 900) {
+        recursiveDepth = 3;
+    } else if (screenSpaceSize.X() > 300) {
+        recursiveDepth = 2;
+    } else if (screenSpaceSize.X() > 75) {
+        recursiveDepth = 1;
+    }
+
+    this->scientificAxisShader.Enable();
+
+    // Blending.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+
+    // Transformation uniform.
+    glUniformMatrix4fv(
+        this->scientificAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+
+    // Other uniforms.
+    glUniform1ui(this->scientificAxisShader.ParameterLocation("depth"), recursiveDepth);
+    glUniform4fv(this->scientificAxisShader.ParameterLocation("axisColor"), 1,
+        this->axisColorParam.Param<core::param::ColorParam>()->Value());
+
+    // Render all plots at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(), this->plotDstOffset,
+        this->plotDstLength);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    glDrawArraysInstanced(GL_QUADS, 0, 4, this->plots.size());
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    this->scientificAxisShader.Disable();
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    this->axisFont.ClearBatchDrawCache();
+
+    for (size_t i = 0; i < columnCount; ++i) {
+        const float cellStart = i * (size + margin);
+        const float cellEnd = (i + 1) * (size + margin) - margin;
+
+        // Labels
+        std::string label = columnInfos[i].Name();
+        this->axisFont.DrawString(axisColor, cellStart, cellEnd, size, size, nameSize, false, label.c_str(),
+            core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+
+        float delta = columnInfos[i].MaximumValue() - columnInfos[i].MinimumValue();
+        // Tick sizes: big *25, mid *5, small *1
+        float tickSize = rangeToSmallStep(columnInfos[i].MaximumValue(), columnInfos[i].MinimumValue()) * 25;
+        float firstTick = ceil(columnInfos[i].MinimumValue() / tickSize) * tickSize;
+
+        for (float tickPos = firstTick; tickPos <= columnInfos[i].MaximumValue(); tickPos += tickSize) {
+            float normalized = (tickPos - columnInfos[i].MinimumValue()) / delta;
+            float offset = normalized * size;
+
+            float pos = cellStart + offset;
+
+            const std::string pLabel = to_string(tickPos);
+
+            // Tick labels for x axis
+            if (i < columnCount - 1) {
+                this->axisFont.DrawString(axisColor, pos, cellEnd + tickLength, tickLabelSize, false, pLabel.c_str(),
+                    core::utility::AbstractFont::ALIGN_CENTER_TOP);
+            }
+            // Tick labels for y axis
+            if (i > 0) {
+                this->axisFont.DrawString(axisColor, cellStart - margin + tickLength, pos, tickLabelSize, false,
+                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }

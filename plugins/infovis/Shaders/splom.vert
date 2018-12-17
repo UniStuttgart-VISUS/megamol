@@ -2,8 +2,8 @@ uniform vec4 viewport;
 uniform mat4 modelViewProjection;
 
 uniform sampler1D colorTable;
-uniform uint colorCount;
-uniform uint colorColumn;
+uniform int colorCount;
+uniform int colorColumn;
 
 uniform int rowStride;
 

@@ -17,6 +17,7 @@
 #include "mmcore/misc/VolumetricDataCallTypes.h"
 
 #include "vislib/Array.h"
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {
@@ -130,7 +131,13 @@ namespace misc {
          * @return The raw data.
          */
         inline const void *GetData(void) const {
-            return this->data;
+            if (metadata != nullptr && metadata->MemLoc == RAM) {
+				return this->data;
+			}
+			else {
+				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				return nullptr;
+			}
         }
 
         /**
@@ -139,8 +146,24 @@ namespace misc {
          * @return The raw data.
          */
         inline void *GetData(void) {
-            return this->data;
+			if (metadata != nullptr && metadata->MemLoc == RAM) {
+				return this->data;
+			}
+			else {
+				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				return nullptr;
+			}
         }
+
+		inline uint32_t GetVRAMData(void) const {
+			if (metadata != nullptr && metadata->MemLoc == VRAM){
+				return vram_volume_name;
+			}
+			else {
+				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from RAM: Volume data location set to VRAM.");
+				return 0;
+			}
+		}
 
         /**
          * Gets the total number of frames in the data set.
@@ -221,6 +244,17 @@ namespace misc {
         }
 
         /**
+         * Gets the voxel value relative to [min, max] from channel c.
+         */
+        const float GetRelativeVoxelValue(const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c = 0) const;
+
+        /**
+         * Gets the voxel value relative to [min, max] from channel c.
+         */
+        const float GetAbsoluteVoxelValue(
+            const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c = 0) const;
+
+        /**
          * Answer whether the given axis is uniform or has
          * this->GetResolution(axis) entries in the slice distance area.
          *
@@ -250,6 +284,10 @@ namespace misc {
             this->data = data;
             this->cntFrames = cntFrames;
         }
+
+		void SetData(uint32_t texture_name)	{
+			this->vram_volume_name = texture_name;
+		}
 
         /**
          * Update the metadata.
@@ -281,6 +319,9 @@ namespace misc {
 
         /** The pointer to the raw data. The call does not own this memory! */
         void *data;
+
+		/** The texture name of the volume data if data is already located in VRAM. */
+		uint32_t vram_volume_name;
 
         /** Pointer to the metadata descriptor of the data set. */
         const Metadata *metadata;

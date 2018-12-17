@@ -18,7 +18,7 @@
 namespace megamol {
 namespace ospray {
 
-enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME };
+enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES };
 
 enum geometryTypeEnum {
     SPHERES,
@@ -27,7 +27,6 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
-    OSPRAY_API_GEOMETRY,
     PKD,
     AOVSPHERES
 };
@@ -74,7 +73,7 @@ public:
     std::shared_ptr<std::vector<float>> sliceData;
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
-    std::shared_ptr<const void*> raw;
+    const void* raw;
     std::shared_ptr<void const*> raw2;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
@@ -84,8 +83,8 @@ public:
     std::shared_ptr<std::vector<float>> zData;
     std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however,
                                                                // this makes access more concise in the renderer
-    void* ospstructure;
 
+    std::vector<std::pair<void*, structureTypeEnum>> ospStructures;
 
     unsigned int voxelCount;
     unsigned int maxDim;
@@ -103,6 +102,7 @@ public:
     bool clippingBoxActive;
     bool dataChanged;
     bool materialChanged;
+    bool parameterChanged;
     bool isValid;
     bool smooth; //< valid for lines
 
@@ -119,6 +119,7 @@ public:
 
     float samplingRate;
     float aoThreshold;
+    float aoRayOffsetFactor;
 
     OSPRayStructureContainer();
     ~OSPRayStructureContainer();

@@ -10,7 +10,7 @@
 #include <cstdarg>
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
 #include <cstdlib>
 #endif /* _WIn32 */

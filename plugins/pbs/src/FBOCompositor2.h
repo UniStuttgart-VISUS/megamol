@@ -20,6 +20,7 @@
 
 #include "image_calls/Image2DCall.h"
 
+
 namespace megamol {
 namespace pbs {
 
@@ -44,7 +45,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return gladLoadGL(); }
+    static bool IsAvailable(void) { return true; }//gladLoadGL(); }
 
     FBOCompositor2(void);
 
@@ -56,8 +57,6 @@ protected:
     void release(void) override;
 
 private:
-    bool GetCapabilities(core::Call& call) override;
-
     bool GetExtents(core::Call& call) override;
 
     bool Render(core::Call& call) override;
@@ -117,6 +116,8 @@ private:
 
     megamol::core::param::ParamSlot restartSlot_;
 
+    megamol::core::param::ParamSlot renderOnlyRequestedFramesSlot_;
+
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
     std::thread collector_thread_;
@@ -171,6 +172,10 @@ private:
 
     GLsizei height_;
 
+    float frame_times_[2];
+
+    float camera_params_[9];
+
     std::vector<GLuint> color_textures_;
 
     std::vector<GLuint> depth_textures_;
@@ -200,6 +205,7 @@ private:
     bool shutdown_ = false;
 
     bool register_done_ = false;
+
 }; // end class FBOCompositor2
 
 } // end namespace pbs

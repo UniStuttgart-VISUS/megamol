@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 
 namespace MegaMolConf {
-    class GraphicalModule : INotifyPropertyChanged {
+    public class GraphicalModule : INotifyPropertyChanged {
         static Font moduleClassFont = new Font("Calibri", 8.0f, FontStyle.Italic);
         static Font moduleNameFont = new Font("Calibri", 10.0f);
         static Brush moduleNameBrush = Brushes.Black;
@@ -18,14 +18,24 @@ namespace MegaMolConf {
         static Pen compatibleSlotBorder = new Pen(selectedSlotBrush, 2.0f);
         static StringFormat moduleClassFormat = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Near, FormatFlags = StringFormatFlags.NoWrap };
         static StringFormat moduleNameFormat = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far, FormatFlags = StringFormatFlags.NoWrap };
-        static int slotWidth = 8;
-        static int slotHeight = 10;
-        static int slotSpacing = 16;
+        private static int slotWidth => (int)Math.Round((float)slotWidth_ * DpiFactor);
+        private static int slotHeight => (int)Math.Round((float)slotHeight_ * DpiFactor);
+        private static int slotSpacing => (int)Math.Round((float)slotSpacing_ * DpiFactor);
+        private const int slotWidth_ = 8;
+        static int slotHeight_ = 10;
+        static int slotSpacing_ = 16;
         static int slotBorder = (slotSpacing - slotHeight) / 2;
         //static float slotScale = 1.8f;
         static int moduleBorder = 10;
         static Pen selectedModulPen1 = makeMyPen1();
         static Pen selectedModulPen2 = makeMyPen2();
+        private static float _dpiFactor = 1.0f;
+
+        public static float DpiFactor
+        {
+            get { return _dpiFactor; }
+            set { _dpiFactor = value; }
+        }
 
         static Pen makeMyPen1() {
             Pen p = new Pen(Color.FromArgb(0x60, 0x8f, 0xbf));

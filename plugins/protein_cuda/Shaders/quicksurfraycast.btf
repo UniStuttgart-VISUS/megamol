@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="quicksurfraycast">
+    <include file="common" />
+
+    <namespace name="texture">
+        <shader name="textureVertex">
+            <snippet type="version">430</snippet>
+            <snippet type="string">
+<!--
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec4 vColor;
+
+out vec2 texCoord;
+
+void main()
+{
+    texCoord = vColor.xy;
+    gl_Position = vec4(vPosition.xyz, 1.0);
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="textureFragment">
+        <snippet type="version">430</snippet>
+        <snippet type="string">
+<!--
+layout(location = 0) out vec4 frag_color;
+
+layout(binding = 15) uniform sampler2D myTexture;
+layout(binding = 16) uniform sampler2D depthTexture;
+
+uniform bool showDepth = false;
+uniform bool useDepth = false;
+uniform float near = 0.1;
+uniform float far = 1.0;
+
+in vec2 texCoord;
+
+void main()
+{
+    frag_color = texture(myTexture, texCoord.st).rgba;
+
+    float depth = texture(depthTexture, texCoord.st).r;
+    if(showDepth) {
+        float dc = depth;
+        /*float f = far / 10.0;
+        float n = near;
+        dc = (2.0 * n) / (f + n - dc * (f - n));*/
+        frag_color = vec4(abs(dc), abs(dc), abs(dc), 1.0);
+    }
+
+    if(useDepth) {
+        gl_FragDepth = depth;
+    }
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+</btf>

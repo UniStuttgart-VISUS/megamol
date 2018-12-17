@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
 
-#include <windows.h>
+#include <Windows.h>
 
 #include "vislib/assert.h"
 #include "vislib/sys/RegistryKey.h"

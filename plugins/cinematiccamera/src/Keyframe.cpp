@@ -15,19 +15,24 @@ using namespace megamol::cinematiccamera;
 /*
 * Keyframe::Keyframe
 */
-Keyframe::Keyframe() {
-    this->animTime              = 0.0f;
-    this->simTime               = 0.0f;
-    this->camera.position       = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
-    this->camera.lookat         = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->camera.up             = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
-    this->camera.apertureangle  = 30.0f;
+Keyframe::Keyframe() :
+    animTime(0.0f),
+    simTime(0.0f),
+    camera()
+{
+
+    this->camera.position      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
+    this->camera.lookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
+    this->camera.up            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
+    this->camera.apertureangle = 30.0f;
 }
 
 
-Keyframe::Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up, vislib::math::Point<float, 3> lookat, float aperture) {
-    this->animTime              = at;
-    this->simTime               = st;
+Keyframe::Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up, vislib::math::Point<float, 3> lookat, float aperture) : 
+    animTime(at),
+    simTime(st),
+    camera() 
+{
     this->camera.position       = pos;
     this->camera.lookat         = lookat;
     this->camera.up             = up;

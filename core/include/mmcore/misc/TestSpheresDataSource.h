@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#define MMCORE_TEST_DYN_PARAM_SLOTS 1
+//#define MMCORE_TEST_DYN_PARAM_SLOTS 1
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/view/AnimDataModule.h"
