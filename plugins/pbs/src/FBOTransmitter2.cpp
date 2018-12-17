@@ -29,11 +29,6 @@
 #    include <unistd.h>
 #endif
 
-//#define FILE_TEST
-#ifdef FILE_TEST
-#    include <fstream>
-#endif
-
 //#define _DEBUG 1
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
@@ -239,16 +234,8 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 #else
             this->color_buf_read_->resize(col_buf.size());
             this->depth_buf_read_->resize(depth_buf.size());
-            std::copy(this->color_buf_read_->begin(), this->color_buf_read_->end(), col_buf.begin());
-            std::copy(this->depth_buf_read_->begin(), this->depth_buf_read_->end(), depth_buf.begin());
-
-
-#    ifdef FILE_TEST
-            std::ofstream fs;
-            fs.open("transmitter.raw", std::ios::binary | std::ios::out);
-            fs.write(col_buf.data(), col_buf.size());
-            fs.close();
-#    endif
+            std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
 #endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
