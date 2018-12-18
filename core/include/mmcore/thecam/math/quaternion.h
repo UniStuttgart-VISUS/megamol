@@ -276,8 +276,8 @@ namespace math {
          * @return An identity quaternion.
          */
         static inline quaternion make_identity(void) {
-            quaternion retval(the::do_not_initialise);
-            the::math::set_identity(retval);
+            quaternion retval(thecam::utility::do_not_initialise);
+            thecam::math::set_identity(retval);
             return retval;
         }
 

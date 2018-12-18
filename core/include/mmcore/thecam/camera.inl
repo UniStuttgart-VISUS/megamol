@@ -337,7 +337,7 @@ void megamol::core::thecam::camera<M, P>::reset(void) {
     const auto WZ = static_cast<world_type>(0);
     const auto WO = static_cast<world_type>(1);
 
-    this->centre_offset(the::math::vector<fractional_type, 2>());
+    this->centre_offset(thecam::math::vector<fractional_type, 2>());
     this->convergence_plane(WZ);
     this->half_disparity(WZ);
     this->eye(megamol::core::thecam::eye::centre);

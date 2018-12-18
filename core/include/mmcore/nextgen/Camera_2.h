@@ -36,8 +36,8 @@ public:
     virtual ~Camera_2(void);
 
 private:
-    
-    
+    /** The camera itself */
+    cam_type camera;
 };
 } // namespace nextgen
 } // namespace core
