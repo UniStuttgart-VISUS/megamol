@@ -47,7 +47,7 @@ if role == "head" then
     mmSetParamValue("::scs::server::noEcho",                   "true")
         
     mmCreateView("mpi_lua", "CinematicView", "v")
-    mmSetParamValue("::mpi_lua::v::backCol",                   "grey")  -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
+    mmSetParamValue("::mpi_lua::v::backCol",                   "grey") -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
     mmSetParamValue("::mpi_lua::v::viewcube::show",            "false") -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
     mmSetParamValue("::mpi_lua::v::showBBox",                  "false") -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
     mmSetParamValue("::mpi_lua::v::05_cinematicWidth",         cc_width_str)
@@ -67,7 +67,7 @@ if role == "head" then
     mmCreateCall("CallRender3D",        "::mpi_lua::v::rendering",      "::mpi_lua::fboc::rendering")
 
 else
-    
+
     mmCreateModule("View3D", "::mpi_lua::v") 
     --mmCreateView("mpi_lua", "View3D", "v") 
 
@@ -80,7 +80,10 @@ else
     mmSetParamValue("::mpi_lua::fbot::view",                  "::mpi_lua::v")
     mmSetParamValue("::mpi_lua::fbot::aggregate",             aggregate)
     mmSetParamValue("::mpi_lua::fbot::port",                  tostring(34230 + rank)) -- 34242 or 34230
-    mmSetParamValue("::mpi_lua::fbot::targetMachine",         headNode)   
+    mmSetParamValue("::mpi_lua::fbot::targetMachine",         headNode)  
+    if (headNode == "localhost" or headNode == "127.0.0.1") then
+        mmSetParamValue("::mpi_lua::fbot::force_localhost",  "true")
+    end     
     mmSetParamValue("::mpi_lua::fbot::trigger",               " ") -- Must be set!!!
 
     if (aggregate == "true") then

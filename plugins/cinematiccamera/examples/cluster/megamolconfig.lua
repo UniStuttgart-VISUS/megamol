@@ -3,8 +3,8 @@
 print("I am the MegaMol VISUS CinematicCamera cluster configuration!")
 
 basePath = "\\\\vestastore\\Entwicklung\\braunms\\cinematiccamera\\"
-
-mmSetConfigValue("headNode",   "minyou")
+headNode = "minyou"
+mmSetConfigValue("headNode",   headNode)
 mmSetConfigValue("renderHead", "10.35.1.1")
 
 mmSetLogLevel(     0)
@@ -18,7 +18,8 @@ mmSetConfigValue("consolegui", "off")
 mmSetConfigValue("topmost",    "on")
 mmSetConfigValue("vsync",      "off")
 
-computer   = mmGetMachineName()
+computer   = string.lower(mmGetMachineName())
+rank       = mmGetEnvValue("PMI_RANK")
 node_count = 20
 
 --- Load cinematic parameters ---
@@ -31,13 +32,13 @@ mmSetConfigValue("cinematic_luaFileToLoad", tostring(cinematic.luaFileToLoad))
 mmSetConfigValue("cinematic_keyframeFile",  tostring(cinematic.keyframeFile))
 
 
-if string.lower(computer) == "minyou" then
+if computer == headNode then
     mmSetConfigValue("*-window",   "x5y35w2000h1000")
     mmSetConfigValue("consolegui", "on")
     mmSetConfigValue("topmost",    "off")
     mmSetConfigValue("fullscreen", "off")
 else
-    keshikinumber = string.match(string.lower(computer), "keshiki(%d+)")
+    keshikinumber = string.match(computer, "keshiki(%d+)")
     if keshikinumber ~= nil then
     
         print("I think I am keshiki" .. keshikinumber)

@@ -40,7 +40,6 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
-    , mpiclusterview_name_slot_{"mpi_cluster_view", "The name of the MpiClusterView instance. Necessary for being able to extract tile viewports for screen space subdivision."} 
 #ifdef WITH_MPI
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -77,8 +76,6 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
-    this->mpiclusterview_name_slot_ << new megamol::core::param::StringParam{""};
-    this->MakeSlotAvailable(&this->mpiclusterview_name_slot_);
 }
 
 
@@ -473,7 +470,7 @@ bool megamol::pbs::FBOTransmitter2::extractCameraParams(float cam_params[9]) {
 
 bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     bool success = true;
-    std::string mcvvn(mpiclusterview_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     // this->ModuleGraphLock().LockExclusive();
 
     /*auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::cluster::simple::View>(
@@ -488,7 +485,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 
     auto const ret = this->GetCoreInstance()
                    ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                       mcvvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
+                       mvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
                            vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
                            vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
                            vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
@@ -497,8 +494,8 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
                            vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
                        });
 
-    if (!ret && !mcvvn.empty()) {
-        if (!mcvvn.empty()) {
+    if (!ret && !mvn.empty()) {
+        if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW\n");
         }
         success = false;

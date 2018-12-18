@@ -110,8 +110,6 @@ private:
 
     megamol::core::param::ParamSlot view_name_slot_;
 
-    megamol::core::param::ParamSlot mpiclusterview_name_slot_;
-
     megamol::core::param::ParamSlot trigger_button_slot_;
 
     megamol::core::param::ParamSlot target_machine_slot_;
