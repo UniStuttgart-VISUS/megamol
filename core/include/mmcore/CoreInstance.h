@@ -491,8 +491,11 @@ public:
             for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
                 auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
                 if (sl != nullptr) {
-                    cb(*(sl->template CallAs<C>()));
-                    found = true;
+                    auto call = sl->template CallAs<C>();
+                    if (call != nullptr) {
+                        cb(*(call));
+                        found = true;
+                    }
                 }
             }
             if (!found) {

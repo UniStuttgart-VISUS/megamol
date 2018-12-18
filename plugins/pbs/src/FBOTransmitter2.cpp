@@ -21,6 +21,8 @@
 #include "mmcore/cluster/simple/View.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
+#include "mmcore/view/View3D.h"
+#include "mmcore/cluster/simple/Client.h"
 
 #ifdef __unix__
 #    include <limits.h>
@@ -229,6 +231,11 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             this->depth_buf_read_->resize(depth_buf.size());
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
+#else
+            this->color_buf_read_->resize(col_buf.size());
+            this->depth_buf_read_->resize(depth_buf.size());
+            std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
 #endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
@@ -469,7 +476,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     std::string mcvvn(mpiclusterview_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     // this->ModuleGraphLock().LockExclusive();
 
-    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::cluster::simple::View>(
+    /*auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::cluster::simple::View>(
         mcvvn, [vvpt](megamol::core::cluster::simple::View& sv) {
             vvpt[0] = static_cast<int>(sv.getTileX());
             vvpt[1] = static_cast<int>(sv.getTileY());
@@ -477,7 +484,18 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
             vvpt[3] = static_cast<int>(sv.getTileH());
             vvpt[4] = static_cast<int>(sv.getVirtWidth());
             vvpt[5] = static_cast<int>(sv.getVirtHeight());
-        });
+        });*/
+
+    auto const ret = this->GetCoreInstance()
+                   ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                       mcvvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
+                           vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
+                           vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
+                           vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
+                           vvpt[3] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Height());
+                           vvpt[4] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Width());
+                           vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
+                       });
 
     if (!ret && !mcvvn.empty()) {
         if (!mcvvn.empty()) {
