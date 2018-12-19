@@ -400,10 +400,13 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
                     bbox[5] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
                 });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: could not find VIEW name to set bounding box\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
@@ -425,10 +428,13 @@ bool megamol::pbs::FBOTransmitter2::extractFrameTimes(float frame_times[2]) {
                     frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
                 });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: could not find VIEW name to set frame times\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
@@ -458,10 +464,13 @@ bool megamol::pbs::FBOTransmitter2::extractCameraParams(float cam_params[9]) {
                     cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
                 });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: could not find VIEW name to set camera params\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
@@ -497,9 +506,12 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
                            vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
                        });
 
-    if (!ret && !mcvvn.empty()) {
+    if (!ret || mcvvn.empty()) {
         if (!mcvvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find MPI CLUSTER VIEW with empty name\n");
         }
         success = false;
     }
@@ -529,9 +541,12 @@ bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<float, 4> 
             }
         });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW\n");
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
