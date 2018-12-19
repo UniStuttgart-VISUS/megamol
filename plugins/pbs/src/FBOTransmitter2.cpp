@@ -389,10 +389,6 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    if (mvn.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "FBOTransmitter2: No VIEW name given.");
-        return false;
-    }
 
     // this->ModuleGraphLock().LockExclusive();
     const auto retBbox =
@@ -430,10 +426,14 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
                 cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
             });
 
-    if (!(retBbox && retTimes && retCam) && !mvn.empty()) {
+    if (!(retBbox && retTimes && retCam) || !mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract meta data.\n");
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -465,9 +465,13 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
                            vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
                        });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || !mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -499,9 +503,13 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
             }
         });
 
-    if (!ret && !mvn.empty()) {
+    if (!ret || !mvn.empty()) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
