@@ -2,9 +2,11 @@
 
 print("I am the MegaMol VISUS CinematicCamera cluster configuration!")
 
-basePath = "D:\\03_megamol\\cc\\"
+basePath   = "D:\\03_megamol\\cc\\"
+rank       = mmGetEnvValue("PMI_RANK")
+node_count = 2
+headNode   = "127.0.0.1"
 
-headNode = "127.0.0.1"
 mmSetConfigValue("headNode",   headNode)
 mmSetConfigValue("renderHead", "127.0.0.1")
 
@@ -19,8 +21,6 @@ mmSetConfigValue("consolegui", "on")
 mmSetConfigValue("topmost",    "off")
 mmSetConfigValue("vsync",      "off")
 
-rank       = mmGetEnvValue("PMI_RANK")
-node_count = 2
 
 --- Load cinematic parameters ---
 local cinematic = require("cinematic_params")
@@ -44,7 +44,7 @@ cc_tile_X_str = tostring(cc_W_int // node_count * node_index)
 cc_tile_W_str = tostring(cc_W_int // node_count)
 cc_tile_H_str = cc_H_str
 
-mmSetConfigValue("t1-window", "x0y0w" .. cc_tile_W_str .. "h" .. cc_tile_H_str ) -- .. "nd") 
+mmSetConfigValue("t1-window", "x50y50w" .. cc_tile_W_str .. "h" .. cc_tile_H_str ) -- .. "nd") 
 mmSetConfigValue("tvview",    cc_W_str .. ";" .. cc_H_str)   
 mmSetConfigValue("t1-tvtile", cc_tile_X_str .. ";0;" .. cc_tile_W_str .. ";" .. cc_tile_H_str)   
 mmSetConfigValue("tvproj",    "mono")

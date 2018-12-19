@@ -15,10 +15,6 @@ mmAddShaderDir(    basePath .. "share\\shaders")
 mmAddResourceDir(  basePath .. "share\\resources")
 mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 
-mmSetConfigValue("consolegui", "on")
-mmSetConfigValue("topmost",    "off")
-mmSetConfigValue("vsync",      "off")
-
 
 --- Load cinematic parameters ---
 local cinematic = require("cinematic_params")
@@ -31,7 +27,7 @@ mmSetConfigValue("cinematic_keyframeFile",  tostring(cinematic.keyframeFile))
 
 
 --- Head config values ---
-mmSetConfigValue("*-window",   "x5y35w2000h1000")
+mmSetConfigValue("*-window",   "x5y35w1500h750")
 mmSetConfigValue("consolegui", "on")
 mmSetConfigValue("topmost",    "off")
 mmSetConfigValue("fullscreen", "off")
