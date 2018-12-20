@@ -48,7 +48,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
     color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
     color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
-    depth_buf_el_size_{4}, connected_{false} {
+    depth_buf_el_size_{4}, connected_{false}, validViewport(false) {
     this->address_slot_ << new megamol::core::param::StringParam{"34242"};
     this->MakeSlotAvailable(&this->address_slot_);
     this->handshake_port_slot_ << new megamol::core::param::IntParam(42000);
@@ -96,48 +96,23 @@ void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
 
-    // extract viewport or get if from opengl context
-    int width            = 1;
-    int height           = 1;
-    int tile_width       = 1;
-    int tile_height      = 1;
-    int viewport[4]      = { 0, 0, 1, 1 };
-    int tile_viewport[4] = { 0, 0, 1, 1 };
-    int vvpt[6]          = { 0, 0, 1, 1, 1, 1 };
-    if (this->extractViewport(vvpt)) {
-        for (int i = 0; i < 4; ++i) {
-            tile_viewport[i] = vvpt[i];
+    if (!this->validViewport) {
+        if (!this->extractViewport(this->viewport)) {
+            GLint glvp[4];
+            glGetIntegerv(GL_VIEWPORT, glvp);
+            for (int i = 0; i < 4; ++i) {
+                this->viewport[i] = glvp[i];
+            }
+            this->viewport[4] = glvp[2];
+            this->viewport[5] = glvp[3];
         }
-        viewport[0]          = 0;
-        viewport[1]          = 0;
-        tile_width           = vvpt[2];
-        tile_height          = vvpt[3];
-        width  = viewport[2] = vvpt[4];
-        height = viewport[3] = vvpt[5];
-
-        // Check if tile viewport lies outside global viewport
-        if ((tile_viewport[0] < viewport[0]) ||
-            (tile_viewport[1] < viewport[1]) ||
-            (tile_viewport[0] + tile_viewport[2]) > (viewport[0] + viewport[2]) ||
-            (tile_viewport[1] + tile_viewport[3]) > (viewport[1] + viewport[3])) {
-            vislib::StringA e;
-            e.Format("[FBOTransmitter2] [AfterRender] Tile viewport (%d, %d, %d, %d) lies outside global viewport (%d, %d, %d, %d).",
-                tile_viewport[0], tile_viewport[1], tile_viewport[2], tile_viewport[3],
-                viewport[0], viewport[1], viewport[2], viewport[3]);
-            throw vislib::Exception(e.PeekBuffer(), __FILE__, __LINE__);
-        }
-
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: extracted viewport for rank %d: (%d, %d, %d, %d, %d, %d).", 
-            this->mpiRank, vvpt[0], vvpt[1], vvpt[2], vvpt[3], vvpt[4], vvpt[5]);
     }
-    else {
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        for (int i = 0; i < 4; ++i) {
-            tile_viewport[i] = viewport[i];
-        }
-        width  = tile_width  = viewport[2];
-        height = tile_height = viewport[3];
-    }
+    int xoff        = this->viewport[0];
+    int yoff        = this->viewport[1];
+    int tile_width  = this->viewport[2];
+    int tile_height = this->viewport[3];
+    int width       = this->viewport[4];
+    int height      = this->viewport[5];
 
     // read FBO
     std::vector<char> col_buf(width * height * col_buf_el_size_);
@@ -154,14 +129,15 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf_tile.data());
         glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf_tile.data());
 
-        int row_offset           = tile_viewport[1]  * width; // y * width = row offset * tile width
-        int colomn_offset        = tile_viewport[0];          // x  = column offset 
+        int row_offset           = yoff  * width; // y * width = row offset * tile width
+        int column_offset        = xoff;          // x  = column offset 
         int color_row_tile_width = col_buf_el_size_   * tile_width;
         int depth_row_tile_width = depth_buf_el_size_ * tile_width;
 
         // Copy tile rows to right position to fit row major format
+        int offset = 0;
         for (int i = 0; i < tile_height; ++i) {
-            int offset = row_offset + (i * width) + colomn_offset;
+            offset = row_offset + column_offset + (i * width);
             memcpy(col_buf.data()   + (col_buf_el_size_   * offset), col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
             memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
         }
@@ -172,15 +148,15 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
-#if _DEBUG
+#if    _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
-        std::array<float, 4> backgroundColor = { 0, 0, 0, 0 };
-        if (!this->extractBkgndColor(backgroundColor)) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not extract background color.\n");
-        }
+        std::array<float, 4> backgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+        this->extractBkgndColor(backgroundColor);
+
+        int tilevp[4] = { xoff, yoff, tile_width, tile_height }; // define current valid pixel viewport for icet 
         auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), tile_viewport, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
+            icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
 
         if (mpiRank == 0) {
             icet_col_buf   = icetImageGetColorub(icet_comp_image);
@@ -203,8 +179,9 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
+            int vp[4] = { 0, 0, width, height }; // full viewport is needed here
             for (int i = 0; i < 4; ++i) {
-                this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = viewport[i];
+                this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = vp[i];
             }
             this->fbo_msg_read_->color_type = fbo_color_type::RGBAu8;
             this->fbo_msg_read_->depth_type = fbo_depth_type::Df;
@@ -214,22 +191,19 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             for (int i = 0; i < 2; ++i) {
                 this->fbo_msg_read_->frame_times[i] = times[i];
             }
-
             for (int i = 0; i < 9; ++i) {
                 this->fbo_msg_read_->cam_params[i] = camera[i];
             }
 
-#ifdef WITH_MPI
             this->color_buf_read_->resize(col_buf.size());
-            // std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
-            memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             this->depth_buf_read_->resize(depth_buf.size());
+#ifdef WITH_MPI
+            // std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
+            memcpy(this->color_buf_read_->data(), icet_col_buf,   width * height * col_buf_el_size_);
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
 #else
-            this->color_buf_read_->resize(col_buf.size());
-            this->depth_buf_read_->resize(depth_buf.size());
-            std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
             std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
 #endif // WITH_MPI
 
@@ -365,10 +339,7 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    if (mvn.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "FBOTransmitter2: No VIEW name given.");
-        return false;
-    }
+
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
 
     //this->ModuleGraphLock().LockExclusive();
@@ -426,7 +397,7 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
                 cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
             });
 
-    if (!(retBbox && retTimes && retCam) || !mvn.empty()) {
+    if (!(retBbox && retTimes && retCam)) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract meta data.\n");
@@ -448,10 +419,6 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    if (mvn.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "FBOTransmitter2: No VIEW name given.");
-        return false;
-    }
 
     // this->ModuleGraphLock().LockExclusive();
     auto const ret = this->GetCoreInstance()
@@ -465,7 +432,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
                            vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
                        });
 
-    if (!ret || !mvn.empty()) {
+    if (!ret) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
         }
@@ -486,10 +453,6 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    if (mvn.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "FBOTransmitter2: No VIEW name given.");
-        return false;
-    }
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(
@@ -503,7 +466,7 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
             }
         });
 
-    if (!ret || !mvn.empty()) {
+    if (!ret) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
         }
@@ -680,7 +643,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
         connected_ = true;
 #ifdef WITH_MPI
         if (aggregate_) {
-#    if _DEBUG
+#if    _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
             // icet setup
@@ -694,19 +657,26 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
             // extract viewport or get if from opengl context
-            auto width  = 1;
-            auto height = 1;
-            int vvpt[6] = { 0, 0, 1, 1, 1, 1 };
-            if (this->extractViewport(vvpt)) {
-                width  = vvpt[4]; // virtual width
-                height = vvpt[5]; // virtual height
+            auto width  = 0;
+            auto height = 0;
+            if (this->extractViewport(this->viewport)) {
+                this->validViewport = true;
+                width  = this->viewport[4];
+                height = this->viewport[5];
             }
             else {
-                GLint viewport[4];
-                glGetIntegerv(GL_VIEWPORT, viewport);
-                width  = viewport[2];
-                height = viewport[3];
+                GLint glvp[4];
+                glGetIntegerv(GL_VIEWPORT, glvp);
+                for (int i = 0; i < 4; ++i) {
+                    this->viewport[i] = glvp[i];
+                }
+                width  = this->viewport[4] = glvp[2];
+                height = this->viewport[5] = glvp[3];
             }
+
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).",
+                this->mpiRank, ((this->validViewport)?("View"):("OpenGL")),
+                this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3], this->viewport[4], this->viewport[5]);
 
             int displayRank = 0;
             icetPhysicalRenderSize(width, height);

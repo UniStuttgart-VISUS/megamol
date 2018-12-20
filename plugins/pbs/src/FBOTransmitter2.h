@@ -162,6 +162,9 @@ private:
 
     bool connected_;
 
+    int viewport[6];
+    bool validViewport;
+
     //bool shutdown_ = false;
 };
 
