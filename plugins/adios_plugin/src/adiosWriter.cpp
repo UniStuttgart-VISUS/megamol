@@ -6,17 +6,16 @@
 #include "vislib/sys/CmdLineProvider.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
+#include <chrono>
 
 namespace megamol {
 namespace adios {
 
-adiosWriter::adiosWriter(void)
-    : core::AbstractDataWriter()
+adiosWriter::adiosWriter(void) : core::AbstractDataWriter()
+    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , filename("filename", "The path to the ADIOS-based file to load.")
     , getData("getdata", "Slot to request data from this data source.")
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
-    , io(nullptr)
-    , writer() {
+    , io(nullptr) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filename);
@@ -133,62 +132,93 @@ bool adiosWriter::run() {
         return false;
     }
 
-    cad->inquire("x");
-    cad->inquire("y");
-    cad->inquire("z");
-    cad->inquire("box");
 
-    if (!(*cad)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
-        return false;
-    }
+    const auto frameCount = cad->getFrameCount();
+    for (auto i = 0; i < frameCount; i++) { // for each frame
 
-    auto X = cad->getData("x")->GetAsFloat();
-    auto Y = cad->getData("y")->GetAsFloat();
-    auto Z = cad->getData("z")->GetAsFloat();
-    auto box = cad->getData("box")->GetAsFloat();
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Starting frame %d", i);
 
-    size_t num_particles = X.size();
+        try {
+        
+        cad->setFrameIDtoLoad(i);
 
+        auto avaiVars = cad->getAvailableVars();
 
-    adios2::Variable<float> varX;
-    adios2::Variable<float> varY;
-    adios2::Variable<float> varZ;
-    adios2::Variable<float> varBox;
+        for (auto var : avaiVars) {
+            cad->inquire(var);
+        }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-    varX = io->DefineVariable<float>("x", 
-        {static_cast<unsigned long long>(this->mpiSize * num_particles)},
-        {static_cast<unsigned long long>(this->mpiRank * num_particles)}, {static_cast<unsigned long long>(num_particles)});
-    varY = io->DefineVariable<float>("y", 
-        {static_cast<unsigned long long>(this->mpiSize * num_particles)},
-        {static_cast<unsigned long long>(this->mpiRank * num_particles)},
-        {static_cast<unsigned long long>(num_particles)});
-    varZ = io->DefineVariable<float>("z", 
-        {static_cast<unsigned long long>(this->mpiSize * num_particles)},
-        {static_cast<unsigned long long>(this->mpiRank * num_particles)},
-        {static_cast<unsigned long long>(num_particles)});
-    varBox = io->DefineVariable<float>("box",
-        {static_cast<unsigned long long>(box.size())}, {0}, {static_cast<unsigned long long>(box.size())});
+        if (!(*cad)(0)) {
+            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
+            return false;
+        }
+
+        if (!this->writer) {
+            const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Opening File %s", fname.c_str());
+            writer = io->Open(fname, adios2::Mode::Write);
+        }
+
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: BeginStep");
+        writer.BeginStep();
+
+        std::vector<std::shared_ptr<float*>> fCollector;
+        std::vector<std::shared_ptr<int>> iCollector;
 
 
-    const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Opening File %s", fname.c_str());
-    writer = io->Open(fname, adios2::Mode::Write);
 
+        io->RemoveAllVariables();
+        for (auto var : avaiVars) {
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: BeginStep");
-    writer.BeginStep();
+            const size_t num = cad->getData(var)->size();
+            if (cad->getData(var)->getType() == "float") {
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-    if (varX) writer.Put<float>(varX, X.data());
-    if (varY) writer.Put<float>(varY, Y.data());
-    if (varZ) writer.Put<float>(varZ, Z.data());
-    if (varBox) writer.Put<float>(varBox, box.data());
+                std::vector<float>& values = dynamic_cast<FloatContainer*>(cad->getData(var).get())->getVec();
 
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<float> adiosVar =
+                    io->DefineVariable<float>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: EndStep");
-    writer.EndStep();
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<float>(adiosVar, values.data());
+            } else if (cad->getData(var)->getType() == "int") {
+
+                std::vector<int>& values = dynamic_cast<IntContainer*>(cad->getData(var).get())->getVec();
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<int> adiosVar =
+                    io->DefineVariable<int>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<int>(adiosVar, values.data());
+            }
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Trying to write - var: %s size: %d", var.c_str(), num);
+            
+        }
+
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: EndStep");
+        auto t1 = std::chrono::high_resolution_clock::now();
+        writer.EndStep();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Time spent for writing frame: %d us", duration);
+
+        } catch (std::invalid_argument& e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+            vislib::sys::Log::DefaultLog.WriteError(e.what());
+        } catch (std::ios_base::failure& e) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+            vislib::sys::Log::DefaultLog.WriteError(e.what());
+        } catch (std::exception& e) {
+            vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+            vislib::sys::Log::DefaultLog.WriteError(e.what());
+        }
+
+    } // end for each frame
 
     return true;
 }

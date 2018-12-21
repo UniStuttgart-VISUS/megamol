@@ -13,15 +13,13 @@ namespace adios {
 
 adiosDataSource::adiosDataSource(void)
     : core::Module()
-    , filename("filename", "The path to the ADIOS-based file to load.")
+    , callRequestMpi("requestMpi", "Requests initialization of MPI and the communicator for the view.")
     , getData("getdata", "Slot to request data from this data source.")
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , data_hash(0)
-    , io(nullptr)
-    , reader()
-    , variables()
-    , dataMap()
-    , loadedFrameID(0) {
+    , filename("filename", "The path to the ADIOS-based file to load.")
+    , frameCount(0)
+    , loadedFrameID(-1)
+    , io(nullptr) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&adiosDataSource::filenameChanged);
@@ -36,12 +34,17 @@ adiosDataSource::adiosDataSource(void)
     this->MakeSlotAvailable(&this->callRequestMpi);
 }
 
-adiosDataSource::~adiosDataSource(void) { this->Release(); }
+
+/**
+ * adiosDataSource::~adiosDataSource(void)
+ */
+adiosDataSource::~adiosDataSource() { this->Release(); }
+
 
 /*
  * adiosDataSource::create
  */
-bool adiosDataSource::create(void) {
+bool adiosDataSource::create() {
     MpiInitialized = this->initMPI();
     vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Initializing");
     if (MpiInitialized) {
@@ -60,7 +63,7 @@ bool adiosDataSource::create(void) {
 /*
  * adiosDataSource::release
  */
-void adiosDataSource::release(void) { /* empty */
+void adiosDataSource::release() { /* empty */
 }
 
 
@@ -69,23 +72,29 @@ void adiosDataSource::release(void) { /* empty */
  */
 bool adiosDataSource::getDataCallback(core::Call& caller) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&caller);
-    if (cad == NULL) return false;
+    if (cad == nullptr) return false;
 
     if (this->data_hash != cad->getDataHash() || loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
+            const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+            if (this->reader) {
+                this->reader.Close();
+                this->io->RemoveAllVariables();
+            }
+            this->reader = io->Open(fname, adios2::Mode::Read);
 
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "ADIOS2datasource: Stepping to frame number: %d", cad->getFrameIDtoLoad());
             if (cad->getFrameIDtoLoad() != 0) {
-                for (size_t i = 0; i < cad->getFrameIDtoLoad() -1; i++) {
+                for (auto i = 0; i < cad->getFrameIDtoLoad(); i++) {
                     reader.BeginStep();
                     reader.EndStep();
                 }
             }
 
             vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Beginning step");
-            adios2::StepStatus status = reader.BeginStep();
+            const adios2::StepStatus status = reader.BeginStep();
             if (status != adios2::StepStatus::OK) {
                 vislib::sys::Log::DefaultLog.WriteError("ADIOS2 ERROR: BeginStep returned an error.");
                 return false;
@@ -98,17 +107,13 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                 return false;
             }
 
-            std::vector<std::size_t> timesteps;
-
             for (auto toInq : varsToInquire) {
                 for (auto var : variables) {
                     if (var.first == toInq) {
-                        size_t num = std::stoi(var.second["Shape"]);
-                        timesteps.push_back(std::stoi(var.second["AvailableStepsCount"]));
+                        const size_t num = std::stoi(var.second["Shape"]);
                         if (var.second["Type"] == "float") {
 
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
-                            //fc->dataVec.resize(num);
                             std::vector<float>& tmp_vec = fc->getVec();
                             tmp_vec.resize(num);
 
@@ -118,8 +123,6 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             }
 
                             reader.Get<float>(advar, tmp_vec);
-                            //reader.Get<float>(adflt, fc->dataVec);
-
                             dataMap[var.first] = std::move(fc);
 
                         } else if (var.second["Type"] == "double") {
@@ -134,7 +137,6 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             }
 
                             reader.Get<double>(advar, tmp_vec);
-
                             dataMap[var.first] = std::move(fc);
 
                         } else if (var.second["Type"] == "int") {
@@ -149,29 +151,14 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             }
 
                             reader.Get<int>(advar, tmp_vec);
-
                             dataMap[var.first] = std::move(fc);
                         }
                     }
                 }
             }
 
-            // Check of all variables have same timestep count
-            std::sort(timesteps.begin(), timesteps.end()); 
-            auto last = std::unique(timesteps.begin(), timesteps.end());
-            timesteps.erase(last, timesteps.end()); 
-
-            if (timesteps.size() != 1) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "Detected variables with different count of time steps - Using lowest");
-                cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
-            } else {
-                cad->setFrameCount(timesteps[0]);
-             }
-
             reader.EndStep();
-
-            // reader.Close();
+            loadedFrameID = cad->getFrameIDtoLoad();
             // here data is loaded
         } catch (std::invalid_argument& e) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -199,8 +186,6 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
     using vislib::sys::Log;
     this->data_hash++;
-
-    this->first_step = true;
     this->frameCount = 1;
 
     return true;
@@ -222,6 +207,10 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Opening File %s", fname.c_str());
 
+            if (this->reader) {
+                this->reader.Close();
+                this->io->RemoveAllVariables();
+                }
             this->reader = io->Open(fname, adios2::Mode::Read);
 
             // vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Reading available attributes");
@@ -234,12 +223,27 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             std::vector<std::string> availVars;
             availVars.reserve(variables.size());
 
+            std::vector<std::size_t> timesteps;
             for (auto var : variables) {
                 availVars.push_back(var.first);
                 vislib::sys::Log::DefaultLog.WriteInfo("%s", var.first.c_str());
+                // get timesteps
+                timesteps.push_back(std::stoi(var.second["AvailableStepsCount"]));
             }
 
             cad->setAvailableVars(availVars);
+            // Check of all variables have same timestep count
+            std::sort(timesteps.begin(), timesteps.end());
+            auto last = std::unique(timesteps.begin(), timesteps.end());
+            timesteps.erase(last, timesteps.end());
+
+            if (timesteps.size() != 1) {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "Detected variables with different count of time steps - Using lowest");
+                cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
+            } else {
+                cad->setFrameCount(timesteps[0]);
+            }
 
         } catch (std::invalid_argument& e) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -258,7 +262,6 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 }
 
 bool adiosDataSource::initMPI() {
-    bool retval = false;
 #ifdef WITH_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         VLTRACE(vislib::Trace::LEVEL_INFO, "adiosDataSource: Need to initialize MPI\n");
@@ -299,7 +302,7 @@ bool adiosDataSource::initMPI() {
     } /* end if (this->comm == MPI_COMM_NULL) */
 
     /* Determine success of the whole operation. */
-    retval = (this->mpi_comm_ != MPI_COMM_NULL);
+    const bool retval = (this->mpi_comm_ != MPI_COMM_NULL);
 #endif /* WITH_MPI */
     return retval;
 }

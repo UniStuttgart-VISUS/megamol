@@ -74,6 +74,8 @@ private:
 
     std::vector<float> mix;
 
+    int currentFrame = -1;
+
 
 };
 

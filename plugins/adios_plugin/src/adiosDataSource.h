@@ -93,11 +93,7 @@ private:
     core::param::ParamSlot filename;
 
     int step = 0;
-
     int particleCount = 0;
-
-    bool first_step = true;
-
     size_t frameCount;
     size_t loadedFrameID;
 
@@ -105,7 +101,6 @@ private:
 
     // ADIOS Stuff
     adios2::ADIOS adiosInst;
-
     std::shared_ptr<adios2::IO> io;
     adios2::Engine reader;
     std::map<std::string, adios2::Params> variables;

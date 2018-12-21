@@ -20,9 +20,13 @@ namespace adios {
 
 class abstractContainer {
 public:
+    virtual ~abstractContainer() = default;
     virtual const std::vector<float> GetAsFloat() = 0;
     virtual const std::vector<double> GetAsDouble() = 0;
     virtual const std::vector<int> GetAsInt() = 0;
+
+    virtual const std::string const getType() = 0;
+    virtual size_t size() = 0;
 };
 
 class DoubleContainer : public abstractContainer {
@@ -32,6 +36,8 @@ public:
     const std::vector<int> GetAsInt() override { return this->getAs<int>(); }
 
     std::vector<double>& getVec() { return dataVec; }
+    size_t size() override { return dataVec.size(); }
+    const std::string const getType() override { return "double"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -52,6 +58,8 @@ public:
     const std::vector<int> GetAsInt() override { return this->getAs<int>(); }
 
     std::vector<float>& getVec() { return dataVec; }
+    size_t size() override { return dataVec.size(); }
+    const std::string const getType() override { return "float"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -62,6 +70,9 @@ private:
         return convert;
     }
 
+public:
+    ~FloatContainer() override = default;
+private:
     std::vector<float> dataVec;
 };
 
@@ -72,6 +83,8 @@ public:
     const std::vector<int> GetAsInt() override { return this->getAs<int>(); }
 
     std::vector<int>& getVec() { return dataVec; }
+    size_t size() override { return dataVec.size(); }
+    const std::string const getType() override { return "int"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -124,7 +137,7 @@ public:
         case 1:
             return "GetHeader";
         default:
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -145,32 +158,34 @@ public:
 
 
     void setTime(float time);
-    float getTime();
+    float getTime() const;
 
-    void inquire(std::string varname);
+    void inquire(const std::string &varname);
 
-    std::vector<std::string> getVarsToInquire();
+    std::vector<std::string> getVarsToInquire() const;
 
-    std::vector<std::string> getAvailableVars();
-    void setAvailableVars(std::vector<std::string> avar);
+    std::vector<std::string> getAvailableVars() const;
+    void setAvailableVars(const std::vector<std::string> &avars);
 
     void setDataHash(size_t datah) { this->dataHash = datah; }
-    size_t getDataHash() { return this->dataHash; }
+    size_t getDataHash() const { return this->dataHash; }
 
     void setFrameCount(size_t fcount) { this->frameCount = fcount; }
-    size_t getFrameCount() { return this->frameCount; }
+    size_t getFrameCount() const { return this->frameCount; }
 
     void setFrameIDtoLoad(size_t fid) { this->frameIDtoLoad = fid; }
-    size_t getFrameIDtoLoad() { return this->frameIDtoLoad; }
+    size_t getFrameIDtoLoad() const { return this->frameIDtoLoad; }
 
     void setData(std::shared_ptr<adiosDataMap> _dta);
-    std::shared_ptr<abstractContainer> getData(std::string _str);
+    std::shared_ptr<abstractContainer> getData(std::string _str) const;
+
+    bool isInVars(std::string);
 
 private:
     size_t dataHash;
     float time;
     size_t frameCount;
-    size_t frameIDtoLoad = 0;
+    size_t frameIDtoLoad;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
 

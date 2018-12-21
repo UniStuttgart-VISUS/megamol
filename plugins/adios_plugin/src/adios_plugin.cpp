@@ -15,6 +15,7 @@
 #include "adiosDataSource.h"
 #include "CallADIOSData.h"
 #include "ADIOStoMultiParticle.h"
+#include "MultiParticletoADIOS.h"
 #include "adiosWriter.h"
 
 /* anonymous namespace hides this type from any other object files */
@@ -46,6 +47,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoMultiParticle>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
 
             // register calls here:
 
