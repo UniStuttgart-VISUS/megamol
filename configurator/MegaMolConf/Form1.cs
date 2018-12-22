@@ -2398,10 +2398,12 @@ in PowerShell:
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
             foreach (TabPage tp in tabViews.TabPages) {
                 MegaMolInstanceInfo mmii = tp.Tag as MegaMolInstanceInfo;
-                if (mmii != null && mmii.Process != null) {
+                if (mmii != null) {
                     mmii.StopObserving();
-                    mmii.Process.EnableRaisingEvents = false;
-                    mmii.Process.Kill();
+                    if (mmii.Process != null) {
+                        mmii.Process.EnableRaisingEvents = false;
+                        mmii.Process.Kill();
+                    }
                 }
             }
 #if false

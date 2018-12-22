@@ -17,9 +17,12 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/simple/View.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
+#include "mmcore/view/View3D.h"
+#include "mmcore/cluster/simple/Client.h"
 
 #ifdef __unix__
 #    include <limits.h>
@@ -228,6 +231,11 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             this->depth_buf_read_->resize(depth_buf.size());
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
+#else
+            this->color_buf_read_->resize(col_buf.size());
+            this->depth_buf_read_->resize(depth_buf.size());
+            std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+            std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
 #endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
@@ -357,23 +365,19 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
 
 
 bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::ParamSlot& slot) {
-    // happy trigger finger hit button action happend
+    // happy trigger finger hit button action happened
     using vislib::sys::Log;
 
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
 
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mvn.c_str());
-    auto vi = dynamic_cast<megamol::core::view::AbstractView*>(ano.get());
-    if (vi != nullptr) {
-        vi->RegisterHook(this);
+    //this->ModuleGraphLock().LockExclusive();
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
+        mvn, [this](megamol::core::view::AbstractView& vi) { vi.RegisterHook(this); });
+    if (!ret) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find view \"%s\" for transmission", mvn.c_str());
     }
-    else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to find view \"%s\" for transmission", mvn.c_str());
-    }
-    this->ModuleGraphLock().UnlockExclusive();
+    //this->ModuleGraphLock().UnlockExclusive();
 
     return true;
 }
@@ -382,34 +386,31 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
 bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mvn.c_str());
-    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
-    if (vi != nullptr) {
-        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
-            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
-            if (sl != nullptr) {
-                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
-                if (r != nullptr) {
-                    bbox[0] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
-                    bbox[1] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
-                    bbox[2] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
-                    bbox[3] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
-                    bbox[4] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
-                    bbox[5] = r->AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
-                    break;
-                }
-            }
-        }
-    } 
-    else {
+
+    // this->ModuleGraphLock().LockExclusive();
+    const auto ret =
+        this->GetCoreInstance()
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [bbox](megamol::core::view::CallRender3D& cr3d) {
+                    bbox[0] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
+                    bbox[1] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
+                    bbox[2] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
+                    bbox[3] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
+                    bbox[4] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
+                    bbox[5] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
+                });
+
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW name to set bounding box\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
-    this->ModuleGraphLock().UnlockExclusive();
+    //this->ModuleGraphLock().UnlockExclusive();
     return success;
 }
 
@@ -417,30 +418,28 @@ bool megamol::pbs::FBOTransmitter2::extractBoundingBox(float bbox[6]) {
 bool megamol::pbs::FBOTransmitter2::extractFrameTimes(float frame_times[2]) {
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mvn.c_str());
-    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
-    if (vi != nullptr) {
-        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
-            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
-            if (sl != nullptr) {
-                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
-                if (r != nullptr) {
-                    frame_times[0] = r->Time();
-                    frame_times[1] = static_cast<float>(r->TimeFramesCount());
-                    break;
-                }
-            }
-        }
-    }
-    else {
+    //this->ModuleGraphLock().LockExclusive();
+
+    const auto ret =
+        this->GetCoreInstance()
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [frame_times](megamol::core::view::CallRender3D& cr3d) {
+                    frame_times[0] = cr3d.Time();
+                    frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
+                });
+
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW name to set frame times\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
-    this->ModuleGraphLock().UnlockExclusive();
+
+    //this->ModuleGraphLock().UnlockExclusive();
     return success;
 }
 
@@ -448,37 +447,35 @@ bool megamol::pbs::FBOTransmitter2::extractFrameTimes(float frame_times[2]) {
 bool megamol::pbs::FBOTransmitter2::extractCameraParams(float cam_params[9]) {
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mvn.c_str());
-    auto vi = dynamic_cast<core::view::AbstractView*>(ano.get());
-    if (vi != nullptr) {
-        for (auto c = vi->ChildList_Begin(); c != vi->ChildList_End(); c++) {
-            auto sl = dynamic_cast<megamol::core::CallerSlot*>((*c).get());
-            if (sl != nullptr) {
-                auto r = sl->CallAs<megamol::core::view::CallRender3D>();
-                if (r != nullptr) {
-                    cam_params[0] = r->GetCameraParameters()->Position()[0];
-                    cam_params[1] = r->GetCameraParameters()->Position()[1];
-                    cam_params[2] = r->GetCameraParameters()->Position()[2];
-                    cam_params[3] = r->GetCameraParameters()->Up()[0];
-                    cam_params[4] = r->GetCameraParameters()->Up()[1];
-                    cam_params[5] = r->GetCameraParameters()->Up()[2];
-                    cam_params[6] = r->GetCameraParameters()->LookAt()[0];
-                    cam_params[7] = r->GetCameraParameters()->LookAt()[1];
-                    cam_params[8] = r->GetCameraParameters()->LookAt()[2];
-                    break;
-                }
-            }
-        }
-    }
-    else {
+    //this->ModuleGraphLock().LockExclusive();
+
+    const auto ret =
+        this->GetCoreInstance()
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [cam_params](megamol::core::view::CallRender3D& cr3d) {
+                    cam_params[0] = cr3d.GetCameraParameters()->Position()[0];
+                    cam_params[1] = cr3d.GetCameraParameters()->Position()[1];
+                    cam_params[2] = cr3d.GetCameraParameters()->Position()[2];
+                    cam_params[3] = cr3d.GetCameraParameters()->Up()[0];
+                    cam_params[4] = cr3d.GetCameraParameters()->Up()[1];
+                    cam_params[5] = cr3d.GetCameraParameters()->Up()[2];
+                    cam_params[6] = cr3d.GetCameraParameters()->LookAt()[0];
+                    cam_params[7] = cr3d.GetCameraParameters()->LookAt()[1];
+                    cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
+                });
+
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW name to set camera params\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
-    this->ModuleGraphLock().UnlockExclusive();
+
+    //this->ModuleGraphLock().UnlockExclusive();
     return success;
 }
 
@@ -486,26 +483,40 @@ bool megamol::pbs::FBOTransmitter2::extractCameraParams(float cam_params[9]) {
 bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     bool success = true;
     std::string mcvvn(mpiclusterview_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mcvvn.c_str());
-    auto sv = dynamic_cast<megamol::core::cluster::simple::View*>(ano.get());
-    if (sv != nullptr) {
-        // MPIClusterView keeps virtual viewport stuff
-        vvpt[0] = static_cast<int>(sv->getTileX());
-        vvpt[1] = static_cast<int>(sv->getTileY());
-        vvpt[2] = static_cast<int>(sv->getTileW());
-        vvpt[3] = static_cast<int>(sv->getTileH());
-        vvpt[4] = static_cast<int>(sv->getVirtWidth());
-        vvpt[5] = static_cast<int>(sv->getVirtHeight());
-    }
-    else {
+    // this->ModuleGraphLock().LockExclusive();
+
+    /*auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::cluster::simple::View>(
+        mcvvn, [vvpt](megamol::core::cluster::simple::View& sv) {
+            vvpt[0] = static_cast<int>(sv.getTileX());
+            vvpt[1] = static_cast<int>(sv.getTileY());
+            vvpt[2] = static_cast<int>(sv.getTileW());
+            vvpt[3] = static_cast<int>(sv.getTileH());
+            vvpt[4] = static_cast<int>(sv.getVirtWidth());
+            vvpt[5] = static_cast<int>(sv.getVirtHeight());
+        });*/
+
+    auto const ret = this->GetCoreInstance()
+                   ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                       mcvvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
+                           vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
+                           vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
+                           vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
+                           vvpt[3] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Height());
+                           vvpt[4] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Width());
+                           vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
+                       });
+
+    if (!ret || mcvvn.empty()) {
         if (!mcvvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW name\n");
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find MPI CLUSTER VIEW\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find MPI CLUSTER VIEW with empty name\n");
         }
         success = false;
     }
-    this->ModuleGraphLock().UnlockExclusive();
+
+    // this->ModuleGraphLock().UnlockExclusive();
     return success;
 }
 
@@ -517,26 +528,30 @@ bool megamol::pbs::FBOTransmitter2::extractBackgroundColor(std::array<float, 4> 
 #endif
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
-    this->ModuleGraphLock().LockExclusive();
-    auto anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-    auto ano = anoc->FindNamedObject(mvn.c_str());
-    auto arv = dynamic_cast<core::view::AbstractRenderingView*>(ano.get());
-    if (arv != nullptr) {
-        const float * bkgndCol = arv->BkgndColour();
-        if (bkgndCol != nullptr) {
-            bkgnd_color[0] = bkgndCol[0];
-            bkgnd_color[1] = bkgndCol[1];
-            bkgnd_color[2] = bkgndCol[2];
-            bkgnd_color[3] = 0.0f;
-        }
-    }
-    else {
+    // this->ModuleGraphLock().LockExclusive();
+
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(
+        mvn, [&bkgnd_color](core::view::AbstractRenderingView& arv) {
+            const float* bkgndCol = arv.BkgndColour();
+            if (bkgndCol != nullptr) {
+                bkgnd_color[0] = bkgndCol[0];
+                bkgnd_color[1] = bkgndCol[1];
+                bkgnd_color[2] = bkgndCol[2];
+                bkgnd_color[3] = 0.0f;
+            }
+        });
+
+    if (!ret || mvn.empty()) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW name\n");
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: could not find VIEW\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: could not find VIEW with empty name\n");
         }
         success = false;
     }
-    this->ModuleGraphLock().UnlockExclusive();
+
+    // this->ModuleGraphLock().UnlockExclusive();
     return success;
 }
 
