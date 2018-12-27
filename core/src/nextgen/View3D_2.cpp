@@ -357,9 +357,6 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();
-    //this has to be moved to the last renderer
-    //glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (cr3d == NULL) {
         /*this->renderTitle(this->cam.Parameters()->TileRect().Left(), this->cam.Parameters()->TileRect().Bottom(),

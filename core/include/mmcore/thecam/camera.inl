@@ -605,7 +605,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
             // mathematically negative.
             a = -a;
         }
-        quaternion_type q(the::do_not_initialise);
+        quaternion_type q(thecam::utility::do_not_initialise);
         math::set_from_angle_axis(q, a, snapshot.up_vector);
         snapshot.view_vector = math::rotate(snapshot.view_vector, q);
         // The following result will be invalid if the camera system was not

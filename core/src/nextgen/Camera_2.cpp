@@ -13,7 +13,7 @@ using namespace megamol::core::nextgen;
 /*
  * Camera_2::Camera_2
  */
-Camera_2::Camera_2(void) {}
+Camera_2::Camera_2(void) : cam_type() {}
 
 /*
  * Camera_2::~Camera_2

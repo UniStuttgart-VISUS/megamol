@@ -22,7 +22,7 @@ namespace nextgen {
 /*
  * Wrapper for the template-heavy camera class
  */
-class MEGAMOLCORE_API Camera_2 {
+class MEGAMOLCORE_API Camera_2 : cam_type {
 public:
 
     /**
@@ -34,10 +34,6 @@ public:
      * Destructor
      */
     virtual ~Camera_2(void);
-
-private:
-    /** The camera itself */
-    cam_type camera;
 };
 } // namespace nextgen
 } // namespace core
