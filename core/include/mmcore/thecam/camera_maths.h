@@ -130,7 +130,7 @@ namespace thecam {
 
         typedef math::rectangle<RECT> screen_rectangle_type;
 
-        typedef math::size<SIZE> screen_size_type;
+        typedef math::size<SIZE> screen_size_type; // TODO replace this with glm::ivec2 or glm::uivec2?
 
         typedef math::vector<glm::vec4> vector_type;
 

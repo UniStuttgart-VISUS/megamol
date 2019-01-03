@@ -142,7 +142,6 @@ bool SimplestSphereRenderer_2::GetExtents(core::Call& call) {
     }
 
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
     cr3d->SetTimeFramesCount(cs->FrameCount());
 
     return true;
@@ -227,7 +226,6 @@ bool SimplestSphereRenderer_2::Render(core::Call& call) {
     } else {
         scale = 1.0f;
     }
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
 
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMatrix;
     scaleMatrix.GetAt(0, 0) = scale;

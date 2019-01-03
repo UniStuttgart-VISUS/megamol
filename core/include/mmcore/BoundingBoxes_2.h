@@ -13,6 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/math/Cuboid.h"
+#include "mmcore/BoundingBoxes.h"
 
 namespace megamol {
 namespace core {
@@ -175,6 +176,15 @@ namespace core {
          * @return A reference to this.
          */
         BoundingBoxes_2& operator=(const BoundingBoxes_2& rhs);
+
+        /**
+         * Assignment operator for the old bounding box object to achieve backwards compatibility.
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this.
+         */
+        BoundingBoxes_2& operator=(const BoundingBoxes& rhs);
     private:
 
         /**

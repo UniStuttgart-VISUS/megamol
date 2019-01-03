@@ -13,6 +13,7 @@
 #endif /* _WIN32 */
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -20,9 +21,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRenderView.h" // TODO new call?
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -49,7 +49,7 @@ using namespace megamol::core::nextgen;
  */
 View3D_2::View3D_2(void)
     : view::AbstractRenderingView()
-    , view::AbstractCamParamSync()
+    /*, view::AbstractCamParamSync()*/
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , lightDir(0.5f, -1.0f, -1.0f)
@@ -110,6 +110,8 @@ View3D_2::View3D_2(void)
 
     // this->camParams->SetVirtualViewSize(defWidth, defHeight);
     // this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, defWidth, defHeight));
+
+    this->cam.resolution_gate(cam_type::screen_size_type(100, 100));
 
     this->rendererSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -268,8 +270,8 @@ View3D_2::View3D_2(void)
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
     }
 
-    this->MakeSlotAvailable(&this->slotGetCamParams);
-    this->MakeSlotAvailable(&this->slotSetCamParams);
+    //this->MakeSlotAvailable(&this->slotGetCamParams);
+    //this->MakeSlotAvailable(&this->slotSetCamParams);
 
     this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
@@ -402,11 +404,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     if (cr3d != nullptr) {
         (*cr3d)(1); // GetExtents
-        if (this->firstImg ||
-            (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
-                !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsObjectSpaceBBoxValid() &&
-                    !this->bboxs.IsObjectSpaceClipBoxValid() && this->bboxs.IsWorldSpaceBBoxValid() &&
-                    !this->bboxs.IsWorldSpaceClipBoxValid()))) {
+        if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
+                                  !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
+                                      !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
 
             if (this->firstImg) {
@@ -443,6 +443,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     // if (fnc > nc) {
     //     this->camParams->SetClip(fnc, fc);
     // }
+    this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
     if (cr3d != nullptr) {
         (*cr3d)(view::AbstractCallRender::FnRender);
@@ -463,13 +464,51 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
  */
 void View3D_2::ResetView(void) {
     // TODO implement
+    this->cam.near_clipping_plane(0.1f);
+    this->cam.far_clipping_plane(100.0f);
+    this->cam.aperture_angle(30.0f);
+    this->cam.eye(thecam::eye::mono);
+    this->cam.projection_type(thecam::projection_type::perspective);
+    // TODO set distance between eyes
+    if (!this->bboxs.IsBoundingBoxValid()) {
+        this->bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    float dist = (0.5f * sqrtf((this->bboxs.BoundingBox().Width() * this->bboxs.BoundingBox().Width()) +
+                               (this->bboxs.BoundingBox().Depth() * this->bboxs.BoundingBox().Depth()) +
+                               (this->bboxs.BoundingBox().Height() * this->bboxs.BoundingBox().Height()))) /
+                 tanf(this->cam.aperture_angle_radians() / 2.0f);
+    auto dim = this->cam.resolution_gate();
+    double halfFovX =
+        (static_cast<double>(dim.width()) * static_cast<double>(this->cam.aperture_angle_radians() / 2.0f)) /
+        static_cast<double>(dim.height());
+    double distX = static_cast<double>(this->bboxs.BoundingBox().Width()) / (2.0 * tan(halfFovX));
+    double distY = static_cast<double>(this->bboxs.BoundingBox().Height()) /
+                   (2.0 * tan(static_cast<double>(this->cam.aperture_angle_radians() / 2.0f)));
+    dist = static_cast<float>((distX > distY) ? distX : distY);
+    dist = dist + (this->bboxs.BoundingBox().Depth() / 2.0f);
+    auto bbc = this->bboxs.BoundingBox().CalcCenter();
+
+    auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
+
+    // this->cam.look_at(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f), bbcglm);
+    this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
+    // TODO set up vector correctly
+    // via cam.orientation quaternion
+    this->cam.orientation(cam_type::quaternion_type::create_identity());
+
+    glm::mat4 vm = this->cam.view_matrix();
+    glm::mat4 pm = this->cam.projection_matrix();
+
+    // TODO Further manipulators? better value?
+    this->translateManipulator.set_step_size(dist);
 }
 
 /*
  * View3D_2::Resize
  */
 void View3D_2::Resize(unsigned int width, unsigned int height) {
-    // TODO implement
+    this->cam.resolution_gate(cam_type::screen_size_type(
+        static_cast<LONG>(width), static_cast<LONG>(height))); // TODO this is ugly and has to die...
 }
 
 /*
@@ -612,7 +651,10 @@ bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
  * View3D_2::unpackMouseCoordinates
  */
 void View3D_2::unpackMouseCoordinates(float& x, float& y) {
-    // TODO implement
+    // TODO is this correct?
+    x *= static_cast<float>(this->cam.resolution_gate().width());
+    y *= static_cast<float>(this->cam.resolution_gate().height());
+    y -= 1.0f;
 }
 
 /*
@@ -640,6 +682,11 @@ bool View3D_2::create(void) {
 
     // TODO implement
 
+
+    // TODO cursor stuff
+
+    this->firstImg = true;
+
     return true;
 }
 
@@ -654,40 +701,12 @@ void View3D_2::release(void) { this->removeTitleRenderer(); }
 bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
 
 /*
- * View3D_2::renderBBox
- */
-void View3D_2::renderBBox(void) {
-    // TODO implement
-}
-
-/*
- * View3D_2::renderBBoxBackside
- */
-void View3D_2::renderBBoxBackside(void) {
-    // TODO implement
-}
-
-/*
- * View3D_2::renderBBoxFrontside
- */
-void View3D_2::renderBBoxFrontside(void) {
-    // TODO implement
-}
-
-/*
- * View3D_2::renderLookAt
- */
-void View3D_2::renderLookAt(void) {
-    // TODO implement
-}
-
-/*
  * View3D_2::OnGetCamParams
  */
-bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
-    // TODO implement
-    return true;
-}
+//bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
+//    // TODO implement
+//    return true;
+//}
 
 /*
  * View3D_2::onStoreCamera
@@ -727,11 +746,4 @@ bool View3D_2::viewKeyPressed(param::ParamSlot& p) {
 bool View3D_2::onToggleButton(param::ParamSlot& p) {
     // TODO implement
     return true;
-}
-
-/*
- * View3D_2::renderViewCube
- */
-void View3D_2::renderViewCube(void) {
-    // TODO implement
 }

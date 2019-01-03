@@ -57,6 +57,17 @@ BoundingBoxes_2& BoundingBoxes_2::operator=(const BoundingBoxes_2& rhs) {
 }
 
 /*
+ * BoundingBoxes_2::operator=
+ */
+BoundingBoxes_2& BoundingBoxes_2::operator=(const BoundingBoxes& rhs) {
+    this->clipBox = rhs.ObjectSpaceClipBox();
+    this->clipBoxValid = rhs.IsObjectSpaceClipBoxValid();
+    this->boundingBox = rhs.ObjectSpaceBBox();
+    this->boundingBoxValid = rhs.IsObjectSpaceBBoxValid();
+    return *this;
+}
+
+/*
  * BoundingBoxes_2::calcClipBox
  */
 void BoundingBoxes_2::calcClipBox(void) const {

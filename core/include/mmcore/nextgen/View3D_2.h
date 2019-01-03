@@ -12,17 +12,17 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
-#include "mmcore/view/AbstractCamParamSync.h"
-#include "mmcore/BoundingBoxes.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
-#include "mmcore/nextgen/Camera_2.h"
 #include "vislib/graphics/CameraLookAtDist.h"
 #include "vislib/graphics/CameraMove2D.h"
 #include "vislib/graphics/CameraParamsStore.h"
@@ -44,7 +44,7 @@ namespace megamol {
 namespace core {
 namespace nextgen {
 
-class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView, public view::AbstractCamParamSync {
+class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
 public:
     /**
@@ -187,29 +187,9 @@ protected:
 #endif /* _WIN32 */
 
     /** The complete scene bounding box */
-    BoundingBoxes bboxs;
+    BoundingBoxes_2 bboxs;
 
     bool frameIsNew = false;
-
-    /**
-     * Renders the vertices of the bounding box
-     */
-    inline void renderBBox(void);
-
-    /**
-     * Renders the back side of the bounding box
-     */
-    inline void renderBBoxBackside(void);
-
-    /**
-     * Renders the front side of the bounding box
-     */
-    inline void renderBBoxFrontside(void);
-
-    /**
-     * Renders the cross for the look-at point
-     */
-    void renderLookAt(void);
 
     bool mouseSensitivityChanged(param::ParamSlot& p);
 
@@ -220,7 +200,7 @@ protected:
      *
      * @return true in case of success, false otherwise.
      */
-    virtual bool OnGetCamParams(view::CallCamParamSync& c);
+    //virtual bool OnGetCamParams(view::CallCamParamSync& c);
 
     /**
      * Stores the current camera settings
@@ -260,16 +240,17 @@ protected:
 
     bool onToggleButton(param::ParamSlot& p);
 
-    /**
-     * Renders the view cube
-     */
-    void renderViewCube(void);
-
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
     /** The camera */
-    std::shared_ptr<Camera_2> cam;
+    Camera_2 cam;
+
+    /** The arcball manipulator for the camera */
+    arcball_type arcballManipulator;
+
+    /** The translation manipulator for the camera */
+    xlate_type translateManipulator;
 
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
@@ -434,7 +415,7 @@ protected:
     vislib::graphics::gl::GLSLShader lineShader;
 };
 
-} /* end namespace view */
+} // namespace nextgen
 } /* end namespace core */
 } /* end namespace megamol */
 

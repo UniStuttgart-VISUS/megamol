@@ -535,7 +535,12 @@ namespace thecam {
          *
          * @return The current view matrix as defined by the camera.
          */
-        matrix_type view_matrix(void) const;
+        inline matrix_type view_matrix(void) const {
+            matrix_type view, proj;
+            // TODO only the calculation of the view matrix should be performed...
+            this->calc_matrices(view, proj);
+            return view;
+        }
 
         // TODO: do we want to allow this?
         //camera& operator =(const camera& rhs);

@@ -11,7 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/BoundingBoxes.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/thecam/camera_snapshot.h"
@@ -46,7 +46,7 @@ public:
      *
      * @return The bounding boxes of the output of the callee.
      */
-    inline BoundingBoxes& AccessBoundingBoxes(void) { return this->bboxs; }
+    inline BoundingBoxes_2& AccessBoundingBoxes(void) { return this->bboxs; }
 
     /**
      * Gets the bounding boxes of the output of the callee. This can
@@ -54,7 +54,7 @@ public:
      *
      * @return The bounding boxes of the output of the callee.
      */
-    inline const BoundingBoxes& GetBoundingBoxes(void) const { return this->bboxs; }
+    inline const BoundingBoxes_2& GetBoundingBoxes(void) const { return this->bboxs; }
 
     /**
      * Gets the camera parameters pointer.
@@ -115,7 +115,7 @@ private:
 #endif /* _WIN32 */
 
     /** The bounding boxes */
-    BoundingBoxes bboxs;
+    BoundingBoxes_2 bboxs;
 
     /** The number of milliseconds required to render the last frame */
     double lastFrameTime;
