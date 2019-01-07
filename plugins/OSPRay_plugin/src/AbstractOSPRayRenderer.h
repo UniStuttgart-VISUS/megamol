@@ -128,6 +128,9 @@ protected:
     core::param::ParamSlot shadows;
     core::param::ParamSlot useDB;
     core::param::ParamSlot numThreads;
+
+    // Fix for deprecated material (ospNewMaterial2 now)
+    std::string rd_type_string;
     
 
     megamol::core::param::ParamSlot deviceTypeSlot;
