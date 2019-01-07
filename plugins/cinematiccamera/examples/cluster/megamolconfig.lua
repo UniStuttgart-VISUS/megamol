@@ -2,9 +2,14 @@
 
 print("I am the MegaMol VISUS CinematicCamera cluster configuration!")
 
-basePath = "\\\\vestastore\\Entwicklung\\braunms\\cinematiccamera\\"
+basePath   = "\\\\vestastore\\Entwicklung\\braunms\\cinematiccamera\\"
+headNode   = "minyou"
+node_count = 20
 
-mmSetConfigValue("headNode",   "minyou")
+computer   = string.lower(mmGetMachineName())
+rank       = mmGetEnvValue("PMI_RANK")
+
+mmSetConfigValue("headNode",   headNode)
 mmSetConfigValue("renderHead", "10.35.1.1")
 
 mmSetLogLevel(     0)
@@ -14,12 +19,6 @@ mmAddShaderDir(    basePath .. "share\\shaders")
 mmAddResourceDir(  basePath .. "share\\resources")
 mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 
-mmSetConfigValue("consolegui", "off")
-mmSetConfigValue("topmost",    "on")
-mmSetConfigValue("vsync",      "off")
-
-computer   = mmGetMachineName()
-node_count = 20
 
 --- Load cinematic parameters ---
 local cinematic = require("cinematic_params")
@@ -31,16 +30,23 @@ mmSetConfigValue("cinematic_luaFileToLoad", tostring(cinematic.luaFileToLoad))
 mmSetConfigValue("cinematic_keyframeFile",  tostring(cinematic.keyframeFile))
 
 
-if string.lower(computer) == "minyou" then
+if computer == headNode then
+
     mmSetConfigValue("*-window",   "x5y35w2000h1000")
     mmSetConfigValue("consolegui", "on")
     mmSetConfigValue("topmost",    "off")
     mmSetConfigValue("fullscreen", "off")
+
 else
-    keshikinumber = string.match(string.lower(computer), "keshiki(%d+)")
+
+    keshikinumber = string.match(computer, "keshiki(%d+)")
     if keshikinumber ~= nil then
     
         print("I think I am keshiki" .. keshikinumber)
+
+        mmSetConfigValue("consolegui", "off")
+        mmSetConfigValue("topmost",    "on")
+        mmSetConfigValue("vsync",      "off")
 
         mmSetConfigValue("scsudptarget", "10.35.1.1")
         mmSetConfigValue("scservername", "10.35.3.1")

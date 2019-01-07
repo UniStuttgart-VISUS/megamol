@@ -46,7 +46,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
     rulerFontParam(      "01_fontSize", "The font size."),
-    moveRightFrameParam ("02_rightFrame", "Move to right animation time frame."),
+    moveRightFrameParam( "02_rightFrame", "Move to right animation time frame."),
     moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
     resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes."),
 
@@ -314,7 +314,7 @@ void TimeLineRenderer::axisAdaptation(void) {
     this->simFormatStr.Prepend("%.");
     this->simFormatStr.Append("f ");
 
-    this->simLenTimeFrac = this->simAxisLen * this->simScaleFac;
+    this->simLenTimeFrac = this->simAxisLen / this->simTotalTime * this->simScaleFac;
     this->simScaleOffset = this->simScalePos - (this->simScaleDelta * this->simScaleFac);
     this->simScaleOffset = (this->simScaleOffset > 0.0f) ? (0.0f) : (this->simScaleOffset);
 
@@ -493,16 +493,16 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glBegin(GL_LINE_STRIP);
             // First vertex
             x = this->animScaleOffset;
-            y = this->simScaleOffset + (*keyframes).First().GetSimTime()  * this->simLenTimeFrac;
+            y = this->simScaleOffset + (*keyframes).First().GetSimTime() * this->simTotalTime * this->simLenTimeFrac;
             glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
             for (unsigned int i = 0; i < keyframes->Count(); i++) {
                 x = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-                y = this->simScaleOffset  + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+                y = this->simScaleOffset  + (*keyframes)[i].GetSimTime()  * this->simTotalTime  * this->simLenTimeFrac;
                 glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
             }
             // Last vertex
             x = this->animScaleOffset + this->animTotalTime * this->animLenTimeFrac;
-            y = this->simScaleOffset + (*keyframes).Last().GetSimTime()  * this->simLenTimeFrac;
+            y = this->simScaleOffset + (*keyframes).Last().GetSimTime()  * this->simTotalTime * this->simLenTimeFrac;
             glVertex2f(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
         glEnd();
     }
@@ -510,7 +510,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Draw markers for existing keyframes in array ---------------------------
     for (unsigned int i = 0; i < keyframes->Count(); i++) {
         x = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-        y = this->simScaleOffset + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+        y = this->simScaleOffset + (*keyframes)[i].GetSimTime() * this->simTotalTime  * this->simLenTimeFrac;
         if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
             if ((*keyframes)[i] == skf) {
                 glColor4fv(skColor);
@@ -524,7 +524,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw interpolated selected keyframe marker -----------------------------
     x = this->animScaleOffset + skf.GetAnimTime() * this->animLenTimeFrac;
-    y = this->simScaleOffset + skf.GetSimTime()  * this->simLenTimeFrac;
+    y = this->simScaleOffset + skf.GetSimTime() * this->simTotalTime  * this->simLenTimeFrac;
     if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
         float tmpMarkerSize = this->keyfMarkSize;
         this->keyfMarkSize = this->keyfMarkSize*0.75f;
@@ -543,7 +543,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Draw dragged keyframe --------------------------------------------------
     if (this->dragDropActive) {
         x = this->animScaleOffset + this->dragDropKeyframe.GetAnimTime() * this->animLenTimeFrac;
-        y = this->simScaleOffset + this->dragDropKeyframe.GetSimTime()  * this->simLenTimeFrac;
+        y = this->simScaleOffset + this->dragDropKeyframe.GetSimTime() * this->simTotalTime  * this->simLenTimeFrac;
         if (((x >= 0.0f) && (x <= this->animAxisLen)) && ((y >= 0.0f) && (y <= this->simAxisLen))) {
             glColor4fv(dkmColor);
             this->drawKeyframeMarker(this->axisStartPos.X() + x, this->axisStartPos.Y() + y);
@@ -599,11 +599,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glColor4fv(fgColor);
     float aT = skf.GetAnimTime();
     float aF = skf.GetAnimTime() * (float)(this->fps);;
-    float sT = skf.GetSimTime()*this->simTotalTime;
+    float sT = skf.GetSimTime() * this->simTotalTime;
     if (this->dragDropActive) {
         aT = this->dragDropKeyframe.GetAnimTime();
         aF = this->dragDropKeyframe.GetAnimTime() * (float)(this->fps);
-        sT = this->dragDropKeyframe.GetSimTime()*this->simTotalTime;
+        sT = this->dragDropKeyframe.GetSimTime() * this->simTotalTime;
     }
 
     float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
@@ -762,7 +762,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
         bool hit = false;
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
             animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-            simAxisY  = this->simScaleOffset  + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+            simAxisY  = this->simScaleOffset  + (*keyframes)[i].GetSimTime() * this->simTotalTime  * this->simLenTimeFrac;
             if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                 posX = this->axisStartPos.X() + animAxisX;
                 posY = this->axisStartPos.Y() + simAxisY;
@@ -809,7 +809,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
             bool hit = false;
             for (unsigned int i = 0; i < keyframes->Count(); i++) {
                 animAxisX = this->animScaleOffset + (*keyframes)[i].GetAnimTime() * this->animLenTimeFrac;
-                simAxisY = this->simScaleOffset + (*keyframes)[i].GetSimTime()  * this->simLenTimeFrac;
+                simAxisY = this->simScaleOffset + (*keyframes)[i].GetSimTime() * this->simTotalTime  * this->simLenTimeFrac;
                 if ((animAxisX >= 0.0f) && (animAxisX <= this->animAxisLen)) {
                     posX = this->axisStartPos.X() + animAxisX;
                     posY = this->axisStartPos.Y() + simAxisY;
