@@ -82,17 +82,9 @@ private:
 
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
-    bool extractBoundingBox(float bbox[6]);
+    bool extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]);
         
-    bool extractFrameTimes(float frame_times[2]);
-
-    bool extractCameraParams(float cam_params[9]);
-
-#ifdef WITH_MPI
-    bool extractBackgroundColor(std::array<IceTFloat, 4> bkgnd_color);
-#else
-    bool extractBackgroundColor(std::array<float, 4> bkgnd_color);
-#endif // WITH_MPI
+    bool extractBkgndColor(std::array<float, 4> bkgnd_color);
 
     bool extractViewport(int vvpt[6]);
 
@@ -109,8 +101,6 @@ private:
     megamol::core::param::ParamSlot commSelectSlot_;
 
     megamol::core::param::ParamSlot view_name_slot_;
-
-    megamol::core::param::ParamSlot mpiclusterview_name_slot_;
 
     megamol::core::param::ParamSlot trigger_button_slot_;
 
@@ -171,6 +161,9 @@ private:
     int depth_buf_el_size_;
 
     bool connected_;
+
+    int viewport[6];
+    bool validViewport;
 
     //bool shutdown_ = false;
 };

@@ -135,12 +135,15 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
         case PATHTRACER:
             this->setupOSPRay(renderer, camera, world, "pathtracer");
+            this->rd_type_string = "pathtracer";
             break;
         case MPI_RAYCAST: //< TODO: Probably only valid if device is a "mpi_distributed" device
             this->setupOSPRay(renderer, camera, world, "mpi_raycast");
+            this->rd_type_string = "mpi_raycast";
             break;
         default:
             this->setupOSPRay(renderer, camera, world, "scivis");
+            this->rd_type_string = "scivis";
         }
         renderer_has_changed = true;
         this->rd_type.ResetDirty();
