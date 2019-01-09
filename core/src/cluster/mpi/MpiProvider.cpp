@@ -54,9 +54,6 @@ megamol::core::cluster::mpi::MpiProvider::MpiProvider(void)
 
     , callProvideMpi("provideMpi", "Provides the MPI communicator etc.")
     , paramNodeColour("nodeColour", "Specifies the node colour identifying the MegaMol instances.") {
-#ifdef WITH_MPI
-    ASSERT(MpiProvider::comm.is_lock_free());
-#endif /* WITH_MPI */
 
     this->callProvideMpi.SetCallback(
         MpiCall::ClassName(), MpiCall::FunctionName(MpiCall::IDX_PROVIDE_MPI), &MpiProvider::OnCallProvideMpi);
@@ -92,11 +89,11 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
     auto colour = this->paramNodeColour.Param<param::IntParam>()->Value();
 
     try {
-        if (MpiProvider::initialiseMpi(colour)) {
+        if (initialiseMpi(colour)) {
             /* MPI was initialised now or before. */
-            ASSERT(MpiProvider::comm  != MPI_COMM_NULL);
+            ASSERT(this->comm  != MPI_COMM_NULL);
             auto& c = dynamic_cast<MpiCall&>(call);
-            c.SetComm(MpiProvider::comm);
+            c.SetComm(this->comm);
             return true;
 
         } else {
@@ -132,7 +129,7 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
     if (--MpiProvider::activeInstances == 0) {
         Log::DefaultLog.WriteInfo("Finalising MPI ...");
         ::MPI_Finalize();
-        MpiProvider::activeNodeColour.store(MPI_UNDEFINED);
+        activeNodeColour.store(MPI_UNDEFINED);
     }
     ASSERT(MpiProvider::activeInstances.load() >= 0);
 #endif /* WITH_MPI */
@@ -181,7 +178,6 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
             colour)) {
         /* Initialisation has not yet been performed, so do it now. */
         ASSERT(this->activeNodeColour.load() == colour);
-        ASSERT(MpiProvider::comm.load() == MPI_COMM_NULL);
 
         MPI_Comm comm = MPI_COMM_NULL;
         int isInitialised = 0;
