@@ -187,6 +187,96 @@ size_t megamol::core::misc::VolumetricDataCall::GetVoxelsPerFrame(void) const {
 }
 
 
+const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const uint32_t x, const uint32_t y,
+    const uint32_t z, const uint32_t c) const {
+
+    float theVal = 0.0f;
+
+    if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
+        !this->metadata->GridType == GridType::RECTILINEAR) {
+        vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
+
+    } else {
+        uint64_t idx =
+            (z * this->metadata->Resolution[1] + y) * this->metadata->Resolution[0] + x;
+        idx *= this->metadata->Components;
+        switch (this->metadata->ScalarType) {
+        case UNKNOWN:
+        case BITS:
+            vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
+            break;
+
+        case SIGNED_INTEGER: 
+            {
+                const int* theVol = static_cast<int*>(this->data);
+                theVal = theVol[idx];
+                theVal -= this->metadata->MinValues[c];
+                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+            }
+            break;
+
+        case UNSIGNED_INTEGER: 
+            {
+                const unsigned int* theVol = static_cast<unsigned int*>(this->data);
+                theVal = theVol[idx];
+                theVal -= this->metadata->MinValues[c];
+                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+            }
+            break;
+
+        case FLOATING_POINT:
+            {
+                const float* theVol = static_cast<float*>(this->data);
+                theVal = theVol[idx];
+                theVal -= this->metadata->MinValues[c];
+                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+            }
+            break;
+        }
+    }
+
+    return theVal;
+}
+
+const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
+    const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c) const {
+
+    float theVal = 0.0f;
+
+    if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
+        !this->metadata->GridType == GridType::RECTILINEAR) {
+        vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported grid!");
+
+    } else {
+        uint64_t idx =
+            z * this->metadata->Resolution[0] * this->metadata->Resolution[1] + y * this->metadata->Resolution[0] + x;
+        idx *= this->metadata->Components;
+        switch (this->metadata->ScalarType) {
+        case UNKNOWN:
+        case BITS:
+            vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported scalar type!");
+            break;
+
+        case SIGNED_INTEGER: {
+            const int* theVol = static_cast<int*>(this->data);
+            theVal = theVol[idx];
+        } break;
+
+        case UNSIGNED_INTEGER: {
+            const unsigned int* theVol = static_cast<unsigned int*>(this->data);
+            theVal = theVol[idx];
+        } break;
+
+        case FLOATING_POINT: {
+            const float* theVol = static_cast<float*>(this->data);
+            theVal = theVol[idx];
+        } break;
+        }
+    }
+
+    return theVal;
+}
+
 /*
  * megamol::core::misc::VolumetricDataCall::IsUniform
  */

@@ -762,7 +762,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
-                material = ospNewMaterial(renderer, "OBJMaterial");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
                 ospSet3fv(material, "Kd", element.materialContainer->Kd.data());
                 ospSet3fv(material, "Ks", element.materialContainer->Ks.data());
                 ospSet1f(material, "Ns", element.materialContainer->Ns);
@@ -770,13 +770,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet3fv(material, "Tf", element.materialContainer->Tf.data());
                 break;
             case LUMINOUS:
-                material = ospNewMaterial(renderer, "Luminous");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Luminous");
                 ospSet3fv(material, "color", element.materialContainer->lumColor.data());
                 ospSet1f(material, "intensity", element.materialContainer->lumIntensity);
                 ospSet1f(material, "transparency", element.materialContainer->lumTransparency);
                 break;
             case GLASS:
-                material = ospNewMaterial(renderer, "Glass");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Glass");
                 ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
                 ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
                 ospSet3fv(
@@ -786,38 +786,38 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
                 break;
             case MATTE:
-                material = ospNewMaterial(renderer, "Matte");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Matte");
                 ospSet3fv(material, "reflectance", element.materialContainer->matteReflectance.data());
                 break;
             case METAL:
-                material = ospNewMaterial(renderer, "Metal");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Metal");
                 ospSet3fv(material, "reflectance", element.materialContainer->metalReflectance.data());
                 ospSet3fv(material, "eta", element.materialContainer->metalEta.data());
                 ospSet3fv(material, "k", element.materialContainer->metalK.data());
                 ospSet1f(material, "roughness", element.materialContainer->metalRoughness);
                 break;
             case METALLICPAINT:
-                material = ospNewMaterial(renderer, "MetallicPaint");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "MetallicPaint");
                 ospSet3fv(material, "shadeColor", element.materialContainer->metallicShadeColor.data());
                 ospSet3fv(material, "glitterColor", element.materialContainer->metallicGlitterColor.data());
                 ospSet1f(material, "glitterSpread", element.materialContainer->metallicGlitterSpread);
                 ospSet1f(material, "eta", element.materialContainer->metallicEta);
                 break;
             case PLASTIC:
-                material = ospNewMaterial(renderer, "Plastic");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Plastic");
                 ospSet3fv(material, "pigmentColor", element.materialContainer->plasticPigmentColor.data());
                 ospSet1f(material, "eta", element.materialContainer->plasticEta);
                 ospSet1f(material, "roughness", element.materialContainer->plasticRoughness);
                 ospSet1f(material, "thickness", element.materialContainer->plasticThickness);
                 break;
             case THINGLASS:
-                material = ospNewMaterial(renderer, "ThinGlass");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "ThinGlass");
                 ospSet3fv(material, "transmission", element.materialContainer->thinglassTransmission.data());
                 ospSet1f(material, "eta", element.materialContainer->thinglassEta);
                 ospSet1f(material, "thickness", element.materialContainer->thinglassThickness);
                 break;
             case VELVET:
-                material = ospNewMaterial(renderer, "Velvet");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Velvet");
                 ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
                 ospSet3fv(
                     material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
@@ -848,14 +848,36 @@ bool AbstractOSPRayRenderer::fillWorld() {
         switch (element.type) {
         case structureTypeEnum::UNINITIALIZED:
             break;
+
+        case structureTypeEnum::OSPRAY_API_STRUCTURES:
+             if (element.ospStructures.empty()) {
+                returnValue = false;
+                break;
+            }
+            for (auto structure : element.ospStructures) {
+                if (structure.second == structureTypeEnum::GEOMETRY) {
+                    geo.push_back(static_cast<OSPGeometry>(structure.first));
+                } else if (structure.second == structureTypeEnum::GEOMETRY) {
+                    vol.push_back(static_cast<OSPVolume>(structure.first));
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
+                }
+            }
+            // General geometry execution
+            for (unsigned int i = 0; i < element.ospStructures.size(); i++) {
+                auto idx = geo.size() - 1 - i;
+                if (material != NULL && geo.size() > 0) {
+                    ospSetMaterial(geo[idx], material);
+                }
+
+                if (geo.size() > 0) {
+                    ospCommit(geo[idx]);
+                    ospAddGeometry(world, geo[idx]);
+                }
+            }
+            break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
-            case geometryTypeEnum::OSPRAY_API_GEOMETRY:
-                if (element.ospstructure == NULL) {
-                    returnValue = false;
-                    break;
-                }
-                geo.push_back(static_cast<OSPGeometry>(element.ospstructure));
             case geometryTypeEnum::PKD: {
                 if (element.raw == NULL) {
                     returnValue = false;
@@ -870,7 +892,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("pkd_geometry"));
 
-                vertexData = ospNewData(element.partCount, OSP_FLOAT4, *element.raw, OSP_DATA_SHARED_BUFFER);
+                vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
                 ospCommit(vertexData);
 
                 // set bbox
@@ -974,7 +996,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                     if (vertexData != NULL) ospRelease(vertexData);
                     vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                        &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                        &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                     ospCommit(vertexData);
                     ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                     ospSetData(geo.back(), "spheres", vertexData);
@@ -1090,7 +1112,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                         if (vertexData != nullptr) ospRelease(vertexData);
                         vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(*element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
                         ospCommit(vertexData);
                         ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
                         ospSetData(geo.back(), "spheres", vertexData);
@@ -1278,15 +1300,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::VOLUME:
 
-            if (element.volumeType == volumeTypeEnum::OSPRAY_API_VOLUME) {
-                if (element.ospstructure == NULL) {
-                    returnValue = false;
-                    break;
-                }
-                vol.push_back(static_cast<OSPVolume>(element.ospstructure));
-                break;
-            } else {
-
                 if (element.voxels == NULL) {
                     returnValue = false;
                     break;
@@ -1297,14 +1310,14 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 auto type = static_cast<uint8_t>(element.voxelDType);
 
                 ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
-                float fixedSpacing[3];
-                for (auto x = 0; x < 3; ++x) {
-                    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
-                }
+                //float fixedSpacing[3];
+                //for (auto x = 0; x < 3; ++x) {
+                //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
+                //}
                 // scaling properties of the volume
                 ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
                 ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", fixedSpacing);
+                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
                 ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
 
                 ospSet1b(vol.back(), "singleShade", element.useMIP);
@@ -1344,7 +1357,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 ospSetObject(vol.back(), "transferFunction", tf);
                 ospCommit(vol.back());
                 ospRelease(tf);
-            }
+            
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());

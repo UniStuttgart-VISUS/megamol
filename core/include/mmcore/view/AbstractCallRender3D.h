@@ -37,22 +37,9 @@ namespace view {
      *
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
-     *
-     * Function "GetCapabilities" asks the callee to set the capabilities
-     * flags of the call.
      */
     class MEGAMOLCORE_API AbstractCallRender3D : public AbstractCallRender {
     public:
-
-        /** Capability of rendering (must be present) */
-        static const UINT64 CAP_RENDER;
-
-        /** Capability to light the scene using the view-light */
-        static const UINT64 CAP_LIGHTING;
-
-        /** Capability to represent dynamic (time-varying) data */
-        static const UINT64 CAP_ANIMATION;
-
         /** Dtor. */
         virtual ~AbstractCallRender3D(void);
 
@@ -64,17 +51,6 @@ namespace view {
          */
         inline BoundingBoxes& AccessBoundingBoxes(void) {
             return this->bboxs;
-        }
-
-        /**
-         * Sets the capability flags specified. This is to be set by the callee
-         * as answer to 'GetCapabilities'.
-         *
-         * @param cap The capability flags to be set. Can by any '|' (or)
-         *            combination of the 'CAP_*' members.
-         */
-        inline void AddCapability(UINT64 cap) {
-            this->capabilities |= cap;
         }
 
         /**
@@ -98,38 +74,6 @@ namespace view {
         }
 
         /**
-         * Gets the capabilitie flags.
-         *
-         * @return The capabilitie flags.
-         */
-        inline UINT64 GetCapabilities(void) const {
-            return this->capabilities;
-        }
-
-        /**
-         * Answers whether the specified capability flags are set.
-         *
-         * @param cap The requested capability flags.  Can by any '|' (or)
-         *            combination of the 'CAP_*' members.
-         *
-         * @return 'true' if all requested flags are set, 'false' otherwise.
-         */
-        inline bool IsCapable(UINT64 cap) const {
-            return (this->capabilities & cap) == cap;
-        }
-
-        /**
-         * Unsets the capability flags specified. This is to be set by the
-         * callee as answer to 'GetCapabilities'.
-         *
-         * @param cap The capability flags to be set. Can by any '|' (or)
-         *            combination of the 'CAP_*' members.
-         */
-        inline void RemoveCapabilities(UINT64 cap) {
-            this->capabilities &= ~cap;
-        }
-
-        /**
          * Sets the camera parameters pointer. These are to be set by the
          * caller before calling 'Render'.
          *
@@ -138,17 +82,6 @@ namespace view {
         inline void SetCameraParameters(const vislib::SmartPtr<
                 vislib::graphics::CameraParameters>& camParams) {
             this->camParams = camParams;
-        }
-
-        /**
-         * Sets the capabilities of the callee. This is to be set by the callee
-         * as answer to 'GetCapabilities'.
-         *
-         * @param cap The new capabilities value. Can by any '|' (or)
-         *            combination of the 'CAP_*' members.
-         */
-        inline void SetCapabilities(UINT64 cap) {
-            this->capabilities = cap;
         }
 
         /**
@@ -196,9 +129,6 @@ namespace view {
 
         /** The bounding boxes */
         BoundingBoxes bboxs;
-
-        /** The capabilities flags */
-        UINT64 capabilities;
 
         /** The number of milliseconds required to render the last frame */
         double lastFrameTime;

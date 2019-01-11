@@ -14,7 +14,8 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutput.h" 
+#include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
 
@@ -27,7 +28,9 @@ namespace view {
 #pragma warning(disable: 4250)  // I know what I am doing ...
 #endif /* _WIN32 */
     /**
-     * Call for registering a module at the cluster display
+     * Call for materializing a rendering module.
+	 *
+	 * This is used for FBO-based compositing and registering a module at the cluster display.
      */
     class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
     public:
@@ -50,26 +53,17 @@ namespace view {
             return "Call for registering a module at the cluster display";
         }
 
-        /** Function index of 'render' */
-        static const unsigned int CALL_RENDER;
+		/** Function index of 'render' */
+        static const unsigned int CALL_RENDER = AbstractCallRender::FnRender;
 
         /** Function index of 'freeze' */
-        static const unsigned int CALL_FREEZE;
+        static const unsigned int CALL_FREEZE = 7;
 
         /** Function index of 'unfreeze' */
-        static const unsigned int CALL_UNFREEZE;
-
-        /** Function index of 'SetCursor2DButtonState' */
-        static const unsigned int CALL_SETCURSOR2DBUTTONSTATE;
-
-        /** Function index of 'SetCursor2DPosition' */
-        static const unsigned int CALL_SETCURSOR2DPOSITION;
-
-        /** Function index of 'SetInputModifier' */
-        static const unsigned int CALL_SETINPUTMODIFIER;
+        static const unsigned int CALL_UNFREEZE = 8;
 
         /** Function index of 'ResetView' */
-        static const unsigned int CALL_RESETVIEW;
+        static const unsigned int CALL_RESETVIEW = 9;
 
         /**
          * Answer the number of functions used for this call.
@@ -77,7 +71,13 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 7;
+			ASSERT(CALL_FREEZE == AbstractCallRender::FunctionCount()
+				&& "Enum has bad magic number");
+			ASSERT(CALL_UNFREEZE == AbstractCallRender::FunctionCount() + 1
+				&& "Enum has bad magic number");
+			ASSERT(CALL_RESETVIEW  == AbstractCallRender::FunctionCount() + 2
+				&& "Enum has bad magic number");
+            return AbstractCallRender::FunctionCount() + 3;
         }
 
         /**
@@ -87,7 +87,16 @@ namespace view {
          *
          * @return The name of the requested function.
          */
-        static const char * FunctionName(unsigned int idx);
+		static const char* FunctionName(unsigned int idx) {
+            if (idx == CALL_FREEZE) {
+                return "freeze";
+            } else if (idx == CALL_UNFREEZE) {
+                return "unfreeze";
+            } else if (idx == CALL_RESETVIEW) {
+                return "ResetView";
+            } 
+            return AbstractCallRender::FunctionName(idx);
+		}
 
         /**
          * Ctor.
@@ -156,7 +165,7 @@ namespace view {
          *
          * @return The input modifier
          */
-        inline mmcInputModifier InputModifier(void) const {
+        inline Modifier InputModifier(void) const {
             return this->mod;
         }
 
@@ -294,7 +303,8 @@ namespace view {
          * @param mod The input modifier
          * qparam down The down flag
          */
-        inline void SetInputModifier(mmcInputModifier mod, bool down) {
+        [[deprecated("This is utterly bad design and to be replaced by something AbstractInputScope-y")]]
+        inline void SetInputModifier(Modifier mod, bool down) {
             this->mod = mod;
             this->down = down;
         }
@@ -495,7 +505,7 @@ namespace view {
         float y;
 
         /** The input modifier to be set */
-        mmcInputModifier mod;
+        Modifier mod;
 
     };
 #ifdef _WIN32

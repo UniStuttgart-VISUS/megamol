@@ -207,14 +207,14 @@ namespace megamol {
 
             // CONTROL POINT POSITIONS
             inline void setControlPointPosition(vislib::math::Vector<float, 3> firstcp, vislib::math::Vector<float, 3> lastcp) {
-                this->firstCtrllPos = firstcp;
-                this->lastCtrllPos  = lastcp;
+                this->startCtrllPos = firstcp;
+                this->endCtrllPos  = lastcp;
             }
-            inline vislib::math::Vector<float, 3> getFirstControlPointPosition() {
-                return this->firstCtrllPos;
+            inline vislib::math::Vector<float, 3> getStartControlPointPosition() {
+                return this->startCtrllPos;
             }
-            inline vislib::math::Vector<float, 3> getLastControlPointPosition() {
-                return this->lastCtrllPos;
+            inline vislib::math::Vector<float, 3> getEndControlPointPosition() {
+                return this->endCtrllPos;
             }
 
 		private:
@@ -236,8 +236,8 @@ namespace megamol {
             float                                          totalSimTime;
             vislib::math::Point<float, 3>                  bboxCenter;
             unsigned int                                   fps;
-            vislib::math::Vector<float, 3>                 firstCtrllPos;
-            vislib::math::Vector<float, 3>                 lastCtrllPos;
+            vislib::math::Vector<float, 3>                 startCtrllPos;
+            vislib::math::Vector<float, 3>                 endCtrllPos;
 
 		};
 

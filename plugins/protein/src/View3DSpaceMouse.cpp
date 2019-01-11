@@ -244,7 +244,7 @@ bool View3DSpaceMouse::create(void) {
     this->adjustor.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
     
-#ifdef _WIN32 
+#if defined(_WIN32) && !defined(__clang__)
     this->rawInput.Initialize(); // create a raw input class to get input from 3d mouse
     // set callback functions for motion and button events from the raw input device
     this->rawInput.SetMotionFunction(Raw3DMotionDelegate(*this, &View3DSpaceMouse::On3DMouseMotion));

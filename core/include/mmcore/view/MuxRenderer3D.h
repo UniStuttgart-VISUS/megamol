@@ -99,16 +99,6 @@ namespace view {
     protected:
 
         /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(Call& call);
-
-        /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
          * and times).
@@ -203,26 +193,6 @@ namespace view {
 
 
     /*
-     * MuxRenderer3D<T>::GetCapabilities
-     */
-    template<unsigned int T>
-    bool MuxRenderer3D<T>::GetCapabilities(Call& call) {
-        CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-        if (cr3d == NULL) return false;
-
-        cr3d->SetCapabilities(0);
-        for (unsigned int i = 0; i < T; i++) {
-            if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
-            CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
-            if ((oc == NULL) || (!(*oc)(2))) continue;
-            cr3d->AddCapability(oc->GetCapabilities());
-        }
-
-        return true;
-    }
-
-
-    /*
      * MuxRenderer3D<T>::GetExtents
      */
     template<unsigned int T>
@@ -235,7 +205,7 @@ namespace view {
         for (unsigned int i = 0; i < T; i++) {
             if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
             CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
-            if ((oc == NULL) || (!(*oc)(1))) continue;
+            if ((oc == NULL) || (!(*oc)(AbstractCallRender::FnGetExtents))) continue;
             if (this->frameCnt == 0) {
                 if (oc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
                     this->bboxs.SetObjectSpaceBBox(oc->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -310,7 +280,7 @@ namespace view {
             CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
             if (oc == NULL) continue;
             *oc = *cr3d;
-            if (!(*oc)(1)) continue;
+            if (!(*oc)(view::AbstractCallRender::FnGetExtents)) continue;
 
             // Back translation ocWS -> ocOS
             float sx, sy, sz, tx, ty, tz;
@@ -350,7 +320,7 @@ namespace view {
             ::glTranslatef(tx, ty, tz); // TODO: Not sure about the ordering here!
             ::glScalef(this->scale, this->scale, this->scale);
 
-            (*oc)(0);
+            (*oc)(view::AbstractCallRender::FnRender);
 
             ::glMatrixMode(GL_MODELVIEW);
             ::glPopMatrix();

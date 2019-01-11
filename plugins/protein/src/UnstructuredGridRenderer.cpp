@@ -129,21 +129,6 @@ bool protein::UnstructuredGridRenderer::create(void)
 
 
 /*
- * protein::UnstructuredGridRenderer::GetCapabilities
- */
-bool protein::UnstructuredGridRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        | view::CallRender3D::CAP_ANIMATION );
-
-    return true;
-}
-
-
-/*
  * protein::UnstructuredGridRenderer::GetExtents
  */
 bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {

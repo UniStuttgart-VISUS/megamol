@@ -1,0 +1,1052 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="reducedsurface">
+    <include file="protein"/>
+
+    <namespace name="ses">
+       
+        <shader name="writeSphereIdVertex">
+            <snippet type="version">120</snippet>
+            <snippet name="::protein::commondefines"/>
+            <snippet type="string">
+<!--
+uniform vec4 viewAttr;
+uniform vec3 zValues;
+
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+
+varying float id;
+varying vec4 objPos;
+varying vec4 camPos;
+varying float squarRad;
+varying float rad;
+
+void main(void) {
+    // store id
+    id = gl_Color.r;
+    
+    // remove the sphere radius from the w coordinates to the rad varyings
+    vec4 inPos = gl_Vertex;
+    rad = gl_Color.g;
+    squarRad = rad * rad;
+    inPos.w = 1.0;
+
+    // object pivot point in object space    
+    objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
+
+    // calculate cam position
+    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos.xyz -= objPos.xyz; // cam pos to glyph space
+
+    // send color to fragment shader
+    gl_FrontColor = gl_Color;
+
+    // Sphere-Touch-Plane-Approach
+    vec2 winHalf = 2.0 / viewAttr.zw; // window size
+
+    vec2 d, p, q, h, dd;
+
+    // get camera orthonormal coordinate system
+    vec4 tmp;
+
+    vec2 mins, maxs;
+    vec3 testPos;
+    vec4 projPos;
+
+    // projected camera vector
+    vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
+
+    vec3 cpj1 = camIn * c2.z + camRight * c2.x;
+    vec3 cpm1 = camIn * c2.x - camRight * c2.z;
+
+    vec3 cpj2 = camIn * c2.z + camUp * c2.y;
+    vec3 cpm2 = camIn * c2.y - camUp * c2.z;
+
+    d.x = length(cpj1);
+    d.y = length(cpj2);
+
+    dd = vec2(1.0) / d;
+
+    p = squarRad * dd;
+    q = d - p;
+    h = sqrt(p * q);
+    //h = vec2(0.0);
+
+    p *= dd;
+    h *= dd;
+
+    cpj1 *= p.x;
+    cpm1 *= h.x;
+    cpj2 *= p.y;
+    cpm2 *= h.y;
+
+    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
+    testPos = objPos.xyz + cpj1 + cpm1;
+    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = projPos.xy;
+    maxs = projPos.xy;
+
+    testPos -= 2.0 * cpm1;
+    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    testPos = objPos.xyz + cpj2 + cpm2;
+    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    testPos -= 2.0 * cpm2;
+    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
+    gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="writeSphereIdFragment">
+            <snippet type="version">120</snippet>
+            <snippet name="::protein::commondefines"/>
+            <snippet name="::common::lighting::simple"/>
+            <snippet type="string">
+<!--
+uniform vec4 viewAttr;
+uniform vec3 zValues;
+
+varying float id;
+varying vec4 objPos;
+varying vec4 camPos;
+varying float squarRad;
+varying float rad;
+
+void main(void) {
+    vec4 coord;
+    vec3 ray;
+    float lambda;
+
+    // transform fragment coordinates from window coordinates to view coordinates.
+    coord = gl_FragCoord 
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+        + vec4(-1.0, -1.0, -1.0, 1.0);
+
+
+    // transform fragment coordinates from view coordinates to object coordinates.
+    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord /= coord.w;
+    coord -= objPos; // ... and to glyph space
+
+
+    // calc the viewing ray
+    ray = normalize(coord.xyz - camPos.xyz);
+
+
+    // calculate the geometry-ray-intersection
+    float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
+    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
+    float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
+    
+    if (radicand < 0.0) { discard; }
+    
+    lambda = d1 - sqrt(radicand);                           // lambda
+    vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+    
+    // write id to red color chanal
+    gl_FragColor = vec4( id, 0.0, 0.0, 1.0);
+
+    // calculate depth
+#ifdef DEPTH
+    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+#ifdef OGL_DEPTH_SES
+    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+#else
+    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
+    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+#endif // OGL_DEPTH_SES
+#endif // DEPTH
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawPointVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D positionTex;
+
+vec4 texel = vec4( 1.0);
+
+void main(void) {
+    // read vertex position from correct texture
+    // ==> use "round()"-function for coordinates? seems to be unnecessary...
+    texel = texelFetch2D( positionTex, ivec2( gl_Vertex.xy), 0);
+    gl_Position = gl_ModelViewProjectionMatrix * vec4( texel.xy, 0.0, 1.0);
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="drawPointFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_FragColor = vec4( 1.0);
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="reducedSurfaceVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    // do not ftransform(), geometry shader needs the original vertices
+    gl_Position = gl_Vertex;
+    gl_FrontColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="reducedSurfaceGeometry">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+//#pragma optionNV(fastmath on)
+//#pragma optionNV(fastprecision off)
+//#pragma optionNV(ifcvt none)
+//#pragma optionNV(inline all)
+//#pragma optionNV(strict on)
+//#pragma optionNV(unroll all)
+
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+#define maxVicinitySize 50
+
+uniform sampler2D vicinityTex;
+uniform float probeRadius;
+
+#define voxelLength origin.w
+
+void main(void) {
+    // read atom Id from color channel
+    int atomId = int( gl_FrontColorIn[0].r);
+
+    // read number of vicinity atoms from vicinity texture
+    vec4 texel = texelFetch2D( vicinityTex, ivec2( 0, atomId), 0);
+    float numAtoms = texel.r;
+
+    // temp variables
+    int cnt, id, cutId;
+    vec4 vicinity[maxVicinitySize];
+    int vicinityCnt = int( numAtoms);
+    // clamp the vicinity count
+    // ===== TODO: This is ugly and incorrect, vicinity atoms can be omitted! FIX THIS!!!! =====
+    vicinityCnt = clamp( vicinityCnt, 0, maxVicinitySize);
+
+    // read vicinity from vicinity texture
+    for( cnt = 0; cnt < vicinityCnt; cnt++ ) {
+        vicinity[cnt] = texelFetch2D( vicinityTex, ivec2( cnt+1, atomId), 0);
+    }
+
+    // names of the variables according to: Connolly "Analytical Molecular Surface Calculation", 1983
+    vec3 ai, aj, ak, uij, uik, ujk, tij, tik, tjk, uijk, utb, bijk, pijk0, pijk1;
+    float ri, rj, rk, dij, dik, djk, hijk, rij, rik, rjk, wijk ,tmpFloat;
+    bool draw0, draw1;
+
+    ak = gl_PositionIn[0].xyz;
+    //rk = gl_PositionIn[0].w;
+    rk = gl_FrontColorIn[0].g;
+
+    vec4 aiCol, ajCol, akCol;
+    akCol = vec4( 1.0, 0.0, 0.0, 1.0);
+
+    // draw the vicinity
+    for( id = 0; id < ( vicinityCnt - 1); id++ ) {
+        ai = vicinity[id].xyz;
+        ri = vicinity[id].w;
+        dik = length( ak - ai);
+        uik = ( ak - ai)/dik;
+
+        aiCol = vec4( 0.0, 1.0, 0.0, 1.0);
+
+        for( cnt = ( id + 1); cnt < vicinityCnt; cnt++ ) {
+            aj = vicinity[cnt].xyz;
+            rj = vicinity[cnt].w;
+            dij = length( aj - ai);
+            djk = length( ak - aj);
+            uij = ( aj - ai)/dij;
+            ujk = ( ak - aj)/djk;
+
+            ajCol = vec4( 0.0, 0.0, 1.0, 1.0);
+
+            if( dij > (ri + rj + probeRadius*2.0f) || dik > (ri + rk + probeRadius*2.0f) || djk > (rj + rk + probeRadius*2.0f) ) {
+                continue;
+            }
+            if( ( ( ri - rj)*( ri - rj) > dij*dij ) || 
+            ( ( ri - rk)*( ri - rk) > dik*dik ) || 
+            ( ( rj - rk)*( rj - rk) > djk*djk ) ) {
+                continue;
+            }
+            tij = 0.5*( ai + aj) + 0.5*( aj - ai) * ( ( ri + probeRadius)*( ri + probeRadius) - ( rj + probeRadius)*( rj + probeRadius))/( dij*dij);
+            tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + probeRadius)*( ri + probeRadius) - ( rk + probeRadius)*( rk + probeRadius))/( dik*dik);
+            tjk = 0.5*( aj + ak) + 0.5*( ak - aj) * ( ( rj + probeRadius)*( rj + probeRadius) - ( rk + probeRadius)*( rk + probeRadius))/( djk*djk);
+            rij = 0.5*sqrt( (ri + rj + 2.0*probeRadius)*(ri + rj + 2.0*probeRadius) - dij*dij) * ( sqrt( dij*dij - ( ri - rj)*( ri - rj)) / dij);
+            rik = 0.5*sqrt( (ri + rk + 2.0*probeRadius)*(ri + rk + 2.0*probeRadius) - dik*dik) * ( sqrt( dik*dik - ( ri - rk)*( ri - rk)) / dik);
+            rjk = 0.5*sqrt( (rj + rk + 2.0*probeRadius)*(rj + rk + 2.0*probeRadius) - djk*djk) * ( sqrt( djk*djk - ( rj - rk)*( rj - rk)) / djk);
+            wijk = acos( dot( uij, uik) );
+            uijk = cross( uij, uik) / sin( wijk);
+            utb = cross( uijk, uij);
+            bijk = tij + utb * ( dot( uik, tik - tij) / sin( wijk));
+            tmpFloat = ( ri + probeRadius)*( ri + probeRadius) - length( bijk - ai)*length( bijk - ai);
+            if( tmpFloat < 0.0 ) {
+                continue;
+            }
+            hijk = sqrt( tmpFloat);
+            pijk0 = bijk + uijk * hijk;
+            pijk1 = bijk - uijk * hijk;
+
+            draw0 = true;
+            draw1 = true;
+            /*
+            for( cutId = 0; cutId < vicinityCnt; cutId++ ) {
+                texel = vicinity[cutId];
+                if( length( pijk0 - texel.xyz ) < ( probeRadius + texel.w - 0.01) )
+                    draw0 = false;
+                if( length( pijk1 - texel.xyz ) < ( probeRadius + texel.w - 0.01) )
+                    draw1 = false;
+            }
+            */
+            int stop1 = id;
+            int stop2 = cnt;
+            for( cutId = 0; cutId < stop1; ++cutId ) {
+                texel = vicinity[cutId];
+                if( length( pijk0 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw0 = false;
+                if( length( pijk1 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw1 = false;
+            }
+            for( cutId = stop1+1; cutId < stop2; ++cutId ) {
+                texel = vicinity[cutId];
+                if( length( pijk0 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw0 = false;
+                if( length( pijk1 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw1 = false;
+            }
+            for( cutId = stop2+1; cutId < vicinityCnt; ++cutId ) {
+                texel = vicinity[cutId];
+                if( length( pijk0 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw0 = false;
+                if( length( pijk1 - texel.xyz ) < ( probeRadius + texel.w - 0.001 ) )
+                    draw1 = false;
+            }
+            
+            if( draw0 || draw1 ) {
+                //gl_FrontColor = vec4( 1.0, 0.0, 0.0, 1.0);
+                //gl_BackColor = vec4( 1.0, 0.0, 0.0, 1.0);
+                gl_FrontColor = aiCol;
+                gl_BackColor = aiCol;
+                gl_Position = gl_ModelViewProjectionMatrix*vec4( ai, 1.0);
+                EmitVertex();
+                //gl_FrontColor = vec4( 0.0, 0.0, 1.0, 1.0);
+                //gl_BackColor = vec4( 0.0, 0.0, 1.0, 1.0);
+                gl_FrontColor = ajCol;
+                gl_BackColor = ajCol;
+                gl_Position = gl_ModelViewProjectionMatrix*vec4( aj, 1.0);
+                EmitVertex();
+                //gl_FrontColor = vec4( 0.0, 1.0, 0.0, 1.0);
+                //gl_BackColor = vec4( 0.0, 1.0, 0.0, 1.0);
+                gl_FrontColor = akCol;
+                gl_BackColor = akCol;
+                gl_Position = gl_ModelViewProjectionMatrix*vec4( ak, 1.0);
+                EmitVertex();
+                EndPrimitive();
+            }
+        }
+    }
+
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="reducedSurfaceFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_FragColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="reducedSurface2Vertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_Position = ftransform();
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="reducedSurface2Fragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+#define maxVicinitySize 50
+
+uniform sampler2D vicinityTex;
+uniform sampler2D visibleAtomsTex;
+uniform sampler2D visibleAtomsIdTex;
+
+uniform float probeRadius;
+
+
+void main(void) {
+
+    // get the Id of the current atom
+    float atomId = texelFetch2D( visibleAtomsIdTex, ivec2( gl_FragCoord.y, 0), 0 ).r;
+    
+    // read number of vicinity atoms from vicinity texture
+    vec4 voxel = texelFetch2D( vicinityTex, ivec2( 0, atomId), 0);
+    int vicinityCnt = int( voxel.r);
+
+    // temp variables
+    int cnt, id, cutId;
+    float dist;
+    float numAtomsVicinity;
+    vec4 vicinity[maxVicinitySize];
+
+    // get the IDs of the two vicinity atoms
+    int id1 = int( gl_FragCoord.x) / maxVicinitySize;
+    int id2 = int( gl_FragCoord.x - float( id1 * maxVicinitySize));
+    // discard the current fragment, if the IDs are the same or out of bounds
+    if( id1 == id2 || id1 >= vicinityCnt || id2 >= vicinityCnt ) {
+        discard;
+    }
+
+    // read vicinity from vicinity texture
+    for( cnt = 0; cnt < vicinityCnt; cnt++ ) {
+        vicinity[cnt] = texelFetch2D( vicinityTex, ivec2( cnt + 1, atomId), 0);
+    }
+
+    // get the actual position and radius of the current atom
+    vec4 tmpVec = texelFetch2D( visibleAtomsTex, ivec2( gl_FragCoord.y, 0), 0);
+    
+    // get the atom positions
+    vec3 ai = vicinity[id1].xyz;
+    float ri = vicinity[id1].w;
+    vec3 aj = vicinity[id2].xyz;
+    float rj = vicinity[id2].w;
+    vec3 ak = tmpVec.xyz;
+    float rk = tmpVec.w;
+    
+    // names of the variables according to: Connolly "Analytical Molecular Surface Calculation", 1983
+    vec3 uij, uik, ujk, tij, tik, tjk, uijk, utb, bijk, pijk0, pijk1;
+    float dij, dik, djk, hijk, wijk, tmpFloat;
+    
+    dij = length( aj - ai);
+    dik = length( ak - ai);
+    djk = length( ak - aj);
+    
+    uij = ( aj - ai)/dij;
+    uik = ( ak - ai)/dik;
+    ujk = ( ak - aj)/djk;
+
+    if( ( ( ri - rj)*( ri - rj) > dij*dij ) || 
+        ( ( ri - rk)*( ri - rk) > dik*dik ) || 
+        ( ( rj - rk)*( rj - rk) > djk*djk ) ) {
+        discard;
+    }
+    tij = 0.5*( ai + aj) + 0.5*( aj - ai) * ( ( ri + probeRadius)*( ri + probeRadius) - ( rj + probeRadius)*( rj + probeRadius))/( dij*dij);
+    tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + probeRadius)*( ri + probeRadius) - ( rk + probeRadius)*( rk + probeRadius))/( dik*dik);
+    tjk = 0.5*( aj + ak) + 0.5*( ak - aj) * ( ( rj + probeRadius)*( rj + probeRadius) - ( rk + probeRadius)*( rk + probeRadius))/( djk*djk);
+    wijk = acos( dot( uij, uik) );
+    uijk = cross( uij, uik) / sin( wijk);
+    utb = cross( uijk, uij);
+    bijk = tij + utb * ( dot( uik, tik - tij) / sin( wijk));
+    tmpFloat = ( ri + probeRadius)*( ri + probeRadius) - length( bijk - ai)*length( bijk - ai);
+    if( tmpFloat < 0.0 ) {
+        discard;
+    }
+    hijk = sqrt( tmpFloat);
+    pijk0 = bijk + uijk * hijk;
+    pijk1 = bijk - uijk * hijk;
+
+    bool draw0, draw1;
+    draw0 = true;
+    draw1 = true;
+    
+    int stop1 = min( id1, id2);
+    int stop2 = max( id1, id2);
+    for( cutId = 0; cutId < stop1; ++cutId ) {
+        voxel = vicinity[cutId];
+        if( length( pijk0 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw0 = false;
+        if( length( pijk1 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw1 = false;
+    }
+    for( cutId = stop1+1; cutId < stop2; ++cutId ) {
+        voxel = vicinity[cutId];
+        if( length( pijk0 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw0 = false;
+        if( length( pijk1 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw1 = false;
+    }
+    for( cutId = stop2+1; cutId < vicinityCnt; ++cutId ) {
+        voxel = vicinity[cutId];
+        if( length( pijk0 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw0 = false;
+        if( length( pijk1 - voxel.xyz ) < ( probeRadius + voxel.w - 0.001 ) )
+            draw1 = false;
+    }
+    
+    if( draw0 && draw1 ) {
+        gl_FragData[0] = vec4( ai, ri);
+        gl_FragData[1] = vec4( aj, rj);
+        gl_FragData[2] = vec4( ak, rk);
+        gl_FragData[3] = vec4( pijk0, -1.0);
+    } else if( draw0 && !draw1 ) {
+        gl_FragData[0] = vec4( ai, ri);
+        gl_FragData[1] = vec4( aj, rj);
+        gl_FragData[2] = vec4( ak, rk);
+        gl_FragData[3] = vec4( pijk0, 1.0);
+    } else if( !draw0 && draw1 ) {
+        gl_FragData[0] = vec4( ai, ri);
+        gl_FragData[1] = vec4( aj, rj);
+        gl_FragData[2] = vec4( ak, rk);
+        gl_FragData[3] = vec4( pijk1, 1.0);
+    } else {
+        discard;
+    }
+    
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawTriangleVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D positionTex0;
+uniform sampler2D positionTex1;
+uniform sampler2D positionTex2;
+
+varying vec4 col;
+
+vec4 texel;
+
+void main(void) {
+    // store texture coordinates as color
+    col = gl_Vertex;
+    // read vertex position from correct texture
+    if( gl_Vertex.z < 0.5 )
+        texel = texelFetch2D( positionTex0, ivec2( gl_Vertex.xy), 0 );
+    else if( gl_Vertex.z < 1.5 )
+        texel = texelFetch2D( positionTex1, ivec2( gl_Vertex.xy), 0 );
+    else
+        texel = texelFetch2D( positionTex2, ivec2( gl_Vertex.xy), 0 );
+    // set position
+    gl_Position = gl_ModelViewProjectionMatrix * vec4( texel.xyz, 1.0);
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawTriangleFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+varying vec4 col;
+
+void main(void) {
+	gl_FragColor = col;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawCUDATriangleVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+attribute vec3 attribCol;
+varying vec3 col;
+
+void main(void) {
+    col = attribCol;
+    gl_Position = ftransform();
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawCUDATriangleFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+varying vec3 col;
+
+void main(void) {
+	gl_FragColor = vec4( col, 1.0);
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="drawVisibleTriangleVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    // do not ftransform(), geometry shader needs the original vertices
+    gl_Position = gl_Vertex;
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="drawVisibleTriangleGeometry">
+            <snippet type="version">120</snippet>
+            <snippet name="protein::commondefines"/>
+            <snippet type="string">
+<!--
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D positionTex0;
+uniform sampler2D positionTex1;
+uniform sampler2D positionTex2;
+uniform sampler2D normalTex;
+uniform sampler2D markerTex;
+uniform float probeRadius;
+
+varying vec4 attribVec1;
+varying vec4 attribVec2;
+varying vec4 attribVec3;
+
+vec4 texel;
+float visible;
+
+#define rp probeRadius
+
+void main(void) {
+    // check if triangle is marked as visible in look-up table
+    visible = texelFetch2D( markerTex, ivec2( gl_PositionIn[0].xy), 0).r;
+    
+    if( visible > 0.5  ) {
+        // get the atom positions
+        texel = texelFetch2D( positionTex0, ivec2( gl_PositionIn[0].xy), 0);
+        vec3 ai = texel.xyz;
+        float ri = texel.w;
+        texel = texelFetch2D( positionTex1, ivec2( gl_PositionIn[0].xy), 0);
+        vec3 aj = texel.xyz;
+        float rj = texel.w;
+        texel = texelFetch2D( positionTex2, ivec2( gl_PositionIn[0].xy), 0);
+        vec3 ak = texel.xyz;
+        float rk = texel.w;
+        vec4 normal = texelFetch2D( normalTex, ivec2( gl_PositionIn[0].xy), 0);
+        
+        // names of the variables according to: Connolly "Analytical Molecular Surface Calculation", 1983
+        vec3 tij, tik, tjk, pijk0, pijk1;
+        float dij, dik, djk, rij, rik, rjk;
+
+        dij = length( aj - ai);
+        dik = length( ak - ai);
+        djk = length( ak - aj);
+        
+        tij = 0.5*( ai + aj) + 0.5*( aj - ai) * ( ( ri + rp)*( ri + rp) - ( rj + rp)*( rj + rp))/( dij*dij);
+        tik = 0.5*( ai + ak) + 0.5*( ak - ai) * ( ( ri + rp)*( ri + rp) - ( rk + rp)*( rk + rp))/( dik*dik);
+        tjk = 0.5*( aj + ak) + 0.5*( ak - aj) * ( ( rj + rp)*( rj + rp) - ( rk + rp)*( rk + rp))/( djk*djk);
+        rij = 0.5*sqrt( float( (ri + rj + 2.0*rp)*(ri + rj + 2.0*rp) - dij*dij)) * ( sqrt( float( dij*dij - ( ri - rj)*( ri - rj))) / dij);
+        rik = 0.5*sqrt( float( (ri + rk + 2.0*rp)*(ri + rk + 2.0*rp) - dik*dik)) * ( sqrt( float( dik*dik - ( ri - rk)*( ri - rk))) / dik);
+        rjk = 0.5*sqrt( float( (rj + rk + 2.0*rp)*(rj + rk + 2.0*rp) - djk*djk)) * ( sqrt( float( djk*djk - ( rj - rk)*( rj - rk))) / djk);
+        pijk0 = normal.xyz;
+        pijk1 = normal.xyz*normal.w;
+        
+        /*
+        vec3 uij = ( aj - ai)/dij;
+        vec3 uik = ( ak - ai)/dik;
+        vec3 ujk = ( ak - aj)/djk;
+        float wijk = acos( dot( uij, uik) );
+        vec3 uijk = cross( uij, uik) / sin( wijk);
+        vec3 utb = cross( uijk, uij);
+        vec3 bijk = tij + utb * ( dot( uik, tik - tij) / sin( wijk));
+        float tmpFloat = ( ri + rp)*( ri + rp) - length( bijk - ai)*length( bijk - ai);
+        float hijk = sqrt( tmpFloat);
+        pijk0 = bijk + uijk * hijk;
+        pijk1 = bijk - uijk * hijk;
+        */
+        
+        /////////////////////////////////////////////////////////////
+        // emit varyings and position for first spherical triangle //
+        /////////////////////////////////////////////////////////////
+        attribVec1 = vec4( ai - pijk0, 1.0);
+        attribVec2 = vec4( aj - pijk0, 1.0);
+        attribVec3 = vec4( ak - pijk0, probeRadius*probeRadius);
+        gl_Position = vec4( pijk0, probeRadius);
+        EmitVertex();
+        
+        //////////////////////////////////////////////////////////////
+        // emit varyings and position for second spherical triangle //
+        //////////////////////////////////////////////////////////////
+        attribVec1 = vec4( ai - pijk1, 1.0);
+        attribVec2 = vec4( aj - pijk1, 1.0);
+        attribVec3 = vec4( ak - pijk1, probeRadius*probeRadius);
+        gl_Position = vec4( pijk1, probeRadius);
+        EmitVertex();
+        
+        ///////////////////////////////////////////////////////////////////////
+        // ==> The two spherical triangles are potentially the same!
+        //     This does not matter, since rendering if fast enough and
+        //     singularity handling will test probe distances.
+        ///////////////////////////////////////////////////////////////////////
+        
+        //////////////////////////////////////////////
+        // emit varyings and position for torus i-j //
+        //////////////////////////////////////////////
+        // get the rotation axis of the torus
+        vec3 torusAxis = normalize( ai - tij);
+        // get the axis for rotating the torus rotations axis on the z-axis
+        vec3 rotAxis = normalize( cross( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        // compute quaternion
+        vec4 quatC;
+        float angle = acos( dot( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        float len = length( rotAxis);
+        float halfAngle = 0.5 * angle;
+        if( len > 0.0 ) {
+            len = sin(halfAngle);
+            quatC.x = rotAxis.x * len;
+            quatC.y = rotAxis.y * len;
+            quatC.z = rotAxis.z * len;
+            quatC.w = cos( halfAngle);
+        } else {
+            quatC = vec4( 0.0, 0.0, 0.0, 1.0);
+        }
+        // compute the tangential point X2 of the spheres
+        vec3 P = tij + rotAxis * rij;
+        vec3 X1 = normalize( P - ai) * ri;
+        vec3 X2 = normalize( P - aj) * rj;
+        vec3 C = ai - aj;
+        C = ( length( P - aj) / ( length( P - ai) + length( P - aj) ) ) * C;
+        float distance = length( X2 - C);
+        C = ( C + aj) - tij;
+        
+        // torus radii
+        attribVec1 = vec4( probeRadius, rij, 1.0, 1.0);
+        // conjugate quaternion
+        attribVec2 = quatC;
+        // everything inside this sphere (x,y,z,rad) is visible
+        attribVec3 = vec4( C, distance);
+        // torus center
+        gl_Position = vec4( tij, 1.0);
+        EmitVertex();
+        
+        //////////////////////////////////////////////
+        // emit varyings and position for torus i-k //
+        //////////////////////////////////////////////
+        // get the rotation axis of the torus
+        torusAxis = normalize( ai - tik);
+        // get the axis for rotating the torus rotations axis on the z-axis
+        rotAxis = normalize( cross( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        // compute quaternion
+        angle = acos( dot( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        len = length( rotAxis);
+        halfAngle = 0.5 * angle;
+        if( len > 0.0 ) {
+            len = sin(halfAngle);
+            quatC.x = rotAxis.x * len;
+            quatC.y = rotAxis.y * len;
+            quatC.z = rotAxis.z * len;
+            quatC.w = cos( halfAngle);
+        } else {
+            quatC = vec4( 0.0, 0.0, 0.0, 1.0);
+        }
+        // compute the tangential point X2 of the spheres
+        P = tik + rotAxis * rik;
+        X1 = normalize( P - ai) * ri;
+        X2 = normalize( P - ak) * rk;
+        C = ai - ak;
+        C = ( length( P - ak) / ( length( P - ai) + length( P - ak) ) ) * C;
+        distance = length( X2 - C);
+        C = ( C + ak) - tik;
+        
+        // torus radii
+        attribVec1 = vec4( probeRadius, rik, 1.0, 1.0);
+        // conjugate quaternion
+        attribVec2 = quatC;
+        // everything inside this sphere (x,y,z,rad) is visible
+        attribVec3 = vec4( C, distance);
+        // torus center
+        gl_Position = vec4( tik, 1.0);
+        EmitVertex();
+        
+        //////////////////////////////////////////////
+        // emit varyings and position for torus j-k //
+        //////////////////////////////////////////////
+        // get the rotation axis of the torus
+        torusAxis = normalize( aj - tjk);
+        // get the axis for rotating the torus rotations axis on the z-axis
+        rotAxis = normalize( cross( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        // compute quaternion
+        angle = acos( dot( torusAxis, vec3( 0.0, 0.0, 1.0)));
+        len = length( rotAxis);
+        halfAngle = 0.5 * angle;
+        if( len > 0.0 ) {
+            len = sin(halfAngle);
+            quatC.x = rotAxis.x * len;
+            quatC.y = rotAxis.y * len;
+            quatC.z = rotAxis.z * len;
+            quatC.w = cos( halfAngle);
+        } else {
+            quatC = vec4( 0.0, 0.0, 0.0, 1.0);
+        }
+        // compute the tangential point X2 of the spheres
+        P = tjk + rotAxis * rjk;
+        X1 = normalize( P - aj) * rj;
+        X2 = normalize( P - ak) * rk;
+        C = aj - ak;
+        C = ( length( P - ak) / ( length( P - aj) + length( P - ak) ) ) * C;
+        distance = length( X2 - C);
+        C = ( C + ak) - tjk;
+        
+        // torus radii
+        attribVec1 = vec4( probeRadius, rjk, 1.0, 1.0);
+        // conjugate quaternion
+        attribVec2 = quatC;
+        // everything inside this sphere (x,y,z,rad) is visible
+        attribVec3 = vec4( C, distance);
+        // torus center
+        gl_Position = vec4( tjk, 1.0);
+        EmitVertex();
+    }
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="drawVisibleTriangleFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_FragColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="adjacentTriangleVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_Position = ftransform();
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="adjacentTriangleFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+#define maxVicinitySize 50
+
+uniform sampler2D positionTex0;
+uniform sampler2D positionTex1;
+uniform sampler2D positionTex2;
+uniform sampler2D normalTex;
+uniform sampler2D markerTex;
+uniform float probeRadius;
+
+void main(void) {
+    int cnt;
+    bool visible = false;
+    vec4 visibleTria[3];
+    vec4 visibleTriaNormal;
+    vec4 invisibleTria[maxVicinitySize];
+    vec4 invisibleTriaNormal[maxVicinitySize];
+    int invisibleTriaId[maxVicinitySize];
+    vec4 tmp;
+    vec3 tmpDir, tmpDirTS;
+    int smallest = -1;
+    
+    int counter = 0;
+    
+    int xcoord = int( gl_FragCoord.x)*maxVicinitySize;
+
+    // check number of visible triangles for this edge
+    for( cnt = 0; cnt < maxVicinitySize; ++cnt ) {
+        if( texelFetch2D( markerTex, ivec2( xcoord+cnt, gl_FragCoord.y), 0).r > 0.5 ) {
+            // if a second visible triangle was found: do nothing!
+            if( visible ) discard;
+            visibleTria[0] = texelFetch2D( positionTex0, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+            visibleTria[1] = texelFetch2D( positionTex1, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+            visibleTria[2] = texelFetch2D( positionTex2, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+            visibleTriaNormal = texelFetch2D( normalTex, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+            visible = true;
+        } else {
+            tmp = texelFetch2D( positionTex1, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+            if( tmp.w > 0.5 ) {
+                invisibleTria[counter] = tmp;
+                invisibleTriaNormal[counter] = texelFetch2D( normalTex, ivec2( xcoord+cnt, gl_FragCoord.y), 0);
+                invisibleTriaId[counter] = cnt;
+                counter++;
+            }
+        }
+    }
+    // if no visible triangles were found: do nothing!
+    if( !visible ) discard;
+    
+    float angle, tmpAngle;
+    // The transformation matrix is:
+    //     (Tx Ty Tz 0)
+    // M = (Bx By Bz 0)
+    //     (Nx Ny Nz 0)
+    //     ( 0  0  0 1)
+    // where T is the tangent, B is binormal and N is the normal (all in object space).
+    // T = shared edge ai-ak; B = pijk - tik; N = T x B
+    vec3 T = normalize( visibleTria[0].xyz - visibleTria[2].xyz);
+
+    float dik = length( visibleTria[1].xyz - visibleTria[0].xyz);
+    vec3 tik = 0.5*( visibleTria[0].xyz + visibleTria[2].xyz) + 0.5*( visibleTria[2].xyz - visibleTria[0].xyz) * ( ( visibleTria[0].w + probeRadius)*( visibleTria[0].w + probeRadius) - ( visibleTria[2].w + probeRadius)*( visibleTria[2].w + probeRadius))/( dik*dik);
+    vec3 B = normalize( visibleTriaNormal.xyz - tik);
+    
+    vec3 N = normalize( cross( T, B));
+    
+    // set angle to more than 2*PI
+    angle = 7.0;
+    for( cnt = 0; cnt < counter; ++cnt ) {
+        // get direction to pijk'
+        tmpDir = normalize( invisibleTriaNormal[cnt].xyz - tik);
+        // project direction to tangent space
+        tmpDirTS = vec3( dot(T, tmpDir), dot(B, tmpDir), dot(N, tmpDir));
+        tmpAngle = atan( tmpDirTS.z, tmpDirTS.y) + 3.14159265;
+        if( tmpAngle < angle ) {
+            angle = tmpAngle;
+            smallest = invisibleTriaId[cnt];
+        }
+    }
+    
+    if( smallest >= 0 )
+        gl_FragColor = vec4( float( xcoord+smallest), gl_FragCoord.y, 0.0, 1.0);
+    else
+        discard;
+}
+-->
+            </snippet>
+        </shader>
+ 
+        <shader name="adjacentAtomVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_Position = ftransform();
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="adjacentAtomFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+#define maxVicinitySize 50
+
+uniform sampler2D visibleAtoms;
+uniform sampler2D markerTex;
+
+uniform float probeRadius;
+
+void main(void) {
+    // get the IDs of the two vicinity atoms
+    int id1 = int( gl_FragCoord.x) / maxVicinitySize;
+    int id2 = int( gl_FragCoord.x - float( id1 * maxVicinitySize));
+    if( texelFetch2D( visibleAtoms, ivec2( id2, 0), 0).r < 0.5 ) {
+        gl_FragColor = vec4( id2, 0.0, 0.0, 1.0);
+    } else {
+        discard;
+    }
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="visibleTriangleIdxVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+void main(void) {
+    // do not ftransform(), geometry shader needs the original vertices
+    gl_Position = gl_Vertex;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="visibleTriangleIdxGeometry">
+            <snippet type="version">120</snippet>
+            <snippet name="protein::commondefines"/>
+            <snippet type="string">
+                <!--
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D markerTex;
+
+void main(void) {
+    // check if triangle is marked as visible in look-up table
+    if( texelFetch2D( markerTex, ivec2( gl_PositionIn[0].xy), 0).r > 0.5  ) {
+        // emit array indices as position
+        gl_Position = gl_PositionIn[0];
+        EmitVertex();
+    }
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="visibleTriangleIdxFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+void main(void) {
+    gl_FragColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
+    </namespace>
+</btf>

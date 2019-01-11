@@ -23,17 +23,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad image_calls)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls)
 
   if(UNIX)
     find_package(JPEG REQUIRED)
     target_compile_definitions(${PROJECT_NAME} PRIVATE XMD_H) # prevents typedef conflict
-	target_include_directories(${PROJECT_NAME} PUBLIC ${JPEG_INCLUDE_DIR})
-	target_link_libraries(${PROJECT_NAME} PRIVATE ${JPEG_LIBRARIES})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${JPEG_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${JPEG_LIBRARIES})
   endif()
 
   if(MPI_C_FOUND)

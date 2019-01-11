@@ -55,6 +55,7 @@ bool iequals(const std::string& one, const std::string& other) {
     return true;
 }
 
+// clang-format off
 #define MMC_LUA_MMLOG "mmLog"
 #define MMC_LUA_MMLOGINFO "mmLogInfo"
 #define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
@@ -94,6 +95,8 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMHELP "mmHelp"
 #define MMC_LUA_MMQUIT "mmQuit"
+#define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
+#define MMC_LUA_MMFLUSH "mmFlush"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -142,10 +145,11 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
     { MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
     { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
-    { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."}
+    { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
+    {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."},
+    {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."}
 };
 
-// clang-format off
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = " MMC_LUA_MMLOGINFO ","
 "  error = error,"
@@ -188,7 +192,10 @@ MMC_LUA_MMLISTCALLS "=" MMC_LUA_MMLISTCALLS ","
 MMC_LUA_MMLISTMODULES "=" MMC_LUA_MMLISTMODULES ","
 MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
+MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
+MMC_LUA_MMFLUSH "=" MMC_LUA_MMFLUSH ","
 "  ipairs = ipairs,"
+"  load = load,"
 "  next = next,"
 "  pairs = pairs,"
 "  pcall = pcall,"
@@ -383,6 +390,10 @@ void megamol::core::LuaState::commonInit() {
 
         lua_register(L, MMC_LUA_MMHELP, &dispatch<&LuaState::Help>);
         lua_register(L, MMC_LUA_MMQUIT, &dispatch<&LuaState::Quit>);
+
+        lua_register(L, MMC_LUA_MMREADTEXTFILE, &dispatch<&LuaState::ReadTextFile>);
+
+        lua_register(L, MMC_LUA_MMFLUSH, &dispatch<&LuaState::Flush>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -855,73 +866,69 @@ int megamol::core::LuaState::GetProcessID(lua_State *L) {
 }
 
 
-int megamol::core::LuaState::GetModuleParams(lua_State *L) {
+int megamol::core::LuaState::GetModuleParams(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMGETMODULEPARAMS)) {
         auto moduleName = luaL_checkstring(L, 1);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
-        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
-        AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
-        if (!anoc) {
-            lua_pushstring(L, MMC_LUA_MMGETMODULEPARAMS": no root");
-            lua_error(L);
-            return 0;
-        }
-        Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName));
-        if (!mod) {
-            std::stringstream ss;
-            ss << MMC_LUA_MMGETMODULEPARAMS ": module " << moduleName << " not found";
-            lua_pushstring(L, ss.str().c_str());
-            lua_error(L);
-            return 0;
-        }
 
-        std::stringstream answer;
-        vislib::StringA name(mod->FullName());
-        answer << name << "\1";
-        AbstractNamedObjectContainer::child_list_type::iterator si, se;
-        se = mod->ChildList_End();
-        for (si = mod->ChildList_Begin(); si != se; ++si) {
-            param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>((*si).get());
-            if (slot != NULL) {
-                //name.Append("::");
-                //name.Append(slot->Name());
+        auto ret = this->coreInst->EnumerateParameterSlotsNoLock<megamol::core::Module>(
+            moduleName, [L](param::ParamSlot& ps) {
+                std::stringstream answer;
+                Module* mod = dynamic_cast<Module*>(ps.Parent().get());
+                if (mod != nullptr) {
+                    vislib::StringA name(mod->FullName());
+                    answer << name << "\1";
+                    AbstractNamedObjectContainer::child_list_type::iterator si, se;
+                    se = mod->ChildList_End();
+                    for (si = mod->ChildList_Begin(); si != se; ++si) {
+                        param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                        if (slot != NULL) {
+                            // name.Append("::");
+                            // name.Append(slot->Name());
 
-                answer << slot->Name() << "\1";
+                            answer << slot->Name() << "\1";
 
-                vislib::StringA descUTF8;
-                vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
-                answer << descUTF8 << "\1";
+                            vislib::StringA descUTF8;
+                            vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
+                            answer << descUTF8 << "\1";
 
-                auto psp = slot->Parameter();
-                if (psp.IsNull()) {
-                    std::ostringstream err;
-                    err << MMC_LUA_MMGETMODULEPARAMS": ParamSlot " << slot->FullName() << " does seem to hold no parameter";
-                    lua_pushstring(L, err.str().c_str());
-                    lua_error(L);
+                            auto psp = slot->Parameter();
+                            if (psp.IsNull()) {
+                                std::ostringstream err;
+                                err << MMC_LUA_MMGETMODULEPARAMS ": ParamSlot " << slot->FullName()
+                                    << " does seem to hold no parameter";
+                                lua_pushstring(L, err.str().c_str());
+                                lua_error(L);
+                            }
+
+                            vislib::RawStorage pspdef;
+                            psp->Definition(pspdef);
+                            // not nice, but we make HEX (base64 would be better, but I don't care)
+                            std::string answer2(pspdef.GetSize() * 2, ' ');
+                            for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
+                                uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                                uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
+                                for (unsigned int j = 0; j < 2; ++j)
+                                    answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
+                            }
+                            answer << answer2 << "\1";
+
+                            vislib::StringA valUTF8;
+                            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+
+                            answer << valUTF8 << "\1";
+                        }
+                    }
+                    lua_pushstring(L, answer.str().c_str());
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "LuaState: ParamSlot %s has a parent which is not a Module!", ps.FullName().PeekBuffer());
                 }
-
-                vislib::RawStorage pspdef;
-                psp->Definition(pspdef);
-                // not nice, but we make HEX (base64 would be better, but I don't care)
-                std::string answer2(pspdef.GetSize() * 2, ' ');
-                for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
-                    uint8_t b = *pspdef.AsAt<uint8_t>(i);
-                    uint8_t bh[2] = { static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16) };
-                    for (unsigned int j = 0; j < 2; ++j) answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
-                }
-                answer << answer2 << "\1";
-
-                vislib::StringA valUTF8;
-                vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
-
-                answer << valUTF8 << "\1";
-            }
-        }
-        lua_pushstring(L, answer.str().c_str());
-        return 1;
+            });
+        return ret ? 1 : 0;
     }
     return 0;
 }
@@ -1006,7 +1013,7 @@ int megamol::core::LuaState::GetParamType(lua_State *L) {
         auto paramName = luaL_checkstring(L, 1);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMTYPE, paramName, &ps)) {
@@ -1044,7 +1051,7 @@ int megamol::core::LuaState::GetParamDescription(lua_State *L) {
         auto paramName = luaL_checkstring(L, 1);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMDESCRIPTION, paramName, &ps)) {
@@ -1068,7 +1075,7 @@ int megamol::core::LuaState::GetParamValue(lua_State *L) {
         auto paramName = luaL_checkstring(L, 1);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
         core::param::ParamSlot *ps = nullptr;
         if (getParamSlot(MMC_LUA_MMGETPARAMVALUE, paramName, &ps)) {
 
@@ -1229,7 +1236,7 @@ int megamol::core::LuaState::CreateChainCall(lua_State* L) {
         std::string to = luaL_checkstring(L, 3);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        // vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         auto pos = chainStart.find_last_of("::");
         if (pos < 4 || chainStart.length() < pos + 2) {
@@ -1239,71 +1246,6 @@ int megamol::core::LuaState::CreateChainCall(lua_State* L) {
         }
         auto moduleName = chainStart.substr(0, pos-1);
         auto slotName = chainStart.substr(pos + 1, -1);
-
-        AbstractNamedObject::ptr_type ano = this->coreInst->namespaceRoot;
-        AbstractNamedObjectContainer::ptr_type anoc = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
-        if (!anoc) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": no root");
-            lua_error(L);
-            return 0;
-        }
-        //Module::ptr_type mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        //if (!mod) {
-        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start module not found");
-        //    lua_error(L);
-        //    return 0;
-        //}
-
-        //auto se = mod->ChildList_End();
-        //bool foundSlot = false;
-        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-        //    auto *slot = dynamic_cast<CallerSlot*>((*si).get());
-        //    if (slot != NULL) {
-        //        if (slot->Name() == slotName.c_str()) {
-        //            foundSlot = true;
-        //            break;
-        //        }
-        //    }
-        //}
-        //if (!foundSlot) {
-        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chain start slot not found");
-        //    lua_error(L);
-        //    return 0;
-        //}
-
-
-        //pos = to.find_last_of("::");
-        //if (pos < 4 || to.length() < pos + 2) {
-        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to module/slot name weird");
-        //    lua_error(L);
-        //    return 0;
-        //}
-        //moduleName = to.substr(0, pos - 1);
-        //slotName = to.substr(pos + 1, -1);
-
-        //mod = Module::dynamic_pointer_cast(anoc.get()->FindNamedObject(moduleName.c_str()));
-        //if (!mod) {
-        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": target module not found");
-        //    lua_error(L);
-        //    return 0;
-        //}
-
-        //se = mod->ChildList_End();
-        //foundSlot = false;
-        //for (auto si = mod->ChildList_Begin(); si != se; ++si) {
-        //    auto *slot = dynamic_cast<CalleeSlot*>((*si).get());
-        //    if (slot != NULL) {
-        //        if (slot->Name() == slotName.c_str()) {
-        //            foundSlot = true;
-        //            break;
-        //        }
-        //    }
-        //}
-        //if (!foundSlot) {
-        //    lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": to slot not found");
-        //    lua_error(L);
-        //    return 0;
-        //}
 
         if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
             std::stringstream out;
@@ -1396,7 +1338,7 @@ int megamol::core::LuaState::DeleteView(lua_State *L) {
 int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMQUERYMODULEGRAPH)) {
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1470,7 +1412,7 @@ int megamol::core::LuaState::ListCalls(lua_State* L) {
             ns = luaL_checkstring(L, 1);
         }
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1536,7 +1478,7 @@ int megamol::core::LuaState::ListModules(lua_State* L) {
             ns = luaL_checkstring(L, 1);
         }
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1589,7 +1531,7 @@ int megamol::core::LuaState::ListModules(lua_State* L) {
 int megamol::core::LuaState::ListInstatiations(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMLISTINSTANTIATIONS)) {
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
         AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
         AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
@@ -1631,5 +1573,54 @@ int megamol::core::LuaState::Quit(lua_State *L) {
     if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
         this->coreInst->Shutdown();
     }
+    return 0;
+}
+
+int megamol::core::LuaState::ReadTextFile(lua_State* L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        const auto filename = luaL_checkstring(L, 1);
+        std::ifstream t(filename);
+        if (t.good()) {
+            std::stringstream buffer;
+            buffer << t.rdbuf();
+
+            //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": read from file '%s':\n%s\n", filename, buffer.str().c_str());
+
+            lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
+            lua_pushstring(L, buffer.str().c_str()); // put string parameter on top of stack
+            // call the function pointer
+            lua_pcall(L, 1, 1, 0);
+            n = lua_gettop(L);
+            if (n != 1) {
+                std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
+                lua_pushstring(L, err.c_str());
+                lua_error(L);
+            } else {
+                const auto newString = luaL_checkstring(L, 1);
+                //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n", newString);
+                return 1;
+            }
+        } else {
+            std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
+            err += filename;
+            err += "'.";
+            lua_pushstring(L, err.c_str());
+            lua_error(L);
+        }
+    } else {
+        std::string err =
+            MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer";
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::Flush(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMFLUSH)) {
+        this->coreInst->FlushGraphUpdates();
+    }
+
     return 0;
 }

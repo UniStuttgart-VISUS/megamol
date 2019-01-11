@@ -19,21 +19,9 @@ using namespace megamol::core;
  */
 view::Renderer3DModuleDS::Renderer3DModuleDS(void) : Renderer3DModule(),
         renderSlotDS("renderingDS", "Connects the renderer to a calling renderer") {
-
     this->renderSlotDS.SetCallback(CallRenderDeferred3D::ClassName(),
         CallRenderDeferred3D::FunctionName(0), &Renderer3DModuleDS::RenderCallback);
     this->renderSlotDS.SetCallback(CallRenderDeferred3D::ClassName(),
         CallRenderDeferred3D::FunctionName(1), &Renderer3DModuleDS::GetExtentsCallback);
-    this->renderSlotDS.SetCallback(CallRenderDeferred3D::ClassName(),
-        CallRenderDeferred3D::FunctionName(2),
-        &Renderer3DModuleDS::GetCapabilitiesCallback);
     this->MakeSlotAvailable(&this->renderSlotDS);
-}
-
-
-/*
- * view::Renderer3DModuleDS::~Renderer3DModuleDS
- */
-view::Renderer3DModuleDS::~Renderer3DModuleDS(void) {
-    // intentionally empty
 }

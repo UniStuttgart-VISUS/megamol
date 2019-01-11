@@ -21,7 +21,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
@@ -127,19 +127,6 @@ bool imageviewer2::ImageViewer::create(void) {
     // intentionally empty
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
-
-    return true;
-}
-
-
-/*
- * misc::ImageViewer::GetCapabilities
- */
-bool imageviewer2::ImageViewer::GetCapabilities(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER);
 
     return true;
 }

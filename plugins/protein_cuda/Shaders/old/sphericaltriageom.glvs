@@ -1,0 +1,11 @@
+uniform float probeRadius;
+uniform float threshold;
+
+
+void main(void)
+{
+	gl_FrontColor = gl_Color;
+	
+	// do not ftransform(), geometry shader needs the original vertices
+	gl_Position = gl_Vertex;
+}

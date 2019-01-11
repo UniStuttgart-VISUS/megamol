@@ -1722,21 +1722,6 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 
 
 /*
- * protein_cuda::CrystalStructureVolumeRenderer::GetCapabilities
- */
-bool protein_cuda::CrystalStructureVolumeRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(core::view::AbstractCallRender3D::CAP_RENDER |
-                          core::view::AbstractCallRender3D::CAP_LIGHTING |
-                          core::view::AbstractCallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * protein_cuda::CrystalStructureVolumeRenderer::GetExtents
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) {

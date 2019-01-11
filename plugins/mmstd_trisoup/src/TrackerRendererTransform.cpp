@@ -109,24 +109,6 @@ bool TrackerRendererTransform::create(void) {
 
 
 /*
- * TrackerRendererTransform::GetCapabilities
- */
-bool TrackerRendererTransform::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *inCr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (inCr3d == NULL) return false;
-    core::view::CallRender3D *outCr3d = this->outRenderSlot.CallAs<core::view::CallRender3D>();
-    if (outCr3d == NULL) return false;
-
-    if ((*outCr3d)(2)) {
-        *inCr3d = *outCr3d;
-        return true;
-    }
-
-    return false;
-}
-
-
-/*
  * TrackerRendererTransform::GetExtents
  */
 bool TrackerRendererTransform::GetExtents(core::Call& call) {
@@ -282,7 +264,7 @@ bool TrackerRendererTransform::Render(core::Call& call) {
     }
 
     *outCr3d = *inCr3d;
-    bool retVal = (*outCr3d)(0);
+    bool retVal = (*outCr3d)(core::view::AbstractCallRender::FnRender);
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glPopMatrix();

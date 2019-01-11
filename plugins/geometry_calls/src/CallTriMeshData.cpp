@@ -9,12 +9,12 @@
 #include "geometry_calls/CallTriMeshData.h"
 //#include <GL/gl.h>
 #include <GL/glu.h>
-#include "vislib/graphics/BitmapCodecCollection.h"
-#include "vislib/graphics/BitmapImage.h"
 #include "vislib/Exception.h"
-#include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::geocalls;
@@ -25,9 +25,16 @@ using namespace megamol::geocalls;
 /*
  * CallTriMeshData::Material::Material
  */
-CallTriMeshData::Material::Material(void) : Ns(0.0f), Ni(0.0f), d(0.0f),
-        Tr(0.0f), illum(ILLUM_DIFF_SPEC), mapFileName(), bumpMapFileName(),
-        mapID(0), bumpMapID(0) {
+CallTriMeshData::Material::Material(void)
+    : Ns(0.0f)
+    , Ni(0.0f)
+    , d(0.0f)
+    , Tr(0.0f)
+    , illum(ILLUM_DIFF_SPEC)
+    , mapFileName()
+    , bumpMapFileName()
+    , mapID(0)
+    , bumpMapID(0) {
     this->Tf[0] = this->Tf[1] = this->Tf[2] = 0.0f;
     this->Ka[0] = this->Ka[1] = this->Ka[2] = 0.2f;
     this->Kd[0] = this->Kd[1] = this->Kd[2] = 0.8f;
@@ -39,9 +46,7 @@ CallTriMeshData::Material::Material(void) : Ns(0.0f), Ni(0.0f), d(0.0f),
 /*
  * CallTriMeshData::Material::Material
  */
-CallTriMeshData::Material::Material(const CallTriMeshData::Material& src) {
-    *this = src;
-}
+CallTriMeshData::Material::Material(const CallTriMeshData::Material& src) { *this = src; }
 
 
 /*
@@ -63,10 +68,18 @@ CallTriMeshData::Material::~Material(void) {
  * CallTriMeshData::Material::Dye
  */
 void CallTriMeshData::Material::Dye(float r, float g, float b) {
-    this->Ka[0] *= r; this->Ka[1] *= g; this->Ka[2] *= b;
-    this->Kd[0] *= r; this->Kd[1] *= g; this->Kd[2] *= b;
-    this->Ks[0] *= r; this->Ks[1] *= g; this->Ks[2] *= b;
-    this->Ke[0] *= r; this->Ke[1] *= b; this->Ke[2] *= b;
+    this->Ka[0] *= r;
+    this->Ka[1] *= g;
+    this->Ka[2] *= b;
+    this->Kd[0] *= r;
+    this->Kd[1] *= g;
+    this->Kd[2] *= b;
+    this->Ks[0] *= r;
+    this->Ks[1] *= g;
+    this->Ks[2] *= b;
+    this->Ke[0] *= r;
+    this->Ke[1] *= b;
+    this->Ke[2] *= b;
 }
 
 
@@ -151,7 +164,7 @@ void CallTriMeshData::Material::SetBumpMapFileName(const vislib::TString& filena
 CallTriMeshData::Material& CallTriMeshData::Material::operator=(const CallTriMeshData::Material& rhs) {
     this->Ns = rhs.Ns;
     this->Ni = rhs.Ni;
-    this->d  = rhs.d;
+    this->d = rhs.d;
     this->Tr = rhs.Tr;
     this->Tf[0] = rhs.Tf[0];
     this->Tf[1] = rhs.Tf[1];
@@ -171,7 +184,7 @@ CallTriMeshData::Material& CallTriMeshData::Material::operator=(const CallTriMes
     this->Ke[2] = rhs.Ke[2];
     this->mapFileName = rhs.mapFileName;
     this->bumpMapFileName = rhs.bumpMapFileName;
-    this->mapID = 0; // texture will be loaded again
+    this->mapID = 0;     // texture will be loaded again
     this->bumpMapID = 0; // texture will be loaded again
     return *this;
 }
@@ -183,38 +196,35 @@ CallTriMeshData::Material& CallTriMeshData::Material::operator=(const CallTriMes
 bool CallTriMeshData::Material::operator==(const CallTriMeshData::Material& rhs) const {
     // epsilon comparisons not required, since we want to check for *exact equality*
     return this->bumpMapFileName.Equals(rhs.bumpMapFileName)
-        // Not checking texture ids!
-        && (this->d == rhs.d)
-        && (this->illum == rhs.illum)
-        && (::memcmp(this->Ka, rhs.Ka, sizeof(float) * 3) == 0)
-        && (::memcmp(this->Kd, rhs.Kd, sizeof(float) * 3) == 0)
-        && (::memcmp(this->Ke, rhs.Ke, sizeof(float) * 3) == 0)
-        && (::memcmp(this->Ks, rhs.Ks, sizeof(float) * 3) == 0)
-        && this->mapFileName.Equals(rhs.mapFileName)
-        // Not checking texture ids!
-        && (this->Ni == rhs.Ni)
-        && (this->Ns == rhs.Ns)
-        && (::memcmp(this->Tf, rhs.Tf, sizeof(float) * 3) == 0)
-        && (this->Tr == rhs.Tr);
+           // Not checking texture ids!
+           && (this->d == rhs.d) && (this->illum == rhs.illum) &&
+           (::memcmp(this->Ka, rhs.Ka, sizeof(float) * 3) == 0) &&
+           (::memcmp(this->Kd, rhs.Kd, sizeof(float) * 3) == 0) &&
+           (::memcmp(this->Ke, rhs.Ke, sizeof(float) * 3) == 0) &&
+           (::memcmp(this->Ks, rhs.Ks, sizeof(float) * 3) == 0) &&
+           this->mapFileName.Equals(rhs.mapFileName)
+           // Not checking texture ids!
+           && (this->Ni == rhs.Ni) && (this->Ns == rhs.Ns) && (::memcmp(this->Tf, rhs.Tf, sizeof(float) * 3) == 0) &&
+           (this->Tr == rhs.Tr);
 }
 
 
 /*
  * CallTriMeshData::Material::loadTexture
  */
-unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
+unsigned int CallTriMeshData::Material::loadTexture(vislib::TString& filename) {
     vislib::graphics::BitmapImage img;
     try {
         if (!vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, filename)) {
             throw vislib::Exception("No suitable codec found", __FILE__, __LINE__);
         }
-    } catch(vislib::Exception ex) {
+    } catch (vislib::Exception ex) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to load texture \"%s\": %s (%s, %d)\n", vislib::StringA(filename).PeekBuffer(),
-            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+            "Unable to load texture \"%s\": %s (%s, %d)\n", vislib::StringA(filename).PeekBuffer(), ex.GetMsgA(),
+            ex.GetFile(), ex.GetLine());
         filename.Clear();
         return 0;
-    } catch(...) {
+    } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to load texture \"%s\": unexpected exception\n", vislib::StringA(filename).PeekBuffer());
         filename.Clear();
@@ -228,8 +238,8 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
             break;
         }
     }
-    img.Convert(hasAlpha ? vislib::graphics::BitmapImage::TemplateByteRGBA
-        : vislib::graphics::BitmapImage::TemplateByteRGB);
+    img.Convert(
+        hasAlpha ? vislib::graphics::BitmapImage::TemplateByteRGBA : vislib::graphics::BitmapImage::TemplateByteRGB);
     img.FlipVertical();
 
     GLuint tex;
@@ -239,10 +249,8 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
     ::glPixelStorei(GL_PACK_ROW_LENGTH, 0);
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     ::glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    ::gluBuild2DMipmaps(GL_TEXTURE_2D, hasAlpha ? 4 : 3,
-        img.Width(), img.Height(),
-        hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-        img.PeekData());
+    ::gluBuild2DMipmaps(GL_TEXTURE_2D, hasAlpha ? 4 : 3, img.Width(), img.Height(), hasAlpha ? GL_RGBA : GL_RGB,
+        GL_UNSIGNED_BYTE, img.PeekData());
 
     return tex;
 }
@@ -253,9 +261,19 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
 /*
  * CallTriMeshData::Mesh::Mesh
  */
-CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */triMemOwned(false),
-        vrtCnt(0), vrtDT(DT_NONE), /*vrt(NULL), */nrmDT(DT_NONE), /*nrm(NULL), */
-        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL), vattCount(0) {
+CallTriMeshData::Mesh::Mesh(void)
+    : triCnt(0)
+    , triDT(DT_NONE)
+    , /*tri(NULL), */ triMemOwned(false)
+    , vrtCnt(0)
+    , vrtDT(DT_NONE)
+    , /*vrt(NULL), */ nrmDT(DT_NONE)
+    , /*nrm(NULL), */
+    colDT(DT_NONE)
+    , /*col(NULL), */ texDT(DT_NONE)
+    , /*tex(NULL), */ vrtMemOwned(false)
+    , mat(NULL)
+    , vattCount(0) {
     this->tri.dataByte = NULL;
     this->vrt.dataFloat = NULL;
     this->nrm.dataFloat = NULL;
@@ -271,9 +289,7 @@ CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */tr
 /*
  * CallTriMeshData::Mesh::Mesh
  */
-CallTriMeshData::Mesh::Mesh(const CallTriMeshData::Mesh& src) {
-    *this = src;
-}
+CallTriMeshData::Mesh::Mesh(const CallTriMeshData::Mesh& src) { *this = src; }
 
 
 /*
@@ -283,7 +299,6 @@ CallTriMeshData::Mesh::~Mesh(void) {
     this->clearTriData();
     this->clearVrtData();
     this->mat = NULL; // DO NOT DELETE
-
 }
 
 
@@ -332,21 +347,13 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
  * CallTriMeshData::Mesh::operator==
  */
 bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
-    bool isEqual = (this->col.dataByte == rhs.col.dataByte)
-        && (this->colDT == rhs.colDT)
-        && (this->mat == rhs.mat)
-        && (this->nrm.dataFloat == rhs.nrm.dataFloat)
-        && (this->nrmDT == rhs.nrmDT)
-        && (this->tex.dataFloat == rhs.tex.dataFloat)
-        && (this->texDT == rhs.texDT)
-        && (this->tri.dataByte == rhs.tri.dataByte)
-        && (this->triDT == rhs.triDT)
-        && (this->triCnt == rhs.triCnt)
-        && (this->triMemOwned == rhs.triMemOwned)
-        && (this->vrt.dataFloat == rhs.vrt.dataFloat)
-        && (this->vrtDT == rhs.vrtDT)
-        && (this->vrtCnt == rhs.vrtCnt)
-        && (this->vrtMemOwned == rhs.vrtMemOwned);
+    bool isEqual = (this->col.dataByte == rhs.col.dataByte) && (this->colDT == rhs.colDT) && (this->mat == rhs.mat) &&
+                   (this->nrm.dataFloat == rhs.nrm.dataFloat) && (this->nrmDT == rhs.nrmDT) &&
+                   (this->tex.dataFloat == rhs.tex.dataFloat) && (this->texDT == rhs.texDT) &&
+                   (this->tri.dataByte == rhs.tri.dataByte) && (this->triDT == rhs.triDT) &&
+                   (this->triCnt == rhs.triCnt) && (this->triMemOwned == rhs.triMemOwned) &&
+                   (this->vrt.dataFloat == rhs.vrt.dataFloat) && (this->vrtDT == rhs.vrtDT) &&
+                   (this->vrtCnt == rhs.vrtCnt) && (this->vrtMemOwned == rhs.vrtMemOwned);
     // this is necessary if we do not want to crash in the next few lines
     if (this->vattCount != rhs.vattCount || !isEqual) {
         return false;
@@ -367,10 +374,17 @@ void CallTriMeshData::Mesh::clearTriData(void) {
     if (this->triMemOwned) {
         if (this->tri.dataByte != NULL) {
             switch (this->triDT) {
-                case DT_BYTE: delete[] this->tri.dataByte; break;
-                case DT_UINT16: delete[] this->tri.dataUInt16; break;
-                case DT_UINT32: delete[] this->tri.dataUInt32; break;
-                default: ASSERT(false);
+            case DT_BYTE:
+                delete[] this->tri.dataByte;
+                break;
+            case DT_UINT16:
+                delete[] this->tri.dataUInt16;
+                break;
+            case DT_UINT32:
+                delete[] this->tri.dataUInt32;
+                break;
+            default:
+                ASSERT(false);
             }
         }
     }
@@ -387,45 +401,82 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     if (this->vrtMemOwned) {
         if (this->vrt.dataFloat != NULL) {
             switch (this->vrtDT) {
-                case DT_FLOAT: delete[] this->vrt.dataFloat; break;
-                case DT_DOUBLE: delete[] this->vrt.dataDouble; break;
-                default: ASSERT(false);
+            case DT_FLOAT:
+                delete[] this->vrt.dataFloat;
+                break;
+            case DT_DOUBLE:
+                delete[] this->vrt.dataDouble;
+                break;
+            default:
+                ASSERT(false);
             }
         }
         if (this->nrm.dataFloat != NULL) {
             switch (this->nrmDT) {
-                case DT_FLOAT: delete[] this->nrm.dataFloat; break;
-                case DT_DOUBLE: delete[] this->nrm.dataDouble; break;
-                default: ASSERT(false);
+            case DT_FLOAT:
+                delete[] this->nrm.dataFloat;
+                break;
+            case DT_DOUBLE:
+                delete[] this->nrm.dataDouble;
+                break;
+            default:
+                ASSERT(false);
             }
         }
         if (this->col.dataByte != NULL) {
             switch (this->colDT) {
-                case DT_BYTE: delete[] this->col.dataByte; break;
-                case DT_FLOAT: delete[] this->col.dataFloat; break;
-                case DT_DOUBLE: delete[] this->col.dataDouble; break;
-                default: ASSERT(false);
+            case DT_BYTE:
+                delete[] this->col.dataByte;
+                break;
+            case DT_FLOAT:
+                delete[] this->col.dataFloat;
+                break;
+            case DT_DOUBLE:
+                delete[] this->col.dataDouble;
+                break;
+            default:
+                ASSERT(false);
             }
         }
         if (this->tex.dataFloat != NULL) {
             switch (this->texDT) {
-            case DT_FLOAT: delete[] this->tex.dataFloat; break;
-            case DT_DOUBLE: delete[] this->tex.dataDouble; break;
-            default: ASSERT(false);
+            case DT_FLOAT:
+                delete[] this->tex.dataFloat;
+                break;
+            case DT_DOUBLE:
+                delete[] this->tex.dataDouble;
+                break;
+            default:
+                ASSERT(false);
             }
         }
         for (size_t i = 0; i < this->vattCount; i++) {
             // we have to check only one of the unified pointers, because its a union...
             if (this->vattVector[i].dataByte != nullptr) {
                 switch (this->vattDTypes[i]) {
-                case DT_BYTE: delete[] this->vattVector[i].dataByte; break;
-                case DT_DOUBLE: delete[] this->vattVector[i].dataDouble; break;
-                case DT_FLOAT: delete[] this->vattVector[i].dataFloat; break;
-                case DT_INT16: delete[] this->vattVector[i].dataInt16; break;
-                case DT_INT32: delete[] this->vattVector[i].dataInt32; break;
-                case DT_UINT16: delete[] this->vattVector[i].dataUInt16; break;
-                case DT_UINT32: delete[] this->vattVector[i].dataUInt32; break;
-                default: ASSERT(false);
+                case DT_BYTE:
+                    delete[] this->vattVector[i].dataByte;
+                    break;
+                case DT_DOUBLE:
+                    delete[] this->vattVector[i].dataDouble;
+                    break;
+                case DT_FLOAT:
+                    delete[] this->vattVector[i].dataFloat;
+                    break;
+                case DT_INT16:
+                    delete[] this->vattVector[i].dataInt16;
+                    break;
+                case DT_INT32:
+                    delete[] this->vattVector[i].dataInt32;
+                    break;
+                case DT_UINT16:
+                    delete[] this->vattVector[i].dataUInt16;
+                    break;
+                case DT_UINT32:
+                    delete[] this->vattVector[i].dataUInt32;
+                    break;
+                default:
+                    ASSERT(false);
                 }
             }
         }
@@ -454,9 +505,7 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
 /*
  * CallTriMeshData::CallTriMeshData
  */
-CallTriMeshData::CallTriMeshData(void) : core::AbstractGetData3DCall(), objCnt(0), objs(NULL) {
-}
-
+CallTriMeshData::CallTriMeshData(void) : core::AbstractGetData3DCall(), objCnt(0), objs(NULL) {}
 
 /*
  * CallTriMeshData::~CallTriMeshData

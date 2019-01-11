@@ -382,20 +382,6 @@ bool protein::SolventVolumeRenderer::create ( void ) {
  * 'render'-functions
  **********************************************************************/
 
-/*
- * protein::ProteinRenderer::GetCapabilities
- */
-bool protein::SolventVolumeRenderer::GetCapabilities( Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities( view::CallRender3D::CAP_RENDER | 
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
 
 /*
  * protein::ProteinRenderer::GetExtents
@@ -448,7 +434,7 @@ bool protein::SolventVolumeRenderer::GetExtents( Call& call) {
 /*    view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
     vislib::math::Point<float, 3> protrenbbc;
     if( protrencr3d ) {
-        (*protrencr3d)(1); // GetExtents
+        (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
         BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
         this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
         //this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;

@@ -2,6 +2,7 @@
  * AbstractSimpleSphereRenderer.h
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
+ * Copyright (C) 2018 by MegaMol Dev Team
  * Alle Rechte vorbehalten.
  */
 
@@ -42,16 +43,6 @@ namespace moldyn {
          * @return 'true' on success, 'false' otherwise.
          */
         virtual bool create(void);
-
-        /**
-         * The get capabilities callback. The module should set the members
-         * of 'call' to tell the caller its capabilities.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetCapabilities(Call& call);
 
         /**
          * The get extents callback. The module should set the members of
@@ -119,6 +110,9 @@ namespace moldyn {
 
         /** Bool parameter slot to force time */
         param::ParamSlot forceTimeSlot;
+
+        /** Determine whether global or local bbox should be used */
+        param::ParamSlot useLocalBBoxParam;
 
     };
 

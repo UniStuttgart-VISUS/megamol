@@ -10,6 +10,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#include <stdlib.h>
 
 #include <basetsd.h>
 
@@ -17,7 +18,7 @@
  * Struct to be returned by a plugin api holding compatibility informations
  */
 typedef struct _mmplg_compatibilityvalues_t {
-    SIZE_T size; // number of bytes of this struct
+    size_t size; // number of bytes of this struct
     const char* mmcoreRev; // MegaMol� core revision
     const char* vislibRev; // VISlib revision or zero if no vislib is used
 } mmplgCompatibilityValues;

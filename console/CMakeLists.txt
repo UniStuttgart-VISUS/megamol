@@ -18,14 +18,12 @@ if(BUILD_CONSOLE)
 
   # Add target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core)
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE
-    ${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR}
-    "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad)
+    ${LIBUNWIND_INCLUDE_DIR} "src" "include")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
@@ -41,6 +39,8 @@ if(BUILD_CONSOLE)
     endif()
     if(USE_EGL)
       find_package(EGL REQUIRED)
+      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
     endif()
   endif()
 
@@ -48,24 +48,22 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
 
-  if(NOT USE_EGL)
-    option(USE_INTERNAL_GLFW "use internal GLFW" ON)
-    if(USE_INTERNAL_GLFW)
-      add_subdirectory(glfw)
-      set(GLFW3_LIBRARIES glfw)
-    else()
-      find_package(glfw3 3.2 MODULE)
-      if(NOT GLFW3_FOUND)
-        find_package(glfw3 3.2 CONFIG REQUIRED)
-        set(GLFW3_LIBRARIES glfw)
-        # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
-        set(GLFW3_INCLUDE_DIRS "")
-      endif()
-    endif()
+  if(NOT USE_EGL)  
+    bootstrap_external_package(glfw_ext glfw3
+      CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG "3.2.1"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=OFF
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF)
+    find_package(glfw3 REQUIRED CONFIG)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
   
   # AntTweakBar
-  if(NOT USE_EGL)
+  if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
     if(USE_INTERNAL_ANTTWEAKBAR)
       add_subdirectory(AntTweakBar)
@@ -80,8 +78,7 @@ if(BUILD_CONSOLE)
   endif()
   
   target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
-
+	  ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
@@ -101,11 +98,12 @@ if(BUILD_CONSOLE)
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+
   set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_LIBDIR}")
+    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
     configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
@@ -116,7 +114,7 @@ if(BUILD_CONSOLE)
     set(MMPLG_DIR "bin")
   endif()
 
-  configure_file(extra/megamol.cfg.in ${CMAKE_BINARY_DIR}/megamol.cfg)
-  configure_file(extra/install_megamol_cfg.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake @ONLY)
-  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake)
+  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
+  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
+  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
 endif()
