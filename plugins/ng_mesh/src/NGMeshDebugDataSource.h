@@ -67,6 +67,15 @@ namespace ngmesh {
 
 	private:
 
+		std::tuple<
+			std::shared_ptr<std::vector<VertexLayout::Attribute>>, //attributes
+            std::shared_ptr<std::vector<std::vector<uint8_t>>>, //vertex data
+            std::shared_ptr<std::vector<uint8_t>>, //index data
+            std::shared_ptr<std::vector<DrawCommandDataAccessor::DrawElementsCommand>>, //draw command data
+			std::shared_ptr<std::vector<uint8_t>>> //per object shader params
+        loadGLTF(std::string const& geometry_filename);
+		//MeshDataAccessor loadGLTF(std::string const& geometry_filename);
+
 		/** The mesh file name */
 		core::param::ParamSlot m_geometryFilename_slot;
 

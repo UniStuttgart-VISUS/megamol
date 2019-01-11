@@ -14,7 +14,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   set(LIBS vislib core glad)
-  include_directories("include" "src")
+  include_directories("include" "src" "external")
 
   # Build MegaMol Plugin
   # public header files for installation

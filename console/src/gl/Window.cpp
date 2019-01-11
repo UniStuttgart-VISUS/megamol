@@ -123,6 +123,8 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             // this only works since we are NOT setting a monitor
             ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 
+			::glfwWindowHint(GLFW_SAMPLES, 8);
+
             /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);

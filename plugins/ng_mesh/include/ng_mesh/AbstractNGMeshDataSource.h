@@ -28,7 +28,7 @@ namespace ngmesh {
 	protected:
 
 		/**
-		* Class for storing and managing rendering data in a NGMesh-friendly fashin.
+		* Class for storing and managing rendering data in a NGMesh-friendly fashion.
 		* Either hand over your generated/loaded data (this will use a copy operation)
 		* or preallocate the space you need and generate/load your data in-place.
 		*/
@@ -98,7 +98,6 @@ namespace ngmesh {
 
 					if( prgm_check && vert_layout_check && vert_buffer_cnt_check && idx_type_check)
 					{
-						// check whether there are as many seperate vertex buffers in given data as in batch
 						
 
 						// check whether there is enough space left in batch
@@ -144,7 +143,6 @@ namespace ngmesh {
 			uint8_t* accessPerObjectParamsData(size_t task_idx);
 
 			void shrinkRenderTask(size_t vertex_cnt, size_t index_cnt);
-
 
 			RenderBatchesDataAccessor generateAccessor()
 			{

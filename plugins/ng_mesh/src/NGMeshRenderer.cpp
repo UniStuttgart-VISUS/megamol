@@ -426,6 +426,10 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	view_matrix[14] = - (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
 	view_matrix[15] = 1.0f;
 
+	// this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
+    glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
+
 
 	CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 
@@ -464,7 +468,8 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
 	//glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	// loop through "registered" render batches
