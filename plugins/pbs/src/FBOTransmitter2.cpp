@@ -101,7 +101,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     initThreads();
 
     if (!this->validViewport) {
-        if (!this->tiled_slot_.Param<core::param::EnumParam>()->Value() || !this->extractViewport(this->viewport)) {
+        if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value() || !this->extractViewport(this->viewport)) {
             GLint glvp[4];
             glGetIntegerv(GL_VIEWPORT, glvp);
             for (int i = 0; i < 4; ++i) {
@@ -662,7 +662,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             // extract viewport or get if from opengl context
             auto width = 0;
             auto height = 0;
-            if (this->tiled_slot_.Param<core::param::EnumParam>()->Value() && this->extractViewport(this->viewport)) {
+            if (this->tiled_slot_.Param<core::param::BoolParam>()->Value() && this->extractViewport(this->viewport)) {
                 this->validViewport = true;
                 width = this->viewport[4];
                 height = this->viewport[5];

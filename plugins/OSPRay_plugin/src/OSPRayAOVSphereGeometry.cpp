@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "../../protein/src/Color.h"
 #include "OSPRayAOVSphereGeometry.h"
+#include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "mmcore/Call.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -30,7 +31,8 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
           "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
     , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
     , getDataSlot("getdata", "Connects to the data source")
-    , getVolSlot("getVol", "Connects to the density volume provider") {
+    , getVolSlot("getVol", "Connects to the density volume provider")
+    , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure"){
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -47,21 +49,27 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
 
     this->aoRayOffsetFactorSlot << new core::param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->aoRayOffsetFactorSlot);
+
+    
+     this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(0), &OSPRayAOVSphereGeometry::getDataCallback);
+    this->deployStructureSlot.SetCallback(
+         CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(1), &OSPRayAOVSphereGeometry::getExtendsCallback);
+     this->deployStructureSlot.SetCallback(
+         CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(2), &OSPRayAOVSphereGeometry::getDirtyCallback);
+     this->MakeSlotAvailable(&this->deployStructureSlot);
+
 }
 
 
-bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
-
-    // fill material container
-    this->processMaterial();
+bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
-    auto os = dynamic_cast<CallOSPRayStructure*>(&call);
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     auto vd = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
     if (vd == nullptr) return false;
 
-    this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
 
     if (!(*cd)(1)) return false;
@@ -73,14 +81,14 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
 
     auto frameTime = 0;
 
-    if (os->getTime() >= minFrameCount) {
+    if (os->FrameID() >= minFrameCount) {
         cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
         vd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
         frameTime = minFrameCount - 1;
     } else {
-        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-        vd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-        frameTime = os->getTime();
+        cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+        vd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+        frameTime = os->FrameID();
     }
 
     if (this->datahash != cd->DataHash() || this->time != frameTime || this->volDatahash != vd->DataHash() ||
@@ -89,7 +97,6 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
         this->time = frameTime;
         this->volDatahash = vd->DataHash();
         this->volFrameID = frameTime;
-        this->structureContainer.dataChanged = true;
     } else {
         return true;
     }
@@ -104,8 +111,6 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
     if (cd->GetParticleListCount() == 0) return false;
 
     static bool isInitAOV = false;
-
-    ospStructures.clear();
 
     // START OSPRAY STUFF
 
@@ -308,15 +313,10 @@ bool OSPRayAOVSphereGeometry::readData(megamol::core::Call& call) {
             ospSetObject(geo, "aovol", aovol);
             //ospCommit(geo);
 
-            ospStructures.emplace_back(reinterpret_cast<void*>(geo), structureTypeEnum::GEOMETRY);
+            os->setStructureType(GEOMETRY);
+            os->setAPIObject(reinterpret_cast<void*>(geo));
         }  // geometries
     } // particle lists
-
-    // Write stuff into the structureContainer
-    this->structureContainer.type = structureTypeEnum::OSPRAY_API_STRUCTURES;
-    this->structureContainer.ospStructures = ospStructures;
-
-    //ospRelease(aovol);
 
     return true;
 }
@@ -343,17 +343,23 @@ bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
 }
 
 
-bool OSPRayAOVSphereGeometry::getExtends(megamol::core::Call& call) {
-    auto os = dynamic_cast<CallOSPRayStructure*>(&call);
+bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
     if (cd == nullptr) return false;
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+    cd->SetFrameID(os->FrameID());
     (*cd)(1);
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
-    this->extendContainer.timeFramesCount = cd->FrameCount();
-    this->extendContainer.isValid = true;
+    os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
 
+    return true;
+}
+
+bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call) {
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
+
+    if (this->InterfaceIsDirty()) {
+        os->setDirty();
+    }
     return true;
 }

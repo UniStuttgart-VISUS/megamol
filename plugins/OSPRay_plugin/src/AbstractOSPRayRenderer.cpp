@@ -650,7 +650,7 @@ void AbstractOSPRayRenderer::changeMaterial() {
         if (element.materialContainer != NULL) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
-                material = ospNewMaterial(renderer, "OBJMaterial");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
                 ospSet3fv(material, "Kd", element.materialContainer->Kd.data());
                 ospSet3fv(material, "Ks", element.materialContainer->Ks.data());
                 ospSet1f(material, "Ns", element.materialContainer->Ns);
@@ -658,13 +658,13 @@ void AbstractOSPRayRenderer::changeMaterial() {
                 ospSet3fv(material, "Tf", element.materialContainer->Tf.data());
                 break;
             case LUMINOUS:
-                material = ospNewMaterial(renderer, "Luminous");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Luminous");
                 ospSet3fv(material, "color", element.materialContainer->lumColor.data());
                 ospSet1f(material, "intensity", element.materialContainer->lumIntensity);
                 ospSet1f(material, "transparency", element.materialContainer->lumTransparency);
                 break;
             case GLASS:
-                material = ospNewMaterial(renderer, "Glass");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Glass");
                 ospSet1f(material, "etaInside", element.materialContainer->glassEtaInside);
                 ospSet1f(material, "etaOutside", element.materialContainer->glassEtaOutside);
                 ospSet3fv(
@@ -674,38 +674,38 @@ void AbstractOSPRayRenderer::changeMaterial() {
                 ospSet1f(material, "attenuationDistance", element.materialContainer->glassAttenuationDistance);
                 break;
             case MATTE:
-                material = ospNewMaterial(renderer, "Matte");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Matte");
                 ospSet3fv(material, "reflectance", element.materialContainer->matteReflectance.data());
                 break;
             case METAL:
-                material = ospNewMaterial(renderer, "Metal");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Metal");
                 ospSet3fv(material, "reflectance", element.materialContainer->metalReflectance.data());
                 ospSet3fv(material, "eta", element.materialContainer->metalEta.data());
                 ospSet3fv(material, "k", element.materialContainer->metalK.data());
                 ospSet1f(material, "roughness", element.materialContainer->metalRoughness);
                 break;
             case METALLICPAINT:
-                material = ospNewMaterial(renderer, "MetallicPaint");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "MetallicPaint");
                 ospSet3fv(material, "shadeColor", element.materialContainer->metallicShadeColor.data());
                 ospSet3fv(material, "glitterColor", element.materialContainer->metallicGlitterColor.data());
                 ospSet1f(material, "glitterSpread", element.materialContainer->metallicGlitterSpread);
                 ospSet1f(material, "eta", element.materialContainer->metallicEta);
                 break;
             case PLASTIC:
-                material = ospNewMaterial(renderer, "Plastic");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Plastic");
                 ospSet3fv(material, "pigmentColor", element.materialContainer->plasticPigmentColor.data());
                 ospSet1f(material, "eta", element.materialContainer->plasticEta);
                 ospSet1f(material, "roughness", element.materialContainer->plasticRoughness);
                 ospSet1f(material, "thickness", element.materialContainer->plasticThickness);
                 break;
             case THINGLASS:
-                material = ospNewMaterial(renderer, "ThinGlass");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "ThinGlass");
                 ospSet3fv(material, "transmission", element.materialContainer->thinglassTransmission.data());
                 ospSet1f(material, "eta", element.materialContainer->thinglassEta);
                 ospSet1f(material, "thickness", element.materialContainer->thinglassThickness);
                 break;
             case VELVET:
-                material = ospNewMaterial(renderer, "Velvet");
+                material = ospNewMaterial2(this->rd_type_string.c_str(), "Velvet");
                 ospSet3fv(material, "reflectance", element.materialContainer->velvetReflectance.data());
                 ospSet3fv(
                     material, "horizonScatteringColor", element.materialContainer->velvetHorizonScatteringColor.data());
@@ -857,7 +857,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             for (auto structure : element.ospStructures) {
                 if (structure.second == structureTypeEnum::GEOMETRY) {
                     geo.push_back(static_cast<OSPGeometry>(structure.first));
-                } else if (structure.second == structureTypeEnum::GEOMETRY) {
+                } else if (structure.second == structureTypeEnum::VOLUME) {
                     vol.push_back(static_cast<OSPVolume>(structure.first));
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
@@ -1028,127 +1028,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                 }
                 break;
-            case AOVSPHERES: {
-                static bool isInitAOV = false;
-                /*if (element.dataChanged)*/ {
-                    if (element.raw == nullptr) {
-                        returnValue = false;
-                        break;
-                    }
-
-                    if (!isInitAOV) {
-                        error = ospLoadModule("aovspheres");
-                        if (error != OSP_NO_ERROR) {
-                            vislib::sys::Log::DefaultLog.WriteError(
-                                "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
-                        } else {
-                            isInitAOV = true;
-                        }
-                    }
-
-                    numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
-
-                    // aovol
-                    // auto const aovol = ospNewVolume("block_bricked_volume");
-                    aovol = ospNewVolume("shared_structured_volume");
-                    ospSet2f(aovol, "voxelRange", element.valueRange->first, element.valueRange->second);
-                    ospSet1f(aovol, "samplingRate", element.samplingRate);
-                    // ospSet1b(aovol, "adaptiveSampling", false);
-                    ospSet3iv(aovol, "dimensions", element.dimensions->data());
-                    ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(element.voxelDType)].c_str());
-                    ospSet3fv(aovol, "gridOrigin", element.gridOrigin->data());
-                    float fixedSpacing[3];
-                    for (auto x = 0; x < 3; ++x) {
-                        fixedSpacing[x] =
-                            element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
-                    }
-                    ospSet3fv(aovol, "gridSpacing", fixedSpacing);
-
-                    float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
-
-                    OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-                    std::vector<float> faketf = {
-                        1.0f,
-                        1.0f,
-                        1.0f,
-                        1.0f,
-                        1.0f,
-                        1.0f,
-                    };
-                    std::vector<float> fakeopa = {1.0f, 1.0f};
-
-                    OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
-                    OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
-                    ospSetData(tf, "colors", tf_rgb);
-                    ospSetData(tf, "opacities", tf_opa);
-                    ospSet2f(tf, "valueRange", 0.0f, 1.0f);
-
-                    ospCommit(tf);
-
-                    ospSetObject(aovol, "transferFunction", tf);
-
-                    // add data
-                    voxels = ospNewData(element.voxelCount,
-                        static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]),
-                        *element.raw2, OSP_DATA_SHARED_BUFFER);
-                    ospCommit(voxels);
-                    ospSetData(aovol, "voxelData", voxels);
-
-                    /*auto ptr = element.raw2.get();
-                    ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
-                        osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
-
-                    ospCommit(aovol);
-                    ospRelease(tf);
-
-                    for (unsigned int i = 0; i < numCreateGeo; i++) {
-                        geo.push_back(ospNewGeometry("aovspheres_geometry"));
-
-
-                        long long int floatsToRead =
-                            element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
-                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
-
-                        if (vertexData != nullptr) ospRelease(vertexData);
-                        vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
-                        ospCommit(vertexData);
-                        ospSet1i(geo.back(), "bytes_per_sphere", element.vertexStride);
-                        ospSetData(geo.back(), "spheres", vertexData);
-                        ospSetData(geo.back(), "color", nullptr);
-
-                        if (element.vertexLength > 3) {
-                            ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
-                        } else {
-                            ospSet1f(geo.back(), "radius", element.globalRadius);
-                        }
-                        if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
-                            element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
-
-                            ospSet1i(geo.back(), "color_offset",
-                                element.vertexLength *
-                                    sizeof(float)); // TODO: This won't work if there are radii in the array
-                            ospSet1i(geo.back(), "color_stride", element.colorStride);
-                            ospSetData(geo.back(), "color", vertexData);
-                            if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                                // ospSet1i(geo.back(), "color_components", 3);
-                                ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
-                            } else {
-                                // ospSet1i(geo.back(), "color_components", 4);
-                                ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
-                            }
-                        }
-
-                        ospSet1f(geo.back(), "aothreshold", element.aoThreshold);
-                        ospSet1f(geo.back(), "aoRayOffset", maxGridSpacing * element.aoRayOffsetFactor);
-                        ospSetObject(geo.back(), "aovol", aovol);
-                    }
-                }
-            } break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
                     returnValue = false;
