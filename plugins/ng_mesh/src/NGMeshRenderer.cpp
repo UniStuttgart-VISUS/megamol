@@ -121,16 +121,6 @@ void NGMeshRenderer::release()
 	m_render_batches.clear();
 }
 
-bool NGMeshRenderer::GetCapabilities(megamol::core::Call& call)
-{
-	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-	if (cr == NULL) return false;
-
-	cr->SetCapabilities(view::CallRender3D::CAP_RENDER);
-
-	return true;
-}
-
 bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 {
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
