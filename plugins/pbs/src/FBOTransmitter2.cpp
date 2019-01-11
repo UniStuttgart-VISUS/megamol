@@ -40,6 +40,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
     , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
     , reconnect_slot_{"reconnect", "Reconnect comm threads"}
+    , tiled_slot_("tiledDisplay", "True if rendering on a tiled display")
 #ifdef WITH_MPI
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
@@ -76,6 +77,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
+
+    tiled_slot_ << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&tiled_slot_);
 }
 
 
@@ -97,7 +101,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     initThreads();
 
     if (!this->validViewport) {
-        if (!this->extractViewport(this->viewport)) {
+        if (!this->tiled_slot_.Param<core::param::EnumParam>()->Value() || !this->extractViewport(this->viewport)) {
             GLint glvp[4];
             glGetIntegerv(GL_VIEWPORT, glvp);
             for (int i = 0; i < 4; ++i) {
@@ -107,12 +111,12 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             this->viewport[5] = glvp[3];
         }
     }
-    int xoff        = this->viewport[0];
-    int yoff        = this->viewport[1];
-    int tile_width  = this->viewport[2];
+    int xoff = this->viewport[0];
+    int yoff = this->viewport[1];
+    int tile_width = this->viewport[2];
     int tile_height = this->viewport[3];
-    int width       = this->viewport[4];
-    int height      = this->viewport[5];
+    int width = this->viewport[4];
+    int height = this->viewport[5];
 
     // read FBO
     std::vector<char> col_buf(width * height * col_buf_el_size_);
@@ -121,8 +125,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     if ((tile_width == width) && (tile_height == height)) {
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf.data());
         glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf.data());
-    }
-    else {
+    } else {
         std::vector<char> col_buf_tile(tile_width * tile_height * col_buf_el_size_);
         std::vector<char> depth_buf_tile(tile_width * tile_height * depth_buf_el_size_);
 
@@ -657,20 +660,19 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
             // extract viewport or get if from opengl context
-            auto width  = 0;
+            auto width = 0;
             auto height = 0;
-            if (this->extractViewport(this->viewport)) {
+            if (this->tiled_slot_.Param<core::param::EnumParam>()->Value() && this->extractViewport(this->viewport)) {
                 this->validViewport = true;
-                width  = this->viewport[4];
+                width = this->viewport[4];
                 height = this->viewport[5];
-            }
-            else {
+            } else {
                 GLint glvp[4];
                 glGetIntegerv(GL_VIEWPORT, glvp);
                 for (int i = 0; i < 4; ++i) {
                     this->viewport[i] = glvp[i];
                 }
-                width  = this->viewport[4] = glvp[2];
+                width = this->viewport[4] = glvp[2];
                 height = this->viewport[5] = glvp[3];
             }
 
