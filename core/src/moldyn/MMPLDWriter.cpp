@@ -168,6 +168,11 @@ bool moldyn::MMPLDWriter::run(void) {
         do {
             mpdc->Unlock();
             mpdc->SetFrameID(i, true);
+            if (!(*mpdc)(1)) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot request frame %u. Abort.\n", i);
+                file.Close();
+                return false;
+            }
             if (!(*mpdc)(0)) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", i);
                 file.Close();
