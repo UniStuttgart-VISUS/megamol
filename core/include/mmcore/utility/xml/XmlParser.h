@@ -91,7 +91,7 @@ namespace xml {
          * @param len Length of the character data.
          * @param state The current state of the reader.
          */
-        virtual void CharacterData(unsigned int level, const MMXML_CHAR *text,
+        virtual void CharacterData(unsigned int level, const XML_Char *text,
             int len, XmlReader::ParserState state);
 
         /**
@@ -102,7 +102,7 @@ namespace xml {
          * @param text Pointer to the character data.
          * @param state The current state of the reader.
          */
-        virtual void Comment(unsigned int level, const MMXML_CHAR *text,
+        virtual void Comment(unsigned int level, const XML_Char *text,
              XmlReader::ParserState state);
 
         /**
@@ -176,7 +176,7 @@ namespace xml {
          *         'false' if the tag was not handled.
          */
         virtual bool StartTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, const MMXML_CHAR ** attrib,
+            const XML_Char * name, const XML_Char ** attrib,
             XmlReader::ParserState state,
             XmlReader::ParserState& outChildState,
             XmlReader::ParserState& outEndTagState,
@@ -200,7 +200,7 @@ namespace xml {
          *         'false' if the tag was not handled.
          */
         virtual bool EndTag(unsigned int num, unsigned int level,
-            const MMXML_CHAR * name, XmlReader::ParserState state,
+            const XML_Char * name, XmlReader::ParserState state,
             XmlReader::ParserState& outPostEndTagState);
 
         /**
@@ -217,7 +217,7 @@ namespace xml {
          * @param tag The tag of the attribute.
          * @param attr The unexpected attribute.
          */
-        void WarnUnexpectedAttribut(const MMXML_CHAR *tag, const MMXML_CHAR *attr) const;
+        void WarnUnexpectedAttribut(const XML_Char *tag, const XML_Char *attr) const;
 
     private:
 
@@ -238,7 +238,7 @@ namespace xml {
          *                           method. The default value is the current 
          *                           state of the reader.
          */
-        void startXmlTag(const MMXML_CHAR *name, const MMXML_CHAR **attrib,
+        void startXmlTag(const XML_Char *name, const XML_Char **attrib,
             XmlReader::ParserState& outEndTagState,
             XmlReader::ParserState& outPostEndTagState);
 
@@ -251,7 +251,7 @@ namespace xml {
          *                           returned. The default value is the value
          *                           set by 'startTag'.
          */
-        void endXmlTag(const MMXML_CHAR *name,
+        void endXmlTag(const XML_Char *name,
             XmlReader::ParserState& outPostEndTagState);
 
         /** pointer to the currently used XmlReader object */

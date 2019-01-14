@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #ifdef _WIN32
 
-#include <windows.h>
+#include <Windows.h>
 #include "vislib/Array.h"
 #include "vislib/MultiSz.h"
 #include "vislib/RawStorage.h"

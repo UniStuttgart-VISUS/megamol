@@ -231,21 +231,6 @@ bool volume::DirectVolumeRenderer::create (void) {
  **********************************************************************/
 
 /*
- * ProteinRenderer::GetCapabilities
- */
-bool volume::DirectVolumeRenderer::GetCapabilities(core::Call& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    cr3d->SetCapabilities(core::view::CallRender3D::CAP_RENDER | 
-        core::view::CallRender3D::CAP_LIGHTING |
-        core::view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * ProteinRenderer::GetExtents
  */
 bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
@@ -265,7 +250,7 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
     // get the pointer to CallRender3D for the secondary renderer 
     core::view::CallRender3D *cr3dSec = this->secRenCallerSlot.CallAs<core::view::CallRender3D>();
     if (cr3dSec) {
-        (*cr3dSec)(1); // GetExtents
+        (*cr3dSec)(core::view::AbstractCallRender::FnGetExtents);
         core::BoundingBoxes &secRenBbox = cr3dSec->AccessBoundingBoxes();
         boundingBox.Union(secRenBbox.ObjectSpaceBBox());
     }
@@ -378,7 +363,7 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
         // Revert scaling done by external renderer in advance
         glScalef(scaleRevert, scaleRevert, scaleRevert);
 
-        (*cr3dSec)(0);
+        (*cr3dSec)(core::view::AbstractCallRender::FnRender);
 
         glPopMatrix();
     }

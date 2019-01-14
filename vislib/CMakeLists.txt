@@ -1,23 +1,12 @@
 option(BUILD_VISLIB "Build vislib" ON)
 
-
 if(BUILD_VISLIB)
   project(vislib)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-  
-  if(UNIX)
-    set(CURSES_NEED_NCURSES True)
-    find_package(Curses REQUIRED)
-    find_package(UUID REQUIRED)
-    find_package(X11 REQUIRED)
-  endif()
 
   add_subdirectory(glad)
 
-  set(LIBS glad ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${UUID_LIBRARIES} ${OPENGL_LIBRARIES} ${CURSES_LIBRARIES})
-  include_directories("include" "src" "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
-  
   # Build vislib
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -42,12 +31,21 @@ if(BUILD_VISLIB)
     "src/graphics/d3d/D3DVISLogo.cpp"
     "src/graphics/gl/GlutMouseInteractionAdapter.cpp"
     )
-  
+
   # Target definition
   add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files} ${version_files})
-  target_link_libraries(vislib PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-  
+  target_link_libraries(vislib PRIVATE glad ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
+	
+  if(UNIX)
+    set(CURSES_NEED_NCURSES True)
+    find_package(Curses REQUIRED)
+    find_package(UUID REQUIRED)
+    find_package(X11 REQUIRED)
+	target_link_libraries(vislib PRIVATE ${X11_LIBRARIES} ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
+  endif()
+
   # Grouping in Visual Studio
   set_target_properties(vislib PROPERTIES FOLDER base)
   source_group("Public Header Files" FILES ${public_header_files})
@@ -58,15 +56,12 @@ if(BUILD_VISLIB)
   # build tests if variable VISLIB_BUILD_TESTS is defined
   option(BUILD_VISLIB_TESTS "Build vislib tests" OFF)
   mark_as_advanced(BUILD_VISLIB_TESTS)
-  if (VISLIB_BUILD_TESTS)
-	  set(VISLIB_BUILD_TESTS ${VISLIB_BUILD_TESTS})
-	  add_subdirectory(tests)
+  if(VISLIB_BUILD_TESTS)
+      set(VISLIB_BUILD_TESTS ${VISLIB_BUILD_TESTS})
+      add_subdirectory(tests)
   endif()
-
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(TARGETS vislib DESTINATION "lib" EXPORT vislib-target)
-
-  
-endif(BUILD_VISLIB)
+endif()

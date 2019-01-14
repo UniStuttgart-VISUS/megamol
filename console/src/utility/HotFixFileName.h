@@ -16,7 +16,8 @@ namespace utility {
     public:
         HotFixFileName(gl::Window& wnd, void* hCore);
         virtual ~HotFixFileName();
-        virtual bool onKey(Key key, int scancode, KeyAction action, Modifiers mods);
+
+        virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
     private:
         void* hCore;
     };

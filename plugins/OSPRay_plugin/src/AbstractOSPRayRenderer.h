@@ -127,14 +127,19 @@ protected:
     core::param::ParamSlot rd_ptBackground;
     core::param::ParamSlot shadows;
     core::param::ParamSlot useDB;
+    core::param::ParamSlot numThreads;
+
+    // Fix for deprecated material (ospNewMaterial2 now)
+    std::string rd_type_string;
+    
 
     megamol::core::param::ParamSlot deviceTypeSlot;
 
     // device type
-    enum deviceType {DEFAULT, MPI_DISTRIBUTED};
+    enum deviceType { DEFAULT, MPI_DISTRIBUTED };
 
     // renderer type
-    enum rdenum {SCIVIS, PATHTRACER, MPI_RAYCAST};
+    enum rdenum { SCIVIS, PATHTRACER, MPI_RAYCAST };
 
     // light
     std::vector<OSPLight> lightArray;

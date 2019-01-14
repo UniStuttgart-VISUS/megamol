@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="SSAOdeferred">
+    
+    <include file="common" />
+
+    <namespace name="ssao">
+    
+        <snippet name="filterLUT" type="string">
+<![CDATA[
+    vec4 sampleWeightsLut[16] = vec4[](
+        vec4(1.0, 1.0, 1.0, 1.0), // #0000
+        vec4(1.0, 1.0, 1.0, 1.0), // #0001
+        vec4(1.0, 1.0, 1.0, 0.0), // #0010    
+        vec4(1.0, 1.0, 1.0, 0.0), // #0011    
+        vec4(1.0, 1.0, 0.0, 0.0), // #0100    
+        vec4(1.0, 1.0, 0.0, 0.0), // #0101    
+        vec4(1.0, 1.0, 0.0, 0.0), // #0110    
+        vec4(1.0, 1.0, 0.0, 0.0), // #0111    
+        vec4(0.0, 1.0, 1.0, 1.0), // #1000    
+        vec4(0.0, 1.0, 1.0, 1.0), // #1001    
+        vec4(0.0, 1.0, 1.0, 0.0), // #1010    
+        vec4(0.0, 1.0, 1.0, 0.0), // #1011    
+        vec4(0.0, 1.0, 0.0, 0.0), // #1100    
+        vec4(0.0, 1.0, 0.0, 0.0), // #1101    
+        vec4(0.0, 1.0, 0.0, 0.0), // #1110    
+        vec4(0.0, 1.0, 0.0, 0.0)  // #1111    
+    );
+    
+    float nValsLut[16] = float[](
+        4.0, // #0000
+        4.0, // #0001
+        3.0, // #0010    
+        3.0, // #0011    
+        2.0, // #0100    
+        2.0, // #0101    
+        2.0, // #0110    
+        2.0, // #0111    
+        3.0, // #1000    
+        3.0, // #1001    
+        2.0, // #1010    
+        2.0, // #1011    
+        1.0, // #1100    
+        1.0, // #1101    
+        1.0, // #1110    
+        1.0  // #1111    
+    );
+]]>
+        </snippet>
+    
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+            <!--
+varying vec3 viewray;
+void main(void) {    
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    viewray = gl_Normal;
+    //viewray = (gl_ModelViewMatrix * gl_Vertex).xyz;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_ARB_gpu_shader5 : enable
+
+uniform sampler2D depthBuffer; // Note: near ... far =  0 ... 1
+uniform sampler2D colorBuffer;
+uniform sampler2D normalBuffer;
+uniform sampler2D rotSampler;
+uniform sampler2D randKernel;
+uniform vec4 clip; // Near, far, top, right
+uniform vec2 winSize;
+uniform float aoRadius;
+uniform float depthThreshold;
+uniform int aoSamples;
+uniform int rm;
+uniform int depthLodLvl;
+
+varying vec3 viewray;
+
+void main(void) {
+
+    // Get eye space pos of the center pixel
+    vec4 vCenterPosES;
+    vCenterPosES.z = -(texelFetch2D(depthBuffer, ivec2(gl_FragCoord.xy), 0).r*(clip.y - clip.x) + clip.x);
+    //vCenterPosES.z =
+    //    -(texelFetch2D(depthBuffer, ivec2(gl_FragCoord.xy / pow(2.0, depthLodLvl)), 
+    //    depthLodLvl).r*(clip.y - clip.x) + clip.x);
+    
+    //vec4 vCenterPosES = vec4(normalize(viewray) * scaleVR, 1.0);
+    vCenterPosES.x = (gl_FragCoord.x - winSize.x*0.5) / (winSize.x*0.5) * -vCenterPosES.z * (clip.w / clip.x);
+    vCenterPosES.y = (gl_FragCoord.y - winSize.y*0.5) / (winSize.y*0.5) * -vCenterPosES.z * (clip.z / clip.x);
+    vCenterPosES.w = 1.0;
+    
+    // Compute tbn matrix of the center pixel
+    vec3 normal = normalize(texture2D(normalBuffer, gl_TexCoord[0].st).xyz);
+    vec3 rVec = normalize(2.0*texture2D(rotSampler, gl_TexCoord[0].st * winSize / 4.0).rgb - 1.0);
+    vec3 tangent = normalize(rVec - normal * dot(rVec, normal)); 
+    //vec3 q = normal.yzx*vec3(1.0, -1.0, 1.0);
+    //vec3 tangent = normalize(cross(normal, q));
+    vec3 bitangent = normalize(cross(normal, tangent));
+    mat3 tbn = mat3(tangent, bitangent, normal);
+    rVec = normalize(tbn * rVec); // Transform to tbn
+    
+    /// Loop through all samples and accumulate occlusion factor ///
+    
+    float occlusion = 0.0;
+    
+    for(int i = 0; i < aoSamples; i++) {
+    
+        // Get sample
+        vec3 vSample = 2.0 * texelFetch2D(randKernel, ivec2(i, 0), 0).rgb - 1.0;
+
+        // Transform sample
+        vSample = tbn * vSample;
+        
+        // Reflect sample
+        //vSample = reflect(vSample, rVec); // Note: this introduces additional noise
+    
+        // Add to centerpixel (in ES)
+        vec4 vSamplePosES = vCenterPosES + vec4(vSample * aoRadius, 0.0);
+        // Get tex coords of the sample
+        vec2 vSamplePosWinC  = (vSamplePosES.xy * vec2(clip.x/clip.w, clip.x/clip.z) 
+            / -vSamplePosES.z) * winSize * 0.5 + winSize * 0.5;
+
+        // Ignore samples laying outside the viewport
+        if((vSamplePosWinC.x < winSize.x)&&(vSamplePosWinC.y < winSize.y)
+            &&(vSamplePosWinC.x > 0.0)&&(vSamplePosWinC.y > 0.0)) {
+      
+        
+            // Get scene depth of the sample
+            float fSampleSceneDepthES = 
+            -((texelFetch2D(depthBuffer, ivec2(vSamplePosWinC / pow(2.0, depthLodLvl)), 
+            depthLodLvl).r) * (clip.y - clip.x) + clip.x);
+    
+            // Compare with sample depth and compute occlusion factor    
+            if((fSampleSceneDepthES > vSamplePosES.z)&&
+                (abs(fSampleSceneDepthES - vSamplePosES.z) < aoRadius)) {
+                occlusion += 1.0;
+            }
+         }
+        
+    }
+    
+    // Normalize occlusion factor
+    occlusion /= float(aoSamples); 
+    gl_FragData[0].r = clamp(1.0 - occlusion, 0.0, 1.0);
+
+    /// Write discontinuity information to the buffer ///
+    
+    // Get linear depth of next positive horizontal/vertical neighbour
+    float depthHor = -((texelFetch2D(depthBuffer, ivec2(gl_FragCoord.xy) 
+        + ivec2(1, 0), 0).r) * (clip.y - clip.x) + clip.x);
+    float depthVert = -((texelFetch2D(depthBuffer, ivec2(gl_FragCoord.xy) 
+        + ivec2(0, 1), 0).r) * (clip.y - clip.x) + clip.x);
+    
+    // Compare linear depth value with next horizontal positive neighbour
+    if(abs(vCenterPosES.z - depthHor) > depthThreshold)
+        gl_FragData[1].r = 1.0;
+    else
+        gl_FragData[1].r = 0.0;
+    
+    // Compare linear depth value with next vertical positive neighbour
+    if(abs(vCenterPosES.z - depthVert) > depthThreshold)
+        gl_FragData[1].g = 1.0;
+    else
+        gl_FragData[1].g = 0.0;
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <namespace name="filter">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+<!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragmentHor">
+            <snippet type="version">120</snippet>
+            <snippet name="ssao::filterLUT" />
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D ssaoBuff; // Unfiltered ssao buffer
+uniform sampler2D discBuff; // Discontinuity buffer
+uniform vec2 winSize;
+uniform int nFilterSamples;
+
+void main(void) {
+    /*// Calc filter LUT index
+    int idx = 0;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(-1, 0), 0).g) * 8;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2( 0, 0), 0).g) * 4;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2( 1, 0), 0).g) * 2;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2( 2, 0), 0).g) * 1;
+    
+    // Blur ssao value
+    float val = 0.0;
+    val += texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy)+ ivec2(-1, 0), 0).r * sampleWeightsLut[idx][0];
+    val += texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy)+ ivec2( 0, 0), 0).r * sampleWeightsLut[idx][1];
+    val += texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy)+ ivec2( 1, 0), 0).r * sampleWeightsLut[idx][2];
+    val += texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy)+ ivec2( 2, 0), 0).r * sampleWeightsLut[idx][3];
+    
+    // Normalize
+    gl_FragData[0].a = val / nValsLut[idx];*/
+    
+    // Horizontal box filter
+    
+    int nVals = 1;
+    int bottom = -nFilterSamples / 2 + 1;
+    int top = nFilterSamples / 2;
+    int firstNegativeDisc = 0;
+    
+    float val = texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy), 0).r;
+    
+    // Explore -x direction
+    for(int x = -1; x >= bottom; x -= 1) {
+        if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy) + ivec2(x, 0), 0).r == 1.0){
+            firstNegativeDisc = x;
+            x = bottom - 1;
+        }
+        else {
+            val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(x, 0), 0).r;
+            nVals++;
+        }
+    }
+    
+    // If the fragment is on a discontinuity only values in the -x direction 
+    // are taken into account
+    if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy), 0).r == 0.0) { 
+        
+        // Explore +x direction
+        for(int x = 1; x <= top; x++) {
+            if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy) + ivec2(x, 0), 0).r == 1.0) {
+                val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(x, 0), 0).r;
+                nVals++;
+                x = top + 1;
+            }
+            else {
+                val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(x, 0), 0).r;
+                nVals++;
+            }
+        }
+    }
+    //else {
+        // In this case the current value contains only the original value 
+        // which can lead to sporadic artifacts 
+    //    if(firstNegativeDisc == -1) {
+    //        val += texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(-1, 0), 0).r;
+    //        val *= 0.5;
+    //    }
+    //}
+    
+    gl_FragData[0].a = val / float(nVals);
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragmentVert">
+            <snippet type="version">120</snippet>
+            <snippet name="ssao::filterLUT" />
+            <snippet type="string">
+<!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D ssaoBuff;  
+uniform sampler2D discBuff;
+uniform vec2 winSize;
+uniform int nFilterSamples;
+
+void main(void) {
+    /*// Calc filter LUT index
+    int idx = 0;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(0, 0), 0).b) * 4;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(0,-1), 0).b) * 8;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(0, 1), 0).b) * 2;
+    idx += int(texelFetch2D(ssaoBuffer, ivec2(gl_FragCoord.xy) + ivec2(0, 2), 0).b);
+    
+    //idx += int(texelFetch2DOffset(ssaoBuffer, ivec2(gl_FragCoord.xy), 0, ivec2(0, 0)).b) * 4;
+    //idx += int(texelFetch2DOffset(ssaoBuffer, ivec2(gl_FragCoord.xy), 0, ivec2(0,-1)).b) * 8;
+    //idx += int(texelFetch2DOffset(ssaoBuffer, ivec2(gl_FragCoord.xy), 0, ivec2(0, 1)).b) * 2;
+    //idx += int(texelFetch2DOffset(ssaoBuffer, ivec2(gl_FragCoord.xy), 0, ivec2(0, 2)).b);
+    
+    // Blur ssao value
+    float val = 0.0;
+    val += texelFetch2D(filterBufferX, ivec2(gl_FragCoord.xy)+ ivec2(0,-1), 0).a * sampleWeightsLut[idx][0];
+    val += texelFetch2D(filterBufferX, ivec2(gl_FragCoord.xy)+ ivec2(0, 0), 0).a * sampleWeightsLut[idx][1];
+    val += texelFetch2D(filterBufferX, ivec2(gl_FragCoord.xy)+ ivec2(0, 1), 0).a * sampleWeightsLut[idx][2];
+    val += texelFetch2D(filterBufferX, ivec2(gl_FragCoord.xy)+ ivec2(0, 2), 0).a * sampleWeightsLut[idx][3];
+    
+    // Normalize
+    gl_FragData[0].a = val / nValsLut[idx];*/
+
+    // Vertical box filter
+    
+    int nVals = 1;
+    int bottom = -nFilterSamples / 2 + 1;
+    int top = nFilterSamples / 2;
+    int firstNegativeDisc = 0;
+
+    float val = texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy), 0).r;
+    
+    // Explore -y direction
+    for(int y = -1; y >= bottom; y -= 1) {
+        if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy) + ivec2(0, y), 0).g == 1.0) {
+            firstNegativeDisc = y;
+            y = bottom - 1;
+        }
+        else {
+            val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(0, y), 0).r;
+            nVals++;
+        }
+    }
+    
+    // If the fragment is on a discontinuity only values in the -y direction 
+    // are taken into account
+    if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy), 0).g == 0.0) { 
+        // Explore +y direction
+        for(int y = 1; y <= top; y++) {
+            if(texelFetch2D(discBuff, ivec2(gl_FragCoord.xy) + ivec2(0, y), 0).g == 1.0) {
+                val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(0, y), 0).r;
+                nVals++;
+                y = top + 1;
+            }
+            else {
+                val += texelFetch2D(ssaoBuff, ivec2(gl_FragCoord.xy) + ivec2(0, y), 0).r;
+                nVals++;
+            }
+        }
+    }
+    //else {
+        // In this case the current value contains only the original value 
+        // which can lead to sporadic artifacts 
+    //    if(firstNegativeDisc == -1) {
+    //        val += (texelFetch2D(filterBufferX, ivec2(gl_FragCoord.xy) + ivec2(0, -1), 0)).a;
+    //        val *= 0.5;
+    //    }
+    //}
+    
+    gl_FragData[0].a = val / float(nVals);
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+
+    <namespace name="deferred">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 posES;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    posES = gl_Normal;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">110</snippet>
+            <snippet name="::common::lighting::simple" />
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D depthBuff;
+uniform sampler2D colorBuff;
+uniform sampler2D normalBuff;
+uniform sampler2D ssaoBuff;
+uniform sampler2D discBuff;
+uniform int renderMode;
+uniform int depthLodLvl;
+uniform vec2 clip;
+uniform vec2 winSize;
+uniform float scale;
+
+varying vec3 posES;
+
+void main(void) {
+    vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
+    // SSAO + Light
+    if(renderMode == 0) { 
+        float ssaoFiltered = texture2D(ssaoBuff, gl_TexCoord[0].st).r;
+        ssaoFiltered = pow(ssaoFiltered, scale); // Amplify
+        vec3 L = normalize(vec3(gl_LightSource[0].position));
+        vec3 V = normalize(posES.xyz);
+        vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
+        gl_FragColor = vec4(LocalLighting(V, normal, L, color.rgb)*ssaoFiltered, color.a);
+    }
+    // SSAO + Color
+    else if(renderMode == 1) { 
+        float val = texture2D(ssaoBuff, gl_TexCoord[0].st).r; 
+        val = pow(val, scale); // Amplify
+        gl_FragColor = vec4(vec3(val)*color.rgb, color.a);
+    }
+    // SSAO
+    else if(renderMode == 2) { 
+        float val = texture2D(ssaoBuff, gl_TexCoord[0].st).r; 
+        val = pow(val, scale); // Amplify
+        gl_FragColor = vec4(vec3(val), color.a);
+    }
+    // Light
+    else if(renderMode == 3) { 
+        vec3 L = normalize(vec3(gl_LightSource[0].position));
+        vec3 V = normalize(posES.xyz);
+        vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
+        gl_FragColor = vec4(LocalLighting( V, normal, L, color.rgb), color.a);
+    }
+    // Depth
+    else if(renderMode == 4) { 
+        gl_FragColor = texelFetch2D(depthBuff, 
+            ivec2(gl_FragCoord.xy / pow(2.0, float(depthLodLvl))), depthLodLvl);
+    }
+    // Normal
+    else if(renderMode == 5) { 
+        vec3 normal = normalize(texture2D(normalBuff, gl_TexCoord[0].st).xyz);
+        gl_FragColor = vec4(normal, color.a);
+    }
+    // Color
+    else if(renderMode == 6) { 
+        gl_FragColor = color;
+    }
+    // Edges
+    else if(renderMode == 7) { 
+        gl_FragColor = vec4(vec3(0.0,texture2D(discBuff, gl_TexCoord[0].st).rg), 1.0);
+    }        
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+    
+</btf>

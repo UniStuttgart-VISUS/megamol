@@ -16,8 +16,7 @@
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/AbstractView3D.h"
-#include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -36,7 +35,6 @@
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
 
 
 namespace megamol {
@@ -47,7 +45,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D : public AbstractView3D,
+    class MEGAMOLCORE_API View3D : public AbstractRenderingView,
             public AbstractCamParamSync {
 
     public:
@@ -139,32 +137,6 @@ namespace view {
         virtual void Resize(unsigned int width, unsigned int height);
 
         /**
-         * Sets the button state of a button of the 2d cursor. See
-         * 'vislib::graphics::Cursor2D' for additional information.
-         *
-         * @param button The button.
-         * @param down Flag whether the button is pressed, or not.
-         */
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down);
-
-        /**
-         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
-         * for additional information.
-         *
-         * @param x The x coordinate
-         * @param y The y coordinate
-         */
-        virtual void SetCursor2DPosition(float x, float y);
-
-        /**
-         * Sets the state of an input modifier.
-         *
-         * @param mod The input modifier to be set.
-         * @param down The new state of the input modifier.
-         */
-        virtual void SetInputModifier(mmcInputModifier mod, bool down);
-
-        /**
          * Callback requesting a rendering of this view
          *
          * @param call The calling call
@@ -181,6 +153,16 @@ namespace view {
          *               false means unfreeze
          */
         virtual void UpdateFreeze(bool freeze);
+
+		virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+
+        virtual bool OnChar(unsigned int codePoint) override;
+
+        virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+
+        virtual bool OnMouseMove(double x, double y) override;
+
+        virtual bool OnMouseScroll(double dx, double dy) override;
 
     protected:
 
@@ -222,7 +204,11 @@ namespace view {
         /** The complete scene bounding box */
         BoundingBoxes bboxs;
 
-    //private:
+        /** keeping track of changes in the camera between frames */
+        vislib::SmartPtr<vislib::graphics::CameraParamsStore> lastFrameParams = new vislib::graphics::CameraParamsStore();
+        bool frameIsNew = false;
+
+        //private:
     protected:
 
         /**
@@ -515,6 +501,8 @@ namespace view {
 
         param::ParamSlot toggleSoftCursorSlot;
 
+        param::ParamSlot hookOnChangeOnlySlot;
+
         /** The colour of the bounding box */
         float bboxCol[4];
 
@@ -536,74 +524,12 @@ namespace view {
         /** The mouse y coordinate */
         float mouseY;
 
-        /** The mouse flags */
-        MouseFlags mouseFlags;
-
         /** The time control */
         TimeControl timeCtrl;
 
         /** Flag whether mouse control is to be handed over to the renderer */
         bool toggleMouseSelection;
         
-        private:
-
-        /**********************************************************************
-        * variables
-        **********************************************************************/
-
-        enum corner {
-            TOP_LEFT = 0,
-            TOP_RIGHT = 1,
-            BOTTOM_LEFT = 2,
-            BOTTOM_RIGHT = 3,
-        };
-
-        vislib::graphics::gl::OpenGLTexture2D textureTopLeft;
-        vislib::graphics::gl::OpenGLTexture2D textureTopRight;
-        vislib::graphics::gl::OpenGLTexture2D textureBottomLeft;
-        vislib::graphics::gl::OpenGLTexture2D textureBottomRight;
-
-        vislib::math::Vector<float, 2> sizeTopLeft;
-        vislib::math::Vector<float, 2> sizeTopRight;
-        vislib::math::Vector<float, 2> sizeBottomLeft;
-        vislib::math::Vector<float, 2> sizeBottomRight;
-
-        float lastScaleAll;
-        bool  firstParamChange;
-
-        /**********************************************************************
-        * functions
-        **********************************************************************/
-
-        /*   */
-        SIZE_T loadFile(vislib::StringA name, void **outData);
-
-        /**  */
-        bool loadTexture(View3D::corner cor, vislib::StringA filename);
-
-        /**  */
-        bool renderWatermark(View3D::corner cor, float vpH, float vpW);
-
-        /**********************************************************************
-        * parameters
-        **********************************************************************/
-
-        /**  */
-        core::param::ParamSlot paramImgTopLeft;
-        core::param::ParamSlot paramImgTopRight;
-        core::param::ParamSlot paramImgBottomLeft;
-        core::param::ParamSlot paramImgBottomRight;
-
-        /**  */
-        core::param::ParamSlot paramScaleAll;
-        core::param::ParamSlot paramScaleTopLeft;
-        core::param::ParamSlot paramScaleTopRight;
-        core::param::ParamSlot paramScaleBottomLeft;
-        core::param::ParamSlot paramScaleBottomRight;
-
-        /**  */
-        core::param::ParamSlot paramAlpha;
-
     };
 
 

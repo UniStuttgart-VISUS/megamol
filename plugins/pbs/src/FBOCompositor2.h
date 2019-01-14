@@ -20,6 +20,7 @@
 
 #include "image_calls/Image2DCall.h"
 
+
 namespace megamol {
 namespace pbs {
 
@@ -44,7 +45,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return gladLoadGL(); }
+    static bool IsAvailable(void) { return true; }//gladLoadGL(); }
 
     FBOCompositor2(void);
 
@@ -56,8 +57,6 @@ protected:
     void release(void) override;
 
 private:
-    bool GetCapabilities(core::Call& call) override;
-
     bool GetExtents(core::Call& call) override;
 
     bool Render(core::Call& call) override;
@@ -87,7 +86,7 @@ private:
 
     bool getImageCallback(megamol::core::Call& c);
 
-    bool restartCallback(megamol::core::param::ParamSlot& p);
+    bool startCallback(megamol::core::param::ParamSlot& p);
 
     static void RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb);
 
@@ -113,7 +112,11 @@ private:
 
     megamol::core::param::ParamSlot handshakePortSlot_;
 
+    megamol::core::param::ParamSlot startSlot_;
+
     megamol::core::param::ParamSlot restartSlot_;
+
+    megamol::core::param::ParamSlot renderOnlyRequestedFramesSlot_;
 
     // megamol::core::utility::gl::FramebufferObject fbo_;
 
@@ -169,6 +172,10 @@ private:
 
     GLsizei height_;
 
+    float frame_times_[2];
+
+    float camera_params_[9];
+
     std::vector<GLuint> color_textures_;
 
     std::vector<GLuint> depth_textures_;
@@ -183,6 +190,8 @@ private:
 
     std::thread registerThread_;
 
+    std::thread initThreadsThread_;
+
     std::atomic<bool> isRegistered_;
 
     std::vector<std::string> addresses_;
@@ -196,6 +205,7 @@ private:
     bool shutdown_ = false;
 
     bool register_done_ = false;
+
 }; // end class FBOCompositor2
 
 } // end namespace pbs

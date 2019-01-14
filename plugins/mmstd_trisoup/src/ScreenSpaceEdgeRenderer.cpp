@@ -88,26 +88,6 @@ bool ScreenSpaceEdgeRenderer::create(void) {
 
 
 /*
- * ScreenSpaceEdgeRenderer::GetCapabilities
- */
-bool ScreenSpaceEdgeRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *inCall = dynamic_cast<view::CallRender3D*>(&call);
-    if (inCall == NULL) return false;
-
-    view::CallRender3D *outCall = this->rendererSlot.CallAs<view::CallRender3D>();
-    if (outCall == NULL) return false;
-
-    *outCall = *inCall;
-
-    if (!(*outCall)(2)) return false;
-
-    *inCall = *outCall;
-
-    return true;
-}
-
-
-/*
  * ScreenSpaceEdgeRenderer::GetExtents
  */
 bool ScreenSpaceEdgeRenderer::GetExtents(Call& call) {
@@ -166,7 +146,7 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
     *outCall = *inCall;
     outCall->SetOutputBuffer(&fbo);
 
-    bool renderValid = (*outCall)(0);
+    bool renderValid = (*outCall)(core::view::AbstractCallRender::FnRender);
 
     fbo.Disable();
 

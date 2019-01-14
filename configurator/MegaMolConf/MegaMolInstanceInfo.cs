@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using MegaMolConf.Analyze;
+using MegaMolConf.Communication;
+using ZeroMQ;
 
 namespace MegaMolConf {
     class MegaMolInstanceInfo {
@@ -98,7 +100,7 @@ namespace MegaMolConf {
             connectionString = "tcp://" + Host + ":" + Port;
 
             TryConnecting(connectionString);
-            object ans = null;
+            string err = "", ans = "";
             string res;
 
             if (!stopQueued) {
@@ -107,8 +109,10 @@ namespace MegaMolConf {
                 if (!IsRunningOnMono()) {
 
                     if (Connection.Valid) {
-                        string ret = Request("return mmGetProcessID()", ref ans);
-                        if (String.IsNullOrWhiteSpace(ret)) {
+
+                        Request("return mmGetProcessID()");
+                        err = GetAnswer(ref ans);
+                        if (String.IsNullOrWhiteSpace(err)) {
                             uint id = 0;
                             try {
                                 id = uint.Parse((string)ans);
@@ -123,16 +127,22 @@ namespace MegaMolConf {
                                 }
                             }
                             if (Process != null) {
-                                Process.EnableRaisingEvents = true;
-                                Process.Exited += new EventHandler(delegate (Object o, EventArgs a) {
-                                    SetProcessState(MegaMolProcessState.MMPS_NONE);
-                                    StopObserving();
-                                    ParentForm.SetTabPageTag(TabPage, null);
-                                    ParentForm.listBoxLog.Log(Util.Level.Info, $"Tab '{TabPage.Text}' disconnected");
-                                    ParentForm.SetTabPageIcon(TabPage, 1);
-                                    ParentForm.listBoxLog.Log(Util.Level.Info, $"Tab '{TabPage.Text}' exited");
-                                    Process = null;
-                                });
+                                try {
+                                    Process.EnableRaisingEvents = true;
+                                    Process.Exited += new EventHandler(delegate(Object o, EventArgs a) {
+                                        SetProcessState(MegaMolProcessState.MMPS_NONE);
+                                        StopObserving();
+                                        ParentForm.SetTabPageTag(TabPage, null);
+                                        ParentForm.listBoxLog.Log(Util.Level.Info,
+                                            $"Tab '{TabPage.Text}' disconnected");
+                                        ParentForm.SetTabPageIcon(TabPage, 1);
+                                        ParentForm.listBoxLog.Log(Util.Level.Info, $"Tab '{TabPage.Text}' exited");
+                                        Process = null;
+                                    });
+                                } catch {
+                                    ParentForm.listBoxLog.Log(Util.Level.Warning, $"could not install exit handler for Tab '{TabPage.Text}'");
+                                    // we can only do this if we started the process ourselves
+                                }
                                 SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD);
                             } else {
                                 SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // wrong instance
@@ -167,7 +177,11 @@ namespace MegaMolConf {
             if (Connection != null && Connection.Valid) {
                 List<string> foundInstances = new List<string>();
                 do {
-                    res = Request("return mmListInstantiations()", ref ans);
+                    Request("return mmListInstantiations()");
+                    ans = null;
+                    do {
+                        res = GetAnswer(ref ans);
+                    } while (ans == null);
                     if (String.IsNullOrWhiteSpace(res)) {
                         var insts = ((string) ans).Split(new char[] {'\n'}, StringSplitOptions.None);
                         foreach (var i in insts) {
@@ -191,9 +205,11 @@ namespace MegaMolConf {
 
                 if (ReadGraphFromInstance) {
                     if (string.IsNullOrEmpty(ParentForm.TabInstantiation(TabPage))) {
-                        res = Request("return mmListModules()", ref ans);
+                        Request("return mmListModules()");
+                        res = GetAnswer(ref ans);
                     } else {
-                        res = Request($"return mmListModules(\"{ParentForm.TabInstantiation(TabPage)}\")", ref ans);
+                        Request($"return mmListModules(\"{ParentForm.TabInstantiation(TabPage)}\")");
+                        res = GetAnswer(ref ans);
                     }
                     if (string.IsNullOrWhiteSpace(res)) {
                         var modules = ((string)ans).Split(new char[] { '\n' }, StringSplitOptions.None);
@@ -206,9 +222,11 @@ namespace MegaMolConf {
                     }
 
                     if (string.IsNullOrEmpty(ParentForm.TabInstantiation(TabPage))) {
-                        res = Request("return mmListCalls()", ref ans);
+                        Request("return mmListCalls()");
+                        res = GetAnswer(ref ans);
                     } else {
-                        res = Request($"return mmListCalls(\"{ParentForm.TabInstantiation(TabPage)}\")", ref ans);
+                        Request($"return mmListCalls(\"{ParentForm.TabInstantiation(TabPage)}\")");
+                        res = GetAnswer(ref ans);
                     }
 
                     if (String.IsNullOrWhiteSpace(res)) {
@@ -234,7 +252,6 @@ namespace MegaMolConf {
             }
             while (!stopQueued) {
                 System.Threading.Thread.Sleep(1000);
-                GraphicalModule gm = Form1.selectedModule;
                 // check current tab (is the correct instance controlled)
                 if (stopQueued) {
                     break;
@@ -246,7 +263,8 @@ namespace MegaMolConf {
                         foreach (GraphicalModule gmc in moduleCreations) {
                             string command =
                                 $@"mmCreateModule(""{gmc.Module.Name}"", ""{ParentForm.TabInstantiation(TabPage)}::{gmc.Name}"")";
-                            res = Request("return " + command, ref ans);
+                            Request("return " + command);
+                            res = GetAnswer(ref ans);
                             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                                 // huh.
                             } else {
@@ -259,7 +277,8 @@ namespace MegaMolConf {
                     lock (moduleDeletions) {
                         foreach (GraphicalModule gmc in moduleDeletions) {
                             string command = $@"mmDeleteModule(""{ParentForm.TabInstantiation(TabPage)}::{gmc.Name}"")";
-                            res = Request("return " + command, ref ans);
+                            Request("return " + command);
+                            res = GetAnswer(ref ans);
                             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                                 // huh.
                             } else {
@@ -277,7 +296,8 @@ namespace MegaMolConf {
                                 $@"mmCreateCall(""{gcc.Call.Name}"",""{ParentForm.TabInstantiation(TabPage)}::{gcc.src.Name}::{
                                     gcc.srcSlot.Name
                                 }"", ""{ParentForm.TabInstantiation(TabPage)}::{gcc.dest.Name}::{gcc.destSlot.Name}"")";
-                            res = Request("return " + command, ref ans);
+                            Request("return " + command);
+                            res = GetAnswer(ref ans);
                             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                                 // huh.
                             } else {
@@ -293,7 +313,8 @@ namespace MegaMolConf {
                                 $@"mmDeleteCall(""{ParentForm.TabInstantiation(TabPage)}::{gcc.src.Name}::{
                                     gcc.srcSlot.Name
                                 }"", ""{ParentForm.TabInstantiation(TabPage)}::{gcc.dest.Name}::{gcc.destSlot.Name}"")";
-                            res = Request($"return {command}", ref ans);
+                            Request($"return {command}");
+                            res = GetAnswer(ref ans);
                             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
                                 // huh.
                             } else {
@@ -303,6 +324,8 @@ namespace MegaMolConf {
                         connectionDeletions.Clear();
                     }
 
+                    // what the hell?
+                    GraphicalModule gm = Form1.selectedModule;
                     if (gm != null) {
 #if true
                         if (stopQueued)
@@ -339,11 +362,13 @@ namespace MegaMolConf {
         }
 
         private string UpdateModuleParams(GraphicalModule gm) {
-            object ans = null;
+            string ans = null;
             string command = $"mmGetModuleParams(\"{ParentForm.TabInstantiation(TabPage)}::{gm.Name}\")";
-            string res = Request("return " + command, ref ans);
+            string res;
+            Request("return " + command);
+            res = GetAnswer(ref ans);
             if (String.IsNullOrWhiteSpace(res) && !stopQueued) {
-                string[] stuff = ((string)ans).Split(new char[] { '\u0001' }, StringSplitOptions.None);
+                string[] stuff = (ans).Split(new char[] { '\u0001' }, StringSplitOptions.None);
                 int len = stuff.Count();
                 // don't forget the trailing element since we conclude with one last separator!
                 if (len > 1 && (len - 1) % 4 == 1) {
@@ -392,39 +417,69 @@ namespace MegaMolConf {
             }
         }
 
-        internal void SendUpdate(string p, string v) {
-            GraphicalModule gm = Form1.selectedModule;
+        internal void SendUpdate(GraphicalModule gm, string p, string v) {
             if (gm != null) {
                 string prefix = $"{ParentForm.TabInstantiation(TabPage)}::{gm.Name}::";
-                object ans = null;
+                string ans = null;
                 string val = v.Replace("\\", "\\\\");
-                string ret = Request($"return mmSetParamValue(\"{prefix}{p}\",\"{val}\")", ref ans);
+                Request($"return mmSetParamValue(\"{prefix}{p}\",\"{val}\")");
+                string res = GetAnswer(ref ans);
             }
         }
 
-        internal string Request(string req, ref object answer) {
+        bool TryGetAnswer(ref string answer, ref string err) {
+            if (Connection == null)
+            {
+                return false;
+            }
+            Communication.Response r = new Response();
+            bool good = Connection.TryReceive(ref r, ref err);
+            if (r != null) {
+                answer = r.Answer;
+            } else {
+                answer = null;
+            }
+            return good;
+        }
+
+        string GetAnswer(ref string answer) {
+            string err = "";
+            bool good = false;
+            int numTries = 500;
+            while (!(good = TryGetAnswer(ref answer, ref err)) && numTries > 0) {
+                numTries--;
+                System.Threading.Thread.Sleep(10);
+            }
+
+            if (!good)
+                err = "timeout";
+            return err;
+        }
+
+        internal string Request(string req) {
             string ret = "";
             lock (myLock) {
                 if (Connection != null && Connection.Valid && !stopQueued) {
                     try {
                         Communication.GenericRequest request = new Communication.GenericRequest { Command = req };
-                        Communication.Response res = Connection.Send(request);
-                        if (!string.IsNullOrWhiteSpace(res.Error)) {
-                            ret = res.Error;
-                            ParentForm.listBoxLog.Log(Util.Level.Error, string.Format("MegaMol did not accept {0}: {1}", req.ToString(), res.Error));
-                            SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
-                            //if (!res.Error.StartsWith("NOTFOUND")) {
-                            //    MessageBox.Show(string.Format("MegaMol did not accept {0}", req.ToString()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
-                            //} else {
-                            //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
-                            //}
-                        } else {
-                            // problem: slow megamol might re-order answers. so if we continue listening no matter what,
-                            // we will get answers from other requests which blows us up
-                            answer = res.Answer;
-                            SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD); // good
-                        }
+                        Connection.Send(request);
+                        //Communication.Response res = Connection.Send(request);
+                        //if (!string.IsNullOrWhiteSpace(res.Error)) {
+                        //    ret = res.Error;
+                        //    ParentForm.listBoxLog.Log(Util.Level.Error, string.Format("MegaMol did not accept {0}: {1}", req.ToString(), res.Error));
+                        //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
+                        //    //if (!res.Error.StartsWith("NOTFOUND")) {
+                        //    //    MessageBox.Show(string.Format("MegaMol did not accept {0}", req.ToString()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        //    //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
+                        //    //} else {
+                        //    //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_BROKEN); // broken
+                        //    //}
+                        //} else {
+                        //    // problem: slow megamol might re-order answers. so if we continue listening no matter what,
+                        //    // we will get answers from other requests which blows us up
+                        //    answer = res.Answer;
+                        //    SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD); // good
+                        //}
                     } catch (Exception ex) {
                         if (!stopQueued) {
                             // todo set this to false when message ordering really works (see above)

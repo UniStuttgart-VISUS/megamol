@@ -75,16 +75,6 @@ protected:
     virtual bool create(void);
 
     /**
-     * The get capabilities callback. The module should set the members
-     * of 'call' to tell the caller its capabilities.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetCapabilities(Call& call);
-
-    /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
      * and times).
@@ -203,7 +193,8 @@ private:
 
 #ifdef WITH_MPI
     /** The communicator that the view uses. */
-    MPI_Comm comm;
+    MPI_Comm comm = MPI_COMM_NULL;
+    MPI_Comm roleComm;
 #endif /* WITH_MPI */
 
     int mpiRank = 0;
@@ -212,7 +203,6 @@ private:
 
     enum mpiRole { IMG_BLANK = 10, IMG_LEFT = 11, IMG_RIGHT = 12};
 
-    MPI_Comm roleComm;
     int roleRank = -1, roleSize = -1;
     int rank = -1;
     mpiRole myRole;

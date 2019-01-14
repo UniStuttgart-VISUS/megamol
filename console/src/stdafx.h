@@ -24,8 +24,10 @@
 ////#define MY_CRTDBG_BREAK_AT_ALLOC 4345
 //#endif /* DEBUG || _DEBUG */
 
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#undef min
+#undef max
 
 #else /* _WIN32 */
 /* Linux includes */

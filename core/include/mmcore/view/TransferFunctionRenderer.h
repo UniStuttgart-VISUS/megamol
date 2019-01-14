@@ -51,16 +51,6 @@ public:
 	TransferFunctionRenderer(void);
 	~TransferFunctionRenderer(void);
 
-	/**
-     * The get capabilities callback. The module should set the members
-     * of 'call' to tell the caller its capabilities.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetCapabilities(CallRender2D& call);
-
     /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes

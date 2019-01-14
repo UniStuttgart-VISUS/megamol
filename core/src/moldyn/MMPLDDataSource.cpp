@@ -102,6 +102,8 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
                 case 3: colSize = 4; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_I; break;
                 case 4: colSize = 12; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB; break;
                 case 5: colSize = 16; colDatType = MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA; break;
+                case 6: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA; break;
+                case 7: colSize = 8; colDatType = MultiParticleDataCall::Particles::COLDATA_DOUBLE_I; break;
                 default: colSize = 0; colDatType = MultiParticleDataCall::Particles::COLDATA_NONE; break;
             }
         } else {
@@ -110,7 +112,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         }
         unsigned int stride = static_cast<unsigned int>(vrtSize + colSize);
 
-        if ((vrtType == 1) || (vrtType == 3)) {
+        if ((vrtType == 1) || (vrtType == 3) || (vrtType == 4)) {
             pts.SetGlobalRadius(*this->dat.AsAt<float>(p)); p += 4;
         } else {
             pts.SetGlobalRadius(0.05f);
@@ -123,7 +125,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
             p += 4;
         } else {
             pts.SetGlobalColour(192, 192, 192);
-            if (colType == 3) {
+            if (colType == 3 || colType == 7) {
                 pts.SetColourMapIndexValues(
                     *this->dat.AsAt<float>(p),
                     *this->dat.AsAt<float>(p + 4));

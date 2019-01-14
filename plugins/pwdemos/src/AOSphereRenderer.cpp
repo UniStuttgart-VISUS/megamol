@@ -248,23 +248,6 @@ bool AOSphereRenderer::create(void) {
 
 
 /*
- * AOSphereRenderer::GetCapabilities
- */
-bool AOSphereRenderer::GetCapabilities(megamol::core::Call& call) {
-    megamol::core::view::AbstractCallRender3D *cr = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(
-        megamol::core::view::AbstractCallRender3D::CAP_RENDER
-        | megamol::core::view::AbstractCallRender3D::CAP_LIGHTING
-        | megamol::core::view::AbstractCallRender3D::CAP_ANIMATION
-        );
-
-    return true;
-}
-
-
-/*
  * AOSphereRenderer::GetExtents
  */
 bool AOSphereRenderer::GetExtents(megamol::core::Call& call) {

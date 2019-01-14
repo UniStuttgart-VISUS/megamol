@@ -15,22 +15,47 @@
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/CoreInstance.h"
+
 #include "mmcore/utility/SDFFont.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/CameraParamsStore.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
+
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/View3D.h"
+
+#include "vislib/Trace.h"
+#include "vislib/String.h"
+#include "vislib/Array.h"
+#include "vislib/memutils.h"
+#include "vislib/StringSerialiser.h"
+
+#include "vislib/math/Point.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/memutils.h"
-#include "vislib/String.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 
+#include "vislib/sys/Log.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/Thread.h"
+
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/graphics/CameraParamsStore.h"
+
+#include "CallCinematicCamera.h"
+#include "ReplacementRenderer.h"
 #include "KeyframeManipulator.h"
 
 
@@ -100,16 +125,6 @@ namespace megamol {
             */
             virtual void release(void);
 
-  			/**
-			* The get capabilities callback. The module should set the members
-			* of 'call' to tell the caller its capabilities.
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool GetCapabilities(core::Call& call);
-
 			/**
 			* The get extents callback. The module should set the members of
 			* 'call' to tell the caller the extents of its data (bounding boxes
@@ -119,7 +134,7 @@ namespace megamol {
 			*
 			* @return The return value of the function.
 			*/
-			virtual bool GetExtents(core::Call& call);
+			virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
 			/**
 			* The render callback.
@@ -128,16 +143,19 @@ namespace megamol {
 			*
 			* @return The return value of the function.
 			*/
-			virtual bool Render(core::Call& call);
+			virtual bool Render(megamol::core::view::CallRender3D& call);
 
-            /**
-            * Callback for mouse events (move, press, and release)
-            *
-            * @param x The x coordinate of the mouse in world space
-            * @param y The y coordinate of the mouse in world space
-            * @param flags The mouse flags
-            */
-            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+            /** The mouse button pressed/released callback. */
+            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+
+            /** The mouse movement callback. */
+            virtual bool OnMouseMove(double x, double y) override;
+
+            //virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
+
+            //virtual bool OnChar(unsigned int codePoint) override;
+
+            //virtual bool OnMouseScroll(double dx, double dy) override;
 
 		private:
 
@@ -154,17 +172,26 @@ namespace megamol {
             bool                             showHelpText;
 
             KeyframeManipulator              manipulator;
+            bool                             manipulatorGrabbed;
+            bool                             showMode;
+
             vislib::graphics::gl::FramebufferObject fbo;
 
-            /** The render to texture */
+            /** The render to texture shader */
             vislib::graphics::gl::GLSLShader textureShader;
+
+            /*** INPUT ********************************************************/
+
+            /** The mouse coordinates */
+            float                            mouseX;
+            float                            mouseY;
 
             /**********************************************************************
             * callback stuff
             **********************************************************************/
 
 			/** The renderer caller slot */
-			core::CallerSlot slaveRendererSlot;
+			core::CallerSlot rendererCallerSlot;
 
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;
@@ -181,6 +208,8 @@ namespace megamol {
             core::param::ParamSlot toggleHelpTextParam;
             /**  */
             core::param::ParamSlot toggleManipOusideBboxParam;
+
+			bool isSelecting;
 
 		};
 

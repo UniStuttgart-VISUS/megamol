@@ -21,7 +21,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
@@ -110,9 +110,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
 
     this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->callRequestImage);
-#ifdef WITH_MPI
-    this->comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+
 }
 
 
@@ -129,19 +127,6 @@ bool imageviewer2::ImageViewer::create(void) {
     // intentionally empty
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
-
-    return true;
-}
-
-
-/*
- * misc::ImageViewer::GetCapabilities
- */
-bool imageviewer2::ImageViewer::GetCapabilities(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER);
 
     return true;
 }
@@ -185,10 +170,9 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
-
+    bool useMpi = initMPI();
 #ifdef WITH_MPI
     // generate communicators for each role
-    bool useMpi = initMPI();
     if (useMpi && !registered) {
         myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
         MPI_Comm_rank(this->comm, &rank);
@@ -205,6 +189,10 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) imgcConnected = true;
+    uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
+    if (imgcConnected) {
+        imgc_enc = imgc->GetEncoding();
+    }
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) || useMpi) { //< imgc has precedence
@@ -253,7 +241,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
             }
 #endif /* WITH_MPI */
 
-
             if (!beBlank && ((loadedFile != filename) || remoteness)) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
@@ -289,10 +276,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 }
                 // cluster nodes broadcast file size
-                uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
-                if (imgcConnected) {
-                    imgc_enc = imgc->GetEncoding();
-                }
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Broadcast root = %d\n", bcastRoot);

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+    
+    <view name="csview" viewmod="view3d">
+        <module class="View3d" name="view3d">
+            <param name="showBBox" value="OFF" />
+            <param name="backCol" value="white" />
+            <param name="anim::time" value="100.0" />
+        </module>
+        <module class="CrystalStructureVolumeRenderer" name="ren">
+        </module>
+        <module class="CrystalStructureDataSource" name="csdata" >
+            <!--<param name="fileFrames" value="scivis/bto_625000at_500frNEW.bin" />-->
+            <param name="fileFrames" value="/proj/SFB716/D4/Datensaetze/SciVisContest2012/atomPos_avg/bto_625000at_avg25.bin" />
+            <param name="fileCells" value="/proj/SFB716/D4/Datensaetze/SciVisContest2012/bto_625000at_cells.bin" />
+            <param name="fileAtoms" value="/proj/SFB716/D4/Datensaetze/SciVisContest2012/bto_625000at.bin" />
+            <param name="frameCacheSize" value="75" />
+            <param name="displOffs" value="25" />
+        </module>
+        <module class="IMDAtomData" name="data">
+            <param name="filename" value="scivis/stress.00000.chkpt" />
+            <param name="radius" value="0.5" />
+        </module>
+        <call class="CallRender3D" from="view3d::rendering" to="ren::rendering" />
+        <call class="CrystalStructureDataCall" from="ren::getdata" to="csdata::dataout" />
+        <call class="DirectionalParticleDataCall" from="csdata::chkptData" to="data::getData" />
+    </view>
+    
+    <job name="datawriterjob" jobmod="jb">
+        <module class="DataWriter" name="jb" />
+        <module class="CrystalStructureDataSource" name="data" >
+            <!--<param name="fileFrames" value="scivis/bto_625000at_500frNEW.bin" />-->
+            <param name="fileFrames" value="scivis/atomPos_avg/bto_625000at_avg25.bin" />
+            <param name="fileCells" value="scivis/bto_625000at_cells.bin" />
+            <param name="fileAtoms" value="scivis/bto_625000at.bin" />
+            <param name="frameCacheSize" value="75" />
+            <param name="displOffs" value="25" />
+        </module>
+        <call class="CrystalStructureDataCall" from="jb::getdata" to="data::dataout" />
+    </job>
+    
+</MegaMol>

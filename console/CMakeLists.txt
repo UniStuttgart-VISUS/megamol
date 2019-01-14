@@ -4,14 +4,26 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 option(BUILD_CONSOLE "build console" ON)
-if(BUILD_CONSOLE)
 
+if(BUILD_CONSOLE)
   project(${CONSOLE_NAME})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+
+  # Add target
+  add_executable(${PROJECT_NAME} ${header_files} ${source_files})
+  set_target_properties(${PROJECT_NAME}
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    OUTPUT_NAME ${PROJECT_NAME})
+  target_include_directories(${PROJECT_NAME} PRIVATE
+    ${LIBUNWIND_INCLUDE_DIR} "src" "include")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
@@ -20,69 +32,53 @@ if(BUILD_CONSOLE)
       message(STATUS ${LIBUNWIND_LIBRARIES})
       message(STATUS ${LIBUNWIND_INCLUDE_DIR})
       if(LIBUNWIND_FOUND)
-	      add_definitions("-DHAS_LIBUNWIND")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_LIBUNWIND=1")
       else()
-	      message(FATAL_ERROR "Cannot find Libunwind")
+        message(FATAL_ERROR "Cannot find libunwind")
       endif()
-    endif(USE_LIBUNWIND)
-    
+    endif()
     if(USE_EGL)
-        find_package(EGL REQUIRED)
+      find_package(EGL REQUIRED)
+      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
     endif()
   endif()
 
   if(WIN32)
     set(VERSION_LIBRARY "Version.lib")
   endif()
-  
-  if(NOT USE_EGL)
-    option(USE_INTERNAL_GLFW "use internal GLFW" ON)
-    if(USE_INTERNAL_GLFW)
-        add_subdirectory(glfw)
-        set(GLFW3_LIBRARIES glfw)
-    else()
-        find_package(glfw3 3.2 MODULE)
-        if(NOT GLFW3_FOUND)
-        find_package(glfw3 3.2 CONFIG REQUIRED)
-        set(GLFW3_LIBRARIES glfw)
-        # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
-        set(GLFW3_INCLUDE_DIRS "")
-        endif()
-    endif()
+
+  if(NOT USE_EGL)  
+    bootstrap_external_package(glfw_ext glfw3
+      CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG "3.2.1"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=OFF
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF)
+    find_package(glfw3 REQUIRED CONFIG)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
-
-  set(LIBS vislib core glad ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
-  include_directories(${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR} "src" "include")
-
-  if(NOT USE_EGL)
+  
+  # AntTweakBar
+  if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
     if(USE_INTERNAL_ANTTWEAKBAR)
-        add_subdirectory(AntTweakBar)
-        add_definitions("-DHAS_ANTTWEAKBAR")
-        list(APPEND LIBS ${AntTweakBar_LIBRARIES})
-        include_directories(${AntTweakBar_INCLUDE_DIR})
+      add_subdirectory(AntTweakBar)
     else()
-        find_package(AntTweakBar REQUIRED)
-        if(AntTweakBar_FOUND)
-        add_definitions("-DHAS_ANTTWEAKBAR")
-        list(APPEND LIBS ${AntTweakBar_LIBRARIES})
-        include_directories(${AntTweakBar_INCLUDE_DIR})
-        endif()
+      find_package(AntTweakBar REQUIRED)
+    endif()
+    if(AntTweakBar_FOUND OR USE_INTERNAL_ANTTWEAKBAR)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_ANTTWEAKBAR=1")
+      target_include_directories(${PROJECT_NAME} PRIVATE ${AntTweakBar_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${AntTweakBar_LIBRARIES})
     endif()
   endif()
-
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   
-  # main target
-  add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core)
-  # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} 
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    OUTPUT_NAME ${PROJECT_NAME})
-  # Add dependencies
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+	  ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
@@ -100,16 +96,16 @@ if(BUILD_CONSOLE)
     endif()
   endif()
 
-
-  # Configuration of the megamol.cfg megamol.sh files
+  # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+
   set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${EXTERNAL_INSTALL_LOCATION}/${CMAKE_INSTALL_LIBDIR}")
+    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()
 
@@ -118,8 +114,7 @@ if(BUILD_CONSOLE)
     set(MMPLG_DIR "bin")
   endif()
 
-  configure_file(extra/megamol.cfg ${CMAKE_BINARY_DIR}/megamol.cfg)
-  configure_file(extra/install_megamol_cfg.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake @ONLY)
-  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake)
-
-endif(BUILD_CONSOLE)
+  configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
+  configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
+  install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
+endif()
