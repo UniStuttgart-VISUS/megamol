@@ -689,9 +689,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             // icet setup
 	    
             icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
-	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Creating Context\n");
             icet_ctx_  = icetCreateContext(icet_comm_);
-	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Setting Parameters\n");
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
             icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
@@ -699,14 +697,10 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
-	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Setting Parameters Done\n");
-
-
             // extract viewport or get if from opengl context
             auto width = 0;
             auto height = 0;
             if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value()) {
-	        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: ViewPortExtraction - GL\n");
                 GLint glvp[4];
                 glGetIntegerv(GL_VIEWPORT, glvp);
                 for (int i = 0; i < 4; ++i) {
@@ -715,27 +709,30 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 width = this->viewport[4] = glvp[2];
                 height = this->viewport[5] = glvp[3];
             } else {
-	      if (this->extractViewport(this->viewport)) {
-	        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: ViewPortExtraction - Tiled\n");
-                this->validViewport = true;
-                width = this->viewport[4];
-                height = this->viewport[5];
-	      } else {
-	      
-        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
-	      }
+	        if (this->extractViewport(this->viewport)) {
+                    this->validViewport = true;
+                    width = this->viewport[4];
+                    height = this->viewport[5];
+	        } else {
+                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
+                    return false;
+	        }
             }
 
+#ifdef _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).",
                 this->mpiRank, ((this->validViewport)?("View"):("OpenGL")),
                 this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3], this->viewport[4], this->viewport[5]);
+#endif
 
             int displayRank = 0;
             icetPhysicalRenderSize(width, height);
             icetResetTiles();
             icetAddTile(0, 0, width, height, displayRank);
 
+#ifdef _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
+#endif
         }
 #endif // WITH_MPI
     }
