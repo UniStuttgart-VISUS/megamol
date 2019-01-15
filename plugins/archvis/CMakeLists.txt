@@ -28,8 +28,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib core ng_mesh)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
   # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

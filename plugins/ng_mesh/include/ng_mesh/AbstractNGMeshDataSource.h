@@ -37,8 +37,8 @@ namespace ngmesh {
 		private:
 			struct MeshData
 			{
-				std::vector<std::vector<uint8_t>>	vertex_data;
-				std::vector<uint8_t>				index_data;
+				std::vector<std::vector<std::byte>>	vertex_data;
+				std::vector<std::byte>				index_data;
 
 				size_t used_vertex_cnt;
 				size_t used_index_cnt;
@@ -56,17 +56,17 @@ namespace ngmesh {
 				std::string							program_name;
 				MeshData							mesh_data;
 				std::vector<DrawElementsCommand>	draw_commands;
-				std::vector<uint8_t>				perObject_shader_params;
+				std::vector<std::byte>				perObject_shader_params;
 				uint32_t							update_flags;
 			};
 
-			struct RenderTask
+			struct RenderTask // TODO Move to dedicated DataStructure to split Mesh/Material/RenderTask Data to different Datasources
 			{
 				size_t batch_idx;
 				size_t draw_commands_offset;
 				size_t perObject_params_byte_offset;
-				size_t vertex_data_offset;
-				size_t index_data_offset;
+				size_t vertex_data_offset; // TODO remove, as already contained in DrawElementsCommand?
+				size_t index_data_offset; // TODO remove, as already contained in DrawElementsCommand?
 			};
 
 			std::list<RenderBatch> m_render_batches;
@@ -136,11 +136,11 @@ namespace ngmesh {
 
 			}
 
-			uint8_t* accessVertexBufferData(size_t task_idx, size_t attribute_idx);
+			std::byte* accessVertexBufferData(size_t task_idx, size_t attribute_idx);
 
-			uint8_t* accessIndexBufferData(size_t task_idx);
+			std::byte* accessIndexBufferData(size_t task_idx);
 
-			uint8_t* accessPerObjectParamsData(size_t task_idx);
+			std::byte* accessPerObjectParamsData(size_t task_idx);
 
 			void shrinkRenderTask(size_t vertex_cnt, size_t index_cnt);
 
