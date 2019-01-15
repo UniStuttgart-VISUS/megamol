@@ -112,6 +112,8 @@ private:
 
     megamol::core::param::ParamSlot reconnect_slot_;
 
+    megamol::core::param::ParamSlot tiled_slot_;
+
     bool aggregate_;
 
 #ifdef WITH_MPI
