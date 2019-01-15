@@ -33,16 +33,12 @@ namespace megamol {
 				std::vector<IteratorPair<TextureDataIterator>> const& texture_data);
 
 		private:
-			struct TextureData
-			{
-				std::vector<std::byte> texture_data;
-				TextureLayout          texture_descriptor;
-			};
 
 			struct Material
 			{
-				std::string              btf_filename;
-				std::vector<TextureData> textures;
+				std::string                         btf_filename;
+				std::vector<std::vector<std::byte>> texture_data;
+				std::vector<TextureLayout>         texture_layouts;
 			};
 
 			std::list<Material> m_materials;

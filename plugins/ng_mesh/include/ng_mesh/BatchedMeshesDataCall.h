@@ -1,7 +1,7 @@
 /*
 * BatchedMeshesDataCall.h
 *
-* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+* Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
 */
 
@@ -24,76 +24,73 @@ namespace megamol {
 		// (fearless warriors set out the cross the dll boundary)
 		/////////////////////////////////
 
+		struct MeshDataAccessor
+		{
+			size_t	                 vertex_buffers_accessors_base_index;
+			size_t		             vertex_buffer_cnt;
+
+			size_t                   index_buffer_accessor_index;
+			GLenum		             index_type;
+
+			GLsizei                  vertex_stride;
+			GLuint                   vertex_attribute_cnt;
+			VertexLayout::Attribute* vertex_attributes;
+
+			GLenum                   usage;
+			GLenum                   primitive_type;
+		};
+
+		struct DrawCommandDataAccessor
+		{
+			DrawElementsCommand*	draw_commands;
+			GLsizei					draw_cnt;
+		};
+
+		class NG_MESH_API BatchedMeshesDataAccessor
+		{
+		public:
+			BatchedMeshesDataAccessor();
+			~BatchedMeshesDataAccessor();
+
+			size_t allocateNewBatch(size_t mesh_vertex_buffer_cnt);
+
+			void setVertexDataAccess(
+				size_t batch_idx,
+				size_t vertex_buffers_cnt,
+				BufferAccessor...);
+
+			void setIndexDataAccess(
+				size_t batch_idx,
+				std::byte* raw_data,
+				size_t byte_size,
+				GLenum index_type);
+
+			void setMeshMetaDataAccess(
+				size_t batch_idx,
+				GLsizei stride,
+				GLuint attribute_cnt,
+				VertexLayout::Attribute* attributes,
+				GLenum usage,
+				GLenum primitive_type);
+
+			void setDrawCommandsDataAcess(
+				size_t batch_idx,
+				DrawElementsCommand* draw_commands,
+				GLsizei draw_cnt);
+
+		private:
+			BufferAccessor*          buffer_accessors;
+			size_t                   buffer_accessor_cnt;
+
+			MeshDataAccessor*        mesh_data_batches;
+			DrawCommandDataAccessor* draw_command_batches;
+			size_t                   batch_cnt;
+		};
+
+
 		class NG_MESH_API BatchedMeshesDataCall : public megamol::core::AbstractGetData3DCall
 		{
 		public:
-
-			struct MeshDataAccessor
-			{
-				struct VertexData
-				{
-					struct Buffer {
-						std::byte*	raw_data_pointer;
-						size_t		byte_size;
-					};
-
-					size_t		buffer_cnt;
-					Buffer*		buffers;
-				};
-
-				struct IndexData
-				{
-					std::byte*	raw_data_pointer;
-					size_t		byte_size;
-					GLenum		index_type;
-				};
-
-				struct VertexLayoutData
-				{
-					GLsizei						stride;
-					GLuint						attribute_cnt;
-					VertexLayout::Attribute*	attributes_pointer;
-				};
-
-				VertexData			vertex_data;
-				IndexData			index_data;
-				VertexLayoutData	vertex_descriptor;
-				GLenum				usage;
-				GLenum				primitive_type;
-			};
-
-			struct DrawCommandDataAccessor
-			{
-				DrawElementsCommand*	draw_commands_pointer;
-				GLsizei					draw_cnt;
-			};
-
-			class NG_MESH_API BatchedMeshesData
-			{
-			public:
-				typedef MeshDataAccessor::VertexData::Buffer VertexBufferAccessor;
-
-				size_t allocateNewBatch(size_t mesh_vertex_buffer_cnt);
-
-				void setVertexData(size_t batch_idx,
-					size_t mesh_vertex_buffer_cnt,
-					VertexBufferAccessor...);
-
-				void setIndexData(
-					std::byte* raw_data_pointer,
-					size_t byte_size,
-					GLenum index_type);
-
-				void setVertexLayout(
-					GLsizei stride,
-					GLuint attribute_cnt,
-					VertexLayout::Attribute* attributes_pointer);
-
-			private:
-				DrawCommandDataAccessor* draw_command_batches;
-				MeshDataAccessor*        mesh_data_batches;
-				size_t                   batch_cnt;
-			};
 
 
 			BatchedMeshesDataCall();
@@ -138,7 +135,7 @@ namespace megamol {
 			}
 
 		private:
-
+			BatchedMeshesDataAccessor* data_accessor;
 		};
 	}
 }

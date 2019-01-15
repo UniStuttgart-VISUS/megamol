@@ -20,6 +20,12 @@ enum UpdateBits {
 	MATERIAL_BIT = 0x10
 };
 
+struct BufferAccessor
+{
+	std::byte*	raw_data;
+	size_t		byte_size;
+};
+
 /**
 * Basic Vertex Layout descriptor taken over from glOwl.
 */
