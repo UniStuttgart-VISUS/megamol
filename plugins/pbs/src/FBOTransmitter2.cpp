@@ -99,7 +99,11 @@ void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     initThreads();
+#if    _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
+#endif
 
+   
     if (!this->validViewport) {
         if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value() || !this->extractViewport(this->viewport)) {
             GLint glvp[4];
@@ -117,6 +121,10 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     int tile_height = this->viewport[3];
     int width = this->viewport[4];
     int height = this->viewport[5];
+
+    #if    _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport ... Done");
+#endif
 
     // read FBO
     std::vector<char> col_buf(width * height * col_buf_el_size_);
@@ -146,6 +154,12 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         }
     }
 
+#if    _DEBUG
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: readFBO ... Done");
+#endif
+
+
+
 #ifdef WITH_MPI
     IceTUByte* icet_col_buf   = reinterpret_cast<IceTUByte*>(col_buf.data());
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
@@ -160,16 +174,28 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         int tilevp[4] = { xoff, yoff, tile_width, tile_height }; // define current valid pixel viewport for icet 
         auto const icet_comp_image =
             icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
+#if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
+#endif
 
         if (mpiRank == 0) {
             icet_col_buf   = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
+#if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
+#endif
         }
+
+
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #endif // WITH_MPI
 
+        
+#if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ...\n");
+#endif
         // extract meta data 
         float times[2]  = { 0.0f, 0.0f };
         float bbox[6]   = {0.0f, 0.0f , 0.0f , 1.0f , 1.0f , 1.0f };
@@ -177,10 +203,16 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         if (!this->extractMetaData(bbox, times, camera)) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not extract meta data.\n");
         }
-
+#if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ... Done\n");
+#endif
        // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
+
+	    #if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
+#endif
 
             int vp[4] = { 0, 0, width, height }; // full viewport is needed here
             for (int i = 0; i < 4; ++i) {
@@ -200,6 +232,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
             this->color_buf_read_->resize(col_buf.size());
             this->depth_buf_read_->resize(depth_buf.size());
+	    
 #ifdef WITH_MPI
             // std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
             memcpy(this->color_buf_read_->data(), icet_col_buf,   width * height * col_buf_el_size_);
@@ -214,6 +247,10 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         }
 
         this->swapBuffers();
+   #if    _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ... Done\n");
+#endif
+
 #ifdef WITH_MPI
     }
 #endif // WITH_MPI
@@ -650,8 +687,11 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
             // icet setup
+	    
             icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Creating Context\n");
             icet_ctx_  = icetCreateContext(icet_comm_);
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Setting Parameters\n");
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
             icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
             icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
@@ -659,14 +699,14 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
             icetDisable(ICET_COMPOSITE_ONE_BUFFER);
 
+	    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Setting Parameters Done\n");
+
+
             // extract viewport or get if from opengl context
             auto width = 0;
             auto height = 0;
-            if (this->tiled_slot_.Param<core::param::BoolParam>()->Value() && this->extractViewport(this->viewport)) {
-                this->validViewport = true;
-                width = this->viewport[4];
-                height = this->viewport[5];
-            } else {
+            if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value()) {
+	        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: ViewPortExtraction - GL\n");
                 GLint glvp[4];
                 glGetIntegerv(GL_VIEWPORT, glvp);
                 for (int i = 0; i < 4; ++i) {
@@ -674,6 +714,16 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 }
                 width = this->viewport[4] = glvp[2];
                 height = this->viewport[5] = glvp[3];
+            } else {
+	      if (this->extractViewport(this->viewport)) {
+	        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: ViewPortExtraction - Tiled\n");
+                this->validViewport = true;
+                width = this->viewport[4];
+                height = this->viewport[5];
+	      } else {
+	      
+        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
+	      }
             }
 
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).",
