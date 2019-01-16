@@ -1,5 +1,5 @@
 /*
-* BatchedMeshesDataCall.h
+* MaterialsDataCall.h
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -13,39 +13,41 @@
 
 #include "ng_mesh.h"
 #include "NGMeshStructs.h"
+#include "MaterialDataStorage.h"
 #include "mmcore/AbstractGetDataCall.h"
 
 namespace megamol {
 	namespace ngmesh {
 
-		struct MaterialDataAccessor
-		{
-			char*          btf_filename;
-			size_t         char_cnt;
-
-			size_t         texture_data_buffer_base_index;
-			TextureLayout* texture_layouts;
-			size_t         texture_cnt;
-		};
-
-		class NG_MESH_API MaterialsDataAccessor
-		{
-		public:
-			MaterialsDataAccessor();
-			~MaterialsDataAccessor();
-
-		private:
-			BufferAccessor*       texture_data_buffer_accessors;
-			size_t                buffer_accessor_cnt;
-
-			MaterialDataAccessor* material_data_accessors;
-		};
+		// C-Style Accessors for Material Data
+		//	struct MaterialDataAccessor
+		//	{
+		//		char*          btf_filename;
+		//		size_t         char_cnt;
+		//	
+		//		size_t         texture_data_buffer_base_index;
+		//		TextureLayout* texture_layouts;
+		//		size_t         texture_cnt;
+		//	};
+		//	
+		//	class NG_MESH_API MaterialsDataAccessor
+		//	{
+		//	public:
+		//		MaterialsDataAccessor();
+		//		~MaterialsDataAccessor();
+		//	
+		//	private:
+		//		BufferAccessor*       texture_data_buffer_accessors;
+		//		size_t                buffer_accessor_cnt;
+		//	
+		//		MaterialDataAccessor* material_data_accessors;
+		//	};
 
 		class NG_MESH_API MaterialsDataCall :public megamol::core::AbstractGetDataCall
 		{
 		public:
-			MaterialsDataCall();
-			~MaterialsDataCall();
+			inline MaterialsDataCall() : AbstractGetDataCall(), m_materials(nullptr) {}
+			~MaterialsDataCall() = default;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -53,7 +55,7 @@ namespace megamol {
 			* @return The name of the objects of this description.
 			*/
 			static const char *ClassName(void) {
-				return "BatchedMeshesDataCall";
+				return "MaterialsDataCall";
 			}
 
 			/**
@@ -62,7 +64,7 @@ namespace megamol {
 			* @return A human readable description of the module.
 			*/
 			static const char *Description(void) {
-				return "Call that gives access to mesh data stored in batches for rendering.";
+				return "Call that gives access to material data.";
 			}
 
 			/**
@@ -86,7 +88,7 @@ namespace megamol {
 			}
 
 		private:
-
+			std::shared_ptr<MaterialDataStorage> m_materials;
 		};
 	}
 }
