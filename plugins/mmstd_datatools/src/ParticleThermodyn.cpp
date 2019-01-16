@@ -71,6 +71,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     mt->SetTypePair(metricsEnum::DENSITY, "Density");
     mt->SetTypePair(metricsEnum::FRACTIONAL_ANISOTROPY, "Fractional Anisotropy");
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
+    mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -141,7 +142,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
     const unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
-    theRadius = theRadius * theRadius;
+    //theRadius = theRadius * theRadius;
     const float theMass = this->massSlot.Param<core::param::FloatParam>()->Value();
     const float theFreedom = this->freedomSlot.Param<core::param::FloatParam>()->Value();
     const int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
@@ -331,6 +332,9 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                         break;
                     case metricsEnum::PRESSURE:
                         vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
+                        break;
+                    case metricsEnum::NEIGHBORS:
+                        magnitude = num_matches;
                         break;
                     default:
                         vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
