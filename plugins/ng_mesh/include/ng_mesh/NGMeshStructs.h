@@ -71,10 +71,10 @@ struct VertexLayout
 	std::vector<Attribute> attributes;
 };
 
-inline size_t computeAttributeByteSize(VertexLayout::Attribute attr)
+inline size_t computeByteSize(GLenum gl_type)
 {
 	size_t retval = 0;
-	switch (attr.type)
+	switch (gl_type)
 	{
 	case GL_BYTE:
 		retval = sizeof(GLbyte);
@@ -119,6 +119,12 @@ inline size_t computeAttributeByteSize(VertexLayout::Attribute attr)
 		break;
 	}
 
+	return retval;
+}
+
+inline size_t computeAttributeByteSize(VertexLayout::Attribute attr)
+{
+	size_t retval = computeByteSize(attr.type);
 	retval *= attr.size;
 
 	return retval;

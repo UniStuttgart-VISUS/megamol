@@ -5,6 +5,7 @@
 * All rights reserved.
 */
 
+#include <array>
 #include <random>
 
 #include "NGMeshRenderer.h"
@@ -12,14 +13,31 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
+#include "ng_mesh/BatchedMeshesDataCall.h"
+#include "ng_mesh/MaterialsDataCall.h"
+#include "ng_mesh/RenderTasksDataCall.h"
+
 using namespace megamol::core;
 using namespace megamol::ngmesh;
 
 NGMeshRenderer::NGMeshRenderer()
-	: Renderer3DModule(), m_renderBatches_callerSlot("getData", "Connects the mesh renderer with a mesh data source")
+	: Renderer3DModule(),
+	//m_renderBatches_callerSlot("getData", "Connects the mesh renderer with a mesh data source"),
+	m_mesh_callerSlot("getMeshData", "Connects the renderer with a mesh data source"),
+	m_material_callerSlot("getMaterialData", "Connects the renderer with a material data source"),
+	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
 {
-	this->m_renderBatches_callerSlot.SetCompatibleCall<CallNGMeshRenderBatchesDescription>();
-	this->MakeSlotAvailable(&this->m_renderBatches_callerSlot);
+	//this->m_renderBatches_callerSlot.SetCompatibleCall<CallNGMeshRenderBatchesDescription>();
+	//this->MakeSlotAvailable(&this->m_renderBatches_callerSlot);
+
+	this->m_mesh_callerSlot.SetCompatibleCall<BatchedMeshesDataCallDescription>();
+	this->MakeSlotAvailable(&this->m_mesh_callerSlot);
+
+	this->m_material_callerSlot.SetCompatibleCall<MaterialsDataCallDescription>();
+	this->MakeSlotAvailable(&this->m_material_callerSlot);
+
+	this->m_render_task_callerSlot.SetCompatibleCall<RenderTasksDataCallDescription>();
+	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
 }
 
 NGMeshRenderer::~NGMeshRenderer()
@@ -126,250 +144,263 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 	if (cr == NULL) return false;
 
-	CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
+	//CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
+	//
+	//if (render_batch_call == NULL)
+	//	return false;
+	//
+	//if (!(*render_batch_call)(1))
+	//	return false;
+	//
+	//cr->SetTimeFramesCount(render_batch_call->FrameCount());
+	//cr->AccessBoundingBoxes() = render_batch_call->GetBoundingBoxes();
+	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
-	if (render_batch_call == NULL)
+
+	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
+
+	if (mesh_call == NULL)
 		return false;
 
-	if (!(*render_batch_call)(1))
+	if (!(*mesh_call)(1))
 		return false;
-	
-	cr->SetTimeFramesCount(render_batch_call->FrameCount());
-	cr->AccessBoundingBoxes() = render_batch_call->GetBoundingBoxes();
+
+	cr->SetTimeFramesCount(mesh_call->FrameCount());
+	cr->AccessBoundingBoxes() = mesh_call->GetBoundingBoxes();
 	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
 }
 
-void NGMeshRenderer::addRenderBatch(
-	ShaderPrgmDataAccessor const&			shader_prgm_data,
-	MeshDataAccessor const&					mesh_data,
-	DrawCommandDataAccessor const&			draw_command_data,
-	ObjectShaderParamsDataAccessor const&	obj_shader_params,
-	MaterialShaderParamsDataAccessor const&	mtl_shader_params)
-{
-	// Push back new RenderBatch object
-	m_render_batches.push_back(RenderBatch());
-
-	// Create shader program
-	m_render_batches.back().shader_prgm = std::make_unique<GLSLShader>();
-	vislib::graphics::gl::ShaderSource vert_shader_src;
-	vislib::graphics::gl::ShaderSource frag_shader_src;
-	// TODO get rid of vislib StringA...
-	vislib::StringA shader_base_name(shader_prgm_data.raw_string);
-	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
-	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
-	m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(),vert_shader_src.Count(),frag_shader_src.Code(),frag_shader_src.Count());
-
-	// Create mesh
-	VertexLayout layout;
-	layout.stride = mesh_data.vertex_descriptor.stride;
-	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
-	{
-		layout.attributes.push_back(VertexLayout::Attribute(
-			mesh_data.vertex_descriptor.attributes[i].size,
-			mesh_data.vertex_descriptor.attributes[i].type,
-			mesh_data.vertex_descriptor.attributes[i].normalized,
-			mesh_data.vertex_descriptor.attributes[i].offset)
-		);
-	}
-
-	if (mesh_data.vertex_data.buffer_cnt > 0 && mesh_data.vertex_data.buffer_cnt == mesh_data.vertex_descriptor.attribute_cnt)
-	{
-		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
-		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
-
-		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
-		{
-			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
-			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
-
-			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+//   void NGMeshRenderer::addRenderBatch(
+//   	ShaderPrgmDataAccessor const&			shader_prgm_data,
+//   	MeshDataAccessor const&					mesh_data,
+//   	DrawCommandDataAccessor const&			draw_command_data,
+//   	ObjectShaderParamsDataAccessor const&	obj_shader_params,
+//   	MaterialShaderParamsDataAccessor const&	mtl_shader_params)
+//   {
+//   	// Push back new RenderBatch object
+//   	m_render_batches.push_back(RenderBatch());
+//   
+//   	// Create shader program
+//   	m_render_batches.back().shader_prgm = std::make_unique<GLSLShader>();
+//   	vislib::graphics::gl::ShaderSource vert_shader_src;
+//   	vislib::graphics::gl::ShaderSource frag_shader_src;
+//   	// TODO get rid of vislib StringA...
+//   	vislib::StringA shader_base_name(shader_prgm_data.raw_string);
+//   	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
+//   	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
+//   	m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(),vert_shader_src.Count(),frag_shader_src.Code(),frag_shader_src.Count());
+//   
+//   	// Create mesh
+//   	VertexLayout layout;
+//   	layout.stride = mesh_data.vertex_descriptor.stride;
+//   	for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
+//   	{
+//   		layout.attributes.push_back(VertexLayout::Attribute(
+//   			mesh_data.vertex_descriptor.attributes[i].size,
+//   			mesh_data.vertex_descriptor.attributes[i].type,
+//   			mesh_data.vertex_descriptor.attributes[i].normalized,
+//   			mesh_data.vertex_descriptor.attributes[i].offset)
+//   		);
+//   	}
+//   
+//   	if (mesh_data.vertex_data.buffer_cnt > 0 && mesh_data.vertex_data.buffer_cnt == mesh_data.vertex_descriptor.attribute_cnt)
+//   	{
+//   		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
+//   		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
+//   
+//   		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
+//   		{
+//   			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
+//   			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
+//   
+//   			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
 			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
-		}
-		
-		m_render_batches.back().mesh = std::make_unique<Mesh>(
-			vertex_data_ptrs,
-			vertex_data_sizes,
-			mesh_data.index_data.raw_data,
-			mesh_data.index_data.byte_size,
-			layout,
-			mesh_data.index_data.index_type,
-			mesh_data.usage,
-			mesh_data.primitive_type
-			);
-	}
-	else if (mesh_data.vertex_data.buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
-	{
-		m_render_batches.back().mesh = std::make_unique<Mesh>(
-			mesh_data.vertex_data.buffers[0].raw_data,
-			mesh_data.vertex_data.buffers[0].byte_size,
-			mesh_data.index_data.raw_data,
-			mesh_data.index_data.byte_size,
-			layout,
-			mesh_data.index_data.index_type,
-			mesh_data.usage,
-			mesh_data.primitive_type
-			);
-	}
-	else
-	{
-		//fail?
-	}
-
-	// Create GPU buffer for draw commands
-	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
-		GL_DRAW_INDIRECT_BUFFER,
-		draw_command_data.data,
-		draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
-		GL_DYNAMIC_DRAW
-		);
-
-	m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
-
-	// Create GPU buffer for mesh related shader parameters
-	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
-		GL_SHADER_STORAGE_BUFFER,
-		obj_shader_params.raw_data,
-		obj_shader_params.byte_size,
-		GL_DYNAMIC_DRAW
-		);
-
-	// Create GPU buffer for material related shader parameters
+//   		}
+//   		
+//   		m_render_batches.back().mesh = std::make_unique<Mesh>(
+//   			vertex_data_ptrs,
+//   			vertex_data_sizes,
+//   			mesh_data.index_data.raw_data,
+//   			mesh_data.index_data.byte_size,
+//   			layout,
+//   			mesh_data.index_data.index_type,
+//   			mesh_data.usage,
+//   			mesh_data.primitive_type
+//   			);
+//   	}
+//   	else if (mesh_data.vertex_data.buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
+//   	{
+//   		m_render_batches.back().mesh = std::make_unique<Mesh>(
+//   			mesh_data.vertex_data.buffers[0].raw_data,
+//   			mesh_data.vertex_data.buffers[0].byte_size,
+//   			mesh_data.index_data.raw_data,
+//   			mesh_data.index_data.byte_size,
+//   			layout,
+//   			mesh_data.index_data.index_type,
+//   			mesh_data.usage,
+//   			mesh_data.primitive_type
+//   			);
+//   	}
+//   	else
+//   	{
+//   		//fail?
+//   	}
+//   
+//   	// Create GPU buffer for draw commands
+//   	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
+//   		GL_DRAW_INDIRECT_BUFFER,
+//   		draw_command_data.data,
+//   		draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
+//   		GL_DYNAMIC_DRAW
+//   		);
+//   
+//   	m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
+//   
+//   	// Create GPU buffer for mesh related shader parameters
+//   	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
+//   		GL_SHADER_STORAGE_BUFFER,
+//   		obj_shader_params.raw_data,
+//   		obj_shader_params.byte_size,
+//   		GL_DYNAMIC_DRAW
+//   		);
+//   
+//   	// Create GPU buffer for material related shader parameters
 	//TODO build textures from input?
-	m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
-		GL_SHADER_STORAGE_BUFFER,
-		mtl_shader_params.data,
-		mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
-		GL_DYNAMIC_DRAW
-		);
-
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-}
-
-void NGMeshRenderer::updateRenderBatch(
-	size_t									idx,
-	ShaderPrgmDataAccessor const&			shader_prgm_data,
-	MeshDataAccessor const&					mesh_data,
-	DrawCommandDataAccessor const&			draw_command_data,
-	ObjectShaderParamsDataAccessor const&	obj_shader_params,
-	MaterialShaderParamsDataAccessor const&	mtl_shader_params,
-	uint32_t								update_flags)
-{
-	if (idx > m_render_batches.size())
-	{
-		vislib::sys::Log::DefaultLog.WriteError("Invalid batch index for render batch update.");
-		return;
-	}
-	else if (idx == m_render_batches.size())
-	{
-		vislib::sys::Log::DefaultLog.WriteInfo("Creating new GPU render batch.");
-		addRenderBatch(shader_prgm_data,
-			mesh_data,
-			draw_command_data,
-			obj_shader_params,
-			mtl_shader_params);
-
-		return;
-	}
-
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::SHADER_BIT) > 0)
-	{
-		m_render_batches[idx].shader_prgm.reset();
-
-		m_render_batches[idx].shader_prgm = std::make_unique<GLSLShader>();
-		vislib::graphics::gl::ShaderSource vert_shader_src;
-		vislib::graphics::gl::ShaderSource frag_shader_src;
-		// TODO get rid of vislib StringA...
-		vislib::StringA shader_base_name(shader_prgm_data.raw_string);
-		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
-		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
-		m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-	}
-
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESH_BIT) > 0)
-	{
-		m_render_batches[idx].mesh.reset();
-
-		VertexLayout layout;
-		layout.stride = mesh_data.vertex_descriptor.stride;
-		for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
-		{
-			layout.attributes.push_back(VertexLayout::Attribute(
-				mesh_data.vertex_descriptor.attributes[i].size,
-				mesh_data.vertex_descriptor.attributes[i].type,
-				mesh_data.vertex_descriptor.attributes[i].normalized,
-				mesh_data.vertex_descriptor.attributes[i].offset)
-			);
-		}
-
-		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
-		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
-
-		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
-		{
-			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
-			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
-
-			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+//   	m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
+//   		GL_SHADER_STORAGE_BUFFER,
+//   		mtl_shader_params.data,
+//   		mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
+//   		GL_DYNAMIC_DRAW
+//   		);
+//   
+//   	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//   }
+//   
+//   void NGMeshRenderer::updateRenderBatch(
+//   	size_t									idx,
+//   	ShaderPrgmDataAccessor const&			shader_prgm_data,
+//   	MeshDataAccessor const&					mesh_data,
+//   	DrawCommandDataAccessor const&			draw_command_data,
+//   	ObjectShaderParamsDataAccessor const&	obj_shader_params,
+//   	MaterialShaderParamsDataAccessor const&	mtl_shader_params,
+//   	uint32_t								update_flags)
+//   {
+//   	if (idx > m_render_batches.size())
+//   	{
+//   		vislib::sys::Log::DefaultLog.WriteError("Invalid batch index for render batch update.");
+//   		return;
+//   	}
+//   	else if (idx == m_render_batches.size())
+//   	{
+//   		vislib::sys::Log::DefaultLog.WriteInfo("Creating new GPU render batch.");
+//   		addRenderBatch(shader_prgm_data,
+//   			mesh_data,
+//   			draw_command_data,
+//   			obj_shader_params,
+//   			mtl_shader_params);
+//   
+//   		return;
+//   	}
+//   
+//   	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::SHADER_BIT) > 0)
+//   	{
+//   		m_render_batches[idx].shader_prgm.reset();
+//   
+//   		m_render_batches[idx].shader_prgm = std::make_unique<GLSLShader>();
+//   		vislib::graphics::gl::ShaderSource vert_shader_src;
+//   		vislib::graphics::gl::ShaderSource frag_shader_src;
+//   		// TODO get rid of vislib StringA...
+//   		vislib::StringA shader_base_name(shader_prgm_data.raw_string);
+//   		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
+//   		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
+//   		m_render_batches.back().shader_prgm->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+//   	}
+//   
+//   	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESH_BIT) > 0)
+//   	{
+//   		m_render_batches[idx].mesh.reset();
+//   
+//   		VertexLayout layout;
+//   		layout.stride = mesh_data.vertex_descriptor.stride;
+//   		for (size_t i = 0; i < mesh_data.vertex_descriptor.attribute_cnt; ++i)
+//   		{
+//   			layout.attributes.push_back(VertexLayout::Attribute(
+//   				mesh_data.vertex_descriptor.attributes[i].size,
+//   				mesh_data.vertex_descriptor.attributes[i].type,
+//   				mesh_data.vertex_descriptor.attributes[i].normalized,
+//   				mesh_data.vertex_descriptor.attributes[i].offset)
+//   			);
+//   		}
+//   
+//   		std::vector<uint8_t*> vertex_data_ptrs(mesh_data.vertex_data.buffer_cnt);
+//   		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_data.buffer_cnt);
+//   
+//   		for (int i = 0; i< mesh_data.vertex_data.buffer_cnt; ++i)
+//   		{
+//   			vertex_data_ptrs[i] = mesh_data.vertex_data.buffers[i].raw_data;
+//   			vertex_data_sizes[i] = mesh_data.vertex_data.buffers[i].byte_size;
+//   
+//   			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
 			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
-		}
-
-		m_render_batches[idx].mesh = std::make_unique<Mesh>(
-			vertex_data_ptrs,
-			vertex_data_sizes,
-			mesh_data.index_data.raw_data,
-			mesh_data.index_data.byte_size,
-			layout,
-			mesh_data.index_data.index_type
-			);
-	}
-
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::DRAWCOMMANDS_BIT) > 0)
-	{
-		m_render_batches[idx].draw_commands.reset();
-
-		// Create GPU buffer for draw commands
-		m_render_batches[idx].draw_commands = std::make_unique<BufferObject>(
-			GL_DRAW_INDIRECT_BUFFER,
-			draw_command_data.data,
-			draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
-			GL_DYNAMIC_DRAW
-			);
-
-		m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
-	}
-
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESHPARAMS_BIT) > 0)
-	{
-		m_render_batches[idx].obj_shader_params.reset();
-
-		// Create GPU buffer for mesh related shader parameters
-		m_render_batches[idx].obj_shader_params = std::make_unique<BufferObject>(
-			GL_SHADER_STORAGE_BUFFER,
-			obj_shader_params.raw_data,
-			obj_shader_params.byte_size,
-			GL_DYNAMIC_DRAW
-			);
-	}
-
-	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MATERIAL_BIT) > 0)
-	{
-		m_render_batches[idx].mtl_shader_params.reset();
-
-		// Create GPU buffer for material related shader parameters
+//   		}
+//   
+//   		m_render_batches[idx].mesh = std::make_unique<Mesh>(
+//   			vertex_data_ptrs,
+//   			vertex_data_sizes,
+//   			mesh_data.index_data.raw_data,
+//   			mesh_data.index_data.byte_size,
+//   			layout,
+//   			mesh_data.index_data.index_type
+//   			);
+//   	}
+//   
+//   	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::DRAWCOMMANDS_BIT) > 0)
+//   	{
+//   		m_render_batches[idx].draw_commands.reset();
+//   
+//   		// Create GPU buffer for draw commands
+//   		m_render_batches[idx].draw_commands = std::make_unique<BufferObject>(
+//   			GL_DRAW_INDIRECT_BUFFER,
+//   			draw_command_data.data,
+//   			draw_command_data.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand),
+//   			GL_DYNAMIC_DRAW
+//   			);
+//   
+//   		m_render_batches.back().draw_cnt = draw_command_data.draw_cnt;
+//   	}
+//   
+//   	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MESHPARAMS_BIT) > 0)
+//   	{
+//   		m_render_batches[idx].obj_shader_params.reset();
+//   
+//   		// Create GPU buffer for mesh related shader parameters
+//   		m_render_batches[idx].obj_shader_params = std::make_unique<BufferObject>(
+//   			GL_SHADER_STORAGE_BUFFER,
+//   			obj_shader_params.raw_data,
+//   			obj_shader_params.byte_size,
+//   			GL_DYNAMIC_DRAW
+//   			);
+//   	}
+//   
+//   	if ((update_flags & CallNGMeshRenderBatches::RenderBatchesData::UpdateBits::MATERIAL_BIT) > 0)
+//   	{
+//   		m_render_batches[idx].mtl_shader_params.reset();
+//   
+//   		// Create GPU buffer for material related shader parameters
 		//TODO build textures from input?
-		m_render_batches[idx].mtl_shader_params = std::make_unique<BufferObject>(
-			GL_SHADER_STORAGE_BUFFER,
-			mtl_shader_params.data,
-			mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
-			GL_DYNAMIC_DRAW
-			);
-	}
-
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-}
-
+//   		m_render_batches[idx].mtl_shader_params = std::make_unique<BufferObject>(
+//   			GL_SHADER_STORAGE_BUFFER,
+//   			mtl_shader_params.data,
+//   			mtl_shader_params.elements_cnt * sizeof(MaterialParameters),
+//   			GL_DYNAMIC_DRAW
+//   			);
+//   	}
+//   
+//   	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//   }
+//   
 
 bool NGMeshRenderer::Render(megamol::core::Call& call)
 {
@@ -431,37 +462,39 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 
 
-	CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
+	//   CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
+	//   
+	//   if (render_batch_call == NULL)
+	//   	return false;
+	//   
+	//   if (!(*render_batch_call)(0))
+	//   	return false;
+	//   
+	//   // loop through render batches data, update GPU render batches if necessary
+	//   auto render_batches = render_batch_call->getRenderBatches();
+	//   
+	//   if (render_batches == nullptr)
+	//   	return true;
+	//   
+	//   for (size_t batch_idx = 0; batch_idx < render_batches->getBatchCount(); ++batch_idx)
+	//   {
+	//   	if (render_batches->getUpdateFlags(batch_idx) > 0) // check if at least a single flag is set to 1
+	//   	{
+	//   		updateRenderBatch(
+	//   			batch_idx,
+	//   			render_batches->getShaderProgramData(batch_idx),
+	//   			render_batches->getMeshData(batch_idx),
+	//   			render_batches->getDrawCommandData(batch_idx),
+	//   			render_batches->getObjectShaderParams(batch_idx),
+	//   			render_batches->getMaterialShaderParams(batch_idx),
+	//   			render_batches->getUpdateFlags(batch_idx)
+	//   		);
+	//   
+	//   		render_batches->resetUpdateFlags(batch_idx);
+	//   	}
+	//   }
 
-	if (render_batch_call == NULL)
-		return false;
-
-	if (!(*render_batch_call)(0))
-		return false;
-
-	// loop through render batches data, update GPU render batches if necessary
-	auto render_batches = render_batch_call->getRenderBatches();
-
-	if (render_batches == nullptr)
-		return true;
-
-	for (size_t batch_idx = 0; batch_idx < render_batches->getBatchCount(); ++batch_idx)
-	{
-		if (render_batches->getUpdateFlags(batch_idx) > 0) // check if at least a single flag is set to 1
-		{
-			updateRenderBatch(
-				batch_idx,
-				render_batches->getShaderProgramData(batch_idx),
-				render_batches->getMeshData(batch_idx),
-				render_batches->getDrawCommandData(batch_idx),
-				render_batches->getObjectShaderParams(batch_idx),
-				render_batches->getMaterialShaderParams(batch_idx),
-				render_batches->getUpdateFlags(batch_idx)
-			);
-
-			render_batches->resetUpdateFlags(batch_idx);
-		}
-	}
+	// TODO update data from calls
 
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 

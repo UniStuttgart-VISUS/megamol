@@ -137,6 +137,9 @@ namespace megamol {
 		private:
 			BatchedMeshesDataAccessor* data_accessor;
 		};
+
+		/** Description class typedef */
+		typedef megamol::core::factories::CallAutoDescription<BatchedMeshesDataCall> BatchedMeshesDataCallDescription;
 	}
 }
 

@@ -66,6 +66,9 @@ namespace megamol
 		private:
 			std::shared_ptr<RenderTaskDataStorage> m_render_tasks;
 		};
+
+		/** Description class typedef */
+		typedef megamol::core::factories::CallAutoDescription<RenderTasksDataCall> RenderTasksDataCallDescription;
 	}
 }
 

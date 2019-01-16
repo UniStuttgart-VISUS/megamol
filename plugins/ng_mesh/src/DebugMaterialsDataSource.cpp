@@ -1,0 +1,29 @@
+#include "DebugMaterialsDataSource.h"
+
+#include "ng_mesh/MaterialsDataCall.h"
+
+megamol::ngmesh::DebugMaterialsDataSource::DebugMaterialsDataSource()
+{
+}
+
+megamol::ngmesh::DebugMaterialsDataSource::~DebugMaterialsDataSource()
+{
+}
+
+bool megamol::ngmesh::DebugMaterialsDataSource::getDataCallback(core::Call & caller)
+{
+	MaterialsDataCall* material_call = dynamic_cast<MaterialsDataCall*>(&caller);
+	if (material_call == NULL)
+		return false;
+
+	load();
+
+	//TODO hand over data access to call
+
+	return true;
+}
+
+bool megamol::ngmesh::DebugMaterialsDataSource::load()
+{
+	return false;
+}

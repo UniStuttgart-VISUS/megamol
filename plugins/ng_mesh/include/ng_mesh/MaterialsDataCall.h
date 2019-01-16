@@ -90,6 +90,9 @@ namespace megamol {
 		private:
 			std::shared_ptr<MaterialDataStorage> m_materials;
 		};
+
+		/** Description class typedef */
+		typedef megamol::core::factories::CallAutoDescription<MaterialsDataCall> MaterialsDataCallDescription;
 	}
 }
 
