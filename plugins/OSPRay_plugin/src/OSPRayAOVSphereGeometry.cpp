@@ -125,7 +125,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     }
 
     OSPVolume aovol = NULL;
-
+    std::vector<OSPGeometry> geo;
     for (unsigned int plist = 0; plist < cd->GetParticleListCount(); ++plist) {
 
         core::moldyn::MultiParticleDataCall::Particles& parts =
@@ -202,14 +202,14 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explizit narrowing
 
         float cellVol = metadata->SliceDists[0][0] * metadata->SliceDists[1][0] * metadata->SliceDists[2][0];
-        float valRange = maxV - minV;
+        const float valRange = maxV - minV;
 
 
-        auto numCreateGeo = parts.GetCount() * vertStride / ispcLimit + 1;
+        const auto numCreateGeo = parts.GetCount() * vertStride / ispcLimit + 1;
 
-
+        //geo.resize(geo.size() + numCreateGeo);
         for (unsigned int i = 0; i < numCreateGeo; i++) {
-            auto geo = ospNewGeometry("aovspheres_geometry");
+            geo.emplace_back(ospNewGeometry("aovspheres_geometry"));
 
             long long int floatsToRead =
                 parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
@@ -219,31 +219,31 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
 
             ospCommit(vertexData);
-            ospSet1i(geo, "bytes_per_sphere", vertStride);
-            ospSetData(geo, "spheres", vertexData);
-            ospSetData(geo, "color", nullptr);
+            ospSet1i(geo.back(), "bytes_per_sphere", vertStride);
+            ospSetData(geo.back(), "spheres", vertexData);
+            ospSetData(geo.back(), "color", nullptr);
 
             if (vertexLength > 3) {
-                ospSet1f(geo, "offset_radius", 3 * sizeof(float));
+                ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
             } else {
-                ospSet1f(geo, "radius", globalRadius);
+                ospSet1f(geo.back(), "radius", globalRadius);
             }
             if (parts.GetColourDataType() ==
                     core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
                 parts.GetColourDataType() ==
                     core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                ospSet1i(geo, "color_offset",
+                ospSet1i(geo.back(), "color_offset",
                     vertexLength * sizeof(float)); // TODO: This won't work if there are radii in the array
-                ospSet1i(geo, "color_stride", parts.GetColourDataStride());
-                ospSetData(geo, "color", vertexData);
+                ospSet1i(geo.back(), "color_stride", parts.GetColourDataStride());
+                ospSetData(geo.back(), "color", vertexData);
                 if (parts.GetColourDataType() ==
                     core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
                     // ospSet1i(geo.back(), "color_components", 3);
-                    ospSet1i(geo, "color_format", OSP_FLOAT3);
+                    ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
                 } else {
                     // ospSet1i(geo.back(), "color_components", 4);
-                    ospSet1i(geo, "color_format", OSP_FLOAT4);
+                    ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
                 }
             }
 
@@ -307,16 +307,21 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
             assert(aovol);
 
-            ospSet1f(geo, "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
-            ospSet1f(geo, "aoRayOffset",
+            ospSet1f(geo.back(), "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
+            ospSet1f(geo.back(), "aoRayOffset",
                 maxGridSpacing * this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value());
-            ospSetObject(geo, "aovol", aovol);
+            ospSetObject(geo.back(), "aovol", aovol);
             //ospCommit(geo);
 
-            os->setStructureType(GEOMETRY);
-            os->setAPIObject(reinterpret_cast<void*>(geo));
         }  // geometries
     } // particle lists
+
+    std::vector<void*> geo_transfer(geo.size());
+    for (auto i = 0; i < geo.size(); i++) {
+        geo_transfer[i] = reinterpret_cast<void*>(geo[i]);
+        }
+    os->setStructureType(GEOMETRY);
+    os->setAPIObjects(std::move(geo_transfer));
 
     return true;
 }
