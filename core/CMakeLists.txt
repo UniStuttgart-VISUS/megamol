@@ -158,6 +158,30 @@ if(BUILD_CORE)
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
+  # Add tracking
+  if(WIN32)
+    set(TRACKING_LIB "bin/tracking.dll")
+    set(TRACKING_IMPORT_LIB "lib/tracking.lib")
+    set(TRACKING_NATNET_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.dll")
+    set(TRACKING_NATNET_IMPORT_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.lib")
+    add_external_project(tracking_ext
+        #GIT_TAG "v1.0"
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+        CMAKE_ARGS -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+    add_external_library(tracking SHARED 
+        DEPENDS tracking_ext 
+        IMPORT_LIBRARY_DEBUG ${TRACKING_IMPORT_LIB}
+        IMPORT_LIBRARY_RELEASE ${TRACKING_IMPORT_LIB}
+        LIBRARY_DEBUG ${TRACKING_LIB}
+        LIBRARY_RELEASE ${TRACKING_LIB})
+    add_external_library(natnet SHARED 
+        DEPENDS tracking_ext 
+        IMPORT_LIBRARY_DEBUG ${TRACKING_NATNET_IMPORT_LIB}
+        IMPORT_LIBRARY_RELEASE ${TRACKING_NATNET_IMPORT_LIB}
+        LIBRARY_DEBUG ${TRACKING_NATNET_LIB}     
+        LIBRARY_RELEASE ${TRACKING_NATNET_LIB})
+  endif()
+  
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -189,6 +213,7 @@ if(BUILD_CORE)
     PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)  
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
@@ -227,6 +252,7 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   install_external(TARGETS libzmq)
   if(WIN32)
+    install_external(TARGETS tracking natnet)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
