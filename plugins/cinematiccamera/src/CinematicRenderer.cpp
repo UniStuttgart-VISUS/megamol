@@ -426,15 +426,17 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
     glEnd();
 
     // DRAW MENU --------------------------------------------------------------
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0.0f, (float)(vpWidth), 0.0f, (float)(vpHeight), -1.0, 1.0);
+    glOrtho(0.0f, (float)(vpWidth), 0.0f, (float)(vpHeight), 0.0f, 1.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, 1.0f);
 
     float vpH = (float)(vpHeight);
     float vpW = (float)(vpWidth);
@@ -533,7 +535,6 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
         htStrHeight      = this->theFont.LineHeight(htFontSize);
         htY              = htX + htStrHeight*htNumOfRows;
         // Draw background colored quad
-        glDisable(GL_BLEND);
         glColor4fv(bgColor);
         glBegin(GL_QUADS);
             glVertex2f(htX,              htY);
@@ -542,7 +543,6 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
             glVertex2f(htX + htStrWidth, htY);
         glEnd();
         // Draw help text
-        glEnable(GL_BLEND);
         this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     }
 

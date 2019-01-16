@@ -49,31 +49,26 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
 
     if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
-    /*
-    std::vector<float> vertexD;
-    std::vector<float> colorD;
-    std::vector<float> normalD;
-    std::vector<float> texD;
-    std::vector<unsigned int> indexD;
+
+
 
     // Write stuff into the structureContainer
+    this->structureContainer.type = structureTypeEnum::OSPRAY_API_STRUCTURES;
 
     switch (cd->getStructureType()) {
     case structureTypeEnum::GEOMETRY:
-        this->structureContainer.type = structureTypeEnum::GEOMETRY;
-        this->structureContainer.geometryType = geometryTypeEnum::OSPRAY_API_GEOMETRY;
+        this->structureContainer.ospStructures.push_back(
+            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::GEOMETRY));
         break;
     case structureTypeEnum::VOLUME:
-        this->structureContainer.type = structureTypeEnum::VOLUME;
-        this->structureContainer.volumeType = volumeTypeEnum::OSPRAY_API_VOLUME;
+        this->structureContainer.ospStructures.push_back(
+            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::VOLUME));
         break;
     case structureTypeEnum::UNINITIALIZED:
         vislib::sys::Log::DefaultLog.WriteError("OSPRay API structure type is no set.");
         return false;
     }
 
-    this->structureContainer.ospstructure = cd->getAPIObject();
-    */
     return true;
 }
 

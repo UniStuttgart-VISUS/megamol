@@ -98,11 +98,12 @@ if(BUILD_CONSOLE)
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+
   set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_LIBDIR}")
+    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
     configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
@@ -115,5 +116,6 @@ if(BUILD_CONSOLE)
 
   configure_file(extra/megamolconfig.lua.in ${CMAKE_BINARY_DIR}/megamolconfig.lua)
   configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
+
   install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
 endif()

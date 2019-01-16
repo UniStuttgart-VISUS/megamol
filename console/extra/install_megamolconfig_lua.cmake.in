@@ -7,7 +7,7 @@
 set(TARGET_DIR "@CMAKE_INSTALL_PREFIX@/bin")
 set(TARGET_FILE "${TARGET_DIR}/megamolconfig.lua")
 set(SOURCE_FILE "@CMAKE_BINARY_DIR@/megamolconfig.lua")
-set(SUPER_SOURCE_FILE "@CMAKE_CURRENT_SOURCE_DIR@/extra/megamolconfig.lua")
+set(SUPER_SOURCE_FILE "@CMAKE_CURRENT_SOURCE_DIR@/extra/megamolconfig.lua.in")
 
 #message(STATUS "TARGET_FILE == ${TARGET_FILE}")
 #message(STATUS "SOURCE_FILE == ${SOURCE_FILE}")

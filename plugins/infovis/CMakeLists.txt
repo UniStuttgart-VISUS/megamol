@@ -13,13 +13,21 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
+if(UNIX)
+  set(bhtsne_cmake_args -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
+else()
+  set(bhtsne_cmake_args "")
+endif()
+
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
     GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
     GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt")
+      "<SOURCE_DIR>/CMakeLists.txt"
+    CMAKE_ARGS ${bhtsne_cmake_args}
+)
   add_external_library(bhtsne STATIC
     DEPENDS bhtsne_ext
     INCLUDE_DIR "src/bhtsne_ext"

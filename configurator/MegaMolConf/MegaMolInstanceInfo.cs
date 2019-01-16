@@ -140,6 +140,7 @@ namespace MegaMolConf {
                                         Process = null;
                                     });
                                 } catch {
+                                    ParentForm.listBoxLog.Log(Util.Level.Warning, $"could not install exit handler for Tab '{TabPage.Text}'");
                                     // we can only do this if we started the process ourselves
                                 }
                                 SetProcessState(MegaMolProcessState.MMPS_CONNECTION_GOOD);

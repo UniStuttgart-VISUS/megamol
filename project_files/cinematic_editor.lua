@@ -55,7 +55,7 @@ mmCreateModule("CinematicRenderer", "::project::CinematicRenderer1")
 mmCreateModule("CinematicView", "::project::CinematicView1")
 mmSetParamValue("::project::CinematicView1::backCol", "grey")
 mmSetParamValue("::project::CinematicView1::bboxCol", "white")
-mmSetParamValue("::project::CinematicView1::06_fps", "24")
+mmSetParamValue("::project::CinematicView1::07_fps", "24")
 mmSetParamValue("::project::CinematicView1::stereo::projection", "2")
 
 mmCreateModule("ReplacementRenderer", "::project::ReplacementRenderer1")
@@ -64,7 +64,7 @@ mmSetParamValue("::project::ReplacementRenderer1::01_replacementRendering", "on"
 
 mmCreateModule("ReplacementRenderer", "::project::ReplacementRenderer2")
 mmSetParamValue("::project::ReplacementRenderer2::03_replacmentKeyAssign", "5")
-mmSetParamValue("::project::ReplacementRenderer2::01_replacementRendering", "on")
+mmSetParamValue("::project::ReplacementRenderer2::01_replacementRendering", "off")
 
 
 mmCreateCall("CallRenderView", "::project::SplitView1::render1", "::project::SplitView2::render")
