@@ -131,6 +131,8 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
         core::moldyn::MultiParticleDataCall::Particles& parts =
             cd->AccessParticles(plist);
 
+        if (parts.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) continue;
+
         unsigned int const partCount = parts.GetCount();
         float const globalRadius = parts.GetGlobalRadius();
 
@@ -348,6 +350,16 @@ bool OSPRayAOVSphereGeometry::InterfaceIsDirty() {
 }
 
 
+bool megamol::ospray::OSPRayAOVSphereGeometry::InterfaceIsDirtyNoReset() const {
+    if (this->aoThresholdSlot.IsDirty() || this->samplingRateSlot.IsDirty() ||
+        this->aoRayOffsetFactorSlot.IsDirty()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
@@ -363,7 +375,7 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
 bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
 
-    if (this->InterfaceIsDirty()) {
+    if (this->InterfaceIsDirtyNoReset()) {
         os->setDirty();
     }
     return true;
