@@ -22,7 +22,6 @@
 #include "io/SIFFWriter.h"
 #include "io/VIMDataSource.h"
 #include "io/VisIttDataSource.h"
-#include "rendering/NGSphereRenderer.h"
 #include "rendering/NGSplatRenderer.h"
 #include "rendering/NGSphereBufferArrayRenderer.h"
 #include "io/VTFDataSource.h"
@@ -120,7 +119,6 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::SIFFWriter>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VIMDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VisIttDataSource>();
-            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSplatRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFDataSource>();

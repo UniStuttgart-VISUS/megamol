@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ngsphere">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">400</snippet>
+        <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="attributes"       type="file">simplesphere/ngsphere_attributes.glsl</snippet>
+        <snippet name="MainParams"       type="file">simplesphere/ngsphere_vert_mainparams.glsl</snippet>
+        <snippet name="MainRest"         type="file">simplesphere/ngsphere_vert_mainstart.glsl</snippet>
+        <snippet name="posTrans"         type="file">simplesphere/ngsphere_vert_postrans.glsl</snippet>
+        <snippet name="clippingPlane"    type="file">simplesphere/simplesphere_vert_clipping.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/ngsphere_vert_spheretouchplane.glsl</snippet>
+        <snippet name="Output"           type="file">simplesphere/ngsphere_vert_output.glsl</snippet>
+        <snippet name="MainEnd"          type="file">simplesphere/simplesphere_vert_mainend.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">140</snippet>
+        <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="lightDirectional" type="file">lightdirectional.glsl</snippet>
+        <snippet name="body1"            type="file">simplesphere/ngsphere_frag_body1.glsl</snippet>
+        <snippet name="out-lighting"     type="file">simplesphere/ngsphere_frag_out-lighting.glsl</snippet>
+        <snippet name="out-depth"        type="file">simplesphere/ngsphere_frag_out-depth.glsl</snippet>
+        <snippet name="footer"           type="file">simplesphere/ngsphere_frag_footer.glsl</snippet>
+    </shader>
+
+</btf>

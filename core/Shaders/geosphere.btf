@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="geosphere">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">150</snippet>
+        <snippet name="commonDefines"  type="file">commondefines.glsl</snippet>
+        <snippet name="defines"        type="file">simplesphere/geosphere_defines.glsl</snippet>
+        <snippet name="complete"       type="file">simplesphere/geosphere_vert_complete.glsl</snippet>
+    </shader>
+
+    <shader name="geometry">
+        <snippet type="version">150</snippet>
+        <snippet name="complete"         type="file">simplesphere/geosphere_geometry_complete.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">150</snippet>
+        <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="lightDirectional" type="file">lightdirectional.glsl</snippet>
+        <snippet name="complete"         type="file">simplesphere/geosphere_frag_complete.glsl</snippet>
+    </shader>
+        
+</btf>
