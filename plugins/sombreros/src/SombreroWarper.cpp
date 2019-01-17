@@ -28,7 +28,7 @@ using namespace megamol::geocalls;
 using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
-//#define NO_DEFORMATION
+#define NO_DEFORMATION
 //#define SWEAT
 
 /*
@@ -1841,9 +1841,9 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 this->colors[i][3 * v + 1] = 255;
                 this->colors[i][3 * v + 2] = 0;
             } else {
-                this->colors[i][3 * v + 0] = 255;
-                this->colors[i][3 * v + 1] = 255;
-                this->colors[i][3 * v + 2] = 255;
+                this->colors[i][3 * v + 0] = this->colors[i][3 * v + 0];
+                this->colors[i][3 * v + 1] = this->colors[i][3 * v + 1];
+                this->colors[i][3 * v + 2] = this->colors[i][3 * v + 2];
             }
         }
 #endif
