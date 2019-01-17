@@ -12,9 +12,17 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "ng_mesh/CallNGMeshRenderBatches.h"
+//#include "ng_mesh/CallNGMeshRenderBatches.h"
 #include "NGMeshRenderer.h"
-#include "NGMeshDebugDataSource.h"
+//#include "NGMeshDebugDataSource.h"
+
+#include "ng_mesh/BatchedMeshesDataCall.h"
+#include "ng_mesh/MaterialsDataCall.h"
+#include "ng_mesh/RenderTasksDataCall.h"
+
+#include "DebugBatchedMeshesDataSource.h"
+#include "DebugMaterialsDataSource.h"
+#include "DebugRenderTasksDataSource.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -43,7 +51,10 @@ namespace {
 
             // register modules here:
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshDebugDataSource>();
+			//this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshDebugDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugBatchedMeshesDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugMaterialsDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugRenderTasksDataSource>();
 
             //
             // TODO: Register your plugin's modules here
@@ -54,7 +65,10 @@ namespace {
             //
 
             // register calls here:
-			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::CallNGMeshRenderBatches> ();
+			//this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::CallNGMeshRenderBatches> ();
+			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::BatchedMeshesDataCall>();
+			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::MaterialsDataCall>();
+			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::RenderTasksDataCall>();
 
             //
             // TODO: Register your plugin's calls here

@@ -19,7 +19,10 @@
 #include "mmcore/view/CallRender3D.h"
 
 //#include "ng_mesh/CallNGMeshRenderBatches.h"
+#include "ng_mesh/BatchedMeshesDataCall.h"
+#include "ng_mesh/MaterialDataStorage.h"
 #include "ng_mesh/NGMeshStructs.h"
+#include "ng_mesh/RenderTaskDataStorage.h"
 
 namespace megamol {
 namespace ngmesh {
@@ -141,6 +144,12 @@ namespace ngmesh {
 		//		MaterialShaderParamsDataAccessor const&	mtl_shader_params,
 		//		uint32_t					update_flags);
 
+		void addMesh(BatchedMeshesDataAccessor const& batched_mesh_accessor);
+
+		void addMaterials(/*std::shared_ptr<MaterialStorage> materials, size_t material_idx ???*/);
+
+		void addRenderTasks(std::shared_ptr<RenderTaskDataStorage> const& render_tasks);
+	
 		/**
 		* The render callback.
 		*
@@ -460,6 +469,20 @@ namespace ngmesh {
 		};
 
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
+
+		struct BatchedMeshes
+		{
+			std::shared_ptr<Mesh>            mesh; //< OpenGL Mesh object that stores the geometry of batched meshes
+			std::vector<DrawElementsCommand> submesh_draw_commands; //< draw commands that identifiy the individual meshes batched together in a single OpenGL Mesh
+		};
+
+		struct Material
+		{
+			std::shared_ptr<GLSLShader>             shader;
+			std::string                             btf_name;
+			//std::vector<std::shared_ptr<Texture2D>> textures;
+		};
+
 		/**
 		 * A collection of GPU Resources required for rendering geometry using glMultiDrawElementsIndirect.
 		 */
@@ -467,19 +490,19 @@ namespace ngmesh {
 		{
 			GLsizei							draw_cnt;          //< draw count, i.e. numer of objects in batch
 
-			std::unique_ptr<GLSLShader>		shader_prgm;       //< shader program used for drawing objects in batch
-			std::unique_ptr<Mesh>			mesh;              //< mesh object that stores geometriy of objects in batch
-			std::unique_ptr<BufferObject>	draw_commands;     //< GPU buffer object that stores individual draw commands
-			std::unique_ptr<BufferObject>	frm_shader_params; //< GPU buffer object that stores per frame data, i.e. camera parameters
-			std::unique_ptr<BufferObject>	obj_shader_params; //< GPU buffer object that stores per object data, i.e. objects transform
-			std::unique_ptr<BufferObject>	mtl_shader_params; //< GPU buffer object that stores per material data, i.e. texture handles
-			//TODO textures?
+			std::shared_ptr<GLSLShader>		shader_prgm;       //< shader program used for drawing objects in batch
+			std::shared_ptr<Mesh>			mesh;              //< mesh object that stores geometry of objects in batch
+			std::shared_ptr<BufferObject>	draw_commands;     //< GPU buffer object that stores individual draw commands
+			//std::shared_ptr<BufferObject>	frm_shader_params; //< GPU buffer object that stores per frame data, i.e. camera parameters
+			std::shared_ptr<BufferObject>	obj_shader_params; //< GPU buffer object that stores per object data, i.e. objects transform
+			std::shared_ptr<BufferObject>	mtl_shader_params; //< GPU buffer object that stores per material data, i.e. texture handles
 		};
 
-		//TODO also split into Material, Mesh, RenderTasks?
-
-		/** List of render batches ready for dispatching */
-		std::vector<RenderBatch> m_render_batches;
+		std::vector<BatchedMeshes>               m_meshes;
+		std::vector<std::shared_ptr<GLSLShader>> m_shader_programs;
+		std::vector<Material>                    m_materials;
+		std::vector<RenderBatch>                 m_render_batches; //< List of render batches ready for dispatching
+		std::unique_ptr<BufferObject>            per_frame_data;
 
 		/** Render batches caller slot */
 		//megamol::core::CallerSlot m_renderBatches_callerSlot;
