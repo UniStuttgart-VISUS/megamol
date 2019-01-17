@@ -38,6 +38,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
         massSlot("mass", "the mass of the particles"),
         freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model"),
         metricsSlot("metrics", "the metrics you want to computer from the neighborhood"),
+        removeSelfSlot("remove self", "whether a particle itself is part of the neighborhood"),
         datahash(0),
         lastTime(-1),
         newColors(),
@@ -86,6 +87,9 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 
     this->freedomSlot.SetParameter(new core::param::FloatParam(1.5f)); // works for single-center models. 3 degrees of freedom -> 3/2
     this->MakeSlotAvailable(&this->freedomSlot);
+
+    this->removeSelfSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->removeSelfSlot);
 
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
@@ -142,7 +146,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
     const unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
-    //theRadius = theRadius * theRadius;
+    float theSquaredRadius = theRadius * theRadius;
     const float theMass = this->massSlot.Param<core::param::FloatParam>()->Value();
     const float theFreedom = this->freedomSlot.Param<core::param::FloatParam>()->Value();
     const int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
@@ -214,7 +218,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
     }
 
     if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
-        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() || this->metricsSlot.IsDirty()) {
+        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() || this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty()) {
         allpartcnt = 0;
 
         // final computation
@@ -232,7 +236,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
 
-        const bool remove_self = false;
+        const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
 
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
@@ -247,6 +251,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             std::vector<float> metricMin(num_thr, FLT_MAX);
             std::vector<float> metricMax(num_thr, 0.0f);
 
+           float eps = sqrt(std::numeric_limits<float>::epsilon());// * 1000.0f;
+           
 #pragma omp parallel num_threads(num_thr)
 //#pragma omp parallel num_threads(1)
             {
@@ -283,7 +289,9 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                                 if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
 
                                 if (theSearchType == searchTypeEnum::RADIUS) {
-                                    particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                    // the documentation says the parameter radius for L2 is squared
+                                    // caution: the criterion is < radius, not <= !!!!
+                                    particleTree->radiusSearch(theVertex, theSquaredRadius + eps, ret_localMatches, params);
                                     if (remove_self) {
                                         ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
                                             [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
@@ -315,7 +323,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                             [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
                         // the furthest is theNumber closest or the last one if fewer.
                         num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
-                        maxDist = ret_matches[num_matches - 1].second;
+                        // the documentation says the returned distances are squares as well
+                        maxDist = sqrt(ret_matches[num_matches - 1].second);
                     }
 
                     float magnitude = 0.0f;
@@ -368,6 +377,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->numNeighborSlot.ResetDirty();
         this->searchTypeSlot.ResetDirty();
         this->metricsSlot.ResetDirty();
+        this->removeSelfSlot.ResetDirty();
     }
 
     // now the colors are known, inject them
