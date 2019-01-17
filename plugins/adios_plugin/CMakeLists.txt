@@ -19,7 +19,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   else()
     add_external_project(adios2_ext
     GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-    #GIT_TAG "v2.2.0"
+    GIT_TAG "v2.3.0"
     CMAKE_ARGS -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
     -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
     -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
