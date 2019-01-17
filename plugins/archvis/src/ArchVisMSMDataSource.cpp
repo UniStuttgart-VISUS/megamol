@@ -493,7 +493,7 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
 
 	ShaderPrgmDataAccessor				shader_prgm_data;
-	DrawCommandDataAccessor				draw_command_data;
+	DrawCommandsDataAccessor				draw_command_data;
 	ObjectShaderParamsDataAccessor		mesh_shader_params;
 	MaterialShaderParamsDataAccessor	mtl_shader_params;
 
@@ -637,7 +637,7 @@ void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_nam
 
 	int element_cnt = m_scale_model.getElementCount();
 	draw_command_data.draw_cnt = element_cnt;
-	draw_command_data.data = new DrawCommandDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
+	draw_command_data.data = new DrawCommandsDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	std::cout << "Per object params byte size: " << sizeof(PerObjectShaderParams) << std::endl;
 

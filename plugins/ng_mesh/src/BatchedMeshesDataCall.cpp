@@ -39,7 +39,7 @@ size_t megamol::ngmesh::BatchedMeshesDataAccessor::allocateNewBatch(size_t mesh_
 
 	// allocate new (larger) memory for batches
 	MeshDataAccessor* new_mesh_data_batches = new MeshDataAccessor[batch_cnt+1];
-	DrawCommandDataAccessor* new_draw_command_batches = new DrawCommandDataAccessor[batch_cnt+1];
+	DrawCommandsDataAccessor* new_draw_command_batches = new DrawCommandsDataAccessor[batch_cnt+1];
 	// copy existing data
 	std::copy(mesh_data_batches, mesh_data_batches + batch_cnt, new_mesh_data_batches);
 	std::copy(draw_command_batches, draw_command_batches + batch_cnt, new_draw_command_batches);

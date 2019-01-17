@@ -88,7 +88,7 @@ namespace megamol {
 			}
 
 		private:
-			std::shared_ptr<MaterialDataStorage> m_materials;
+			std::shared_ptr<MaterialsDataStorage> m_materials;
 		};
 
 		/** Description class typedef */

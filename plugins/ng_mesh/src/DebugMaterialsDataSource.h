@@ -65,7 +65,7 @@ namespace megamol
 
 		private:
 
-			MaterialDataStorage m_material_storage;
+			MaterialsDataStorage m_material_storage;
 		};
 	}
 }

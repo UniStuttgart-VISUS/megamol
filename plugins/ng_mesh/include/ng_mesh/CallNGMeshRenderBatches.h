@@ -80,7 +80,7 @@ namespace ngmesh {
 		GLenum				primitive_type;
 	};
 
-	struct DrawCommandDataAccessor
+	struct DrawCommandsDataAccessor
 	{
 		struct DrawElementsCommand
 		{
@@ -124,7 +124,7 @@ namespace ngmesh {
 					+ sizeof(MeshDataAccessor)
 					+ sizeof(MeshDataAccessor::VertexData::Buffer)
 					+ sizeof(VertexLayout::Attribute)
-					+ sizeof(DrawCommandDataAccessor)
+					+ sizeof(DrawCommandsDataAccessor)
 					+ sizeof(ObjectShaderParamsDataAccessor)
 					+ sizeof(MaterialShaderParamsDataAccessor)
 					+ sizeof(uint32_t));
@@ -135,7 +135,7 @@ namespace ngmesh {
 				meshes = (MeshDataAccessor*)(shader_prgms + batch_cnt);
 				vertex_buffers = (MeshDataAccessor::VertexData::Buffer*)(meshes + batch_cnt);
 				vertex_attributes = (VertexLayout::Attribute*)(vertex_buffers + batch_cnt);
-				draw_commands = (DrawCommandDataAccessor*)(vertex_attributes + batch_cnt);
+				draw_commands = (DrawCommandsDataAccessor*)(vertex_attributes + batch_cnt);
 				obj_shader_params = (ObjectShaderParamsDataAccessor*)(draw_commands + batch_cnt);
 				mtl_shader_params = (MaterialShaderParamsDataAccessor*)(obj_shader_params + batch_cnt);
 				update_flags = (uint32_t*)(mtl_shader_params + batch_cnt);
@@ -149,7 +149,7 @@ namespace ngmesh {
 			MeshDataAccessor*						meshes;
 			MeshDataAccessor::VertexData::Buffer*	vertex_buffers;
 			VertexLayout::Attribute*				vertex_attributes;
-			DrawCommandDataAccessor*				draw_commands;
+			DrawCommandsDataAccessor*				draw_commands;
 			ObjectShaderParamsDataAccessor*			obj_shader_params;
 			MaterialShaderParamsDataAccessor*		mtl_shader_params;
 			uint32_t*								update_flags;
@@ -189,7 +189,7 @@ namespace ngmesh {
 
 					ShaderPrgmDataAccessor*				shader_prgms;
 					MeshDataAccessor*					meshes;
-					DrawCommandDataAccessor*			draw_commands;
+					DrawCommandsDataAccessor*			draw_commands;
 					ObjectShaderParamsDataAccessor*		obj_shader_params;
 					MaterialShaderParamsDataAccessor*	mtl_shader_params;
 					uint32_t*							update_flags;
@@ -237,7 +237,7 @@ namespace ngmesh {
 					size_t byte_size = rhs.m_head.used_batch_cnt * (
 						sizeof(ShaderPrgmDataAccessor)
 						+ sizeof(MeshDataAccessor)
-						+ sizeof(DrawCommandDataAccessor)
+						+ sizeof(DrawCommandsDataAccessor)
 						+ sizeof(ObjectShaderParamsDataAccessor)
 						+ sizeof(MaterialShaderParamsDataAccessor)
 						+ sizeof(uint32_t));
@@ -248,14 +248,14 @@ namespace ngmesh {
 
 					m_head.shader_prgms = (ShaderPrgmDataAccessor*)m_head.raw_buffer;
 					m_head.meshes = (MeshDataAccessor*)(m_head.shader_prgms + m_head.used_batch_cnt);
-					m_head.draw_commands = (DrawCommandDataAccessor*)(m_head.meshes + m_head.used_batch_cnt);
+					m_head.draw_commands = (DrawCommandsDataAccessor*)(m_head.meshes + m_head.used_batch_cnt);
 					m_head.obj_shader_params = (ObjectShaderParamsDataAccessor*)(m_head.draw_commands + m_head.used_batch_cnt);
 					m_head.mtl_shader_params = (MaterialShaderParamsDataAccessor*)(m_head.obj_shader_params + m_head.used_batch_cnt);
 					m_head.update_flags = (uint32_t*)(m_head.mtl_shader_params + m_head.used_batch_cnt);
 
 					std::memcpy(m_head.shader_prgms, rhs.m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmDataAccessor));
 					std::memcpy(m_head.meshes, rhs.m_head.meshes, m_head.used_batch_cnt * sizeof(MeshDataAccessor));
-					std::memcpy(m_head.draw_commands, rhs.m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandDataAccessor));
+					std::memcpy(m_head.draw_commands, rhs.m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandsDataAccessor));
 					std::memcpy(m_head.obj_shader_params, rhs.m_head.obj_shader_params, m_head.used_batch_cnt * sizeof(ObjectShaderParamsDataAccessor));
 					std::memcpy(m_head.mtl_shader_params, rhs.m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParamsDataAccessor));
 					std::memcpy(m_head.update_flags, rhs.m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
@@ -289,8 +289,8 @@ namespace ngmesh {
 						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<VertexLayout::Attribute*>(m_data.raw_buffer + base_offset + offset);
 						offset += sizeof(VertexLayout::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
-						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
-						offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
+						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandsDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + base_offset + offset);
+						offset += sizeof(DrawCommandsDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
 						m_head.obj_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(m_data.raw_buffer + base_offset + offset);
 						offset += m_head.obj_shader_params[i].byte_size;
@@ -323,7 +323,7 @@ namespace ngmesh {
 					size_t byte_size = new_batch_cnt * (
 						sizeof(ShaderPrgmDataAccessor)
 						+ sizeof(MeshDataAccessor)
-						+ sizeof(DrawCommandDataAccessor)
+						+ sizeof(DrawCommandsDataAccessor)
 						+ sizeof(ObjectShaderParamsDataAccessor)
 						+ sizeof(MaterialShaderParamsDataAccessor)
 						+ sizeof(uint32_t));
@@ -334,14 +334,14 @@ namespace ngmesh {
 
 					new_head.shader_prgms = (ShaderPrgmDataAccessor*) new_head.raw_buffer;
 					new_head.meshes = (MeshDataAccessor*)(new_head.shader_prgms + new_batch_cnt);
-					new_head.draw_commands = (DrawCommandDataAccessor*)(new_head.meshes + new_batch_cnt);
+					new_head.draw_commands = (DrawCommandsDataAccessor*)(new_head.meshes + new_batch_cnt);
 					new_head.obj_shader_params = (ObjectShaderParamsDataAccessor*)(new_head.draw_commands + new_batch_cnt);
 					new_head.mtl_shader_params = (MaterialShaderParamsDataAccessor*)(new_head.obj_shader_params + new_batch_cnt);
 					new_head.update_flags = (uint32_t*)(new_head.mtl_shader_params + new_batch_cnt);
 
 					std::memcpy(new_head.shader_prgms, m_head.shader_prgms, m_head.used_batch_cnt * sizeof(ShaderPrgmDataAccessor));
 					std::memcpy(new_head.meshes, m_head.meshes, m_head.used_batch_cnt * sizeof(MeshDataAccessor));
-					std::memcpy(new_head.draw_commands, m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandDataAccessor));
+					std::memcpy(new_head.draw_commands, m_head.draw_commands, m_head.used_batch_cnt * sizeof(DrawCommandsDataAccessor));
 					std::memcpy(new_head.obj_shader_params, m_head.obj_shader_params, m_head.used_batch_cnt * sizeof(ObjectShaderParamsDataAccessor));
 					std::memcpy(new_head.mtl_shader_params, m_head.mtl_shader_params, m_head.used_batch_cnt * sizeof(MaterialShaderParamsDataAccessor));
 					std::memcpy(new_head.update_flags, m_head.update_flags, m_head.used_batch_cnt * sizeof(uint32_t));
@@ -387,8 +387,8 @@ namespace ngmesh {
 						m_head.meshes[i].vertex_descriptor.attributes = reinterpret_cast<VertexLayout::Attribute*>(new_data.raw_buffer + base_offset + offset);
 						offset += sizeof(VertexLayout::Attribute) * m_head.meshes[i].vertex_descriptor.attribute_cnt;
 
-						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
-						offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
+						m_head.draw_commands[i].data = reinterpret_cast<DrawCommandsDataAccessor::DrawElementsCommand*>(new_data.raw_buffer + base_offset + offset);
+						offset += sizeof(DrawCommandsDataAccessor::DrawElementsCommand) * m_head.draw_commands[i].draw_cnt;
 
 						m_head.obj_shader_params[i].raw_data = reinterpret_cast<uint8_t*>(new_data.raw_buffer + base_offset + offset);
 						offset += m_head.obj_shader_params[i].byte_size;
@@ -407,7 +407,7 @@ namespace ngmesh {
 				void addBatch(
 					ShaderPrgmDataAccessor				shader_prgm,
 					MeshDataAccessor					mesh_data,
-					DrawCommandDataAccessor				draw_commands,
+					DrawCommandsDataAccessor				draw_commands,
 					ObjectShaderParamsDataAccessor		obj_shader_params,
 					MaterialShaderParamsDataAccessor	mtl_shader_params)
 				{
@@ -433,7 +433,7 @@ namespace ngmesh {
 						// size required for storing the attribute descriptions
 						+ mesh_data.vertex_descriptor.attribute_cnt * sizeof(VertexLayout::Attribute)
 						// size required for storing draw command data
-						+ draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand)
+						+ draw_commands.draw_cnt * sizeof(DrawCommandsDataAccessor::DrawElementsCommand)
 						// size required for storing additional per object data, e.g. model-matrix
 						+ obj_shader_params.byte_size
 						// size required for storing additional per program data, e.g. global texture addresses
@@ -491,10 +491,10 @@ namespace ngmesh {
 					std::memcpy(m_head.meshes[idx].vertex_descriptor.attributes, mesh_data.vertex_descriptor.attributes, mesh_data.vertex_descriptor.attribute_cnt * sizeof(VertexLayout::Attribute));
 
 					// Set and copy draw command data
-					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + offset);
+					m_head.draw_commands[idx].data = reinterpret_cast<DrawCommandsDataAccessor::DrawElementsCommand*>(m_data.raw_buffer + offset);
 					m_head.draw_commands[idx].draw_cnt = draw_commands.draw_cnt;
-					offset += sizeof(DrawCommandDataAccessor::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
-					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandDataAccessor::DrawElementsCommand));
+					offset += sizeof(DrawCommandsDataAccessor::DrawElementsCommand) * m_head.draw_commands[idx].draw_cnt;
+					std::memcpy(m_head.draw_commands[idx].data, draw_commands.data, draw_commands.draw_cnt * sizeof(DrawCommandsDataAccessor::DrawElementsCommand));
 
 					// Set and copy per object data
 					m_head.obj_shader_params[idx].raw_data = (m_data.raw_buffer + offset); 
@@ -528,7 +528,7 @@ namespace ngmesh {
 
 				ShaderPrgmDataAccessor const&			getShaderProgramData(size_t batch_idx) const { return m_head.shader_prgms[batch_idx]; }
 				MeshDataAccessor const&					getMeshData(size_t batch_idx) const { return m_head.meshes[batch_idx]; }
-				DrawCommandDataAccessor	const&			getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
+				DrawCommandsDataAccessor	const&			getDrawCommandData(size_t batch_idx) const { return m_head.draw_commands[batch_idx]; }
 				ObjectShaderParamsDataAccessor const&	getObjectShaderParams(size_t batch_idx) const { return m_head.obj_shader_params[batch_idx]; }
 				MaterialShaderParamsDataAccessor const&	getMaterialShaderParams(size_t batch_idx) const { return m_head.mtl_shader_params[batch_idx]; }
 				uint32_t								getUpdateFlags(size_t batch_idx) const { return m_head.update_flags[batch_idx]; }
