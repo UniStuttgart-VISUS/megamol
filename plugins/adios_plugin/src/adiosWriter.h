@@ -6,6 +6,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "CallADIOSData.h"
 #include "mmcore/AbstractDataWriter.h"
+#include "vislib/String.h"
 #ifdef WITH_MPI
 #    include <mpi.h>
 #endif
@@ -67,6 +68,7 @@ private:
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
     bool initMPI();
+    vislib::StringA getCommandLine(void);
 
 #ifdef WITH_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;

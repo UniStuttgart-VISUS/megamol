@@ -25,7 +25,7 @@ public:
     virtual const std::vector<double> GetAsDouble() = 0;
     virtual const std::vector<int> GetAsInt() = 0;
 
-    virtual const std::string const getType() = 0;
+    virtual const std::string getType() = 0;
     virtual size_t size() = 0;
 };
 
@@ -37,7 +37,7 @@ public:
 
     std::vector<double>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
-    const std::string const getType() override { return "double"; }
+    const std::string getType() override { return "double"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -59,7 +59,7 @@ public:
 
     std::vector<float>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
-    const std::string const getType() override { return "float"; }
+    const std::string getType() override { return "float"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -84,7 +84,7 @@ public:
 
     std::vector<int>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
-    const std::string const getType() override { return "int"; }
+    const std::string getType() override { return "int"; }
 
 private:
     // TODO: maybe better in abstract container - no copy paste

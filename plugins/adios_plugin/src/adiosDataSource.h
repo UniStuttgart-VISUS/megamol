@@ -8,6 +8,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
 #include "CallADIOSData.h"
+#include "vislib/String.h"
 #ifdef WITH_MPI
 #    include <mpi.h>
 #endif
@@ -78,6 +79,7 @@ private:
     int mpiRank = -1, mpiSize = -1;
 #endif
 
+    vislib::StringA getCommandLine(void);
     bool filenameChanged(core::param::ParamSlot& slot);
 
     /** The slot for requesting data */
@@ -106,11 +108,5 @@ private:
     std::map<std::string, adios2::Params> variables;
     adiosDataMap dataMap;
 };
-
-
-
-
-
-
 } /* end namespace adios */
 } /* end namespace megamol */

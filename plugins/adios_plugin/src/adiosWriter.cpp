@@ -91,7 +91,7 @@ bool adiosWriter::initMPI() {
             MPI_Initialized(&initializedBefore);
             if (!initializedBefore) {
                 this->mpi_comm_ = MPI_COMM_WORLD;
-                vislib::sys::CmdLineProviderA cmdLine(::GetCommandLineA());
+                vislib::sys::CmdLineProviderA cmdLine(this->getCommandLine());
                 int argc = cmdLine.ArgC();
                 char** argv = cmdLine.ArgV();
                 ::MPI_Init(&argc, &argv);
@@ -223,6 +223,31 @@ bool adiosWriter::run() {
     return true;
 }
 
+
+vislib::StringA adiosWriter::getCommandLine(void) {
+    vislib::StringA retval;
+
+#ifdef WIN32
+    retval = ::GetCommandLineA();
+#else /* _WIN32 */
+    char *arg = nullptr;
+    size_t size = 0;
+
+    auto fp = ::fopen("/proc/self/cmdline", "rb");
+    if (fp != nullptr) {
+        while (::getdelim(&arg, &size, 0, fp) != -1) {
+            retval.Append(arg, size);
+            retval.Append(" ");
+        }
+        ::free(arg);
+        ::fclose(fp);
+    }
+#endif /* _WIN32 */
+
+    vislib::sys::Log::DefaultLog.WriteInfo("Command line used for MPI "
+        "initialisation is \"%s\".", retval.PeekBuffer());
+    return retval;
+}
 
 } // namespace adios
 } // namespace megamol
