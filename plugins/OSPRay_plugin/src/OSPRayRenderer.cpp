@@ -247,11 +247,10 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         cam_has_changed ||
         renderer_has_changed ||
         !(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
-        time != cr->Time() ||
+        frameID != static_cast<size_t>(cr->Time()) ||
         this->InterfaceIsDirty()) {
 
-        if (data_has_changed ||
-            time != cr->Time() ||
+        if (data_has_changed || frameID != static_cast<size_t>(cr->Time()) ||
             this->InterfaceIsDirty()) {
             if (!this->fillWorld()) return false;
             ospCommit(world);
@@ -261,6 +260,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         }
         this->InterfaceResetDirty();
         time = cr->Time();
+        frameID = static_cast<size_t>(cr->Time());
         renderer_has_changed = false;
 
         /*

@@ -108,6 +108,7 @@ private:
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
     float time;
+    size_t frameID;
 
     osp::vec2i imgSize;
 
