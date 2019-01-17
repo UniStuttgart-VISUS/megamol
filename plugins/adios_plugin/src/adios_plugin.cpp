@@ -13,7 +13,10 @@
 #include "vislib/vislibversion.h"
 
 #include "adiosDataSource.h"
-
+#include "CallADIOSData.h"
+#include "ADIOStoMultiParticle.h"
+#include "MultiParticletoADIOS.h"
+#include "adiosWriter.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -42,16 +45,14 @@ namespace {
             // register modules here:
 
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoMultiParticle>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
 
             // register calls here:
 
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::adios_plugin::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::adios_plugin::MyCall2>();
-            //   ...
-            //
+            this->call_descriptions.RegisterAutoDescription<megamol::adios::CallADIOSData>();
+
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
