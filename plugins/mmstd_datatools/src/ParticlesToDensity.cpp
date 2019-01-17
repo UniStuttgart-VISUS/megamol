@@ -323,45 +323,48 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
+                        auto tmp_hx = hx;
+                        auto tmp_hy = hy;
+                        auto tmp_hz = hz;
                         if (cycl_x) {
-                            hx = (hx + 2 * sx) % sx;
+                            tmp_hx = (hx + 2 * sx) % sx;
                         } else {
                             if (hx < 0 || hx > sx - 1) {
                                 continue;
                             }
                         }
                         if (cycl_y) {
-                            hy = (hy + 2 * sy) % sy;
+                            tmp_hy = (hy + 2 * sy) % sy;
                         } else {
                             if (hy < 0 || hy > sy - 1) {
                                 continue;
                             }
                         }
                         if (cycl_z) {
-                            hz = (hz + 2 * sz) % sz;
+                            tmp_hz = (hz + 2 * sz) % sz;
                         } else {
                             if (hz < 0 || hz > sz - 1) {
                                 continue;
                             }
                         }
 
-                        float x_diff = static_cast<float>(hx) * sliceDistX + minOSx;
+                        float x_diff = static_cast<float>(tmp_hx) * sliceDistX + minOSx;
                         x_diff = std::fabs(x_diff - x_base);
                         if (x_diff > halfRangeOSx) x_diff -= rangeOSx;
-                        float y_diff = static_cast<float>(hy) * sliceDistY + minOSy;
+                        float y_diff = static_cast<float>(tmp_hy) * sliceDistY + minOSy;
                         y_diff = std::fabs(y_diff - y_base);
                         if (y_diff > halfRangeOSy) y_diff -= rangeOSy;
-                        float z_diff = static_cast<float>(hz) * sliceDistZ + minOSz;
+                        float z_diff = static_cast<float>(tmp_hz) * sliceDistZ + minOSz;
                         z_diff = std::fabs(z_diff - z_base);
                         if (z_diff > halfRangeOSz) z_diff -= rangeOSz;
                         float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                         //if (dis == 0.0f) dis = 1.0f;
                         //vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
                         if (dis > disThreshold - rad) {
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] +=
+                            vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
                                 gauss(dis - disThreshold + rad, 3.0f * rad);
                         } else {
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f;
+                            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
                         }
                         //++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
                     }

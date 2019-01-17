@@ -65,6 +65,8 @@ protected:
 
     bool InterfaceIsDirty();
 
+    bool InterfaceIsDirtyNoReset() const;
+
     core::param::ParamSlot samplingRateSlot;
 
     core::param::ParamSlot aoThresholdSlot;
