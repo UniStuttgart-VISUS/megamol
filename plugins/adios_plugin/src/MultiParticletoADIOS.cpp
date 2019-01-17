@@ -165,7 +165,12 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     }     // end for each particle lists
 
     tmp_pcount.resize(1);
-    tmp_pcount[0] = tmp_x.size();
+	if (this->orderSlot.Param<core::param::EnumParam>()->Value() == 0) {	
+		tmp_pcount[0] = tmp_x.size();
+	} else {
+		tmp_pcount[0] = tmp_x.size()/3;
+	}
+
 
     if (this->orderSlot.Param<core::param::EnumParam>()->Value() == 0) {
         dataMap["x"] = std::move(fc_x);
