@@ -74,8 +74,8 @@ namespace megamol {
 
 			if (it == m_batched_render_task.end())
 			{
-				m_render_tasks.push_back(BatchedRenderTasks());
-				it = m_render_tasks.back();
+				m_batched_render_task.push_back(BatchedRenderTasks());
+				it = m_batched_render_task.end();
 				--it;
 			}
 

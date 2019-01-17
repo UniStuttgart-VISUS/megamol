@@ -40,7 +40,7 @@ namespace megamol {
 			GLenum                   primitive_type;
 		};
 
-		struct DrawCommandDataAccessor
+		struct DrawCommandsDataAccessor
 		{
 			DrawElementsCommand*	draw_commands;
 			GLsizei					draw_cnt;
@@ -78,13 +78,12 @@ namespace megamol {
 				DrawElementsCommand* draw_commands,
 				GLsizei draw_cnt);
 
-		private:
-			BufferAccessor*          buffer_accessors;
-			size_t                   buffer_accessor_cnt;
+			BufferAccessor*           buffer_accessors;
+			size_t                    buffer_accessor_cnt;
 
-			MeshDataAccessor*        mesh_data_batches;
-			DrawCommandDataAccessor* draw_command_batches;
-			size_t                   batch_cnt;
+			MeshDataAccessor*         mesh_data_batches;
+			DrawCommandsDataAccessor* draw_command_batches;
+			size_t                    batch_cnt;
 		};
 
 

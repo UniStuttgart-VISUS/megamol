@@ -75,7 +75,7 @@ bool NGMeshDebugDataSource::getDataCallback(core::Call& caller)
 bool NGMeshDebugDataSource::load(std::string const& shader_btf_namespace, std::string const& geometry_filename)
 {
 	ShaderPrgmDataAccessor				shader_prgm_data;
-	DrawCommandDataAccessor				draw_command_data;
+	DrawCommandsDataAccessor				draw_command_data;
 	ObjectShaderParamsDataAccessor		obj_shader_params;
 	MaterialShaderParamsDataAccessor	mtl_shader_params;
 
@@ -241,7 +241,7 @@ bool NGMeshDebugDataSource::load(std::string const& shader_btf_namespace, std::s
 std::tuple<std::shared_ptr<std::vector<VertexLayout::Attribute>>,
     std::shared_ptr<std::vector<std::vector<uint8_t>>>,
     std::shared_ptr<std::vector<uint8_t>>,
-    std::shared_ptr<std::vector<DrawCommandDataAccessor::DrawElementsCommand>>,
+    std::shared_ptr<std::vector<DrawCommandsDataAccessor::DrawElementsCommand>>,
     std::shared_ptr<std::vector<uint8_t>>>
 	NGMeshDebugDataSource::loadGLTF(std::string const& geometry_filename) {
     // Create vector of glTF models
@@ -363,8 +363,8 @@ std::tuple<std::shared_ptr<std::vector<VertexLayout::Attribute>>,
         bytes_copied += size;
     }
 
-    std::shared_ptr<std::vector<DrawCommandDataAccessor::DrawElementsCommand>> draw_commands =
-        std::make_shared<std::vector<DrawCommandDataAccessor::DrawElementsCommand>>(mesh_node_cnt);
+    std::shared_ptr<std::vector<DrawCommandsDataAccessor::DrawElementsCommand>> draw_commands =
+        std::make_shared<std::vector<DrawCommandsDataAccessor::DrawElementsCommand>>(mesh_node_cnt);
 
 	std::shared_ptr<std::vector<uint8_t>> per_obj_shader_params = std::make_shared<std::vector<uint8_t>>(
         mesh_node_cnt * sizeof(vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>));

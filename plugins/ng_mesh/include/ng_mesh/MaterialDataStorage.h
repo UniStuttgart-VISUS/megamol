@@ -19,7 +19,7 @@
 namespace megamol {
 	namespace ngmesh {
 
-		class MaterialDataStorage
+		class MaterialsDataStorage
 		{
 		public:
 
@@ -31,8 +31,6 @@ namespace megamol {
 				std::string const&                                    btf_filename,
 				std::vector<TextureLayout> const&                     texture_layouts,
 				std::vector<IteratorPair<TextureDataIterator>> const& texture_data);
-
-		private:
 
 			struct Material
 			{
@@ -46,7 +44,7 @@ namespace megamol {
 
 
 		template<typename TextureDataIterator>
-		inline void MaterialDataStorage::addMaterial(
+		inline void MaterialsDataStorage::addMaterial(
 			std::string const&                                    btf_filename,
 			std::vector<TextureLayout> const&                     texture_layouts,
 			std::vector<IteratorPair<TextureDataIterator>> const& texture_data)

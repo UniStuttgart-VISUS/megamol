@@ -44,29 +44,23 @@ bool megamol::ngmesh::DebugRenderTasksDataSource::load()
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
 	std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transforms(100);
-	//	obj_shader_params.byte_size = object_transforms.size() * sizeof(vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>);
-	//	obj_shader_params.raw_data = reinterpret_cast<uint8_t*>(object_transforms.data());
-	//	
-	//	for (int i = 0; i < 100; ++i)
-	//	{
-	//		draw_command_data.data[i].cnt = 3;
-	//		draw_command_data.data[i].instance_cnt = 1;
-	//		draw_command_data.data[i].first_idx = 0;
-	//		draw_command_data.data[i].base_vertex = 0;
-	//		draw_command_data.data[i].base_instance = 0;
-	//	
-	//		GLfloat scale = distr(generator);
-	//		scale = 1.0f;
-	//		object_transforms[i].SetAt(0, 0, scale);
-	//		object_transforms[i].SetAt(1, 1, scale);
-	//		object_transforms[i].SetAt(2, 2, scale);
-	//	
-	//		object_transforms[i].SetAt(0, 3, loc_distr(generator));
-	//		object_transforms[i].SetAt(1, 3, loc_distr(generator));
-	//		object_transforms[i].SetAt(2, 3, loc_distr(generator));
-	//	
-	//		m_render_task_data.addRenderTask(0, 0, 1, 0, )
-	//	}
+	
+	for (int i = 0; i < 100; ++i)
+	{
+		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR > object_transform;
+
+		GLfloat scale = distr(generator);
+		scale = 1.0f;
+		object_transform.SetAt(0, 0, scale);
+		object_transform.SetAt(1, 1, scale);
+		object_transform.SetAt(2, 2, scale);
+	
+		object_transform.SetAt(0, 3, loc_distr(generator));
+		object_transform.SetAt(1, 3, loc_distr(generator));
+		object_transform.SetAt(2, 3, loc_distr(generator));
+	
+		m_render_task_data.addRenderTask<GLfloat*>(0, 0, 1, 0, { object_transform.PeekComponents(),object_transform.PeekComponents() + 16 });
+	}
 
 	return true;
 }

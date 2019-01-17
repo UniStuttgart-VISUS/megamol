@@ -402,6 +402,109 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 //   }
 //   
 
+void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const & meshes)
+{
+	for (size_t i = 0; i < meshes.batch_cnt; i++)
+	{
+		MeshDataAccessor& mesh_data = meshes.mesh_data_batches[i];
+
+		VertexLayout layout;
+		layout.stride = mesh_data.vertex_stride;
+		for (size_t j = 0; j < mesh_data.vertex_attribute_cnt; j++)
+		{
+			layout.attributes.push_back(mesh_data.vertex_attributes[j]);
+		}
+
+		if (mesh_data.vertex_buffer_cnt > 0 && mesh_data.vertex_buffer_cnt == mesh_data.vertex_attribute_cnt)
+		{
+			std::vector<std::byte*> vertex_data_ptrs(mesh_data.vertex_buffer_cnt);
+			std::vector<size_t> vertex_data_sizes(mesh_data.vertex_buffer_cnt);
+
+			for (int j = 0; j < mesh_data.vertex_buffer_cnt; ++j)
+			{
+				vertex_data_ptrs[i] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].raw_data;
+				vertex_data_sizes[i] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].byte_size;
+
+				//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+				//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
+			}
+
+			std::byte* index_data_ptr = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data;
+			size_t index_data_size = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size;
+
+			auto mesh = std::make_shared<Mesh>(
+				vertex_data_ptrs,
+				vertex_data_sizes,
+				index_data_ptr,
+				index_data_size,
+				layout,
+				mesh_data.index_type,
+				mesh_data.usage,
+				mesh_data.primitive_type);
+			
+			m_meshes.push_back(BatchedMeshes());
+			m_meshes.back().mesh = mesh;
+
+			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+			auto dest = m_meshes.back().submesh_draw_commands.data();
+			auto src_first = meshes.draw_command_batches[i].draw_commands;
+			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+			std::copy(src_first, src_last, dest);
+
+		}
+		else if (mesh_data.vertex_buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
+		{
+			auto mesh = std::make_shared<Mesh>(
+				meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].raw_data,
+				meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].byte_size,
+				meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data,
+				meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size,
+				layout,
+				mesh_data.index_type,
+				mesh_data.usage,
+				mesh_data.primitive_type
+				);
+
+			m_meshes.push_back(BatchedMeshes());
+			m_meshes.back().mesh = mesh;
+
+			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+			auto dest = m_meshes.back().submesh_draw_commands.data();
+			auto src_first = meshes.draw_command_batches[i].draw_commands;
+			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+			std::copy(src_first, src_last, dest);
+		}
+		else
+		{
+			//fail?
+		}
+	}
+	
+}
+
+void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsDataStorage> const & materials)
+{
+	for (auto& material : materials->m_materials)
+	{
+		// Create shader program
+		m_shader_programs.push_back(std::make_unique<GLSLShader>());
+
+		vislib::graphics::gl::ShaderSource vert_shader_src;
+		vislib::graphics::gl::ShaderSource frag_shader_src;
+		// TODO get rid of vislib StringA...
+		vislib::StringA shader_base_name(material.btf_filename.c_str());
+		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
+		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
+
+		m_shader_programs.back()->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+	}
+}
+
+void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks)
+{
+	//TODO
+}
+
 bool NGMeshRenderer::Render(megamol::core::Call& call)
 {
 	megamol::core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
