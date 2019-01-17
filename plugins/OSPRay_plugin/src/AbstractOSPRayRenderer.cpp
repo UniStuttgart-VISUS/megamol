@@ -850,21 +850,21 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES:
-             if (element.ospStructures.empty()) {
+             if (element.ospStructures.first.empty()) {
                 returnValue = false;
                 break;
             }
-            for (auto structure : element.ospStructures) {
-                if (structure.second == structureTypeEnum::GEOMETRY) {
-                    geo.push_back(static_cast<OSPGeometry>(structure.first));
-                } else if (structure.second == structureTypeEnum::VOLUME) {
-                    vol.push_back(static_cast<OSPVolume>(structure.first));
+            for (auto structure : element.ospStructures.first) {
+                if (element.ospStructures.second == structureTypeEnum::GEOMETRY) {
+                    geo.push_back(reinterpret_cast<OSPGeometry>(structure));
+                } else if (element.ospStructures.second == structureTypeEnum::VOLUME) {
+                    vol.push_back(reinterpret_cast<OSPVolume>(structure));
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError("OSPRAY_API_STRUCTURE: Something went wrong.");
                 }
             }
             // General geometry execution
-            for (unsigned int i = 0; i < element.ospStructures.size(); i++) {
+            for (unsigned int i = 0; i < element.ospStructures.first.size(); i++) {
                 auto idx = geo.size() - 1 - i;
                 if (material != NULL && geo.size() > 0) {
                     ospSetMaterial(geo[idx], material);

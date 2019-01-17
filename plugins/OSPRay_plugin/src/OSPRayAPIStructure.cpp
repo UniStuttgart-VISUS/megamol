@@ -57,12 +57,10 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
 
     switch (cd->getStructureType()) {
     case structureTypeEnum::GEOMETRY:
-        this->structureContainer.ospStructures.push_back(
-            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::GEOMETRY));
+        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::GEOMETRY);
         break;
     case structureTypeEnum::VOLUME:
-        this->structureContainer.ospStructures.push_back(
-            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::VOLUME));
+        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::VOLUME);
         break;
     case structureTypeEnum::UNINITIALIZED:
         vislib::sys::Log::DefaultLog.WriteError("OSPRay API structure type is no set.");
