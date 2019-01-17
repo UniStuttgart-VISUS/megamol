@@ -4,11 +4,13 @@
 #include <type_traits>
 
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/moldyn/Accessor.h"
 
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
+
 
 namespace megamol {
 namespace core {
@@ -23,470 +25,6 @@ namespace moldyn {
  */
 class MEGAMOLCORE_API SimpleSphericalParticles {
 public:
-    class VertexData_Detail {
-    public:
-        virtual double GetXd() const = 0;
-        virtual double GetYd() const = 0;
-        virtual double GetZd() const = 0;
-        virtual float const GetXf() const = 0;
-        virtual float const GetYf() const = 0;
-        virtual float const GetZf() const = 0;
-        virtual float const GetRf() const = 0;
-        virtual short const GetXs() const = 0;
-        virtual short const GetYs() const = 0;
-        virtual short const GetZs() const = 0;
-        virtual void SetBasePtr(void const* ptr) = 0;
-        virtual std::unique_ptr<VertexData_Detail> Clone() const = 0;
-        virtual ~VertexData_Detail() = default;
-    };
-
-    class VertexData_None : public VertexData_Detail {
-    public:
-        VertexData_None() = default;
-
-        VertexData_None(VertexData_None const& rhs) = default;
-
-        double GetXd() const override { return 0.0; }
-
-        double GetYd() const override { return 0.0; }
-
-        double GetZd() const override { return 0.0; }
-
-        virtual float const GetXf() const override { return 0.0f; }
-
-        virtual float const GetYf() const override { return 0.0f; }
-
-        virtual float const GetZf() const override { return 0.0f; }
-
-        virtual float const GetRf() const override { return 0.0f; }
-
-        virtual short const GetXs() const override { return 0; }
-
-        virtual short const GetYs() const override { return 0; }
-
-        virtual short const GetZs() const override { return 0; }
-
-        virtual void SetBasePtr(void const* ptr) override{};
-
-        virtual std::unique_ptr<VertexData_Detail> Clone() const override {
-            return std::unique_ptr<VertexData_Detail>{new VertexData_None{*this}};
-        }
-    };
-
-    template <class T, bool hasRad> class VertexData_Impl : public VertexData_Detail {
-    public:
-        VertexData_Impl() = default;
-
-        VertexData_Impl(VertexData_Impl const& rhs) : basePtr{rhs.basePtr} {}
-
-        double GetXd() const override { return GetX<double>(); }
-
-        virtual float const GetXf() const override { return GetX<float>(); }
-
-        virtual short const GetXs() const override { return GetX<short>(); }
-
-        template <class R> std::enable_if_t<std::is_same<T, R>::value, R> const GetX() const {
-            return this->basePtr[0];
-        }
-
-        template <class R> std::enable_if_t<!std::is_same<T, R>::value, R> const GetX() const {
-            return static_cast<R>(this->basePtr[0]);
-        }
-
-        double GetYd() const override { return GetY<double>(); }
-
-        virtual float const GetYf() const override { return GetY<float>(); }
-
-        virtual short const GetYs() const override { return GetY<short>(); }
-
-        template <class R> std::enable_if_t<std::is_same<T, R>::value, R> const GetY() const {
-            return this->basePtr[1];
-        }
-
-        template <class R> std::enable_if_t<!std::is_same<T, R>::value, R> const GetY() const {
-            return static_cast<R>(this->basePtr[1]);
-        }
-
-        double GetZd() const override { return GetZ<double>(); }
-
-        virtual float const GetZf() const override { return GetZ<float>(); }
-
-        virtual short const GetZs() const override { return GetZ<short>(); }
-
-        template <class R> std::enable_if_t<std::is_same<T, R>::value, R> const GetZ() const {
-            return this->basePtr[2];
-        }
-
-        template <class R> std::enable_if_t<!std::is_same<T, R>::value, R> const GetZ() const {
-            return static_cast<R>(this->basePtr[2]);
-        }
-
-        virtual float const GetRf() const override { return GetR<hasRad>(); }
-
-        template <bool hasRad_v> std::enable_if_t<hasRad_v, float> const GetR() const { return this->basePtr[3]; }
-
-        template <bool hasRad_v> std::enable_if_t<!hasRad_v, float> const GetR() const { return 0.0f; }
-
-        virtual void SetBasePtr(void const* ptr) override { this->basePtr = reinterpret_cast<T const*>(ptr); }
-
-        virtual std::unique_ptr<VertexData_Detail> Clone() const override {
-            return std::unique_ptr<VertexData_Detail>{new VertexData_Impl{*this}};
-        }
-
-    private:
-        T const* basePtr;
-    };
-
-    class VertexData_Base {
-    public:
-        VertexData_Base(std::unique_ptr<VertexData_Detail>&& impl, void const* basePtr)
-            : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(impl)} {
-            pimpl->SetBasePtr(basePtr);
-        }
-
-        VertexData_Base(VertexData_Base const& rhs) = delete;
-
-        VertexData_Base(VertexData_Base&& rhs) : pimpl{std::forward<std::unique_ptr<VertexData_Detail>>(rhs.pimpl)} {}
-
-        VertexData_Base& operator=(VertexData_Base const& rhs) = delete;
-
-        VertexData_Base& operator=(VertexData_Base&& rhs) {
-            pimpl = std::move(rhs.pimpl);
-            return *this;
-        }
-
-        double GetXd() const { return pimpl->GetXd(); }
-
-        double GetYd() const { return pimpl->GetYd(); }
-
-        double GetZd() const { return pimpl->GetZd(); }
-
-        float const GetXf() const { return pimpl->GetXf(); }
-
-        float const GetYf() const { return pimpl->GetYf(); }
-
-        float const GetZf() const { return pimpl->GetZf(); }
-
-        float const GetRf() const { return pimpl->GetRf(); }
-
-        short const GetXs() const { return pimpl->GetXs(); }
-
-        short const GetYs() const { return pimpl->GetYs(); }
-
-        short const GetZs() const { return pimpl->GetZs(); }
-
-    private:
-        std::unique_ptr<VertexData_Detail> pimpl;
-    };
-
-    class ColorData_Detail {
-    public:
-        virtual uint16_t GetRu16() const = 0;
-        virtual uint16_t GetGu16() const = 0;
-        virtual uint16_t GetBu16() const = 0;
-        virtual uint16_t GetAu16() const = 0;
-        virtual uint8_t const GetRu8() const = 0;
-        virtual uint8_t const GetGu8() const = 0;
-        virtual uint8_t const GetBu8() const = 0;
-        virtual uint8_t const GetAu8() const = 0;
-        virtual float const GetRf() const = 0;
-        virtual float const GetGf() const = 0;
-        virtual float const GetBf() const = 0;
-        virtual float const GetAf() const = 0;
-        virtual float const GetIf() const = 0;
-        virtual double GetId() const = 0;
-        virtual void SetBasePtr(void const* ptr) = 0;
-        virtual std::unique_ptr<ColorData_Detail> Clone() const = 0;
-        virtual ~ColorData_Detail() = default;
-    };
-
-    class ColorData_None : public ColorData_Detail {
-    public:
-        ColorData_None() = default;
-
-        ColorData_None(ColorData_None const& rhs) = default;
-
-        uint16_t GetRu16() const override { return 0; }
-
-        uint16_t GetGu16() const override { return 0; }
-
-        uint16_t GetBu16() const override { return 0; }
-
-        uint16_t GetAu16() const override { return 0; }
-
-        virtual uint8_t const GetRu8() const override { return 0; }
-
-        virtual uint8_t const GetGu8() const override { return 0; }
-
-        virtual uint8_t const GetBu8() const override { return 0; }
-
-        virtual uint8_t const GetAu8() const override { return 0; }
-
-        virtual float const GetRf() const override { return 0.0f; }
-
-        virtual float const GetGf() const override { return 0.0f; }
-
-        virtual float const GetBf() const override { return 0.0f; }
-
-        virtual float const GetAf() const override { return 0.0f; }
-
-        virtual float const GetIf() const override { return 0.0f; }
-
-        double GetId() const override { return 0.0; }
-
-        virtual void SetBasePtr(void const* ptr) override {}
-
-        virtual std::unique_ptr<ColorData_Detail> Clone() const override {
-            return std::unique_ptr<ColorData_Detail>{new ColorData_None{*this}};
-        }
-    };
-
-    template <class T, bool hasAlpha, bool isI> class ColorData_Impl : public ColorData_Detail {
-    public:
-        ColorData_Impl() = default;
-
-        ColorData_Impl(ColorData_Impl const& rhs) : basePtr{rhs.basePtr} {}
-
-        uint16_t GetRu16() const override { return GetR<uint16_t, isI>(); }
-
-        virtual uint8_t const GetRu8() const override { return GetR<uint8_t, isI>(); }
-
-        virtual float const GetRf() const override { return GetR<float, isI>(); }
-
-        template <class R, bool isI_v> std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetR() const {
-            return this->basePtr[0];
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetR() const {
-            return static_cast<R>(this->basePtr[0]);
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<isI_v, R> const GetR() const { return static_cast<R>(0.0); }
-
-        uint16_t GetGu16() const override { return GetG<uint16_t, isI>(); }
-
-        virtual uint8_t const GetGu8() const override { return GetG<uint8_t, isI>(); }
-
-        virtual float const GetGf() const override { return GetG<float, isI>(); }
-
-        template <class R, bool isI_v> std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetG() const {
-            return this->basePtr[1];
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetG() const {
-            return static_cast<R>(this->basePtr[1]);
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<isI_v, R> const GetG() const { return static_cast<R>(0.0); }
-
-        uint16_t GetBu16() const override { return GetB<uint16_t, isI>(); }
-
-        virtual uint8_t const GetBu8() const override { return GetB<uint8_t, isI>(); }
-
-        virtual float const GetBf() const override { return GetB<float, isI>(); }
-
-        template <class R, bool isI_v> std::enable_if_t<std::is_same<T, R>::value && !isI_v, R> const GetB() const {
-            return this->basePtr[2];
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<!std::is_same<T, R>::value && !isI_v, R> const GetB() const {
-            return static_cast<R>(this->basePtr[2]);
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<isI_v, R> const GetB() const { return static_cast<R>(0.0); }
-
-        uint16_t GetAu16() const override { return GetA<uint16_t, hasAlpha, isI>(); }
-
-        virtual uint8_t const GetAu8() const override { return GetA<uint8_t, hasAlpha, isI>(); }
-
-        virtual float const GetAf() const override { return GetA<float, hasAlpha, isI>(); }
-
-        template <class R, bool hasAlpha_v, bool isI_v>
-        std::enable_if_t<std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
-            return this->basePtr[3];
-        }
-
-        template <class R, bool hasAlpha_v, bool isI_v>
-        std::enable_if_t<!std::is_same<T, R>::value && hasAlpha_v && !isI_v, R> const GetA() const {
-            return static_cast<R>(this->basePtr[3]);
-        }
-
-        template <class R, bool hasAlpha_v, bool isI_v> std::enable_if_t<!hasAlpha_v && !isI_v, R> const GetA() const {
-            return static_cast<R>(0.0);
-        }
-
-        template <class R, bool hasAlpha_v, bool isI_v> std::enable_if_t<isI_v, R> const GetA() const {
-            return static_cast<R>(0.0);
-        }
-
-        virtual float const GetIf() const override { return GetI<float, isI>(); }
-
-        double GetId() const override { return GetI<double, isI>(); }
-
-        template <class R, bool isI_v> std::enable_if_t<std::is_same<T, R>::value && isI_v, R> const GetI() const {
-            return this->basePtr[0];
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<!std::is_same<T, R>::value && isI_v, R> const GetI() const {
-            return static_cast<R>(this->basePtr[0]);
-        }
-
-        template <class R, bool isI_v> std::enable_if_t<!isI_v, R> const GetI() const { return static_cast<R>(0.0); }
-
-        virtual void SetBasePtr(void const* ptr) override { this->basePtr = reinterpret_cast<T const*>(ptr); }
-
-        virtual std::unique_ptr<ColorData_Detail> Clone() const override {
-            return std::unique_ptr<ColorData_Detail>{new ColorData_Impl{*this}};
-        }
-
-    private:
-        T const* basePtr;
-    };
-
-    class ColorData_Base {
-    public:
-        ColorData_Base(std::unique_ptr<ColorData_Detail>&& impl, void const* basePtr)
-            : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(impl)} {
-            pimpl->SetBasePtr(basePtr);
-        }
-
-        ColorData_Base(ColorData_Base const& rhs) = delete;
-
-        ColorData_Base(ColorData_Base&& rhs) : pimpl{std::forward<std::unique_ptr<ColorData_Detail>>(rhs.pimpl)} {}
-
-        ColorData_Base& operator=(ColorData_Base const& rhs) = delete;
-
-        ColorData_Base& operator=(ColorData_Base&& rhs) {
-            pimpl = std::move(rhs.pimpl);
-            return *this;
-        }
-
-        uint16_t GetRu16() const { return pimpl->GetRu16(); }
-        uint16_t GetGu16() const { return pimpl->GetGu16(); }
-        uint16_t GetBu16() const { return pimpl->GetBu16(); }
-        uint16_t GetAu16() const { return pimpl->GetAu16(); }
-        uint8_t const GetRu8() const { return pimpl->GetRu8(); }
-        uint8_t const GetGu8() const { return pimpl->GetGu8(); }
-        uint8_t const GetBu8() const { return pimpl->GetBu8(); }
-        uint8_t const GetAu8() const { return pimpl->GetAu8(); }
-        float const GetRf() const { return pimpl->GetRf(); }
-        float const GetGf() const { return pimpl->GetGf(); }
-        float const GetBf() const { return pimpl->GetBf(); }
-        float const GetAf() const { return pimpl->GetAf(); }
-        float const GetIf() const { return pimpl->GetIf(); }
-        double GetId() const { return pimpl->GetId(); }
-
-    private:
-        std::unique_ptr<ColorData_Detail> pimpl;
-    };
-
-    class IDData_Detail {
-    public:
-        virtual uint32_t const GetIDu32() const = 0;
-        virtual uint64_t const GetIDu64() const = 0;
-        virtual void SetBasePtr(void const* ptr) = 0;
-        virtual std::unique_ptr<IDData_Detail> Clone() const = 0;
-        virtual ~IDData_Detail() = default;
-    };
-
-    class IDData_None : public IDData_Detail {
-    public:
-        IDData_None() = default;
-
-        IDData_None(IDData_None const& rhs) = default;
-
-        virtual uint32_t const GetIDu32() const override { return 0; }
-
-        virtual uint64_t const GetIDu64() const override { return 0; }
-
-        virtual void SetBasePtr(void const* ptr) override {}
-
-        virtual std::unique_ptr<IDData_Detail> Clone() const override {
-            return std::unique_ptr<IDData_Detail>{new IDData_None{*this}};
-        }
-    };
-
-    template <class T> class IDData_Impl : public IDData_Detail {
-    public:
-        IDData_Impl() = default;
-
-        IDData_Impl(IDData_Impl const& rhs) : basePtr{rhs.basePtr} {}
-
-        virtual uint32_t const GetIDu32() const override { return GetID<uint32_t>(); }
-
-        virtual uint64_t const GetIDu64() const override { return GetID<uint64_t>(); }
-
-        template <class R> std::enable_if_t<std::is_same<T, R>::value, R> const GetID() const {
-            return this->basePtr[0];
-        }
-
-        template <class R> std::enable_if_t<!std::is_same<T, R>::value, R> const GetID() const {
-            return static_cast<R>(this->basePtr[0]);
-        }
-
-        virtual void SetBasePtr(void const* ptr) override { this->basePtr = reinterpret_cast<T const*>(ptr); }
-
-        virtual std::unique_ptr<IDData_Detail> Clone() const override {
-            return std::unique_ptr<IDData_Detail>{new IDData_Impl{*this}};
-        }
-
-    private:
-        T const* basePtr;
-    };
-
-    class IDData_Base {
-    public:
-        IDData_Base(std::unique_ptr<IDData_Detail>&& impl, void const* basePtr)
-            : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(impl)} {
-            pimpl->SetBasePtr(basePtr);
-        }
-
-        IDData_Base(IDData_Base const& rhs) = delete;
-
-        IDData_Base(IDData_Base&& rhs) : pimpl{std::forward<std::unique_ptr<IDData_Detail>>(rhs.pimpl)} {}
-
-        IDData_Base& operator=(IDData_Base const& rhs) = delete;
-
-        IDData_Base& operator=(IDData_Base&& rhs) {
-            pimpl = std::move(rhs.pimpl);
-            return *this;
-        }
-
-        uint32_t const GetIDu32() const { return pimpl->GetIDu32(); }
-        uint64_t const GetIDu64() const { return pimpl->GetIDu64(); }
-
-    private:
-        std::unique_ptr<IDData_Detail> pimpl;
-    };
-
-    /** Struct holding pointers into data streams for a specific particle */
-    struct particle_t {
-        particle_t(VertexData_Base&& v, ColorData_Base&& c, IDData_Base&& i)
-            : vert{std::forward<VertexData_Base>(v)}
-            , col{std::forward<ColorData_Base>(c)}
-            , id{std::forward<IDData_Base>(i)} {}
-
-        particle_t(particle_t const& rhs) = delete;
-
-        particle_t(particle_t&& rhs) : vert{std::move(rhs.vert)}, col{std::move(rhs.col)}, id{std::move(rhs.id)} {}
-
-        particle_t& operator=(particle_t const& rhs) = delete;
-
-        particle_t& operator=(particle_t&& rhs) {
-            vert = std::move(rhs.vert);
-            col = std::move(rhs.col);
-            id = std::move(rhs.id);
-            return *this;
-        }
-
-        VertexData_Base vert;
-        ColorData_Base col;
-        IDData_Base id;
-        /*void const* vertPtr;
-        void const* colPtr;
-        void const* idPtr;*/
-    };
-
     /** possible values for the vertex data */
     enum VertexDataType {
         VERTDATA_NONE = 0,      //< indicates that this object is void
@@ -510,6 +48,157 @@ public:
 
     /** possible values for the id data */
     enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
+
+    /**
+     * This class holds the accessors to the current data.
+     */
+    class ParticleStore {
+    public:
+        explicit ParticleStore() = default;
+
+        /*ParticleStore(ParticleStore const& rhs) = delete;
+
+        ParticleStore(ParticleStore&& rhs) = delete;
+
+        ParticleStore& operator=(ParticleStore const& rhs) = delete;
+
+        ParticleStore& operator=(ParticleStore&& rhs) = delete;*/
+
+        void SetVertexData(SimpleSphericalParticles::VertexDataType const t, char const* p, unsigned int const s = 0,
+            float const globRad = 0.5f) {
+            switch (t) {
+            case SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ: {
+                this->x_acc_ = std::make_shared<Accessor_Impl<double>>(p, s);
+                this->y_acc_ = std::make_shared<Accessor_Impl<double>>(p + sizeof(double), s);
+                this->z_acc_ = std::make_shared<Accessor_Impl<double>>(p + 2 * sizeof(double), s);
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+            } break;
+            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: {
+                this->x_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->y_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
+                this->z_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+            } break;
+            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: {
+                this->x_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->y_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
+                this->z_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
+                this->r_acc_ = std::make_shared<Accessor_Impl<float>>(p + 3 * sizeof(float), s);
+            } break;
+            case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: {
+                this->x_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p, s);
+                this->y_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + sizeof(unsigned short), s);
+                this->z_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + 2 * sizeof(unsigned short), s);
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+            } break;
+            case SimpleSphericalParticles::VERTDATA_NONE:
+            default: {
+                this->x_acc_ = std::make_shared<Accessor_0>();
+                this->y_acc_ = std::make_shared<Accessor_0>();
+                this->z_acc_ = std::make_shared<Accessor_0>();
+                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+            }
+            }
+        }
+
+        void SetColorData(SimpleSphericalParticles::ColourDataType const t, char const* p, unsigned int const s = 0,
+            unsigned char const r = 255, unsigned char const g = 255, unsigned char const b = 255,
+            unsigned char const a = 255) {
+            switch (t) {
+            case SimpleSphericalParticles::COLDATA_DOUBLE_I: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<double>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_0>();
+                this->cb_acc_ = std::make_shared<Accessor_0>();
+                this->ca_acc_ = std::make_shared<Accessor_0>();
+            } break;
+            case SimpleSphericalParticles::COLDATA_FLOAT_I: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_0>();
+                this->cb_acc_ = std::make_shared<Accessor_0>();
+                this->ca_acc_ = std::make_shared<Accessor_0>();
+            } break;
+            case SimpleSphericalParticles::COLDATA_FLOAT_RGB: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
+                this->cb_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
+                this->ca_acc_ = std::make_shared<Accessor_Val<float>>(1.0f);
+            } break;
+            case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
+                this->cb_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
+                this->ca_acc_ = std::make_shared<Accessor_Impl<float>>(p + 3 * sizeof(float), s);
+            } break;
+            case SimpleSphericalParticles::COLDATA_UINT8_RGB: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + sizeof(unsigned char), s);
+                this->cb_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + 2 * sizeof(unsigned char), s);
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(255);
+            } break;
+            case SimpleSphericalParticles::COLDATA_UINT8_RGBA: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + sizeof(unsigned char), s);
+                this->cb_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + 2 * sizeof(unsigned char), s);
+                this->ca_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + 3 * sizeof(unsigned char), s);
+            } break;
+            case SimpleSphericalParticles::COLDATA_USHORT_RGBA: {
+                this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p, s);
+                this->cg_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + sizeof(unsigned short), s);
+                this->cb_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + 2 * sizeof(unsigned short), s);
+                this->ca_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + 3 * sizeof(unsigned short), s);
+            } break;
+            case SimpleSphericalParticles::COLDATA_NONE:
+            default: {
+                this->cr_acc_ = std::make_shared<Accessor_Val<unsigned char>>(r);
+                this->cg_acc_ = std::make_shared<Accessor_Val<unsigned char>>(g);
+                this->cb_acc_ = std::make_shared<Accessor_Val<unsigned char>>(b);
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(a);
+            }
+            }
+        }
+
+        void SetIDData(SimpleSphericalParticles::IDDataType const t, char const* p, unsigned int const s = 0) {
+            switch (t) {
+            case SimpleSphericalParticles::IDDATA_UINT32: {
+                this->id_acc_ = std::make_shared<Accessor_Impl<unsigned int>>(reinterpret_cast<char const*>(p), s);
+            } break;
+            case SimpleSphericalParticles::IDDATA_UINT64: {
+                this->id_acc_ = std::make_shared<Accessor_Impl<uint64_t>>(reinterpret_cast<char const*>(p), s);
+            } break;
+            case SimpleSphericalParticles::IDDATA_NONE:
+            default: { this->id_acc_ = std ::make_shared<Accessor_0>(); }
+            }
+        }
+
+        std::shared_ptr<Accessor> const& GetXAcc() const { return this->x_acc_; }
+
+        std::shared_ptr<Accessor> const& GetYAcc() const { return this->y_acc_; }
+
+        std::shared_ptr<Accessor> const& GetZAcc() const { return this->z_acc_; }
+
+        std::shared_ptr<Accessor> const& GetRAcc() const { return this->r_acc_; }
+
+        std::shared_ptr<Accessor> const& GetCRAcc() const { return this->cr_acc_; }
+
+        std::shared_ptr<Accessor> const& GetCGAcc() const { return this->cg_acc_; }
+
+        std::shared_ptr<Accessor> const& GetCBAcc() const { return this->cb_acc_; }
+
+        std::shared_ptr<Accessor> const& GetCAAcc() const { return this->ca_acc_; }
+
+        std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
+
+    private:
+        std::shared_ptr<Accessor> x_acc_;
+        std::shared_ptr<Accessor> y_acc_;
+        std::shared_ptr<Accessor> z_acc_;
+        std::shared_ptr<Accessor> r_acc_;
+        std::shared_ptr<Accessor> cr_acc_;
+        std::shared_ptr<Accessor> cg_acc_;
+        std::shared_ptr<Accessor> cb_acc_;
+        std::shared_ptr<Accessor> ca_acc_;
+        std::shared_ptr<Accessor> id_acc_;
+    };
 
     /** possible values of accumulated data sizes over all vertex coordinates */
     static unsigned int VertexDataSize[5];
@@ -666,32 +355,8 @@ public:
         this->colPtr = p;
         this->colStride = s == 0 ? ColorDataSize[t] : s;
 
-        switch (t) {
-        case COLDATA_UINT8_RGB:
-            this->colorAccessor.reset(new ColorData_Impl<uint8_t, false, false>{});
-            break;
-        case COLDATA_UINT8_RGBA:
-            this->colorAccessor.reset(new ColorData_Impl<uint8_t, true, false>{});
-            break;
-        case COLDATA_FLOAT_RGB:
-            this->colorAccessor.reset(new ColorData_Impl<float, false, false>{});
-            break;
-        case COLDATA_FLOAT_RGBA:
-            this->colorAccessor.reset(new ColorData_Impl<float, true, false>{});
-            break;
-        case COLDATA_FLOAT_I:
-            this->colorAccessor.reset(new ColorData_Impl<float, false, true>{});
-            break;
-        case COLDATA_USHORT_RGBA:
-            this->colorAccessor.reset(new ColorData_Impl<uint16_t, true, false>{});
-            break;
-        case COLDATA_DOUBLE_I:
-            this->colorAccessor.reset(new ColorData_Impl<double, false, true>{});
-            break;
-        case COLDATA_NONE:
-        default:
-            this->colorAccessor.reset(new ColorData_None{});
-        }
+        this->par_store_.SetColorData(t, reinterpret_cast<char const*>(p), this->colStride, this->col[0], this->col[1],
+            this->col[2], this->col[3]);
     }
 
     /**
@@ -718,6 +383,10 @@ public:
         this->idDataType = IDDATA_NONE;
         this->idPtr = nullptr; // DO NOT DELETE
 
+        this->par_store_.SetVertexData(VERTDATA_NONE, nullptr);
+        this->par_store_.SetColorData(COLDATA_NONE, nullptr);
+        this->par_store_.SetIDData(IDDATA_NONE, nullptr);
+
         this->count = cnt;
     }
 
@@ -734,6 +403,9 @@ public:
         this->col[1] = g;
         this->col[2] = b;
         this->col[3] = a;
+
+        this->par_store_.SetColorData(this->colDataType, reinterpret_cast<char const*>(this->colPtr), this->colStride,
+            this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
     /**
@@ -741,7 +413,11 @@ public:
      *
      * @param r The global radius
      */
-    void SetGlobalRadius(float r) { this->radius = r; }
+    void SetGlobalRadius(float r) {
+        this->radius = r;
+        this->par_store_.SetVertexData(
+            this->vertDataType, reinterpret_cast<char const*>(this->vertPtr), this->vertStride, this->radius);
+    }
 
     /**
      * Sets the global particle type
@@ -764,23 +440,7 @@ public:
         this->vertPtr = p;
         this->vertStride = s == 0 ? VertexDataSize[t] : s;
 
-        switch (t) {
-        case VERTDATA_FLOAT_XYZ:
-            this->vertexAccessor.reset(new VertexData_Impl<float, false>{});
-            break;
-        case VERTDATA_FLOAT_XYZR:
-            this->vertexAccessor.reset(new VertexData_Impl<float, true>{});
-            break;
-        case VERTDATA_SHORT_XYZ:
-            this->vertexAccessor.reset(new VertexData_Impl<short, false>{});
-            break;
-        case VERTDATA_DOUBLE_XYZ:
-            this->vertexAccessor.reset(new VertexData_Impl<double, false>{});
-            break;
-        case VERTDATA_NONE:
-        default:
-            this->vertexAccessor.reset(new VertexData_None{});
-        }
+        this->par_store_.SetVertexData(t, reinterpret_cast<char const*>(p), this->vertStride, this->radius);
     }
 
     /**
@@ -797,17 +457,7 @@ public:
         this->idPtr = p;
         this->idStride = s == 0 ? IDDataSize[t] : s;
 
-        switch (t) {
-        case IDDATA_UINT32:
-            this->idAccessor.reset(new IDData_Impl<uint32_t>{});
-            break;
-        case IDDATA_UINT64:
-            this->idAccessor.reset(new IDData_Impl<uint64_t>{});
-            break;
-        case IDDATA_NONE:
-        default:
-            this->idAccessor.reset(new IDData_None{});
-        }
+        this->par_store_.SetIDData(t, reinterpret_cast<char const*>(p), this->idStride);
     }
 
     /**
@@ -836,38 +486,11 @@ public:
     bool operator==(const SimpleSphericalParticles& rhs) const;
 
     /**
-     * Access particle at index without range check.
+     * Get instance of particle store call the accessors.
      *
-     * @param idx Index of particle in the streams.
-     *
-     * @return Struct of pointers to positions of the particle in the streams.
+     * @return Instance of particle store.
      */
-    inline particle_t operator[](size_t idx) const noexcept {
-        return particle_t{
-            VertexData_Base{this->vertexAccessor->Clone(),
-                this->vertPtr != nullptr ? static_cast<char const*>(this->vertPtr) + idx * this->vertStride : nullptr},
-            ColorData_Base{this->colorAccessor->Clone(),
-                this->colPtr != nullptr ? static_cast<char const*>(this->colPtr) + idx * this->colStride : nullptr},
-            IDData_Base{this->idAccessor->Clone(),
-                this->idPtr != nullptr ? static_cast<char const*>(this->idPtr) + idx * this->idStride : nullptr}};
-    }
-
-    /**
-     * Access particle at index with range check.
-     *
-     * @param idx Index of particle in the streams.
-     *
-     * @return Struct of pointers to positions of the particle in the streams.
-     *
-     * @throws std::out_of_range if idx is larger than particle count.
-     */
-    inline particle_t const& At(size_t idx) const {
-        if (idx < this->count) {
-            return this->operator[](idx);
-        } else {
-            throw std::out_of_range("Idx larger than particle count.");
-        }
-    }
+    ParticleStore const& GetParticleStore() const { return this->par_store_; }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
@@ -1000,14 +623,8 @@ private:
     /** The particle ID stride */
     unsigned int idStride;
 
-    /** Polymorphic vertex access object */
-    std::unique_ptr<VertexData_Detail> vertexAccessor;
-
-    /** Polymorphic color access object */
-    std::unique_ptr<ColorData_Detail> colorAccessor;
-
-    /** Polymorphic id access object */
-    std::unique_ptr<IDData_Detail> idAccessor;
+    /** Instance of the particle store */
+    ParticleStore par_store_;
 };
 
 } // namespace moldyn

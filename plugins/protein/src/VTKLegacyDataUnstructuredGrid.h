@@ -11,7 +11,7 @@
 #ifndef MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
 #define MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractVTKLegacyData.h"
@@ -26,16 +26,26 @@ namespace protein {
 class VTKLegacyDataUnstructuredGrid : public AbstractVTKLegacyData {
 
 public:
-
     /** Enum describing possible cell types used by the VTK */
-    enum CellType {VTK_VERTEX=1, VTK_POLY_VERTEX, VTK_LINE, VTK_POLY_LINE,
-        VTK_TRIANGLE, VTK_TRIANGLE_STRIP, VTK_POLYGON, VTK_PIXEL, VTK_QUAD,
-        VTK_TETRA, VTK_VOXEL, VTK_HEXAHEDRON, VTK_WEDGE, VTK_PYRAMID
+    enum CellType {
+        VTK_VERTEX = 1,
+        VTK_POLY_VERTEX,
+        VTK_LINE,
+        VTK_POLY_LINE,
+        VTK_TRIANGLE,
+        VTK_TRIANGLE_STRIP,
+        VTK_POLYGON,
+        VTK_PIXEL,
+        VTK_QUAD,
+        VTK_TETRA,
+        VTK_VOXEL,
+        VTK_HEXAHEDRON,
+        VTK_WEDGE,
+        VTK_PYRAMID
     };
 
     /** TODO */
-    void AddPointData(const char *data, size_t nElements, size_t nComponents,
-            DataType type, vislib::StringA name);
+    void AddPointData(const char* data, size_t nElements, size_t nComponents, DataType type, vislib::StringA name);
 
     /** CTor */
     VTKLegacyDataUnstructuredGrid();
@@ -49,7 +59,7 @@ public:
      * @param idx The index of the seeked data array.
      * @return The pointer to the data, or NULL if the array is not there
      */
-    const char *PeekCellDataByIndex(size_t idx) const;
+    const char* PeekCellDataByIndex(size_t idx) const;
 
     /**
      * Answers the pointer to a point data attribute array specified by a name.
@@ -57,22 +67,22 @@ public:
      * @param name The name of the seeked data array.
      * @return The pointer to the data, or NULL if the array is not there
      */
-    const char *PeekCellDataByName(vislib::StringA name) const;
+    const char* PeekCellDataByName(vislib::StringA name) const;
 
     /**
      * Answers the pointer to the cell index data
      *
      * @return The pointer to the data, or NULL if the array is not there
      */
-    inline const int *PeekCells() const {
-//        // DEBUG Print vertex positions
-//        for (size_t p = 0; p < this->nPoints; ++p) {
-//            printf("!!%i: (%f %f %f)\n", p,
-//                    this->points[3*p+0],
-//                    this->points[3*p+1],
-//                    this->points[3*p+2]);
-//        }
-//        // END DEBUG
+    inline const int* PeekCells() const {
+        //        // DEBUG Print vertex positions
+        //        for (size_t p = 0; p < this->nPoints; ++p) {
+        //            printf("!!%i: (%f %f %f)\n", p,
+        //                    this->points[3*p+0],
+        //                    this->points[3*p+1],
+        //                    this->points[3*p+2]);
+        //        }
+        //        // END DEBUG
         return this->cells;
     }
 
@@ -81,15 +91,15 @@ public:
      *
      * @return The pointer to the data, or NULL if the array is not there
      */
-    inline const CellType *PeekCellTypes() const {
-//        // DEBUG Print vertex positions
-//        for (size_t p = 0; p < this->nPoints; ++p) {
-//            printf("!!%i: (%f %f %f)\n", p,
-//                    this->points[3*p+0],
-//                    this->points[3*p+1],
-//                    this->points[3*p+2]);
-//        }
-//        // END DEBUG
+    inline const CellType* PeekCellTypes() const {
+        //        // DEBUG Print vertex positions
+        //        for (size_t p = 0; p < this->nPoints; ++p) {
+        //            printf("!!%i: (%f %f %f)\n", p,
+        //                    this->points[3*p+0],
+        //                    this->points[3*p+1],
+        //                    this->points[3*p+2]);
+        //        }
+        //        // END DEBUG
         return this->cellTypes;
     }
 
@@ -98,15 +108,15 @@ public:
      *
      * @return The pointer to the data, or NULL if the array is not there
      */
-    inline const float *PeekPoints() const {
-//        // DEBUG Print vertex positions
-//        for (size_t p = 0; p < this->nPoints; ++p) {
-//            printf("!!%i: (%f %f %f)\n", p,
-//                    this->points[3*p+0],
-//                    this->points[3*p+1],
-//                    this->points[3*p+2]);
-//        }
-//        // END DEBUG
+    inline const float* PeekPoints() const {
+        //        // DEBUG Print vertex positions
+        //        for (size_t p = 0; p < this->nPoints; ++p) {
+        //            printf("!!%i: (%f %f %f)\n", p,
+        //                    this->points[3*p+0],
+        //                    this->points[3*p+1],
+        //                    this->points[3*p+2]);
+        //        }
+        //        // END DEBUG
         return this->points;
     }
 
@@ -131,27 +141,21 @@ public:
      *
      * @return The number of points
      */
-    size_t GetNumberOfPoints() const {
-        return this->nPoints;
-    }
+    size_t GetNumberOfPoints() const { return this->nPoints; }
 
     /**
      * Answers the size of the cell index data
      *
      * @return The size of the cell index data
      */
-    size_t GetCellDataSize() const {
-        return this->nCellData;
-    }
+    size_t GetCellDataSize() const { return this->nCellData; }
 
     /**
      * Answers the size of the cell index data
      *
      * @return The size of the cell index data
      */
-    size_t GetNumberOfCells() const {
-        return this->nCells;
-    }
+    size_t GetNumberOfCells() const { return this->nCells; }
 
     /**
      * Copy vertex coordinates from a buffer.
@@ -163,10 +167,10 @@ public:
         // (Re)allocate if necessary
         if (nPoints > this->nPoints) {
             if (this->points) delete[] this->points;
-            this->points = new float[3*nPoints];
+            this->points = new float[3 * nPoints];
         }
         this->nPoints = nPoints;
-        memcpy(this->points, buff, this->nPoints*sizeof(float)*3);
+        memcpy(this->points, buff, this->nPoints * sizeof(float) * 3);
     }
 
     /**
@@ -181,7 +185,7 @@ public:
             this->cells = new int[cellDataCnt];
         }
         this->nCellData = cellDataCnt;
-        memcpy(this->cells, buff, this->nCellData*sizeof(int));
+        memcpy(this->cells, buff, this->nCellData * sizeof(int));
     }
 
     /**
@@ -196,21 +200,17 @@ public:
             this->cellTypes = new CellType[cellCnt];
         }
         this->nCells = cellCnt;
-        memcpy(this->cellTypes, buff, this->nCells*sizeof(CellType));
+        memcpy(this->cellTypes, buff, this->nCells * sizeof(CellType));
     }
 
     /** TODO */
-    inline size_t GetPointDataCount() const {
-        return this->pointData.Count();
-    }
+    inline size_t GetPointDataCount() const { return this->pointData.Count(); }
 
 protected:
-
 private:
-
     /// The array of points using the following format:
     /// x_0 y_0 z_0 x_1 y_1 z_1 ...
-    float *points;
+    float* points;
 
     /// The number of vertices
     size_t nPoints;
@@ -219,13 +219,13 @@ private:
     /// numPoints_0 i_0 j_0 k_0 ....
     /// numPoints_1 i_1 j_1 k_1 ....
     /// ...
-    int *cells;
+    int* cells;
 
     /// The number of cells
     size_t nCells;
 
     /// Array containing the different cell types for all cells
-    CellType *cellTypes;
+    CellType* cellTypes;
 
     /// The size of the cell index data
     size_t nCellData;
@@ -235,7 +235,6 @@ private:
 
     /// Data attributes for the cell data
     vislib::Array<AbstractVTKLegacyData::AttributeArray> cellData;
-
 };
 
 } // namespace protein

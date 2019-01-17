@@ -183,14 +183,17 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             this->colorTransferGray(p, NULL, 0, rgba);
         }
 
+        auto const& parStore = p.GetParticleStore();
+        auto const& xAcc = parStore.GetXAcc();
+        auto const& yAcc = parStore.GetYAcc();
+        auto const& zAcc = parStore.GetZAcc();
 
         finalData[i] = new float[cnt * 7];
         for (size_t loop = 0; loop < cnt; loop++) {
-            auto part = p[loop];
 
-            pos.SetX(part.vert.GetXf());
-            pos.SetY(part.vert.GetYf());
-            pos.SetZ(part.vert.GetZf());
+            pos.SetX(xAcc->Get_f(loop));
+            pos.SetY(yAcc->Get_f(loop));
+            pos.SetZ(zAcc->Get_f(loop));
             pos.SetW(1.0f);
 
             pos = totMX * pos;
@@ -230,10 +233,12 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
 void datatools::ParticleTranslateRotateScale::colorTransferGray(core::moldyn::MultiParticleDataCall::Particles& p,
     float const* transferTable, unsigned int tableSize, std::vector<float>& rgbaArray) {
 
+    auto const& parStore = p.GetParticleStore();
+    auto const& iAcc = parStore.GetCRAcc();
+
     std::vector<float> grayArray(p.GetCount());
     for (size_t i = 0; i < p.GetCount(); i++) {
-        auto part = p[i];
-        grayArray[i] = part.col.GetIf();
+        grayArray[i] = iAcc->Get_f(i);
     }
     
     float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
