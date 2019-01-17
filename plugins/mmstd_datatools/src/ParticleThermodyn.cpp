@@ -251,7 +251,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             std::vector<float> metricMin(num_thr, FLT_MAX);
             std::vector<float> metricMax(num_thr, 0.0f);
 
-           float eps = sqrt(std::numeric_limits<float>::epsilon());// * 1000.0f;
+           float eps = sqrt(std::numeric_limits<float>::epsilon());
            
 #pragma omp parallel num_threads(num_thr)
 //#pragma omp parallel num_threads(1)
@@ -396,6 +396,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                 continue;
             }
             outMPDC->AccessParticles(i).SetCount(pl.GetCount());
+            outMPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
             outMPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, 
                 this->newColors.data() + allpartcnt, 0);
@@ -412,6 +413,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                 continue;
             }
             outDPDC->AccessParticles(i).SetCount(pl.GetCount());
+            outDPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
             outDPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outDPDC->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
