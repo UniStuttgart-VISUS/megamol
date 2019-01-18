@@ -19,6 +19,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <chrono>
+#include <functional>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -61,6 +62,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
+    ep->SetTypePair(1, "IColToSingleCell_Volume");
     this->aggregatorSlot << ep;
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
@@ -272,7 +274,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     float const maxCellSize = std::max(sliceDistX, std::max(sliceDistY, sliceDistZ));
     float const disThreshold = 0.5f * maxCellSize;
 
-    for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
+    for (unsigned int i = 0; i < c2->GetParticleListCount(); ++i) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
         const bool useGlobRad =
@@ -296,6 +298,34 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         auto const& yAcc = parStore.GetYAcc();
         auto const& zAcc = parStore.GetZAcc();
         auto const& rAcc = parStore.GetRAcc();
+        auto const& iAcc = parStore.GetCRAcc();
+
+        std::function<void(int, int, int, int, int, int, int, float, float, float)> volOp;
+        switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
+        case 1: {
+            volOp = [this, &gauss, &iAcc](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
+                        float const dis, float const disThreshold, float const rad) -> void {
+                auto const val = iAcc->Get_f(pidx);
+                if (dis > disThreshold - rad) {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
+                        gauss(dis - disThreshold + rad, 3.0f * rad) * val;
+                } else {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += val;
+                }
+            };
+        } break;
+        default:
+        case 0: {
+            volOp = [this, &gauss](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
+                        float const dis, float const disThreshold, float const rad) -> void {
+                if (dis > disThreshold - rad) {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis - disThreshold + rad, 3.0f * rad);
+                } else {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
+                }
+            };
+        }
+        }
 
 #pragma omp parallel for
         for (int j = 0; j < parts.GetCount(); ++j) {
@@ -360,12 +390,18 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                         float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                         //if (dis == 0.0f) dis = 1.0f;
                         //vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
-                        if (dis > disThreshold - rad) {
+                        
+                        volOp(j, x, y, z, sx, sy, sz, dis, disThreshold, rad);
+                        
+                        /*if (dis > disThreshold - rad) {
                             vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
                                 gauss(dis - disThreshold + rad, 3.0f * rad);
                         } else {
                             vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
-                        }
+                        }*/
+
+
+
                         //++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
                     }
                 }
