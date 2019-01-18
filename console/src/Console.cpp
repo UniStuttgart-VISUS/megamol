@@ -65,6 +65,7 @@ void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* 
 void initTraceAndLog();
 void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline);
 void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser);
+void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal);
 
 }
 
@@ -118,36 +119,7 @@ int main(int argc, char* argv[]) {
             // ok or warnings!
 
             if (parser->UseCmdLineFile()) {
-                const TCHAR *cmdlinefile = parser->CmdLineFile();
-                if (cmdlinefile == NULL) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
-
-                } else {
-                    vislib::TString cmdlinefilename(cmdlinefile);
-                    vislib::sys::BufferedFile file;
-                    if (file.Open(cmdlinefilename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-                        vislib::StringA newCmdLine = vislib::sys::ReadLineFromFileA(file, 100000);
-                        file.Close();
-
-                        cmdline.CreateCmdLine(argv[0], A2T(newCmdLine));
-                        retVal = parser->Parse(cmdline.ArgC(), cmdline.ArgV());
-
-                        if (retVal < 0) {
-                            ::printErrorsAndWarnings(parser);
-
-                        } else {
-                            vislib::sys::Log::DefaultLog.WriteInfo(
-                                "Read command line from \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
-
-                        }
-
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "Unable to open file \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
-
-                    }
-                }
-
+                ::loadCmdFromFile(parser, cmdline, argv, retVal);
             }
 
             if (!parser->HideLogo() || parser->ShowVersionInfo()) {
@@ -229,6 +201,38 @@ void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser) {
     megamol::console::utility::AboutInfo::PrintGreeting();
     parser->PrintErrorsAndWarnings(stderr);
     std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
+}
+
+void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal) {
+    const TCHAR* cmdlinefile = parser->CmdLineFile();
+    if (cmdlinefile == NULL) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
+
+    } else {
+        vislib::TString cmdlinefilename(cmdlinefile);
+        vislib::sys::BufferedFile file;
+        if (file.Open(cmdlinefilename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
+                vislib::sys::File::OPEN_ONLY)) {
+            vislib::StringA newCmdLine = vislib::sys::ReadLineFromFileA(file, 100000);
+            file.Close();
+
+            cmdline.CreateCmdLine(argv[0], A2T(newCmdLine));
+            retVal = parser->Parse(cmdline.ArgC(), cmdline.ArgV());
+
+            if (retVal < 0) {
+                ::printErrorsAndWarnings(parser);
+
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "Read command line from \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
+            }
+
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to open file \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
+        }
+    }
 }
 
 void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline) {
