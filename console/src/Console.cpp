@@ -62,6 +62,8 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser);
 void signalCtrlC(int);
 void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* message);
 
+void initTraceAndLog();
+
 }
 
 
@@ -93,19 +95,7 @@ int main(int argc, char* argv[]) {
     ::terminationRequest = false;
     ::echoedImportant = false;
     ::applicationExecutablePath = argv[0];
-
-    // VISlib TRACE
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-
-    // VISlib Log
-    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
-
-    megamol::console::utility::AboutInfo::LogGreeting();
-    megamol::console::utility::AboutInfo::LogVersionInfo();
-    megamol::console::utility::AboutInfo::LogStartTime();
+    ::initTraceAndLog();
 
     try {
         vislib::sys::TCmdLineProvider cmdline(argc, argv);
@@ -229,7 +219,22 @@ int main(int argc, char* argv[]) {
     return retVal;
 }
 
+
 namespace {
+
+void initTraceAndLog() {
+    // VISlib TRACE
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
+
+    // VISlib Log
+    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
+    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    megamol::console::utility::AboutInfo::LogGreeting();
+    megamol::console::utility::AboutInfo::LogVersionInfo();
+    megamol::console::utility::AboutInfo::LogStartTime();
+}
 
 /**
  * Creates the core instance object.
