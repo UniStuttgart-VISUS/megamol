@@ -85,7 +85,12 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             cad->inquire("global_g");
             cad->inquire("global_b");
             cad->inquire("global_a");
-        }
+        }		
+		// Intensity
+		else if (cad->isInVars("i")) {
+			cad->inquire("i");
+			stride += 1;
+		}
         // ID
         if (cad->isInVars("id")) {
             cad->inquire("id");
@@ -121,6 +126,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         std::vector<float> b;
         std::vector<float> a;
         std::vector<int> id;
+		std::vector<float> intensity;
 
         // Radius
         if (cad->isInVars("radius")) {
@@ -139,7 +145,17 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             g = cad->getData("global_g")->GetAsFloat();
             b = cad->getData("global_b")->GetAsFloat();
             a = cad->getData("global_a")->GetAsFloat();
-        }
+		} else if (cad->isInVars("i")) {
+			intensity = cad->getData("i")->GetAsFloat();
+			// normalizing intentsity to [0,1]    
+			std::vector<float>::iterator minIt = std::min_element(std::begin(intensity), std::end(intensity));
+			std::vector<float>::iterator maxIt = std::max_element(std::begin(intensity), std::end(intensity));
+			float minIntensity = intensity[std::distance(std::begin(intensity), minIt)];
+			float maxIntensity = intensity[std::distance(std::begin(intensity), maxIt)];
+			for (auto i = 0; i < intensity.size(); i++) {
+				intensity[i] = (intensity[i] - minIntensity)/(maxIntensity - minIntensity);
+			}
+		}
         // ID
         if (cad->isInVars("id")) {
             id = cad->getData("id")->GetAsInt();
@@ -178,7 +194,9 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 mix[stride * i + pos + 1] = g[i];
                 mix[stride * i + pos + 2] = b[i];
                 mix[stride * i + pos + 3] = a[i];
-            }
+			} else if (cad->isInVars("i")) {
+				mix[stride * i + pos] = intensity[i];
+			}
             // TODO
             // if (cad->isInVars("id")) {
         }
@@ -203,6 +221,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             mpdc->AccessParticles(0).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
         } else if (cad->isInVars("r")) {
             colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+		} else if (cad->isInVars("i")) {
+			colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I; 
 		} else {
 			mpdc->AccessParticles(0).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
 		}

@@ -109,16 +109,21 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
             for (auto toInq : varsToInquire) {
                 for (auto var : variables) {
-                    if (var.first == toInq) {
-                        const size_t num = std::stoi(var.second["Shape"]);
-                        if (var.second["Type"] == "float") {
+					if (var.first == toInq) {
+						size_t num = 1;
+						bool singleValue = true;
+						if (var.second["SingleValue"] != std::string("true")) {
+							num = std::stoi(var.second["Shape"]);
+							singleValue = false;
+						}
+						if (var.second["Type"] == "float") {
 
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
                             std::vector<float>& tmp_vec = fc->getVec();
                             tmp_vec.resize(num);
 
                             adios2::Variable<float> advar = io->InquireVariable<float>(var.first);
-                            if (this->MpiInitialized) {
+                            if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
 
@@ -132,7 +137,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             tmp_vec.resize(num);
 
                             adios2::Variable<double> advar = io->InquireVariable<double>(var.first);
-                            if (this->MpiInitialized) {
+                            if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
 
@@ -146,7 +151,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             tmp_vec.resize(num);
 
                             adios2::Variable<int> advar = io->InquireVariable<int>(var.first);
-                            if (this->MpiInitialized) {
+                            if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
 
