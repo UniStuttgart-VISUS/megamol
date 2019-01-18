@@ -93,8 +93,8 @@ namespace moldyn {
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered
-                && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGSplat
-                && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGSplat
+                && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
+                && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
                 && ogl_IsVersionGEQ(2, 0)                                               // SimpleGeo
                 && isExtAvailable("GL_EXT_geometry_shader4")                            // SimpleGeo
@@ -139,12 +139,12 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {
-            SIMPLE      = 0,
-            NG          = 1,
-            SPLAT       = 2,
-            GEO         = 3,
-            CLUSTERED   = 4,
-            BUFFERARRAY = 5
+            SIMPLE    = 0,
+            CLUSTERED = 1,
+            NG        = 2,
+            NG_SPLAT  = 3,
+            NG_BUF_AR = 4,
+            GEO       = 5
         };
 
         RenderMode                               renderMode;
@@ -154,16 +154,31 @@ namespace moldyn {
         vislib::SmartPtr<ShaderSource>           fragShader;
         vislib::SmartPtr<ShaderSource>           geoShader;
 
-        // NGSphere
+
+        // NG /////////////////////////////////////////////////////////////////
+
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
+        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
         GLuint                                   vertArray;
         GLuint                                   colIdxAttribLoc;
         SimpleSphericalParticles::ColourDataType colType;
         SimpleSphericalParticles::VertexDataType vertType;
         std::shared_ptr<GLSLShader>              newShader;
         shaderMap                                theShaders;
+        shaderMap_splat                          theShaders_splat;
+
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
+
+        std::vector<GLsync>                      fences;
+        GLuint                                   theSingleBuffer;
+        unsigned int                             currBuf;
+        GLsizeiptr                               bufSize;
+        int                                      numBuffers;
+        void                                    *theSingleMappedMem;
+        GLuint                                   singleBufferCreationBits;
+        GLuint                                   singleBufferMappingBits;
+
         //TimeMeasure                            timer;
 
         /*********************************************************************/
@@ -173,6 +188,8 @@ namespace moldyn {
         core::param::ParamSlot renderModeParam;
 
         core::param::ParamSlot radiusScalingParam;
+        core::param::ParamSlot alphaScalingParam;
+        core::param::ParamSlot attenuateSubpixelParam;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -195,10 +212,10 @@ namespace moldyn {
         bool releaseResources();
 
         /**
-         * Render spheres for different render modes.
+         * Render spheres in different render modes.
          *
-         * @param cr3d     The calling render call.
-         * @param mpdc     The multy particle data call.
+         * @param cr3d     Pointer to the calling render call.
+         * @param mpdc     Pointer to the multi particle data call.
          * @param vp       The current viewport.
          * @param clipDat  The current clip data.
          * @param clipCol  The current clip data.
@@ -212,35 +229,61 @@ namespace moldyn {
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
+        /// Clustered sphere rendering = simple sphere rendering + option to use vao (+ vb, vc) 
+        /// defined in simple spherical particles -> not implemented yet (?)
+        bool renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
+            float vp[4], float clipDat[4], float clipCol[4], float scaling);
+
         bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
-        bool renderSplat(view::CallRender3D* call);
+        bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
+            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
+            vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
+            vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
+
+        bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
+            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4]);
 
         bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
-        // Clustered sphere rendering = simple sphere rendering + option to use vao (+ vb, vc) defined in simple spherical particles -> NOT implemented yet (?)
-        bool renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
-            float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
-        bool renderBufferArray(view::CallRender3D* call);
+        // NG /////////////////////////////////////////////////////////////////
 
+        void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
+            unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
-        // NGSphere
-        //void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-        std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
-        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
         bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+
         bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
-        void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, 
-            unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
+
+        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+
+        std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
 
+        void getBytesAndStride_splat(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
+            unsigned int &colStride, unsigned int &vertStride);
+
+        bool makeColorString_splat(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+
+        bool makeVertexString_splat(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
+
+        std::shared_ptr<GLSLShader> makeShader_splat(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+
+        std::shared_ptr<vislib::graphics::gl::GLSLShader> generateShader_splat(MultiParticleDataCall::Particles &parts);
+
+
+        void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
+
+        void lockSingle(GLsync& syncObj);
+
+        void waitSingle(GLsync& syncObj);
     };
 
 } /* end namespace moldyn */
