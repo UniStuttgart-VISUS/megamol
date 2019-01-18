@@ -55,11 +55,14 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         auto availVars = cad->getAvailableVars();
         if (cad->isInVars("xyz")) {
             cad->inquire("xyz");
-        } else {
+        } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
             cad->inquire("x");
             cad->inquire("y");
             cad->inquire("z");
-        }
+        } else {
+			vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
+			return false;
+		}
         int stride = 3;
         cad->inquire("box");
         cad->inquire("p_count");
@@ -102,11 +105,14 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
         if (cad->isInVars("xyz")) {
             X = cad->getData("xyz")->GetAsFloat();
-        } else {
+        } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
             X = cad->getData("x")->GetAsFloat();
             Y = cad->getData("y")->GetAsFloat();
             Z = cad->getData("z")->GetAsFloat();
-        }
+        } else {
+			vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
+			return false;
+		}
         auto box = cad->getData("box")->GetAsFloat();
         auto p_count = cad->getData("p_count")->GetAsInt();
         std::vector<float> radius;
@@ -161,7 +167,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 mix[stride * i + 0] = X[i];
                 mix[stride * i + 1] = Y[i];
                 mix[stride * i + 2] = Z[i];
-            }
+			}
             pos += 3;
             if (cad->isInVars("radius")) {
                 mix[stride * i + pos] = radius[i];
@@ -190,12 +196,16 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             mpdc->AccessParticles(0).SetGlobalRadius(radius[0]);
         } else if (cad->isInVars("radius")) {
             vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
-        }
+		} else {
+			mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
+		}
         if (cad->isInVars("global_r")) {
             mpdc->AccessParticles(0).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
         } else if (cad->isInVars("r")) {
             colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
-        }
+		} else {
+			mpdc->AccessParticles(0).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
+		}
         if (cad->isInVars("id")) {
             idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
         }
