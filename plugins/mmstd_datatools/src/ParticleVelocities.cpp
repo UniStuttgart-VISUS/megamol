@@ -150,12 +150,12 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         for (unsigned int i = 0; i < in->GetParticleListCount(); i++) {
             size_t stride = in->AccessParticles(i).GetVertexDataStride();
             this->cachedVertexDataType[i] = in->AccessParticles(i).GetVertexDataType();
+            cachedGlobalRadius[i] = in->AccessParticles(i).GetGlobalRadius();
             if (stride == 0) {
                 switch (this->cachedVertexDataType[i]) {
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE:
                         continue;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ:
-                        cachedGlobalRadius[i] = in->AccessParticles(i).GetGlobalRadius();
                         stride = 12;
                         break;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR:
