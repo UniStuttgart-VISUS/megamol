@@ -3,6 +3,21 @@
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
+ *
+ */
+
+
+/*
+ * KNOWN OpenGL Errors:
+ *
+ * >>> glUnmapNamedBuffer throws following error (can be ignored):
+ *     -> only if named buffer wasn't mapped before ...
+ * [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
+ *
+ * >>> glMapNamedBufferRange throws following error (can be ignored):
+ * [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
+ * [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
+ *
  */
 
 
@@ -124,9 +139,6 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     bufSize(32 * 1024 * 1024),
     numBuffers(3),
     theSingleMappedMem(nullptr),
-    // this variant should not need the fence
-    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT), // | GL_MAP_FLUSH_EXPLICIT_BIT), 
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     //timer(),
@@ -154,7 +166,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     this->attenuateSubpixelParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->attenuateSubpixelParam);
 
-    fences.resize(numBuffers);
+    //this->resetResources();
 }
 
 
@@ -177,6 +189,15 @@ bool moldyn::SimpleSphereRenderer::create(void) {
     glDebugMessageCallback(DebugGLCallback, NULL);
 #endif
 
+    auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
+    if (currentRenderMode != this->renderMode) {
+        this->renderMode = currentRenderMode;
+        this->resetResources();
+        if (!this->createShaders()) {
+            return false;
+        }
+    }
+
     //timer.SetNumRegions(4);
     //const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};
     //timer.SetRegionNames(4, regions);
@@ -184,7 +205,7 @@ bool moldyn::SimpleSphereRenderer::create(void) {
     //timer.SetSummaryFileName("summary.csv");
     //timer.SetMaximumFrames(20, 100);
 
-    return (this->shaderCreate(this->renderMode) && AbstractSimpleSphereRenderer::create());
+    return (AbstractSimpleSphereRenderer::create());
 }
 
 
@@ -193,9 +214,216 @@ bool moldyn::SimpleSphereRenderer::create(void) {
  */
 void moldyn::SimpleSphereRenderer::release(void) {
 
-    this->releaseResources();
-
+    this->resetResources();
     AbstractSimpleSphereRenderer::release();
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::resetResources
+ */
+bool moldyn::SimpleSphereRenderer::resetResources(void) {
+
+    this->sphereShader.Release();
+    this->sphereGeometryShader.Release();
+
+    this->vertShader = nullptr;
+    this->fragShader = nullptr;
+    this->geoShader = nullptr;
+
+    this->theSingleMappedMem = nullptr;
+
+    if (this->newShader != nullptr) {
+        this->newShader->Release();
+        this->newShader.reset();
+    }
+    this->theShaders.clear();
+    this->theShaders_splat.clear();
+
+    glUnmapNamedBufferEXT(this->theSingleBuffer);
+    for (auto &x : fences) {
+        if (x) {
+            glDeleteSync(x);
+        }
+    }
+
+    glDeleteBuffers(1, &this->theSingleBuffer);
+    glDeleteVertexArrays(1, &this->vertArray);
+
+    this->currBuf = 0;
+    this->bufSize = (32 * 1024 * 1024);
+    this->numBuffers = 3;
+    this->fences.clear();
+    this->fences.resize(numBuffers);
+
+    this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
+    this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
+
+    // this variant should not need the fence
+    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
+    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
+    this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+    if (this->renderMode == RenderMode::NG_BUF_AR) {
+        this->singleBufferCreationBits |= GL_MAP_FLUSH_EXPLICIT_BIT;
+    }
+    this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+
+    return true;
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::createShaders
+ */
+bool moldyn::SimpleSphereRenderer::createShaders() {
+
+    this->vertShader = new ShaderSource();
+    this->fragShader = new ShaderSource();
+
+    vislib::StringA vertShaderName;
+    vislib::StringA fragShaderName;
+    vislib::StringA geoShaderName;
+
+    try {
+
+        // Select shader names
+        switch (this->renderMode) {
+        case (RenderMode::SIMPLE):
+            vertShaderName = "simplesphere::vertex";
+            fragShaderName = "simplesphere::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            break;
+        case (RenderMode::CLUSTERED):
+            vertShaderName = "simplesphere::vertex";
+            fragShaderName = "simplesphere::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            break;
+        case (RenderMode::NG):
+            vertShaderName = "ngsphere::vertex";
+            fragShaderName = "ngsphere::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            glGenVertexArrays(1, &this->vertArray);
+            glBindVertexArray(this->vertArray);
+            glBindVertexArray(0);
+            break;
+        case (RenderMode::NG_SPLAT):
+            vertShaderName = "ngsplat::vertex";
+            fragShaderName = "ngsplat::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            glGenVertexArrays(1, &this->vertArray);
+            glBindVertexArray(this->vertArray);
+            glGenBuffers(1, &this->theSingleBuffer);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
+            glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
+            this->theSingleMappedMem = glMapNamedBufferRange(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+            glBindVertexArray(0);
+            break;
+        case (RenderMode::NG_BUF_AR):
+            vertShaderName = "ngspherebufferarray::vertex";
+            fragShaderName = "ngspherebufferarray::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            glGenVertexArrays(1, &this->vertArray);
+            glBindVertexArray(this->vertArray);
+            glGenBuffers(1, &this->theSingleBuffer);
+            glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
+            glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
+            this->theSingleMappedMem = glMapNamedBufferRange(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
+            break;
+        case (RenderMode::GEO):
+            this->geoShader = new ShaderSource();
+            vertShaderName = "geosphere::vertex";
+            fragShaderName = "geosphere::fragment";
+            geoShaderName = "geosphere::geometry";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+                return false;
+            }
+            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                this->geoShader->Code(), this->geoShader->Count(),
+                this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere geometry shader: Unknown error\n");
+                return false;
+            }
+            if (!this->sphereGeometryShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to link sphere geometry shader: Unknown error\n");
+                return false;
+            }
+            break;
+        default:
+            return false;
+        }
+
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+                ce.FailedAction()), ce.GetMsgA());
+        return false;
+    }
+    catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader: %s\n", e.GetMsgA());
+        return false;
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader: Unknown exception\n");
+        return false;
+    }
+
+
+    return true;
 }
 
 
@@ -214,7 +442,8 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
         this->renderMode = currentRenderMode;
-        if (!this->shaderCreate(currentRenderMode)) {
+        this->resetResources();
+        if (!this->createShaders()) {
             return false;
         }
     }
@@ -279,209 +508,6 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 #endif
 
     return false;
-}
-
-
-/*
- * moldyn::SimpleSphereRenderer::shaderCreate
- */
-bool moldyn::SimpleSphereRenderer::shaderCreate(SimpleSphereRenderer::RenderMode rm) {
-
-    this->releaseResources();
-
-    this->vertShader = new ShaderSource();
-    this->fragShader = new ShaderSource();
-
-    vislib::StringA vertShaderName;
-    vislib::StringA fragShaderName;
-    vislib::StringA geoShaderName;
-
-    try {
-
-        // Select shader names
-        switch (rm) {
-        case (RenderMode::SIMPLE): 
-            vertShaderName = "simplesphere::vertex";
-            fragShaderName = "simplesphere::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere shader: Unknown error\n");
-                return false;
-            }
-            break;
-        case (RenderMode::CLUSTERED):
-            vertShaderName = "simplesphere::vertex";
-            fragShaderName = "simplesphere::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere shader: Unknown error\n");
-                return false;
-            }
-            break;
-        case (RenderMode::NG): 
-            vertShaderName = "ngsphere::vertex";
-            fragShaderName = "ngsphere::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            glGenVertexArrays(1, &this->vertArray);
-            glBindVertexArray(this->vertArray);
-            glBindVertexArray(0);
-            break;
-        case (RenderMode::NG_SPLAT): 
-            vertShaderName = "ngsplat::vertex";
-            fragShaderName = "ngsplat::vertex";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere shader: Unknown error\n");
-                return false;
-            }
-            glGenVertexArrays(1, &this->vertArray);
-            glBindVertexArray(this->vertArray);
-            glGenBuffers(1, &this->theSingleBuffer);
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
-            glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-            glBindVertexArray(0);
-            break;
-        case (RenderMode::NG_BUF_AR):
-            vertShaderName = "ngspherebufferarray::vertex";
-            fragShaderName = "ngspherebufferarray::vertex";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere shader: Unknown error\n");
-                return false;
-            }
-            glGenVertexArrays(1, &this->vertArray);
-            glBindVertexArray(this->vertArray);
-            glGenBuffers(1, &this->theSingleBuffer);
-            glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
-            glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-            break;
-        case (RenderMode::GEO):
-            this->geoShader = new ShaderSource();
-            vertShaderName = "geosphere::vertex";
-            fragShaderName = "geosphere::fragment";
-            geoShaderName = "geosphere::geometry";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
-                return false;
-            }
-            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
-                this->geoShader->Code(), this->geoShader->Count(),
-                this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere geometry shader: Unknown error\n");
-                return false;
-            }
-            if (!this->sphereGeometryShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to link sphere geometry shader: Unknown error\n");
-                return false;
-            }
-            break;
-        default: 
-            return false;
-        }
-
-    }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-                ce.FailedAction()), ce.GetMsgA());
-        return false;
-    }
-    catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader: %s\n", e.GetMsgA());
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader: Unknown exception\n");
-        return false;
-    }
-
-
-    return true;
-}
-
-
-/*
- * moldyn::SimpleSphereRenderer::releaseResources
- */
-bool moldyn::SimpleSphereRenderer::releaseResources(void) {
-
-    this->sphereShader.Release();
-    this->sphereGeometryShader.Release();
-
-    this->vertShader = nullptr;
-    this->fragShader = nullptr;
-    this->geoShader  = nullptr;
-
-    if (this->newShader != nullptr) {
-        this->newShader->Release();
-        this->newShader.reset();
-    }
-    this->theShaders.clear();
-    this->theShaders_splat.clear();
-
-    glDeleteVertexArrays(1, &this->vertArray);
-    glDeleteBuffers(1, &this->theSingleBuffer);
-
-    glUnmapNamedBufferEXT(this->theSingleBuffer);
-    for (auto &x : fences) {
-        if (x) {
-            glDeleteSync(x);
-        }
-    }
-
-    this->fences.clear();
-    this->currBuf = 0;
-    this->bufSize = (32 * 1024 * 1024);
-    this->numBuffers = 3;
-    this->theSingleMappedMem = nullptr;
-    this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
-    this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
-
-    return true;
 }
 
 
@@ -936,7 +962,9 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm) {
 
-
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
     //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 #if 1
     // maybe for blending against white, remove pre-mult alpha and use this:
@@ -947,7 +975,6 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
 #endif
 
     glEnable(GL_POINT_SPRITE);
-    
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
@@ -961,25 +988,25 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
-            newShader = this->generateShader_splat(parts);
+            this->newShader = this->generateShader_splat(parts);
         }
 
-        newShader->Enable();
+        this->newShader->Enable();
 
         colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
 
-        glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, vp);
-        glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-        glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
-        glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
-        glUniform1f(newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-        glUniform1f(newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
-        glUniform1i(newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
-        glUniform1f(newShader->ParameterLocation("zNear"), cr3d->GetCameraParameters()->NearClip());
-        glUniformMatrix4fv(newShader->ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, vp);
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, clipDat);
+        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+        glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
+        glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
+        glUniform1f(this->newShader->ParameterLocation("zNear"), cr3d->GetCameraParameters()->NearClip());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -1026,6 +1053,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData())
             - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
             && vertStride == colStride) || colStride == 0) {
+
             numVerts = this->bufSize / vertStride;
             const char *currVert = static_cast<const char *>(parts.GetVertexData());
             const char *currCol = static_cast<const char *>(parts.GetColourData());
@@ -1037,7 +1065,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
                 //currCol = currCol == 0 ? currVert : currCol;
                 const char *whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-                this->waitSingle(fences[currBuf]);
+                this->waitSingle(this->fences[currBuf]);
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
@@ -1068,11 +1096,13 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         //glDisableClientState(GL_VERTEX_ARRAY);
         //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
-
         newShader->Disable();
     }
 
     mpdc->Unlock();
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 
     return true;
 }

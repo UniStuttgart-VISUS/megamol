@@ -92,7 +92,7 @@ namespace moldyn {
             ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered
+            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered, NGSphere, NGBufferArray, NGSplat, SimpleGeo
                 && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
                 && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
@@ -197,19 +197,17 @@ namespace moldyn {
 
         /**
          * Create shaders for given render mode.
-         *
-         * @param rm The render mode.
-         *
+         * 
          * @return True if success, false otherwise.
          */
-        bool shaderCreate(SimpleSphereRenderer::RenderMode rm);
+        bool createShaders(void);
 
         /**
          * Release all OpenGL resources.
          *
          * @return True if success, false otherwise.
          */
-        bool releaseResources();
+        bool resetResources(void);
 
         /**
          * Render spheres in different render modes.
