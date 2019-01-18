@@ -66,6 +66,7 @@ void initTraceAndLog();
 void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline);
 void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser);
 void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal);
+void countProjects(vislib::SingleLinkedList<vislib::TString>& projects, int& loadedProjects, int& loadedLuaProjects);
 
 }
 
@@ -455,19 +456,9 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // prepare project files and instantiations
     vislib::SingleLinkedList<vislib::TString> projects;
     parser->GetProjectFiles(projects);
-    vislib::SingleLinkedList<vislib::TString>::Iterator projectIter = projects.GetIterator();
     int loadedProjects = 0;
     int loadedLuaProjects = 0;
-    while (projectIter.HasNext()) {
-        const vislib::TString& project = projectIter.Next();
-        // HAZARD: Legacy Projects vs. new Projects
-        ::mmcLoadProject(hCore, project);
-        loadedProjects++;
-        if (project.EndsWith(".lua")) {
-            loadedLuaProjects++;
-            processPendingActions();
-        }
-    }
+    countProjects(projects, loadedProjects, loadedLuaProjects);
     if (loadedLuaProjects > 0 && loadedLuaProjects != loadedProjects) {
         vislib::sys::Log::DefaultLog.WriteError("You cannot mix loading legacy projects and lua projects!");
         return -66;
@@ -598,6 +589,21 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
 #endif
 
     return 0;
+}
+
+void countProjects(vislib::SingleLinkedList<vislib::TString> &projects, int &loadedProjects, int &loadedLuaProjects)
+{
+    vislib::SingleLinkedList<vislib::TString>::Iterator projectIter = projects.GetIterator();
+    while (projectIter.HasNext()) {
+        const vislib::TString& project = projectIter.Next();
+        // HAZARD: Legacy Projects vs. new Projects
+        ::mmcLoadProject(hCore, project);
+        loadedProjects++;
+        if (project.EndsWith(".lua")) {
+            loadedLuaProjects++;
+            processPendingActions();
+        }
+    }
 }
 
 /**
