@@ -64,6 +64,7 @@ void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* 
 
 void initTraceAndLog();
 void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline);
+void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser);
 
 }
 
@@ -111,9 +112,7 @@ int main(int argc, char* argv[]) {
 
         if (retVal < 0) {
             // errors are present!
-            megamol::console::utility::AboutInfo::PrintGreeting();
-            parser->PrintErrorsAndWarnings(stderr);
-            std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
+            ::printErrorsAndWarnings(parser);
 
         } else {
             // ok or warnings!
@@ -134,9 +133,7 @@ int main(int argc, char* argv[]) {
                         retVal = parser->Parse(cmdline.ArgC(), cmdline.ArgV());
 
                         if (retVal < 0) {
-                            megamol::console::utility::AboutInfo::PrintGreeting();
-                            parser->PrintErrorsAndWarnings(stderr);
-                            std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
+                            ::printErrorsAndWarnings(parser);
 
                         } else {
                             vislib::sys::Log::DefaultLog.WriteInfo(
@@ -166,6 +163,7 @@ int main(int argc, char* argv[]) {
             }
 
             if (retVal > 0) {
+                // warnings are present
                 parser->PrintErrorsAndWarnings(stderr);
             }
 
@@ -225,6 +223,12 @@ void initTraceAndLog() {
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();
+}
+
+void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser) {
+    megamol::console::utility::AboutInfo::PrintGreeting();
+    parser->PrintErrorsAndWarnings(stderr);
+    std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
 }
 
 void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline) {
