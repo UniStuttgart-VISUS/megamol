@@ -169,22 +169,12 @@ namespace moldyn {
         /*********************************************************************/
 
         core::param::ParamSlot renderModeParam;
-        core::param::ParamSlot toggleModeParam;
 
         core::param::ParamSlot radiusScalingParam;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
-
-        /**
-         * Toggle render mode on button press.
-         *
-         * @param slot The calling parameter slot.
-         *
-         * @return True if success, false otherwise.
-         */
-        bool toggleRenderMode(param::ParamSlot& slot);
 
         /**
          * Create shaders for given render mode.
@@ -217,15 +207,23 @@ namespace moldyn {
          *
          * @return True if success, false otherwise.
          */
-        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, float vp[4], float clipDat[4], float clipCol[4], float scaling);
-        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
+        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
+            float vp[4], float clipDat[4], float clipCol[4], float scaling);
+
+        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
+            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
+
         bool renderSplat(view::CallRender3D* call);
-        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
+
+        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
+            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
+
         bool renderClustered(view::CallRender3D* call);
+
         bool renderBufferArray(view::CallRender3D* call);
 
 

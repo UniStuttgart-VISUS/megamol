@@ -118,9 +118,8 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     streamer(),
     colStreamer(),
     //timer(),
-    radiusScalingParam(   "scaling",          "Scaling factor for particle radii."),
-    renderModeParam("renderMode",       "The sphere render mode."),
-    toggleModeParam("renderModeButton", "Toggle sphere render mode: 1-6")
+    radiusScalingParam("scaling",    "Scaling factor for particle radii."),
+    renderModeParam(   "renderMode", "The sphere render mode.")
 {
     this->radiusScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
@@ -134,10 +133,6 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     rmp->SetTypePair(RenderMode::BUFFERARRAY, "BufferArray");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
-
-    this->toggleModeParam.SetParameter(new param::ButtonParam('r'));
-    this->toggleModeParam.SetUpdateCallback(&SimpleSphereRenderer::toggleRenderMode);
-    this->MakeSlotAvailable(&this->toggleModeParam);
 }
 
 
@@ -183,34 +178,6 @@ void moldyn::SimpleSphereRenderer::release(void) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::toggleRenderMode
- */
-bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
-
-    ASSERT((&slot == &this->toggleModeParam));
-
-    auto currentRenderMode = this->renderModeParam.Param<param::EnumParam>()->Value();
-    currentRenderMode = (currentRenderMode + 1) % 6;
-    this->renderModeParam.Param<param::EnumParam>()->SetValue(currentRenderMode);
-
-    vislib::StringA mode;
-    switch (static_cast<RenderMode>(currentRenderMode)) {
-    case (RenderMode::SIMPLE):          mode = "SIMPLE"; break;
-        case (RenderMode::NG):          mode = "NG"; break;
-        case (RenderMode::SPLAT):       mode = "SPLAT"; break;
-        case (RenderMode::GEO):         mode = "GEO"; break;
-        case (RenderMode::CLUSTERED):   mode = "CLUSTERED"; break;
-        case (RenderMode::BUFFERARRAY): mode = "BUFFERARRAY"; break;
-        default: break;
-    }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        ">>> Switched to render mode: %s", mode.PeekBuffer());
-
-    return true;
-}
-
-
-/*
  * moldyn::SimpleSphereRenderer::Render
  */
 bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
@@ -242,10 +209,6 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
 
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
     GLfloat lightPos[4];
     glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
@@ -262,6 +225,10 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
 
     switch (currentRenderMode) {
