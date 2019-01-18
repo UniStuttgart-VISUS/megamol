@@ -109,6 +109,8 @@ namespace datatools {
         core::param::ParamSlot freedomSlot;
         core::param::ParamSlot metricsSlot;
         core::param::ParamSlot removeSelfSlot;
+        core::param::ParamSlot findExtremesSlot;
+        core::param::ParamSlot extremeValueSlot;
         
         size_t datahash;
         int lastTime;
