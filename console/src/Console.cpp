@@ -419,7 +419,7 @@ void processPendingActions(void) {
         }
     }
     while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
+        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) { // <-- GLFW and OpenGL context/window start life when instantiating the first view
             vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
             vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
             break;
@@ -486,7 +486,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         }
     }
 
-    processPendingActions();
+    processPendingActions(); // <-- GLFW and OpenGL context/window start life here!
 
     // parameter value options
     std::map<vislib::TString, vislib::TString> paramValues;
