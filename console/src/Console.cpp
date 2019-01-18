@@ -63,6 +63,7 @@ void signalCtrlC(int);
 void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* message);
 
 void initTraceAndLog();
+void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline);
 
 }
 
@@ -157,17 +158,7 @@ int main(int argc, char* argv[]) {
             }
 
             if (parser->EchoCmdLine()) {
-                // echo the command line
-                vislib::StringA cmdlineecho("Called:");
-                for (int i = 0; i < cmdline.ArgC(); i++) {
-                    cmdlineecho.Append(" ");
-                    cmdlineecho.Append(vislib::StringA(cmdline.ArgV()[i]));
-                }
-                
-                vislib::sys::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
-                if (vislib::sys::Log::DefaultLog.GetEchoLevel() < vislib::sys::Log::LEVEL_INFO) {
-                    std::cout << cmdlineecho << std::endl;
-                }
+                ::echoCmdLine(cmdline);
             }
 
             if (parser->ShowVersionInfo()) {
@@ -234,6 +225,20 @@ void initTraceAndLog() {
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();
+}
+
+void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline) {
+    // echo the command line
+    vislib::StringA cmdlineecho("Called:");
+    for (int i = 0; i < cmdline.ArgC(); i++) {
+        cmdlineecho.Append(" ");
+        cmdlineecho.Append(vislib::StringA(cmdline.ArgV()[i]));
+    }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
+    if (vislib::sys::Log::DefaultLog.GetEchoLevel() < vislib::sys::Log::LEVEL_INFO) {
+        std::cout << cmdlineecho << std::endl;
+    }
 }
 
 /**
