@@ -21,13 +21,13 @@ megamol::ngmesh::DebugMaterialsDataSource::~DebugMaterialsDataSource()
 
 bool megamol::ngmesh::DebugMaterialsDataSource::getDataCallback(core::Call & caller)
 {
-	MaterialsDataCall* material_call = dynamic_cast<MaterialsDataCall*>(&caller);
-	if (material_call == NULL)
+	MaterialsDataCall* matl_call = dynamic_cast<MaterialsDataCall*>(&caller);
+	if (matl_call == NULL)
 		return false;
 
 	load();
-
-	//TODO hand over data access to call
+	
+	matl_call->setMaterialsData(m_material_storage);
 
 	return true;
 }

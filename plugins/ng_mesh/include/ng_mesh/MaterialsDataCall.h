@@ -87,8 +87,25 @@ namespace megamol {
 				return AbstractGetDataCall::FunctionName(idx);
 			}
 
+			void setMaterialsData(std::shared_ptr<MaterialsDataStorage> const& materials_data) {
+				m_materials = materials_data;
+			}
+
+			std::shared_ptr<MaterialsDataStorage> getMaterialsData(){
+				return m_materials;
+			}
+
+			uint32_t getUpdateFlags() {
+				return m_update_flags;
+			}
+
+			void resetUpdateFlags() {
+				m_update_flags = 0;
+			}
+
 		private:
 			std::shared_ptr<MaterialsDataStorage> m_materials;
+			uint32_t                              m_update_flags;
 		};
 
 		/** Description class typedef */

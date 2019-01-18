@@ -277,7 +277,7 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 //   
 //   	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 //   }
-//   
+
 //   void NGMeshRenderer::updateRenderBatch(
 //   	size_t									idx,
 //   	ShaderPrgmDataAccessor const&			shader_prgm_data,
@@ -479,7 +479,6 @@ void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const 
 			//fail?
 		}
 	}
-	
 }
 
 void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsDataStorage> const & materials)
@@ -502,7 +501,41 @@ void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsData
 
 void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks)
 {
-	//TODO
+	for (auto& task_batch : render_tasks->m_batched_render_task)
+	{
+		m_render_batches.push_back(RenderBatch());
+		RenderBatch& render_batch = m_render_batches.back();
+
+		render_batch.draw_cnt = task_batch.total_draw_cnt;
+		render_batch.shader_prgm = m_materials.at(task_batch.material_idx).shader;
+		render_batch.mesh = m_meshes.at(task_batch.mesh_batch_idx).mesh;
+
+		// Create GPU buffer for per object shader parameters
+	 	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
+	 		GL_SHADER_STORAGE_BUFFER,
+			task_batch.per_object_data,
+	 		GL_DYNAMIC_DRAW);
+
+		//TODO material parameter for shader
+
+		std::vector<DrawElementsCommand> draw_command_data;
+		draw_command_data.reserve(render_batch.draw_cnt);
+		for (auto& task : task_batch.render_tasks)
+		{
+			size_t base_idx = task.draw_commands_base_offset;
+			for (size_t i = 0; i < task.draw_commands_cnt; i++)
+			{
+				draw_command_data.push_back(m_meshes[task_batch.mesh_batch_idx].submesh_draw_commands[base_idx + i]);
+			}
+		}
+
+		// Create GPU buffer for draw commands
+	 	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
+	 		GL_DRAW_INDIRECT_BUFFER,
+	 		draw_command_data,
+	 		GL_DYNAMIC_DRAW
+	 		);
+	}
 }
 
 bool NGMeshRenderer::Render(megamol::core::Call& call)
@@ -564,6 +597,31 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 
+	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
+	MaterialsDataCall* matl_call     = this->m_mesh_callerSlot.CallAs<MaterialsDataCall>();
+	RenderTasksDataCall* task_call   = this->m_mesh_callerSlot.CallAs<RenderTasksDataCall>();
+
+	if (mesh_call == NULL || matl_call == NULL || task_call == NULL)
+		return false;
+
+	if ( (!(*mesh_call)(0)) || (!(*matl_call)(0)) || (!(*task_call)(0)) )
+		return false;
+
+	// TODO update on-demand only
+
+	if (mesh_call->getUpdateFlags() > 0) {
+		addMeshes(*(mesh_call->getBatchedMeshesDataAccessor()));
+	}
+	if (matl_call->getUpdateFlags() > 0) {
+		addMaterials(matl_call->getMaterialsData());
+	}
+	if (task_call->getUpdateFlags() > 0) {
+		addRenderTasks(task_call->getRenderTaskData());
+	}
+
+	mesh_call->resetUpdateFlags();
+	matl_call->resetUpdateFlags();
+	task_call->resetUpdateFlags();
 
 	//   CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 	//   

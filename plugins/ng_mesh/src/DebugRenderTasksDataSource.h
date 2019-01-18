@@ -65,7 +65,7 @@ namespace megamol
 
 		private:
 
-			RenderTaskDataStorage m_render_task_data;
+			std::shared_ptr<RenderTaskDataStorage> m_render_task_data;
 		};
 	}
 }

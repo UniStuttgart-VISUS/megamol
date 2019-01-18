@@ -26,13 +26,13 @@ megamol::ngmesh::DebugRenderTasksDataSource::~DebugRenderTasksDataSource()
 
 bool megamol::ngmesh::DebugRenderTasksDataSource::getDataCallback(core::Call & caller)
 {
-	RenderTasksDataCall* material_call = dynamic_cast<RenderTasksDataCall*>(&caller);
-	if (material_call == NULL)
+	RenderTasksDataCall* task_call = dynamic_cast<RenderTasksDataCall*>(&caller);
+	if (task_call == NULL)
 		return false;
 
 	load();
 
-	//TODO hand over data access to call
+	task_call->setRenderTaskData(m_render_task_data);
 
 	return true;
 }
@@ -59,7 +59,7 @@ bool megamol::ngmesh::DebugRenderTasksDataSource::load()
 		object_transform.SetAt(1, 3, loc_distr(generator));
 		object_transform.SetAt(2, 3, loc_distr(generator));
 	
-		m_render_task_data.addRenderTask<GLfloat*>(0, 0, 1, 0, { object_transform.PeekComponents(),object_transform.PeekComponents() + 16 });
+		m_render_task_data->addRenderTask<GLfloat*>(0, 0, 1, 0, { object_transform.PeekComponents(),object_transform.PeekComponents() + 16 });
 	}
 
 	return true;

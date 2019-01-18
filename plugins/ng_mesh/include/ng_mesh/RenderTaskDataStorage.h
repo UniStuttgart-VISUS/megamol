@@ -30,24 +30,21 @@ namespace megamol {
 				size_t material_idx,
 				IteratorPair<PerObjectDataIterator> per_object_data);
 
-		private:
 			struct RenderTask
 			{
-				// reference to subset of mesh data used for this render task
-				size_t mesh_batch_idx;
 				size_t draw_commands_base_offset;
-				size_t draw_cnt;
-
-				// reference to material (i.e. shader) used for this render task
-				size_t material_idx;
+				size_t draw_commands_cnt;
 			};
 
 			struct BatchedRenderTasks
 			{
-				std::vector<RenderTask> m_render_tasks;
+				/** individual render task */
+				std::vector<RenderTask> render_tasks;
+				size_t total_draw_cnt;
 
-				// (all) per object data used (in the shader) for this batch of render tasks
-				std::vector<std::byte> per_object_data;
+				size_t mesh_batch_idx; //< reference to subset of mesh data used for this render task
+				size_t material_idx; //< reference to material (i.e. shader) used for this render task
+				std::vector<std::byte> per_object_data; //< (all) per object data used (in the shader) for this batch of render tasks
 			};
 
 			std::vector<BatchedRenderTasks> m_batched_render_task;
@@ -65,8 +62,8 @@ namespace megamol {
 			auto it = m_batched_render_task.begin();
 			for (; it != m_batched_render_task.end(); ++it)
 			{
-				if( ( it->m_render_tasks.front().mesh_batch_idx == mesh_batch_idx)
-					&& (it->m_render_tasks.front().material_idx == material_idx) )
+				if( ( it->mesh_batch_idx == mesh_batch_idx)
+					&& (it->material_idx == material_idx) )
 				{
 					break;
 				}
@@ -79,23 +76,25 @@ namespace megamol {
 				--it;
 			}
 
-			it->m_render_tasks.push_back(RenderTask);
+			it->total_draw_cnt += draw_cnt;
+			it->mesh_batch_idx = mesh_batch_idx;
+			it->material_idx = material_idx;
 
-			RenderTask& new_task = it->m_render_tasks.back();
+			it->render_tasks.push_back(RenderTask());
+
+			RenderTask& new_task = it->render_tasks.back();
 			
-			new_task.mesh_batch_idx = mesh_batch_idx;
 			new_task.draw_commands_base_offset = draw_commands_base_offset;
-			new_task.draw_cnt = draw_cnt;
-			new_task.material_idx = material_idx;
-
+			new_task.draw_commands_cnt = draw_cnt;
+			
 			size_t per_obj_data_byte_size = sizeof(std::iterator_traits<PerObjectDataIterator>::value_type) *
 				std::distance(std::get<0>(per_object_data), std::get<1>(per_object_data));
 
 			size_t allocated_byte_size = it->per_object_data.size();
 			size_t new_byte_size = per_obj_data_byte_size + allocated_byte_size;
 
-			std::vector<byte> new_per_obj_data(new_byte_size);
-			auto dest = new_per_obj_data.back().per_object_data.data();
+			std::vector<std::byte> new_per_obj_data(new_byte_size);
+			auto dest = new_per_obj_data.data();
 			auto src_first = reinterpret_cast<std::byte*>(&*std::get<0>(per_object_data));
 			auto src_last = reinterpret_cast<std::byte*>(&*std::get<1>(per_object_data));
 			std::copy(src_first, src_last, dest);

@@ -63,8 +63,25 @@ namespace megamol
 				return AbstractGetDataCall::FunctionName(idx);
 			}
 
+			void setRenderTaskData(std::shared_ptr<RenderTaskDataStorage> const& render_task_data) {
+				m_render_tasks = render_task_data;
+			}
+
+			std::shared_ptr<RenderTaskDataStorage> getRenderTaskData() {
+				return m_render_tasks;
+			}
+
+			uint32_t getUpdateFlags() {
+				return m_update_flags;
+			}
+
+			void resetUpdateFlags() {
+				m_update_flags = 0;
+			}
+
 		private:
 			std::shared_ptr<RenderTaskDataStorage> m_render_tasks;
+			uint32_t                               m_update_flags;
 		};
 
 		/** Description class typedef */

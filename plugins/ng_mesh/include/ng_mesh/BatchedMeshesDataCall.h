@@ -133,8 +133,25 @@ namespace megamol {
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
+			void setBatchedMeshesDataAccessor(BatchedMeshesDataAccessor* data_accessor){
+				m_data_accessor = data_accessor;
+			}
+
+			BatchedMeshesDataAccessor* getBatchedMeshesDataAccessor() {
+				return m_data_accessor;
+			}
+
+			uint32_t getUpdateFlags() {
+				return m_update_flags;
+			}
+
+			void resetUpdateFlags() {
+				m_update_flags = 0;
+			}
+
 		private:
-			BatchedMeshesDataAccessor* data_accessor;
+			BatchedMeshesDataAccessor* m_data_accessor;
+			uint32_t                   m_update_flags;
 		};
 
 		/** Description class typedef */

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "NGMeshStructs.h"
+#include "BatchedMeshesDataCall.h"
 
 namespace megamol {
 	namespace ngmesh {
@@ -52,6 +53,8 @@ namespace megamol {
 			std::byte* accessVertexBufferData(size_t task_idx, size_t attribute_idx);
 
 			std::byte* accessIndexBufferData(size_t task_idx);
+
+			BatchedMeshesDataAccessor generateDataAccessor();
 
 		private:
 			struct MeshData

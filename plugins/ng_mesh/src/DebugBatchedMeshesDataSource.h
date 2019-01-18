@@ -65,7 +65,8 @@ namespace megamol
 
 		private:
 
-			MeshDataStorage m_mesh_data_storage;
+			MeshDataStorage           m_mesh_data_storage;
+			BatchedMeshesDataAccessor m_mesh_data_accessor;
 		};
 	}
 }

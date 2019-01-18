@@ -100,7 +100,7 @@ void megamol::ngmesh::BatchedMeshesDataAccessor::setDrawCommandsDataAcess(size_t
 }
 
 megamol::ngmesh::BatchedMeshesDataCall::BatchedMeshesDataCall()
-	: megamol::core::AbstractGetData3DCall(), data_accessor(nullptr)
+	: megamol::core::AbstractGetData3DCall(), m_data_accessor(nullptr)
 {
 }
 

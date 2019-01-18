@@ -65,7 +65,7 @@ namespace megamol
 
 		private:
 
-			MaterialsDataStorage m_material_storage;
+			std::shared_ptr<MaterialsDataStorage> m_material_storage;
 		};
 	}
 }

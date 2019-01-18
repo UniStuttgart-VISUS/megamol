@@ -30,7 +30,7 @@ bool megamol::ngmesh::DebugBatchedMeshesDataSource::getDataCallback(core::Call &
 
 	load();
 
-	//TODO hand over data access to call
+	mesh_call->setBatchedMeshesDataAccessor(&m_mesh_data_accessor);
 
 	return true;
 }
