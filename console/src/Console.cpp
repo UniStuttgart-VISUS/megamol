@@ -166,6 +166,7 @@ int main(int argc, char* argv[]) {
 
     if (parser != NULL) {
         delete parser;
+        parser = NULL;
     }
 
     ::hCore.DestroyHandle();
@@ -532,8 +533,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         }
 
     } while (winsAlive || jobsAlive);
-
-    SAFE_DELETE(parser);
 
 #if 0
 
