@@ -103,7 +103,7 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    renderMode(RenderMode::NG),
+    renderMode(RenderMode::SIMPLE),
     sphereShader(),
     sphereGeometryShader(),
     vertShader(nullptr),
@@ -118,12 +118,12 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     streamer(),
     colStreamer(),
     //timer(),
-    scalingParam(   "scaling",          "Scaling factor for particle radii."),
+    radiusScalingParam(   "scaling",          "Scaling factor for particle radii."),
     renderModeParam("renderMode",       "The sphere render mode."),
     toggleModeParam("renderModeButton", "Toggle sphere render mode: 1-6")
 {
-    this->scalingParam << new core::param::FloatParam(1.0f);
-    this->MakeSlotAvailable(&this->scalingParam);
+    this->radiusScalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->radiusScalingParam);
 
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     rmp->SetTypePair(RenderMode::SIMPLE,      "Simple");
@@ -216,24 +216,66 @@ bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
 bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-
-    bool callRender = true;
     if (currentRenderMode != this->renderMode) {
         this->renderMode = currentRenderMode;
-        callRender = this->shaderCreate(currentRenderMode);
-    }
-
-    if (callRender) {
-        switch (currentRenderMode) {
-            case (RenderMode::SIMPLE):      return this->renderSimple(call);
-            case (RenderMode::NG):          return this->renderNG(call);
-            case (RenderMode::SPLAT):       return this->renderSplat(call);
-            case (RenderMode::GEO):         return this->renderGeo(call);
-            case (RenderMode::CLUSTERED):   return this->renderClustered(call);
-            case (RenderMode::BUFFERARRAY): return this->renderBufferArray(call);
-            default: break;
+        if (!this->shaderCreate(currentRenderMode)) {
+            return false;
         }
     }
+
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d == NULL) return false;
+
+    float scaling = 1.0f;
+    MultiParticleDataCall *mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
+    if (mpdc == NULL) return false;
+
+    float viewport[4];
+    ::glGetFloatv(GL_VIEWPORT, viewport);
+    glPointSize(vislib::math::Max(viewport[2], viewport[3]));
+    if (viewport[2] < 1.0f) viewport[2] = 1.0f;
+    if (viewport[3] < 1.0f) viewport[3] = 1.0f;
+    viewport[2] = 2.0f / viewport[2];
+    viewport[3] = 2.0f / viewport[3];
+
+    float clipDat[4];
+    float clipCol[4];
+    this->getClipData(clipDat, clipCol);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    GLfloat lightPos[4];
+    glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    // Scaling
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
+    scaleMat.SetAt(0, 0, scaling);
+    scaleMat.SetAt(1, 1, scaling);
+    scaleMat.SetAt(2, 2, scaling);
+    modelViewMatrix = modelViewMatrix * scaleMat;
+
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+
+
+    switch (currentRenderMode) {
+        case (RenderMode::SIMPLE):      return this->renderSimple(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
+        case (RenderMode::NG):          return this->renderNG(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
+        case (RenderMode::SPLAT):       return this->renderSplat(cr3d);
+        case (RenderMode::GEO):         return this->renderGeo(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
+        case (RenderMode::CLUSTERED):   return this->renderClustered(cr3d);
+        case (RenderMode::BUFFERARRAY): return this->renderBufferArray(cr3d);
+        default: break;
+    }
+
+
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     return false;
 }
@@ -367,6 +409,12 @@ bool moldyn::SimpleSphereRenderer::releaseResources(void) {
     this->fragShader = nullptr;
     this->geoShader  = nullptr;
 
+    if (this->newShader != nullptr) {
+        this->newShader->Release();
+        this->newShader.reset();
+    }
+    this->theShaders.clear();
+
     glDeleteVertexArrays(1, &this->vertArray);
 
     return true;
@@ -376,47 +424,24 @@ bool moldyn::SimpleSphereRenderer::releaseResources(void) {
 /*
  * moldyn::SimpleSphereRenderer::renderSimple
  */
-bool moldyn::SimpleSphereRenderer::renderSimple(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, float vp[4], float clipDat[4], float clipCol[4], float scaling) {
 
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    float scaling = 1.0f;
-    MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
-    if (c2 == NULL) return false;
-
-    float clipDat[4];
-    float clipCol[4];
-    this->getClipData(clipDat, clipCol);
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
+    glScalef(scaling, scaling, scaling);
 
     this->sphereShader.Enable();
-    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
-    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, vp);
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
 
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
 
-    glScalef(scaling, scaling, scaling);
-
     unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
-    for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-        MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
 
@@ -513,11 +538,9 @@ bool moldyn::SimpleSphereRenderer::renderSimple(megamol::core::view::CallRender3
         glDisable(GL_TEXTURE_1D);
     }
 
-    c2->Unlock();
+    mpdc->Unlock();
 
     this->sphereShader.Disable();
-
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     return true;
 }
@@ -526,63 +549,26 @@ bool moldyn::SimpleSphereRenderer::renderSimple(megamol::core::view::CallRender3
 /*
  * moldyn::SimpleSphereRenderer::renderNG
  */
-bool moldyn::SimpleSphereRenderer::renderNG(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
+    float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm) {
 
 #ifdef DEBUG_GL_CALLBACK
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    float scaling = 1.0f;
-    MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
-    if (c2 == NULL) return false;
-
     //	timer.BeginFrame();
 
-    float clipDat[4];
-    float clipCol[4];
-    this->getClipData(clipDat, clipCol);
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    //glScalef(scaling, scaling, scaling);
-
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    GLfloat lpos[4];
-    glGetLightfv(GL_LIGHT0, GL_POSITION, lpos);
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
-    scaleMat.SetAt(0, 0, scaling);
-    scaleMat.SetAt(1, 1, scaling);
-    scaleMat.SetAt(2, 2, scaling);
-    modelViewMatrix = modelViewMatrix * scaleMat;
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
     // Compute modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = modelViewMatrix;
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = mvm;
     modelViewMatrixInv.Invert();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = pm * mvm;
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixInv = modelViewProjMatrix;
     modelViewProjMatrixInv.Invert();
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
     modelViewProjMatrixTransp.Transpose();
-    // end suck
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -590,26 +576,28 @@ bool moldyn::SimpleSphereRenderer::renderNG(megamol::core::view::CallRender3D& c
 #endif
 
     //currBuf = 0;
-    for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-        MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 
         if (colType != parts.GetColourDataType() || vertType != parts.GetVertexDataType()) {
-            newShader = this->generateShader(parts);
+            this->newShader = this->generateShader(parts);
         }
-        newShader->Enable();
+        this->newShader->Enable();
+
         colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
-        glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(newShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
-        glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
-        glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
-        glUniform4fv(newShader->ParameterLocation("lpos"), 1, lpos);
-        glUniformMatrix4fv(newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-        glUniformMatrix4fv(newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-        glUniform1f(newShader->ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, vp);
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, clipDat);
+        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, lp);
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+        glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         // colour
@@ -716,11 +704,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(megamol::core::view::CallRender3D& c
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        //glDisableClientState(GL_COLOR_ARRAY);
-        //glDisableClientState(GL_VERTEX_ARRAY);
-        //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
-        newShader->Disable();
+        this->newShader->Disable();
 
 #ifdef CHRONOTIMING
         printf("waitSignal times:\n");
@@ -731,9 +716,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(megamol::core::view::CallRender3D& c
 #endif
     }
 
-    c2->Unlock();
-
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    mpdc->Unlock();
 
 #ifdef DEBUG_GL_CALLBACK
     glDisable(GL_DEBUG_OUTPUT);
@@ -749,7 +732,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(megamol::core::view::CallRender3D& c
 /*
  * moldyn::SimpleSphereRenderer::renderSplat
  */
-bool moldyn::SimpleSphereRenderer::renderSplat(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderSplat(view::CallRender3D* call) {
 
 
     return true;
@@ -759,64 +742,26 @@ bool moldyn::SimpleSphereRenderer::renderSplat(megamol::core::view::CallRender3D
 /*
  * moldyn::SimpleSphereRenderer::renderGeo
  */
-bool moldyn::SimpleSphereRenderer::renderGeo(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
+    float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm) {
 
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    float scaling = 1.0f;
-    MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
-    if (c2 == NULL) return false;
-
-    float clipDat[4];
-    float clipCol[4];
-    this->getClipData(clipDat, clipCol);
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-
-    glScalef(scaling, scaling, scaling);
-
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    // Get GL_MODELVIEW matrix
-    GLfloat modelMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&modelMatrix_column[0]);
-
-    // Get GL_PROJECTION matrix
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-
-    // Compute modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::ROW_MAJOR> modelProjMatrix = projMatrix * modelMatrix;
-
-    // Get light position
-    GLfloat lightPos[4];
-    glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
     this->sphereGeometryShader.Enable();
 
     // Set shader variables
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, vp);
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
 
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("proj"), 1, false, projMatrix_column);
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, lightPos);
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("modelview"), 1, false, mvm.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("proj"), 1, false, pm.PeekComponents());
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, lp);
 
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, clipDat);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, clipCol);
@@ -825,8 +770,8 @@ bool moldyn::SimpleSphereRenderer::renderGeo(megamol::core::view::CallRender3D& 
     GLint vertexPos = glGetAttribLocation(this->sphereGeometryShader, "vertex");
     GLint vertexColor = glGetAttribLocation(this->sphereGeometryShader, "color");
 
-    for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-        MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
 
@@ -917,11 +862,10 @@ bool moldyn::SimpleSphereRenderer::renderGeo(megamol::core::view::CallRender3D& 
 
         ::glDisableVertexAttribArray(vertexPos);
         ::glDisableVertexAttribArray(vertexColor);
-
         glDisable(GL_TEXTURE_1D);
     }
 
-    c2->Unlock();
+    mpdc->Unlock();
 
     this->sphereGeometryShader.Disable();
 
@@ -932,7 +876,7 @@ bool moldyn::SimpleSphereRenderer::renderGeo(megamol::core::view::CallRender3D& 
 /*
  * moldyn::SimpleSphereRenderer::renderClustered
  */
-bool moldyn::SimpleSphereRenderer::renderClustered(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* call) {
 
 
     return true;
@@ -942,7 +886,7 @@ bool moldyn::SimpleSphereRenderer::renderClustered(megamol::core::view::CallRend
 /*
  * moldyn::SimpleSphereRenderer::renderBufferArray
  */
-bool moldyn::SimpleSphereRenderer::renderBufferArray(megamol::core::view::CallRender3D& call) {
+bool moldyn::SimpleSphereRenderer::renderBufferArray(view::CallRender3D* call) {
 
 
     return true;
@@ -1158,8 +1102,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
     bool interleaved;
     this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-    shaderMap::iterator i = theShaders.find(std::make_tuple(c, p, interleaved));
-    if (i == theShaders.end()) {
+    shaderMap::iterator i = this->theShaders.find(std::make_tuple(c, p, interleaved));
+    if (i == this->theShaders.end()) {
         //instance()->ShaderSourceFactory().MakeShaderSource()
 
         vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*this->vertShader);
@@ -1226,8 +1170,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
         std::string s(v2->WholeCode());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
-        theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
-        i = theShaders.find(std::make_tuple(c, p, interleaved));
+        this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
+        i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     }
     return i->second;
 }
