@@ -31,6 +31,7 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/Map.h"
 
 #include <map>
 #include <tuple>
@@ -71,9 +72,10 @@ namespace moldyn {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Renderer for sphere glyphs.";                                       // SimpleSphere
-            //return "Renderer for sphere glyphs with a bit of bleeding-edge features"; // NGSphere, NGSplat
-            //return "Renderer for sphere glyphs using geometry shader";                // SimpleGeo
+            return "Renderer for sphere glyphs.";                                        // SimpleSphere
+            // return "Renderer for sphere glyphs with a bit of bleeding-edge features"; // NGSphere, NGSplat
+            // return "Renderer for sphere glyphs using geometry shader";                // SimpleGeo
+            // return "Renderer for clustered sphere glyphs.";                           // Clustered
         }
 
         /**
@@ -90,7 +92,7 @@ namespace moldyn {
             ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere
+            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered
                 && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGSplat
                 && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGSplat
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
@@ -222,7 +224,9 @@ namespace moldyn {
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
-        bool renderClustered(view::CallRender3D* call);
+        // Clustered sphere rendering = simple sphere rendering + option to use vao (+ vb, vc) defined in simple spherical particles -> NOT implemented yet (?)
+        bool renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
+            float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
         bool renderBufferArray(view::CallRender3D* call);
 

@@ -20,7 +20,7 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     : colDataType(COLDATA_NONE), colPtr(NULL), colStride(0), count(0)
     , maxColI(1.0f), minColI(0.0f), radius(0.5f), particleType(0)
     , vertDataType(VERTDATA_NONE), vertPtr(NULL), vertStride(0)
-    , disabledNullChecks(false), clusterInfos(NULL)
+    , disabledNullChecks(false), isVAO(false), clusterInfos(NULL)
     , idDataType{IDDATA_NONE}, idPtr{nullptr}, idStride{0} {
     this->col[0] = 255;
     this->col[1] = 0;

@@ -236,7 +236,7 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
         case (RenderMode::NG):          return this->renderNG(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
         case (RenderMode::SPLAT):       return this->renderSplat(cr3d);
         case (RenderMode::GEO):         return this->renderGeo(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
-        case (RenderMode::CLUSTERED):   return this->renderClustered(cr3d);
+        case (RenderMode::CLUSTERED):   return this->renderClustered(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
         case (RenderMode::BUFFERARRAY): return this->renderBufferArray(cr3d);
         default: break;
     }
@@ -327,9 +327,19 @@ bool moldyn::SimpleSphereRenderer::shaderCreate(SimpleSphereRenderer::RenderMode
             }
             break;
         case (RenderMode::CLUSTERED):  
-            vertShaderName = "";
-            fragShaderName = "";
+            vertShaderName = "simplesphere::vertex";
+            fragShaderName = "simplesphere::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
             break;
         case (RenderMode::BUFFERARRAY):
             vertShaderName = "";
@@ -396,6 +406,7 @@ bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiP
     glScalef(scaling, scaling, scaling);
 
     this->sphereShader.Enable();
+
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, vp);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
@@ -843,8 +854,145 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
 /*
  * moldyn::SimpleSphereRenderer::renderClustered
  */
-bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* call) {
+bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
+    float vp[4], float clipDat[4], float clipCol[4], float scaling) {
 
+    glScalef(scaling, scaling, scaling);
+
+    this->sphereShader.Enable();
+
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, vp);
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
+
+    unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
+
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
+        float minC = 0.0f, maxC = 0.0f;
+        unsigned int colTabSize = 0;
+
+        GLuint vao, vb, cb;
+        parts.GetVAOs(vao, vb, cb);
+        if (parts.IsVAO())
+            glBindVertexArray(vao);
+
+        // colour
+        if (!parts.IsVAO())
+        {
+            switch (parts.GetColourDataType()) {
+            case MultiParticleDataCall::Particles::COLDATA_NONE:
+                glColor3ubv(parts.GetGlobalColour());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                break;
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                glEnableVertexAttribArrayARB(cial);
+                glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+
+                glEnable(GL_TEXTURE_1D);
+
+                view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                if ((cgtf != NULL) && ((*cgtf)())) {
+                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                    colTabSize = cgtf->TextureSize();
+                }
+                else {
+                    glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                    colTabSize = 2;
+                }
+
+                glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
+                minC = parts.GetMinColourIndexValue();
+                maxC = parts.GetMaxColourIndexValue();
+                glColor3ub(127, 127, 127);
+            } break;
+            default:
+                glColor3ub(127, 127, 127);
+                break;
+            }
+        }
+        else if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I)
+        {
+            glBindBufferARB(GL_ARRAY_BUFFER, cb);
+            glEnableVertexAttribArrayARB(cial);
+            glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+
+            glEnable(GL_TEXTURE_1D);
+
+            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+            if ((cgtf != NULL) && ((*cgtf)())) {
+                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                colTabSize = cgtf->TextureSize();
+            }
+            else {
+                glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                colTabSize = 2;
+            }
+
+            glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
+            minC = parts.GetMinColourIndexValue();
+            maxC = parts.GetMaxColourIndexValue();
+            glColor3ub(127, 127, 127);
+        }
+
+        // radius and position
+        switch (parts.GetVertexDataType()) {
+        case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            continue;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            if (!parts.IsVAO())
+            {
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+            }
+            glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            if (!parts.IsVAO())
+            {
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+            }
+            glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            break;
+        default:
+            continue;
+        }
+
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+
+        if (parts.IsVAO())
+            glBindVertexArray(0);
+
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableVertexAttribArrayARB(cial);
+        glDisable(GL_TEXTURE_1D);
+    }
+
+    mpdc->Unlock();
+
+    this->sphereShader.Disable();
 
     return true;
 }
@@ -859,6 +1007,11 @@ bool moldyn::SimpleSphereRenderer::renderBufferArray(view::CallRender3D* call) {
     return true;
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+// NGSphere functions                                                        //
+///////////////////////////////////////////////////////////////////////////////
 
 /*
  * NGSphere - moldyn::SimpleSphereRenderer::makeColorString
