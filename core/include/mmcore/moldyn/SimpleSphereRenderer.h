@@ -186,6 +186,7 @@ namespace moldyn {
         /*********************************************************************/
 
         core::param::ParamSlot renderModeParam;
+        core::param::ParamSlot toggleModeParam;
 
         core::param::ParamSlot radiusScalingParam;
         core::param::ParamSlot alphaScalingParam;
@@ -194,6 +195,15 @@ namespace moldyn {
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
+
+        /**
+         * Toggle render mode on button press.
+         *
+         * @param slot The calling parameter slot.
+         *
+         * @return True if success, false otherwise.
+         */
+        bool toggleRenderMode(param::ParamSlot& slot);
 
         /**
          * Create shaders for given render mode.

@@ -143,6 +143,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     //timer(),
     renderModeParam(       "renderMode",        "The sphere render mode."),
+    toggleModeParam(       "renderModeButton",  "Toggle sphere render modes."),
     radiusScalingParam(    "scaling",           "Scaling factor for particle radii."),
     alphaScalingParam(     "alphaScaling",      "NGSplat: Scaling factor for particle alpha."), 
     attenuateSubpixelParam("attenuateSubpixel", "NGSplat: Attenuate alpha of points that should have subpixel size.")
@@ -156,6 +157,10 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     rmp->SetTypePair(RenderMode::GEO,       "Geo");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
+
+    this->toggleModeParam.SetParameter(new param::ButtonParam('r'));
+    this->toggleModeParam.SetUpdateCallback(&SimpleSphereRenderer::toggleRenderMode);
+    this->MakeSlotAvailable(&this->toggleModeParam);
 
     this->radiusScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
@@ -186,16 +191,13 @@ bool moldyn::SimpleSphereRenderer::create(void) {
     ASSERT(IsAvailable());
 
 #ifdef DEBUG_GL_CALLBACK
-    glDebugMessageCallback(DebugGLCallback, NULL);
+    glDebugMessageCallback(DebugGLCallback, nullptr);
 #endif
 
-    auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-    if (currentRenderMode != this->renderMode) {
-        this->renderMode = currentRenderMode;
-        this->resetResources();
-        if (!this->createShaders()) {
-            return false;
-        }
+    this->renderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
+    this->resetResources();
+    if (!this->createShaders()) {
+        return false;
     }
 
     //timer.SetNumRegions(4);
@@ -216,6 +218,33 @@ void moldyn::SimpleSphereRenderer::release(void) {
 
     this->resetResources();
     AbstractSimpleSphereRenderer::release();
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::toggleRenderMode
+ */
+bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
+
+    ASSERT((&slot == &this->toggleModeParam));
+
+    auto currentRenderMode = this->renderModeParam.Param<param::EnumParam>()->Value();
+    currentRenderMode = (currentRenderMode + 1) % 6;
+    this->renderModeParam.Param<param::EnumParam>()->SetValue(currentRenderMode);
+
+    vislib::StringA mode;
+    switch (static_cast<RenderMode>(currentRenderMode)) {
+    case (RenderMode::SIMPLE):    mode = "SIMPLE"; break;
+    case (RenderMode::CLUSTERED): mode = "CLUSTERED"; break;
+    case (RenderMode::NG):        mode = "NG"; break;
+    case (RenderMode::NG_SPLAT):  mode = "SPLAT"; break;
+    case (RenderMode::NG_BUF_AR): mode = "BUFFERARRAY"; break;
+    case (RenderMode::GEO):       mode = "GEO"; break;
+    default: break;
+    }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Switched to render mode: %s", mode.PeekBuffer());
+
+    return true;
 }
 
 
@@ -263,9 +292,6 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
     //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
     //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
     this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
-    if (this->renderMode == RenderMode::NG_BUF_AR) {
-        this->singleBufferCreationBits |= GL_MAP_FLUSH_EXPLICIT_BIT;
-    }
     this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 
     return true;
@@ -285,9 +311,8 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
     vislib::StringA geoShaderName;
 
     try {
-
-        // Select shader names
         switch (this->renderMode) {
+
         case (RenderMode::SIMPLE):
             vertShaderName = "simplesphere::vertex";
             fragShaderName = "simplesphere::fragment";
@@ -303,6 +328,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
                 return false;
             }
             break;
+
         case (RenderMode::CLUSTERED):
             vertShaderName = "simplesphere::vertex";
             fragShaderName = "simplesphere::fragment";
@@ -318,6 +344,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
                 return false;
             }
             break;
+
         case (RenderMode::NG):
             vertShaderName = "ngsphere::vertex";
             fragShaderName = "ngsphere::fragment";
@@ -331,6 +358,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             glBindVertexArray(this->vertArray);
             glBindVertexArray(0);
             break;
+
         case (RenderMode::NG_SPLAT):
             vertShaderName = "ngsplat::vertex";
             fragShaderName = "ngsplat::fragment";
@@ -345,10 +373,11 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             glGenBuffers(1, &this->theSingleBuffer);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
             glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRange(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
+            this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glBindVertexArray(0);
             break;
+
         case (RenderMode::NG_BUF_AR):
             vertShaderName = "ngspherebufferarray::vertex";
             fragShaderName = "ngspherebufferarray::fragment";
@@ -368,10 +397,11 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             glGenBuffers(1, &this->theSingleBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
             glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRange(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
+            this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
             break;
+
         case (RenderMode::GEO):
             this->geoShader = new ShaderSource();
             vertShaderName = "geosphere::vertex";
@@ -399,6 +429,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
                 return false;
             }
             break;
+
         default:
             return false;
         }
@@ -422,7 +453,6 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
         return false;
     }
 
-
     return true;
 }
 
@@ -437,8 +467,6 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-    // timer.BeginFrame();
-
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
         this->renderMode = currentRenderMode;
@@ -448,12 +476,14 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
         }
     }
 
+    // timer.BeginFrame();
+
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
+    if (cr3d == nullptr) return false;
 
     float scaling = 1.0f;
     MultiParticleDataCall *mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
-    if (mpdc == NULL) return false;
+    if (mpdc == nullptr) return false;
 
     float viewport[4];
     ::glGetFloatv(GL_VIEWPORT, viewport);
@@ -570,7 +600,7 @@ bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiP
             glEnable(GL_TEXTURE_1D);
 
             view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
+            if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
             }
@@ -698,7 +728,7 @@ bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* cr3d, Mul
                 glEnable(GL_TEXTURE_1D);
 
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                if ((cgtf != NULL) && ((*cgtf)())) {
+                if ((cgtf != nullptr) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();
                 }
@@ -726,7 +756,7 @@ bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* cr3d, Mul
             glEnable(GL_TEXTURE_1D);
 
             view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
+            if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
             }
@@ -845,7 +875,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
             glEnable(GL_TEXTURE_1D);
             view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
+            if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
             }
@@ -1016,7 +1046,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
             view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
             glEnable(GL_TEXTURE_1D);
-            if ((cgtf != NULL) && ((*cgtf)())) {
+            if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
             }
@@ -1088,7 +1118,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             }
         }
         else {
-
+            // nothing to do ...
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1122,6 +1152,7 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
 
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
@@ -1180,34 +1211,35 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData())
             - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
             && vertStride == colStride) || colStride == 0) {
+
             numVerts = this->bufSize / vertStride;
             const char *currVert = static_cast<const char *>(parts.GetVertexData());
             const char *currCol = static_cast<const char *>(parts.GetColourData());
             vertCounter = 0;
             while (vertCounter < parts.GetCount()) {
                 //GLuint vb = this->theBuffers[currBuf];
-                void *mem = static_cast<char*>(theSingleMappedMem) + numVerts * vertStride * currBuf;
+                void *mem = static_cast<char*>(this->theSingleMappedMem) + numVerts * vertStride * this->currBuf;
                 currCol = colStride == 0 ? currVert : currCol;
                 //currCol = currCol == 0 ? currVert : currCol;
                 const char *whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-                this->waitSingle(fences[currBuf]);
+                this->waitSingle(this->fences[this->currBuf]);
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
+                glFlushMappedNamedBufferRangeEXT(this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
                 //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-                glDrawArrays(GL_POINTS, static_cast<GLint>(numVerts * currBuf), static_cast<GLsizei>(vertsThisTime));
-                this->lockSingle(fences[currBuf]);
+                glDrawArrays(GL_POINTS, static_cast<GLint>(numVerts * this->currBuf), static_cast<GLsizei>(vertsThisTime));
+                this->lockSingle(this->fences[this->currBuf]);
 
-                currBuf = (currBuf + 1) % this->numBuffers;
+                this->currBuf = (this->currBuf + 1) % this->numBuffers;
                 vertCounter += vertsThisTime;
                 currVert += vertsThisTime * vertStride;
                 currCol += vertsThisTime * colStride;
             }
         }
         else {
-
+            // nothing to do ...
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1303,7 +1335,7 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
             glEnable(GL_TEXTURE_1D);
 
             view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != NULL) && ((*cgtf)())) {
+            if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
             }
@@ -1809,7 +1841,7 @@ bool moldyn::SimpleSphereRenderer::makeColorString_splat(MultiParticleDataCall::
         //glEnable(GL_TEXTURE_1D);
 
         //view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-        //if ((cgtf != NULL) && ((*cgtf)())) {
+        //if ((cgtf != nullptr) && ((*cgtf)())) {
         //	glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
         //	colTabSize = cgtf->TextureSize();
         //}
@@ -2027,7 +2059,7 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles 
         glEnable(GL_TEXTURE_1D);
 
         view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-        if ((cgtf != NULL) && ((*cgtf)())) {
+        if ((cgtf != nullptr) && ((*cgtf)())) {
             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
             colTabSize = cgtf->TextureSize();
         }
