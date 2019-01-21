@@ -349,7 +349,7 @@ bool RaycastVolumeRenderer::updateVolumeData()
 		return false;
 
 	// TODO check time and frame id or whatever else
-	if (this->m_volume_datahash != cd->DataHash() )
+	if (this->m_volume_datahash != cd->DataHash())
 	{
 		this->m_volume_datahash = cd->DataHash();
 	}
