@@ -55,8 +55,8 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , filterSizeSlot("filterSize", "The support size of the filter")
-    , datahash(0)
-    , time(0)
+    , datahash(std::numeric_limits<size_t>::max())
+    , time(std::numeric_limits<unsigned int>::max())
     , outDataSlot("outData", "Provides a density volume for the particles")
     , inDataSlot("inData", "takes the particle data") {
 
@@ -161,6 +161,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     if (outVol == nullptr) return false;
 
+    inMpdc->SetFrameID(outVol->FrameID(), true);
     if (!(*inMpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
         return false;
@@ -169,9 +170,9 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
         return false;
     }
-    if (this->time != outVol->FrameID() || this->datahash != inMpdc->DataHash() || this->anythingDirty()) {
+    if (this->time != inMpdc->FrameID() || this->datahash != inMpdc->DataHash() || this->anythingDirty()) {
         if (!this->createVolumeCPU(inMpdc)) return false;
-        this->time = outVol->FrameID();
+        this->time = inMpdc->FrameID();
         this->datahash = inMpdc->DataHash();
         this->resetDirty();
     }
@@ -303,14 +304,16 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         std::function<void(int, int, int, int, int, int, int, float, float, float)> volOp;
         switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
         case 1: {
-            volOp = [this, &gauss, &iAcc](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
+            volOp = [this, &gauss, &iAcc, &weights](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
                         float const dis, float const disThreshold, float const rad) -> void {
                 auto const val = iAcc->Get_f(pidx);
                 if (dis > disThreshold - rad) {
                     vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
                         gauss(dis - disThreshold + rad, 3.0f * rad) * val;
+                    ++(weights[omp_get_thread_num()][x + (y + z * sy) * sx]);
                 } else {
                     vol[omp_get_thread_num()][x + (y + z * sy) * sx] += val;
+                    ++(weights[omp_get_thread_num()][x + (y + z * sy) * sx]);
                 }
             };
         } break;
@@ -423,6 +426,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             vol[%d][%d]\n", omp_get_thread_num(), i, j);
             }*/
         }
+        vol[0][j] /= weights[0][j] == 0 ? 1 : static_cast<float>(weights[0][j]);
         //vol[0][j] /= static_cast<float>(weights[0][j]);
         if (vol[0][j] > localMax[omp_get_thread_num()]) {
             localMax[omp_get_thread_num()] = vol[0][j];
