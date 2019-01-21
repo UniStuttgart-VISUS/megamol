@@ -26,27 +26,27 @@ namespace MegaMolConf.Communication {
         /// <summary>
         /// Creates a connection.
         /// </summary>
-        /// <param name="adress">The adress to connect to. Use ZeroMQ connection string syntax, e.g. "tcp://localhost:35421"</param>
+        /// <param name="address">The address to connect to. Use ZeroMQ connection string syntax, e.g. "tcp://localhost:35421"</param>
         /// <returns>The new connection</returns>
         /// <remarks>The connection might be established asynchronous.
         /// Errors might occur at the actual communication.</remarks>
-        public static Connection Connect(string adress) {
-            return Connect(adress, DefaultTimeout);
+        public static Connection Connect(string address) {
+            return Connect(address, DefaultTimeout);
         }
 
         /// <summary>
         /// Creates a connection.
         /// </summary>
-        /// <param name="adress">The adress to connect to. Use ZeroMQ connection string syntax, e.g. "tcp://localhost:35421"</param>
+        /// <param name="address">The address to connect to. Use ZeroMQ connection string syntax, e.g. "tcp://localhost:35421"</param>
         /// <param name="timeout">The timeout when the function will throw an exception</param>
         /// <returns>The new connection</returns>
         /// <remarks>The connection might be established asynchronous.
         /// Errors might occur at the actual communication.</remarks>
-        public static Connection Connect(string adress, TimeSpan timeout) {
+        public static Connection Connect(string address, TimeSpan timeout) {
             ZContext c = ZeroMQContext.Get;
             ZSocket s = new ZSocket(c, ZSocketType.REQ);
             ZError e;
-            if (!s.Connect(adress, out e)) {
+            if (!s.Connect(address, out e)) {
                 throw new Exception(e.ToString());
             }
             s.ReceiveTimeout = timeout;
@@ -60,8 +60,8 @@ namespace MegaMolConf.Communication {
                 throw new Exception("did not get a port from MegaMol");
             }
             string port = zm[0].ReadString();
-            int idx = adress.LastIndexOf(":");
-            string adr2 = adress.Substring(0, idx);
+            int idx = address.LastIndexOf(":");
+            string adr2 = address.Substring(0, idx);
             adr2 += ":" + port;
             if (!s2.Connect(adr2, out e)) {
                 throw new Exception(e.ToString());
