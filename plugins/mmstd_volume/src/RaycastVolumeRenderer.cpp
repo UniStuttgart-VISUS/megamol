@@ -113,10 +113,14 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     auto cr = dynamic_cast<core::view::CallRender3D*>(&call);
     auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
 
-    if (cr == NULL) return false;
+    if (cr == nullptr) return false;
     if (cd == nullptr) return false;
 
     // TODO Do something about time/framecount ?
+
+    int const req_frame = static_cast<int>(cr->Time());
+
+    cd->SetFrameID(req_frame);
 
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
@@ -318,8 +322,9 @@ bool RaycastVolumeRenderer::updateVolumeData() {
     if (cd == nullptr) return false;
 
     // TODO check time and frame id or whatever else
-    if (this->m_volume_datahash != cd->DataHash()) {
+    if (this->m_volume_datahash != cd->DataHash() || this->m_frame_id != cd->FrameID()) {
         this->m_volume_datahash = cd->DataHash();
+        this->m_frame_id = cd->FrameID();
     } else {
         return true;
     }

@@ -444,6 +444,8 @@ private:
     std::unique_ptr<Texture2D> m_transfer_function;
 
     size_t m_volume_datahash = std::numeric_limits<size_t>::max();
+    int m_frame_id = -1;
+
     float m_volume_origin[3];
     float m_volume_extents[3];
     float m_volume_resolution[3];
