@@ -404,6 +404,8 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 
 void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const & meshes)
 {
+	std::cout << "Adding " << meshes.batch_cnt << "mesh batches" << std::endl;
+
 	for (size_t i = 0; i < meshes.batch_cnt; i++)
 	{
 		MeshDataAccessor& mesh_data = meshes.mesh_data_batches[i];
@@ -598,8 +600,8 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 
 	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
-	MaterialsDataCall* matl_call     = this->m_mesh_callerSlot.CallAs<MaterialsDataCall>();
-	RenderTasksDataCall* task_call   = this->m_mesh_callerSlot.CallAs<RenderTasksDataCall>();
+	MaterialsDataCall* matl_call     = this->m_material_callerSlot.CallAs<MaterialsDataCall>();
+	RenderTasksDataCall* task_call   = this->m_render_task_callerSlot.CallAs<RenderTasksDataCall>();
 
 	if (mesh_call == NULL || matl_call == NULL || task_call == NULL)
 		return false;

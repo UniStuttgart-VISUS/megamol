@@ -172,7 +172,7 @@ namespace megamol {
 				size_t vb_offset = computeAttributeByteSize(vertex_descriptor.attributes[i]) * it->mesh_data.used_vertex_cnt;
 				auto dest = it->mesh_data.vertex_data[i].data();
 				auto src_first = reinterpret_cast<std::byte*>(&*std::get<0>(vertex_buffers[i]));
-				auto src_last = reinterpret_cast<std::byte*>(&*std::get<1>(vertex_buffers[i]));
+				auto src_last = reinterpret_cast<std::byte*>(&*(std::get<1>(vertex_buffers[i])-1));
 
 				std::copy(src_first, src_last, dest);
 			}
@@ -181,7 +181,7 @@ namespace megamol {
 			size_t ib_offset = computeByteSize(index_type) * it->mesh_data.used_index_cnt;
 			auto dest = it->mesh_data.index_data.data();
 			auto src_first = reinterpret_cast<std::byte*>(&*std::get<0>(index_buffer));
-			auto src_last = reinterpret_cast<std::byte*>(&*std::get<1>(index_buffer));
+			auto src_last = reinterpret_cast<std::byte*>(&*(std::get<1>(index_buffer)-1));
 			std::copy(src_first, src_last, dest);
 
 			// add draw command

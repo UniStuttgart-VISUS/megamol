@@ -17,6 +17,7 @@
 #include "ng_mesh/RenderTasksDataCall.h"
 
 megamol::ngmesh::DebugRenderTasksDataSource::DebugRenderTasksDataSource()
+	: m_render_task_data(std::make_shared<RenderTaskDataStorage>())
 {
 }
 
@@ -42,8 +43,6 @@ bool megamol::ngmesh::DebugRenderTasksDataSource::load()
 	std::mt19937 generator(4215);
 	std::uniform_real_distribution<float> distr(0.01f, 0.03f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
-
-	std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transforms(100);
 	
 	for (int i = 0; i < 100; ++i)
 	{

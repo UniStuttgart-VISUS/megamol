@@ -12,6 +12,7 @@
 #include "ng_mesh/MaterialsDataCall.h"
 
 megamol::ngmesh::DebugMaterialsDataSource::DebugMaterialsDataSource()
+	: m_material_storage(std::make_shared<MaterialsDataStorage>())
 {
 }
 
