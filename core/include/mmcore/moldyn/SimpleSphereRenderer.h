@@ -261,7 +261,7 @@ namespace moldyn {
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
 
-        // NG /////////////////////////////////////////////////////////////////
+        // NGSphere ///////////////////////////////////////////////////////////
 
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
@@ -274,6 +274,7 @@ namespace moldyn {
 
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
+        // NGSplat ////////////////////////////////////////////////////////////
 
         void getBytesAndStride_splat(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride);
@@ -286,6 +287,7 @@ namespace moldyn {
 
         std::shared_ptr<vislib::graphics::gl::GLSLShader> generateShader_splat(MultiParticleDataCall::Particles &parts);
 
+        // NGSplat NGBufferArray //////////////////////////////////////////////
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 

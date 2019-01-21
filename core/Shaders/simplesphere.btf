@@ -5,7 +5,7 @@
     <shader name="vertex">
         <snippet type="version">110</snippet>
         <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="attributes"       type="file">simplesphere/simplesphere_attributes.glsl</snippet>
+        <snippet name="attributes"       type="file">simplesphere/simplesphere_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/simplesphere_vert_mainparams.glsl</snippet>
         <snippet name="posTrans"         type="file">simplesphere/simplesphere_vert_postrans.glsl</snippet>
         <snippet name="clippingPlane"    type="file">simplesphere/simplesphere_vert_clipping.glsl</snippet>
@@ -18,7 +18,7 @@
         <snippet type="version">110</snippet>
         <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="lightDirectional" type="file">lightdirectional.glsl</snippet>
-        <snippet name="body1"            type="file">simplesphere/simplesphere_frag_body1.glsl</snippet>
+        <snippet name="body"             type="file">simplesphere/simplesphere_frag_body.glsl</snippet>
         <snippet name="out-lighting"     type="file">simplesphere/simplesphere_frag_out-lighting.glsl</snippet>
         <snippet name="out-depth"        type="file">simplesphere/simplesphere_frag_out-depth.glsl</snippet>
         <snippet name="footer"           type="file">simplesphere/simplesphere_frag_footer.glsl</snippet>
