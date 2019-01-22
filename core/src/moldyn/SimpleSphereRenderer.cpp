@@ -164,7 +164,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     this->radiusScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
 
-    this->alphaScalingParam << new core::param::FloatParam(1.0f);
+    this->alphaScalingParam << new core::param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
     this->attenuateSubpixelParam << new core::param::BoolParam(false);
@@ -797,7 +797,7 @@ bool moldyn::SimpleSphereRenderer::renderClustered(view::CallRender3D* cr3d, Mul
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
         if (parts.IsVAO())
-            glBindVertexArray(0);
+            glBindVertexArray(0); // vao
 
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
@@ -889,6 +889,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         default:
             break;
         }
+
+        // radius and position
         switch (parts.GetVertexDataType()) {
         case MultiParticleDataCall::Particles::VERTDATA_NONE:
             break;
@@ -903,14 +905,12 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             break;
         }
 
-
         unsigned int colBytes, vertBytes, colStride, vertStride;
         bool interleaved;
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
         //currBuf = 0;
         //UINT64 numVerts, vertCounter;
-
         // does all data reside interleaved in the same memory?
         if (interleaved) {
 
@@ -1116,7 +1116,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             }
         }
         else {
-            // nothing to do ...
+            // nothing
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1160,55 +1160,13 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 
-        unsigned int colBytes = 0, vertBytes = 0;
-        switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE:
-            // nothing
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            colBytes = vislib::math::Max(colBytes, 3U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-            colBytes = vislib::math::Max(colBytes, 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            colBytes = vislib::math::Max(colBytes, 3 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-            colBytes = vislib::math::Max(colBytes, 4 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                colBytes = vislib::math::Max(colBytes, 1 * 4U);
-                // nothing else
-            } break;
-        default:
-            // nothing
-            break;
-        }
+        unsigned int colBytes, vertBytes, colStride, vertStride;
+        bool interleaved;
+        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-        // radius and position
-        switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            continue;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
-            break;
-        default:
-            continue;
-        }
-
-        unsigned int colStride = parts.GetColourDataStride();
-        colStride = colStride < colBytes ? colBytes : colStride;
-        unsigned int vertStride = parts.GetVertexDataStride();
-        vertStride = vertStride < vertBytes ? vertBytes : vertStride;
         UINT64 numVerts, vertCounter;
         // does all data reside interleaved in the same memory?
-        if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData())
-            - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
-            && vertStride == colStride) || colStride == 0) {
+        if (interleaved) {
 
             numVerts = this->bufSize / vertStride;
             const char *currVert = static_cast<const char *>(parts.GetVertexData());
@@ -1237,7 +1195,7 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
             }
         }
         else {
-            // nothing to do ...
+            // nothing
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1322,30 +1280,30 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
             break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            ::glEnableVertexAttribArray(vertexColor);
-            if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
-            }
-            else {
-                glVertexAttribPointer(vertexColor, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
-            }
+                ::glEnableVertexAttribArray(vertexColor);
+                if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                    ::glVertexAttribPointer(vertexColor, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                }
+                else {
+                    glVertexAttribPointer(vertexColor, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                }
 
-            glEnable(GL_TEXTURE_1D);
+                glEnable(GL_TEXTURE_1D);
 
-            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != nullptr) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            }
-            else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
+                view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                if ((cgtf != nullptr) && ((*cgtf)())) {
+                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                    colTabSize = cgtf->TextureSize();
+                }
+                else {
+                    glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                    colTabSize = 2;
+                }
 
-            glUniform1i(this->sphereGeometryShader.ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-        } break;
+                glUniform1i(this->sphereGeometryShader.ParameterLocation("colTab"), 0);
+                minC = parts.GetMinColourIndexValue();
+                maxC = parts.GetMaxColourIndexValue();
+            } break;
         default:
             ::glVertexAttrib3f(vertexColor, 0.5f, 0.5f, 0.5f);
             break;
@@ -1733,8 +1691,8 @@ void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Part
         break;
     }
 
-    colStride = parts.GetColourDataStride();
-    colStride = colStride < colBytes ? colBytes : colStride;
+    colStride  = parts.GetColourDataStride();
+    colStride  = colStride < colBytes ? colBytes : colStride;
     vertStride = parts.GetVertexDataStride();
     vertStride = vertStride < vertBytes ? vertBytes : vertStride;
 
@@ -1800,6 +1758,7 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles 
         break;
     }
     glBindBuffer(GL_ARRAY_BUFFER, vertBuf);
+
     // radius and position
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
