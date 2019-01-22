@@ -6,19 +6,6 @@
  *
  */
 
-/*
- * KNOWN OpenGL Errors:
- *
- * >>> glUnmapNamedBuffer throws following error (can be ignored):
- *      -> only if named buffer wasn't mapped before ...
- *      [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
- *
- * >>> glMapNamedBufferRange throws following error (can be ignored):
- *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
- *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
- *
- */
-
 
 #include "stdafx.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
@@ -30,7 +17,8 @@ using namespace vislib::graphics::gl;
 
 //#define CHRONOTIMING
 #define MAP_BUFFER_LOCALLY
-#define DEBUG_GL_CALLBACK
+//#define DEBUG_GL_CALLBACK
+
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
 #define NGS_THE_ALIGNMENT "packed"
@@ -113,6 +101,20 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
 }
 
 
+/******************************************************************************
+ * Known DebugGLCallback Errors:
+ *
+ * >>> glUnmapNamedBuffer throws following error (can be ignored):
+ *      -> only if named buffer wasn't mapped before ...
+ *      [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
+ *
+ * >>> glMapNamedBufferRange throws following error (can be ignored):
+ *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
+ *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
+ *
+ ******************************************************************************/
+
+
 /*
  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
  */
@@ -138,7 +140,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     bufSize(32 * 1024 * 1024),
     numBuffers(3),
     theSingleMappedMem(nullptr),
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT), // | GL_MAP_FLUSH_EXPLICIT_BIT), 
+    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT), 
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     //timer(),
     renderModeParam(       "renderMode",        "The sphere render mode."),
@@ -148,12 +150,13 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     attenuateSubpixelParam("attenuateSubpixel", "NGSplat: Attenuate alpha of points that should have subpixel size.")
 {
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
-    rmp->SetTypePair(RenderMode::SIMPLE,    "Simple");
-    rmp->SetTypePair(RenderMode::CLUSTERED, "Clustered");
-    rmp->SetTypePair(RenderMode::NG,        "NG");
-    rmp->SetTypePair(RenderMode::NG_SPLAT,  "NGSplat");
-    rmp->SetTypePair(RenderMode::NG_BUF_AR, "NGBufferArray");
-    rmp->SetTypePair(RenderMode::GEO,       "Geo");
+    rmp->SetTypePair(RenderMode::SIMPLE,           "Simple");
+    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
+    rmp->SetTypePair(RenderMode::SIMPLE_GEO,       "Simple_Geometry_Shader");
+    rmp->SetTypePair(RenderMode::NG,               "NG");
+    rmp->SetTypePair(RenderMode::NG_SPLAT,         "NG_Splat");
+    rmp->SetTypePair(RenderMode::NG_BUFFER_ARRAY,  "NG_Buffer_Array");
+
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
 
@@ -226,21 +229,10 @@ bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
 
     ASSERT((&slot == &this->toggleModeParam));
 
+    // Only changing value of parameter.
     auto currentRenderMode = this->renderModeParam.Param<param::EnumParam>()->Value();
-    currentRenderMode = (currentRenderMode + 1) % 6;
+    currentRenderMode = (currentRenderMode + 1) % (static_cast<int>(RenderMode::__MODE_COUNT__));
     this->renderModeParam.Param<param::EnumParam>()->SetValue(currentRenderMode);
-
-    vislib::StringA mode;
-    switch (static_cast<RenderMode>(currentRenderMode)) {
-    case (RenderMode::SIMPLE):    mode = "SIMPLE"; break;
-    case (RenderMode::CLUSTERED): mode = "CLUSTERED"; break;
-    case (RenderMode::NG):        mode = "NG"; break;
-    case (RenderMode::NG_SPLAT):  mode = "SPLAT"; break;
-    case (RenderMode::NG_BUF_AR): mode = "BUFFERARRAY"; break;
-    case (RenderMode::GEO):       mode = "GEO"; break;
-    default: break;
-    }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Switched to render mode: %s", mode.PeekBuffer());
 
     return true;
 }
@@ -329,7 +321,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             }
             break;
 
-        case (RenderMode::CLUSTERED):
+        case (RenderMode::SIMPLE_CLUSTERED):
             vertShaderName = "simplesphere::vertex";
             fragShaderName = "simplesphere::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -341,6 +333,34 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            break;
+
+        case (RenderMode::SIMPLE_GEO):
+            this->geoShader = new ShaderSource();
+            vertShaderName = "geosphere::vertex";
+            fragShaderName = "geosphere::fragment";
+            geoShaderName = "geosphere::geometry";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+                return false;
+            }
+            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                this->geoShader->Code(), this->geoShader->Count(),
+                this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to compile sphere geometry shader: Unknown error\n");
+                return false;
+            }
+            if (!this->sphereGeometryShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to link sphere geometry shader: Unknown error\n");
                 return false;
             }
             break;
@@ -378,7 +398,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             glBindVertexArray(0);
             break;
 
-        case (RenderMode::NG_BUF_AR):
+        case (RenderMode::NG_BUFFER_ARRAY):
             vertShaderName = "ngspherebufferarray::vertex";
             fragShaderName = "ngspherebufferarray::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -400,34 +420,6 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
-            break;
-
-        case (RenderMode::GEO):
-            this->geoShader = new ShaderSource();
-            vertShaderName = "geosphere::vertex";
-            fragShaderName = "geosphere::fragment";
-            geoShaderName = "geosphere::geometry";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
-                return false;
-            }
-            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
-                this->geoShader->Code(), this->geoShader->Count(),
-                this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile sphere geometry shader: Unknown error\n");
-                return false;
-            }
-            if (!this->sphereGeometryShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to link sphere geometry shader: Unknown error\n");
-                return false;
-            }
             break;
 
         default:
@@ -453,6 +445,18 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
         return false;
     }
 
+    vislib::StringA mode;
+    switch (static_cast<RenderMode>(this->renderMode)) {
+        case (RenderMode::SIMPLE):           mode = "SIMPLE"; break;
+        case (RenderMode::SIMPLE_CLUSTERED): mode = "SIMPLE CLUSTERED"; break;
+        case (RenderMode::SIMPLE_GEO):       mode = "SIMPLE GEOMETRY SHADER"; break;
+        case (RenderMode::NG):               mode = "NG"; break;
+        case (RenderMode::NG_SPLAT):         mode = "NG SPLAT"; break;
+        case (RenderMode::NG_BUFFER_ARRAY):  mode = "NG BUFFER ARRAY"; break;
+        default: break;
+    }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s", mode.PeekBuffer());
+
     return true;
 }
 
@@ -467,6 +471,7 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
+    // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
         this->renderMode = currentRenderMode;
@@ -518,12 +523,13 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     switch (currentRenderMode) {
-        case (RenderMode::SIMPLE):    return this->renderSimple(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
-        case (RenderMode::CLUSTERED): return this->renderClustered(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
-        case (RenderMode::NG):        return this->renderNG(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
-        case (RenderMode::NG_SPLAT):  return this->renderNGSplat(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
-        case (RenderMode::NG_BUF_AR): return this->renderNGBufferArray(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos);
-        case (RenderMode::GEO):       return this->renderGeo(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
+        case (RenderMode::SIMPLE):           return this->renderSimple(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
+        case (RenderMode::SIMPLE_CLUSTERED): return this->renderClustered(cr3d, mpdc, viewport, clipDat, clipCol, scaling);
+        case (RenderMode::SIMPLE_GEO):       return this->renderGeo(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix); 
+        case (RenderMode::NG):               return this->renderNG(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
+        case (RenderMode::NG_SPLAT):         return this->renderNGSplat(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos, modelViewMatrix, projMatrix);
+        case (RenderMode::NG_BUFFER_ARRAY):  return this->renderNGBufferArray(cr3d, mpdc, viewport, clipDat, clipCol, scaling, lightPos);
+        
         default: break;
     }
 

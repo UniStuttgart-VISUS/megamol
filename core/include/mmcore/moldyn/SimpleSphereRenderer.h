@@ -72,10 +72,7 @@ namespace moldyn {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Renderer for sphere glyphs.";                                        // SimpleSphere
-            // return "Renderer for sphere glyphs with a bit of bleeding-edge features"; // NGSphere, NGSplat
-            // return "Renderer for sphere glyphs using geometry shader";                // SimpleGeo
-            // return "Renderer for clustered sphere glyphs.";                           // Clustered
+            return "Renderer for sphere glyphs providing different modes using e.g. a bit of bleeding-edge features or a geometry shader.";
         }
 
         /**
@@ -139,12 +136,13 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {
-            SIMPLE    = 0,
-            CLUSTERED = 1,
-            NG        = 2,
-            NG_SPLAT  = 3,
-            NG_BUF_AR = 4,
-            GEO       = 5
+            SIMPLE           = 0,
+            SIMPLE_CLUSTERED = 1,
+            SIMPLE_GEO       = 2,
+            NG               = 3,
+            NG_SPLAT         = 4,
+            NG_BUFFER_ARRAY  = 5,
+            __MODE_COUNT__   = 6
         };
 
         RenderMode                               renderMode;
@@ -155,7 +153,7 @@ namespace moldyn {
         vislib::SmartPtr<ShaderSource>           geoShader;
 
 
-        // NG /////////////////////////////////////////////////////////////////
+        // NG... //////////////////////////////////////////////////////////////
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
@@ -234,34 +232,40 @@ namespace moldyn {
          *
          * @return True if success, false otherwise.
          */
+        // SIMPLE
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
+        // CLUSTERED
         /// Clustered sphere rendering = simple sphere rendering + option to use vao (+ vb, vc) 
         /// defined in simple spherical particles -> not implemented yet (?)
         bool renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
+        // NG
         bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
+        // NGSPLAT
         bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
+        // NGBUFFERARRAY
         bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4]);
 
+        // GEO
         bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
 
-        // NGSphere ///////////////////////////////////////////////////////////
+        // NGSphere NGSplat ///////////////////////////////////////////////////
 
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
