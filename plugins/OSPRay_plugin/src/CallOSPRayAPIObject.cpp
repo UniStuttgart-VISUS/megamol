@@ -29,11 +29,11 @@ CallOSPRayAPIObject::~CallOSPRayAPIObject(void) {
 }
 
 
-void CallOSPRayAPIObject::setAPIObject(void* api_obj) {
+void CallOSPRayAPIObject::setAPIObjects(std::vector<void*> api_obj) {
     this->api_obj = api_obj;
 }
 
-void* CallOSPRayAPIObject::getAPIObject() {
+std::vector<void*> CallOSPRayAPIObject::getAPIObjects() {
     return this->api_obj;
 }
 

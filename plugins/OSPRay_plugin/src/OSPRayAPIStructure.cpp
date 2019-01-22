@@ -38,9 +38,10 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
     if (!(*cd)(2)) return false; // get dirty
     cd->SetTimeStamp(os->getTime());
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cd->isDirty()) {
+    if (this->datahash != cd->DataHash() || this->frameID != static_cast<size_t>(os->getTime()) || this->InterfaceIsDirty() || cd->isDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
+        this->frameID = static_cast<size_t>(os->getTime());
         this->structureContainer.dataChanged = true;
         cd->resetDirty();
     } else {
@@ -57,12 +58,10 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
 
     switch (cd->getStructureType()) {
     case structureTypeEnum::GEOMETRY:
-        this->structureContainer.ospStructures.push_back(
-            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::GEOMETRY));
+        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::GEOMETRY);
         break;
     case structureTypeEnum::VOLUME:
-        this->structureContainer.ospStructures.push_back(
-            std::make_pair<void*, structureTypeEnum>(cd->getAPIObject(), structureTypeEnum::VOLUME));
+        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::VOLUME);
         break;
     case structureTypeEnum::UNINITIALIZED:
         vislib::sys::Log::DefaultLog.WriteError("OSPRay API structure type is no set.");

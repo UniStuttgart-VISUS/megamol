@@ -284,8 +284,8 @@ public:
     /** Dtor. */
     virtual ~CallOSPRayAPIObject(void);
 
-    void setAPIObject(void* api_obj);
-    void* getAPIObject();
+    void setAPIObjects(std::vector<void*> api_obj);
+    std::vector<void*> getAPIObjects();
 
     void setStructureType(structureTypeEnum strtype);
     structureTypeEnum getStructureType();
@@ -295,7 +295,7 @@ public:
     bool isDirty();
 
 private:
-    void* api_obj;
+    std::vector<void*> api_obj;
     float timeStamp;
     structureTypeEnum type;
     bool dirtyFlag;
