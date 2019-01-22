@@ -1,6 +1,7 @@
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform mat4 modelview;
-uniform mat4 proj;
+
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
 
 // clipping plane attributes
 uniform vec4 clipDat;
@@ -19,10 +20,6 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-mat4 modelviewproj = proj*modelview; // TODO Move this to the CPU?
-mat4 modelviewprojInv = inverse(modelviewproj);
-mat4 modelviewprojTrans = transpose(modelviewproj);
-
 void main(void) {
     vec4 coord;
     vec3 ray;
@@ -37,7 +34,7 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
     
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = modelviewprojInv * coord;
+    coord = MVPinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
     
@@ -93,8 +90,8 @@ void main(void) {
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(modelviewprojTrans[2], Ding);
-    float depthW = dot(modelviewprojTrans[3], Ding);
+    float depth = dot(MVPtransp[2], Ding);
+    float depthW = dot(MVPtransp[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     
 #ifndef CLIP

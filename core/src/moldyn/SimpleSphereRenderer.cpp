@@ -118,7 +118,7 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    renderMode(RenderMode::SIMPLE),
+    renderMode(RenderMode::NG),
     sphereShader(),
     sphereGeometryShader(),
     vertShader(nullptr),
@@ -1129,11 +1129,13 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         //glDisableClientState(GL_VERTEX_ARRAY);
         //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
+
         newShader->Disable();
     }
 
     mpdc->Unlock();
 
+    glDisable(GL_POINT_SPRITE);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
@@ -1226,9 +1228,22 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm) {
 
+    // Compute modelviewprojection matrix
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = mvm;
+    modelViewMatrixInv.Invert();
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = pm * mvm;
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixInv = modelViewProjMatrix;
+    modelViewProjMatrixInv.Invert();
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
+    modelViewProjMatrixTransp.Transpose();
+
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+
+    /// If enabled and a vertex shader is active, it specifies that the GL will choose between front and 
+    /// back colors based on the polygon's face direction of which the vertex being shaded is a part. 
+    /// It has no effect on points or lines.
+    //glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); // Has significant negative performance impact ....
 
     this->sphereGeometryShader.Enable();
 
@@ -1237,9 +1252,10 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("modelview"), 1, false, mvm.PeekComponents());
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("proj"), 1, false, pm.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, lp);
 
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, clipDat);
@@ -1345,6 +1361,8 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     }
 
     mpdc->Unlock();
+
+    //glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
     this->sphereGeometryShader.Disable();
 

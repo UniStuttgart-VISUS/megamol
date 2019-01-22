@@ -1,8 +1,9 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-uniform mat4 modelview;
-uniform mat4 proj;
+uniform mat4 MVinv;
+uniform mat4 MVP;
+
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 uniform vec4 lightPos;
 
@@ -21,9 +22,6 @@ out vec4 light;
 out float rad;
 out float squareRad;
 
-mat4 modelviewproj = proj*modelview; // TODO Move this to the CPU?
-mat4 modelviewInv = inverse(modelview);
-
 void main(void) {
     
     // remove the sphere radius from the w coordinates to the rad varyings
@@ -36,14 +34,14 @@ void main(void) {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = modelviewInv[3]; // (C) by Christoph
+    camPos = MVinv[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = modelviewInv * gl_LightSource[0].position - objPos;
+    //lightPos = MVinv * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    light = modelviewInv*normalize(lightPos);
+    light = MVinv*normalize(lightPos);
     
     color = inColor[0];    
     
@@ -102,25 +100,25 @@ void main(void) {
     cpm2 *= h.y;
 
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = modelviewproj * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = modelviewproj * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = modelviewproj * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = modelviewproj * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -129,14 +127,14 @@ void main(void) {
     //gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
     
     // Cube vertices
-    /*vec4 posA =  modelviewproj * vec4(objPos.xyz + (camRight + camUp + camIn)*rad, 1.0);
-    vec4 posB =  modelviewproj * vec4(objPos.xyz + (camRight - camUp + camIn)*rad, 1.0);
-    vec4 posC =  modelviewproj * vec4(objPos.xyz + (-camRight + camUp + camIn)*rad, 1.0);
-    vec4 posD =  modelviewproj * vec4(objPos.xyz + (-camRight - camUp + camIn)*rad, 1.0);
-    vec4 posE =  modelviewproj * vec4(objPos.xyz + (-camRight - camUp - camIn)*rad, 1.0);
-    vec4 posF =  modelviewproj * vec4(objPos.xyz + (camRight - camUp - camIn)*rad, 1.0);
-    vec4 posG =  modelviewproj * vec4(objPos.xyz + (camRight + camUp - camIn)*rad, 1.0);
-    vec4 posH =  modelviewproj * vec4(objPos.xyz + (-camRight + camUp - camIn)*rad, 1.0);*/
+    /*vec4 posA =  MVP * vec4(objPos.xyz + (camRight + camUp + camIn)*rad, 1.0);
+    vec4 posB =  MVP * vec4(objPos.xyz + (camRight - camUp + camIn)*rad, 1.0);
+    vec4 posC =  MVP * vec4(objPos.xyz + (-camRight + camUp + camIn)*rad, 1.0);
+    vec4 posD =  MVP * vec4(objPos.xyz + (-camRight - camUp + camIn)*rad, 1.0);
+    vec4 posE =  MVP * vec4(objPos.xyz + (-camRight - camUp - camIn)*rad, 1.0);
+    vec4 posF =  MVP * vec4(objPos.xyz + (camRight - camUp - camIn)*rad, 1.0);
+    vec4 posG =  MVP * vec4(objPos.xyz + (camRight + camUp - camIn)*rad, 1.0);
+    vec4 posH =  MVP * vec4(objPos.xyz + (-camRight + camUp - camIn)*rad, 1.0);*/
     
     // Triangle strip
     /*gl_Position = posA; EmitVertex();

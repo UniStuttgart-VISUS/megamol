@@ -1,5 +1,3 @@
-uniform mat4 modelview;
-uniform mat4 proj;
 uniform vec4 inConsts1;
 uniform sampler1D colTab;
 
