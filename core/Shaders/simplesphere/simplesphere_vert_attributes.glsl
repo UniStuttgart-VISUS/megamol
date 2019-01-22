@@ -1,5 +1,4 @@
 uniform vec4 viewAttr;
-
 uniform float scaling;
 
 #ifndef CALC_CAM_SYS
@@ -24,7 +23,7 @@ varying float rad;
 
 #ifdef DEFERRED_SHADING
 varying float pointSize;
-#endif
+#endif // DEFERRED_SHADING
 
 #ifdef RETICLE
 varying vec2 centerFragment;

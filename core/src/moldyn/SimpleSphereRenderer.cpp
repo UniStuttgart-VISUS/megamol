@@ -6,17 +6,16 @@
  *
  */
 
-
 /*
  * KNOWN OpenGL Errors:
  *
  * >>> glUnmapNamedBuffer throws following error (can be ignored):
- *     -> only if named buffer wasn't mapped before ...
- * [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
+ *      -> only if named buffer wasn't mapped before ...
+ *      [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
  *
  * >>> glMapNamedBufferRange throws following error (can be ignored):
- * [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
- * [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
+ *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
+ *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
  *
  */
 
@@ -195,7 +194,6 @@ bool moldyn::SimpleSphereRenderer::create(void) {
 #endif
 
     this->renderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-    this->resetResources();
     if (!this->createShaders()) {
         return false;
     }
@@ -289,8 +287,8 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
     // this variant should not need the fence
-    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
+    //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
+    //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT); 
     this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
     this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 
@@ -302,6 +300,8 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
  * moldyn::SimpleSphereRenderer::createShaders
  */
 bool moldyn::SimpleSphereRenderer::createShaders() {
+
+    this->resetResources();
 
     this->vertShader = new ShaderSource();
     this->fragShader = new ShaderSource();
@@ -470,7 +470,6 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
         this->renderMode = currentRenderMode;
-        this->resetResources();
         if (!this->createShaders()) {
             return false;
         }

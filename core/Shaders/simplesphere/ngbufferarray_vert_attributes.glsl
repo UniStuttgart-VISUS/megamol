@@ -26,13 +26,13 @@ varying float rad;
 
 #ifdef DEFERRED_SHADING
 varying float pointSize;
-#endif
+#endif // DEFERRED_SHADING
 
 #ifdef RETICLE
 varying vec2 centerFragment;
 #endif // RETICLE
 
-#define CONSTRAD inConsts1.x
-#define MIN_COLV inConsts1.y
-#define MAX_COLV inConsts1.z
+#define CONSTRAD    inConsts1.x
+#define MIN_COLV    inConsts1.y
+#define MAX_COLV    inConsts1.z
 #define COLTAB_SIZE inConsts1.w

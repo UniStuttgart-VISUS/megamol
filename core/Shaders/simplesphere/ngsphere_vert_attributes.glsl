@@ -36,7 +36,7 @@ out vec4 vertColor;
 
 #ifdef DEFERRED_SHADING
 out float pointSize;
-#endif
+#endif // DEFERRED_SHADING
 
 #ifdef RETICLE
 out vec2 centerFragment;

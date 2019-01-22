@@ -1,7 +1,8 @@
 #define CLIP
 #define DEPTH
 #define SMALL_SPRITE_LIGHTING
-//#define CALC_CAM_SYS
+#define CALC_CAM_SYS
+//#define BULLSHIT
 
 #ifdef DEBUG
 #undef CLIP
@@ -9,8 +10,6 @@
 #define AXISHINTS
 #endif // DEBUG
 
-//#define BULLSHIT
-
 #ifndef FLACH
 #define FLACH
-#endif
+#endif // FLACH

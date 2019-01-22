@@ -10,9 +10,9 @@ uniform float zNear;
 uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
+#endif // CALC_CAM_SYS
 uniform mat4 modelViewProjection;
 uniform mat4 modelViewInverse;
-#endif // CALC_CAM_SYS
 
 // clipping plane attributes
 uniform vec4 clipDat;
@@ -33,7 +33,7 @@ out float effectiveDiameter;
 
 #ifdef DEFERRED_SHADING
 out float pointSize;
-#endif
+#endif // DEFERRED_SHADING
 
 #ifdef RETICLE
 out vec2 centerFragment;
