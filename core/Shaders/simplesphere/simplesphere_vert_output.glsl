@@ -7,4 +7,4 @@
 
 #ifdef DEFERRED_SHADING
     pointSize = gl_PointSize;
-#endif
+#endif // DEFERRED_SHADING

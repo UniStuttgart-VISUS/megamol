@@ -274,19 +274,6 @@ namespace moldyn {
 
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
-        // NGSplat ////////////////////////////////////////////////////////////
-
-        void getBytesAndStride_splat(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-            unsigned int &colStride, unsigned int &vertStride);
-
-        bool makeColorString_splat(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-
-        bool makeVertexString_splat(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-
-        std::shared_ptr<GLSLShader> makeShader_splat(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-
-        std::shared_ptr<vislib::graphics::gl::GLSLShader> generateShader_splat(MultiParticleDataCall::Particles &parts);
-
         // NGSplat NGBufferArray //////////////////////////////////////////////
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);

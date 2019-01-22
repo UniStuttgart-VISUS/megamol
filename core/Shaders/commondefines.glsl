@@ -1,8 +1,7 @@
 #define CLIP
 #define DEPTH
 #define SMALL_SPRITE_LIGHTING
-#define CALC_CAM_SYS
-//#define BULLSHIT
+//#define CALC_CAM_SYS
 
 #ifdef DEBUG
 #undef CLIP
