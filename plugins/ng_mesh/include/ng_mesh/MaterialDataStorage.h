@@ -32,6 +32,11 @@ namespace megamol {
 				std::vector<TextureLayout> const&                     texture_layouts,
 				std::vector<IteratorPair<TextureDataIterator>> const& texture_data);
 
+			void addMaterial(std::string const& btf_filename) {
+				m_materials.push_back(Material());
+				m_materials.back().btf_filename = btf_filename;
+			}
+
 			struct Material
 			{
 				std::string                         btf_filename;

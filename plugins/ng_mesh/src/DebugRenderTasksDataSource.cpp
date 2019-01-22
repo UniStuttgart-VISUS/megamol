@@ -44,7 +44,7 @@ bool megamol::ngmesh::DebugRenderTasksDataSource::load()
 	std::uniform_real_distribution<float> distr(0.01f, 0.03f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 	
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR > object_transform;
 
@@ -53,10 +53,12 @@ bool megamol::ngmesh::DebugRenderTasksDataSource::load()
 		object_transform.SetAt(0, 0, scale);
 		object_transform.SetAt(1, 1, scale);
 		object_transform.SetAt(2, 2, scale);
+
+		object_transform.SetAt(3, 3, 1.0f);
 	
-		object_transform.SetAt(0, 3, loc_distr(generator));
-		object_transform.SetAt(1, 3, loc_distr(generator));
-		object_transform.SetAt(2, 3, loc_distr(generator));
+		//object_transform.SetAt(0, 3, loc_distr(generator));
+		//object_transform.SetAt(1, 3, loc_distr(generator));
+		//object_transform.SetAt(2, 3, loc_distr(generator));
 	
 		m_render_task_data->addRenderTask<GLfloat*>(0, 0, 1, 0, { object_transform.PeekComponents(),object_transform.PeekComponents() + 16 });
 	}

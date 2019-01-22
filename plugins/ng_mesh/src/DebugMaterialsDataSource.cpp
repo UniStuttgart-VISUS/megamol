@@ -35,5 +35,7 @@ bool megamol::ngmesh::DebugMaterialsDataSource::getDataCallback(core::Call & cal
 
 bool megamol::ngmesh::DebugMaterialsDataSource::load()
 {
+	m_material_storage = std::make_shared<MaterialsDataStorage>();
+	m_material_storage->addMaterial("NGMeshDebug");
 	return false;
 }

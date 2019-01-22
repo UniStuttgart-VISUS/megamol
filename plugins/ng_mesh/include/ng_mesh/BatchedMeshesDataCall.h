@@ -51,13 +51,22 @@ namespace megamol {
 		public:
 			BatchedMeshesDataAccessor();
 			~BatchedMeshesDataAccessor();
+			BatchedMeshesDataAccessor(const BatchedMeshesDataAccessor& cpy);
+			BatchedMeshesDataAccessor(BatchedMeshesDataAccessor&& other);
+			BatchedMeshesDataAccessor& operator=(BatchedMeshesDataAccessor&& rhs);
+			BatchedMeshesDataAccessor& operator=(const BatchedMeshesDataAccessor& rhs);
 
 			size_t allocateNewBatch(size_t mesh_vertex_buffer_cnt);
 
-			void setVertexDataAccess(
+			//void setVertexDataAccess(
+			//	size_t batch_idx,
+			//	size_t vertex_buffers_cnt,
+			//	BufferAccessor...);
+
+			void setVertexDataAccessor(
 				size_t batch_idx,
-				size_t vertex_buffers_cnt,
-				BufferAccessor...);
+				size_t vertex_buffer_idx,
+				BufferAccessor buffer_accessor);
 
 			void setIndexDataAccess(
 				size_t batch_idx,

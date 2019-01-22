@@ -67,6 +67,8 @@ namespace megamol
 
 			MeshDataStorage           m_mesh_data_storage;
 			BatchedMeshesDataAccessor m_mesh_data_accessor;
+
+			bool                      m_data_loaded;
 		};
 	}
 }

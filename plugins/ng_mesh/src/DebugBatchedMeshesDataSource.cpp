@@ -14,6 +14,7 @@
 #include "ng_mesh/BatchedMeshesDataCall.h"
 
 megamol::ngmesh::DebugBatchedMeshesDataSource::DebugBatchedMeshesDataSource()
+	: m_data_loaded(false)
 {
 	// no slots to load for this debug data source
 }
@@ -28,10 +29,15 @@ bool megamol::ngmesh::DebugBatchedMeshesDataSource::getDataCallback(core::Call &
 	if (mesh_call == NULL)
 		return false;
 
-	load();
+	if (!m_data_loaded)
+	{
+		load();
 
-	mesh_call->setBatchedMeshesDataAccessor(&m_mesh_data_accessor);
+		mesh_call->setBatchedMeshesDataAccessor(&m_mesh_data_accessor);
 
+		m_data_loaded = true;
+	}
+	
 	return true;
 }
 
@@ -39,7 +45,7 @@ bool megamol::ngmesh::DebugBatchedMeshesDataSource::load()
 {
 	// Create std-container for holding vertex data
 	std::vector<std::vector<float>> vbs = { {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},// normal data buffer
-		{-0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f} }; // position data buffer
+		{-5.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 10.0f, 0.0f} }; // position data buffer
 	// Create std-container holding vertex attribute descriptions
 	std::vector<VertexLayout::Attribute> attribs = {
 		VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0),
@@ -54,6 +60,7 @@ bool megamol::ngmesh::DebugBatchedMeshesDataSource::load()
 	std::pair< std::vector<uint32_t>::iterator, std::vector<uint32_t>::iterator> ib_iterators = { indices.begin(),indices.end() };
 
 	m_mesh_data_storage.addMesh(vertex_descriptor, vb_iterators, ib_iterators,GL_UNSIGNED_INT,GL_STATIC_DRAW,GL_TRIANGLES);
+	m_mesh_data_accessor = m_mesh_data_storage.generateDataAccessor();
 
 	return true;
 }

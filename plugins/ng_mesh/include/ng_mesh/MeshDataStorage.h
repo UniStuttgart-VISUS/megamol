@@ -95,6 +95,9 @@ namespace megamol {
 			GLenum                                                 primitive_type,
 			bool                                                   seperate)
 		{
+			typedef typename std::iterator_traits<IndexBufferIterator>::value_type IndexBufferType;
+			typedef typename std::iterator_traits<VertexBufferIterator>::value_type VertexBufferType;
+
 			// compute the number of requested vertices and indices
 			size_t req_vertex_byte_size = 0; // compute byte size of per vertex data in first vertex buffer
 			if (vertex_buffers.size() == 1) {
@@ -106,10 +109,9 @@ namespace megamol {
 				req_vertex_byte_size = computeAttributeByteSize(vertex_descriptor.attributes.front());
 			}
 
-			size_t req_vb_byte_size = sizeof(std::iterator_traits<VertexBufferIterator>::value_type) *
-				std::distance(std::get<0>(vertex_buffers.front()), std::get<1>(vertex_buffers.front()));
+			size_t req_vb_byte_size = sizeof(VertexBufferType) * std::distance(std::get<0>(vertex_buffers.front()), std::get<1>(vertex_buffers.front()));
 			size_t req_vert_cnt = req_vb_byte_size / req_vertex_byte_size;
-			size_t req_index_byte_size = sizeof(std::iterator_traits<IndexBufferIterator>::value_type) * std::distance(std::get<0>(index_buffer), std::get<1>(index_buffer));
+			size_t req_index_byte_size = sizeof(VertexBufferType) * std::distance(std::get<0>(index_buffer), std::get<1>(index_buffer));
 			size_t req_index_cnt = req_index_byte_size/computeByteSize(index_type);
 
 			// check if a mesh batch with matching vertex layout and index type already exists
@@ -169,19 +171,19 @@ namespace megamol {
 			// copy mesh vertex data
 			for (int i = 0; i < vertex_buffers.size(); ++i)
 			{
-				size_t vb_offset = computeAttributeByteSize(vertex_descriptor.attributes[i]) * it->mesh_data.used_vertex_cnt;
-				auto dest = it->mesh_data.vertex_data[i].data();
-				auto src_first = reinterpret_cast<std::byte*>(&*std::get<0>(vertex_buffers[i]));
-				auto src_last = reinterpret_cast<std::byte*>(&*(std::get<1>(vertex_buffers[i])-1));
+				size_t vb_byte_offset = computeAttributeByteSize(vertex_descriptor.attributes[i]) * it->mesh_data.used_vertex_cnt;
+				auto dest = reinterpret_cast<VertexBufferType*>(it->mesh_data.vertex_data[i].data() + vb_byte_offset);
+				auto src_first = std::get<0>(vertex_buffers[i]);
+				auto src_last = std::get<1>(vertex_buffers[i]);
 
 				std::copy(src_first, src_last, dest);
 			}
 
 			// copy mesh index data
-			size_t ib_offset = computeByteSize(index_type) * it->mesh_data.used_index_cnt;
-			auto dest = it->mesh_data.index_data.data();
-			auto src_first = reinterpret_cast<std::byte*>(&*std::get<0>(index_buffer));
-			auto src_last = reinterpret_cast<std::byte*>(&*(std::get<1>(index_buffer)-1));
+			size_t ib_byte_offset = computeByteSize(index_type) * it->mesh_data.used_index_cnt;
+			auto dest = reinterpret_cast<IndexBufferType*>(it->mesh_data.index_data.data() + ib_byte_offset);
+			auto src_first = std::get<0>(index_buffer);
+			auto src_last = std::get<1>(index_buffer);
 			std::copy(src_first, src_last, dest);
 
 			// add draw command

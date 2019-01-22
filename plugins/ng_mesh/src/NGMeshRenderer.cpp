@@ -404,7 +404,7 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 
 void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const & meshes)
 {
-	std::cout << "Adding " << meshes.batch_cnt << "mesh batches" << std::endl;
+	std::cout << "Adding " << meshes.batch_cnt << " mesh batch(es)" << std::endl;
 
 	for (size_t i = 0; i < meshes.batch_cnt; i++)
 	{
@@ -424,8 +424,8 @@ void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const 
 
 			for (int j = 0; j < mesh_data.vertex_buffer_cnt; ++j)
 			{
-				vertex_data_ptrs[i] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].raw_data;
-				vertex_data_sizes[i] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].byte_size;
+				vertex_data_ptrs[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].raw_data;
+				vertex_data_sizes[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].byte_size;
 
 				//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
 				//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
@@ -498,6 +498,10 @@ void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsData
 		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
 
 		m_shader_programs.back()->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+
+		m_materials.push_back(Material());
+		m_materials.back().btf_name = material.btf_filename;
+		m_materials.back().shader = m_shader_programs.back();
 	}
 }
 
@@ -519,6 +523,11 @@ void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskD
 	 		GL_DYNAMIC_DRAW);
 
 		//TODO material parameter for shader
+		m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
+			GL_SHADER_STORAGE_BUFFER,
+			nullptr,
+			8,
+			GL_DYNAMIC_DRAW);
 
 		std::vector<DrawElementsCommand> draw_command_data;
 		draw_command_data.reserve(render_batch.draw_cnt);
@@ -544,7 +553,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 {
 	megamol::core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
 	if (cr == NULL) return false;
-
+	
 	// manual creation of projection and view matrix
 	GLfloat fovy = (cr->GetCameraParameters()->ApertureAngle() / 180.0f) * 3.14f;
 	GLfloat near_clip = cr->GetCameraParameters()->NearClip();
@@ -569,7 +578,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	projection_matrix[13] = 0.0f;
 	projection_matrix[14] = (2.0f * far_clip * near_clip) * nf;
 	projection_matrix[15] = 0.0f;
-
+	
 	auto cam_right = cr->GetCameraParameters()->Right();
 	auto cam_up = cr->GetCameraParameters()->Up();
 	auto cam_front = -cr->GetCameraParameters()->Front();
@@ -589,42 +598,43 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	view_matrix[9] = cam_up.Z();
 	view_matrix[10] = cam_front.Z();
 	view_matrix[11] = 0.0f;
-
+	
 	view_matrix[12] = - (cam_position.X()*cam_right.X() + cam_position.Y()*cam_right.Y() + cam_position.Z()*cam_right.Z());
 	view_matrix[13] = - (cam_position.X()*cam_up.X() + cam_position.Y()*cam_up.Y() + cam_position.Z()*cam_up.Z());
 	view_matrix[14] = - (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
 	view_matrix[15] = 1.0f;
-
+	
 	// this is the apex of suck and must die
     glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
-
+	
 	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
-	MaterialsDataCall* matl_call     = this->m_material_callerSlot.CallAs<MaterialsDataCall>();
-	RenderTasksDataCall* task_call   = this->m_render_task_callerSlot.CallAs<RenderTasksDataCall>();
-
+	MaterialsDataCall*     matl_call = this->m_material_callerSlot.CallAs<MaterialsDataCall>();
+	RenderTasksDataCall*   task_call = this->m_render_task_callerSlot.CallAs<RenderTasksDataCall>();
+	
 	if (mesh_call == NULL || matl_call == NULL || task_call == NULL)
 		return false;
-
+	
 	if ( (!(*mesh_call)(0)) || (!(*matl_call)(0)) || (!(*task_call)(0)) )
 		return false;
-
+	
 	// TODO update on-demand only
-
+	
 	if (mesh_call->getUpdateFlags() > 0) {
 		addMeshes(*(mesh_call->getBatchedMeshesDataAccessor()));
+		mesh_call->resetUpdateFlags();
 	}
+	
 	if (matl_call->getUpdateFlags() > 0) {
 		addMaterials(matl_call->getMaterialsData());
+		matl_call->resetUpdateFlags();
 	}
+	
 	if (task_call->getUpdateFlags() > 0) {
 		addRenderTasks(task_call->getRenderTaskData());
+		task_call->resetUpdateFlags();
 	}
-
-	mesh_call->resetUpdateFlags();
-	matl_call->resetUpdateFlags();
-	task_call->resetUpdateFlags();
-
+	
 	//   CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 	//   
 	//   if (render_batch_call == NULL)
@@ -656,52 +666,62 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	//   		render_batches->resetUpdateFlags(batch_idx);
 	//   	}
 	//   }
-
+	
 	// TODO update data from calls
-
+	
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
-
+	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
 	//glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
+	//glCullFace(GL_BACK);
+	
 	// loop through "registered" render batches
 	for (auto const& render_batch : m_render_batches)
 	{
 		render_batch.shader_prgm->Enable();
-
+	
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
 		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
 		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
-
+	
 		render_batch.obj_shader_params->bind(0);
 		render_batch.mtl_shader_params->bind(1);
-
+	
 		render_batch.draw_commands->bind();
 		render_batch.mesh->bindVertexArray();
-
+	
 		glMultiDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
 			render_batch.mesh->getIndicesType(),
 			(GLvoid*)0,
 			render_batch.draw_cnt,
 			0);
 
-
+		
 		//CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;
 		//command_buffer.first_idx = 0;
 		//command_buffer.base_vertex = 0;
 		//command_buffer.base_instance = 0;
-		
+
+		//DrawElementsCommand command_buffer;
+		//command_buffer.cnt = 3;
+		//command_buffer.instance_cnt = 1;
+		//command_buffer.first_idx = 0;
+		//command_buffer.base_vertex = 0;
+		//command_buffer.base_instance = 0;
+		//
 		//glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
 		//	render_batch.mesh->getIndicesType(),
-		//	/*&command_buffer*/0);
-	}
+		//	&command_buffer);
 
+		GLenum err = glGetError();
+		std::cout << "Error: " << err << std::endl;
+	}
+	
 	// Clear the way for his ancient majesty, the mighty immediate mode...
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -709,6 +729,6 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-
+	
 	return true;
 }

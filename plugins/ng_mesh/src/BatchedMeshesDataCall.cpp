@@ -25,6 +25,100 @@ megamol::ngmesh::BatchedMeshesDataAccessor::~BatchedMeshesDataAccessor()
 	if (draw_command_batches != nullptr) delete draw_command_batches;
 }
 
+megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(const BatchedMeshesDataAccessor & cpy)
+	: buffer_accessors(nullptr),
+	buffer_accessor_cnt(0),
+	draw_command_batches(nullptr),
+	mesh_data_batches(nullptr),
+	batch_cnt(0)
+{
+	for (size_t i = 0; i < cpy.batch_cnt; i++)
+	{
+		MeshDataAccessor& cpy_mesh_data = cpy.mesh_data_batches[i];
+
+		allocateNewBatch(cpy_mesh_data.vertex_buffer_cnt);
+
+		for (size_t j = 0; j < cpy_mesh_data.vertex_buffer_cnt; j++)
+		{
+			BufferAccessor tmp = cpy.buffer_accessors[cpy_mesh_data.vertex_buffers_accessors_base_index + j];
+			setVertexDataAccessor(i, j, tmp);
+		}
+
+		BufferAccessor index_data_accessor = cpy.buffer_accessors[cpy_mesh_data.index_buffer_accessor_index];
+
+		setIndexDataAccess(i, index_data_accessor.raw_data, index_data_accessor.byte_size, cpy_mesh_data.index_type);
+
+		setMeshMetaDataAccess(
+			i,
+			cpy_mesh_data.vertex_stride,
+			cpy_mesh_data.vertex_attribute_cnt,
+			cpy_mesh_data.vertex_attributes,
+			cpy_mesh_data.usage,
+			cpy_mesh_data.primitive_type);
+
+		setDrawCommandsDataAcess(
+			i,
+			cpy.draw_command_batches[i].draw_commands,
+			cpy.draw_command_batches[i].draw_cnt);
+	}
+}
+
+megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(BatchedMeshesDataAccessor && other)
+	: buffer_accessors(nullptr),
+	buffer_accessor_cnt(0),
+	draw_command_batches(nullptr),
+	mesh_data_batches(nullptr),
+	batch_cnt(0)
+{
+	BufferAccessor* tmp_buffer_accessors = this->buffer_accessors;
+	size_t tmp_buffer_accessor_cnt = this->buffer_accessor_cnt;
+	MeshDataAccessor* tmp_mesh_data_batches = this->mesh_data_batches;
+	DrawCommandsDataAccessor* tmp_draw_command_batches = this->draw_command_batches;
+	size_t tmp_batch_cnt = this->batch_cnt;
+
+	this->buffer_accessors = other.buffer_accessors;
+	this->buffer_accessor_cnt = other.buffer_accessor_cnt;
+	this->mesh_data_batches = other.mesh_data_batches;
+	this->draw_command_batches = other.draw_command_batches;
+	this->batch_cnt = other.batch_cnt;
+
+	other.buffer_accessors = tmp_buffer_accessors;
+	other.buffer_accessor_cnt = tmp_buffer_accessor_cnt;
+	other.mesh_data_batches = tmp_mesh_data_batches;
+	other.draw_command_batches = tmp_draw_command_batches;
+	other.batch_cnt = tmp_batch_cnt;
+}
+
+megamol::ngmesh::BatchedMeshesDataAccessor & megamol::ngmesh::BatchedMeshesDataAccessor::operator=(BatchedMeshesDataAccessor && rhs)
+{
+	BufferAccessor* tmp_buffer_accessors = this->buffer_accessors;
+	size_t tmp_buffer_accessor_cnt = this->buffer_accessor_cnt;
+	MeshDataAccessor* tmp_mesh_data_batches = this->mesh_data_batches;
+	DrawCommandsDataAccessor* tmp_draw_command_batches = this->draw_command_batches;
+	size_t tmp_batch_cnt = this->batch_cnt;
+
+	this->buffer_accessors = rhs.buffer_accessors;
+	this->buffer_accessor_cnt = rhs.buffer_accessor_cnt;
+	this->mesh_data_batches = rhs.mesh_data_batches;
+	this->draw_command_batches = rhs.draw_command_batches;
+	this->batch_cnt = rhs.batch_cnt;
+
+	rhs.buffer_accessors = tmp_buffer_accessors;
+	rhs.buffer_accessor_cnt = tmp_buffer_accessor_cnt;
+	rhs.mesh_data_batches = tmp_mesh_data_batches;
+	rhs.draw_command_batches = tmp_draw_command_batches;
+	rhs.batch_cnt = tmp_batch_cnt;
+
+	return *this;
+}
+
+megamol::ngmesh::BatchedMeshesDataAccessor & megamol::ngmesh::BatchedMeshesDataAccessor::operator=(const BatchedMeshesDataAccessor & rhs)
+{
+	// TODO: insert return statement here
+	*this = BatchedMeshesDataAccessor(rhs);
+	return *this;
+}
+
 size_t megamol::ngmesh::BatchedMeshesDataAccessor::allocateNewBatch(size_t mesh_vertex_buffer_cnt)
 {
 	// allocate new (larger) memory for buffer accessors
@@ -54,25 +148,34 @@ size_t megamol::ngmesh::BatchedMeshesDataAccessor::allocateNewBatch(size_t mesh_
 	// set buffer indices of buffer accessors in new batch
 	mesh_data_batches[batch_cnt - 1].vertex_buffers_accessors_base_index 
 		= buffer_accessor_cnt - mesh_vertex_buffer_cnt - 1;
+	mesh_data_batches[batch_cnt - 1].vertex_buffer_cnt = mesh_vertex_buffer_cnt;
 	mesh_data_batches[batch_cnt - 1].index_buffer_accessor_index = buffer_accessor_cnt - 1;
 
 	// return index of new batch
 	return (batch_cnt - 1);
 }
 
-void megamol::ngmesh::BatchedMeshesDataAccessor::setVertexDataAccess(size_t batch_idx, size_t vertex_buffers_cnt, BufferAccessor ...)
+//void megamol::ngmesh::BatchedMeshesDataAccessor::setVertexDataAccess(size_t batch_idx, size_t vertex_buffers_cnt, BufferAccessor ...)
+//{
+//	va_list args;
+//	va_start(args, vertex_buffers_cnt);
+//	for (size_t i = 0; i < vertex_buffers_cnt; ++i)
+//	{
+//		size_t buffer_idx = mesh_data_batches[batch_idx].vertex_buffers_accessors_base_index + i;
+//
+//		BufferAccessor accessor = va_arg(args, BufferAccessor);
+//
+//		buffer_accessors[buffer_idx].raw_data = accessor.raw_data;
+//		buffer_accessors[buffer_idx].byte_size = accessor.byte_size;
+//	}
+//}
+
+void megamol::ngmesh::BatchedMeshesDataAccessor::setVertexDataAccessor(size_t batch_idx, size_t vertex_buffer_idx, BufferAccessor data_accessor)
 {
-	va_list args;
-	va_start(args, vertex_buffers_cnt);
-	for (size_t i = 0; i < vertex_buffers_cnt; ++i)
-	{
-		size_t buffer_idx = mesh_data_batches[batch_idx].vertex_buffers_accessors_base_index + i;
+	size_t buffer_idx = mesh_data_batches[batch_idx].vertex_buffers_accessors_base_index + vertex_buffer_idx;
 
-		BufferAccessor accessor = va_arg(args, BufferAccessor);
-
-		buffer_accessors[buffer_idx].raw_data = accessor.raw_data;
-		buffer_accessors[buffer_idx].byte_size = accessor.byte_size;
-	}
+	buffer_accessors[buffer_idx].raw_data = data_accessor.raw_data;
+	buffer_accessors[buffer_idx].byte_size = data_accessor.byte_size;
 }
 
 void megamol::ngmesh::BatchedMeshesDataAccessor::setIndexDataAccess(size_t batch_idx, std::byte * raw_data, size_t byte_size, GLenum index_type)
@@ -96,7 +199,6 @@ void megamol::ngmesh::BatchedMeshesDataAccessor::setDrawCommandsDataAcess(size_t
 {
 	draw_command_batches[batch_idx].draw_commands = draw_commands;
 	draw_command_batches[batch_idx].draw_cnt = draw_cnt;
-	
 }
 
 megamol::ngmesh::BatchedMeshesDataCall::BatchedMeshesDataCall()
