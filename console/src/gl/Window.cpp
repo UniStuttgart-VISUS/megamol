@@ -35,15 +35,17 @@ using namespace megamol;
 using namespace megamol::console;
 
 #ifndef USE_EGL
-gl::Window::Window(const char* title, const utility::WindowPlacement & placement, GLFWwindow* share)
+gl::Window::Window(const char* titlePrefix, const char* instance, void* hCore,
+    const utility::WindowPlacement& placement, GLFWwindow* share)
         : glfw(), 
 #else
-gl::Window::Window(const char* title, const utility::WindowPlacement & placement, EGLContext* share)
+gl::Window::Window(const char* titlePrefix, const char* instance, void* hCore,
+    const utility::WindowPlacement& placement, EGLContext* share)
         : 
 #endif
         hView(), hWnd(nullptr), width(-1), height(-1), renderContext(), uiLayers(), mouseCapture(),
-        name(title), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false),
-        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false) {
+        name(std::string(titlePrefix) + std::string(instance)), fpsCntr(), fps(1000.0f), fpsList(), showFpsInTitle(true), fpsSyncTime(), topMost(false),
+        fragmentQuery(0), showFragmentsInTitle(false), showPrimsInTitle(false), associatedInstance(instance), hCore(hCore) {
 
     if (::memcmp(name.c_str(), WindowManager::TitlePrefix, WindowManager::TitlePrefixLength) == 0) {
         name = name.substr(WindowManager::TitlePrefixLength);
@@ -93,7 +95,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
                 h = mode->height * 3 / 4;
             }
 
-            hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
+            hWnd = ::glfwCreateWindow(w, h, (std::string(titlePrefix) + std::string(associatedInstance)).c_str(), nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
@@ -124,7 +126,8 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             ::glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 
             /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
-            hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
+            hWnd = ::glfwCreateWindow(mode->width, mode->height,
+                (std::string(titlePrefix) + std::string(associatedInstance)).c_str(), nullptr, share);
             vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
             ::glfwGetMonitorPos(mon, &x, &y);
@@ -284,6 +287,7 @@ void gl::Window::RequestClose() {
 #else
         // TODO
 #endif
+        ::mmcRequestViewDeInstantiation(this->hCore, this->associatedInstance.c_str());
     }
 }
 

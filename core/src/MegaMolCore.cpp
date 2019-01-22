@@ -1244,3 +1244,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void *hCore) {
         core->PerformGraphUpdates();
     }
 }
+
+void mmcRequestViewDeInstantiation(void* hCore, const char* name) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core != nullptr) {
+        core->RequestViewDeInstantiation(name);
+    }
+}

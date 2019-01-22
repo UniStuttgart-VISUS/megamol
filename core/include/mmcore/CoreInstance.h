@@ -229,6 +229,8 @@ public:
     void RequestViewInstantiation(
         const ViewDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param = NULL);
 
+    void RequestViewDeInstantiation(const vislib::StringA& id);
+
     /**
      * Requests the instantiation of the job defined by the given
      * description.
@@ -1129,6 +1131,9 @@ private:
     /** The list of pending views to be instantiated */
     vislib::SingleLinkedList<ViewInstanceRequest> pendingViewInstRequests;
 
+    /** The list of pending view de-instantiations */
+    vislib::SingleLinkedList<vislib::StringA> pendingViewDeInstRequests;
+
     /** The list of pending jobs to be instantiated */
     vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
 
@@ -1180,6 +1185,9 @@ private:
 
     /** list of indices into module deletion requests pointing to flush events */
     std::vector<size_t> moduleDelRequestsFlushIndices;
+
+    /** list of indices into instance deletion requests pointing to flush events */
+    std::vector<size_t> pendingViewDeInstRequestsFlushIndices;
 
     /** list of indices into param set requests pointing to flush events */
     std::vector<size_t> paramSetRequestsFlushIndices;

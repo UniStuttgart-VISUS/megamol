@@ -751,6 +751,11 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
     this->pendingViewInstRequests.Add(req);
 }
 
+void megamol::core::CoreInstance::RequestViewDeInstantiation(const vislib::StringA& id) {
+    vislib::sys::AutoLock l(this->graphUpdateLock);
+    this->pendingViewDeInstRequests.Add(id);
+}
+
 
 /*
  * megamol::core::CoreInstance::RequestJobInstantiation
@@ -907,7 +912,8 @@ bool megamol::core::CoreInstance::FlushGraphUpdates() {
         this->paramSetRequestsFlushIndices.push_back(this->pendingParamSetRequests.Count() - 1);
     if (this->pendingGroupParamSetRequests.Count() != 0)
         this->groupParamSetRequestsFlushIndices.push_back(this->pendingGroupParamSetRequests.Count() - 1);
-
+    if (this->pendingViewDeInstRequests.Count() != 0)
+        this->pendingViewDeInstRequestsFlushIndices.push_back(this->pendingViewDeInstRequests.Count() - 1);
     return true;
 }
 
@@ -1111,6 +1117,34 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::sys::Log::DefaultLog.WriteError(
                 "cannot delete call from \"%s\" to \"%s\"", cdr.First().PeekBuffer(), cdr.Second().PeekBuffer());
         }
+    }
+
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingViewDeInstRequests.Count(), this->pendingViewDeInstRequestsFlushIndices);
+
+    // delete dangling instances
+    while (this->pendingViewDeInstRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->pendingViewDeInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->pendingViewDeInstRequestsFlushIndices);
+            break;
+        }
+
+        auto vdr = this->pendingViewDeInstRequests.First();
+        this->pendingViewDeInstRequests.RemoveFirst();
+
+        ++counter;
+
+        core::ModuleNamespace::ptr_type ns =
+            core::ModuleNamespace::dynamic_pointer_cast(root.get()->FindNamedObject(vdr));
+        if (!ns) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates: could not find namespace \"%s\" for deletion.", vdr.PeekBuffer());
+            continue;
+        }
+
+        //root.get()->RemoveChild(ns);
     }
 
     counter = 0;
@@ -1382,7 +1416,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         auto& pg = pgp.Next().Value();
         if (pg.GroupSize == pg.Requests.Count()) {
             // flush mechanism
-            if (this->checkForFlushEvent(counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
+            if (this->checkForFlushEvent(
+                    counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
                 this->updateFlushIdxList(counter, this->groupParamSetRequestsFlushIndices);
                 break;
             }
@@ -3083,8 +3118,8 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
 /*
  * megamol::core::CoreInstance::enumParameters
  */
-void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const {
+void megamol::core::CoreInstance::enumParameters(megamol::core::ModuleNamespace::const_ptr_type path,
+    std::function<void(const Module&, param::ParamSlot&)> cb) const {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -3102,8 +3137,8 @@ void megamol::core::CoreInstance::enumParameters(
             for (si = mod->ChildList_Begin(); si != se; ++si) {
                 param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
                 if (slot) {
-					cb(*mod, *slot);
-				}
+                    cb(*mod, *slot);
+                }
             }
 
         } else if (ns) {
@@ -3850,5 +3885,6 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 
 
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
-    list.erase(std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+    list.erase(
+        std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
 }

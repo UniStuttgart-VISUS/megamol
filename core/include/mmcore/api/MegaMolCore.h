@@ -494,6 +494,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
     void *hCore, const wchar_t *name, const wchar_t *id);
 
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestViewDeInstantiation(void *hCore, const char* name);
+    
 /**
  * Answer whether the core has pending requests of instantiations of views.
  *

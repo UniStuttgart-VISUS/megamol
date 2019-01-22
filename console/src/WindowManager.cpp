@@ -165,9 +165,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     if (!windows.empty()) share = windows[0]->WindowHandle();
 
     // prepare window object
-    std::shared_ptr<gl::Window> w = std::make_shared<gl::Window>(
-        (vislib::StringA(TitlePrefix) + pendInstName).PeekBuffer(),
-        wp, share);
+    std::shared_ptr<gl::Window> w = std::make_shared<gl::Window>(TitlePrefix, pendInstName, hCore, wp, share);
     if (!w || !w->IsAlive()) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to create window");
         return false;

@@ -42,9 +42,11 @@ namespace gl {
         }
 
 #ifndef USE_EGL
-        Window(const char* title, const utility::WindowPlacement & placement, GLFWwindow* share);
+        Window(const char* titlePrefix, const char* instance, void* hCore, const utility::WindowPlacement & placement, GLFWwindow* share);
 #else
-        Window(const char* title, const utility::WindowPlacement & placement, EGLContext* share);
+        Window(const char* titlePrefix, const char* instance, void* hCore,
+            const utility::WindowPlacement& placement,
+            EGLContext* share);
 #endif
         virtual ~Window();
 
@@ -150,6 +152,8 @@ namespace gl {
         GLuint primsQuery;
         bool showFragmentsInTitle;
         bool showPrimsInTitle;
+        std::string associatedInstance;
+        void *hCore;
     };
 
 } /* end namespace gl */
