@@ -187,6 +187,7 @@ namespace moldyn {
         core::param::ParamSlot toggleModeParam;
 
         core::param::ParamSlot radiusScalingParam;
+
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
 
@@ -230,7 +231,7 @@ namespace moldyn {
          * @param mvm      The current model view matrix.
          * @param pm       The current projection matrix.
          *
-         * @return True if success, false otherwise.
+         * @return         True if success, false otherwise.
          */
         // SIMPLE
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 

@@ -15,9 +15,9 @@ using namespace megamol::core;
 using namespace vislib::graphics::gl;
 
 
-//#define CHRONOTIMING
 #define MAP_BUFFER_LOCALLY
-//#define DEBUG_GL_CALLBACK
+#define DEBUG_GL_CALLBACK
+//#define CHRONOTIMING
 
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
@@ -27,7 +27,7 @@ const GLuint SSBObindingPoint      = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 
 
-//typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+// typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar* message, const GLvoid* userParam) {
     const char *sourceText, *typeText, *severityText;
@@ -102,13 +102,12 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
 
 
 /******************************************************************************
- * Known DebugGLCallback Errors:
+ * Known DebugGLCallback Errors (CAN BE IGNORED):
  *
- * >>> glUnmapNamedBuffer throws following error (can be ignored):
- *      -> only if named buffer wasn't mapped before ...
+ * >>> glUnmapNamedBuffe (only if named buffer wasn't mapped before):
  *      [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
  *
- * >>> glMapNamedBufferRange throws following error (can be ignored):
+ * >>> glMapNamedBufferRange:
  *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations.
  *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
  *
@@ -141,7 +140,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     numBuffers(3),
     theSingleMappedMem(nullptr),
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT), 
-    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+    singleBufferMappingBits( GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     //timer(),
     renderModeParam(       "renderMode",        "The sphere render mode."),
     toggleModeParam(       "renderModeButton",  "Toggle sphere render modes."),
