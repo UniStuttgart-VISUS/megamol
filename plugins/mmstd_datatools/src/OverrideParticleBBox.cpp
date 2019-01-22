@@ -123,12 +123,16 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     //        }
     //    }
     //}
+
+    if (!(inData)(0)) return false;
     outData = inData; // also transfers the unlocker to 'outData'
-        
+
     bool doX = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     bool doY = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     bool doZ = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
     int samples = this->autocomputeSamplesSlot.Param<core::param::IntParam>()->Value();
+
+    float rad = 0.0f;
 
     float minX = std::numeric_limits<float>::max(), minY = std::numeric_limits<float>::max(), minZ = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::lowest(), maxY = std::numeric_limits<float>::lowest(), maxZ = std::numeric_limits<float>::lowest();
@@ -136,6 +140,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         size_t step;
 
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
+            if (rad < inData.AccessParticles(l).GetGlobalRadius()) rad = inData.AccessParticles(l).GetGlobalRadius();
             if (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
                 || inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 posFromSomethingFunc getPoint;
@@ -224,6 +229,9 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         const vislib::math::Vector<float, 3>& u = this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value();
         outData.AccessBoundingBoxes().SetObjectSpaceBBox(doX ? minX : l.X(), doY ? minY : l.Y(), doZ ? minZ : l.Z(),
             doX ? maxX : u.X(), doY ? maxY : u.Y(), doZ ? maxZ : u.Z());
+        outData.AccessBoundingBoxes().SetObjectSpaceClipBox(doX ? minX - rad : l.X(), doY ? minY - rad : l.Y(), doZ ? minZ - rad : l.Z(),
+            doX ? maxX - rad : u.X(), doY ? maxY - rad : u.Y(), doZ ? maxZ - rad : u.Z());
+        outData.AccessBoundingBoxes().MakeScaledWorld(1.0f);
     }
 
     return true;
