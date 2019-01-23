@@ -150,7 +150,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
 {
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     rmp->SetTypePair(RenderMode::SIMPLE,           "Simple");
-    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
+    //rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered"); /// Currently same as "Simple" ....
     rmp->SetTypePair(RenderMode::SIMPLE_GEO,       "Simple_Geometry_Shader");
     rmp->SetTypePair(RenderMode::NG,               "NG");
     rmp->SetTypePair(RenderMode::NG_SPLAT,         "NG_Splat");
@@ -398,8 +398,8 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
             break;
 
         case (RenderMode::NG_BUFFER_ARRAY):
-            vertShaderName = "ngspherebufferarray::vertex";
-            fragShaderName = "ngspherebufferarray::fragment";
+            vertShaderName = "ngbufferarray::vertex";
+            fragShaderName = "ngbufferarray::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -1039,8 +1039,9 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
         glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
         glUniform1f(this->newShader->ParameterLocation("zNear"), cr3d->GetCameraParameters()->NearClip());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, lp);
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -1243,7 +1244,7 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     /// If enabled and a vertex shader is active, it specifies that the GL will choose between front and 
     /// back colors based on the polygon's face direction of which the vertex being shaded is a part. 
     /// It has no effect on points or lines.
-    //glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); // Has significant negative performance impact ....
+    //glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); // ! Has significant negative performance impact ....
 
     this->sphereGeometryShader.Enable();
 

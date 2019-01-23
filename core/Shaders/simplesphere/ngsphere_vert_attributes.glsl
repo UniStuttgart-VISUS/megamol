@@ -1,6 +1,7 @@
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_ARB_gpu_shader5 : require
 #extension GL_ARB_gpu_shader_fp64 : enable
+
 uniform vec4 viewAttr;
 
 uniform float scaling;
@@ -25,6 +26,7 @@ uniform mat4 MVPtransp;
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
+
 uniform vec4 globalCol;
 
 out vec4 objPos;

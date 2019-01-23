@@ -1,6 +1,7 @@
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
-#endif // BACKSIDE_ENABLED
+#endif // BACKSIDE_ENABLED^
+
 //#define DISCARD_COLOR_MARKER
 
 // clipping plane attributes
@@ -21,14 +22,14 @@ FLACH in float effectiveDiameter;
 FLACH in vec2 centerFragment;
 #endif // RETICLE
 
-in vec4 vsColor;
+in vec4 vertColor;
 out vec4 outColor;
 
 void main(void) {
 
     //gl_FragColor = vec4((gl_PointCoord.xy - vec2(0.5)) * vec2(2.0), 0.0, 1.0);
     //gl_FragColor = vec4(gl_PointCoord.xy, 0.5, 1.0);
-    //gl_FragColor = vsColor;
+    //gl_FragColor = vertColor;
     vec2 dist = gl_PointCoord.xy - vec2(0.5);
     float d = sqrt(dot(dist, dist));
     float alpha = 0.5-d;
@@ -37,9 +38,9 @@ void main(void) {
     //alpha = 0.5;
 #if 1
     // blend against white!
-    outColor = vec4(vsColor.rgb, alpha);
+    outColor = vec4(vertColor.rgb, alpha);
 #else
-    outColor = vec4(vsColor.rgb * alpha, alpha);
+    outColor = vec4(vertColor.rgb * alpha, alpha);
 #endif
-    //gl_FragColor = vec4(vsColor.rgb, 1.0);
+    //gl_FragColor = vec4(vertColor.rgb, 1.0);
 }

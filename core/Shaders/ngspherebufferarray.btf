@@ -7,8 +7,8 @@
         <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="attributes"       type="file">simplesphere/ngbufferarray_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/ngbufferarray_vert_mainparams.glsl</snippet>
-        <snippet name="posTrans"         type="file">simplesphere/ngbufferarray_vert_postrans.glsl</snippet>
-        <snippet name="clippingPlane"    type="file">simplesphere/ngbufferarray_vert_clipping.glsl</snippet>
+        <snippet name="posTrans"         type="file">simplesphere/simplesphere_vert_postrans.glsl</snippet>
+        <snippet name="clippingPlane"    type="file">simplesphere/simplesphere_vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">simplesphere/ngbufferarray_vert_spheretouchplane.glsl</snippet>
         <snippet name="Output"           type="file">simplesphere/ngbufferarray_vert_output.glsl</snippet>
         <snippet name="mainend"          type="file">simplesphere/ngbufferarray_vert_mainend.glsl</snippet>
