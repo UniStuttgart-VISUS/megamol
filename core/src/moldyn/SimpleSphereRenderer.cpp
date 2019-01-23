@@ -445,7 +445,7 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
     }
 
     vislib::StringA mode;
-    switch (static_cast<RenderMode>(this->renderMode)) {
+    switch (this->renderMode) {
         case (RenderMode::SIMPLE):           mode = "SIMPLE"; break;
         case (RenderMode::SIMPLE_CLUSTERED): mode = "SIMPLE CLUSTERED"; break;
         case (RenderMode::SIMPLE_GEO):       mode = "SIMPLE GEOMETRY SHADER"; break;
@@ -454,7 +454,8 @@ bool moldyn::SimpleSphereRenderer::createShaders() {
         case (RenderMode::NG_BUFFER_ARRAY):  mode = "NG BUFFER ARRAY"; break;
         default: break;
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s", mode.PeekBuffer());
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s (%d)", 
+        mode.PeekBuffer(), static_cast<int>(this->renderMode));
 
     return true;
 }
@@ -997,14 +998,15 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm) {
 
     glDisable(GL_DEPTH_TEST);
+
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
-    //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 #if 1
     // maybe for blending against white, remove pre-mult alpha and use this:
     // @gl.blendFuncSeparate @gl.SRC_ALPHA, @gl.ONE_MINUS_SRC_ALPHA, @gl.ONE, @gl.ONE_MINUS_SRC_ALPHA
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 #else
+    //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     glBlendFunc(GL_ONE, GL_ONE);
 #endif
 
@@ -1039,9 +1041,9 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
         glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
         glUniform1f(this->newShader->ParameterLocation("zNear"), cr3d->GetCameraParameters()->NearClip());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-        glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, lp);
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+        //glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, lp);
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
