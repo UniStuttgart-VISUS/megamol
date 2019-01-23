@@ -18,9 +18,6 @@
 
 #include "ng_mesh/NGMeshRenderBatchBakery.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
 using namespace megamol;

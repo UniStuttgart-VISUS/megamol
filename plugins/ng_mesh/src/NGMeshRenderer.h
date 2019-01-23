@@ -144,11 +144,11 @@ namespace ngmesh {
 		//		MaterialShaderParamsDataAccessor const&	mtl_shader_params,
 		//		uint32_t					update_flags);
 
-		void addMeshes(BatchedMeshesDataAccessor const& meshes);
+		void updateMeshes(BatchedMeshesDataAccessor const& meshes, uint32_t update_flags);
 
-		void addMaterials(std::shared_ptr<MaterialsDataStorage> const& materials);
+		void updateMaterials(std::shared_ptr<MaterialsDataStorage> const& materials, uint32_t update_flags);
 
-		void addRenderTasks(std::shared_ptr<RenderTaskDataStorage> const& render_tasks);
+		void updateRenderTasks(std::shared_ptr<RenderTaskDataStorage> const& render_tasks, uint32_t update_flags);
 	
 		/**
 		* The render callback.
@@ -709,9 +709,7 @@ namespace ngmesh {
 			unsigned int m_height;
 		};
 
-
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
-
 
 		struct BatchedMeshes
 		{
@@ -752,6 +750,9 @@ namespace ngmesh {
 		megamol::core::CallerSlot m_mesh_callerSlot;
 		megamol::core::CallerSlot m_material_callerSlot;
 		megamol::core::CallerSlot m_render_task_callerSlot;
+
+
+		std::shared_ptr<Mesh> createMesh(BatchedMeshesDataAccessor const & meshes, size_t mesh_idx);
 	};
 
 }

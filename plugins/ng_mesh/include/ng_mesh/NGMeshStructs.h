@@ -13,11 +13,17 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 enum UpdateBits {
-	SHADER_BIT = 0x1,
-	MESH_BIT = 0x2,
-	DRAWCOMMANDS_BIT = 0x4,
-	MESHPARAMS_BIT = 0x8,
-	MATERIAL_BIT = 0x10
+	UPDATE_ALL_BIT = 0x1,       //< delete existing and readd data afterwards 
+	UPDATE_INDVIDUAL_BIT = 0x2, //< check individual elements/batches for updates
+	DATA_ADDED_BIT = 0x4        //< new data added to call, keep exising and add new data
+
+	//MATERIAL_SHADER_BIT = 0x1,
+	//MATERIAL_TEXTURES_BIT = 0x2,
+	//MESH_UPDATE_ALL_BIT = 0x4,
+	//MESH_UPDATE_INDVIDUAL_BIT = 0x8,
+	//MESH_BATCH_ADDED_BIT = 010,
+	//TASK_DRAWCOMMANDS_BIT = 0x20,
+	//TASK_PEROBJECTDATA_BIT = 0x40
 };
 
 struct BufferAccessor

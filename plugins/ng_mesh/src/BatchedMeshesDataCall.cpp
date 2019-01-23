@@ -202,7 +202,7 @@ void megamol::ngmesh::BatchedMeshesDataAccessor::setDrawCommandsDataAcess(size_t
 }
 
 megamol::ngmesh::BatchedMeshesDataCall::BatchedMeshesDataCall()
-	: megamol::core::AbstractGetData3DCall(), m_data_accessor(nullptr), m_update_flags(MESH_BIT)
+	: megamol::core::AbstractGetData3DCall(), m_data_accessor(nullptr), m_update_flags(UPDATE_ALL_BIT)
 {
 }
 

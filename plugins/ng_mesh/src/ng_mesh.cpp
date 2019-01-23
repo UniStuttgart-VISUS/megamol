@@ -19,10 +19,12 @@
 #include "ng_mesh/BatchedMeshesDataCall.h"
 #include "ng_mesh/MaterialsDataCall.h"
 #include "ng_mesh/RenderTasksDataCall.h"
+#include "ng_mesh/glTFDataCall.h"
 
 #include "DebugBatchedMeshesDataSource.h"
 #include "DebugMaterialsDataSource.h"
 #include "DebugRenderTasksDataSource.h"
+#include "glTFFileLoader.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -55,6 +57,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugBatchedMeshesDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugMaterialsDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugRenderTasksDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFFileLoader>();
 
             //
             // TODO: Register your plugin's modules here
@@ -66,9 +69,10 @@ namespace {
 
             // register calls here:
 			//this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::CallNGMeshRenderBatches> ();
-			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::BatchedMeshesDataCall>();
-			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::MaterialsDataCall>();
-			this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::RenderTasksDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::BatchedMeshesDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::MaterialsDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::RenderTasksDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFDataCall>();
 
             //
             // TODO: Register your plugin's calls here

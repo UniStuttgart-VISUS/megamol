@@ -43,7 +43,7 @@ namespace megamol {
 		//		MaterialDataAccessor* material_data_accessors;
 		//	};
 
-		class NG_MESH_API MaterialsDataCall :public megamol::core::AbstractGetDataCall
+		class NG_MESH_API MaterialsDataCall : public megamol::core::AbstractGetDataCall
 		{
 		public:
 			inline MaterialsDataCall() : AbstractGetDataCall(), m_materials(nullptr) {}

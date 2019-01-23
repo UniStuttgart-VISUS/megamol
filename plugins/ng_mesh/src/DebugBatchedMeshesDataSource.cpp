@@ -16,6 +16,8 @@
 megamol::ngmesh::DebugBatchedMeshesDataSource::DebugBatchedMeshesDataSource()
 	: m_data_loaded(false)
 {
+	m_bbox = { -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
+
 	// no slots to load for this debug data source
 }
 
@@ -45,7 +47,7 @@ bool megamol::ngmesh::DebugBatchedMeshesDataSource::load()
 {
 	// Create std-container for holding vertex data
 	std::vector<std::vector<float>> vbs = { {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},// normal data buffer
-		{-5.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 10.0f, 0.0f} }; // position data buffer
+		{-0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f} }; // position data buffer
 	// Create std-container holding vertex attribute descriptions
 	std::vector<VertexLayout::Attribute> attribs = {
 		VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0),

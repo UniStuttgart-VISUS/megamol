@@ -1,24 +1,27 @@
 /*
-* DebugRenderTasksDataSource.h
+* glTFMeshesDataSource.h
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
 */
 
-#ifndef DEBUG_RENDER_TASKS_DATA_SOURCE_H_INCLUDED
-#define DEBUG_RENDER_TASKS_DATA_SOURCE_H_INCLUDED
+#ifndef GLTF_MESHES_DATA_SOURCE_H_INCLUDED
+#define GLTF_MESHES_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ng_mesh/AbstractRenderTasksDataSource.h"
-#include "ng_mesh/RenderTaskDataStorage.h"
+#include "mmcore/CallerSlot.h"
+
+#include "ng_mesh/AbstractBatchedMeshesDataSource.h"
+#include "ng_mesh/glTFDataCall.h"
+#include "ng_mesh/MeshDataStorage.h"
 
 namespace megamol
 {
 	namespace ngmesh
 	{
-		class DebugRenderTasksDataSource : public AbstractRenderTasksDataSource
+		class GlTFMeshesDataSource : public AbstractBatchedMeshesDataSource
 		{
 		public:
 			/**
@@ -27,7 +30,7 @@ namespace megamol
 			* @return The name of this module.
 			*/
 			static const char *ClassName(void) {
-				return "DebugRenderTasksDataSource";
+				return "GlTFMeshesDataSource";
 			}
 
 			/**
@@ -36,7 +39,7 @@ namespace megamol
 			* @return A human readable description of this module.
 			*/
 			static const char *Description(void) {
-				return "Data source for debuging NGMeshRenderer & NGMesh data calls";
+				return "Data source for passing through mesh data from a glTF file";
 			}
 
 			/**
@@ -49,27 +52,18 @@ namespace megamol
 			}
 
 
-			DebugRenderTasksDataSource();
-			~DebugRenderTasksDataSource();
+			GlTFMeshesDataSource();
+			~GlTFMeshesDataSource();
 
 		protected:
 
 			virtual bool getDataCallback(core::Call& caller);
 
-			/**
-			* Generat mesh data for debugging RenderTasksDataCall and rendering
-			*
-			* @return True on success
-			*/
-			virtual bool load();
-
 		private:
-
-			std::shared_ptr<RenderTaskDataStorage> m_render_task_data;
-
-			bool                                   m_loaded;
+			BatchedMeshesDataAccessor m_mesh_data_accessor;
+			megamol::core::CallerSlot m_glTF_callerSlot;
 		};
 	}
 }
 
-#endif // !DEBUG_RENDER_TASKS_DATA_SOURCE_H_INCLUDED
+#endif // !GLTF_MESHES_DATA_SOURCE_H_INCLUDED

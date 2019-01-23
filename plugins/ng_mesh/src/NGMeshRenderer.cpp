@@ -402,70 +402,51 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 //   }
 //   
 
-void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const & meshes)
+void megamol::ngmesh::NGMeshRenderer::updateMeshes(BatchedMeshesDataAccessor const & meshes, uint32_t update_flags)
 {
-	std::cout << "Adding " << meshes.batch_cnt << " mesh batch(es)" << std::endl;
-
-	for (size_t i = 0; i < meshes.batch_cnt; i++)
+	if (update_flags == UPDATE_ALL_BIT)
 	{
-		MeshDataAccessor& mesh_data = meshes.mesh_data_batches[i];
+		m_meshes.clear();
+		m_meshes.reserve(meshes.batch_cnt);
 
-		VertexLayout layout;
-		layout.stride = mesh_data.vertex_stride;
-		for (size_t j = 0; j < mesh_data.vertex_attribute_cnt; j++)
+		for (size_t i = 0; i < meshes.batch_cnt; i++)
 		{
-			layout.attributes.push_back(mesh_data.vertex_attributes[j]);
+			auto mesh = createMesh(meshes, i);
+
+			m_meshes.push_back(BatchedMeshes());
+			m_meshes.back().mesh = mesh;
+
+			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+			auto dest = m_meshes.back().submesh_draw_commands.data();
+			auto src_first = meshes.draw_command_batches[i].draw_commands;
+			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+			std::copy(src_first, src_last, dest);
 		}
-
-		if (mesh_data.vertex_buffer_cnt > 0 && mesh_data.vertex_buffer_cnt == mesh_data.vertex_attribute_cnt)
+	}
+	else if (update_flags == UPDATE_INDVIDUAL_BIT)
+	{
+		for (size_t i = 0; i < meshes.batch_cnt; i++)
 		{
-			std::vector<std::byte*> vertex_data_ptrs(mesh_data.vertex_buffer_cnt);
-			std::vector<size_t> vertex_data_sizes(mesh_data.vertex_buffer_cnt);
-
-			for (int j = 0; j < mesh_data.vertex_buffer_cnt; ++j)
+			if (/* update for batch required*/true)
 			{
-				vertex_data_ptrs[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].raw_data;
-				vertex_data_sizes[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].byte_size;
+				auto mesh = createMesh(meshes, i);
+				m_meshes[i].mesh = mesh;
 
-				//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
-				//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
+				m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+				auto dest = m_meshes.back().submesh_draw_commands.data();
+				auto src_first = meshes.draw_command_batches[i].draw_commands;
+				auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+				std::copy(src_first, src_last, dest);
 			}
-
-			std::byte* index_data_ptr = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data;
-			size_t index_data_size = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size;
-
-			auto mesh = std::make_shared<Mesh>(
-				vertex_data_ptrs,
-				vertex_data_sizes,
-				index_data_ptr,
-				index_data_size,
-				layout,
-				mesh_data.index_type,
-				mesh_data.usage,
-				mesh_data.primitive_type);
-			
-			m_meshes.push_back(BatchedMeshes());
-			m_meshes.back().mesh = mesh;
-
-			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
-			auto dest = m_meshes.back().submesh_draw_commands.data();
-			auto src_first = meshes.draw_command_batches[i].draw_commands;
-			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
-			std::copy(src_first, src_last, dest);
-
 		}
-		else if (mesh_data.vertex_buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
+	}
+	else if (update_flags == DATA_ADDED_BIT)
+	{
+		size_t start_idx = m_meshes.size();
+
+		for (size_t i = start_idx; i < meshes.batch_cnt; i++)
 		{
-			auto mesh = std::make_shared<Mesh>(
-				meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].raw_data,
-				meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].byte_size,
-				meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data,
-				meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size,
-				layout,
-				mesh_data.index_type,
-				mesh_data.usage,
-				mesh_data.primitive_type
-				);
+			auto mesh = createMesh(meshes, i);
 
 			m_meshes.push_back(BatchedMeshes());
 			m_meshes.back().mesh = mesh;
@@ -475,15 +456,11 @@ void megamol::ngmesh::NGMeshRenderer::addMeshes(BatchedMeshesDataAccessor const 
 			auto src_first = meshes.draw_command_batches[i].draw_commands;
 			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
 			std::copy(src_first, src_last, dest);
-		}
-		else
-		{
-			//fail?
 		}
 	}
 }
 
-void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsDataStorage> const & materials)
+void megamol::ngmesh::NGMeshRenderer::updateMaterials(std::shared_ptr<MaterialsDataStorage> const & materials, uint32_t update_flags)
 {
 	for (auto& material : materials->m_materials)
 	{
@@ -505,7 +482,7 @@ void megamol::ngmesh::NGMeshRenderer::addMaterials(std::shared_ptr<MaterialsData
 	}
 }
 
-void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks)
+void megamol::ngmesh::NGMeshRenderer::updateRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks, uint32_t update_flags)
 {
 	for (auto& task_batch : render_tasks->m_batched_render_task)
 	{
@@ -523,10 +500,10 @@ void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskD
 	 		GL_DYNAMIC_DRAW);
 
 		//TODO material parameter for shader
+		std::array<uint64_t, 4> dummy_texture_handles;
 		m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
 			GL_SHADER_STORAGE_BUFFER,
-			nullptr,
-			8,
+			dummy_texture_handles,
 			GL_DYNAMIC_DRAW);
 
 		std::vector<DrawElementsCommand> draw_command_data;
@@ -551,6 +528,7 @@ void megamol::ngmesh::NGMeshRenderer::addRenderTasks(std::shared_ptr<RenderTaskD
 
 bool NGMeshRenderer::Render(megamol::core::Call& call)
 {
+	
 	megamol::core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
 	if (cr == NULL) return false;
 	
@@ -617,21 +595,19 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	
 	if ( (!(*mesh_call)(0)) || (!(*matl_call)(0)) || (!(*task_call)(0)) )
 		return false;
-	
-	// TODO update on-demand only
-	
+		
 	if (mesh_call->getUpdateFlags() > 0) {
-		addMeshes(*(mesh_call->getBatchedMeshesDataAccessor()));
+		updateMeshes(*(mesh_call->getBatchedMeshesDataAccessor()), mesh_call->getUpdateFlags());
 		mesh_call->resetUpdateFlags();
 	}
 	
 	if (matl_call->getUpdateFlags() > 0) {
-		addMaterials(matl_call->getMaterialsData());
+		updateMaterials(matl_call->getMaterialsData(), matl_call->getUpdateFlags());
 		matl_call->resetUpdateFlags();
 	}
 	
 	if (task_call->getUpdateFlags() > 0) {
-		addRenderTasks(task_call->getRenderTaskData());
+		updateRenderTasks(task_call->getRenderTaskData(), task_call->getUpdateFlags());
 		task_call->resetUpdateFlags();
 	}
 	
@@ -699,7 +675,6 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 			render_batch.draw_cnt,
 			0);
 
-		
 		//CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;
@@ -718,8 +693,8 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 		//	render_batch.mesh->getIndicesType(),
 		//	&command_buffer);
 
-		GLenum err = glGetError();
-		std::cout << "Error: " << err << std::endl;
+		//GLenum err = glGetError();
+		//std::cout << "Error: " << err << std::endl;
 	}
 	
 	// Clear the way for his ancient majesty, the mighty immediate mode...
@@ -731,4 +706,65 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	
 	return true;
+}
+
+std::shared_ptr<NGMeshRenderer::Mesh> megamol::ngmesh::NGMeshRenderer::createMesh(BatchedMeshesDataAccessor const & meshes, size_t mesh_idx)
+{
+	std::shared_ptr<NGMeshRenderer::Mesh> retval(nullptr);
+
+	MeshDataAccessor& mesh_data = meshes.mesh_data_batches[mesh_idx];
+
+	VertexLayout layout;
+	layout.stride = mesh_data.vertex_stride;
+	for (size_t j = 0; j < mesh_data.vertex_attribute_cnt; j++)
+	{
+		layout.attributes.push_back(mesh_data.vertex_attributes[j]);
+	}
+
+	if (mesh_data.vertex_buffer_cnt > 0 && mesh_data.vertex_buffer_cnt == mesh_data.vertex_attribute_cnt)
+	{
+		std::vector<std::byte*> vertex_data_ptrs(mesh_data.vertex_buffer_cnt);
+		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_buffer_cnt);
+
+		for (int j = 0; j < mesh_data.vertex_buffer_cnt; ++j)
+		{
+			vertex_data_ptrs[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].raw_data;
+			vertex_data_sizes[j] = meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index + j].byte_size;
+
+			//std::cout << "Vertex Data Pointer Offset: " << uint32_view[i] << std::endl;
+			//std::cout << "Vertex Data Sizes: " << vertex_data_sizes[i] << std::endl;
+		}
+
+		std::byte* index_data_ptr = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data;
+		size_t index_data_size = meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size;
+
+		retval = std::make_shared<Mesh>(
+			vertex_data_ptrs,
+			vertex_data_sizes,
+			index_data_ptr,
+			index_data_size,
+			layout,
+			mesh_data.index_type,
+			mesh_data.usage,
+			mesh_data.primitive_type);
+	}
+	else if (mesh_data.vertex_buffer_cnt == 1) // buffer_cnt != attrib_cnt signals one vertex buffer for all attributes
+	{
+		retval = std::make_shared<Mesh>(
+			meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].raw_data,
+			meshes.buffer_accessors[mesh_data.vertex_buffers_accessors_base_index].byte_size,
+			meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].raw_data,
+			meshes.buffer_accessors[mesh_data.index_buffer_accessor_index].byte_size,
+			layout,
+			mesh_data.index_type,
+			mesh_data.usage,
+			mesh_data.primitive_type
+			);
+	}
+	else
+	{
+		//fail?
+	}
+
+	return retval;
 }
