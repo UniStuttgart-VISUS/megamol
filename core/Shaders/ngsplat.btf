@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">140</snippet>
+        <snippet type="version">400</snippet>
         <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="attributes"       type="file">simplesphere/ngsplat_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/ngsplat_vert_mainparams.glsl</snippet>
