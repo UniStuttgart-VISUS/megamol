@@ -194,13 +194,26 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         vd.resize(parts.GetCount() * vertexLength);
         auto data = static_cast<const float*>(parts.GetVertexData());
 
+        auto posSize = parts.VertexDataSize[parts.GetVertexDataType()];
+        auto vertSize = parts.GetVertexDataStride();
+        //if (vertSize == 0)
+
+        auto const& cRAcc = parts.GetParticleStore().GetCRAcc();
+        auto const& cGAcc = parts.GetParticleStore().GetCGAcc();
+        auto const& cBAcc = parts.GetParticleStore().GetCBAcc();
+        auto const& cAAcc = parts.GetParticleStore().GetCAAcc();
+
         for (size_t i = 0; i < parts.GetCount(); i++) {
             std::copy_n(data + (i * parts.GetVertexDataStride() / sizeof(float)),
                 vertexLength,
                 vd.begin() + (i * vertexLength));
-            for (size_t j = 0; j < colorLength; j++) {
-                cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + vertexLength * sizeof(float) + j) / 255.0f);
-            }
+            cd_rgba.push_back(cRAcc->Get_f(i) / 255.0);
+            cd_rgba.push_back(cGAcc->Get_f(i) / 255.0);
+            cd_rgba.push_back(cBAcc->Get_f(i) / 255.0);
+            cd_rgba.push_back(cAAcc->Get_f(i) / 255.0);
+            /*for (size_t j = 0; j < colorLength; j++) {
+                cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + posSize + j) / 255.0f);
+            }*/
         }
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
         vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
