@@ -20,6 +20,7 @@
 #include <math.h>
 #include <chrono>
 #include <functional>
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -55,7 +56,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , filterSizeSlot("filterSize", "The support size of the filter")
-    , datahash(std::numeric_limits<size_t>::max())
+    , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
+    //, datahash(std::numeric_limits<size_t>::max())
+    , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
     , outDataSlot("outData", "Provides a density volume for the particles")
     , inDataSlot("inData", "takes the particle data") {
@@ -115,6 +118,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->filterSizeSlot << new core::param::IntParam(1, 0);
     this->MakeSlotAvailable(&this->filterSizeSlot);
 
+    this->sigmaSlot << new core::param::FloatParam(3.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+    this->MakeSlotAvailable(&this->sigmaSlot);
+
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
@@ -170,10 +176,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
         return false;
     }
-    if (this->time != inMpdc->FrameID() || this->datahash != inMpdc->DataHash() || this->anythingDirty()) {
+    if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
         if (!this->createVolumeCPU(inMpdc)) return false;
         this->time = inMpdc->FrameID();
-        this->datahash = inMpdc->DataHash();
+        this->in_datahash = inMpdc->DataHash();
+        ++this->datahash;
         this->resetDirty();
     }
 
@@ -213,6 +220,8 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.IsUniform[1] = true;
     metadata.IsUniform[2] = true;
     outVol->SetMetadata(&metadata);
+
+    outVol->SetDataHash(this->datahash);
 
     /*outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
         this->yResSlot.Param<core::param::IntParam>()->Value(), this->zResSlot.Param<core::param::IntParam>()->Value());
@@ -309,7 +318,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 auto const val = iAcc->Get_f(pidx);
                 if (dis > disThreshold - rad) {
                     vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
-                        gauss(dis - disThreshold + rad, 3.0f * rad) * val;
+                        gauss(dis - disThreshold + rad, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad) * val;
                     ++(weights[omp_get_thread_num()][x + (y + z * sy) * sx]);
                 } else {
                     vol[omp_get_thread_num()][x + (y + z * sy) * sx] += val;
@@ -322,7 +331,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             volOp = [this, &gauss](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
                         float const dis, float const disThreshold, float const rad) -> void {
                 if (dis > disThreshold - rad) {
-                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis - disThreshold + rad, 3.0f * rad);
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis - disThreshold + rad, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad);
                 } else {
                     vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
                 }
