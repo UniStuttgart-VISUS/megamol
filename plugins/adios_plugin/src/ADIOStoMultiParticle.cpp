@@ -250,7 +250,7 @@ bool ADIOStoMultiParticle::getExtentCallback(core::Call& call) {
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
     if (cad == nullptr) return false;
 
-    this->getDataCallback(call);
+    if (!this->getDataCallback(call)) return false;
 
     return true;
 }
