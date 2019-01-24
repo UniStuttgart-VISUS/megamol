@@ -465,6 +465,7 @@ void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSP
             if (header.GetTypes()[type].GetFields()[this->GetData()[type].FieldMap()[fi]].GetType() == MMSPDHeader::Field::TYPE_BYTE) {
                 val /= 255.0f;
             }
+            //vislib::sys::Log::DefaultLog.WriteInfo("read: %f", val);
             typeData[type]->Write(val);
         }
 

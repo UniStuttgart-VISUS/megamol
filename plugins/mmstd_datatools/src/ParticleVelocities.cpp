@@ -150,12 +150,12 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         for (unsigned int i = 0; i < in->GetParticleListCount(); i++) {
             size_t stride = in->AccessParticles(i).GetVertexDataStride();
             this->cachedVertexDataType[i] = in->AccessParticles(i).GetVertexDataType();
+            cachedGlobalRadius[i] = in->AccessParticles(i).GetGlobalRadius();
             if (stride == 0) {
                 switch (this->cachedVertexDataType[i]) {
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE:
                         continue;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ:
-                        cachedGlobalRadius[i] = in->AccessParticles(i).GetGlobalRadius();
                         stride = 12;
                         break;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR:
@@ -163,6 +163,10 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
                         break;
                     case MultiParticleDataCall::Particles::VertexDataType::VERTDATA_SHORT_XYZ:
                         vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: cannot process short position vertices");
+                        this->cachedVertexDataType[i] = MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE;
+                        continue;
+                    default:
+                        vislib::sys::Log::DefaultLog.WriteError("ParticleVelocities: cannot process unknown position type");
                         this->cachedVertexDataType[i] = MultiParticleDataCall::Particles::VertexDataType::VERTDATA_NONE;
                         continue;
                 }
@@ -241,6 +245,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         outMPDC->SetParticleListCount(cachedNumLists);
         for (auto i = 0; i < cachedNumLists; i++) {
             outMPDC->AccessParticles(i).SetCount(this->cachedListLength[i]);
+            outMPDC->AccessParticles(i).SetGlobalRadius(this->cachedGlobalRadius[i]);
             outMPDC->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
                 in->AccessParticles(i).GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
@@ -250,6 +255,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
         outDPDC->SetParticleListCount(cachedNumLists);
         for (auto i = 0; i < cachedNumLists; i++) {
             outDPDC->AccessParticles(i).SetCount(this->cachedListLength[i]);
+            outDPDC->AccessParticles(i).SetGlobalRadius(this->cachedGlobalRadius[i]);
             outDPDC->AccessParticles(i).SetVertexData(this->cachedVertexDataType[i], in->AccessParticles(i).GetVertexData(),
                 in->AccessParticles(i).GetVertexDataStride());
             outDPDC->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),

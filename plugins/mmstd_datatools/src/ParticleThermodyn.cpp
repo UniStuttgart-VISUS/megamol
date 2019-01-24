@@ -6,19 +6,19 @@
  */
 #include "stdafx.h"
 #include "ParticleThermodyn.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include <cstdint>
 #include <algorithm>
-#include <cfloat>
+#include <array>
 #include <cassert>
+#include <cfloat>
+#include <cstdint>
 #include <limits>
 #include <omp.h>
-#include <array>
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "vislib/sys/ConsoleProgressBar.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -27,23 +27,31 @@ using namespace megamol::stdplugin;
  * datatools::ParticleThermodyn::ParticleThermodyn
  */
 datatools::ParticleThermodyn::ParticleThermodyn(void)
-        : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction"),
-        cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction"),
-        cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction"),
-        radiusSlot("radius", "the radius in which to look for neighbors"),
-        numNeighborSlot("numNeighbors", "how many neighbors to collect"),
-        searchTypeSlot("searchType", "num of neighbors or radius"),
-        minMetricSlot("minMetric", "the detected minimum of the selected metric"),
-        maxMetricSlot("maxMetric", "the detected maximum of the selected metric"),
-        massSlot("mass", "the mass of the particles"),
-        freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model"),
-        metricsSlot("metrics", "the metrics you want to computer from the neighborhood"),
-        datahash(0),
-        lastTime(-1),
-        newColors(),
-        allParts(), maxDist(0.0f), particleTree(nullptr), myPts(nullptr),
-        outDataSlot("outData", "Provides intensities based on a local particle metric"),
-        inDataSlot("inData", "Takes the directional particle data") {
+    : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+    , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+    , radiusSlot("radius", "the radius in which to look for neighbors")
+    , numNeighborSlot("numNeighbors", "how many neighbors to collect")
+    , searchTypeSlot("searchType", "num of neighbors or radius")
+    , minMetricSlot("minMetric", "the detected minimum of the selected metric")
+    , maxMetricSlot("maxMetric", "the detected maximum of the selected metric")
+    , massSlot("mass", "the mass of the particles")
+    , freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model")
+    , metricsSlot("metrics", "the metrics you want to computer from the neighborhood")
+    , removeSelfSlot("remove self", "whether a particle itself is part of the neighborhood")
+    , findExtremesSlot("find extremes", "whether to only color particles with values larger than extremevalue. Make "
+                                        "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
+                                        "allows you to highlight the neighbors responsible for the extremes.")
+    , extremeValueSlot("extreme value", "the extreme value that you find weird")
+    , datahash(0)
+    , lastTime(-1)
+    , newColors()
+    , allParts()
+    , maxDist(0.0f)
+    , particleTree(nullptr)
+    , myPts(nullptr)
+    , outDataSlot("outData", "Provides intensities based on a local particle metric")
+    , inDataSlot("inData", "Takes the directional particle data") {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclXSlot);
@@ -60,17 +68,18 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->numNeighborSlot.SetParameter(new core::param::IntParam(10));
     this->MakeSlotAvailable(&this->numNeighborSlot);
 
-    core::param::EnumParam *st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
+    core::param::EnumParam* st = new core::param::EnumParam(searchTypeEnum::NUM_NEIGHBORS);
     st->SetTypePair(searchTypeEnum::RADIUS, "Radius");
     st->SetTypePair(searchTypeEnum::NUM_NEIGHBORS, "Num. Neighbors");
     this->searchTypeSlot << st;
     this->MakeSlotAvailable(&this->searchTypeSlot);
 
-    core::param::EnumParam *mt = new core::param::EnumParam(metricsEnum::TEMPERATURE);
+    core::param::EnumParam* mt = new core::param::EnumParam(metricsEnum::TEMPERATURE);
     mt->SetTypePair(metricsEnum::TEMPERATURE, "Temperature");
     mt->SetTypePair(metricsEnum::DENSITY, "Density");
     mt->SetTypePair(metricsEnum::FRACTIONAL_ANISOTROPY, "Fractional Anisotropy");
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
+    mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -83,13 +92,27 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->massSlot.SetParameter(new core::param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->massSlot);
 
-    this->freedomSlot.SetParameter(new core::param::FloatParam(1.5f)); // works for single-center models. 3 degrees of freedom -> 3/2
+    this->freedomSlot.SetParameter(
+        new core::param::FloatParam(1.5f)); // works for single-center models. 3 degrees of freedom -> 3/2
     this->MakeSlotAvailable(&this->freedomSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
+    this->removeSelfSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->removeSelfSlot);
+
+    this->findExtremesSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->findExtremesSlot);
+
+    this->extremeValueSlot.SetParameter(new core::param::FloatParam(50.0));
+    this->MakeSlotAvailable(&this->extremeValueSlot);
+
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData",
+        &ParticleThermodyn::getDataCallback);
+    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent",
+        &ParticleThermodyn::getExtentCallback);
+    this->outDataSlot.SetCallback(
+        megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
+    this->outDataSlot.SetCallback(
+        megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::DirectionalParticleDataCallDescription>();
@@ -100,48 +123,44 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleThermodyn::~ParticleThermodyn(void) {
-    this->Release();
-}
+datatools::ParticleThermodyn::~ParticleThermodyn(void) { this->Release(); }
 
 /*
-* datatools::ParticleThermodyn::create
-*/
-bool datatools::ParticleThermodyn::create(void) {
-    return true;
-}
+ * datatools::ParticleThermodyn::create
+ */
+bool datatools::ParticleThermodyn::create(void) { return true; }
 
 
-bool isListOK(megamol::core::moldyn::DirectionalParticleDataCall *in, const unsigned int i) {
+bool isListOK(megamol::core::moldyn::DirectionalParticleDataCall* in, const unsigned int i) {
     using megamol::core::moldyn::DirectionalParticleDataCall;
     auto& pl = in->AccessParticles(i);
-    return ((pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ)
-        || (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR))
-    && pl.GetDirDataType() == DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+    return ((pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
+               (pl.GetVertexDataType() ==
+                   DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)) &&
+           pl.GetDirDataType() == DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
 }
 
 
 /*
-* datatools::ParticleThermodyn::release
-*/
-void datatools::ParticleThermodyn::release(void) {
-}
+ * datatools::ParticleThermodyn::release
+ */
+void datatools::ParticleThermodyn::release(void) {}
 
 
-bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleDataCall *in,
-    core::moldyn::MultiParticleDataCall *outMPDC, core::moldyn::DirectionalParticleDataCall *outDPDC) {
+bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleDataCall* in,
+    core::moldyn::MultiParticleDataCall* outMPDC, core::moldyn::DirectionalParticleDataCall* outDPDC) {
 
     using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    megamol::core::AbstractGetData3DCall *out;
+    megamol::core::AbstractGetData3DCall* out;
     if (outMPDC != nullptr) out = outMPDC;
     if (outDPDC != nullptr) out = outDPDC;
 
     const unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
-    theRadius = theRadius * theRadius;
+    float theSquaredRadius = theRadius * theRadius;
     const float theMass = this->massSlot.Param<core::param::FloatParam>()->Value();
     const float theFreedom = this->freedomSlot.Param<core::param::FloatParam>()->Value();
     const int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
@@ -161,8 +180,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         plc = in->GetParticleListCount();
 
         for (unsigned int i = 0; i < plc; i++) {
-            if (isListOK(in, i))
-                totalParts += in->AccessParticles(i).GetCount();
+            if (isListOK(in, i)) totalParts += in->AccessParticles(i).GetCount();
         }
 
         if (theSearchType == searchTypeEnum::RADIUS) {
@@ -179,16 +197,18 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
             if (!isListOK(in, pli)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: ignoring list %d because it either has no proper positions or no velocity", pli);
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "ParticleThermodyn: ignoring list %d because it either has no proper positions or no velocity",
+                    pli);
                 continue;
             }
 
-            //unsigned int vert_stride = 0;
-            //if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-            //else if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-            //else continue;
-            //vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
-            //const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
+            // unsigned int vert_stride = 0;
+            // if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ)
+            // vert_stride = 12; else if (pl.GetVertexDataType() ==
+            // DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16; else
+            // continue; vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride()); const unsigned char
+            // *vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
             UINT64 part_cnt = pl.GetCount();
 
@@ -203,7 +223,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->myPts = std::make_shared<directionalPointcloud>(in, allParts);
 
         vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
-        particleTree = std::make_shared<my_kd_tree_t>(3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        particleTree = std::make_shared<my_kd_tree_t>(
+            3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
         vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: done.");
 
@@ -212,8 +233,10 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->radiusSlot.ForceSetDirty();
     }
 
-    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty()
-        || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() || this->metricsSlot.IsDirty()) {
+    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
+        this->cyclZSlot.IsDirty() || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() ||
+        this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
+        this->extremeValueSlot.IsDirty()) {
         allpartcnt = 0;
 
         // final computation
@@ -221,17 +244,18 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
         bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
         auto bbox = in->AccessBoundingBoxes().ObjectSpaceBBox();
-        //bbox.EnforcePositiveSize(); // paranoia
+        // bbox.EnforcePositiveSize(); // paranoia
         auto bbox_cntr = bbox.CalcCenter();
 
         vislib::sys::ConsoleProgressBar cpb;
         const int progressDivider = 100;
-        cpb.Start("measuring temperature", static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
+        cpb.Start("measuring thermodynamics",
+            static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
 
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
 
-        const bool remove_self = false;
+        const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
 
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
@@ -246,12 +270,16 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             std::vector<float> metricMin(num_thr, FLT_MAX);
             std::vector<float> metricMax(num_thr, 0.0f);
 
+            float eps = sqrt(std::numeric_limits<float>::epsilon());
+            bool findExtremes = this->findExtremesSlot.Param<megamol::core::param::BoolParam>()->Value();
+            float extremeVal = this->extremeValueSlot.Param<megamol::core::param::FloatParam>()->Value();
+
 #pragma omp parallel num_threads(num_thr)
-//#pragma omp parallel num_threads(1)
+            //#pragma omp parallel num_threads(1)
             {
                 float theVertex[3];
-                std::vector<std::pair<size_t, float> > ret_matches;
-                std::vector<std::pair<size_t, float> > ret_localMatches;
+                std::vector<std::pair<size_t, float>> ret_matches;
+                std::vector<std::pair<size_t, float>> ret_localMatches;
                 std::vector<size_t> ret_index(theNumber);
                 std::vector<float> out_dist_sqr(theNumber);
                 nanoflann::KNNResultSet<float> resultSet(theNumber);
@@ -267,8 +295,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
 
                     INT64 myIndex = part_i + allpartcnt;
                     ret_matches.clear();
-                    const float *vertexBase = this->myPts->get_position(myIndex);
-                    //const float *velocityBase = this->myPts->get_velocity(myIndex);
+                    const float* vertexBase = this->myPts->get_position(myIndex);
+                    // const float *velocityBase = this->myPts->get_velocity(myIndex);
 
                     for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
                         for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
@@ -277,23 +305,38 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                                 theVertex[0] = vertexBase[0];
                                 theVertex[1] = vertexBase[1];
                                 theVertex[2] = vertexBase[2];
-                                if (x_s > 0) theVertex[0] = theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
-                                if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
-                                if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
+                                if (x_s > 0)
+                                    theVertex[0] =
+                                        theVertex[0] + ((theVertex[0] > bbox_cntr.X()) ? -bbox.Width() : bbox.Width());
+                                if (y_s > 0)
+                                    theVertex[1] = theVertex[1] +
+                                                   ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
+                                if (z_s > 0)
+                                    theVertex[2] =
+                                        theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
 
                                 if (theSearchType == searchTypeEnum::RADIUS) {
-                                    particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                                    // the documentation says the parameter radius for L2 is squared
+                                    // caution: the criterion is < radius, not <= !!!!
+                                    particleTree->radiusSearch(
+                                        theVertex, theSquaredRadius + eps, ret_localMatches, params);
                                     if (remove_self) {
-                                        ret_localMatches.erase(std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
-                                            [&](decltype(ret_localMatches)::value_type &elem) {return elem.first == myIndex; }), ret_localMatches.end());
+                                        ret_localMatches.erase(
+                                            std::remove_if(ret_localMatches.begin(), ret_localMatches.end(),
+                                                [&](decltype(ret_localMatches)::value_type& elem) {
+                                                    return elem.first == myIndex;
+                                                }),
+                                            ret_localMatches.end());
                                     }
-                                    ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
+                                    ret_matches.insert(
+                                        ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
                                 } else {
                                     resultSet.init(ret_index.data(), out_dist_sqr.data());
                                     particleTree->findNeighbors(resultSet, theVertex, params);
                                     for (size_t i = 0; i < resultSet.size(); ++i) {
                                         if (!remove_self || ret_index[i] != myIndex) {
-                                            ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                            ret_matches.push_back(
+                                                std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
                                         }
                                     }
                                 }
@@ -309,12 +352,15 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                         maxDist = theRadius;
                         num_matches = ret_matches.size();
                     } else {
-                        // find overall closest! we did search around periodic boundary conditions, so there will be huge distances!
+                        // find overall closest! we did search around periodic boundary conditions, so there will be
+                        // huge distances!
                         sort(ret_matches.begin(), ret_matches.end(),
-                            [](const decltype(ret_matches)::value_type &left, const decltype(ret_matches)::value_type &right) {return left.second < right.second; });
+                            [](const decltype(ret_matches)::value_type& left,
+                                const decltype(ret_matches)::value_type& right) { return left.second < right.second; });
                         // the furthest is theNumber closest or the last one if fewer.
                         num_matches = ret_matches.size() >= theNumber ? theNumber : ret_matches.size();
-                        maxDist = ret_matches[num_matches - 1].second;
+                        // the documentation says the returned distances are squares as well
+                        maxDist = sqrt(ret_matches[num_matches - 1].second);
                     }
 
                     float magnitude = 0.0f;
@@ -332,17 +378,34 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                     case metricsEnum::PRESSURE:
                         vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
                         break;
+                    case metricsEnum::NEIGHBORS:
+                        magnitude = num_matches;
+                        break;
                     default:
                         vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
                         break;
                     }
-                    newColors[myIndex] = magnitude;
+                    if (findExtremes) {
+                        // debug weird magnitudes
+                        if (magnitude > extremeVal) {
+                            for (size_t x = 0; x < num_matches; ++x) {
+                                auto idx = ret_matches[x].first;
+                                if (newColors[idx] < extremeVal) {
+                                    newColors[idx] = magnitude / 2;
+                                }
+                            }
+                            newColors[myIndex] = magnitude;
+                        }
+                    } else {
+                        newColors[myIndex] = magnitude;
+                    }
 
                     if (magnitude < metricMin[threadIdx]) metricMin[threadIdx] = magnitude;
                     if (magnitude > metricMax[threadIdx]) metricMax[threadIdx] = magnitude;
 #pragma omp atomic
                     ++counter;
-                    if ((counter % progressDivider) == 0) cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(counter / progressDivider));
+                    if ((counter % progressDivider) == 0)
+                        cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(counter / progressDivider));
                 }
             } // end #pragma omp parallel num_threads(num_thr)
             for (auto i = 0; i < num_thr; ++i) {
@@ -355,7 +418,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
 
         this->minMetricSlot.Param<core::param::FloatParam>()->SetValue(theMinTemp);
         this->maxMetricSlot.Param<core::param::FloatParam>()->SetValue(theMaxTemp);
-        vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: min metric: %f max metric: %f", theMinTemp, theMaxTemp);
+        vislib::sys::Log::DefaultLog.WriteInfo(
+            "ParticleThermodyn: min metric: %f max metric: %f", theMinTemp, theMaxTemp);
 
         this->radiusSlot.ResetDirty();
         this->cyclXSlot.ResetDirty();
@@ -364,45 +428,56 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->numNeighborSlot.ResetDirty();
         this->searchTypeSlot.ResetDirty();
         this->metricsSlot.ResetDirty();
+        this->removeSelfSlot.ResetDirty();
+        this->findExtremesSlot.ResetDirty();
+        this->extremeValueSlot.ResetDirty();
     }
 
     // now the colors are known, inject them
-    //in->SetUnlocker(nullptr, false);
-    //in->Unlock();
+    // in->SetUnlocker(nullptr, false);
+    // in->Unlock();
 
-    //vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: found temperatures between %f and %f", minTemp, maxTemp);
+    // vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: found temperatures between %f and %f", minTemp,
+    // maxTemp);
 
     allpartcnt = 0;
     if (outMPDC != nullptr) {
         outMPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
-            auto &pl = in->AccessParticles(i);
+            auto& pl = in->AccessParticles(i);
             if (!isListOK(in, i)) {
                 outMPDC->AccessParticles(i).SetCount(0);
                 continue;
             }
             outMPDC->AccessParticles(i).SetCount(pl.GetCount());
-            outMPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, 
+            outMPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
+            outMPDC->AccessParticles(i).SetVertexData(
+                pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
+            outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
-            outMPDC->AccessParticles(i).SetColourMapIndexValues(this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
+            outMPDC->AccessParticles(i).SetColourMapIndexValues(
+                this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
                 this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
             allpartcnt += pl.GetCount();
         }
     } else if (outDPDC != nullptr) {
         outDPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
-            auto &pl = in->AccessParticles(i);
+            auto& pl = in->AccessParticles(i);
             if (!isListOK(in, i)) {
                 outDPDC->AccessParticles(i).SetCount(0);
                 continue;
             }
             outDPDC->AccessParticles(i).SetCount(pl.GetCount());
-            outDPDC->AccessParticles(i).SetVertexData(pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outDPDC->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
+            outDPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
+            outDPDC->AccessParticles(i).SetVertexData(
+                pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
+            outDPDC->AccessParticles(i).SetColourData(
+                core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
             outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
-            outDPDC->AccessParticles(i).SetColourMapIndexValues(this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
+            outDPDC->AccessParticles(i).SetColourMapIndexValues(
+                this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
                 this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
             allpartcnt += pl.GetCount();
         }
@@ -447,9 +522,8 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
 
     for (size_t i = 0; i < num_matches; ++i) {
         const float* velo = myPts->get_velocity(matches[i].first);
-        for (int x = 0; x < 3; ++x) 
-            for (int y = 0; y < 3; ++y)
-                mat(x,y) += velo[x] * velo[y];
+        for (int x = 0; x < 3; ++x)
+            for (int y = 0; y < 3; ++y) mat(x, y) += velo[x] * velo[y];
     }
     mat /= static_cast<float>(num_matches);
 
@@ -467,23 +541,24 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
 
 
 bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
     using megamol::core::moldyn::DirectionalParticleDataCall;
+    using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
-    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
+    DirectionalParticleDataCall* outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
+    MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr && outDpdc == nullptr) return false;
 
-    DirectionalParticleDataCall *inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
+    DirectionalParticleDataCall* inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
     if (inDpdc == nullptr) return false;
 
-    megamol::core::AbstractGetData3DCall *out;
+    megamol::core::AbstractGetData3DCall* out;
     if (outMpdc != nullptr) out = outMpdc;
     if (outDpdc != nullptr) out = outDpdc;
 
     inDpdc->SetFrameID(out->FrameID(), true);
     if (!(*inDpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: could not get current frame extents (%u)", out->FrameID());
+        vislib::sys::Log::DefaultLog.WriteError(
+            "ParticleThermodyn: could not get current frame extents (%u)", out->FrameID());
         return false;
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(inDpdc->GetBoundingBoxes().ObjectSpaceBBox());
@@ -501,19 +576,19 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
 }
 
 bool datatools::ParticleThermodyn::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
     using megamol::core::moldyn::DirectionalParticleDataCall;
+    using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
-    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
+    DirectionalParticleDataCall* outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
+    MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr && outDpdc == nullptr) return false;
 
-    DirectionalParticleDataCall *inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
+    DirectionalParticleDataCall* inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
     if (inDpdc == nullptr) return false;
 
     if (!this->assertData(inDpdc, outMpdc, outDpdc)) return false;
 
-    //inMpdc->Unlock();
+    // inMpdc->Unlock();
 
     return true;
 }
