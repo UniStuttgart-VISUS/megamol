@@ -81,6 +81,7 @@ namespace moldyn {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
+
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
             HDC dc = ::wglGetCurrentDC();
@@ -89,6 +90,7 @@ namespace moldyn {
             ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
+                                                                                        /// Necessary for:
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered, NGSphere, NGBufferArray, NGSplat, SimpleGeo
                 && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
                 && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
@@ -136,12 +138,12 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {
-            SIMPLE           = 0,
-            SIMPLE_CLUSTERED = 1,
-            SIMPLE_GEO       = 2,
-            NG               = 3,
-            NG_SPLAT         = 4,
-            NG_BUFFER_ARRAY  = 5,
+            SIMPLE           = 0,     /// Simple sphere rendering.
+            SIMPLE_CLUSTERED = 1,     /// (Currently same as "Simple" since clustered rendering is not yet implemented in SimpleSphericalParticles.)
+            SIMPLE_GEO       = 2,     /// Simple sphere rendering using geometry shader.
+            NG               = 3,     /// Next generation (NG) sphere rendering using shader storage buffer object.
+            NG_SPLAT         = 4,     /// NG sphere rendering using splats.
+            NG_BUFFER_ARRAY  = 5,     /// NG sphere rendering using array buffers.
             __MODE_COUNT__   = 6
         };
 
@@ -153,7 +155,7 @@ namespace moldyn {
         vislib::SmartPtr<ShaderSource>           geoShader;
 
 
-        // NG... //////////////////////////////////////////////////////////////
+        // Used for NG rendering //////////////////////////////////////////////
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
@@ -188,6 +190,7 @@ namespace moldyn {
 
         core::param::ParamSlot radiusScalingParam;
 
+        // NGSplat ////////////////////////////////////////////////////////////
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
 
@@ -233,13 +236,12 @@ namespace moldyn {
          *
          * @return         True if success, false otherwise.
          */
+
         // SIMPLE
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
         // CLUSTERED
-        /// Clustered sphere rendering = simple sphere rendering + option to use vao (+ vb, vc) 
-        /// defined in simple spherical particles -> not implemented yet (?)
         bool renderClustered(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling);
 
@@ -265,8 +267,7 @@ namespace moldyn {
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& mvm,
             vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& pm);
 
-
-        // NGSphere NGSplat ///////////////////////////////////////////////////
+        // Used by NGSphere and NGSplat ///////////////////////////////////////////
 
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
@@ -279,7 +280,7 @@ namespace moldyn {
 
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
-        // NGSplat NGBufferArray //////////////////////////////////////////////
+        // Used by NGSplat and NGBufferArray //////////////////////////////////
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 

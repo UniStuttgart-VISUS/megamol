@@ -150,7 +150,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
 {
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     rmp->SetTypePair(RenderMode::SIMPLE,           "Simple");
-    //rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered"); /// Currently same as "Simple" ....
+    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
     rmp->SetTypePair(RenderMode::SIMPLE_GEO,       "Simple_Geometry_Shader");
     rmp->SetTypePair(RenderMode::NG,               "NG");
     rmp->SetTypePair(RenderMode::NG_SPLAT,         "NG_Splat");
