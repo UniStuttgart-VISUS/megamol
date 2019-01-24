@@ -321,6 +321,10 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 
     if (cd == nullptr) return false;
 
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
     // TODO check time and frame id or whatever else
     if (this->m_volume_datahash != cd->DataHash() || this->m_frame_id != cd->FrameID()) {
         this->m_volume_datahash = cd->DataHash();
@@ -328,10 +332,6 @@ bool RaycastVolumeRenderer::updateVolumeData() {
     } else {
         return true;
     }
-
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     auto const metadata = cd->GetMetadata();
 
