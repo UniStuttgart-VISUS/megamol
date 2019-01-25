@@ -238,6 +238,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
         this->extremeValueSlot.IsDirty()) {
         allpartcnt = 0;
+        ++myHash;
 
         // final computation
         bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -482,6 +483,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             allpartcnt += pl.GetCount();
         }
     }
+    out->SetDataHash(this->myHash);
     out->SetUnlocker(in->GetUnlocker());
     in->SetUnlocker(nullptr, false);
     return true;

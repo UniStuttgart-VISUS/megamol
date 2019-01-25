@@ -113,6 +113,7 @@ namespace datatools {
         core::param::ParamSlot extremeValueSlot;
         
         size_t datahash;
+        size_t myHash = 0;
         int lastTime;
         std::vector<float> newColors;
         std::vector<size_t> allParts;
