@@ -74,7 +74,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&caller);
     if (cad == nullptr) return false;
 
-    if (loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
             const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
@@ -180,6 +180,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
         cad->setData(std::make_shared<adiosDataMap>(dataMap));
         cad->setDataHash(this->data_hash);
+		this->dataHashChanged = false;
     }
     return true;
 }
@@ -191,6 +192,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
     using vislib::sys::Log;
     this->data_hash++;
+	this->dataHashChanged = true;
     this->frameCount = 1;
 
     return true;
@@ -201,7 +203,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&caller);
     if (cad == nullptr) return false;
 
-    if (this->data_hash != cad->getDataHash() || loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
             vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Setting Engine");

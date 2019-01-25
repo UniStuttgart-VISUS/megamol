@@ -90,6 +90,7 @@ private:
 
     /** Data file load id counter */
     size_t data_hash;
+	bool dataHashChanged = false;
 
     /** The file name */
     core::param::ParamSlot filename;
