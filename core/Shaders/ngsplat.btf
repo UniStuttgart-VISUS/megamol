@@ -8,8 +8,9 @@
         <snippet name="attributes"       type="file">simplesphere/ngsplat_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/ngsplat_vert_mainparams.glsl</snippet>
         <snippet name="MainRest"         type="file">simplesphere/ngsphere_vert_mainstart.glsl</snippet>
-        <snippet name="posTrans"         type="file">simplesphere/ngsphere_vert_postrans.glsl</snippet>
-        <snippet name="clippingPlane"    type="file">simplesphere/simplesphere_vert_clipping.glsl</snippet>
+        <snippet name="posTrans"         type="file">simplesphere/vert_postrans.glsl</snippet>
+        <snippet name="clippingPlane"    type="file">simplesphere/vert_clipping.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/vert_spheretouchplane.glsl</snippet>        
         <snippet name="MainLast"         type="file">simplesphere/ngsplat_vert_mainlast.glsl</snippet>
     </shader>
 

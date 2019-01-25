@@ -1,4 +1,5 @@
     // Sphere-Touch-Plane-Approach
+    
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;

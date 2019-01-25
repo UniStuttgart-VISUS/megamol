@@ -4,6 +4,7 @@ void main(void) {
     vec4 inPos = gl_Vertex;
     rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
     inPos.w = 1.0;
+
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
         gl_FrontColor = gl_Color;

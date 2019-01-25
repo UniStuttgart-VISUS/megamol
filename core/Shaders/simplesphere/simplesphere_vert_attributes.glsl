@@ -1,5 +1,6 @@
 uniform vec4 viewAttr;
 uniform float scaling;
+uniform vec4 lpos;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -10,6 +11,9 @@ uniform vec3 camRight;
 // clipping plane attributes
 uniform vec4 clipDat;
 uniform vec4 clipCol;
+
+uniform mat4 MVinv;
+uniform mat4 MVP;
 
 uniform vec4 inConsts1;
 attribute float colIdx;

@@ -6,7 +6,7 @@ void main(void) {
     inPos.w = 1.0;
     
     if (COLTAB_SIZE > 0.0) {  
-    float cid = MAX_COLV - MIN_COLV;    
+        float cid = MAX_COLV - MIN_COLV;    
         if (cid < 0.000001) {
             gl_FrontColor = texture1D(colTab, 0.5 / COLTAB_SIZE);
         } else {

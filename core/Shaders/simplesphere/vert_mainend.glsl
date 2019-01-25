@@ -10,5 +10,4 @@
 #endif // RETICLE
 
     // gl_PointSize = 32.0;
-
 }

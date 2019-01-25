@@ -2,7 +2,6 @@
 #extension GL_EXT_gpu_shader4 : require
 
 uniform vec4 viewAttr;
-
 uniform float scaling;
 uniform vec4 lpos;
 

@@ -1,10 +1,3 @@
-    // remove the sphere radius from the w coordinates to the rad varyings
-    //vec4 inPos = gl_Vertex;
-    //rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
-    //inPos.w = 1.0;
-    //inPos = vec4(0.0, 0.0, 0.0, 1.0);
-    //rad = 1.0;
-        
     if (COLTAB_SIZE > 0.0) {   
         float cid = MAX_COLV - MIN_COLV;
         if (cid < 0.000001) {

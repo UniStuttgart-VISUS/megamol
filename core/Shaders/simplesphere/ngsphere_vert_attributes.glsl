@@ -3,7 +3,6 @@
 #extension GL_ARB_gpu_shader_fp64 : enable
 
 uniform vec4 viewAttr;
-
 uniform float scaling;
 uniform vec4 lpos;
 

@@ -1,4 +1,5 @@
 uniform vec4 viewAttr;
+uniform vec4 lpos;
 
 #ifdef WITH_SCALING
 uniform float scaling;
@@ -17,6 +18,9 @@ uniform vec4 clipCol;
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
+
+uniform mat4 MVinv;
+uniform mat4 MVP;
 
 varying vec4 objPos;
 varying vec4 camPos;

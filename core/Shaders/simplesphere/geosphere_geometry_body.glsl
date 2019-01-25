@@ -5,7 +5,7 @@ uniform mat4 MVinv;
 uniform mat4 MVP;
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec4 lightPos;
+uniform vec4 lpos;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -39,9 +39,9 @@ void main(void) {
     
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = MVinv * gl_LightSource[0].position - objPos;
+    //lpos = MVinv * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    light = MVinv*normalize(lightPos);
+    light = MVinv*normalize(lpos);
     
     color = inColor[0];    
     
