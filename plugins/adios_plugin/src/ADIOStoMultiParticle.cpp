@@ -42,15 +42,16 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
     if (cad == nullptr) return false;
 
-
-    if (mpdc->FrameID() != currentFrame) {
+	if (!(*cad)(1)) {
+		vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
+		return false;
+	}
+	bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
+    if ((mpdc->FrameID() != currentFrame) || dathashChanged) {
 
         cad->setFrameIDtoLoad(mpdc->FrameID());
 
-        if (!(*cad)(1)) {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
-            return false;
-        }
+
 
         auto availVars = cad->getAvailableVars();
         if (cad->isInVars("xyz")) {

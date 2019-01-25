@@ -74,7 +74,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&caller);
     if (cad == nullptr) return false;
 
-    if (this->data_hash != cad->getDataHash() || loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
             const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
@@ -249,7 +249,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             } else {
                 cad->setFrameCount(timesteps[0]);
             }
-
+			cad->setDataHash(this->data_hash);
         } catch (std::invalid_argument& e) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
