@@ -37,7 +37,7 @@
 /** The core instance handle. */
 static megamol::console::CoreHandle hCore;
 
-/** An application wide termination request */
+/** An application wide termination request (read: CTRL-C) */
 static bool terminationRequest;
 
 /**
@@ -502,6 +502,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     }
 
     // main loop
+    const bool autoClose = loadedLuaProjects + loadedProjects > 0;
     bool winsAlive, jobsAlive;
     do {
         processPendingActions();
@@ -522,7 +523,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             megamol::console::WindowManager::Instance().Update();
         }
 
-    } while (winsAlive || jobsAlive);
+    } while (!terminationRequest && ((autoClose && (winsAlive || jobsAlive)) || !autoClose));
 
     SAFE_DELETE(parser);
 
