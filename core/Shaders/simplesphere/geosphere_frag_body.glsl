@@ -12,7 +12,7 @@ in vec4 objPos;
 in vec4 camPos;
 in vec4 light;
 in float rad;
-in float squareRad;
+in float squarRad;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -44,7 +44,7 @@ void main(void) {
     // calculate the geometry-ray-intersection
     float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
-    float radicand = squareRad - d2s;                        // square of difference of projected length and lambda
+    float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
 #ifdef CLIP
     lambda = d1 - sqrt(radicand);                           // lambda
 

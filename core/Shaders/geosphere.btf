@@ -4,21 +4,23 @@
 
     <shader name="vertex">
         <snippet type="version">150</snippet>
-        <snippet name="commonDefines"  type="file">commondefines.glsl</snippet>
-        <snippet name="defines"        type="file">simplesphere/geosphere_vert_defines.glsl</snippet>
-        <snippet name="body    "       type="file">simplesphere/geosphere_vert_body.glsl</snippet>
+        <snippet name="CommonDefines"   type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"      type="file">simplesphere/geosphere_vert_attributes.glsl</snippet>
+        <snippet name="Body"            type="file">simplesphere/geosphere_vert_body.glsl</snippet>
     </shader>
 
     <shader name="geometry">
         <snippet type="version">150</snippet>
-        <snippet name="body"             type="file">simplesphere/geosphere_geometry_body.glsl</snippet>
+        <snippet name="MainStart"        type="file">simplesphere/geosphere_geometry_mainstart.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/vert_spheretouchplane.glsl</snippet>
+        <snippet name="MainEnd"          type="file">simplesphere/geosphere_geometry_mainend.glsl</snippet>
     </shader>
 
     <shader name="fragment">
         <snippet type="version">150</snippet>
-        <snippet name="commonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="lightDirectional" type="file">lightdirectional.glsl</snippet>
-        <snippet name="body"             type="file">simplesphere/geosphere_frag_body.glsl</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
+        <snippet name="Body"             type="file">simplesphere/geosphere_frag_body.glsl</snippet>
     </shader>
         
 </btf>

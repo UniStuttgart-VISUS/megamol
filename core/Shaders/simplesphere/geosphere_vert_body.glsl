@@ -1,21 +1,5 @@
-uniform vec4 inConsts1;
-uniform sampler1D colTab;
-
-// clipping plane attributes
-uniform vec4 clipDat;
-uniform vec4 clipCol;
-
-in vec4 vertex;
-in vec4 color;
-
-out vec4 inColor;
-
-#define CONSTRAD inConsts1.x
-#define MIN_COLV inConsts1.y
-#define MAX_COLV inConsts1.z
-#define COLTAB_SIZE inConsts1.w
-
 void main(void) {
+    
     gl_Position = vertex;
     float rad = vertex.w;
     if (CONSTRAD > -0.5) {
