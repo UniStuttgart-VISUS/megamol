@@ -57,7 +57,7 @@ namespace megamol
 			virtual bool getDataCallback(core::Call& caller);
 
 			/**
-			* Generat mesh data for debugging RenderTasksDataCall and rendering
+			* 
 			*
 			* @return True on success
 			*/

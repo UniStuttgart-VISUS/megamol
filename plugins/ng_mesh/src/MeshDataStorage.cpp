@@ -55,5 +55,8 @@ BatchedMeshesDataAccessor megamol::ngmesh::MeshDataStorage::generateDataAccessor
 		++it;
 	}
 
+	retval.mesh_index_lut = reinterpret_cast<MeshIndexLookup*>(m_mesh_lut.data());
+	retval.mesh_cnt = m_mesh_lut.size();
+
 	return retval;
 }

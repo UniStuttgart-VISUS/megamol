@@ -43,7 +43,7 @@ namespace megamol {
 				new_batch.render_tasks.reserve(task_cnt);
 				new_batch.total_draw_cnt = 0;
 
-				new_batch.mesh_batch_idx = mesh_batch_idx;
+				new_batch.mesh_idx = mesh_batch_idx;
 				new_batch.material_idx = material_idx;
 
 				new_batch.per_object_data = std::vector<std::byte>(per_object_data_byte_size);
@@ -63,7 +63,7 @@ namespace megamol {
 				std::vector<RenderTask> render_tasks;
 				size_t total_draw_cnt;
 
-				size_t mesh_batch_idx; //< reference to subset of mesh data used for this render task
+				size_t mesh_idx; //< reference to subset of mesh data used for this render task
 				size_t material_idx; //< reference to material (i.e. shader) used for this render tas
 				
 				std::vector<std::byte> per_object_data; //< (all) per object data used (in the shader) for this batch of render tasks
@@ -86,7 +86,7 @@ namespace megamol {
 			auto it = m_batched_render_task.begin();
 			for (; it != m_batched_render_task.end(); ++it)
 			{
-				if( ( it->mesh_batch_idx == mesh_batch_idx)
+				if( ( it->mesh_idx == mesh_batch_idx)
 					&& (it->material_idx == material_idx) )
 				{
 					break;
@@ -105,7 +105,7 @@ namespace megamol {
 			}
 
 			it->total_draw_cnt += draw_cnt;
-			it->mesh_batch_idx = mesh_batch_idx;
+			it->mesh_idx = mesh_batch_idx;
 			it->material_idx = material_idx;
 
 			it->render_tasks.push_back(RenderTask());

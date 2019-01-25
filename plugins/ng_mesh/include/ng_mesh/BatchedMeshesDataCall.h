@@ -46,6 +46,12 @@ namespace megamol {
 			GLsizei					draw_cnt;
 		};
 
+		struct MeshIndexLookup
+		{
+			size_t batch_index;
+			size_t draw_command_index;
+		};
+
 		class NG_MESH_API BatchedMeshesDataAccessor
 		{
 		public:
@@ -93,6 +99,9 @@ namespace megamol {
 			MeshDataAccessor*         mesh_data_batches;
 			DrawCommandsDataAccessor* draw_command_batches;
 			size_t                    batch_cnt;
+
+			MeshIndexLookup*          mesh_index_lut;
+			size_t                    mesh_cnt;
 		};
 
 

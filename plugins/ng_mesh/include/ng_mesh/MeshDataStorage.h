@@ -79,8 +79,15 @@ namespace megamol {
 				std::vector<DrawElementsCommand>	draw_commands;
 			};
 
-			std::list<MeshBatch> m_mesh_batches;
+			/** List/Storage of all meshes, organized in batches for efficiency */
+			std::list<MeshBatch>                   m_mesh_batches;
 
+			/** Look-up-table from individual mesh to batch and draw command index */
+			struct MeshLookup{
+				size_t batch_index;
+				size_t draw_command_index;
+			};
+			std::vector<MeshLookup> m_mesh_lut;
 		};
 
 		template<
@@ -199,6 +206,11 @@ namespace megamol {
 			// adjust used vertex/index count
 			it->mesh_data.used_vertex_cnt += req_vert_cnt;
 			it->mesh_data.used_index_cnt += req_index_cnt;
+
+			size_t batch_idx = std::distance(m_mesh_batches.begin(), it);
+			size_t draw_command_idx = it->draw_commands.size() - 1;
+
+			m_mesh_lut.push_back({ batch_idx,draw_command_idx });
 		}
 	}
 }

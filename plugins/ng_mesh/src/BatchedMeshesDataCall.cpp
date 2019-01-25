@@ -13,7 +13,9 @@ megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor()
 	buffer_accessor_cnt(0),
 	draw_command_batches(nullptr),
 	mesh_data_batches(nullptr),
-	batch_cnt(0)
+	batch_cnt(0),
+	mesh_index_lut(nullptr),
+	mesh_cnt(0)
 {
 	
 }
@@ -30,7 +32,9 @@ megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(const Batc
 	buffer_accessor_cnt(0),
 	draw_command_batches(nullptr),
 	mesh_data_batches(nullptr),
-	batch_cnt(0)
+	batch_cnt(0),
+	mesh_index_lut(nullptr),
+	mesh_cnt(0)
 {
 	for (size_t i = 0; i < cpy.batch_cnt; i++)
 	{
@@ -61,6 +65,9 @@ megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(const Batc
 			cpy.draw_command_batches[i].draw_commands,
 			cpy.draw_command_batches[i].draw_cnt);
 	}
+
+	this->mesh_index_lut = cpy.mesh_index_lut;
+	this->mesh_cnt = cpy.mesh_cnt;
 }
 
 megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(BatchedMeshesDataAccessor && other)
@@ -68,25 +75,33 @@ megamol::ngmesh::BatchedMeshesDataAccessor::BatchedMeshesDataAccessor(BatchedMes
 	buffer_accessor_cnt(0),
 	draw_command_batches(nullptr),
 	mesh_data_batches(nullptr),
-	batch_cnt(0)
+	batch_cnt(0),
+	mesh_index_lut(nullptr),
+	mesh_cnt(0)
 {
 	BufferAccessor* tmp_buffer_accessors = this->buffer_accessors;
 	size_t tmp_buffer_accessor_cnt = this->buffer_accessor_cnt;
 	MeshDataAccessor* tmp_mesh_data_batches = this->mesh_data_batches;
 	DrawCommandsDataAccessor* tmp_draw_command_batches = this->draw_command_batches;
 	size_t tmp_batch_cnt = this->batch_cnt;
+	MeshIndexLookup* tmp_mesh_index_lut = this->mesh_index_lut;
+	size_t tmp_mesh_cnt = this->mesh_cnt;
 
 	this->buffer_accessors = other.buffer_accessors;
 	this->buffer_accessor_cnt = other.buffer_accessor_cnt;
 	this->mesh_data_batches = other.mesh_data_batches;
 	this->draw_command_batches = other.draw_command_batches;
 	this->batch_cnt = other.batch_cnt;
+	this->mesh_index_lut = other.mesh_index_lut;
+	this->mesh_cnt = other.mesh_cnt;
 
 	other.buffer_accessors = tmp_buffer_accessors;
 	other.buffer_accessor_cnt = tmp_buffer_accessor_cnt;
 	other.mesh_data_batches = tmp_mesh_data_batches;
 	other.draw_command_batches = tmp_draw_command_batches;
 	other.batch_cnt = tmp_batch_cnt;
+	other.mesh_index_lut = tmp_mesh_index_lut;
+	other.mesh_cnt = tmp_mesh_cnt;
 }
 
 megamol::ngmesh::BatchedMeshesDataAccessor & megamol::ngmesh::BatchedMeshesDataAccessor::operator=(BatchedMeshesDataAccessor && rhs)
@@ -96,18 +111,24 @@ megamol::ngmesh::BatchedMeshesDataAccessor & megamol::ngmesh::BatchedMeshesDataA
 	MeshDataAccessor* tmp_mesh_data_batches = this->mesh_data_batches;
 	DrawCommandsDataAccessor* tmp_draw_command_batches = this->draw_command_batches;
 	size_t tmp_batch_cnt = this->batch_cnt;
+	MeshIndexLookup* tmp_mesh_index_lut = this->mesh_index_lut;
+	size_t tmp_mesh_cnt = this->mesh_cnt;
 
 	this->buffer_accessors = rhs.buffer_accessors;
 	this->buffer_accessor_cnt = rhs.buffer_accessor_cnt;
 	this->mesh_data_batches = rhs.mesh_data_batches;
 	this->draw_command_batches = rhs.draw_command_batches;
 	this->batch_cnt = rhs.batch_cnt;
+	this->mesh_index_lut = rhs.mesh_index_lut;
+	this->mesh_cnt = rhs.mesh_cnt;
 
 	rhs.buffer_accessors = tmp_buffer_accessors;
 	rhs.buffer_accessor_cnt = tmp_buffer_accessor_cnt;
 	rhs.mesh_data_batches = tmp_mesh_data_batches;
 	rhs.draw_command_batches = tmp_draw_command_batches;
 	rhs.batch_cnt = tmp_batch_cnt;
+	rhs.mesh_index_lut = tmp_mesh_index_lut;
+	rhs.mesh_cnt = tmp_mesh_cnt;
 
 	return *this;
 }

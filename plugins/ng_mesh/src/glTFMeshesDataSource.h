@@ -61,6 +61,7 @@ namespace megamol
 
 		private:
 			BatchedMeshesDataAccessor m_mesh_data_accessor;
+			MeshDataStorage           m_mesh_data_storage;
 			megamol::core::CallerSlot m_glTF_callerSlot;
 		};
 	}

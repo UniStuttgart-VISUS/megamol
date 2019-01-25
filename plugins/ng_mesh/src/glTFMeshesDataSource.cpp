@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "glTFMeshesDataSource.h"
+#include "tiny_gltf.h"
 
 megamol::ngmesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
 	: m_glTF_callerSlot("getGlTFFile","Connects the data source with a loaded glTF file")
@@ -29,6 +30,56 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 	if (gltf_call->getUpdateFlag())
 	{
 		BatchedMeshesDataAccessor retval;
+
+		auto model = gltf_call->getGlTFModel();
+
+		for (size_t mesh_idx = 0; mesh_idx < model->meshes.size(); mesh_idx++)
+		{
+			std::vector<VertexLayout::Attribute> attribs;
+			std::vector<std::pair< std::vector<unsigned char>::iterator, std::vector<unsigned char>::iterator>> vb_iterators;
+			std::pair< std::vector<unsigned char>::iterator, std::vector<unsigned char>::iterator> ib_iterators;
+
+			//TODO for now support a single primitive per mesh
+			auto& indices_accessor = model->accessors[model->meshes[mesh_idx].primitives.back().indices];
+			auto& indices_bufferView = model->bufferViews[indices_accessor.bufferView];
+			auto& indices_buffer = model->buffers[indices_bufferView.buffer];
+
+			ib_iterators = {
+				indices_buffer.data.begin() + indices_bufferView.byteOffset + indices_accessor.byteOffset,
+				indices_buffer.data.begin() + indices_bufferView.byteOffset + indices_accessor.byteOffset
+				+ (indices_accessor.count * indices_accessor.ByteStride(indices_bufferView))
+			};
+
+			auto& vertex_attributes = model->meshes[mesh_idx].primitives.back().attributes;
+			for (auto attrib : vertex_attributes)
+			{
+				auto& vertexAttrib_accessor = model->accessors[attrib.second];
+				auto& vertexAttrib_bufferView = model->bufferViews[vertexAttrib_accessor.bufferView];
+				auto& vertexAttrib_buffer = model->buffers[vertexAttrib_bufferView.buffer];
+
+				attribs.push_back(VertexLayout::Attribute(
+					vertexAttrib_accessor.type,
+					vertexAttrib_accessor.componentType,
+					vertexAttrib_accessor.normalized,
+					vertexAttrib_accessor.byteOffset)
+				);
+
+				//TODO vb_iterators
+				vb_iterators.push_back(
+					{
+						vertexAttrib_buffer.data.begin() + vertexAttrib_bufferView.byteOffset + vertexAttrib_accessor.byteOffset,
+						vertexAttrib_buffer.data.begin() + vertexAttrib_bufferView.byteOffset + vertexAttrib_accessor.byteOffset
+							+ (vertexAttrib_accessor.count * vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView))
+					}
+				);
+			}
+
+			VertexLayout vertex_descriptor(0, attribs);
+			m_mesh_data_storage.addMesh(vertex_descriptor, vb_iterators, ib_iterators, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+			
+		}
+
+		m_mesh_data_accessor = m_mesh_data_storage.generateDataAccessor();
 
 		// set update_all_flag?
 	}

@@ -491,7 +491,10 @@ void megamol::ngmesh::NGMeshRenderer::updateRenderTasks(std::shared_ptr<RenderTa
 
 		render_batch.draw_cnt = task_batch.total_draw_cnt;
 		render_batch.shader_prgm = m_materials.at(task_batch.material_idx).shader;
-		render_batch.mesh = m_meshes.at(task_batch.mesh_batch_idx).mesh;
+
+		size_t mesh_batch_idx = 0/* task_batch.mesh_idx*/;
+
+		render_batch.mesh = m_meshes.at(mesh_batch_idx).mesh;
 
 		// Create GPU buffer for per object shader parameters
 	 	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
@@ -513,7 +516,7 @@ void megamol::ngmesh::NGMeshRenderer::updateRenderTasks(std::shared_ptr<RenderTa
 			size_t base_idx = task.draw_commands_base_offset;
 			for (size_t i = 0; i < task.draw_commands_cnt; i++)
 			{
-				draw_command_data.push_back(m_meshes[task_batch.mesh_batch_idx].submesh_draw_commands[base_idx + i]);
+				draw_command_data.push_back(m_meshes[task_batch.mesh_idx].submesh_draw_commands[base_idx + i]);
 			}
 		}
 
