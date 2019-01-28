@@ -1,3 +1,5 @@
+    // Position transformations
+
     // object pivot point in object space     
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know) 
  

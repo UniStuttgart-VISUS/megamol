@@ -1,3 +1,5 @@
+#extension GL_ARB_explicit_attrib_location : enable
+
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
@@ -8,15 +10,21 @@ uniform vec4 clipCol;
 
 uniform vec4 viewAttr;
 
-FLACH varying vec4 objPos;
-FLACH varying vec4 camPos;
-FLACH varying vec4 lightPos;
-FLACH varying float squarRad;
-FLACH varying float rad;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
+FLACH in vec4 objPos;
+FLACH in vec4 camPos;
+FLACH in vec4 lightPos;
+FLACH in float squarRad;
+FLACH in float rad;
+FLACH in vec4 vertColor;
 
 #ifdef RETICLE
-FLACH varying vec2 centerFragment;
+FLACH in vec2 centerFragment;
 #endif // RETICLE
+
+out layout(location = 0) vec4 outColor;
 
 void main(void) {
     vec4 coord;
@@ -30,7 +38,7 @@ void main(void) {
     
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = MVPinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
     
@@ -39,7 +47,7 @@ void main(void) {
     ray = normalize(coord.xyz - camPos.xyz);
 
     // chose color for lighting
-    vec4 color = gl_Color;
+    vec4 color = vertColor;
     //vec4 color = vec4(uplParams.xyz, 1.0);
 
     // calculate the geometry-ray-intersection

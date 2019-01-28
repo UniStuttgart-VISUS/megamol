@@ -12,7 +12,7 @@
     <shader name="geometry">
         <snippet type="version">150</snippet>
         <snippet name="MainStart"        type="file">simplesphere/geosphere_geometry_mainstart.glsl</snippet>
-        <snippet name="SphereTouchPlane" type="file">simplesphere/vert_spheretouchplane.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"          type="file">simplesphere/geosphere_geometry_mainend.glsl</snippet>
     </shader>
 

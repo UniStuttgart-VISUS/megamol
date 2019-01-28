@@ -1,7 +1,6 @@
-#extension GL_ARB_conservative_depth:require
-layout (depth_greater) out float gl_FragDepth; // we think this is right
-//layout (depth_less) out float gl_FragDepth; // this should be wrong 
 #extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_conservative_depth       : require
+layout (depth_greater) out float gl_FragDepth; 
 
 uniform mat4 MVP;
 uniform mat4 MVPinv;

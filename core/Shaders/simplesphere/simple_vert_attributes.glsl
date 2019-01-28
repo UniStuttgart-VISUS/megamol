@@ -1,6 +1,9 @@
 uniform vec4 viewAttr;
-uniform float scaling;
 uniform vec4 lpos;
+
+#ifdef WITH_SCALING
+uniform float scaling;
+#endif // WITH_SCALING
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -16,21 +19,25 @@ uniform mat4 MVinv;
 uniform mat4 MVP;
 
 uniform vec4 inConsts1;
-attribute float colIdx;
 uniform sampler1D colTab;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+in vec4 inVertex;
+in vec4 inColor;
+in float colIdx;
+
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec4 vertColor;
 
 #ifdef DEFERRED_SHADING
-varying float pointSize;
+out float pointSize;
 #endif // DEFERRED_SHADING
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
 
 #define CONSTRAD inConsts1.x

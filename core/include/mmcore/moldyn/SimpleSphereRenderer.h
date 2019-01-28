@@ -156,7 +156,6 @@ namespace moldyn {
         vislib::SmartPtr<ShaderSource>           vertShader;
         vislib::SmartPtr<ShaderSource>           fragShader;
         vislib::SmartPtr<ShaderSource>           geoShader;
-        GLuint                                   colIdxAttribLoc;
 
         GLuint                                   vertArray;
         SimpleSphericalParticles::ColourDataType colType;
@@ -240,42 +239,47 @@ namespace moldyn {
         // SIMPLE
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPtransp);
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
 
         // NG
         bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPtransp);
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
 
         // NGSPLAT
         bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPtransp);
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
 
         // NGBUFFERARRAY
         bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPtransp);
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
 
         // GEO
         bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>& MVPtransp);
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
+
+        template <typename T>
+        void setPointers(MultiParticleDataCall::Particles &parts, T &shader,
+            GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
+            GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
 
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
@@ -287,8 +291,6 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
 
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
-
-        void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 
         void lockSingle(GLsync& syncObj);
 

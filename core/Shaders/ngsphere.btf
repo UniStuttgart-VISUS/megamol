@@ -8,11 +8,11 @@
         <snippet name="attributes"       type="file">simplesphere/ngsphere_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/ngsphere_vert_mainparams.glsl</snippet> <!-- Format is important for dynamically generated content! -->
         <snippet name="MainRest"         type="file">simplesphere/ngsphere_vert_mainstart.glsl</snippet>
-        <snippet name="PosTrans"         type="file">simplesphere/vert_postrans.glsl</snippet>
-        <snippet name="ClippingPlane"    type="file">simplesphere/vert_clipping.glsl</snippet>
-        <snippet name="SphereTouchPlane" type="file">simplesphere/vert_spheretouchplane.glsl</snippet>
-        <snippet name="PosOutput"        type="file">simplesphere/vert_posout.glsl</snippet>
-        <snippet name="MainEnd"          type="file">simplesphere/vert_mainend.glsl</snippet>
+        <snippet name="PosTrans"         type="file">simplesphere/simple_vert_postrans.glsl</snippet>
+        <snippet name="ClippingPlane"    type="file">simplesphere/simple_vert_clipping.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/simple_vert_spheretouchplane.glsl</snippet>
+        <snippet name="PosOutput"        type="file">simplesphere/simple_vert_posout.glsl</snippet>
+        <snippet name="MainEnd"          type="file">simplesphere/simple_vert_mainend.glsl</snippet>
     </shader>
 
     <shader name="fragment">
