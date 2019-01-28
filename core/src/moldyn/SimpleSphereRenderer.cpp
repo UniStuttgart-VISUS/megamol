@@ -658,12 +658,12 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         // colour
         switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE: {
-            glUniform4f(this->newShader->ParameterLocation("globalCol"),
-                static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
-                1.0f);
-        } break;
+                glUniform4f(this->newShader->ParameterLocation("globalCol"),
+                    static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+                    static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f,
+                    1.0f);
+            } break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
             glEnable(GL_TEXTURE_1D);
@@ -681,13 +681,14 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             maxC = parts.GetMaxColourIndexValue();
         } break;
         default:
-            break;
+            glUniform4f(this->newShader->ParameterLocation("globalCol"), 0.5f, 0.5f, 0.5f, 1.0f);
+            break; 
         }
 
         // radius and position
         switch (parts.GetVertexDataType()) {
         case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            break;
+            continue;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -695,8 +696,10 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
             break;
+        case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
         default:
-            break;
+            continue;
         }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -858,13 +861,14 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             maxC = parts.GetMaxColourIndexValue();
         } break;
         default:
+            glUniform4f(this->newShader->ParameterLocation("globalCol"), 0.5f, 0.5f, 0.5f, 1.0f);
             break;
         }
 
         // radius and position
         switch (parts.GetVertexDataType()) {
         case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            break;
+            continue;
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -873,7 +877,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
             break;
         default:
-            break;
+            continue;
         }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -1156,7 +1160,7 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles&
         break;
     case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 4, GL_SHORT, GL_TRUE, parts.GetColourDataStride(), colPtr);
+        glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_SHORT, GL_TRUE, parts.GetColourDataStride(), colPtr);
         break;
     default:
         glVertexAttrib3f(colAttribLoc, 0.5f, 0.5f, 0.5f);
@@ -1204,7 +1208,7 @@ bool moldyn::SimpleSphereRenderer::makeColorString(MultiParticleDataCall::Partic
     switch (parts.GetColourDataType()) {
     case MultiParticleDataCall::Particles::COLDATA_NONE:
         declaration = "";
-        code = "";
+        code        = "    theColor = globalCol;\n";
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
         vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
@@ -1223,28 +1227,28 @@ bool moldyn::SimpleSphereRenderer::makeColorString(MultiParticleDataCall::Partic
         declaration = "    float r; float g; float b;\n";
         if (interleaved) {
             code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         else {
             code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
         declaration = "    float r; float g; float b; float a;\n";
         if (interleaved) {
             code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
         }
         else {
             code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                "                 theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
@@ -1269,17 +1273,16 @@ bool moldyn::SimpleSphereRenderer::makeColorString(MultiParticleDataCall::Partic
         declaration = "    uint col1; uint col2;\n";
         if (interleaved) {
             code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+                   "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
         }
         else {
             code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+                   "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
         }
     } break;
     default:
         declaration = "";
-        code = "    theColor = gl_Color;\n"
-            "    theColIdx = colIdx;";
+        code        = "    theColor = globalCol;\n";
         break;
     }
     //code = "    theColor = vec4(0.2, 0.7, 1.0, 1.0);";
@@ -1298,58 +1301,56 @@ bool moldyn::SimpleSphereRenderer::makeVertexString(MultiParticleDataCall::Parti
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
         declaration = "";
-        code = "";
+        code        = "";
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         declaration = "    float posX; float posY; float posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = CONSTRAD;";
         }
         else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = CONSTRAD;";
         }
         else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         declaration = "    float posX; float posY; float posZ; float posR;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
         }
         else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                   "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
         }
         break;
     default:
         declaration = "";
-        code = "    inPos = gl_Vertex;\n"
-            "    rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;\n"
-            "    inPos.w = 1.0; ";
+        code        = "";
         break;
     }
 
