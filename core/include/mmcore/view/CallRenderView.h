@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/RenderOutput.h" 
+#include "mmcore/view/RenderOutputOpenGL.h" 
 #include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
@@ -32,7 +32,7 @@ namespace view {
 	 *
 	 * This is used for FBO-based compositing and registering a module at the cluster display.
      */
-    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
+    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutputOpenGL {
     public:
 
         /**

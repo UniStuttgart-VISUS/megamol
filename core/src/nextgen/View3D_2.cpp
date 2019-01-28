@@ -320,6 +320,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
         this->doBeforeRenderHook();
     }
 
+    glm::ivec4 currentViewport;
     CallRender3D_2* cr3d = this->rendererSlot.CallAs<CallRender3D_2>();
     if (cr3d != nullptr) {
         cr3d->SetMouseSelection(this->toggleMouseSelection);
@@ -334,8 +335,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     if (this->overrideViewport != nullptr) {
         if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0) &&
             (this->overrideViewport[3] >= 0)) {
-            glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
-                this->overrideViewport[3]);
+            /*glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
+                this->overrideViewport[3]);*/
+            currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2], this->overrideViewport[3]);
         }
     } else {
         // this is correct in non-override mode,
@@ -343,19 +345,21 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
         // TODO
         // glViewport(0, 0, static_cast<GLsizei>(this->camParams->TileRect().Width()),
         // static_cast<GLsizei>(this->camParams->TileRect().Height()));
+        auto camRes = this->cam.resolution_gate();
+        currentViewport = glm::ivec4(0, 0, camRes.width(), camRes.height());
     }
 
     if (this->overrideCall != nullptr) {
         if (cr3d != nullptr) {
-            view::RenderOutput* ro = dynamic_cast<view::RenderOutput*>(overrideCall);
+            view::RenderOutputOpenGL* ro = dynamic_cast<view::RenderOutputOpenGL*>(overrideCall);
             if (ro != nullptr) {
-                *static_cast<view::RenderOutput*>(cr3d) = *ro;
+                *static_cast<view::RenderOutputOpenGL*>(cr3d) = *ro;
             }
         }
         this->overrideCall->EnableOutputBuffer();
     } else if (cr3d != nullptr) {
         cr3d->SetOutputBuffer(GL_BACK);
-        cr3d->GetViewport(); // access the viewport to enforce evaluation
+        cr3d->GetViewport(); // access the viewport to enforce evaluation TODO is this still necessary
     }
 
     const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();

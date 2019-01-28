@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * nextgen::CallRender3D_2::CallRender3D_2
  */
-nextgen::CallRender3D_2::CallRender3D_2(void) : nextgen::AbstractCallRender3D_2(), RenderOutput() {
+nextgen::CallRender3D_2::CallRender3D_2(void) : nextgen::AbstractCallRender3D_2(), RenderOutputOpenGL() {
     // intentionally empty
 }
 
@@ -31,7 +31,7 @@ nextgen::CallRender3D_2::~CallRender3D_2(void) {
  */
 nextgen::CallRender3D_2& nextgen::CallRender3D_2::operator=(const nextgen::CallRender3D_2& rhs) {
     nextgen::AbstractCallRender3D_2::operator=(rhs);
-    view::RenderOutput::operator=(rhs);
+    view::RenderOutputOpenGL::operator=(rhs);
 
     return *this;
 }

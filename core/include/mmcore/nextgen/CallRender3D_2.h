@@ -15,7 +15,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/nextgen/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutputOpenGL.h"
 #include <glm/glm.hpp>
 
 namespace megamol {
@@ -32,11 +32,8 @@ namespace nextgen {
  *
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
- *
- * Function "GetCapabilities" asks the callee to set the capabilities
- * flags of the call.
  */
-class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public view::RenderOutput {
+class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public view::RenderOutputOpenGL {
 public:
     /**
      * Answer the name of the objects of this description.

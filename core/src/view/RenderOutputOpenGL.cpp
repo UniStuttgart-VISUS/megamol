@@ -1,12 +1,12 @@
 /*
- * RenderOutput.cpp
+ * RenderOutputOpenGL.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutputOpenGL.h"
 #include "vislib/assert.h"
 #include "vislib/Trace.h"
 
@@ -14,9 +14,9 @@ using namespace megamol::core;
 
 
 /*
- * view::RenderOutput::DisableOutputBuffer
+ * view::RenderOutputOpenGL::DisableOutputBuffer
  */
-void view::RenderOutput::DisableOutputBuffer(void) {
+void view::RenderOutputOpenGL::DisableOutputBuffer(void) {
     if (this->outputFBO) {
         this->outputFBO->Disable();
     }
@@ -24,9 +24,9 @@ void view::RenderOutput::DisableOutputBuffer(void) {
 
 
 /*
- * view::RenderOutput::EnableOutputBuffer
+ * view::RenderOutputOpenGL::EnableOutputBuffer
  */
-void view::RenderOutput::EnableOutputBuffer(void) {
+void view::RenderOutputOpenGL::EnableOutputBuffer(void) {
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
@@ -56,17 +56,17 @@ void view::RenderOutput::EnableOutputBuffer(void) {
 
 
 /*
- * view::RenderOutput::FrameBufferObject
+ * view::RenderOutputOpenGL::FrameBufferObject
  */
-vislib::graphics::gl::FramebufferObject *view::RenderOutput::FrameBufferObject(void) const {
+vislib::graphics::gl::FramebufferObject *view::RenderOutputOpenGL::FrameBufferObject(void) const {
     return this->outputFBO;
 }
 
 
 /*
- * view::RenderOutput::GetViewport
+ * view::RenderOutputOpenGL::GetViewport
  */
-const vislib::math::Rectangle<int>& view::RenderOutput::GetViewport(void) const {
+const vislib::math::Rectangle<int>& view::RenderOutputOpenGL::GetViewport(void) const {
     if (this->outputViewport.IsEmpty()) {
         // sort of lazy evaluation
         if (this->outputFBO != NULL) {
@@ -83,17 +83,17 @@ const vislib::math::Rectangle<int>& view::RenderOutput::GetViewport(void) const 
 
 
 /*
- * view::RenderOutput::OutputBuffer
+ * view::RenderOutputOpenGL::OutputBuffer
  */
-GLenum view::RenderOutput::OutputBuffer(void) const {
+GLenum view::RenderOutputOpenGL::OutputBuffer(void) const {
     return this->outputBuffer;
 }
 
 
 /*
- * view::RenderOutput::ResetOutputBuffer
+ * view::RenderOutputOpenGL::ResetOutputBuffer
  */
-void view::RenderOutput::ResetOutputBuffer(void) {
+void view::RenderOutputOpenGL::ResetOutputBuffer(void) {
     this->outputBuffer = GL_BACK;
     this->outputFBO = NULL; // DO NOT DELETE
     this->outputFBOTargets.Clear();
@@ -102,9 +102,9 @@ void view::RenderOutput::ResetOutputBuffer(void) {
 
 
 /*
- * view::RenderOutput::SetOutputBuffer
+ * view::RenderOutputOpenGL::SetOutputBuffer
  */
-void view::RenderOutput::SetOutputBuffer(GLenum buffer,
+void view::RenderOutputOpenGL::SetOutputBuffer(GLenum buffer,
         int x, int y, int w, int h) {
     this->outputBuffer = buffer;
     this->outputFBO = NULL; // DO NOT DELETE
@@ -114,9 +114,9 @@ void view::RenderOutput::SetOutputBuffer(GLenum buffer,
 
 
 /*
- * view::RenderOutput::SetOutputBuffer
+ * view::RenderOutputOpenGL::SetOutputBuffer
  */
-void view::RenderOutput::SetOutputBuffer(
+void view::RenderOutputOpenGL::SetOutputBuffer(
         vislib::graphics::gl::FramebufferObject *fbo,
         UINT cntTargets, UINT* targets, int x, int y, int w, int h) {
     ASSERT(fbo != NULL);
@@ -134,10 +134,10 @@ void view::RenderOutput::SetOutputBuffer(
 
 
 /*
- * view::RenderOutput::operator=
+ * view::RenderOutputOpenGL::operator=
  */
-view::RenderOutput& view::RenderOutput::operator=(
-        const view::RenderOutput& rhs) {
+view::RenderOutputOpenGL& view::RenderOutputOpenGL::operator=(
+        const view::RenderOutputOpenGL& rhs) {
     this->outputBuffer = rhs.outputBuffer;
     this->outputFBO = rhs.outputFBO;
     this->outputFBOTargets = rhs.outputFBOTargets;
@@ -147,9 +147,9 @@ view::RenderOutput& view::RenderOutput::operator=(
 
 
 /*
- * view::RenderOutput::RenderOutput
+ * view::RenderOutputOpenGL::RenderOutput
  */
-view::RenderOutput::RenderOutput(void) : AbstractRenderOutput(),
+view::RenderOutputOpenGL::RenderOutputOpenGL(void) : AbstractRenderOutput(),
         outputBuffer(GL_BACK), outputFBO(NULL), outputFBOTargets(),
         outputViewport(0, 0, 0, 0) {
     // intentionally empty
@@ -157,8 +157,8 @@ view::RenderOutput::RenderOutput(void) : AbstractRenderOutput(),
 
 
 /*
- * view::RenderOutput::~RenderOutput
+ * view::RenderOutputOpenGL::~RenderOutput
  */
-view::RenderOutput::~RenderOutput(void) {
+view::RenderOutputOpenGL::~RenderOutputOpenGL(void) {
     this->outputFBO = NULL; // DO NOT DELETE
 }

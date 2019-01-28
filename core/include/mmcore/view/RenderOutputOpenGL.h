@@ -1,5 +1,5 @@
 /*
- * RenderOutput.h
+ * RenderOutputOpenGL.h
  *
  * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
@@ -29,7 +29,7 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API RenderOutput : public virtual AbstractRenderOutput {
+    class MEGAMOLCORE_API RenderOutputOpenGL : public virtual AbstractRenderOutput {
     public:
 
         /**
@@ -80,7 +80,7 @@ namespace view {
          *
          * @param call The source object to copy from
          */
-        inline void SetOutputBuffer(RenderOutput& output) {
+        inline void SetOutputBuffer(RenderOutputOpenGL& output) {
             this->outputBuffer = output.outputBuffer;
             this->outputFBO = output.outputFBO;
             this->outputFBOTargets = output.outputFBOTargets;
@@ -97,6 +97,8 @@ namespace view {
         inline void SetOutputBuffer(GLenum buffer = GL_BACK) {
             GLint vp[4];
             ::glGetIntegerv(GL_VIEWPORT, vp);
+            // TODO take the current viewport instead
+            this->GetViewport();
             this->SetOutputBuffer(buffer, vp[0], vp[1], vp[2], vp[3]);
         }
 
@@ -379,15 +381,15 @@ namespace view {
          *
          * @return A reference to this
          */
-        RenderOutput& operator=(const RenderOutput& rhs);
+        RenderOutputOpenGL& operator=(const RenderOutputOpenGL& rhs);
 
     protected:
 
         /** Ctor. */
-        RenderOutput(void);
+        RenderOutputOpenGL(void);
 
         /** Dtor. */
-        virtual ~RenderOutput(void);
+        virtual ~RenderOutputOpenGL(void);
 
     private:
 
