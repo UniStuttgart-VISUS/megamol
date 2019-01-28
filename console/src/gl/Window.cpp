@@ -94,6 +94,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
 
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -124,6 +125,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
             ::glfwGetMonitorPos(mon, &x, &y);
             ::glfwSetWindowPos(hWnd, x, y);
@@ -476,6 +478,7 @@ void gl::Window::on_resize(int w, int h) {
     if ((w > 0) && (h > 0)) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
+        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
         for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
             // we inform even disabled layers, since we would need to know and update as soon as they get enabled.
             uil->OnResize(w, h);

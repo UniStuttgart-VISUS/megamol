@@ -1954,7 +1954,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         } else {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
-            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+            if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
                 vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
             } else {

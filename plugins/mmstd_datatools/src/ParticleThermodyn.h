@@ -38,7 +38,8 @@ namespace datatools {
             TEMPERATURE,
             FRACTIONAL_ANISOTROPY,
             DENSITY,
-            PRESSURE
+            PRESSURE,
+            NEIGHBORS
         };
 
         /** Return module class name */
@@ -107,8 +108,12 @@ namespace datatools {
         core::param::ParamSlot massSlot;
         core::param::ParamSlot freedomSlot;
         core::param::ParamSlot metricsSlot;
+        core::param::ParamSlot removeSelfSlot;
+        core::param::ParamSlot findExtremesSlot;
+        core::param::ParamSlot extremeValueSlot;
         
         size_t datahash;
+        size_t myHash = 0;
         int lastTime;
         std::vector<float> newColors;
         std::vector<size_t> allParts;

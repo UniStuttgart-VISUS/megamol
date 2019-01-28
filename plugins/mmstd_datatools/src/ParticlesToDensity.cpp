@@ -19,6 +19,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <chrono>
+#include <functional>
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -54,13 +56,16 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , filterSizeSlot("filterSize", "The support size of the filter")
+    , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
+    //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
-    , time(0)
+    , time(std::numeric_limits<unsigned int>::max())
     , outDataSlot("outData", "Provides a density volume for the particles")
     , inDataSlot("inData", "takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
+    ep->SetTypePair(1, "IColToSingleCell_Volume");
     this->aggregatorSlot << ep;
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
@@ -113,6 +118,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->filterSizeSlot << new core::param::IntParam(1, 0);
     this->MakeSlotAvailable(&this->filterSizeSlot);
 
+    this->sigmaSlot << new core::param::FloatParam(3.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+    this->MakeSlotAvailable(&this->sigmaSlot);
+
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
@@ -159,6 +167,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     if (outVol == nullptr) return false;
 
+    inMpdc->SetFrameID(outVol->FrameID(), true);
     if (!(*inMpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
         return false;
@@ -167,10 +176,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
         return false;
     }
-    if (this->time != outVol->FrameID() || this->datahash != inMpdc->DataHash() || this->anythingDirty()) {
+    if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
         if (!this->createVolumeCPU(inMpdc)) return false;
-        this->time = outVol->FrameID();
-        this->datahash = inMpdc->DataHash();
+        this->time = inMpdc->FrameID();
+        this->in_datahash = inMpdc->DataHash();
+        ++this->datahash;
         this->resetDirty();
     }
 
@@ -210,6 +220,8 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     metadata.IsUniform[1] = true;
     metadata.IsUniform[2] = true;
     outVol->SetMetadata(&metadata);
+
+    outVol->SetDataHash(this->datahash);
 
     /*outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
         this->yResSlot.Param<core::param::IntParam>()->Value(), this->zResSlot.Param<core::param::IntParam>()->Value());
@@ -272,7 +284,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     float const maxCellSize = std::max(sliceDistX, std::max(sliceDistY, sliceDistZ));
     float const disThreshold = 0.5f * maxCellSize;
 
-    for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
+    for (unsigned int i = 0; i < c2->GetParticleListCount(); ++i) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
         const bool useGlobRad =
@@ -296,6 +308,36 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         auto const& yAcc = parStore.GetYAcc();
         auto const& zAcc = parStore.GetZAcc();
         auto const& rAcc = parStore.GetRAcc();
+        auto const& iAcc = parStore.GetCRAcc();
+
+        std::function<void(int, int, int, int, int, int, int, float, float, float)> volOp;
+        switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
+        case 1: {
+            volOp = [this, &gauss, &iAcc, &weights](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
+                        float const dis, float const disThreshold, float const rad) -> void {
+                auto const val = iAcc->Get_f(pidx);
+                if (dis > disThreshold - rad) {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
+                        gauss(dis - disThreshold + rad, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad) * val;
+                    ++(weights[omp_get_thread_num()][x + (y + z * sy) * sx]);
+                } else {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += val;
+                    ++(weights[omp_get_thread_num()][x + (y + z * sy) * sx]);
+                }
+            };
+        } break;
+        default:
+        case 0: {
+            volOp = [this, &gauss](int const pidx, int const x, int const y, int const z, int const sx, int const sy, int const sz,
+                        float const dis, float const disThreshold, float const rad) -> void {
+                if (dis > disThreshold - rad) {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis - disThreshold + rad, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad);
+                } else {
+                    vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
+                }
+            };
+        }
+        }
 
 #pragma omp parallel for
         for (int j = 0; j < parts.GetCount(); ++j) {
@@ -323,46 +365,55 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             for (int hz = z - filterSize; hz <= z + filterSize; ++hz) {
                 for (int hy = y - filterSize; hy <= y + filterSize; ++hy) {
                     for (int hx = x - filterSize; hx <= x + filterSize; ++hx) {
+                        auto tmp_hx = hx;
+                        auto tmp_hy = hy;
+                        auto tmp_hz = hz;
                         if (cycl_x) {
-                            hx = (hx + 2 * sx) % sx;
+                            tmp_hx = (hx + 2 * sx) % sx;
                         } else {
                             if (hx < 0 || hx > sx - 1) {
                                 continue;
                             }
                         }
                         if (cycl_y) {
-                            hy = (hy + 2 * sy) % sy;
+                            tmp_hy = (hy + 2 * sy) % sy;
                         } else {
                             if (hy < 0 || hy > sy - 1) {
                                 continue;
                             }
                         }
                         if (cycl_z) {
-                            hz = (hz + 2 * sz) % sz;
+                            tmp_hz = (hz + 2 * sz) % sz;
                         } else {
                             if (hz < 0 || hz > sz - 1) {
                                 continue;
                             }
                         }
 
-                        float x_diff = static_cast<float>(hx) * sliceDistX + minOSx;
+                        float x_diff = static_cast<float>(tmp_hx) * sliceDistX + minOSx;
                         x_diff = std::fabs(x_diff - x_base);
                         if (x_diff > halfRangeOSx) x_diff -= rangeOSx;
-                        float y_diff = static_cast<float>(hy) * sliceDistY + minOSy;
+                        float y_diff = static_cast<float>(tmp_hy) * sliceDistY + minOSy;
                         y_diff = std::fabs(y_diff - y_base);
                         if (y_diff > halfRangeOSy) y_diff -= rangeOSy;
-                        float z_diff = static_cast<float>(hz) * sliceDistZ + minOSz;
+                        float z_diff = static_cast<float>(tmp_hz) * sliceDistZ + minOSz;
                         z_diff = std::fabs(z_diff - z_base);
                         if (z_diff > halfRangeOSz) z_diff -= rangeOSz;
                         float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
                         //if (dis == 0.0f) dis = 1.0f;
                         //vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f / dis;
-                        if (dis > disThreshold - rad) {
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] +=
+                        
+                        volOp(j, x, y, z, sx, sy, sz, dis, disThreshold, rad);
+                        
+                        /*if (dis > disThreshold - rad) {
+                            vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
                                 gauss(dis - disThreshold + rad, 3.0f * rad);
                         } else {
-                            vol[omp_get_thread_num()][hx + (hy + hz * sy) * sx] += 1.0f;
-                        }
+                            vol[omp_get_thread_num()][x + (y + z * sy) * sx] += 1.0f;
+                        }*/
+
+
+
                         //++weights[omp_get_thread_num()][hx + (hy + hz * sy) * sx];
                     }
                 }
@@ -384,6 +435,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             vol[%d][%d]\n", omp_get_thread_num(), i, j);
             }*/
         }
+        vol[0][j] /= weights[0][j] == 0 ? 1 : static_cast<float>(weights[0][j]);
         //vol[0][j] /= static_cast<float>(weights[0][j]);
         if (vol[0][j] > localMax[omp_get_thread_num()]) {
             localMax[omp_get_thread_num()] = vol[0][j];

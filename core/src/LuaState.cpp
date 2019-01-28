@@ -97,6 +97,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMQUIT "mmQuit"
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 #define MMC_LUA_MMFLUSH "mmFlush"
+#define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -147,7 +148,8 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
     { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
     {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."},
-    {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."}
+    {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."},
+    {MMC_LUA_MMCURRENTSCRIPTPATH, MMC_LUA_MMCURRENTSCRIPTPATH "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise."}
 };
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
@@ -194,6 +196,7 @@ MMC_LUA_MMLISTINSTANTIATIONS "=" MMC_LUA_MMLISTINSTANTIATIONS ","
 MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
 MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
 MMC_LUA_MMFLUSH "=" MMC_LUA_MMFLUSH ","
+MMC_LUA_MMCURRENTSCRIPTPATH "=" MMC_LUA_MMCURRENTSCRIPTPATH ","
 "  ipairs = ipairs,"
 "  load = load,"
 "  next = next,"
@@ -394,6 +397,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMREADTEXTFILE, &dispatch<&LuaState::ReadTextFile>);
 
         lua_register(L, MMC_LUA_MMFLUSH, &dispatch<&LuaState::Flush>);
+        lua_register(L, MMC_LUA_MMCURRENTSCRIPTPATH, &dispatch<&LuaState::CurrentScriptPath>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -500,7 +504,7 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::str
     if (!input.fail()) {
         std::stringstream buffer;
         buffer << input.rdbuf();
-        return RunString(envName, buffer.str(), result);
+        return RunString(envName, buffer.str(), result, fileName);
     } else {
         return false;
     }
@@ -514,16 +518,18 @@ bool megamol::core::LuaState::RunFile(const std::string& envName, const std::wst
         vislib::StringA contents;
         vislib::sys::ReadTextFile(contents, input);
         input.Close();
-        return RunString(envName, std::string(contents), result);
+        const std::string narrowFileName(fileName.begin(), fileName.end());
+        return RunString(envName, std::string(contents), result, narrowFileName);
     } else {
         return false;
     }
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result) {
+bool megamol::core::LuaState::RunString(const std::string& envName, const std::string& script, std::string& result, std::string scriptPath) {
     // no two threads can touch L at the same time
     std::lock_guard<std::mutex> stateGuard(this->stateLock);
+    this->currentScriptPath = scriptPath;
     if (L != nullptr) {
         //vislib::sys::Log::DefaultLog.WriteInfo("trying to execute: %s", script.c_str());
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaState::RunString");
@@ -579,8 +585,8 @@ bool megamol::core::LuaState::RunFile(const std::wstring& fileName, std::string&
 }
 
 
-bool megamol::core::LuaState::RunString(const std::string& script, std::string& result) {
-    return RunString("megamol_env", script, result);
+bool megamol::core::LuaState::RunString(const std::string& script, std::string& result, std::string scriptPath) {
+    return RunString("megamol_env", script, result, scriptPath);
 }
 
 
@@ -1623,4 +1629,9 @@ int megamol::core::LuaState::Flush(lua_State* L) {
     }
 
     return 0;
+}
+
+int megamol::core::LuaState::CurrentScriptPath(struct lua_State* L) {
+    lua_pushstring(L, this->currentScriptPath.c_str());
+    return 1;
 }
