@@ -92,10 +92,10 @@ namespace moldyn {
 #endif // _WIN32
                                                                                         /// Necessary for:
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered, NGSphere, NGBufferArray, NGSplat, SimpleGeo
-                && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
-                && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
-                && ogl_IsVersionGEQ(3, 2)                                               // SimpleGeo
+                && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
+                //&& ogl_IsVersionGEQ(2, 2)                                             // SimpleGeo
+                && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
                 && isExtAvailable("GL_EXT_geometry_shader4")                            // SimpleGeo
                 && isExtAvailable("GL_EXT_gpu_shader4")                                 // SimpleGeo
                 && isExtAvailable("GL_EXT_bindable_uniform")                            // SimpleGeo
@@ -235,7 +235,6 @@ namespace moldyn {
          *
          * @return         True if success, false otherwise.
          */
-
         // SIMPLE
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
@@ -243,7 +242,6 @@ namespace moldyn {
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-
         // NG
         bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
@@ -251,7 +249,6 @@ namespace moldyn {
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-
         // NGSPLAT
         bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
@@ -259,7 +256,6 @@ namespace moldyn {
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-
         // NGBUFFERARRAY
         bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
@@ -267,7 +263,6 @@ namespace moldyn {
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-
         // GEO
         bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
             float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
@@ -276,24 +271,86 @@ namespace moldyn {
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
             vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
 
+        /**
+         * Set pointers to vertex and color buffers and corresponding shader variables.
+         *
+         * @param parts            ...
+         * @param shader           ...
+         * @param vertBuf          ...
+         * @param vertPtr          ...
+         * @param vertAttribLoc    ...
+         * @param colBuf           ...
+         * @param colPtr           ...
+         * @param colAttribLoc     ...
+         * @param colIdxAttribLoc  ...
+         */
         template <typename T>
         void setPointers(MultiParticleDataCall::Particles &parts, T &shader,
             GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
             GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
 
+        /**
+         * Get bytes and stride ...
+         *
+         * @param parts        ...
+         * @param colBytes     ...
+         * @param vertBytes    ...
+         * @param colStride    ...
+         * @param vertStride   ...
+         * @param interleaved  ...
+         */
         void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
+        /**
+         * Make NG vertex shader color string ...
+         *
+         * @param parts        ...
+         * @param code         ...
+         * @param declaration  ...
+         * @param interleaved  ...
+         *
+         */
         bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
+        /**
+         * Make NG vertex shader position string ...
+         *
+         * @param parts        ...
+         * @param code         ...
+         * @param declaration  ...
+         * @param interleaved  ...
+         */
         bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
+        /**
+         * Make NG shaders ...
+         *
+         * @param vert  ...
+         * @param frag  ...
+         */
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
 
+        /**
+         * Generate NG shaders ...
+         *
+         * @param parts  ...
+         *
+         */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
+        /**
+         * Lock single ...
+         *
+         * @param syncObj  ...
+         */
         void lockSingle(GLsync& syncObj);
 
+        /**
+         * Wait singel ...
+         *
+         * @param syncObj  ...
+         */
         void waitSingle(GLsync& syncObj);
     };
 

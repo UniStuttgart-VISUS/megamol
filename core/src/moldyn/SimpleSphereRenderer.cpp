@@ -639,10 +639,6 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
 
         this->newShader->Enable();
 
-        //GLuint vertAttribLoc   = glGetAttribLocationARB(this->sphereShader, "inVertex");
-        //GLuint colAttribLoc    = glGetAttribLocationARB(this->sphereShader, "inColor");
-        //GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
-
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, vp);
         glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
@@ -707,8 +703,6 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         bool interleaved;
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-        //currBuf = 0;
-        //UINT64 numVerts, vertCounter;
         // does all data reside interleaved in the same memory?
         if (interleaved) {
 
@@ -763,9 +757,6 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        //glDisableVertexAttribArrayARB(vertAttribLoc);
-        //glDisableVertexAttribArrayARB(colAttribLoc);
-        //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
 
         this->newShader->Disable();
@@ -821,10 +812,6 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         }
 
         this->newShader->Enable();
-
-        //GLuint vertAttribLoc   = glGetAttribLocationARB(this->sphereShader, "inVertex");
-        //GLuint colAttribLoc    = glGetAttribLocationARB(this->sphereShader, "inColor");
-        //GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, vp);
         glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -936,9 +923,6 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        //glDisableVertexAttribArrayARB(vertAttribLoc);
-        //glDisableVertexAttribArrayARB(colAttribLoc);
-        //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
 
         newShader->Disable();
@@ -1105,12 +1089,8 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-// NG functions ///////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
 /*
- * NG - moldyn::SimpleSphereRenderer::setPointers
+ * moldyn::SimpleSphereRenderer::setPointers
  */
 template <typename T>
 void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader,
@@ -1215,7 +1195,7 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles&
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::makeColorString
+ * moldyn::SimpleSphereRenderer::makeColorString
  */
 bool moldyn::SimpleSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
 
@@ -1309,7 +1289,7 @@ bool moldyn::SimpleSphereRenderer::makeColorString(MultiParticleDataCall::Partic
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::makeVertexString
+ * moldyn::SimpleSphereRenderer::makeVertexString
  */
 bool moldyn::SimpleSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved) {
 
@@ -1378,7 +1358,7 @@ bool moldyn::SimpleSphereRenderer::makeVertexString(MultiParticleDataCall::Parti
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::makeShader
+ * moldyn::SimpleSphereRenderer::makeShader
  */
 std::shared_ptr<GLSLShader> moldyn::SimpleSphereRenderer::makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
 
@@ -1413,7 +1393,7 @@ std::shared_ptr<GLSLShader> moldyn::SimpleSphereRenderer::makeShader(vislib::Sma
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::generateShader
+ * moldyn::SimpleSphereRenderer::generateShader
  */
 std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::generateShader(MultiParticleDataCall::Particles &parts) {
 
@@ -1503,7 +1483,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::getBytesAndStride
+ * moldyn::SimpleSphereRenderer::getBytesAndStride
  */
 void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
     unsigned int &colStride, unsigned int &vertStride, bool &interleaved) {
@@ -1570,7 +1550,7 @@ void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Part
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::lockSingle
+ * moldyn::SimpleSphereRenderer::lockSingle
  */
 void moldyn::SimpleSphereRenderer::lockSingle(GLsync& syncObj) {
     if (syncObj) {
@@ -1581,7 +1561,7 @@ void moldyn::SimpleSphereRenderer::lockSingle(GLsync& syncObj) {
 
 
 /*
- * NG - moldyn::SimpleSphereRenderer::waitSingle
+ * moldyn::SimpleSphereRenderer::waitSingle
  */
 void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
     if (syncObj) {

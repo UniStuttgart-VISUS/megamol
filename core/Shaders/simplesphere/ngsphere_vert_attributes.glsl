@@ -26,8 +26,6 @@ uniform vec4 inConsts1;
 uniform sampler1D colTab;
 uniform vec4 globalCol;
 
-in float colIdx;
-
 out vec4 objPos;
 out vec4 camPos;
 out vec4 lightPos;
