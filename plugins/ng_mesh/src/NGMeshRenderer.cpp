@@ -711,9 +711,9 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	return true;
 }
 
-std::shared_ptr<NGMeshRenderer::Mesh> megamol::ngmesh::NGMeshRenderer::createMesh(BatchedMeshesDataAccessor const & meshes, size_t mesh_idx)
+std::shared_ptr<Mesh> megamol::ngmesh::NGMeshRenderer::createMesh(BatchedMeshesDataAccessor const & meshes, size_t mesh_idx)
 {
-	std::shared_ptr<NGMeshRenderer::Mesh> retval(nullptr);
+	std::shared_ptr<Mesh> retval(nullptr);
 
 	MeshDataAccessor& mesh_data = meshes.mesh_data_batches[mesh_idx];
 
@@ -726,7 +726,7 @@ std::shared_ptr<NGMeshRenderer::Mesh> megamol::ngmesh::NGMeshRenderer::createMes
 
 	if (mesh_data.vertex_buffer_cnt > 0 && mesh_data.vertex_buffer_cnt == mesh_data.vertex_attribute_cnt)
 	{
-		std::vector<std::byte*> vertex_data_ptrs(mesh_data.vertex_buffer_cnt);
+		std::vector<GLvoid*> vertex_data_ptrs(mesh_data.vertex_buffer_cnt);
 		std::vector<size_t> vertex_data_sizes(mesh_data.vertex_buffer_cnt);
 
 		for (int j = 0; j < mesh_data.vertex_buffer_cnt; ++j)

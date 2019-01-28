@@ -24,7 +24,7 @@
 #include "DebugBatchedMeshesDataSource.h"
 #include "DebugMaterialsDataSource.h"
 #include "DebugRenderTasksDataSource.h"
-#include "glTFFileLoader.h"
+#include "gltf/glTFFileLoader.h"
 
 
 /* anonymous namespace hides this type from any other object files */

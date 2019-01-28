@@ -26,6 +26,7 @@
 #include "vislib/macro_utils.h"
 
 #include "ng_mesh/NGMeshStructs.h"
+#include "glowl/Mesh.h"
 
 
 namespace megamol {

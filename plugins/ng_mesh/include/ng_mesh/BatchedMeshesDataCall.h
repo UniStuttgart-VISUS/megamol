@@ -15,6 +15,7 @@
 #include "mmcore/AbstractGetData3DCall.h"
 
 #include "NGMeshStructs.h"
+#include "glowl/Mesh.h"
 
 namespace megamol {
 	namespace ngmesh {
