@@ -95,7 +95,7 @@ namespace moldyn {
                 && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
                 && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
-                && ogl_IsVersionGEQ(2, 0)                                               // SimpleGeo
+                && ogl_IsVersionGEQ(3, 2)                                               // SimpleGeo
                 && isExtAvailable("GL_EXT_geometry_shader4")                            // SimpleGeo
                 && isExtAvailable("GL_EXT_gpu_shader4")                                 // SimpleGeo
                 && isExtAvailable("GL_EXT_bindable_uniform")                            // SimpleGeo

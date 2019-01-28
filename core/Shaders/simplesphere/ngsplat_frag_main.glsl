@@ -1,3 +1,7 @@
+#extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_conservative_depth       : require
+layout (depth_greater) out float gl_FragDepth; 
+
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED^
@@ -23,7 +27,7 @@ FLACH in vec2 centerFragment;
 #endif // RETICLE
 
 in vec4 vertColor;
-out vec4 outColor;
+out layout(location = 0) vec4 outColor;
 
 void main(void) {
 
@@ -36,11 +40,11 @@ void main(void) {
     alpha *= effectiveDiameter * effectiveDiameter;
     alpha *= alphaScaling;
     //alpha = 0.5;
-#if 1
+#if 0
     // blend against white!
     outColor = vec4(vertColor.rgb, alpha);
 #else
     outColor = vec4(vertColor.rgb * alpha, alpha);
 #endif
-    //gl_FragColor = vec4(vertColor.rgb, 1.0);
+    //outColor = vec4(vertColor.rgb, 1.0);
 }

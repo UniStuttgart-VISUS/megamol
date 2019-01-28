@@ -1,3 +1,5 @@
+#extension GL_ARB_explicit_attrib_location : enable
+
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 
 uniform mat4 MVPinv;
@@ -10,7 +12,7 @@ uniform vec4 clipCol;
 in vec4 color;
 in vec4 objPos;
 in vec4 camPos;
-in vec4 light;
+in vec4 lightPos;
 in float rad;
 in float squarRad;
 
@@ -19,6 +21,8 @@ uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
+
+out layout(location = 0) vec4 outColor;
 
 void main(void) {
     vec4 coord;
@@ -84,8 +88,8 @@ void main(void) {
     }
 
     // phong lighting with directional light
-    //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(LocalLighting(ray, normal, light.xyz, colOut), color.w);
+    //outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, colOut), color.w);
     
     // calculate depth
 #ifdef DEPTH
@@ -96,7 +100,7 @@ void main(void) {
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = (radicand < 0.0) ? color.rgb : gl_FragColor.rgb;
+    outColor.rgb = (radicand < 0.0) ? color.rgb : outColor.rgb;
 #endif // CLIP
 
 #endif // DEPTH
@@ -107,11 +111,11 @@ void main(void) {
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
         + vec4(-1.0, -1.0, -1.0, 1.0);
     if (min(abs(coord.x - centerFragment.x), abs(coord.y - centerFragment.y)) < 0.002) {
-        //gl_FragColor.rgb = vec3(1.0, 1.0, 0.5);
-        gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
+        //outColor.rgb = vec3(1.0, 1.0, 0.5);
+        outColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
 
-//gl_FragColor.rgb = normal; // DEBUG
-//gl_FragColor = color; // DEBUG
+//outColor.rgb = normal; // DEBUG
+//outColor = color; // DEBUG
 }

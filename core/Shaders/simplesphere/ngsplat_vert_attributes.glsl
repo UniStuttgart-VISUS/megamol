@@ -25,8 +25,10 @@ uniform mat4 MVP;
 uniform mat4 MVinv;
 
 uniform vec4 inConsts1;
-in float colIdx;
 uniform sampler1D colTab;
+uniform vec4 globalCol;
+
+in float colIdx;
 
 out vec4 objPos;
 out vec4 camPos;

@@ -6,7 +6,7 @@
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    outColor.rgb = (radicand < 0.0) ? outColor.rgb : outColor.rgb;
+    outColor.rgb = (radicand < 0.0) ? vertColor.rgb : outColor.rgb;
 #endif // CLIP
 
 #ifdef DISCARD_COLOR_MARKER

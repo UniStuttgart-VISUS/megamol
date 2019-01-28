@@ -2,10 +2,6 @@
 #extension GL_ARB_conservative_depth       : require
 layout (depth_greater) out float gl_FragDepth; 
 
-uniform mat4 MVP;
-uniform mat4 MVPinv;
-uniform mat4 MVPtransp;
-
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
@@ -19,6 +15,9 @@ uniform vec4 clipCol;
 
 uniform vec4 viewAttr;
 
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
 FLACH in vec4 objPos;
 FLACH in vec4 camPos;
 FLACH in vec4 lightPos;
@@ -26,11 +25,11 @@ FLACH in float squarRad;
 FLACH in float rad;
 FLACH in vec4 vertColor;
 
-out layout(location = 0) vec4 outCol;
-
 #ifdef RETICLE
 FLACH in vec2 centerFragment;
 #endif // RETICLE
+
+out layout(location = 0) vec4 outColor;
 
 void main(void) {
     vec4 coord;
@@ -44,7 +43,7 @@ void main(void) {
     
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    //coord = gl_ModelViewProjectionMatrixInverse * coord;
+    //coord = MVPinv * coord;
     coord = MVPinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space

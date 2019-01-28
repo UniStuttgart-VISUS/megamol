@@ -13,12 +13,12 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-in vec4 inColor[1];
+in vec4 vertColor[1];
 
 out vec4 color;
 out vec4 objPos;
 out vec4 camPos;
-out vec4 light;
+out vec4 lightPos;
 out float rad;
 out float squarRad;
 
@@ -41,9 +41,9 @@ void main(void) {
     // USE THIS LINE TO GET POSITIONAL LIGHTING
     //lpos = MVinv * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    light = MVinv*normalize(lpos);
+    lightPos = MVinv * normalize(lpos);
     
-    color = inColor[0];    
+    color = vertColor[0];    
      
 #ifdef HALO
     squarRad = (rad + HALO_RAD) * (rad + HALO_RAD);

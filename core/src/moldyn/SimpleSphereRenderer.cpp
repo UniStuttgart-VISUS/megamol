@@ -763,7 +763,11 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        //glDisableVertexAttribArrayARB(vertAttribLoc);
+        //glDisableVertexAttribArrayARB(colAttribLoc);
+        //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
+
         this->newShader->Disable();
 
 #ifdef CHRONOTIMING
@@ -1047,8 +1051,9 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp) {
 
-    glDepthFunc(GL_LEQUAL); // TO DELETE?
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+    //glDepthFunc(GL_LEQUAL); // Why not use default GL_LESS?
 
     /// If enabled and a vertex shader is active, it specifies that the GL will choose between front and 
     /// back colors based on the polygon's face direction of which the vertex being shaded is a part. 
@@ -1057,9 +1062,9 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
 
     this->sphereGeometryShader.Enable();
 
-    GLint vertAttribLoc   = glGetAttribLocationARB(this->sphereShader, "inVertex");
-    GLint colAttribLoc    = glGetAttribLocationARB(this->sphereShader, "inColor");
-    GLint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
+    GLuint vertAttribLoc   = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
+    GLuint colAttribLoc    = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
+    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "colIdx");
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, vp);
@@ -1091,11 +1096,10 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
 
     mpdc->Unlock();
 
-    //glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
     this->sphereGeometryShader.Disable();
 
-    glDepthFunc(GL_LESS); // default
+    //glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
+    //glDepthFunc(GL_LESS); // default
 
     return true;
 }

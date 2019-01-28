@@ -5,10 +5,11 @@ uniform sampler1D colTab;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
-in vec4 vertex;
-in vec4 color;
+in vec4 inVertex;
+in vec4 inColor;
+in float colIdx;
 
-out vec4 inColor;
+out vec4 vertColor;
 
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y
