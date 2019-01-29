@@ -14,7 +14,7 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/thecam/camera_snapshot.h"
+#include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/assert.h"
@@ -108,8 +108,8 @@ private:
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
-       /** The camera parameters */
-       // vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+    /** The transferred camera state */
+    cam_type::minimal_state_type minCamState;
 #ifdef _WIN32
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */

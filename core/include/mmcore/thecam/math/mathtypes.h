@@ -46,6 +46,7 @@
 
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/thecam/utility/not_instantiable.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol {
 namespace core {
@@ -128,7 +129,7 @@ namespace math {
 
 
     /** Utility class for providing the value of Euler's number. */
-    template<class T> class euler_e : public utility::not_instantiable {
+    template<class T> class MEGAMOLCORE_API euler_e : public utility::not_instantiable {
     public:
         /* The value of Euler's number. */
         static const T value;
@@ -143,7 +144,7 @@ namespace math {
 
 
     /** Utility class providing the value of Pi. */
-    template<class T> class pi : public utility::not_instantiable {
+    template<class T> class MEGAMOLCORE_API pi : public utility::not_instantiable {
     public:
         /* The value of Pi. */
         static const T value;
