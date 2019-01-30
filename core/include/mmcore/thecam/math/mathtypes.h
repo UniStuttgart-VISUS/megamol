@@ -42,11 +42,14 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include <cfloat>
+
 #include "mmcore/thecam/utility/config.h"
 
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/thecam/utility/not_instantiable.h"
 #include "mmcore/api/MegaMolCore.std.h"
+
 
 namespace megamol {
 namespace core {
@@ -105,26 +108,26 @@ namespace math {
 
 
     /** Utility class providing an epsilon value. */
-    template<class T> class epsilon : public utility::not_instantiable {
+    template<class T> class MEGAMOLCORE_API epsilon : public utility::not_instantiable {
     public:
         /** The epsilon value. */
-        static const T value;
+        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::epsilon<double>::value);
     };
 
 
     /** Utility class providing an epsilon value. */
-    template<> class epsilon<float> : public utility::not_instantiable {
+    template<> class MEGAMOLCORE_API epsilon<float> : public utility::not_instantiable {
     public:
         /** The epsilon value. */
-        static const float value;
+        static constexpr const float value = FLT_EPSILON;
     };
 
 
     /** Utility class providing an epsilon value. */
-    template<> class epsilon<double> : public utility::not_instantiable {
+    template<> class MEGAMOLCORE_API epsilon<double> : public utility::not_instantiable {
     public:
         /** The epsilon value. */
-        static const double value;
+        static constexpr const double value = DBL_EPSILON;
     };
 
 
@@ -132,58 +135,35 @@ namespace math {
     template<class T> class MEGAMOLCORE_API euler_e : public utility::not_instantiable {
     public:
         /* The value of Euler's number. */
-        static const T value;
+        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::euler_e<double>::value);
     };
 
     /** Utility class for providing the value of Euler's number. */
-    template<> class euler_e<double> : public utility::not_instantiable {
+    template<> class MEGAMOLCORE_API euler_e<double> : public utility::not_instantiable {
     public:
         /* The value of Euler's number. */
-        static const double value;
+        static constexpr const double value = 2.71828182845904523536;
     };
-
 
     /** Utility class providing the value of Pi. */
     template<class T> class MEGAMOLCORE_API pi : public utility::not_instantiable {
     public:
         /* The value of Pi. */
-        static const T value;
+        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::pi<double>::value);
     };
 
 
     /** Utility class providing the value of Pi. */
-    template<> class pi<double> : public utility::not_instantiable {
+    template<> class MEGAMOLCORE_API pi<double> : public utility::not_instantiable {
     public:
         /* The value of Pi. */
-        static const double value;
+        static constexpr const double value = 3.14159265358979323846;
     };
 
 } /* end namespace math */
 } /* end namespace thecam */
 } /* end namespace core */
 } /* end namespace megamol */
-
-
-/*
- * megamol::core::thecam::math::euler_e<T>::value
- */
-template<class T>
-const T megamol::core::thecam::math::euler_e<T>::value = static_cast<T>(
-    megamol::core::thecam::math::euler_e<double>::value);
-
-
-/*
- * megamol::core::thecam::math::epsilon<T>::value
- */
-template<class T>
-const T megamol::core::thecam::math::epsilon<T>::value = static_cast<T>(0);
-
-
-/*
- * megamol::core::thecam::math::pi<T>::value
- */
-template<class T>
-const T megamol::core::thecam::math::pi<T>::value = static_cast<T>(megamol::core::thecam::math::pi<double>::value);
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
