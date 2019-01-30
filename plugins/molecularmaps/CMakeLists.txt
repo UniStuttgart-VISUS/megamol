@@ -4,12 +4,25 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER molecularmaps EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build molecularmaps" ON)
+
+include(CheckLanguage)
+check_language(CUDA)
+if(MSVC AND CMAKE_CUDA_COMPILER)
+  option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build molecularmaps" OFF)
+else()
+  set(BUILD_${EXPORT_NAME}_PLUGIN OFF)
+endif()
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(molecularmaps LANGUAGES CXX CUDA)
+
+  string(REPLACE "." ";" CUDA_VERSION_LIST ${CMAKE_CUDA_COMPILER_VERSION})
+  list(GET CUDA_VERSION_LIST 0 CUDA_VERSION_MAJOR)
+  if(NOT CUDA_VERSION_MAJOR GREATER 7)
+    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 8 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
+  endif()
 
   #NVCC options
   set(CMAKE_CUDA_STANDARD 11)
