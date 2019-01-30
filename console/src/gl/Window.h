@@ -120,6 +120,7 @@ namespace gl {
         static void glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y);
         static void glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m);
         static void glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y);
+        static void glfw_onClose_func(GLFWwindow* wnd);
 #endif
 
         void on_resize(int w, int h);

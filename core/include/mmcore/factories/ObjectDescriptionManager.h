@@ -203,6 +203,7 @@ template <class T> void ObjectDescriptionManager<T>::Register(description_ptr_ty
     if (!objDesc) throw vislib::IllegalParamException("objDesc", __FILE__, __LINE__);
     if (this->Find(objDesc->ClassName()) != nullptr) {
         if (allowReplacement) {
+            // TODO: if the original object is still in use, all hell breaks loose
             vislib::sys::Log::DefaultLog.WriteWarn("replacing known object description \"%s\".", objDesc->ClassName());
             this->Unregister(objDesc->ClassName());
         } else {

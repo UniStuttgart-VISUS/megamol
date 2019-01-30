@@ -144,6 +144,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             ::glfwSetCursorPosCallback(hWnd, &Window::glfw_onMouseMove_func);
             ::glfwSetScrollCallback(hWnd, &Window::glfw_onMouseWheel_func);
             ::glfwSetCharCallback(hWnd, &Window::glfw_onChar_func);
+            ::glfwSetWindowCloseCallback(hWnd, &Window::glfw_onClose_func);
         }
     }
 #else
@@ -469,6 +470,11 @@ void gl::Window::glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) {
             if (uil->OnMouseScroll(x, y)) break;
         }
     }
+}
+
+void megamol::console::gl::Window::glfw_onClose_func(GLFWwindow* wnd) {
+    Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
+    // TODO: tell the core to unregister the viewdescription
 }
 #endif // USE_EGL
 
