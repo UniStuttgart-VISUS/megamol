@@ -109,21 +109,6 @@ bool TriSoupRenderer::create(void) {
 
 
 /*
- * TriSoupRenderer::GetCapabilities
- */
-bool TriSoupRenderer::GetCapabilities(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->SetCapabilities(view::CallRender3D::CAP_RENDER | 
-        view::CallRender3D::CAP_LIGHTING |
-        view::CallRender3D::CAP_ANIMATION);
-
-    return true;
-}
-
-
-/*
  * TriSoupRenderer::GetExtents
  */
 bool TriSoupRenderer::GetExtents(Call& call) {

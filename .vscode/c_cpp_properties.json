@@ -61,7 +61,8 @@
                 "${workspaceRoot}/vislib/include",
                 "${workspaceRoot}/core/lua",
                 "${workspaceRoot}/external/include",
-                "${workspaceRoot}/vislib/glad/include"
+                "${workspaceRoot}/vislib/glad/include",
+                "${workspaceRoot}/core/expat/src"
             ],
             "defines": [
                 "_DEBUG",

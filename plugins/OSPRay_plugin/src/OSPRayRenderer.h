@@ -78,16 +78,6 @@ protected:
 private:
 
     /**
-    * The get capabilities callback. The module should set the members
-    * of 'call' to tell the caller its capabilities.
-    *
-    * @param call The calling call.
-    *
-    * @return The return value of the function.
-    */
-    virtual bool GetCapabilities(megamol::core::Call& call);
-
-    /**
     * The get extents callback. The module should set the members of
     * 'call' to tell the caller the extents of its data (bounding boxes
     * and times).
@@ -118,6 +108,7 @@ private:
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
     float time;
+    size_t frameID;
 
     osp::vec2i imgSize;
 

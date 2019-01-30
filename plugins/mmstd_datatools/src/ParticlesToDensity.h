@@ -77,17 +77,43 @@ private:
      */
     bool getExtentCallback(megamol::core::Call& c);
 
+    inline bool anythingDirty() const {
+        return this->aggregatorSlot.IsDirty() || this->xResSlot.IsDirty() || this->yResSlot.IsDirty() ||
+               this->zResSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
+               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->filterSizeSlot.IsDirty() || this->sigmaSlot.IsDirty();
+    }
+
+    inline void resetDirty() {
+        this->aggregatorSlot.ResetDirty();
+        this->xResSlot.ResetDirty();
+        this->yResSlot.ResetDirty();
+        this->zResSlot.ResetDirty();
+        this->cyclXSlot.ResetDirty();
+        this->cyclYSlot.ResetDirty();
+        this->cyclZSlot.ResetDirty();
+        this->normalizeSlot.ResetDirty();
+        this->filterSizeSlot.ResetDirty();
+        this->sigmaSlot.ResetDirty();
+    }
+
     core::param::ParamSlot aggregatorSlot;
 
     core::param::ParamSlot xResSlot;
     core::param::ParamSlot yResSlot;
     core::param::ParamSlot zResSlot;
 
+    core::param::ParamSlot cyclXSlot;
+    core::param::ParamSlot cyclYSlot;
+    core::param::ParamSlot cyclZSlot;
+
     core::param::ParamSlot normalizeSlot;
     core::param::ParamSlot filterSizeSlot;
 
+    core::param::ParamSlot sigmaSlot;
+
     std::vector<std::vector<float>> vol;
 
+    size_t in_datahash = std::numeric_limits<size_t>::max();
     size_t datahash = 0;
     unsigned int time = 0;
     float maxDens = 0.0f;

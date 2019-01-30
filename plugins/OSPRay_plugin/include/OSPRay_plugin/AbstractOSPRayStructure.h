@@ -43,6 +43,7 @@ protected:
 
     SIZE_T datahash;
     float time;
+    size_t frameID;
 
     OSPRayStructureContainer structureContainer;
     OSPRayExtendContainer extendContainer;

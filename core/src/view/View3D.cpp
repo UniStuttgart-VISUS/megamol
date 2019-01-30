@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "mmcore/view/View3D.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -24,6 +23,7 @@
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/graphics/CameraParamsStore.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
@@ -32,10 +32,7 @@
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 #    include "vislib/sys/KeyCode.h"
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/param/FilePathParam.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/BitmapImage.h"
 #include "vislib/math/Vector.h"
 //#define ROTATOR_HACK
 #ifdef ROTATOR_HACK
@@ -50,7 +47,7 @@ using namespace megamol::core;
  * view::View3D::View3D
  */
 view::View3D::View3D(void)
-    : view::AbstractView3D()
+    : view::AbstractRenderingView()
     , AbstractCamParamSync()
     , cam()
     , camParams()
@@ -113,24 +110,9 @@ view::View3D::View3D(void)
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , mouseX(0.0f)
     , mouseY(0.0f)
-    , mouseFlags(0)
     , timeCtrl()
     , toggleMouseSelection(false)
-    , paramAlpha("watermark::01_alpha", "The alpha value for the watermarks.")
-    , paramScaleAll("watermark::02_scaleAll", "The scale factor for all images.")
-    , paramImgTopLeft("watermark::03_imageTopLeft", "The image file name for the top left watermark.")
-    , paramScaleTopLeft("watermark::04_scaleTopLeft", "The scale factor for the top left watermark.")
-    , paramImgTopRight("watermark::05_imageTopRight", "The image file name for the top right watermark.")
-    , paramScaleTopRight("watermark::06_scaleTopRight", "The scale factor for the top right watermark.")
-    , paramImgBottomLeft("watermark::07_imageBottomLeft", "The image file name for the bottom left watermark.")
-    , paramScaleBottomLeft("watermark::08_scaleBottomLeft", "The scale factor for the botttom left watermark.")
-    , paramImgBottomRight("watermark::09_imageBottomRight", "The image file name for the bottom right watermark.")
-    , paramScaleBottomRight("watermark::10_scaleBottomRight", "The scale factor for the bottom right watermark.")
-    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
-    , textureBottomLeft()
-    , textureBottomRight()
-    , textureTopLeft()
-    , textureTopRight() {
+    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical") {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -301,45 +283,8 @@ view::View3D::View3D(void)
     this->MakeSlotAvailable(&this->slotGetCamParams);
     this->MakeSlotAvailable(&this->slotSetCamParams);
 
-    /* Init image file name params */
-    this->paramImgTopLeft.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->paramImgTopLeft);
-
-    this->paramImgTopRight.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->paramImgTopRight);
-
-    this->paramImgBottomLeft.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->paramImgBottomLeft);
-
-    this->paramImgBottomRight.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->paramImgBottomRight);
-
-    /* Init scale params */
-    this->paramScaleAll.SetParameter(new param::FloatParam(1.0));
-    this->MakeSlotAvailable(&this->paramScaleAll);
-
-    this->paramScaleTopLeft.SetParameter(new param::FloatParam(1.0, 0.0000001f));
-    this->MakeSlotAvailable(&this->paramScaleTopLeft);
-
-    this->paramScaleTopRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
-    this->MakeSlotAvailable(&this->paramScaleTopRight);
-
-    this->paramScaleBottomLeft.SetParameter(new param::FloatParam(1.0, 0.0000001f));
-    this->MakeSlotAvailable(&this->paramScaleBottomLeft);
-
-    this->paramScaleBottomRight.SetParameter(new param::FloatParam(1.0, 0.0000001f));
-    this->MakeSlotAvailable(&this->paramScaleBottomRight);
-
-    /* Init alpha param */
-    this->paramAlpha.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->paramAlpha);
-
     this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
-
-    /* Init variables */
-    this->lastScaleAll = 1.0f;
-    this->firstParamChange = false;
 }
 
 
@@ -383,7 +328,6 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
-    cr3d->SetMouseSelection(this->toggleMouseSelection);
 
     AbstractRenderingView::beginFrame();
 
@@ -417,7 +361,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
     }
 
-    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->bkgndColour();
+    const float* bkgndCol = (this->overrideBkgndCol != NULL) ? this->overrideBkgndCol : this->BkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -460,7 +404,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->stereoFocusDistSlot.ResetDirty();
     }
     if (cr3d != NULL) {
-        (*cr3d)(1); // GetExtents
+        (*cr3d)(AbstractCallRender::FnGetExtents);
         if (this->firstImg ||
             (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                 !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsObjectSpaceBBoxValid() &&
@@ -504,9 +448,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->camParams->SetClip(fnc, fc);
     }
 
-    if (! (*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
+    if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
-        //vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.", this->FullName().PeekBuffer());
+        // vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
+        // this->FullName().PeekBuffer());
         frameIsNew = true;
     } else {
         frameIsNew = false;
@@ -594,7 +539,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     // call for render
     if (cr3d != NULL) {
-        (*cr3d)(0);
+        (*cr3d)(AbstractCallRender::FnRender);
     }
 
     // render bounding box front
@@ -610,101 +555,6 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     if (this->showSoftCursor()) {
         this->renderSoftCursor();
     }
-
-    /* Watermarks*/
-    /* Update parameters */
-    if (this->paramImgTopLeft.IsDirty()) {
-        this->paramImgTopLeft.ResetDirty();
-        this->loadTexture(view::View3D::TOP_LEFT,
-            static_cast<vislib::StringA>(this->paramImgTopLeft.Param<param::FilePathParam>()->Value()));
-    }
-    if (this->paramImgTopRight.IsDirty()) {
-        this->paramImgTopRight.ResetDirty();
-        this->loadTexture(view::View3D::TOP_RIGHT,
-            static_cast<vislib::StringA>(this->paramImgTopRight.Param<param::FilePathParam>()->Value()));
-    }
-    if (this->paramImgBottomLeft.IsDirty()) {
-        this->paramImgBottomLeft.ResetDirty();
-        this->loadTexture(view::View3D::BOTTOM_LEFT,
-            static_cast<vislib::StringA>(this->paramImgBottomLeft.Param<param::FilePathParam>()->Value()));
-    }
-    if (this->paramImgBottomRight.IsDirty()) {
-        this->paramImgBottomRight.ResetDirty();
-        this->loadTexture(view::View3D::BOTTOM_RIGHT,
-            static_cast<vislib::StringA>(this->paramImgBottomRight.Param<param::FilePathParam>()->Value()));
-    }
-    if (this->paramScaleAll.IsDirty()) {
-        this->paramScaleAll.ResetDirty();
-        float scaleAll = this->paramScaleAll.Param<param::FloatParam>()->Value();
-
-        // Ignore first usage of scaleAll to set lastScaleAll when parameter value is loaded
-        if (this->firstParamChange) {
-            this->paramScaleTopLeft.Param<param::FloatParam>()->SetValue(
-                this->paramScaleTopLeft.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
-            this->paramScaleTopRight.Param<param::FloatParam>()->SetValue(
-                this->paramScaleTopRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll), false);
-            this->paramScaleBottomLeft.Param<param::FloatParam>()->SetValue(
-                this->paramScaleBottomLeft.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll),
-                false);
-            this->paramScaleBottomRight.Param<param::FloatParam>()->SetValue(
-                this->paramScaleBottomRight.Param<param::FloatParam>()->Value() + (scaleAll - this->lastScaleAll),
-                false);
-        } else {
-            this->firstParamChange = true;
-        }
-        this->lastScaleAll = scaleAll;
-    }
-
-    // Get current viewport
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    float vpWidth = static_cast<float>(vp[2] - vp[0]);
-    float vpHeight = static_cast<float>(vp[3] - vp[1]);
-
-    // OpenGl states
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-
-    // Set matrices
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0.0f, vpWidth, 0.0f, vpHeight, -1.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    // Draw help text in front of all
-    // glTranslatef(0.0f, 0.0f, 1.0f);
-
-    // Render watermarks ...
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
-    this->renderWatermark(view::View3D::TOP_LEFT, vpHeight, vpWidth);
-    this->renderWatermark(view::View3D::TOP_RIGHT, vpHeight, vpWidth);
-    this->renderWatermark(view::View3D::BOTTOM_LEFT, vpHeight, vpWidth);
-    this->renderWatermark(view::View3D::BOTTOM_RIGHT, vpHeight, vpWidth);
-    glDisable(GL_TEXTURE_2D);
-
-    // Reset matrices
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-
-    // Reset OpenGl states
-    glDisable(GL_BLEND);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
 
 #ifdef ROTATOR_HACK
     this->cam.Parameters()->SetView(c_e_p, c_l_p, c_u_v);
@@ -766,76 +616,6 @@ void view::View3D::ResetView(void) {
 void view::View3D::Resize(unsigned int width, unsigned int height) {
     this->camParams->SetVirtualViewSize(
         static_cast<vislib::graphics::ImageSpaceType>(width), static_cast<vislib::graphics::ImageSpaceType>(height));
-}
-
-
-/*
- * view::View3D::SetCursor2DButtonState
- */
-void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
-    if (!this->toggleMouseSelection) {
-        this->cursor2d.SetButtonState(btn, down);
-    } else {
-        // stuff from protein::View3DMouse
-        switch (btn) {
-        case 0: // left
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
-            break;
-        case 1: // right
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
-            break;
-        case 2: // middle
-            view::MouseFlagsSetFlag(this->mouseFlags, core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
-            break;
-        }
-    }
-}
-
-
-/*
- * view::View3D::SetCursor2DPosition
- */
-void view::View3D::SetCursor2DPosition(float x, float y) {
-    if (!this->toggleMouseSelection) {
-        this->cursor2d.SetPosition(x, y, true);
-    } else {
-        // stuff from protein::View3DMouse
-        CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
-        if (cr3d) {
-            cr3d->SetMouseInfo(
-                static_cast<float>(static_cast<int>(x)), static_cast<float>(static_cast<int>(y)), this->mouseFlags);
-            if ((*cr3d)(3)) {
-                this->mouseX = (float)static_cast<int>(x);
-                this->mouseY = (float)static_cast<int>(y);
-                view::MouseFlagsResetAllChanged(this->mouseFlags);
-                // mouse event consumed
-                return;
-            }
-            view::MouseFlagsResetAllChanged(this->mouseFlags);
-        }
-    }
-}
-
-
-/*
- * view::View3D::SetInputModifier
- */
-void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
-    unsigned int modId = 0;
-    switch (mod) {
-    case MMC_INMOD_SHIFT:
-        modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
-        break;
-    case MMC_INMOD_CTRL:
-        modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
-        break;
-    case MMC_INMOD_ALT:
-        modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
-        break;
-    default:
-        return;
-    }
-    this->modkeys.SetModifierState(modId, down);
 }
 
 
@@ -917,6 +697,117 @@ void view::View3D::UpdateFreeze(bool freeze) {
         this->cam.SetParameters(this->camParams);
         SAFE_DELETE(this->frozenValues);
     }
+}
+
+
+bool view::View3D::OnKey(Key key, KeyAction action, Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
+
+    return true;
+}
+
+
+bool view::View3D::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnChar)) return false;
+
+    return true;
+}
+
+
+bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+	// This mouse handling/mapping is so utterly weird and should die!
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    } else if (mods.test(Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    } else if (mods.test(Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    if (!this->toggleMouseSelection) {
+        switch (button) {
+        case megamol::core::view::MouseButton::BUTTON_LEFT:
+            this->cursor2d.SetButtonState(0, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_RIGHT:
+            this->cursor2d.SetButtonState(1, down);
+            break;
+        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
+            this->cursor2d.SetButtonState(2, down);
+            break;
+        default:
+            break;
+        }
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+        if (cr == NULL) return false;
+
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
+    }
+    return true;
+}
+
+
+bool view::View3D::OnMouseMove(double x, double y) {
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
+
+	// This mouse handling/mapping is so utterly weird and should die!
+	if (!this->toggleMouseSelection) {
+        this->cursor2d.SetPosition(x, y, true);
+    } else {
+        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+        if (cr) {
+            InputEvent evt;
+            evt.tag = InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
+                return false;
+			}
+        }
+    }
+
+    return true;
+}
+
+
+bool view::View3D::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr == NULL) return false;
+
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(view::CallRender3D::FnOnMouseScroll)) return false;
+
+    return true;
 }
 
 
@@ -1675,227 +1566,4 @@ void view::View3D::renderViewCube(void) {
     glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
-}
-
-
-/*
- * WatermarkRenderer::renderWatermark
- */
-bool view::View3D::renderWatermark(view::View3D::corner cor, float vpH, float vpW) {
-
-    // Set watermark dimensions
-    float imageWidth, imageHeight;
-    float left, top, bottom, right;
-    float scale;
-    vislib::graphics::gl::OpenGLTexture2D* tex = NULL;
-    float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
-    float fixImgWidth = vpW * 1.0f;
-
-    switch (cor) {
-    case (view::View3D::TOP_LEFT):
-        tex = &this->textureTopLeft;
-        scale = this->paramScaleTopLeft.Param<param::FloatParam>()->Value();
-        imageWidth = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeTopLeft.Y() / this->sizeTopLeft.X()) * scale;
-        left = 0.0f;
-        right = imageWidth;
-        top = vpH;
-        bottom = vpH - imageHeight;
-        break;
-    case (view::View3D::TOP_RIGHT):
-        tex = &this->textureTopRight;
-        scale = this->paramScaleTopRight.Param<param::FloatParam>()->Value();
-        imageWidth = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X()) * scale;
-        left = vpW - imageWidth;
-        right = vpW;
-        top = vpH;
-        bottom = vpH - imageHeight;
-        break;
-    case (view::View3D::BOTTOM_LEFT):
-        tex = &this->textureBottomLeft;
-        scale = this->paramScaleBottomLeft.Param<param::FloatParam>()->Value();
-        imageWidth = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeBottomLeft.Y() / this->sizeBottomLeft.X()) * scale;
-        left = 0.0f;
-        right = imageWidth;
-        top = imageHeight;
-        bottom = 0.0f;
-        break;
-    case (view::View3D::BOTTOM_RIGHT):
-        tex = &this->textureBottomRight;
-        scale = this->paramScaleBottomRight.Param<param::FloatParam>()->Value();
-        imageWidth = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeBottomRight.Y() / this->sizeBottomRight.X()) * scale;
-        left = vpW - imageWidth;
-        right = vpW;
-        top = imageHeight;
-        bottom = 0.0f;
-        break;
-    default:
-        vislib::sys::Log::DefaultLog.WriteError("[View3D] [renderWatermark] Unknown corner - BUG.");
-        break;
-    }
-
-    // Draw watermark texture
-    if (tex->IsValid()) {
-        glActiveTexture(GL_TEXTURE0);
-        tex->Bind();
-        glColor4f(1.0f, 1.0f, 1.0f, alpha);
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(left, top);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(right, top);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(right, bottom);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(left, bottom);
-        glEnd();
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
-
-/*
- * WatermarkRenderer::loadTexture
- */
-bool view::View3D::loadTexture(view::View3D::corner cor, vislib::StringA filename) {
-
-    if (!filename.IsEmpty()) {
-
-        vislib::graphics::gl::OpenGLTexture2D* tex = NULL;
-        vislib::math::Vector<float, 2>* texSize = NULL;
-
-        switch (cor) {
-        case (view::View3D::TOP_LEFT):
-            tex = &this->textureTopLeft;
-            texSize = &this->sizeTopLeft;
-            break;
-        case (view::View3D::TOP_RIGHT):
-            tex = &this->textureTopRight;
-            texSize = &this->sizeTopRight;
-            break;
-        case (view::View3D::BOTTOM_LEFT):
-            tex = &this->textureBottomLeft;
-            texSize = &this->sizeBottomLeft;
-            break;
-        case (view::View3D::BOTTOM_RIGHT):
-            tex = &this->textureBottomRight;
-            texSize = &this->sizeBottomRight;
-            break;
-        default:
-            vislib::sys::Log::DefaultLog.WriteError("[View3D] [renderWatermark] Unknown corner - BUG.");
-            break;
-        }
-
-        if (tex->IsValid()) {
-            tex->Release();
-        }
-
-        static vislib::graphics::BitmapImage img;
-        static sg::graphics::PngBitmapCodec pbc;
-        pbc.Image() = &img;
-        ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        void* buf = NULL;
-        SIZE_T size = 0;
-
-        // if ((size = megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(),
-        // filename, &buf)) > 0) {
-        if ((size = this->loadFile(filename, &buf)) > 0) {
-            if (pbc.Load(buf, size)) {
-                img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-                texSize->SetX(static_cast<float>(img.Width()));
-                texSize->SetY(static_cast<float>(img.Height()));
-                // for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
-                //    BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
-                //    BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
-                //    BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
-                //    if (r + g + b > 0) {
-                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
-                //    }
-                //    else {
-                //        img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
-                //    }
-                //}
-                if (tex->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "[WatermarkRenderer] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
-                    ARY_SAFE_DELETE(buf);
-                    return false;
-                }
-                tex->Bind();
-                glGenerateMipmap(GL_TEXTURE_2D);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                tex->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-                tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-                ARY_SAFE_DELETE(buf);
-                return true;
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "[WatermarkRenderer] [loadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
-            }
-        } else {
-            // Error is already catch by loadFile function ...
-            // vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not find \"%s\"
-            // texture.", filename.PeekBuffer());
-        }
-        return false;
-    } else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "[WatermarkRenderer] [loadTexture] Unable to load file: No filename given\n");
-    }
-
-    return true;
-}
-
-
-/*
- * WatermarkRenderer::loadTexture
- *
- * Based on: megamol::core::utility::ResourceWrapper::LoadResource() but without the lookup in the resource folder(s)
- */
-SIZE_T view::View3D::loadFile(vislib::StringA name, void** outData) {
-
-    *outData = NULL;
-
-    vislib::StringW filename = static_cast<vislib::StringW>(name);
-    if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[View3D] [loadFile] Unable to load file: No filename given\n");
-        return 0;
-    }
-
-    if (!vislib::sys::File::Exists(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
-        return 0;
-    }
-
-    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
-    if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
-        return 0;
-    }
-
-    vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
-    if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[View3D] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
 }

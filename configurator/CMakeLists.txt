@@ -48,16 +48,8 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   endif()
 
   # Install binaries and libraries
-  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/MegaMolConf.exe ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.exe COPYONLY)")
-  #install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/MegaMolConf.pdb ${CMAKE_INSTALL_PREFIX}/bin/MegaMolConf.pdb COPYONLY)")
-  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/ZeroMQ.dll ${CMAKE_INSTALL_PREFIX}/bin/ZeroMQ.dll COPYONLY)")
-
-  if(BITS EQUAL 64)
-    set(sub_dir "amd64")
-  else()
-    set(sub_dir "i386")
-  endif()
-  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libsodium.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libsodium.dll COPYONLY)")
-  install(CODE "configure_file(${CMAKE_CURRENT_BINARY_DIR}/bin/${sub_dir}/libzmq.dll ${CMAKE_INSTALL_PREFIX}/bin/${sub_dir}/libzmq.dll COPYONLY)")
-
+  install(CODE " \
+    file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/bin\" \
+      DESTINATION ${CMAKE_INSTALL_PREFIX} \
+	  FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")")
 endif()

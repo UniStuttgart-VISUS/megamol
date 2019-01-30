@@ -94,6 +94,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             }
 
             hWnd = ::glfwCreateWindow(w, h, title, nullptr, share);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", w, h);
             if (hWnd != nullptr) {
                 if (placement.pos) ::glfwSetWindowPos(hWnd, placement.x, placement.y);
             }
@@ -124,6 +125,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
             /* note we do not use a real fullscrene mode, since then we would have focus-iconify problems */
             hWnd = ::glfwCreateWindow(mode->width, mode->height, title, nullptr, share);
+            vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Create window with size w: %d, h: %d\n", mode->width, mode->height);
             int x, y;
             ::glfwGetMonitorPos(mon, &x, &y);
             ::glfwSetWindowPos(hWnd, x, y);
@@ -334,7 +336,7 @@ void gl::Window::Update() {
 
     for (std::shared_ptr<AbstractUILayer> uil : this->uiLayers) {
         if (!uil->Enabled()) continue;
-        uil->onDraw();
+        uil->OnDraw();
     }
 
     // done rendering. swap and next turn
@@ -368,23 +370,23 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
 
-    AbstractUILayer::Key key = static_cast<AbstractUILayer::Key>(k);
+    core::view::Key key = static_cast<core::view::Key>(k);
 
-    AbstractUILayer::KeyAction action(AbstractUILayer::KeyAction::RELEASE);
+    core::view::KeyAction action(core::view::KeyAction::RELEASE);
     switch (a) {
-    case GLFW_PRESS: action = AbstractUILayer::KeyAction::PRESS; break;
-    case GLFW_REPEAT: action = AbstractUILayer::KeyAction::REPEAT; break;
-    case GLFW_RELEASE: action = AbstractUILayer::KeyAction::RELEASE; break;
+    case GLFW_PRESS: action = core::view::KeyAction::PRESS; break;
+    case GLFW_REPEAT: action = core::view::KeyAction::REPEAT; break;
+    case GLFW_RELEASE: action = core::view::KeyAction::RELEASE; break;
     }
 
-    AbstractUILayer::Modifiers mods = AbstractUILayer::KEY_MOD_NONE;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_SHIFT);
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_CTRL);
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_ALT);
+    core::view::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |=  core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
         if (!uil->Enabled()) continue;
-        if (uil->onKey(key, s, action, mods)) break;
+        if (uil->OnKey(key, action, mods)) break;
     }
 }
 
@@ -393,7 +395,7 @@ void gl::Window::glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) {
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
     for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
         if (!uil->Enabled()) continue;
-        if (uil->onChar(charcode)) break;
+        if (uil->OnChar(charcode)) break;
     }
 }
 
@@ -401,11 +403,11 @@ void gl::Window::glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
     if (that->mouseCapture) {
-        that->mouseCapture->onMouseMove(x, y);
+        that->mouseCapture->OnMouseMove(x, y);
     } else {
         for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
             if (!uil->Enabled()) continue;
-            if (uil->onMouseMove(x, y)) break;
+            if (uil->OnMouseMove(x, y)) break;
         }
     }
 }
@@ -414,24 +416,24 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
 
-    AbstractUILayer::MouseButton btn = static_cast<AbstractUILayer::MouseButton>(b);
+    core::view::MouseButton btn = static_cast<core::view::MouseButton>(b);
 
-    AbstractUILayer::MouseButtonAction action =
-        (a == GLFW_PRESS) ? AbstractUILayer::MouseButtonAction::PRESS
-            : AbstractUILayer::MouseButtonAction::RELEASE;
+    core::view::MouseButtonAction action =
+        (a == GLFW_PRESS) ? core::view::MouseButtonAction::PRESS
+            : core::view::MouseButtonAction::RELEASE;
 
-    AbstractUILayer::Modifiers mods = AbstractUILayer::KEY_MOD_NONE;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_SHIFT);
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_CTRL);
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods = static_cast<AbstractUILayer::Modifiers>(mods | AbstractUILayer::KEY_MOD_ALT);
+    core::view::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
     if (that->mouseCapture) {
-        that->mouseCapture->onMouseButton(btn, action, mods);
+        that->mouseCapture->OnMouseButton(btn, action, mods);
     } else {
         for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
             if (!uil->Enabled()) continue;
-            if (uil->onMouseButton(btn, action, mods)) {
-                if (action == AbstractUILayer::MouseButtonAction::PRESS) {
+            if (uil->OnMouseButton(btn, action, mods)) {
+                if (action == core::view::MouseButtonAction::PRESS) {
                     that->mouseCapture = uil;
                 }
                 break;
@@ -460,11 +462,11 @@ void gl::Window::glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
     if (that->mouseCapture) {
-        that->mouseCapture->onMouseWheel(x, y);
+        that->mouseCapture->OnMouseScroll(x, y);
     } else {
         for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
             if (!uil->Enabled()) continue;
-            if (uil->onMouseWheel(x, y)) break;
+            if (uil->OnMouseScroll(x, y)) break;
         }
     }
 }
@@ -476,9 +478,10 @@ void gl::Window::on_resize(int w, int h) {
     if ((w > 0) && (h > 0)) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
+        vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
         for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
             // we inform even disabled layers, since we would need to know and update as soon as they get enabled.
-            uil->onResize(w, h);
+            uil->OnResize(w, h);
         }
     }
 #else

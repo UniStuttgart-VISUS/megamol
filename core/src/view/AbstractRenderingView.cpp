@@ -116,6 +116,20 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
 
 
 /*
+* view::AbstractRenderingView::bkgndColour
+*/
+const float *view::AbstractRenderingView::BkgndColour(void) const {
+    if (this->bkgndColSlot.IsDirty()) {
+        this->bkgndColSlot.ResetDirty();
+        utility::ColourParser::FromString(
+            this->bkgndColSlot.Param<param::StringParam>()->Value(),
+            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+    }
+    return this->bkgndCol;
+}
+
+
+/*
  * view::AbstractRenderingView::beginFrame
  */
 void view::AbstractRenderingView::beginFrame(void) {
@@ -166,20 +180,6 @@ void view::AbstractRenderingView::endFrame(bool abort) {
  */
 double view::AbstractRenderingView::lastFrameTime(void) const {
     return this->fpsCounter.LastFrameTime();
-}
-
-
-/*
- * view::AbstractRenderingView::bkgndColour
- */
-const float *view::AbstractRenderingView::bkgndColour(void) const {
-    if (this->bkgndColSlot.IsDirty()) {
-        this->bkgndColSlot.ResetDirty();
-        utility::ColourParser::FromString(
-            this->bkgndColSlot.Param<param::StringParam>()->Value(),
-            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
-    }
-    return this->bkgndCol;
 }
 
 

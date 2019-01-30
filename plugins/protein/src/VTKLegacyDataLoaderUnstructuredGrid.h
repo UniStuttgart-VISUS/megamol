@@ -1,7 +1,7 @@
 //
 // VTKLegacyDataLoaderUnstructuredGrid.h
 //
-// Copyright (C) 2013 by University of Stuttgart (VISUS).
+// Copyright (C) 2013-2018 by University of Stuttgart (VISUS).
 // All rights reserved.
 //
 // Created on : Sep 23, 2013
@@ -11,16 +11,16 @@
 #ifndef MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
 #define MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "VTKLegacyDataUnstructuredGrid.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "VTKLegacyDataUnstructuredGrid.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
 
@@ -33,7 +33,6 @@ namespace protein {
 class VTKLegacyDataLoaderUnstructuredGrid : public core::view::AnimDataModule {
 
 public:
-
     /** CTor */
     VTKLegacyDataLoaderUnstructuredGrid();
 
@@ -45,16 +44,14 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
-        return "VTKLegacyDataLoaderUnstructuredGrid";
-    }
+    static const char* ClassName(void) { return "VTKLegacyDataLoaderUnstructuredGrid"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Loader module for *.vtk file format used by the Visualization \
                 Toolkit.";
     }
@@ -64,12 +61,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
-        return true;
-    }
+    static bool IsAvailable(void) { return true; }
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -123,28 +117,25 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame *frame, unsigned int idx);
+    virtual void loadFrame(Frame* frame, unsigned int idx);
 
 private:
-
     /**
      * Storage of frame data
      */
     class Frame : public megamol::core::view::AnimDataModule::Frame {
     public:
-
         /** Ctor */
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
         virtual ~Frame(void);
 
-        void AddPointData(const char *data,
-                size_t nElements, size_t nComponents,
-                AbstractVTKLegacyData::DataType type, vislib::StringA name) {
+        void AddPointData(const char* data, size_t nElements, size_t nComponents, AbstractVTKLegacyData::DataType type,
+            vislib::StringA name) {
 
             // Add new element to point data array
-           this->data.AddPointData(data, nElements, nComponents, type, name);
+            this->data.AddPointData(data, nElements, nComponents, type, name);
         }
 
         /**
@@ -152,9 +143,7 @@ private:
          *
          * @return A pointer to the data.
          */
-        const VTKLegacyDataUnstructuredGrid *GetData() const {
-            return &this->data;
-        }
+        const VTKLegacyDataUnstructuredGrid* GetData() const { return &this->data; }
 
         /**
          * Get cell data array according to the array's id and the piece's
@@ -163,18 +152,14 @@ private:
          * @param The arrays id.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetCellDataByName(vislib::StringA id) const {
-            return this->data.PeekCellDataByName(id);
-        }
+        const char* GetCellDataByName(vislib::StringA id) const { return this->data.PeekCellDataByName(id); }
 
         /**
          * Answers the encoding used in this data.
          *
          * @return The encoding of the data
          */
-        AbstractVTKLegacyData::DataEncoding GetEncoding() const {
-            return this->data.GetEncoding();
-        }
+        AbstractVTKLegacyData::DataEncoding GetEncoding() const { return this->data.GetEncoding(); }
 
         /**
          * Get cell data array according to the array's index and the piece's
@@ -184,63 +169,49 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetCellDataByIdx(unsigned int arrayIdx) const {
-            return this->data.PeekCellDataByIndex(arrayIdx);
-        }
+        const char* GetCellDataByIdx(unsigned int arrayIdx) const { return this->data.PeekCellDataByIndex(arrayIdx); }
 
         /**
          * Answers the number of vertices.
          *
          * @return The number of points
          */
-        size_t GetNumberOfPoints() const {
-            return this->data.GetNumberOfPoints();
-        }
+        size_t GetNumberOfPoints() const { return this->data.GetNumberOfPoints(); }
 
         /**
          * Sets the data encoding (either ascii or binary).
          *
          * @param encoding The data encoding
          */
-        void SetEncoding(AbstractVTKLegacyData::DataEncoding encoding) {
-            this->data.SetDataEncoding(encoding);
-        }
+        void SetEncoding(AbstractVTKLegacyData::DataEncoding encoding) { this->data.SetDataEncoding(encoding); }
 
         /**
          * Copy vertex coordinates from a buffer.
          *
          * @param buff The input buffer
          */
-        void SetCellIndexData(const int* buff, size_t cellDataCnt) {
-            this->data.SetCellIndexData(buff, cellDataCnt);
-        }
+        void SetCellIndexData(const int* buff, size_t cellDataCnt) { this->data.SetCellIndexData(buff, cellDataCnt); }
 
         /**
          * Copy vertex coordinates from a buffer.
          *
          * @param buff The input buffer
          */
-        void SetCellTypes(const int* buff, size_t cellCnt) {
-            this->data.SetCellTypes(buff, cellCnt);
-        }
+        void SetCellTypes(const int* buff, size_t cellCnt) { this->data.SetCellTypes(buff, cellCnt); }
 
         /**
          * Sets the geometry/topology information.
          *
          * @param topology The data's topology.
          */
-        void SetTopology(AbstractVTKLegacyData::DataGeometry topology) {
-            this->data.SetDataGeometry(topology);
-        }
+        void SetTopology(AbstractVTKLegacyData::DataGeometry topology) { this->data.SetDataGeometry(topology); }
 
         /**
          * Set the frame Index.
          *
          * @param idx the index
          */
-        void SetFrameIdx(unsigned int idx) {
-            this->frame = idx;
-        }
+        void SetFrameIdx(unsigned int idx) { this->frame = idx; }
 
         /**
          * Copy vertex coordinates from a buffer.
@@ -248,9 +219,7 @@ private:
          * @param buff    The input buffer
          * @param nPoints The number of points
          */
-        void SetPoints(const float* buff, size_t nPoints) {
-            this->data.SetPoints(buff, nPoints);
-        }
+        void SetPoints(const float* buff, size_t nPoints) { this->data.SetPoints(buff, nPoints); }
 
         /**
          * Test for equality
@@ -262,9 +231,7 @@ private:
         bool operator==(const Frame& rhs);
 
         /** TODO */
-        inline size_t GetPointDataCount() const {
-            return this->data.GetPointDataCount();
-        }
+        inline size_t GetPointDataCount() const { return this->data.GetPointDataCount(); }
 
         /**
          * Answers the pointer to a point data attribute array specified by a name.
@@ -287,26 +254,22 @@ private:
         }
 
     private:
-
         /// The data object containing the VTK unstructured grid data
         VTKLegacyDataUnstructuredGrid data;
-
     };
-    
+
     /**
      * Helper class to unlock frame data when
      * 'VTKLegacyDataCallUnstructuredGrid' is used.
      */
     class VTKUnlocker : public megamol::core::AbstractGetData3DCall::Unlocker {
     public:
-
         /**
          * Ctor.
          *
          * @param frame The frame to unlock
          */
-        VTKUnlocker(Frame& frame) : megamol::core::AbstractGetData3DCall::Unlocker(),
-                frame(&frame) {
+        VTKUnlocker(Frame& frame) : megamol::core::AbstractGetData3DCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
 
@@ -325,9 +288,8 @@ private:
         }
 
     private:
-
         /** The frame to unlock */
-        Frame *frame;
+        Frame* frame;
     };
 
     /**
@@ -338,9 +300,12 @@ private:
      */
     bool isWhiteSpaceChar(char c) {
         switch (c) {
-            case ' '  : return true; // TODO extend
-            case '\n' : return true;
-            default : return false;
+        case ' ':
+            return true; // TODO extend
+        case '\n':
+            return true;
+        default:
+            return false;
         }
     }
 
@@ -352,8 +317,10 @@ private:
      */
     bool isNewlineChar(char c) {
         switch (c) {
-            case '\n' : return true; // TODO extend
-            default : return false;
+        case '\n':
+            return true; // TODO extend
+        default:
+            return false;
         }
     }
 
@@ -377,7 +344,7 @@ private:
         size_t len1 = 0;
         // Seek the end of the current line
         while (!this->isNewlineChar(buffPt[len1])) {
-//            printf("%c\n", buffPt[len1]);
+            //            printf("%c\n", buffPt[len1]);
             len1++;
         }
         vislib::StringA line(buffPt, (int)len1);
@@ -398,12 +365,12 @@ private:
 
     /** TODO */
     vislib::StringA readNextToken(char*& buffPt) {
-        size_t len=0;
+        size_t len = 0;
         // Skip non-white-space-characters
         while (!this->isWhiteSpaceChar(buffPt[len])) {
             len++;
         }
-//        printf("TOKENSTR %s\n", vislib::StringA(buffPt, len).PeekBuffer());
+        //        printf("TOKENSTR %s\n", vislib::StringA(buffPt, len).PeekBuffer());
         return vislib::StringA(buffPt, (int)len);
     }
 
@@ -423,9 +390,8 @@ private:
     void readFieldData(char*& buffPt, core::view::AnimDataModule::Frame* frame, size_t numArrays);
 
     /** TODO */
-    void readDataArray(char*& buffPt, core::view::AnimDataModule::Frame* frame,
-            size_t nTupels, size_t nComponents,
-            AbstractVTKLegacyData::DataAssociation);
+    void readDataArray(char*& buffPt, core::view::AnimDataModule::Frame* frame, size_t nTupels, size_t nComponents,
+        AbstractVTKLegacyData::DataAssociation);
 
     /** TODO */
     void swapBytes(char* buffPt, size_t stride, size_t cnt);
@@ -451,7 +417,7 @@ private:
 
     /// Parameter slot for the name of the data set to be sent with MultiparticleDataCall
     core::param::ParamSlot mpdcAttributeSlot;
-    
+
     /// Parameter slot for the global radius of all particles to be sent with MultiparticleDataCall
     core::param::ParamSlot globalRadiusParam;
 
@@ -462,7 +428,7 @@ private:
 
     vislib::StringA filenamesPrefix; ///> The prefix of the file series
     vislib::StringA filenamesSuffix; ///> The suffix og the file series
-    size_t filenamesDigits;            ///> The number of digits in the file names
+    size_t filenamesDigits;          ///> The number of digits in the file names
 
     /// The number of frames
     size_t nFrames;
@@ -475,11 +441,9 @@ private:
 
     /// The world space bounding box
     Cubef bbox;
-
 };
 
 } // namespace protein
 } // namespace megamol
 
 #endif // MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
-

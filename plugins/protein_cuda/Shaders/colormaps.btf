@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="colormaps">
+
+    <snippet name="Heatmap" type="string">
+<!--
+vec3 heatMapLUT[96] = vec3[](
+vec3(1.000000, 1.000000, 1.000000), vec3(1.000000, 1.000000, 0.968750), vec3(1.000000, 1.000000, 0.937500), 
+vec3(1.000000, 1.000000, 0.906250), vec3(1.000000, 1.000000, 0.875000), vec3(1.000000, 1.000000, 0.843750), 
+vec3(1.000000, 1.000000, 0.812500), vec3(1.000000, 1.000000, 0.781250), vec3(1.000000, 1.000000, 0.750000), 
+vec3(1.000000, 1.000000, 0.718750), vec3(1.000000, 1.000000, 0.687500), vec3(1.000000, 1.000000, 0.656250), 
+vec3(1.000000, 1.000000, 0.625000), vec3(1.000000, 1.000000, 0.593750), vec3(1.000000, 1.000000, 0.562500), 
+vec3(1.000000, 1.000000, 0.531250), vec3(1.000000, 1.000000, 0.500000), vec3(1.000000, 1.000000, 0.468750), 
+vec3(1.000000, 1.000000, 0.437500), vec3(1.000000, 1.000000, 0.406250), vec3(1.000000, 1.000000, 0.375000), 
+vec3(1.000000, 1.000000, 0.343750), vec3(1.000000, 1.000000, 0.312500), vec3(1.000000, 1.000000, 0.281250), 
+vec3(1.000000, 1.000000, 0.250000), vec3(1.000000, 1.000000, 0.218750), vec3(1.000000, 1.000000, 0.187500), 
+vec3(1.000000, 1.000000, 0.156250), vec3(1.000000, 1.000000, 0.125000), vec3(1.000000, 1.000000, 0.093750), 
+vec3(1.000000, 1.000000, 0.062500), vec3(1.000000, 1.000000, 0.031250),
+vec3(1.000000, 1.000000, 0.000000), vec3(1.000000, 0.968750, 0.000000), vec3(1.000000, 0.937500, 0.000000), 
+vec3(1.000000, 0.906250, 0.000000), vec3(1.000000, 0.875000, 0.000000), vec3(1.000000, 0.843750, 0.000000), 
+vec3(1.000000, 0.812500, 0.000000), vec3(1.000000, 0.781250, 0.000000), vec3(1.000000, 0.750000, 0.000000), 
+vec3(1.000000, 0.718750, 0.000000), vec3(1.000000, 0.687500, 0.000000), vec3(1.000000, 0.656250, 0.000000), 
+vec3(1.000000, 0.625000, 0.000000), vec3(1.000000, 0.593750, 0.000000), vec3(1.000000, 0.562500, 0.000000), 
+vec3(1.000000, 0.531250, 0.000000), vec3(1.000000, 0.500000, 0.000000), vec3(1.000000, 0.468750, 0.000000), 
+vec3(1.000000, 0.437500, 0.000000), vec3(1.000000, 0.406250, 0.000000), vec3(1.000000, 0.375000, 0.000000), 
+vec3(1.000000, 0.343750, 0.000000), vec3(1.000000, 0.312500, 0.000000), vec3(1.000000, 0.281250, 0.000000), 
+vec3(1.000000, 0.250000, 0.000000), vec3(1.000000, 0.218750, 0.000000), vec3(1.000000, 0.187500, 0.000000), 
+vec3(1.000000, 0.156250, 0.000000), vec3(1.000000, 0.125000, 0.000000), vec3(1.000000, 0.093750, 0.000000), 
+vec3(1.000000, 0.062500, 0.000000), vec3(1.000000, 0.031250, 0.000000),
+vec3(1.000000, 0.000000, 0.000000), vec3(0.968750, 0.000000, 0.000000), vec3(0.937500, 0.000000, 0.000000), 
+vec3(0.906250, 0.000000, 0.000000), vec3(0.875000, 0.000000, 0.000000), vec3(0.843750, 0.000000, 0.000000), 
+vec3(0.812500, 0.000000, 0.000000), vec3(0.781250, 0.000000, 0.000000), vec3(0.750000, 0.000000, 0.000000), 
+vec3(0.718750, 0.000000, 0.000000), vec3(0.687500, 0.000000, 0.000000), vec3(0.656250, 0.000000, 0.000000), 
+vec3(0.625000, 0.000000, 0.000000), vec3(0.593750, 0.000000, 0.000000), vec3(0.562500, 0.000000, 0.000000), 
+vec3(0.531250, 0.000000, 0.000000), vec3(0.500000, 0.000000, 0.000000), vec3(0.468750, 0.000000, 0.000000), 
+vec3(0.437500, 0.000000, 0.000000), vec3(0.406250, 0.000000, 0.000000), vec3(0.375000, 0.000000, 0.000000), 
+vec3(0.343750, 0.000000, 0.000000), vec3(0.312500, 0.000000, 0.000000), vec3(0.281250, 0.000000, 0.000000), 
+vec3(0.250000, 0.000000, 0.000000), vec3(0.218750, 0.000000, 0.000000), vec3(0.187500, 0.000000, 0.000000), 
+vec3(0.156250, 0.000000, 0.000000), vec3(0.125000, 0.000000, 0.000000), vec3(0.093750, 0.000000, 0.000000), 
+vec3(0.062500, 0.000000, 0.000000), vec3(0.031250, 0.000000, 0.000000)
+); 
+    
+vec3 HeatmapGetColor(float min, float max, float val) {
+    float step = (max-min)/96.0;
+    return heatMapLUT[int((val-min)/step)];
+}
+-->
+    </snippet>
+     
+    <snippet name="RGB2LAB" type="string">
+<!--
+// Converts a color from RGB to CIELAB
+//
+// RGB values can be between 0.0 and 1.0
+// Values for L are in the range [0,100] while a and b are roughly in the range 
+// [-110,110]. 
+//
+// This transform is based on ITU-R Recommendation BT.709 using the D65
+// white point reference. The error in transforming RGB -> Lab -> RGB is
+// approximately 10^-5. 
+//
+// Based on MATLAB code by Mark Ruzon
+// see http://robotics.stanford.edu/~ruzon/software/rgblab.html
+vec3 RGB2LAB(float r, float g, float b) {
+    
+    /* 1. RGB to XYZ */
+    
+    mat3 m = mat3(0.41242400, 0.21265600, 0.01933240,
+                  0.35757900, 0.71515800, 0.11919300,
+                  0.18046400, 0.07218560, 0.95044400);
+    vec3 xyz = m * vec3(r, g, b);
+
+    /* 2. XYZ to LAB */
+    
+    // Normalize for D65 white point
+    xyz.x /= 0.950456;
+    xyz.z /= 1.088754;
+
+    // Set a threshold
+    float T = 0.008856;
+    bool xt = xyz.x > T;
+    bool yt = xyz.y > T;
+    bool zt = xyz.z > T;
+    
+    float y3 = pow(xyz.y, 1.0/3.0); // Precompute because it is used twice
+
+    float fX = int(xt)*pow(xyz.x, 1.0/3.0) + int(!xt)*(7.787037037*xyz.x+0.137931034);
+    float fY = int(yt)*y3                  + int(!yt)*(7.787037037*xyz.y+0.137931034);
+    float fZ = int(zt)*pow(xyz.z, 1.0/3.0) + int(!zt)*(7.787037037*xyz.z+0.137931034);
+
+    vec3 Lab;
+
+    Lab.x = int(yt)*(116*y3-16.0) + int(!yt)*(903.3*xyz.y);
+    Lab.y = 500*(fX-fY);
+    Lab.z = 200*(fY-fZ);
+
+    return Lab;
+}
+-->
+    </snippet>
+    
+    <snippet name="LAB2RGB" type="string">
+<!--
+// Converts a color from CIELAB RGB
+//
+// RGB values can be between 0.0 and 1.0
+// Values for L are in the range [0,100] while a and b are roughly in the range 
+// [-110,110]. 
+//
+// This transform is based on ITU-R Recommendation BT.709 using the D65
+// white point reference. The error in transforming RGB -> Lab -> RGB is
+// approximately 10^-5. 
+//
+// Based on MATLAB code by Mark Ruzon
+// see http://robotics.stanford.edu/~ruzon/software/rgblab.html
+vec3 LAB2RGB(float L, float a, float b) {
+    
+    /* 1. LAB to XYZ */
+    
+    vec3 xyz;
+    
+    // Define Thresholds
+    float T1 = 0.008856;
+    float T2 = 0.206893;
+    
+    // Compute Y
+    float fY = pow(((L+16.0)/116.0), 3.0);
+    bool yt = (fY > T1);
+    fY = int(!yt)*(L/903.3) + int(yt)*fY;
+    xyz.y = fY;
+
+    // Alter fY slightly for further calculations
+    fY = int(yt)*(pow(fY, 1.0/3.0)) + int(!yt)*(7.787*fY+0.137931034);
+
+    // Compute X
+    float fX = a / 500.0 + fY;
+    bool xt = fX > T2;
+    xyz.x = int(xt)*pow(fX, 3.0) + int(!xt)*((fX - 0.137931034) / 7.787);
+
+    // Compute Z
+    float fZ = fY - b / 200.0;
+    bool zt = fZ > T2;
+    xyz.z = int(zt)*pow(fZ, 3.0) + int(!zt)*((fZ - 0.137931034) / 7.787);
+
+    // Normalize for D65 white point
+    xyz.x = xyz.x * 0.950456;
+    xyz.z = xyz.z * 1.088754;
+
+    /* 2. XYZ to RGB */
+    
+    vec3 rgb;
+    
+    mat3 m = mat3( 3.240479, -0.969256,  0.055648,
+                  -1.537150,  1.875992, -0.204043,
+                  -0.498535,  0.041556,  1.057311);
+    rgb = m*xyz;
+    rgb.x = clamp(rgb.x, 0.0, 1.0);
+    rgb.y = clamp(rgb.y, 0.0, 1.0);
+    rgb.z = clamp(rgb.z, 0.0, 1.0);
+    
+    return rgb;
+}
+-->
+    </snippet>
+    
+    <snippet name="RGB2MSH" type="string">
+<!--
+vec3 RGB2LAB(float r, float g, float b) {
+    
+    /* 1. RGB to XYZ */
+    
+    mat3 m = mat3(0.41242400, 0.21265600, 0.01933240,
+                  0.35757900, 0.71515800, 0.11919300,
+                  0.18046400, 0.07218560, 0.95044400);
+    vec3 xyz = m * vec3(r, g, b);
+
+    /* 2. XYZ to LAB */
+    
+    // Normalize for D65 white point
+    xyz.x /= 0.950456;
+    xyz.z /= 1.088754;
+
+    // Set a threshold
+    float T = 0.008856;
+    bool xt = xyz.x > T;
+    bool yt = xyz.y > T;
+    bool zt = xyz.z > T;
+    
+    float y3 = pow(xyz.y, 1.0/3.0); // Precompute because it is used twice
+
+    float fX = int(xt)*pow(xyz.x, 1.0/3.0) + int(!xt)*(7.787037037*xyz.x+0.137931034);
+    float fY = int(yt)*y3                  + int(!yt)*(7.787037037*xyz.y+0.137931034);
+    float fZ = int(zt)*pow(xyz.z, 1.0/3.0) + int(!zt)*(7.787037037*xyz.z+0.137931034);
+
+    vec3 Lab;
+
+    Lab.x = int(yt)*(116*y3-16.0) + int(!yt)*(903.3*xyz.y);
+    Lab.y = 500*(fX-fY);
+    Lab.z = 200*(fY-fZ);
+
+    return Lab;
+}
+
+// Converts a color from RGB to MSH
+vec3 RGB2MSH(float r, float g, float b) {
+    
+    /* 1. RGB to LAB */
+    
+    vec3 Lab = RGB2LAB(r, g, b);
+    
+    /* 2. LAB to MSH */
+    
+    vec3 Msh;
+    Msh.x = length(Lab);
+    Msh.y = acos(Lab.x/Msh.x);
+    Msh.z = atan(Lab.y/Lab.z);
+
+    return Msh;
+}
+-->
+    </snippet>
+    
+    <snippet name="MSH2RGB" type="string">
+<!--
+vec3 LAB2RGB(float L, float a, float b) {
+    
+    /* 1. LAB to XYZ */
+    
+    vec3 xyz;
+    
+    // Define Thresholds
+    float T1 = 0.008856;
+    float T2 = 0.206893;
+    
+    // Compute Y
+    float fY = pow(((L+16.0)/116.0), 3.0);
+    bool yt = (fY > T1);
+    fY = int(!yt)*(L/903.3) + int(yt)*fY;
+    xyz.y = fY;
+
+    // Alter fY slightly for further calculations
+    fY = int(yt)*(pow(fY, 1.0/3.0)) + int(!yt)*(7.787*fY+0.137931034);
+
+    // Compute X
+    float fX = a / 500.0 + fY;
+    bool xt = fX > T2;
+    xyz.x = int(xt)*pow(fX, 3.0) + int(!xt)*((fX - 0.137931034) / 7.787);
+
+    // Compute Z
+    float fZ = fY - b / 200.0;
+    bool zt = fZ > T2;
+    xyz.z = int(zt)*pow(fZ, 3.0) + int(!zt)*((fZ - 0.137931034) / 7.787);
+
+    // Normalize for D65 white point
+    xyz.x = xyz.x * 0.950456;
+    xyz.z = xyz.z * 1.088754;
+
+    /* 2. XYZ to RGB */
+    
+    vec3 rgb;
+    
+    mat3 m = mat3( 3.240479, -0.969256,  0.055648,
+                  -1.537150,  1.875992, -0.204043,
+                  -0.498535,  0.041556,  1.057311);
+    rgb = m*xyz;
+    rgb.x = clamp(rgb.x, 0.0, 1.0);
+    rgb.y = clamp(rgb.y, 0.0, 1.0);
+    rgb.z = clamp(rgb.z, 0.0, 1.0);
+    
+    return rgb;
+}
+
+// Converts a color from MSH to RGB
+vec3 MSH2RGB(float M, float s, float h) {
+    
+    /* 1. MSH to LAB */
+    
+    vec3 Lab;
+    Lab.x = M*cos(s);
+    Lab.y = M*sin(s)*cos(h);
+    Lab.z = M*sin(s)*sin(h);
+    
+    /* 2. LAB to RGB */
+    
+    return LAB2RGB(Lab.x, Lab.y, Lab.z);
+    //return vec3(1.0, 1.0, 0.0);
+}
+-->
+    </snippet>
+ 
+    <snippet name="HSV2RGB" type="string">
+<!-- 
+// see https://github.com/bernstein/pixelparty-shader/blob/master/hsv.glsl  
+vec3 HSV2RGB(vec3 hsv) {
+  
+  vec3 rgb = vec3(hsv.z);
+  if ( hsv.y != 0.0 ) {
+    float var_h = hsv.x * 6.0;
+    float var_i = floor(var_h); 
+    float var_1 = hsv.z * (1.0 - hsv.y);
+    float var_2 = hsv.z * (1.0 - hsv.y * (var_h-var_i));
+    float var_3 = hsv.z * (1.0 - hsv.y * (1.0 - (var_h-var_i)));
+
+    switch (int(var_i)) {
+      case 0: rgb = vec3(hsv.z, var_3, var_1); break;
+      case 1: rgb = vec3(var_2, hsv.z, var_1); break;
+      case 2: rgb = vec3(var_1, hsv.z, var_3); break;
+      case 3: rgb = vec3(var_1, var_2, hsv.z); break;
+      case 4: rgb = vec3(var_3, var_1, hsv.z); break;
+      default: rgb = vec3(hsv.z, var_1, var_2); break;
+    }
+  }
+  return rgb;
+}
+-->
+    </snippet>
+    
+    <snippet name="COOLWARM" type="string">
+<!--
+vec3 CoolWarmMsh(float val, float min, float thresh, float max) {
+                    
+    val = clamp(val, min, max);
+    
+    vec3 redMsh = vec3(90, 1.08, 0.5);
+    vec3 whiteMsh = vec3(90, 0, 1.061);
+    vec3 blueMsh = vec3(90, 1.08, -1.1);
+    
+    vec3 resMsh;
+    
+    if (val < thresh) {
+        //resMsh = redMsh;
+        resMsh =  (val-min)/(thresh-min)*whiteMsh + 
+            (1.0f - (val-min)/(thresh-min))*redMsh;
+    } 
+    else {
+        //resMsh = blueMsh;
+        whiteMsh.z *= -1.0;
+        return ((val-thresh)/(max-thresh))*blueMsh + 
+            (1.0f - ((val-thresh)/(max-thresh)))*whiteMsh;
+    }
+    return resMsh;
+}
+-->
+    </snippet>
+
+</btf>

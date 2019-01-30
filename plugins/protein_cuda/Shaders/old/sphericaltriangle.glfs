@@ -1,0 +1,145 @@
+uniform vec4 viewAttr;
+uniform vec2 zValues;
+
+varying vec4 objPos;
+varying vec4 camPos;
+varying vec4 lightPos;
+
+varying vec4 inVec1;
+varying vec4 inVec2;
+varying vec4 inVec3;
+varying vec4 inProbe1;
+varying vec4 inProbe2;
+varying vec4 inProbe3;
+varying vec3 inColors;
+
+vec3 decodeColor( float codedColor)
+{
+	float col = codedColor;
+	float red, green;
+	if( col > 1000000.0 )
+		red = floor( col / 1000000.0);
+	else
+		red = 0.0;
+	col = col - ( red *	1000000.0);
+	if( col > 1000.0)
+		green = floor( col / 1000.0);
+	else
+		green = 0.0;
+	col = col - ( green *	1000.0);
+	return vec3( red / 255.0, green / 255.0, col / 255.0);
+}
+
+float dot1( vec3 v1)
+{
+	return dot( v1, v1);
+}
+
+void main(void) {
+	vec4 coord;
+	vec3 ray;
+	float lambda;
+	float rad = inVec1.w;
+	float squarRad = inVec2.w;
+	vec3 dualProbe = vec3( inProbe1.w, inProbe2.w, inProbe3.w);
+
+	// transform fragment coordinates from window coordinates to view coordinates.
+	coord = gl_FragCoord 
+		* vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+		+ vec4(-1.0, -1.0, -1.0, 1.0);
+	
+	// transform fragment coordinates from view coordinates to object coordinates.
+	coord = gl_ModelViewProjectionMatrixInverse * coord;
+	coord /= coord.w;
+	coord -= objPos; // ... and to glyph space
+
+	// calc the viewing ray
+	ray = normalize(coord.xyz - camPos.xyz);
+
+	// calculate the geometry-ray-intersection
+	float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
+	float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
+	float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
+	
+	if (radicand < 0.0) { discard; }
+	
+	lambda = d1 + sqrt(radicand);                           // lambda
+	vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+
+	// compute the actual position of the intersection with the sphere
+	vec3 pos1 = sphereintersection + objPos.xyz;
+	// cut with plane 1
+	vec3 planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
+	float d = dot( objPos.xyz, planeNormal);
+	float dist1 = dot( pos1, planeNormal) - d;
+	float dist2 = dot( inVec3.xyz + objPos.xyz, planeNormal) - d;
+	if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
+	// cut with plane 2
+	planeNormal = normalize( cross( inVec2.xyz, inVec3.xyz));
+	d = dot( objPos.xyz, planeNormal);
+	dist1 = dot( pos1, planeNormal) - d;
+	dist2 = dot( inVec1.xyz + objPos.xyz, planeNormal) - d;
+	if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
+	// cut with plane 3
+	planeNormal = normalize( cross( inVec1.xyz, inVec3.xyz));
+	d = dot( objPos.xyz, planeNormal);
+	dist1 = dot( pos1, planeNormal) - d;
+	dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
+	if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
+	// discard the point if it is eaten away by one of the neighbouring probes
+	// --> check first, if one of the probes is nearly dual to the object position
+	if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
+	    ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
+			( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
+			( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
+	// "calc" normal at intersection point
+	vec3 normal = -sphereintersection / rad;
+#ifdef SMALL_SPRITE_LIGHTING
+	normal = mix(-ray, normal, lightPos.w);
+#endif // SMALL_SPRITE_LIGHTING
+
+	// ----- START compute color -----
+	// compute auxiliary direction vectors
+	vec3 u = inVec1.xyz - inVec2.xyz;
+	vec3 v = inVec3.xyz - inVec2.xyz;
+	// base point and direction of ray from the origin to the intersection point
+	vec3 w = -inVec2.xyz;
+	vec3 dRay = normalize( sphereintersection);
+	// cross products for computing the determinant
+	vec3 wXu = cross( w, u);
+	vec3 dXv = cross( dRay, v);
+	// compute interse determinant
+	float invdet = 1.0 / dot( dXv, u);
+	// compute weights
+	float beta = dot( dXv, w) * invdet;
+	float gamma = dot( wXu, dRay) * invdet;
+	float alpha = 1.0 - ( beta + gamma);
+	// compute color
+	vec3 color = decodeColor( inColors.y) * alpha + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
+#ifdef FLATSHADE_SES
+	if( alpha > beta && alpha > gamma )
+		color = decodeColor( inColors.y);
+	else if( beta > alpha && beta > gamma )
+		color = decodeColor( inColors.x);
+	else
+		color = decodeColor( inColors.z);
+#endif // FLATSHADE_SES
+	// ----- END compute color -----
+	//color = vec3( 0.0, 0.75, 1.0);
+	
+	// phong lighting with directional light
+	gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+
+	// calculate depth
+#ifdef DEPTH
+	vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+	float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+	float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+	gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+	//gl_FragDepth = ( depth + zValues.x) / zValues.y;
+#endif // DEPTH
+
+	//gl_FragColor.rgb = gl_FragColor.rgb * ( 1.0 - ( depth + zValues.x) / zValues.y);
+	//gl_FragColor.a = gl_FragDepth;
+
+}

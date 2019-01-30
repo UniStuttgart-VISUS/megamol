@@ -1,0 +1,435 @@
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+//#define LIGHT_PERPIXEL
+
+uniform float probeRadius;
+uniform float threshold;
+
+#ifdef LIGHT_PERPIXEL
+varying vec4 diffuse, ambient;
+varying vec3 normal, lightDir, halfVector;
+#endif
+
+#define probeCenter gl_FrontColorIn[0].xyz
+
+//const int maxVertices = 100;
+//vec3 tmp1[maxVertices];
+//vec3 tmp2[maxVertices];
+//vec3 tmp3[maxVertices];
+//int counter = 0;
+
+#ifdef LIGHT_PERPIXEL
+void lighting( const vec3 norm)
+{
+	// transformation of the normal into eye space
+	normal = normalize(gl_NormalMatrix * norm);
+	// normalize the direction of the light
+	lightDir = normalize(vec3(gl_LightSource[0].position));
+	// normalize the halfVector to pass it to the fragment shader
+	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+	// compute the diffuse, ambient and globalAmbient terms
+	diffuse = gl_FrontColor * gl_LightSource[0].diffuse;
+	ambient = gl_FrontColor * gl_LightSource[0].ambient;
+	ambient += gl_LightModel.ambient * gl_FrontColor;
+}
+#else
+void lighting( const vec3 norm)
+{
+	vec3 normal, lightDir;
+	vec4 diffuse, ambient, globalAmbient;
+	float NdotL;
+	
+	normal = normalize(gl_NormalMatrix * norm);
+	lightDir = normalize(vec3(gl_LightSource[0].position));
+	NdotL = max(dot(normal, lightDir), 0.0);
+	diffuse = gl_FrontColorIn[0] * gl_LightSource[0].diffuse;
+	
+	// Compute the ambient and globalAmbient terms
+	ambient = gl_FrontColorIn[0] * gl_LightSource[0].ambient;
+	globalAmbient = gl_LightModel.ambient * gl_FrontColorIn[0];
+	
+	gl_FrontColor =  NdotL * diffuse + globalAmbient + ambient;
+	gl_BackColor =  NdotL * diffuse + globalAmbient + ambient;
+}
+#endif
+
+
+void emitTriangle( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v1 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v1));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v2 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v2));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v3 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v3));
+		EmitVertex();
+		
+		EndPrimitive();
+}
+
+/* // iterative subdivision routine
+void subdivide( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+	// distances between the vertices
+	const float d12 = length( v1 - v2);
+	const float d13 = length( v1 - v3);
+	const float d23 = length( v2 - v3);
+	
+	// case 1: no edge is longer than the threshold
+	if( d12 <= threshold && d13 <= threshold && d23 <= threshold )
+	{
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v1 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v1));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v2 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v2));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v3 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v3));
+		EmitVertex();
+		
+		EndPrimitive();
+	}
+	// case 2: all edges are longer than the threshold
+	else if( d12 > threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		//subdivide( v1, v12, v13);
+		if( counter < maxVertices-3 )
+		{
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v12;
+			tmp3[counter] = v13;
+			//subdivide( v12, v2, v23);
+			counter++;
+			tmp1[counter] = v12;
+			tmp2[counter] = v2;
+			tmp3[counter] = v23;
+			//subdivide( v13, v23, v3);
+			counter++;
+			tmp1[counter] = v13;
+			tmp2[counter] = v23;
+			tmp3[counter] = v3;
+			//subdivide( v13, v12, v23);
+			counter++;
+			tmp1[counter] = v13;
+			tmp2[counter] = v12;
+			tmp3[counter] = v23;
+		}
+	}
+	// case 3: one edge is longer than the threshold
+	// --> case 3.1: d12 is longer
+	else if( d12 > threshold && d13 < threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		//subdivide( v1, v12, v3);
+		if( counter < maxVertices-1 )
+		{
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v12;
+			tmp3[counter] = v3;
+			//subdivide( v12, v2, v3);
+			counter++;
+			tmp1[counter] = v12;
+			tmp2[counter] = v2;
+			tmp3[counter] = v3;
+		}
+	}
+	// --> case 3.2: d13 is longer
+	else if( d12 < threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		//subdivide( v1, v2, v13);
+		if( counter < maxVertices-1 )
+		{
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v2;
+			tmp3[counter] = v13;
+			//subdivide( v13, v2, v3);
+			counter++;
+			tmp1[counter] = v13;
+			tmp2[counter] = v2;
+			tmp3[counter] = v3;
+		}
+	}
+	// --> case 3.3: d23 is longer
+	else if( d12 < threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		//subdivide( v1, v2, v23);
+		if( counter < maxVertices-1 )
+		{
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v2;
+			tmp3[counter] = v23;
+			//subdivide( v1, v23, v3);
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v23;
+			tmp3[counter] = v3;
+		}
+	}
+	// case 4: two edges are longer than the threshold
+	// --> case 4.1: d12 and d13 are longer
+	else if( d12 > threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		//subdivide( v1, v12, v13);
+		if( counter < maxVertices-2 )
+		{
+			counter++;
+			tmp1[counter] = v1;
+			tmp2[counter] = v12;
+			tmp3[counter] = v13;
+			// connect the smaller distance
+			if( length( v13 - v2) < length( v12 - v3) )
+			{
+				//subdivide( v12, v2, v13);
+				counter++;
+				tmp1[counter] = v12;
+				tmp2[counter] = v2;
+				tmp3[counter] = v13;
+				//subdivide( v13, v2, v3);
+				counter++;
+				tmp1[counter] = v13;
+				tmp2[counter] = v2;
+				tmp3[counter] = v3;
+			}
+			else
+			{
+				//subdivide( v12, v2, v3);
+				counter++;
+				tmp1[counter] = v12;
+				tmp2[counter] = v2;
+				tmp3[counter] = v3;
+				//subdivide( v13, v12, v3);
+				counter++;
+				tmp1[counter] = v13;
+				tmp2[counter] = v12;
+				tmp3[counter] = v3;
+			}
+		}
+	}
+	// --> case 4.2: d12 and d23 are longer
+	else if( d12 > threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		//subdivide( v12, v2, v23);
+		if( counter < maxVertices-2 )
+		{
+			counter++;
+			tmp1[counter] = v12;
+			tmp2[counter] = v2;
+			tmp3[counter] = v23;
+			// connect the smaller distance
+			if( length( v23 - v1) < length( v12 - v3) )
+			{
+				//subdivide( v1, v23, v3);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v23;
+				tmp3[counter] = v3;
+				//subdivide( v1, v12, v23);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v12;
+				tmp3[counter] = v23;
+			}
+			else
+			{
+				//subdivide( v1, v12, v3);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v12;
+				tmp3[counter] = v3;
+				//subdivide( v12, v23, v3);
+				counter++;
+				tmp1[counter] = v12;
+				tmp2[counter] = v23;
+				tmp3[counter] = v3;
+			}
+		}
+	}
+	// --> case 4.3: d13 and d23 are longer
+	else // if( d12 < threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		//subdivide( v13, v23, v3);
+		if( counter < maxVertices-2 )
+		{
+			counter++;
+			tmp1[counter] = v13;
+			tmp2[counter] = v23;
+			tmp3[counter] = v3;
+			// connect the smaller distance
+			if( length( v23 - v1) < length( v13 - v2) )
+			{
+				//subdivide( v1, v2, v23);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v2;
+				tmp3[counter] = v23;
+				//subdivide( v1, v23, v13);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v23;
+				tmp3[counter] = v13;
+			}
+			else
+			{
+				//subdivide( v1, v2, v13);
+				counter++;
+				tmp1[counter] = v1;
+				tmp2[counter] = v2;
+				tmp3[counter] = v13;
+				//subdivide( v13, v2, v23);
+				counter++;
+				tmp1[counter] = v13;
+				tmp2[counter] = v2;
+				tmp3[counter] = v23;
+			}
+		}
+	}
+}
+*/
+
+void subdivide2( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+	// distances between the vertices
+	const float d12 = length( v1 - v2);
+	const float d13 = length( v1 - v3);
+	const float d23 = length( v2 - v3);
+	
+	// case 1: no edge is longer than the threshold
+	if( d12 <= threshold && d13 <= threshold && d23 <= threshold )
+	{
+		emitTriangle( v1, v2, v3);
+	}
+	// case 2: all edges are longer than the threshold
+	else if( d12 > threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v1, v12, v13);
+		emitTriangle( v12, v2, v23);
+		emitTriangle( v13, v23, v3);
+		emitTriangle( v13, v12, v23);
+	}
+	// case 3: one edge is longer than the threshold
+	// --> case 3.1: d12 is longer
+	else if( d12 > threshold && d13 < threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		emitTriangle( v1, v12, v3);
+		emitTriangle( v12, v2, v3);
+	}
+	// --> case 3.2: d13 is longer
+	else if( d12 < threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		emitTriangle( v1, v2, v13);
+		emitTriangle( v13, v2, v3);
+	}
+	// --> case 3.3: d23 is longer
+	else if( d12 < threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v1, v2, v23);
+		emitTriangle( v1, v23, v3);
+	}
+	// case 4: two edges are longer than the threshold
+	// --> case 4.1: d12 and d13 are longer
+	else if( d12 > threshold && d13 > threshold && d23 < threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		emitTriangle( v1, v12, v13);
+		// connect the smaller distance
+		if( length( v13 - v2) < length( v12 - v3) )
+		{
+			emitTriangle( v12, v2, v13);
+			emitTriangle( v13, v2, v3);
+		}
+		else
+		{
+			emitTriangle( v12, v2, v3);
+			emitTriangle( v13, v12, v3);
+		}
+	}
+	// --> case 4.2: d12 and d23 are longer
+	else if( d12 > threshold && d13 < threshold && d23 > threshold )
+	{
+		vec3 v12 = normalize( v1 + v2) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v12, v2, v23);
+		// connect the smaller distance
+		if( length( v23 - v1) < length( v12 - v3) )
+		{
+			emitTriangle( v1, v23, v3);
+			emitTriangle( v1, v12, v23);
+		}
+		else
+		{
+			emitTriangle( v1, v12, v3);
+			emitTriangle( v12, v23, v3);
+		}
+	}
+	// --> case 4.3: d13 and d23 are longer
+	else // if( d12 < threshold && d13 > threshold && d23 > threshold )
+	{
+		vec3 v13 = normalize( v1 + v3) * probeRadius;
+		vec3 v23 = normalize( v2 + v3) * probeRadius;
+		emitTriangle( v13, v23, v3);
+		// connect the smaller distance
+		if( length( v23 - v1) < length( v13 - v2) )
+		{
+			emitTriangle( v1, v2, v23);
+			emitTriangle( v1, v23, v13);
+		}
+		else
+		{
+			emitTriangle( v1, v2, v13);
+			emitTriangle( v13, v2, v23);
+		}
+	}
+}
+
+
+void main(void)
+{
+	gl_FrontColor = gl_FrontColorIn[0];
+	
+	//tmp1[counter] = vec3(gl_PositionIn[0].xyz) / gl_PositionIn[0].w - probeCenter;
+	//tmp2[counter] = vec3(gl_PositionIn[1].xyz) / gl_PositionIn[1].w - probeCenter;
+	//tmp3[counter] = vec3(gl_PositionIn[2].xyz) / gl_PositionIn[2].w - probeCenter;
+	
+	subdivide2( vec3(gl_PositionIn[0].xyz) / gl_PositionIn[0].w - probeCenter,
+	            vec3(gl_PositionIn[1].xyz) / gl_PositionIn[1].w - probeCenter, 
+	            vec3(gl_PositionIn[2].xyz) / gl_PositionIn[2].w - probeCenter);
+
+	/*
+	while( counter >= 0 )
+	{
+		counter--;
+		subdivide( tmp1[counter+1], tmp2[counter+1], tmp3[counter+1]);
+	}
+	*/
+	
+}

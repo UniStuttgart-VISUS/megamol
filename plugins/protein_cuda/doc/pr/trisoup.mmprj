@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+
+    <view name="trisoup" viewmod="view">
+
+        <module class="View3D" name="view" />
+
+        <module class="TriSoupRenderer" name="soup" />
+        <call class="CallRender3D" from="view::rendering" to="soup::rendering" />
+
+
+        <param name="soup::style" value="Wireframe" />
+
+    </view>
+
+    <view name="vimview" viewmod="view">
+        <module class="View3D" name="view" />
+        <module class="SimpleSphereRenderer" name="spheres" />
+        <call class="CallRender3D" from="view::rendering" to="spheres::rendering" />
+        <module class="VIMDataSource" name="data" />
+        <call class="MultiParticleDataCall" from="spheres::getdata" to="data::getdata" />
+    </view>
+
+</MegaMol>

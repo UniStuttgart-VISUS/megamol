@@ -106,6 +106,15 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         vertexLength = 4;
     }
 
+    auto const& parStore = parts.GetParticleStore();
+    auto const& xAcc = parStore.GetXAcc();
+    auto const& yAcc = parStore.GetYAcc();
+    auto const& zAcc = parStore.GetZAcc();
+    auto const& rAcc = parStore.GetCRAcc();
+    auto const& gAcc = parStore.GetCGAcc();
+    auto const& bAcc = parStore.GetCBAcc();
+    auto const& aAcc = parStore.GetCAAcc();
+
     // Color data type check
     if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
         colorLength = 4;
@@ -118,18 +127,17 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         fcfaf = floatColFromVoidArray;*/
 
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec3f pos;
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
 
             ospcommon::vec4f col;
-            col.x = part.col.GetRf();
-            col.y = part.col.GetGf();
-            col.z = part.col.GetBf();
-            col.w = part.col.GetAf();
+            col.x = rAcc->Get_f(loop);
+            col.y = gAcc->Get_f(loop);
+            col.z = bAcc->Get_f(loop);
+            col.w = aAcc->Get_f(loop);
 
             float const color = encodeColorToFloat(col);
 
@@ -141,15 +149,14 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         colorLength = 1;
 
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec3f pos;
 
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
 
-            float const color = part.col.GetIf();
+            float const color = rAcc->Get_f(loop);
 
             this->position.emplace_back(pos, color);
         }
@@ -159,19 +166,18 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         colorLength = 3;
 
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec3f pos;
 
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
 
             ospcommon::vec3f col;
 
-            col.x = part.col.GetRf();
-            col.y = part.col.GetGf();
-            col.z = part.col.GetBf();
+            col.x = rAcc->Get_f(loop);
+            col.y = gAcc->Get_f(loop);
+            col.z = bAcc->Get_f(loop);
 
             float const color = encodeColorToFloat(col);
 
@@ -180,20 +186,19 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
 
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec3f pos;
 
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
 
             ospcommon::vec4uc col;
 
-            col.x = part.col.GetRu8();
-            col.y = part.col.GetGu8();
-            col.z = part.col.GetBu8();
-            col.w = part.col.GetAu8();
+            col.x = rAcc->Get_u8(loop);
+            col.y = gAcc->Get_u8(loop);
+            col.z = bAcc->Get_u8(loop);
+            col.w = aAcc->Get_u8(loop);
 
             float const color = encodeColorToFloat(col);
 
@@ -201,19 +206,18 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         }
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec3f pos;
 
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
 
             ospcommon::vec3uc col;
 
-            col.x = part.col.GetRu8();
-            col.y = part.col.GetGu8();
-            col.z = part.col.GetBu8();
+            col.x = rAcc->Get_u8(loop);
+            col.y = gAcc->Get_u8(loop);
+            col.z = bAcc->Get_u8(loop);
 
             float const color = encodeColorToFloat(col);
 
@@ -223,13 +227,12 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
         colorLength = 0;
 
         for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-            auto part = parts[loop];
 
             ospcommon::vec4f pos;
 
-            pos.x = part.vert.GetXf();
-            pos.y = part.vert.GetYf();
-            pos.z = part.vert.GetZf();
+            pos.x = xAcc->Get_f(loop);
+            pos.y = yAcc->Get_f(loop);
+            pos.z = zAcc->Get_f(loop);
             pos.w = 0.0f;
 
             this->position.push_back(pos);

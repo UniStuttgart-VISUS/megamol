@@ -877,8 +877,8 @@ bool megamol::core::CoreInstance::RequestParamGroupValue(
                 "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
             return false;
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(), id.PeekBuffer(), value.PeekBuffer());
+            vislib::sys::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(),
+                id.PeekBuffer(), value.PeekBuffer());
             g.Requests[id] = value;
         }
         return true;
@@ -887,6 +887,28 @@ bool megamol::core::CoreInstance::RequestParamGroupValue(
             "Cannot queue parameter change into nonexisting group %s", group.PeekBuffer());
         return false;
     }
+}
+
+
+bool megamol::core::CoreInstance::FlushGraphUpdates() {
+    vislib::sys::AutoLock u(this->graphUpdateLock);
+
+    if (this->pendingCallInstRequests.Count() != 0)
+        this->callInstRequestsFlushIndices.push_back(this->pendingCallInstRequests.Count() - 1);
+    if (this->pendingChainCallInstRequests.Count() != 0)
+        this->chainCallInstRequestsFlushIndices.push_back(this->pendingChainCallInstRequests.Count() - 1);
+    if (this->pendingModuleInstRequests.Count() != 0)
+        this->moduleInstRequestsFlushIndices.push_back(this->pendingModuleInstRequests.Count() - 1);
+    if (this->pendingCallDelRequests.Count() != 0)
+        this->callDelRequestsFlushIndices.push_back(this->pendingCallDelRequests.Count() - 1);
+    if (this->pendingModuleDelRequests.Count() != 0)
+        this->moduleDelRequestsFlushIndices.push_back(this->pendingModuleDelRequests.Count() - 1);
+    if (this->pendingParamSetRequests.Count() != 0)
+        this->paramSetRequestsFlushIndices.push_back(this->pendingParamSetRequests.Count() - 1);
+    if (this->pendingGroupParamSetRequests.Count() != 0)
+        this->groupParamSetRequestsFlushIndices.push_back(this->pendingGroupParamSetRequests.Count() - 1);
+
+    return true;
 }
 
 
@@ -901,10 +923,23 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         return;
     }
 
+    // counts processed graph update events for flush mechanism
+    size_t counter = 0;
+
+    this->shortenFlushIdxList(this->pendingModuleDelRequests.Count(), this->moduleDelRequestsFlushIndices);
+
     // delete modules
     while (this->pendingModuleDelRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->moduleDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->moduleDelRequestsFlushIndices);
+            break;
+        }
+
         auto mdr = this->pendingModuleDelRequests.First();
         this->pendingModuleDelRequests.RemoveFirst();
+
+        ++counter;
 
         Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
         if (!mod) {
@@ -1015,10 +1050,23 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingCallDelRequests.Count(), this->callDelRequestsFlushIndices);
+
     // delete calls
     while (this->pendingCallDelRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->callDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->callDelRequestsFlushIndices);
+            break;
+        }
+
         auto cdr = this->pendingCallDelRequests.First();
         this->pendingCallDelRequests.RemoveFirst();
+
+        ++counter;
+
         bool found = false;
         // find the call
         std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
@@ -1065,10 +1113,23 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingModuleInstRequests.Count(), this->moduleInstRequestsFlushIndices);
+
     // make modules
     while (this->pendingModuleInstRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->moduleInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->moduleInstRequestsFlushIndices);
+            break;
+        }
+
         auto mir = this->pendingModuleInstRequests.First();
         this->pendingModuleInstRequests.RemoveFirst();
+
+        ++counter;
+
         if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
                                                     " of class \"%s\".",
@@ -1076,10 +1137,23 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingCallInstRequests.Count(), this->callInstRequestsFlushIndices);
+
     // make calls
     while (this->pendingCallInstRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->callInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->callInstRequestsFlushIndices);
+            break;
+        }
+
         auto cir = this->pendingCallInstRequests.First();
         this->pendingCallInstRequests.RemoveFirst();
+
+        ++counter;
+
         if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
             vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
                                                     " from \"%s\" to \"%s\".",
@@ -1087,9 +1161,22 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingChainCallInstRequests.Count(), this->chainCallInstRequestsFlushIndices);
+
+    // make chain calls
     while (this->pendingChainCallInstRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->chainCallInstRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->chainCallInstRequestsFlushIndices);
+            break;
+        }
+
         auto cir = this->pendingChainCallInstRequests.First();
         this->pendingChainCallInstRequests.RemoveFirst();
+
+        ++counter;
 
         ASSERT(cir.From().StartsWith("::"));
 
@@ -1249,10 +1336,22 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingParamSetRequests.Count(), this->paramSetRequestsFlushIndices);
+
     // set parameter values;
     while (this->pendingParamSetRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->paramSetRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->paramSetRequestsFlushIndices);
+            break;
+        }
+
         auto psr = this->pendingParamSetRequests.First();
         this->pendingParamSetRequests.RemoveFirst();
+
+        ++counter;
 
         auto p = this->FindParameter(psr.First());
         if (p != nullptr) {
@@ -1273,10 +1372,23 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
     }
 
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingGroupParamSetRequests.Count(), this->groupParamSetRequestsFlushIndices);
+
+    // set parameter values for a group
     auto pgp = this->pendingGroupParamSetRequests.GetIterator();
     while (pgp.HasNext()) {
         auto& pg = pgp.Next().Value();
         if (pg.GroupSize == pg.Requests.Count()) {
+            // flush mechanism
+            if (this->checkForFlushEvent(counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
+                this->updateFlushIdxList(counter, this->groupParamSetRequestsFlushIndices);
+                break;
+            }
+
+            ++counter;
+
             vislib::sys::Log::DefaultLog.WriteInfo("parameter group %s is complete. executing:", pg.Name.PeekBuffer());
             auto pgi = pg.Requests.GetIterator();
             while (pgi.HasNext()) {
@@ -1840,7 +1952,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         } else {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
-            if (!this->lua->RunString(content.PeekBuffer(), result)) {
+            if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
                 vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
             } else {
@@ -2972,7 +3084,7 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
  * megamol::core::CoreInstance::enumParameters
  */
 void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, mmcEnumStringAFunction func, void* data) const {
+    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const {
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -2988,17 +3100,14 @@ void megamol::core::CoreInstance::enumParameters(
             AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
             se = mod->ChildList_End();
             for (si = mod->ChildList_Begin(); si != se; ++si) {
-                const param::ParamSlot* slot = dynamic_cast<const param::ParamSlot*>((*si).get());
-                if (slot != NULL) {
-                    vislib::StringA name(mod->FullName());
-                    name.Append("::");
-                    name.Append(slot->Name());
-                    func(name.PeekBuffer(), data);
-                }
+                param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+					cb(*mod, *slot);
+				}
             }
 
         } else if (ns) {
-            this->enumParameters(ns, func, data);
+            this->enumParameters(ns, cb);
         }
     }
 }
@@ -3718,4 +3827,28 @@ void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& fr
     Log::DefaultLog.WriteWarn(
         _T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
 #endif /* _WIN32 */
+}
+
+
+void megamol::core::CoreInstance::updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list) {
+    list.erase(list.begin());
+    std::transform(list.begin(), list.end(), list.begin(), [processedCount](size_t el) { return el - processedCount; });
+}
+
+
+bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const {
+    if (!list.empty()) {
+        auto const idx = list.front();
+
+        if (eventIdx > idx) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
+    list.erase(std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
 }
