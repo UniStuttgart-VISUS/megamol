@@ -80,6 +80,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     mt->SetTypePair(metricsEnum::FRACTIONAL_ANISOTROPY, "Fractional Anisotropy");
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
     mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
+    mt->SetTypePair(metricsEnum::NEAREST_DISTANCE, "Nearest Dist");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -238,6 +239,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
         this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
         this->extremeValueSlot.IsDirty()) {
         allpartcnt = 0;
+        ++myHash;
 
         // final computation
         bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -381,6 +383,22 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                     case metricsEnum::NEIGHBORS:
                         magnitude = num_matches;
                         break;
+                    case metricsEnum::NEAREST_DISTANCE:
+                        {
+                            magnitude = std::numeric_limits<float>::max();
+                            if (remove_self) {
+                                // nearest is a neighbor
+                                if (!ret_matches.empty()) {
+                                    magnitude = ret_matches[0].second;
+                                }
+                            } else {
+                                // nearest should be ourselves, with distance 0, so take the next best
+                                if (ret_matches.size() > 1) {
+                                    magnitude = ret_matches[1].second;
+                                }
+                            }
+                        }
+                        break;
                     default:
                         vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
                         break;
@@ -482,6 +500,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             allpartcnt += pl.GetCount();
         }
     }
+    out->SetDataHash(this->myHash);
     out->SetUnlocker(in->GetUnlocker());
     in->SetUnlocker(nullptr, false);
     return true;
