@@ -10,6 +10,7 @@
 #include <array>
 #include <cassert>
 #include <cfloat>
+#include <cfenv>
 #include <cstdint>
 #include <limits>
 #include <omp.h>
@@ -19,6 +20,8 @@
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/ConsoleProgressBar.h"
 #include "vislib/sys/Log.h"
+
+#include "MinSphereWrapper.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -371,7 +374,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                         magnitude = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
                         break;
                     case metricsEnum::DENSITY:
-                        vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
+                        //vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
+                        magnitude = computeDensity(ret_matches, num_matches, vertexBase, pl.GetGlobalRadius(), bbox);
                         break;
                     case metricsEnum::FRACTIONAL_ANISOTROPY:
                         magnitude = computeFractionalAnisotropy(ret_matches, num_matches);
@@ -539,6 +543,39 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
     float scale = sqrt(1.5f) / sqrt(ev[0] * ev[0] + ev[1] * ev[1] + ev[2] * ev[2]);
 
     return FA * scale;
+}
+
+float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vector<std::pair<size_t, float>>& matches,
+    size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
+    bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+    auto r_mode = fegetround();
+    fesetround(FE_TONEAREST);
+
+    std::vector<float> part;
+    part.reserve(num_matches * 4);
+    for (size_t i = 0; i < num_matches; ++i) {
+        auto coord = myPts->get_position(matches[i].first);
+        part.push_back(
+            cycl_x ? coord[0] - bbox.Width() * std::nearbyintf((coord[0] - curPoint[0]) / bbox.Width()) : coord[0]);
+        part.push_back(
+            cycl_y ? coord[1] - bbox.Height() * std::nearbyintf((coord[1] - curPoint[1]) / bbox.Height()) : coord[1]);
+        part.push_back(
+            cycl_z ? coord[2] - bbox.Depth() * std::nearbyintf((coord[2] - curPoint[2]) / bbox.Depth()) : coord[2]);
+        part.push_back(radius);
+    }
+
+    fesetround(r_mode);
+
+    auto sphere = getMinSphere(part);
+
+    auto minSphereVolume = 4.0f/3.0f*3.14f*sphere[3]*sphere[3]*sphere[3];
+
+    auto parVolume = 4.0f/3.0f*3.14f*radius*radius*radius;
+
+    return parVolume/minSphereVolume;
 }
 
 
