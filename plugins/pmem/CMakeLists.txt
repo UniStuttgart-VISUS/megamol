@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER pmem EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pmem" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pmem" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(pmem)
@@ -12,6 +12,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+
+  find_package(PMDK REQUIRED)
+  find_package(libpmemobj++ CONFIG REQUIRED)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -25,8 +28,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+    "include" "src" ${PMDK_INCLUDE_DIR} ${LIBPMEMOBJ_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core ${PMDK_LIBRARIES})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -34,6 +37,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(DIRECTORY "${PMDK_ROOT}/lib/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
