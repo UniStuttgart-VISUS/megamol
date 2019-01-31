@@ -21,6 +21,7 @@
 #define CGAL_MINIBALL_SUPPORTSET
 
 #include <Min_sphere_of_spheres_d_configure.h>
+#include <Min_sphere_of_spheres_d_pair.h>
 #include <cmath>
 #include <functional>
 #include <utility>
