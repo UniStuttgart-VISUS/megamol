@@ -39,7 +39,8 @@ namespace datatools {
             FRACTIONAL_ANISOTROPY,
             DENSITY,
             PRESSURE,
-            NEIGHBORS
+            NEIGHBORS,
+            NEAREST_DISTANCE
         };
 
         /** Return module class name */
