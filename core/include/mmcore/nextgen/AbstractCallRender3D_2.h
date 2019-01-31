@@ -57,25 +57,42 @@ public:
     inline const BoundingBoxes_2& GetBoundingBoxes(void) const { return this->bboxs; }
 
     /**
-     * Gets the camera parameters pointer.
+     * Gets the camera parameters .
      *
      * @return The camera parameters pointer.
      */
-    // inline const vislib::SmartPtr<TODO>&
-    // GetCameraParameters(void) const {
-    //    return this->camParams;
-    //}
+    inline const cam_type::minimal_state_type& GetCameraState(void) const { return this->minCamState; }
 
     /**
-     * Sets the camera parameters pointer. These are to be set by the
+     * Returns the camera containing the parameters transferred by this call.
+     * Things like the view matrix are not calculated yet and have still to be retrieved from the object
+     * by using the appropriate functions. THIS METHOD PERFORMS A COPY OF A WHOLE CAMERA OBJECT.
+     * TO AVOID THIS, USE GetCameraState() or GetCamera(Camera_2&) INSTEAD.
+     * 
+     * @return A camera object containing the minimal state transferred by this call.
+     */
+    inline const Camera_2 GetCamera(void) const {
+        Camera_2 retval = this->minCamState;
+        return retval;
+    }
+
+    /**
+     * Stores the transferred camera state in a given Camera_2 object to avoid the copy of whole camera objects.
+     * This invalidates all present parameters in the given object. They have to be calculated again, using the appropriate functions.
+     *
+     * @param cam The camera object the transferred state is stored in
+     */
+    inline void GetCamera(Camera_2& cam) const {
+        cam = this->minCamState;
+    }
+
+    /**
+     * Sets the camera state. This has to be set by the
      * caller before calling 'Render'.
      *
-     * @param camParams The new value for the camera parameters pointer.
+     * @param camera The camera the state is adapted from.
      */
-    // inline void SetCameraParameters(const vislib::SmartPtr<
-    //        vislib::graphics::CameraParameters>& camParams) {
-    //    this->camParams = camParams;
-    //}
+    inline void SetCameraState(Camera_2& camera) { camera.get_minimal_state(this->minCamState); }
 
     /**
      * Gets the number of milliseconds required to render the last frame.
@@ -121,7 +138,7 @@ private:
     double lastFrameTime;
 };
 
-} /* end namespace view */
+} // namespace nextgen
 } /* end namespace core */
 } /* end namespace megamol */
 

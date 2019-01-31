@@ -16,10 +16,25 @@ using namespace megamol::core::nextgen;
 Camera_2::Camera_2(void) : cam_type() {}
 
 /*
+ * Camera_2::Camera_2
+ */
+Camera_2::Camera_2(const cam_type::minimal_state_type& rhs) : cam_type() {
+    *this = rhs;
+}
+
+/*
  * Camera_2::~Camera_2
  */
 Camera_2::~Camera_2(void) {
     // intentionally empty
+}
+
+/*
+ * Camera_2::operator=
+ */
+Camera_2& Camera_2::operator=(const cam_type::minimal_state_type& rhs) {
+    camera::operator=(rhs); // TODO is this correct?
+    return *this;
 }
 
 /*

@@ -96,6 +96,9 @@ bool nextgen::Renderer3DModule_2::RenderChain(Call& call) {
         (*chainedCall)(0);
     } else {
         // TODO move this behind the fbo magic?
+
+        auto vp = cr3d->GetViewport();
+        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = cr3d->BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

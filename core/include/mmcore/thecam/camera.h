@@ -483,7 +483,7 @@ namespace thecam {
          * @return 'snapshot'.
          */
         snapshot_type& take_snapshot(snapshot_type& snapshot,
-            const snapshot_content which) const;
+            const snapshot_content which = snapshot_content::all) const;
 
         /**
          * Computes the current up-vector of the camera.

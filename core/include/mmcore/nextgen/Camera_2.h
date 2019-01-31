@@ -39,9 +39,25 @@ public:
     Camera_2(void);
 
     /**
+     * Constructor using a minimal state to construct the camera
+     *
+     * @param other The state that is used to construct the camera
+     */
+    Camera_2(const cam_type::minimal_state_type& other);
+
+    /**
      * Destructor
      */
     virtual ~Camera_2(void);
+
+    /** 
+     * Assign the camera's properties from a minimal state snapshot.
+     *
+     * @param rhs The minimal camera state to be applied.
+     *
+     * @return *this
+     */
+    Camera_2& operator=(const cam_type::minimal_state_type& rhs);
 
     /**
      * Calculates the clipping distances based on a bounding box cuboid

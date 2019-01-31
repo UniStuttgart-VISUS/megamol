@@ -450,6 +450,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
     if (cr3d != nullptr) {
+        cr3d->SetCameraState(this->cam);
         (*cr3d)(view::AbstractCallRender::FnRender);
     }
 
