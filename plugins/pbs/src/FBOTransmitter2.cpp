@@ -384,7 +384,7 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
 
     //this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
-        mvn, [this](megamol::core::view::AbstractView& vi) { vi.RegisterHook(this); });
+        mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
@@ -496,8 +496,8 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(
-        mvn, [&bkgnd_color](core::view::AbstractRenderingView& arv) {
-            const float* bkgndCol = arv.BkgndColour();
+        mvn, [&bkgnd_color](core::view::AbstractRenderingView* arv) {
+            const float* bkgndCol = arv->BkgndColour();
             if (bkgndCol != nullptr) {
                 bkgnd_color[0] = bkgndCol[0];
                 bkgnd_color[1] = bkgndCol[1];
