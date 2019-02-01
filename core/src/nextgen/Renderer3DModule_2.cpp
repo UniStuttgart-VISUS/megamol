@@ -8,62 +8,47 @@
 #include "stdafx.h"
 #include "mmcore/nextgen/Renderer3DModule_2.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/InputCall.h"
 
 using namespace megamol::core;
+using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 
 /*
- * nextgen::Renderer3DModule_2::Renderer3DModule_2
+ * Renderer3DModule_2::Renderer3DModule_2
  */
-nextgen::Renderer3DModule_2::Renderer3DModule_2(void)
-    : Module()
-    , renderSlot("rendering", "Connects the renderer to a view")
+Renderer3DModule_2::Renderer3DModule_2(void)
+    : RendererModule<CallRender3D_2>()
     , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer") {
+
+    // TODO key callbacks, etc
+    this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &Renderer3DModule_2::RenderChain);
+    this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &Renderer3DModule_2::GetExtentsChain);
+    //this->renderSlot.
 
     this->chainRenderSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
-    this->renderSlot.SetCallback(
-        CallRender3D_2::ClassName(), CallRender3D_2::FunctionName(0), &Renderer3DModule_2::RenderCallback);
-    this->renderSlot.SetCallback(
-        CallRender3D_2::ClassName(), CallRender3D_2::FunctionName(1), &Renderer3DModule_2::GetExtentsCallback);
-    this->renderSlot.SetCallback(
-        CallRender3D_2::ClassName(), CallRender3D_2::FunctionName(2), &Renderer3DModule_2::OnMouseEventCallback);
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
 /*
- * nextgen::Renderer3DModule_2::~Renderer3DModule_2
+ * Renderer3DModule_2::~Renderer3DModule_2
  */
-nextgen::Renderer3DModule_2::~Renderer3DModule_2(void) {
+Renderer3DModule_2::~Renderer3DModule_2(void) {
     // intentionally empty
 }
 
 /*
- * nextgen::Renderer3DModule_2::MouseEvent
+ * Renderer3DModule_2::GetExtentsChain
  */
-bool nextgen::Renderer3DModule_2::MouseEvent(float x, float y, view::MouseFlags flags) { return false; }
-
-/*
- * nextgen::Renderer3DModule_2::OnMouseEventCallback
- */
-bool nextgen::Renderer3DModule_2::OnMouseEventCallback(Call& call) {
-    try {
-        nextgen::CallRender3D_2& cr3d = dynamic_cast<nextgen::CallRender3D_2&>(call);
-        return this->MouseEvent(cr3d.GetMouseX(), cr3d.GetMouseY(), cr3d.GetMouseFlags());
-    } catch (...) {
-        ASSERT("OnMouseEventCallback call cast failed\n");
-    }
-    return false;
-}
-
-/*
- * nextgen::Renderer3DModule_2::GetExtentsChain
- */
-bool nextgen::Renderer3DModule_2::GetExtentsChain(Call& call) {
-    nextgen::CallRender3D_2* cr3d = dynamic_cast<nextgen::CallRender3D_2*>(&call);
+bool Renderer3DModule_2::GetExtentsChain(Call& call) {
+    CallRender3D_2* cr3d = dynamic_cast<CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
-    nextgen::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<nextgen::CallRender3D_2>();
+    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
         *chainedCall = *cr3d;
@@ -75,19 +60,19 @@ bool nextgen::Renderer3DModule_2::GetExtentsChain(Call& call) {
     // TODO extents magic
 
     // get our own extents
-    this->GetExtents(call);
+    this->GetExtents(*cr3d);
 
     return true;
 }
 
 /*
- * nextgen::Renderer3DModule_2::RenderChain
+ * Renderer3DModule_2::RenderChain
  */
-bool nextgen::Renderer3DModule_2::RenderChain(Call& call) {
-    nextgen::CallRender3D_2* cr3d = dynamic_cast<nextgen::CallRender3D_2*>(&call);
+bool Renderer3DModule_2::RenderChain(Call& call) {
+    CallRender3D_2* cr3d = dynamic_cast<CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
-    nextgen::CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<nextgen::CallRender3D_2>();
+    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
         *chainedCall = *cr3d;
@@ -107,12 +92,12 @@ bool nextgen::Renderer3DModule_2::RenderChain(Call& call) {
     // TODO FBO magic
 
     // render our own stuff
-    this->Render(call);
+    this->Render(*cr3d);
 
     return true;
 }
 
 /*
- * nextgen::Renderer3DModule_2::MouseEventChain
+ * Renderer3DModule_2::MouseEventChain
  */
-bool nextgen::Renderer3DModule_2::MouseEventChain(float x, float y, view::MouseFlags flags) { return false; }
+bool Renderer3DModule_2::MouseEventChain(float x, float y, view::MouseFlags flags) { return false; }

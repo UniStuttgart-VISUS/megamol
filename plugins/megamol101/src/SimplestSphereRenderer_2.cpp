@@ -126,7 +126,7 @@ bool SimplestSphereRenderer_2::create(void) {
 /*
  * SimplestSphereRenderer_2::GetExtents
  */
-bool SimplestSphereRenderer_2::GetExtents(core::Call& call) {
+bool SimplestSphereRenderer_2::GetExtents(core::nextgen::CallRender3D_2& call) {
     core::nextgen::CallRender3D_2* cr3d = dynamic_cast<core::nextgen::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
@@ -163,7 +163,7 @@ void SimplestSphereRenderer_2::release(void) {
 /*
  * SimplestSphereRenderer_2::Render
  */
-bool SimplestSphereRenderer_2::Render(core::Call& call) {
+bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
     core::nextgen::CallRender3D_2* cr3d = dynamic_cast<core::nextgen::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 

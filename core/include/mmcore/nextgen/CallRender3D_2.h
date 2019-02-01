@@ -11,19 +11,19 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/nextgen/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
-#include <glm/glm.hpp>
 
 namespace megamol {
 namespace core {
 namespace nextgen {
 #ifdef _WIN32
 #    pragma warning(disable : 4250) // I know what I am doing ...
-#endif /* _WIN32 */
+#endif                              /* _WIN32 */
 /**
  * New and improved base class of rendering graph calls
  *
@@ -54,7 +54,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 3; }
+    static unsigned int FunctionCount(void) { return AbstractCallRender3D_2::FunctionCount(); }
 
     /**
      * Answer the name of the function used for this call.
@@ -63,18 +63,7 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) {
-        switch (idx) {
-        case 0:
-            return "Render";
-        case 1:
-            return "GetExtents";
-        case 2:
-            return "MouseEvent";
-        default:
-            return NULL;
-        }
-    }
+    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3D_2::FunctionName(idx); }
 
     /** Ctor. */
     CallRender3D_2(void);
@@ -87,27 +76,21 @@ public:
      *
      * @return The mouse flags
      */
-    inline view::MouseFlags GetMouseFlags(void) const {
-        return this->mouseFlags;
-    }
+    inline view::MouseFlags GetMouseFlags(void) const { return this->mouseFlags; }
 
     /**
      * Answer the mouse x coordinate in world space
      *
      * @return The mouse x coordinate in world space
      */
-    inline float GetMouseX(void) const {
-        return this->mouseX;
-    }
+    inline float GetMouseX(void) const { return this->mouseX; }
 
     /**
      * Answer the mouse y coordinate in world space
      *
      * @return The mouse y coordinate in world space
      */
-    inline float GetMouseY(void) const {
-        return this->mouseY;
-    }
+    inline float GetMouseY(void) const { return this->mouseY; }
 
     /**
      * Sets the mouse informations.
@@ -127,36 +110,28 @@ public:
      *
      * @return The current state of the mouse selection
      */
-    inline bool MouseSelection(void) { 
-        return this->mouseSelection; 
-    }
+    inline bool MouseSelection(void) { return this->mouseSelection; }
 
     /**
      * Sets the state of the mouse selection.
      *
      * @param selection The current state of the mouse selection
      */
-    inline void SetMouseSelection(bool selection) { 
-        this->mouseSelection = selection; 
-    }
+    inline void SetMouseSelection(bool selection) { this->mouseSelection = selection; }
 
     /**
      * Sets the background color
      *
      * @param backCol The new background color
      */
-    inline void SetBackgroundColor(glm::vec4 backCol) {
-        this->backgroundCol = backCol;
-    }
+    inline void SetBackgroundColor(glm::vec4 backCol) { this->backgroundCol = backCol; }
 
     /**
      * Gets the background color
-     * 
+     *
      * @return The stored background color
      */
-    inline glm::vec4 BackgroundColor(void) const {
-        return this->backgroundCol;
-    }
+    inline glm::vec4 BackgroundColor(void) const { return this->backgroundCol; }
 
     /**
      * Assignment operator
@@ -190,7 +165,7 @@ private:
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRender3D_2> CallRender3D_2Description;
 
-} /* end namespace view */
+} // namespace nextgen
 } /* end namespace core */
 } /* end namespace megamol */
 

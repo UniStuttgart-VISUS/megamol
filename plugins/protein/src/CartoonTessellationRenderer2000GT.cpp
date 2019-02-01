@@ -309,7 +309,7 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(Call& call) {
+bool CartoonTessellationRenderer2000GT::GetExtents(nextgen::CallRender3D_2& call) {
     nextgen::CallRender3D_2* cr = dynamic_cast<nextgen::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
@@ -355,7 +355,7 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(Call& call) {
+bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

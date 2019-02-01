@@ -407,7 +407,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     if (cr3d != nullptr) {
-        (*cr3d)(1); // GetExtents
+        (*cr3d)(view::AbstractCallRender::FnGetExtents);
         if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
                                       !this->bboxs.IsClipBoxValid()))) {

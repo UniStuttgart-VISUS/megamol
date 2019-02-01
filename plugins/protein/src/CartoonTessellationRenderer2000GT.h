@@ -105,7 +105,7 @@ namespace protein {
         *
         * @return The return value of the function.
         */
-        virtual bool GetExtents(Call& call);
+        virtual bool GetExtents(nextgen::CallRender3D_2& call);
 
         /**
         * TODO: Document
@@ -119,7 +119,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(Call& call);
+        virtual bool Render(nextgen::CallRender3D_2& call);
 
     private:
 

@@ -94,7 +94,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core::nextgen::CallRender3D_2& call);
 
     /**
      * The Open GL Render callback.
@@ -104,7 +104,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core::nextgen::CallRender3D_2& call);
 
     /** The input data slot. */
     core::CallerSlot sphereDataSlot;
