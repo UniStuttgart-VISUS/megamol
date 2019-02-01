@@ -2020,14 +2020,18 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
     }
 
     auto anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
+    auto mod = dynamic_cast<Module *>(ano);
     std::vector<AbstractNamedObject*> anoStack;
-    if (!fromModule) {
+    if (!fromModule || mod == nullptr) {
+        // we start from the root or a namespace
         const auto it_end = anoc->ChildList_End();
         for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
             if (dynamic_cast<AbstractNamedObjectContainer*>((*it).get())) {
                 anoStack.push_back((*it).get());
             }
         }
+        // if it was a namespace, we do not want to dig into calls!
+        fromModule = false;
     } else {
         anoStack.push_back(anoc);
     }
@@ -2037,7 +2041,7 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
         anoStack.pop_back();
 
         anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
-        auto *mod = dynamic_cast<Module *>(ano);
+        mod = dynamic_cast<Module *>(ano);
 
         if (mod) {
             cb(mod);

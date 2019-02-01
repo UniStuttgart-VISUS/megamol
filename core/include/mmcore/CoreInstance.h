@@ -413,28 +413,33 @@ public:
 
     /**
      * Enumerates all modules of the graph, calling cb for each encountered module.
-     * If entry_point is specified, the graph is traversed starting from that module,
+     * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
      * 
-     * @param entry_point the name of the module for traversal start
+     * @param entry_point the name of the module/namespace for traversal start
      * @param cb the lambda
      * 
      */
     inline void EnumModulesNoLock(const std::string& entry_point, std::function<void(Module*)> cb) {
-        if (!this->FindModuleNoLock<core::Module>(entry_point, [this, cb](Module* mod) {
+        auto thingy = this->namespaceRoot->FindNamedObject(entry_point.c_str());
+        auto mod = dynamic_cast<Module *>(thingy.get());
+        auto ns = dynamic_cast<ModuleNamespace *>(thingy.get());
+        if (mod) {
             this->EnumModulesNoLock(mod, cb);
-        })) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "EnumModulesNoLock: Unable to find module \"%s\" as entry point", entry_point.c_str());
+        } else if (ns) {
+            this->EnumModulesNoLock(ns, cb);
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
     }
 
     /**
      * Enumerates all modules of the graph, calling cb for each encountered module.
-     * If entry_point is specified, the graph is traversed starting from that module,
+     * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
      * 
-     * @param entry_point the module for traversal start or nullptr
+     * @param entry_point traversal start or nullptr
      * @param cb the lambda
      * 
      */
