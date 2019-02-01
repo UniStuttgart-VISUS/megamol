@@ -1420,62 +1420,39 @@ int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
 int megamol::core::LuaState::ListCalls(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMLISTCALLS)) {
 
-        int n = lua_gettop(L);
-        const char *ns = nullptr;
-        if (n == 1) {
-            ns = luaL_checkstring(L, 1);
-        }
+        const int n = lua_gettop(L);
+
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
-        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
-        AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-        if (!ano) {
-            lua_pushstring(L, MMC_LUA_MMLISTCALLS": no root");
-            lua_error(L);
-            return 0;
-        }
-
         std::stringstream answer;
-        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
 
-        const auto it_end = anor->ChildList_End();
-        for (auto it = anor->ChildList_Begin(); it != it_end; ++it) {
-            if (std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it)) {
-                if (dynamic_cast<const Module *>(it->get())) {
-                    // no namespaces, modules directly
-                    anoStack.push_back(*it);
-                } else if (ns == nullptr || it->get()->FullName().Equals(ns)) {
-                    // namespaces
-                    anoStack.push_back(*it);
+        const auto fun = [&answer](Module* mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se; ++si) {
+                const auto slot = dynamic_cast<CallerSlot*>((*si).get());
+                if (slot) {
+                    const Call *c = const_cast<CallerSlot *>(slot)->CallAs<Call>();
+                    if (c != nullptr) {
+                        answer << c->ClassName() << ";"
+                        << c->PeekCallerSlot()->Parent()->Name() << "," << c->PeekCalleeSlot()->Parent()->Name() << ";"
+                        << c->PeekCallerSlot()->Name() << "," << c->PeekCalleeSlot()->Name() << std::endl;
+                    }
                 }
             }
+        };
+
+        if (n == 1) {
+            const auto starting_point = luaL_checkstring(L, 1);
+            if (!std::string(starting_point).empty()) {
+                this->coreInst->EnumModulesNoLock(starting_point, fun);
+            } else {
+                this->coreInst->EnumModulesNoLock(nullptr, fun);
+            }
+        } else {
+            this->coreInst->EnumModulesNoLock(nullptr, fun);
         }
-
-        while (!anoStack.empty()) {
-            AbstractNamedObject::const_ptr_type ano = anoStack.back();
-            anoStack.pop_back();
-
-            AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-            const CallerSlot *caller = dynamic_cast<const CallerSlot *>(ano.get());
-
-            if (caller) {
-                // TODO there must be a better way
-                const Call *c = const_cast<CallerSlot *>(caller)->CallAs<Call>();
-                if (c != nullptr) {
-                    answer << c->ClassName() << ";"
-                    << c->PeekCallerSlot()->Parent()->Name() << "," << c->PeekCalleeSlot()->Parent()->Name() << ";"
-                    << c->PeekCallerSlot()->Name() << "," << c->PeekCalleeSlot()->Name() << std::endl;
-                }
-            }
-
-            if (anoc) {
-                const auto it_end2 = anoc->ChildList_End();
-                for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
-                    anoStack.push_back(*it);
-                }
-            }
-        }
+        
         lua_pushstring(L, answer.str().c_str());
         return 1;
     }
