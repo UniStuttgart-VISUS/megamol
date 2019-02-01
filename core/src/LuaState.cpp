@@ -98,6 +98,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 #define MMC_LUA_MMFLUSH "mmFlush"
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
+#define MMC_LUA_MMLISTPARAMETERS "mmListParameters"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -149,7 +150,9 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
     {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."},
     {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."},
-    {MMC_LUA_MMCURRENTSCRIPTPATH, MMC_LUA_MMCURRENTSCRIPTPATH "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise."}
+    {MMC_LUA_MMCURRENTSCRIPTPATH, MMC_LUA_MMCURRENTSCRIPTPATH "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise."},
+    {MMC_LUA_MMLISTPARAMETERS, MMC_LUA_MMLISTPARAMETERS "(string baseModule)\n\tReturn all parameters, their type and value, starting from a certain module downstream."
+        "\n\tWill use the graph root if an empty string is passed."}
 };
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
@@ -197,6 +200,7 @@ MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
 MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
 MMC_LUA_MMFLUSH "=" MMC_LUA_MMFLUSH ","
 MMC_LUA_MMCURRENTSCRIPTPATH "=" MMC_LUA_MMCURRENTSCRIPTPATH ","
+MMC_LUA_MMLISTPARAMETERS "=" MMC_LUA_MMLISTPARAMETERS ","
 "  ipairs = ipairs,"
 "  load = load,"
 "  next = next,"
@@ -388,6 +392,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMLISTCALLS, &dispatch<&LuaState::ListCalls>);
         lua_register(L, MMC_LUA_MMLISTMODULES, &dispatch<&LuaState::ListModules>);
         lua_register(L, MMC_LUA_MMLISTINSTANTIATIONS, &dispatch<&LuaState::ListInstatiations>);
+        lua_register(L, MMC_LUA_MMLISTPARAMETERS, &dispatch<&LuaState::ListParameters>);
 
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
@@ -1555,9 +1560,127 @@ int megamol::core::LuaState::ListInstatiations(lua_State* L) {
                 if (!dynamic_cast<const Module *>(it->get())) {
                     AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it);
                     answer << anoc->FullName() << std::endl;
+                    // TODO: the immediate child view should be it, generally
                 }
             }
         }
+
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::ListParameters(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMLISTPARAMETERS)) {
+
+        const int n = lua_gettop(L);
+
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        std::stringstream answer;
+
+        const auto fun = [&answer](Module* mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se; ++si) {
+                const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+                    answer << slot->FullName() << "\1" << slot->Parameter()->ValueString() << "\1";
+                }
+            }
+        };
+
+        if (n == 1) {
+            const auto starting_point = luaL_checkstring(L, 1);
+            if (!std::string(starting_point).empty()) {
+                this->coreInst->EnumModulesNoLock(starting_point, fun);
+            } else {
+                this->coreInst->EnumModulesNoLock(nullptr, fun);
+            }
+        } else {
+            this->coreInst->EnumModulesNoLock(nullptr, fun);
+        }
+        
+        //bool fromModule = false;
+
+        //const AbstractNamedObject* ano;
+        //if (n == 1) {
+        //    const char *startingPoint = luaL_checkstring(L, 1);
+        //    if (!std::string(startingPoint).empty()) {
+        //        this->coreInst->FindModuleNoLock<core::Module>(startingPoint, [&ano](core::Module* mod) {
+        //            ano = mod;
+        //        });
+        //        if (!ano) {
+        //            lua_pushstring(L, MMC_LUA_MMLISTMODULES": could not find module to start search");
+        //            lua_error(L);
+        //            return 0;
+        //        }
+        //        fromModule = true;
+        //    }
+        //} 
+        //if (!fromModule) {
+        //    ano = dynamic_cast<const AbstractNamedObject*>(this->coreInst->ModuleGraphRoot().get());
+        //    if (!ano) {
+        //        lua_pushstring(L, MMC_LUA_MMLISTMODULES": no root");
+        //        lua_error(L);
+        //        return 0;
+        //    }
+        //}
+
+        //const AbstractNamedObjectContainer* anor = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
+
+        //std::stringstream answer;
+        //std::vector<const AbstractNamedObject*> anoStack;
+
+        //if (!fromModule) {
+        //    const auto it_end = anor->ChildList_End();
+        //    for (auto it = anor->ChildList_Begin(); it != it_end; ++it) {
+        //        if (dynamic_cast<const AbstractNamedObjectContainer *>((*it).get())) {
+        //            anoStack.push_back((*it).get());
+        //        }
+        //    }
+        //} else {
+        //    anoStack.push_back(anor);
+        //}
+
+        //while (!anoStack.empty()) {
+        //    ano = anoStack.back();
+        //    anoStack.pop_back();
+
+        //    const AbstractNamedObjectContainer* anoc = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
+        //    const Module *mod = dynamic_cast<const Module *>(ano);
+
+        //    if (mod) {
+        //        AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+        //        se = mod->ChildList_End();
+        //        for (si = mod->ChildList_Begin(); si != se; ++si) {
+        //            param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
+        //            if (slot) {
+        //                answer << slot->FullName();
+        //            }
+        //            if (fromModule) {
+        //                CallerSlot* cs = dynamic_cast<CallerSlot*>((*si).get());
+        //                if (cs) {
+        //                    const Call* c = cs->CallAs<Call>();
+        //                    if (c) {
+        //                        this->coreInst->FindModuleNoLock<core::Module>(
+        //                            c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer(), [&anoStack](core::Module* mod) {
+        //                                anoStack.push_back(mod);
+        //                            });
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    if (anoc) {
+        //        const auto it_end2 = anoc->ChildList_End();
+        //        for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
+        //            anoStack.push_back((*it).get());
+        //        }
+        //    }
+        //}
 
         lua_pushstring(L, answer.str().c_str());
         return 1;
@@ -1635,3 +1758,4 @@ int megamol::core::LuaState::CurrentScriptPath(struct lua_State* L) {
     lua_pushstring(L, this->currentScriptPath.c_str());
     return 1;
 }
+

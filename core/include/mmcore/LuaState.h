@@ -226,6 +226,7 @@ namespace utility {
         int ListCalls(lua_State *L);
         int ListModules(lua_State *L);
         int ListInstatiations(lua_State *L);
+        int ListParameters(lua_State *L);
 
         int Help(lua_State *L);
         int Quit(lua_State *L);
