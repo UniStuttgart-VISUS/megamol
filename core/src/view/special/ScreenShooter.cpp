@@ -439,6 +439,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, 
             PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
+        // todo: just put the whole project file into one string, even better would ofc be
+        // to have a legal exif structure (lol)
+        //png_byte info[] = "heinzor:blah";
+        //png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
+
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
             // we can render the whole image in just one call!
