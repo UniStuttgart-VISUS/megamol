@@ -43,7 +43,7 @@ namespace megamol {
 				BatchedMeshes(
 					unsigned int vertices_allocated,
 					unsigned int indices_allocated)
-					: mesh(std::make_shared<Mesh>()),
+					: mesh(nullptr),
 					vertices_allocated(vertices_allocated),
 					vertices_used(0),
 					indices_allocated(indices_allocated),

@@ -19,6 +19,9 @@
 #include "ng_mesh/BatchedMeshesDataCall.h"
 #include "ng_mesh/MaterialsDataCall.h"
 #include "ng_mesh/RenderTasksDataCall.h"
+#include "ng_mesh/GPUMeshDataCall.h"
+#include "ng_mesh/GPUMaterialDataCall.h"
+#include "ng_mesh/GPURenderTaskDataCall.h"
 #include "ng_mesh/glTFDataCall.h"
 
 #include "DebugBatchedMeshesDataSource.h"
@@ -72,6 +75,9 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::BatchedMeshesDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::MaterialsDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::RenderTasksDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMeshDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMaterialDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPURenderTaskDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFDataCall>();
 
             //

@@ -37,6 +37,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
+  # Additional definitions for compiling with VS
+  if(MSVC)
+      add_definitions(-DNOMINMAX)
+  endif()
+
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)

@@ -16,8 +16,8 @@ namespace megamol {
 	namespace ngmesh {
 
 		/**
-* Basic Vertex Layout descriptor taken over from glOwl.
-*/
+		* Basic Vertex Layout descriptor, courtesy of glOwl by Michael Becher.
+		*/
 		struct VertexLayout
 		{
 			struct Attribute
@@ -129,7 +129,7 @@ namespace megamol {
 		};
 
 		/**
-		 * OpenGL mesh class. Wraps all data and functionality required to store and use geometry with OpenGL.
+		 * OpenGL mesh class. Wraps all data and functionality required to store and use geometry with OpenGL. Courtesy of glOwl by Michael Becher.
 		 */
 		class Mesh
 		{
