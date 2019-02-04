@@ -96,6 +96,15 @@ add_subdirectory(plugins)
 ###############################
 add_subdirectory(utils)
 
+###############################
+# Tests
+###############################
+option(MEGAMOL_TESTS "Build MegaMol Tests" OFF)
+mark_as_advanced(MEGAMOL_TESTS)
+if (MEGAMOL_TESTS)
+    add_subdirectory(tests)
+endif()
+
 # Check dependencies and throw error
 foreach(d ${DEP_LIST})
   string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
