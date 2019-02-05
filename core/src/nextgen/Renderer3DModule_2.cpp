@@ -22,11 +22,15 @@ Renderer3DModule_2::Renderer3DModule_2(void)
     , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer") {
 
     // TODO key callbacks, etc
-    this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &Renderer3DModule_2::RenderChain);
-    this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &Renderer3DModule_2::GetExtentsChain);
-    //this->renderSlot.
+    // this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
+    //    AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &Renderer3DModule_2::RenderChain);
+    // this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
+    //    AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &Renderer3DModule_2::GetExtentsChain);
+    // this->renderSlot.
+
+    /*this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
+        &RendererModule<CallRender3D_2>::RenderCallback);*/
 
     this->chainRenderSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->chainRenderSlot);
