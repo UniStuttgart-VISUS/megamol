@@ -95,9 +95,12 @@ namespace datatools {
         bool assertData(core::moldyn::DirectionalParticleDataCall *in,
             core::moldyn::MultiParticleDataCall *outMPDC, core::moldyn::DirectionalParticleDataCall *outDPDC);
 
+        std::vector<float> decyclePos(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
+
         float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
         float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);
         float computeDensity(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
+        float computePressure(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
 
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;

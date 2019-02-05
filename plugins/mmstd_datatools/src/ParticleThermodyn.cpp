@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cfloat>
 #include <cfenv>
+#include <cfloat>
 #include <cstdint>
 #include <limits>
 #include <omp.h>
@@ -211,8 +211,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
             // if (pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ)
             // vert_stride = 12; else if (pl.GetVertexDataType() ==
             // DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR) vert_stride = 16; else
-            // continue; vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride()); const unsigned char
-            // *vert = static_cast<const unsigned char*>(pl.GetVertexData());
+            // continue; vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride()); const unsigned
+            // char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
             UINT64 part_cnt = pl.GetCount();
 
@@ -375,34 +375,33 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                         magnitude = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
                         break;
                     case metricsEnum::DENSITY:
-                        //vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
+                        // vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
                         magnitude = computeDensity(ret_matches, num_matches, vertexBase, pl.GetGlobalRadius(), bbox);
                         break;
                     case metricsEnum::FRACTIONAL_ANISOTROPY:
                         magnitude = computeFractionalAnisotropy(ret_matches, num_matches);
                         break;
                     case metricsEnum::PRESSURE:
-                        vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
+                        //vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
+                        magnitude = computePressure(ret_matches, num_matches, vertexBase, pl.GetGlobalRadius(), bbox);
                         break;
                     case metricsEnum::NEIGHBORS:
                         magnitude = num_matches;
                         break;
-                    case metricsEnum::NEAREST_DISTANCE:
-                        {
-                            magnitude = std::numeric_limits<float>::max();
-                            if (remove_self) {
-                                // nearest is a neighbor
-                                if (!ret_matches.empty()) {
-                                    magnitude = ret_matches[0].second;
-                                }
-                            } else {
-                                // nearest should be ourselves, with distance 0, so take the next best
-                                if (ret_matches.size() > 1) {
-                                    magnitude = ret_matches[1].second;
-                                }
+                    case metricsEnum::NEAREST_DISTANCE: {
+                        magnitude = std::numeric_limits<float>::max();
+                        if (remove_self) {
+                            // nearest is a neighbor
+                            if (!ret_matches.empty()) {
+                                magnitude = ret_matches[0].second;
+                            }
+                        } else {
+                            // nearest should be ourselves, with distance 0, so take the next best
+                            if (ret_matches.size() > 1) {
+                                magnitude = ret_matches[1].second;
                             }
                         }
-                        break;
+                    } break;
                     default:
                         vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
                         break;
@@ -510,6 +509,35 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
     return true;
 }
 
+
+std::vector<float> megamol::stdplugin::datatools::ParticleThermodyn::decyclePos(
+    std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
+    bool const cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool const cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool const cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+    auto const r_mode = fegetround();
+    fesetround(FE_TONEAREST);
+
+    std::vector<float> part;
+    part.reserve(num_matches * 4);
+    for (size_t i = 0; i < num_matches; ++i) {
+        auto const coord = myPts->get_position(matches[i].first);
+        part.push_back(
+            cycl_x ? coord[0] - bbox.Width() * std::nearbyintf((coord[0] - curPoint[0]) / bbox.Width()) : coord[0]);
+        part.push_back(
+            cycl_y ? coord[1] - bbox.Height() * std::nearbyintf((coord[1] - curPoint[1]) / bbox.Height()) : coord[1]);
+        part.push_back(
+            cycl_z ? coord[2] - bbox.Depth() * std::nearbyintf((coord[2] - curPoint[2]) / bbox.Depth()) : coord[2]);
+        part.push_back(radius);
+    }
+
+    fesetround(r_mode);
+
+    return part;
+}
+
+
 float megamol::stdplugin::datatools::ParticleThermodyn::computeTemperature(
     std::vector<std::pair<size_t, float>>& matches, const size_t num_matches, const float mass, const float freedom) {
     std::array<float, 3> sum = {0, 0, 0};
@@ -537,6 +565,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeTemperature(
     return magnitude;
 }
 
+
 float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotropy(
     std::vector<std::pair<size_t, float>>& matches, const size_t num_matches) {
 
@@ -562,37 +591,52 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
     return FA * scale;
 }
 
+
 float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vector<std::pair<size_t, float>>& matches,
     size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
-    bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-    auto r_mode = fegetround();
-    fesetround(FE_TONEAREST);
-
-    std::vector<float> part;
-    part.reserve(num_matches * 4);
-    for (size_t i = 0; i < num_matches; ++i) {
-        auto coord = myPts->get_position(matches[i].first);
-        part.push_back(
-            cycl_x ? coord[0] - bbox.Width() * std::nearbyintf((coord[0] - curPoint[0]) / bbox.Width()) : coord[0]);
-        part.push_back(
-            cycl_y ? coord[1] - bbox.Height() * std::nearbyintf((coord[1] - curPoint[1]) / bbox.Height()) : coord[1]);
-        part.push_back(
-            cycl_z ? coord[2] - bbox.Depth() * std::nearbyintf((coord[2] - curPoint[2]) / bbox.Depth()) : coord[2]);
-        part.push_back(radius);
-    }
-
-    fesetround(r_mode);
+    if (num_matches == 0) return 0.0f;
+    
+    std::vector<float> const part = decyclePos(matches, num_matches, curPoint, radius, bbox);
 
     auto sphere = getMinSphere(part);
 
-    auto minSphereVolume = 4.0f/3.0f*3.14f*sphere[3]*sphere[3]*sphere[3];
+    auto const minSphereVolume = 4.0f / 3.0f * 3.14f * sphere[3] * sphere[3] * sphere[3];
 
-    auto parVolume = 4.0f/3.0f*3.14f*radius*radius*radius;
+    // auto parVolume = 4.0f/3.0f*3.14f*radius*radius*radius;
 
-    return parVolume/minSphereVolume;
+    return num_matches / minSphereVolume;
+}
+
+
+float megamol::stdplugin::datatools::ParticleThermodyn::computePressure(std::vector<std::pair<size_t, float>>& matches,
+    size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
+    if (num_matches == 0) return 0.0f;
+
+    std::vector<float> const part = decyclePos(matches, num_matches, curPoint, radius, bbox);
+
+    //auto density = computeDensity(matches, num_matches, curPoint, radius, bbox);
+    //auto temperature = computeTemperature(matches, num_matches, 1.0f, 1.5f);
+
+    auto diffLJ = [](float const r, float const eps, float const sigma) -> float {
+        float const rm = std::powf(1.12f * sigma, 6.0f);
+        return eps * (12.0f * rm * (-rm / std::powf(r, 13.0f) + 1.0f / std::powf(r, 7.0f)));
+    };
+
+    static float kb = 1.380649e-23f;
+
+    float pressure = 0.0f;
+
+    for (size_t i = 0; i < num_matches; ++i) {
+        float dis = std::sqrtf(std::powf(std::fabsf(part[i * 3 + 0] - curPoint[0]), 2.0f) +
+                               std::powf(std::fabsf(part[i * 3 + 1] - curPoint[1]), 2.0f) +
+                               std::powf(std::fabsf(part[i * 3 + 2] - curPoint[2]), 2.0f));
+
+        if (dis == 0.0f) continue;
+
+        pressure += dis * diffLJ(dis, 1.0f, 0.94f * radius);
+    }
+
+    return pressure;
 }
 
 
@@ -630,6 +674,7 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
 
     return true;
 }
+
 
 bool datatools::ParticleThermodyn::getDataCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::DirectionalParticleDataCall;
