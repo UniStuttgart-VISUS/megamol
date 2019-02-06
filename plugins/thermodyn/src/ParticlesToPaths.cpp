@@ -43,6 +43,7 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     if (inCall->DataHash() != inDataHash_) {
         inDataHash_ = inCall->DataHash();
 
+        pathStore_.clear();
         pathStore_.resize(plc);
 
         for (unsigned int plidx = 0; plidx < plc; ++plidx) {
