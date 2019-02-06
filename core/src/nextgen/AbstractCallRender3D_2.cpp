@@ -21,7 +21,9 @@ nextgen::AbstractCallRender3D_2::~AbstractCallRender3D_2(void) {
  * nextgen::AbstractCallRender3D::operator=
  */
 nextgen::AbstractCallRender3D_2& nextgen::AbstractCallRender3D_2::operator=(const nextgen::AbstractCallRender3D_2& rhs) {
-    // TODO implement
+    this->minCamState = rhs.minCamState;
+    this->bboxs = rhs.bboxs;
+    this->lastFrameTime = rhs.lastFrameTime;
     return *this;
 }
 

@@ -92,7 +92,7 @@ public:
      *
      * @param camera The camera the state is adapted from.
      */
-    inline void SetCameraState(Camera_2& camera) { camera.get_minimal_state(this->minCamState); }
+    inline void SetCameraState(Camera_2& camera) { this->minCamState = camera.get_minimal_state(this->minCamState); }
 
     /**
      * Gets the number of milliseconds required to render the last frame.

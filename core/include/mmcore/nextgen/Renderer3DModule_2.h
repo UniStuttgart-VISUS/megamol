@@ -64,7 +64,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtentsChain(Call& call);
+    virtual bool GetExtentsChain(CallRender3D_2& call) override final;
 
     /**
      * The callback that triggers the rendering of all chained render modules
@@ -74,46 +74,10 @@ protected:
      *
      * @return True on success, false otherwise
      */
-    virtual bool RenderChain(Call& call);
+    virtual bool RenderChain(CallRender3D_2& call) override final;
 
     // TODO events
 
-    /**
-     * The mouse event callback called when the mouse moved or a mouse
-     * button changes it's state. This version of the method calls the respective method of alle chained renderers
-     *
-     * @param x The x coordinate of the mouse in world space
-     * @param y The y coordinate of the mouse in world space
-     * @param flags The mouse flags
-     *
-     * @return 'true' if the mouse event was consumed by the renderer and
-     *         must be ignored by the view or subsequent renderer modules.
-     */
-    virtual bool MouseEventChain(float x, float y, view::MouseFlags flags);
-
-private:
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetExtentsCallback(CallRender3D_2& call) { return this->GetExtentsChain(call); }
-
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool RenderCallback(CallRender3D_2& call) { return this->RenderChain(call); }
-
-    /** Slot for the daisy-chained renderer */
-    CallerSlot chainRenderSlot;
 };
 
 } // namespace nextgen

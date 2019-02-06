@@ -17,24 +17,10 @@ using namespace megamol::core::view;
 /*
  * Renderer3DModule_2::Renderer3DModule_2
  */
-Renderer3DModule_2::Renderer3DModule_2(void)
-    : RendererModule<CallRender3D_2>()
-    , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer") {
+Renderer3DModule_2::Renderer3DModule_2(void) : RendererModule<CallRender3D_2>() {
 
-    // TODO key callbacks, etc
-    // this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
-    //    AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &Renderer3DModule_2::RenderChain);
-    // this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
-    //    AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &Renderer3DModule_2::GetExtentsChain);
-    // this->renderSlot.
-
-    /*this->renderSlot.SetCallback(CallRender3D_2::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
-        &RendererModule<CallRender3D_2>::RenderCallback);*/
-
-    this->chainRenderSlot.SetCompatibleCall<CallRender3D_2Description>();
+    // Callbacks should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
-
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
@@ -48,14 +34,11 @@ Renderer3DModule_2::~Renderer3DModule_2(void) {
 /*
  * Renderer3DModule_2::GetExtentsChain
  */
-bool Renderer3DModule_2::GetExtentsChain(Call& call) {
-    CallRender3D_2* cr3d = dynamic_cast<CallRender3D_2*>(&call);
-    if (cr3d == nullptr) return false;
-
+bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
-        *chainedCall = *cr3d;
+        *chainedCall = call;
 
         // chain through the the get extents call
         (*chainedCall)(1);
@@ -64,7 +47,7 @@ bool Renderer3DModule_2::GetExtentsChain(Call& call) {
     // TODO extents magic
 
     // get our own extents
-    this->GetExtents(*cr3d);
+    this->GetExtents(call);
 
     return true;
 }
@@ -72,23 +55,20 @@ bool Renderer3DModule_2::GetExtentsChain(Call& call) {
 /*
  * Renderer3DModule_2::RenderChain
  */
-bool Renderer3DModule_2::RenderChain(Call& call) {
-    CallRender3D_2* cr3d = dynamic_cast<CallRender3D_2*>(&call);
-    if (cr3d == nullptr) return false;
-
+bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
-        *chainedCall = *cr3d;
+        *chainedCall = call;
 
         // chain through the the render call
         (*chainedCall)(0);
     } else {
         // TODO move this behind the fbo magic?
 
-        auto vp = cr3d->GetViewport();
+        auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
-        auto backCol = cr3d->BackgroundColor();
+        auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
@@ -96,12 +76,7 @@ bool Renderer3DModule_2::RenderChain(Call& call) {
     // TODO FBO magic
 
     // render our own stuff
-    this->Render(*cr3d);
+    this->Render(call);
 
     return true;
 }
-
-/*
- * Renderer3DModule_2::MouseEventChain
- */
-bool Renderer3DModule_2::MouseEventChain(float x, float y, view::MouseFlags flags) { return false; }

@@ -223,7 +223,8 @@ bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
 
     cam_type::snapshot_type camsnap;
     cam_type::matrix_type viewCam, projCam;
-    localCam.take_snapshot(camsnap);
+    //localCam.take_snapshot(camsnap);
+    localCam.calc_matrices(camsnap, viewCam, projCam);
 
     glm::mat4 view = viewCam;
     glm::mat4 proj = projCam;
