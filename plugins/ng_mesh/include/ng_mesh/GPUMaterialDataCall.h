@@ -63,16 +63,16 @@ namespace megamol
 				return AbstractGetDataCall::FunctionName(idx);
 			}
 
-			void setRenderTaskData(GPUMaterialDataStorage* gpu_materials) {
+			void setMaterialStorage(std::shared_ptr<GPUMaterialDataStorage> const& gpu_materials) {
 				m_gpu_materials = gpu_materials;
 			}
 
-			GPUMaterialDataStorage* getRenderTaskData() {
+			std::shared_ptr<GPUMaterialDataStorage> getMaterialStorage() {
 				return m_gpu_materials;
 			}
 
 		private:
-			GPUMaterialDataStorage* m_gpu_materials;
+			std::shared_ptr<GPUMaterialDataStorage> m_gpu_materials;
 		};
 
 		/** Description class typedef */

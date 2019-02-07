@@ -24,9 +24,9 @@
 #include "ng_mesh/GPURenderTaskDataCall.h"
 #include "ng_mesh/glTFDataCall.h"
 
-#include "DebugBatchedMeshesDataSource.h"
-#include "DebugMaterialsDataSource.h"
-#include "DebugRenderTasksDataSource.h"
+#include "DebugGPUMeshDataSource.h"
+#include "DebugGPUMaterialDataSource.h"
+#include "DebugGPURenderTaskDataSource.h"
 #include "gltf/glTFFileLoader.h"
 
 
@@ -57,9 +57,9 @@ namespace {
             // register modules here:
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshRenderer>();
 			//this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshDebugDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugBatchedMeshesDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugMaterialsDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugRenderTasksDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMeshDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMaterialDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPURenderTaskDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFFileLoader>();
 
             //

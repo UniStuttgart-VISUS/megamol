@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetDataCall.h"
+#include "mmcore/AbstractGetData3DCall.h"
 #include "ng_mesh.h"
 #include "GPURenderTaskDataStorage.h"
 
@@ -19,10 +19,10 @@ namespace megamol
 {
 	namespace ngmesh
 	{
-		class NG_MESH_API GPURenderTaskDataCall : public megamol::core::AbstractGetDataCall
+		class NG_MESH_API GPURenderTaskDataCall : public megamol::core::AbstractGetData3DCall
 		{
 		public:
-			inline GPURenderTaskDataCall() : AbstractGetDataCall(), m_gpu_render_tasks(nullptr) {}
+			inline GPURenderTaskDataCall() : AbstractGetData3DCall(), m_gpu_render_tasks(nullptr) {}
 			~GPURenderTaskDataCall() = default;
 
 			/**

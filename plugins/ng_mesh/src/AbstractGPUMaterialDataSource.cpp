@@ -11,7 +11,9 @@
 #include "ng_mesh/GPUMaterialDataCall.h"
 
 megamol::ngmesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
-	: core::Module(), m_getData_slot("getData", "The slot publishing the loaded data")
+	: core::Module(),
+	m_gpu_materials(std::make_shared<GPUMaterialDataStorage>()),
+	m_getData_slot("getData", "The slot publishing the loaded data")
 {
 	this->m_getData_slot.SetCallback(GPUMaterialDataCall::ClassName(), "GetData", &AbstractGPUMaterialDataSource::getDataCallback);
 	this->MakeSlotAvailable(&this->m_getData_slot);

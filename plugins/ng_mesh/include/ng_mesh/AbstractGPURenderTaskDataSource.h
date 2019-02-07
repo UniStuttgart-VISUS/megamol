@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "ng_mesh.h"
 #include "GPURenderTaskDataStorage.h"
@@ -48,10 +49,13 @@ namespace megamol
 			virtual void release();
 
 		private:
-			GPURenderTaskDataStorage m_gpu_render_tasks;
+			std::shared_ptr<GPURenderTaskDataStorage> m_gpu_render_tasks;
 
 			/** The slot for requesting data */
 			megamol::core::CalleeSlot m_getData_slot;
+
+			megamol::core::CallerSlot m_mesh_callerSlot;
+			megamol::core::CallerSlot m_material_callerSlot;
 		};
 	}
 }

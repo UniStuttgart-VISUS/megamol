@@ -29,6 +29,10 @@ namespace megamol {
 				std::vector<std::shared_ptr<Texture2D>> textures;
 			};
 
+			void addMaterial(std::string shader_btf_name);
+
+			void addMaterial(std::shared_ptr<GLSLShader> const& shader);
+
 		private:
 			std::vector<Material> m_materials;
 		};

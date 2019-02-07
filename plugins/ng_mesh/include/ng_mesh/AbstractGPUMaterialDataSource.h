@@ -47,8 +47,9 @@ namespace megamol
 			*/
 			virtual void release();
 
+			std::shared_ptr<GPUMaterialDataStorage> m_gpu_materials;
+
 		private:
-			GPUMaterialDataStorage m_gpu_materials;
 
 			/** The slot for requesting data */
 			megamol::core::CalleeSlot m_getData_slot;

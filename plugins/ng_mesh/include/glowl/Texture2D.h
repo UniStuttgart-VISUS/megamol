@@ -8,6 +8,8 @@
 #ifndef TEXTURE2D_H_INCLUDED
 #define TEXTURE2D_H_INCLUDED
 
+#include <algorithm>
+
 #include "Texture.h"
 
 namespace megamol {

@@ -13,9 +13,9 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "ng_mesh/BatchedMeshesDataCall.h"
-#include "ng_mesh/MaterialsDataCall.h"
-#include "ng_mesh/RenderTasksDataCall.h"
+#include "ng_mesh/GPUMeshDataCall.h"
+#include "ng_mesh/GPUMaterialDataCall.h"
+#include "ng_mesh/GPURenderTaskDataCall.h"
 
 using namespace megamol::core;
 using namespace megamol::ngmesh;
@@ -23,20 +23,20 @@ using namespace megamol::ngmesh;
 NGMeshRenderer::NGMeshRenderer()
 	: Renderer3DModule(),
 	//m_renderBatches_callerSlot("getData", "Connects the mesh renderer with a mesh data source"),
-	m_mesh_callerSlot("getMeshData", "Connects the renderer with a mesh data source"),
-	m_material_callerSlot("getMaterialData", "Connects the renderer with a material data source"),
+	//m_mesh_callerSlot("getMeshData", "Connects the renderer with a mesh data source"),
+	//m_material_callerSlot("getMaterialData", "Connects the renderer with a material data source"),
 	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
 {
 	//this->m_renderBatches_callerSlot.SetCompatibleCall<CallNGMeshRenderBatchesDescription>();
 	//this->MakeSlotAvailable(&this->m_renderBatches_callerSlot);
 
-	this->m_mesh_callerSlot.SetCompatibleCall<BatchedMeshesDataCallDescription>();
-	this->MakeSlotAvailable(&this->m_mesh_callerSlot);
+	//this->m_mesh_callerSlot.SetCompatibleCall<GPUMeshDataCallDescription>();
+	//this->MakeSlotAvailable(&this->m_mesh_callerSlot);
+	//
+	//this->m_material_callerSlot.SetCompatibleCall<GPUMaterialDataCallDescription>();
+	//this->MakeSlotAvailable(&this->m_material_callerSlot);
 
-	this->m_material_callerSlot.SetCompatibleCall<MaterialsDataCallDescription>();
-	this->MakeSlotAvailable(&this->m_material_callerSlot);
-
-	this->m_render_task_callerSlot.SetCompatibleCall<RenderTasksDataCallDescription>();
+	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
 }
 
@@ -157,17 +157,17 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 
-	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
-
-	if (mesh_call == NULL)
-		return false;
-
-	if (!(*mesh_call)(1))
-		return false;
-
-	cr->SetTimeFramesCount(mesh_call->FrameCount());
-	cr->AccessBoundingBoxes() = mesh_call->GetBoundingBoxes();
-	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+	//BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
+	//
+	//if (mesh_call == NULL)
+	//	return false;
+	//
+	//if (!(*mesh_call)(1))
+	//	return false;
+	//
+	//cr->SetTimeFramesCount(mesh_call->FrameCount());
+	//cr->AccessBoundingBoxes() = mesh_call->GetBoundingBoxes();
+	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
 }
@@ -589,30 +589,30 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 	
-	BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
-	MaterialsDataCall*     matl_call = this->m_material_callerSlot.CallAs<MaterialsDataCall>();
-	RenderTasksDataCall*   task_call = this->m_render_task_callerSlot.CallAs<RenderTasksDataCall>();
+	//GPUMeshDataCall*       mesh_call = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+	//GPUMaterialDataCall*   matl_call = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
+	GPURenderTaskDataCall* task_call = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
 	
-	if (mesh_call == NULL || matl_call == NULL || task_call == NULL)
+	if (/*mesh_call == NULL || matl_call == NULL ||*/ task_call == NULL)
 		return false;
 	
-	if ( (!(*mesh_call)(0)) || (!(*matl_call)(0)) || (!(*task_call)(0)) )
+	if ( /*(!(*mesh_call)(0)) || (!(*matl_call)(0)) ||*/ (!(*task_call)(0)) )
 		return false;
 		
-	if (mesh_call->getUpdateFlags() > 0) {
-		updateMeshes(*(mesh_call->getBatchedMeshesDataAccessor()), mesh_call->getUpdateFlags());
-		mesh_call->resetUpdateFlags();
-	}
-	
-	if (matl_call->getUpdateFlags() > 0) {
-		updateMaterials(matl_call->getMaterialsData(), matl_call->getUpdateFlags());
-		matl_call->resetUpdateFlags();
-	}
-	
-	if (task_call->getUpdateFlags() > 0) {
-		updateRenderTasks(task_call->getRenderTaskData(), task_call->getUpdateFlags());
-		task_call->resetUpdateFlags();
-	}
+	//	if (mesh_call->getUpdateFlags() > 0) {
+	//		updateMeshes(*(mesh_call->getBatchedMeshesDataAccessor()), mesh_call->getUpdateFlags());
+	//		mesh_call->resetUpdateFlags();
+	//	}
+	//	
+	//	if (matl_call->getUpdateFlags() > 0) {
+	//		updateMaterials(matl_call->getMaterialsData(), matl_call->getUpdateFlags());
+	//		matl_call->resetUpdateFlags();
+	//	}
+	//	
+	//	if (task_call->getUpdateFlags() > 0) {
+	//		updateRenderTasks(task_call->getRenderTaskData(), task_call->getUpdateFlags());
+	//		task_call->resetUpdateFlags();
+	//	}
 	
 	//   CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 	//   

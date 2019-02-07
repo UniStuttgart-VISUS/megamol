@@ -66,7 +66,7 @@ namespace megamol
 
 		private:
 
-			GPUMeshDataStorage m_gpu_meshes;
+			std::shared_ptr<GPUMeshDataStorage> m_gpu_meshes;
 
 			/** The slot for requesting data */
 			megamol::core::CalleeSlot m_getData_slot;

@@ -201,8 +201,8 @@ namespace ngmesh {
 		/** Render batches caller slot */
 		//megamol::core::CallerSlot m_renderBatches_callerSlot;
 
-		megamol::core::CallerSlot m_mesh_callerSlot;
-		megamol::core::CallerSlot m_material_callerSlot;
+		//megamol::core::CallerSlot m_mesh_callerSlot;
+		//megamol::core::CallerSlot m_material_callerSlot;
 		megamol::core::CallerSlot m_render_task_callerSlot;
 
 
