@@ -532,18 +532,18 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
     switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
     case SCIVIS:
         // scivis renderer settings
-        ospSet1f(
+        ospSet1i(
             renderer, "aoTransparencyEnabled", this->AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
         ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
         ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
-        ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
-        ospSet1i(renderer, "backgroundEnabled", 0);
-        /* Not implemented
+        ospSet1f(renderer, "aoDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
+        //ospSet1i(renderer, "backgroundEnabled", 0);
+        
         GLfloat bgcolor[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
         ospSet3fv(renderer, "bgColor", bgcolor);
-        ospSet1i(renderer, "oneSidedLighting", 0);
-        */
+        ospSet1i(renderer, "oneSidedLighting", true);
+        
         break;
     case PATHTRACER:
         if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {

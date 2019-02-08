@@ -56,7 +56,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     INCLUDE_DIR "src/Eigen_ext")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp" "3rd/min_sphere_of_spheres/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   # Grouping in Visual Studio
@@ -85,7 +85,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
-    "3rd/nanoflann")
+    "3rd/nanoflann" "3rd/min_sphere_of_spheres")
   target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen)
 
   if(MPI_C_FOUND)
