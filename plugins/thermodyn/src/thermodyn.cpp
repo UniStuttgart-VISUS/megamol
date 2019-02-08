@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "ParticlesToPaths.h"
+#include "PathsToLines.h"
 
 #include "thermodyn/PathLineDataCall.h"
 
@@ -43,6 +44,7 @@ namespace {
 
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlesToPaths>();
+            this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathToLines>();
             //
             // TODO: Register your plugin's modules here
             // like:

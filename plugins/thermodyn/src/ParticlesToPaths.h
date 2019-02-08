@@ -39,7 +39,11 @@ private:
     /** output of particle pathlines */
     core::CalleeSlot dataOutSlot_;
 
-    int entrySize_;
+    std::vector<int> entrySizes_;
+
+    std::vector<bool> colsPresent_;
+
+    std::vector<bool> dirsPresent_;
 
     std::vector<std::unordered_map<uint64_t, std::vector<float>>> pathStore_;
 

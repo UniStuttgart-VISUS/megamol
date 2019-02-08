@@ -37,6 +37,8 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     auto inCall = dataInSlot_.CallAs<core::moldyn::DirectionalParticleDataCall>();
     if (inCall == nullptr) return false;
 
+    if (!(*inCall)(0)) return false;
+
     auto const plc = inCall->GetParticleListCount();
     auto const frameCount = inCall->FrameCount();
 
@@ -45,6 +47,10 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
 
         pathStore_.clear();
         pathStore_.resize(plc);
+
+        entrySizes_.resize(plc);
+        colsPresent_.resize(plc);
+        dirsPresent_.resize(plc);
 
         for (unsigned int plidx = 0; plidx < plc; ++plidx) {
             // step over all time frames to create complete pathline
@@ -87,11 +93,16 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
             auto& aAcc = part.GetParticleStore().GetCAAcc();
             auto& idAcc = part.GetParticleStore().GetIDAcc();
 
-            entrySize_ = 3;
-            if (dirPresent) entrySize_ += 3;
+            int entrySize = 3;
+            if (dirPresent) entrySize += 3;
+            if (colPresent) entrySize += 4;
+
+            entrySizes_[plidx] =  entrySize;
+            colsPresent_[plidx] = colPresent;
+            dirsPresent_[plidx] = dirPresent;
 
             for (size_t pidx = 0; pidx < pCount; ++pidx) {
-                storeEntry[idAcc->Get_u64(pidx)].reserve(frameCount * entrySize_);
+                storeEntry[idAcc->Get_u64(pidx)].reserve(frameCount * entrySize);
             }
 
             for (unsigned int fidx = 0; fidx < frameCount; ++fidx) {
@@ -108,16 +119,16 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                     entry.push_back(xAcc->Get_f(pidx));
                     entry.push_back(yAcc->Get_f(pidx));
                     entry.push_back(zAcc->Get_f(pidx));
-                    if (dirPresent) {
-                        entry.push_back(dxAcc->Get_f(pidx));
-                        entry.push_back(dyAcc->Get_f(pidx));
-                        entry.push_back(dzAcc->Get_f(pidx));
-                    }
                     if (colPresent) {
                         entry.push_back(rAcc->Get_f(pidx));
                         entry.push_back(gAcc->Get_f(pidx));
                         entry.push_back(bAcc->Get_f(pidx));
                         entry.push_back(aAcc->Get_f(pidx));
+                    }
+                    if (dirPresent) {
+                        entry.push_back(dxAcc->Get_f(pidx));
+                        entry.push_back(dyAcc->Get_f(pidx));
+                        entry.push_back(dzAcc->Get_f(pidx));
                     }
                 }
             }
@@ -125,7 +136,9 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     }
 
     // all data is serialized
-    outCall->SetEntrySize(entrySize_);
+    outCall->SetEntrySizes(entrySizes_);
+    outCall->SetColorFlags(colsPresent_);
+    outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
 
     return true;

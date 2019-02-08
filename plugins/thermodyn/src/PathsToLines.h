@@ -44,6 +44,8 @@ private:
 
     std::vector<Lines> linesStore_;
 
+    std::vector<std::vector<float>> linesData_;
+
 }; // end class PathToLines
 
 } // end namespace thermodyn

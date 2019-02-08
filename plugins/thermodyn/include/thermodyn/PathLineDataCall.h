@@ -44,16 +44,28 @@ public:
      */
     static const char* FunctionName(unsigned int idx) { return AbstractGetData3DCall::FunctionName(idx); }
 
-    int GetEntrySize() const { return entrySize_; }
+    std::vector<int> const& GetEntrySize() const { return entrySizes_; }
+
+    std::vector<bool> const& HasColors() const { return colsPresent_; }
+
+    std::vector<bool> const& HasDirections() const { return dirsPresent_; }
 
     std::vector<pathline_store_t> const* GetPathStore() const { return pathStore_; }
 
-    void SetEntrySize(int const entrySize) { entrySize_ = entrySize; }
+    void SetEntrySizes(std::vector<int> const& entrySizes) { entrySizes_ = entrySizes; }
+
+    void SetColorFlags(std::vector<bool> const& colsPresent) { colsPresent_ = colsPresent; }
+
+    void SetDirFlags(std::vector<bool> const& dirsPresent) { dirsPresent_ = dirsPresent; }
 
     void SetPathStore(std::vector<pathline_store_t> const* pathStore) { pathStore_ = pathStore; }
 
 private:
-    int entrySize_;
+    std::vector<int> entrySizes_;
+
+    std::vector<bool> dirsPresent_;
+
+    std::vector<bool> colsPresent_;
 
     std::vector<pathline_store_t> const* pathStore_ = nullptr;
 }; // end class PathLineDataCall
