@@ -123,7 +123,7 @@ public:
         this->dirPtr = p;
         this->dirStride = s == 0 ? DirDataSize[t] : s;
 
-        this->par_store_.SetDirData(t, reinterpret_cast<char const*>(p), this->dirStride);
+        this->par_store_->SetDirData(t, reinterpret_cast<char const*>(p), this->dirStride);
     }
 
     /**
@@ -134,7 +134,7 @@ public:
     void SetCount(UINT64 cnt) {
         this->dirDataType = DIRDATA_NONE;
         this->dirPtr = NULL; // DO NOT DELETE
-        this->par_store_.SetDirData(DIRDATA_NONE, nullptr);
+        this->par_store_->SetDirData(DIRDATA_NONE, nullptr);
         SimpleSphericalParticles::SetCount(cnt);
     }
 
@@ -161,7 +161,7 @@ public:
      *
      * @return Instance of particle store.
      */
-    DirectionalParticleStore const& GetParticleStore() const { return this->par_store_; }
+    DirectionalParticleStore const& GetParticleStore() const { return *this->par_store_; }
 
 private:
     /** The direction data type */
@@ -174,7 +174,7 @@ private:
     unsigned int dirStride;
 
     /** Instance of the particle store */
-    DirectionalParticleStore par_store_;
+    std::shared_ptr<DirectionalParticleStore> par_store_;
 };
 
 
