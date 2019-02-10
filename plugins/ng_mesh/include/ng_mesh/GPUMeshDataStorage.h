@@ -90,7 +90,7 @@ namespace megamol {
 			}
 			else {
 				for (auto& attr : vertex_descriptor.attributes) {
-					vb_attrib_byte_sizes.push_back(computeAttributeByteSize(vertex_descriptor.attributes.front()));
+					vb_attrib_byte_sizes.push_back(computeAttributeByteSize(attr));
 				}
 			}
 
