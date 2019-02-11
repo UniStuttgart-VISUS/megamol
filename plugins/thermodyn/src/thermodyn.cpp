@@ -14,6 +14,7 @@
 
 #include "ParticlesToPaths.h"
 #include "PathsToLines.h"
+#include "PathFilter.h"
 
 #include "thermodyn/PathLineDataCall.h"
 
@@ -45,6 +46,7 @@ namespace {
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlesToPaths>();
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathToLines>();
+            this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathFilter>();
             //
             // TODO: Register your plugin's modules here
             // like:
