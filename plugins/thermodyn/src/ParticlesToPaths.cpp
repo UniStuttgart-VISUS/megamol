@@ -2,14 +2,20 @@
 #include "ParticlesToPaths.h"
 
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/param/BoolParam.h"
 
 #include "vislib/sys/Log.h"
 
+#include <cfenv>
 #include "thermodyn/PathLineDataCall.h"
 
 
 megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
-    : dataInSlot_("dataIn", "Input of particle data"), dataOutSlot_("dataOut", "Output of particle pathlines") {
+    : dataInSlot_("dataIn", "Input of particle data")
+    , dataOutSlot_("dataOut", "Output of particle pathlines")
+    , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+    , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction") {
     dataInSlot_.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -18,6 +24,15 @@ megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
     dataOutSlot_.SetCallback(
         PathLineDataCall::ClassName(), PathLineDataCall::FunctionName(1), &ParticlesToPaths::getExtentCallback);
     MakeSlotAvailable(&dataOutSlot_);
+
+    this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->cyclXSlot);
+
+    this->cyclYSlot.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->cyclYSlot);
+
+    this->cyclZSlot.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&this->cyclZSlot);
 }
 
 
@@ -51,6 +66,21 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
         entrySizes_.resize(plc);
         colsPresent_.resize(plc);
         dirsPresent_.resize(plc);
+
+        auto const bbox = inCall->AccessBoundingBoxes().ObjectSpaceBBox();
+        auto const bbwidth = bbox.Width();
+        auto const bbheight = bbox.Height();
+        auto const bbdepth = bbox.Depth();
+        auto const hbbwidth = 0.5f * bbwidth;
+        auto const hbbheight = 0.5f * bbheight;
+        auto const hbbdepth = 0.5f * bbdepth;
+        auto const xo = bbox.GetLeft();
+        auto const yo = bbox.GetBottom();
+        auto const zo = bbox.GetBack();
+
+        bool const cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+        bool const cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+        bool const cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
 
         for (unsigned int plidx = 0; plidx < plc; ++plidx) {
             // step over all time frames to create complete pathline
@@ -97,13 +127,19 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
             if (dirPresent) entrySize += 3;
             if (colPresent) entrySize += 4;
 
-            entrySizes_[plidx] =  entrySize;
+            entrySizes_[plidx] = entrySize;
             colsPresent_[plidx] = colPresent;
             dirsPresent_[plidx] = dirPresent;
+
+            std::vector<float> old_pos(pCount * 3);
+            std::vector<float> dec_pos(pCount * 3);
 
             for (size_t pidx = 0; pidx < pCount; ++pidx) {
                 storeEntry[idAcc->Get_u64(pidx)].reserve(frameCount * entrySize);
             }
+
+            auto const r_mode = fegetround();
+            fesetround(FE_TONEAREST);
 
             for (unsigned int fidx = 0; fidx < frameCount; ++fidx) {
                 do {
@@ -115,10 +151,57 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
 
                 for (size_t pidx = 0; pidx < pCount; ++pidx) {
                     auto idx = idAcc->Get_u64(pidx);
+
+                    auto x = xAcc->Get_f(pidx);
+                    auto y = yAcc->Get_f(pidx);
+                    auto z = zAcc->Get_f(pidx);
+
+                    if (fidx == 0) {
+                        old_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
+                        old_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
+                        old_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                        dec_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
+                        dec_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
+                        dec_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                    }
+
+                    auto const px = old_pos[pidx * 3 + 0];
+                    auto const py = old_pos[pidx * 3 + 1];
+                    auto const pz = old_pos[pidx * 3 + 2];
+
+                    // auto dis = std::sqrtf(std::powf(px-x, 2.0f) + std::powf(py-y, 2.0f) + std::powf(pz-z, 2.0f));
+                    auto xdis = std::fabs(px - x);
+                    auto ydis = std::fabs(py - y);
+                    auto zdis = std::fabs(pz - z);
+
+                    /*auto xdis = (px - x);
+                    auto ydis = (py - y);
+                    auto zdis = (pz - z);*/
+
+                    if (cycl_x && xdis >= hbbwidth) {
+                        // x += bbwidth * std::copysign(std::ceil(xdis / bbwidth), px - x);
+                        xdis = (px - x) - bbwidth * std::nearbyint((px - x) / bbwidth);
+                    }
+                    if (cycl_y && ydis >= hbbheight) {
+                        // y += bbheight * std::copysign(std::ceil(ydis / bbheight), py - y);
+                        ydis = (py - y) - bbheight * std::nearbyint((py - y) / bbheight);
+                    }
+                    if (cycl_z && zdis >= hbbdepth) {
+                        // z += bbwidth * std::copysign(std::ceil(zdis / bbdepth), pz - z);
+                        zdis = (pz - z) - bbdepth * std::nearbyint((pz - z) / bbdepth);
+                    }
+
+                    if (cycl_x) x = dec_pos[pidx * 3 + 0] + xdis * std::copysign(1.0f, px - x);
+                    if (cycl_y) y = dec_pos[pidx * 3 + 1] + ydis * std::copysign(1.0f, py - y);
+                    if (cycl_z) z = dec_pos[pidx * 3 + 2] + zdis * std::copysign(1.0f, pz - z);
+
                     auto& entry = storeEntry[idx];
-                    entry.push_back(xAcc->Get_f(pidx));
+                    /*entry.push_back(xAcc->Get_f(pidx));
                     entry.push_back(yAcc->Get_f(pidx));
-                    entry.push_back(zAcc->Get_f(pidx));
+                    entry.push_back(zAcc->Get_f(pidx));*/
+                    entry.push_back(x);
+                    entry.push_back(y);
+                    entry.push_back(z);
                     if (colPresent) {
                         entry.push_back(rAcc->Get_f(pidx));
                         entry.push_back(gAcc->Get_f(pidx));
@@ -130,8 +213,15 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                         entry.push_back(dyAcc->Get_f(pidx));
                         entry.push_back(dzAcc->Get_f(pidx));
                     }
+                    old_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
+                    old_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
+                    old_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                    dec_pos[pidx * 3 + 0] = x;
+                    dec_pos[pidx * 3 + 1] = y;
+                    dec_pos[pidx * 3 + 2] = z;
                 }
             }
+            fesetround(r_mode);
         }
     }
 

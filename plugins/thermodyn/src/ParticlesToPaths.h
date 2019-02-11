@@ -1,9 +1,10 @@
 #pragma once
 
+#include <unordered_map>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include <unordered_map>
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace thermodyn {
@@ -38,6 +39,10 @@ private:
 
     /** output of particle pathlines */
     core::CalleeSlot dataOutSlot_;
+
+    core::param::ParamSlot cyclXSlot;
+    core::param::ParamSlot cyclYSlot;
+    core::param::ParamSlot cyclZSlot;
 
     std::vector<int> entrySizes_;
 
