@@ -5,6 +5,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace thermodyn {
@@ -44,6 +45,8 @@ private:
     core::param::ParamSlot cyclYSlot;
     core::param::ParamSlot cyclZSlot;
 
+    core::param::ParamSlot bboxSlot;
+
     std::vector<int> entrySizes_;
 
     std::vector<bool> colsPresent_;
@@ -53,6 +56,8 @@ private:
     std::vector<std::unordered_map<uint64_t, std::vector<float>>> pathStore_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
+
+    vislib::math::Cuboid<float> bbox;
 }; // end class ParticlesToPaths
 
 } // end namespace thermodyn

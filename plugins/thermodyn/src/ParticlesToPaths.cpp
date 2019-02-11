@@ -15,7 +15,8 @@ megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
     , dataOutSlot_("dataOut", "Output of particle pathlines")
     , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
     , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
-    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction") {
+    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+    , bboxSlot("line_bbox", "True, if bbox of lines should be propagated") {
     dataInSlot_.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -33,6 +34,9 @@ megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
 
     this->cyclZSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclZSlot);
+
+    this->bboxSlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->bboxSlot);
 }
 
 
@@ -81,6 +85,15 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
         bool const cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
         bool const cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
         bool const cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+        bool const lBBoxFl = this->bboxSlot.Param<core::param::BoolParam>()->Value();
+
+        float xMax = std::numeric_limits<float>::lowest();
+        float yMax = std::numeric_limits<float>::lowest();
+        float zMax = std::numeric_limits<float>::lowest();
+        float xMin = std::numeric_limits<float>::max();
+        float yMin = std::numeric_limits<float>::max();
+        float zMin = std::numeric_limits<float>::max();
 
         for (unsigned int plidx = 0; plidx < plc; ++plidx) {
             // step over all time frames to create complete pathline
@@ -202,6 +215,14 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                     entry.push_back(x);
                     entry.push_back(y);
                     entry.push_back(z);
+                    if (lBBoxFl) {
+                        xMax = std::max(x, xMax);
+                        yMax = std::max(y, yMax);
+                        zMax = std::max(z, zMax);
+                        xMin = std::min(x, xMin);
+                        yMin = std::min(y, yMin);
+                        zMin = std::min(z, zMin);
+                    }
                     if (colPresent) {
                         entry.push_back(rAcc->Get_f(pidx));
                         entry.push_back(gAcc->Get_f(pidx));
@@ -222,6 +243,9 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                 }
             }
             fesetround(r_mode);
+        }
+        if (lBBoxFl) {
+            this->bbox.Set(xMin, yMin, zMin, xMax, yMax, zMax);
         }
     }
 
@@ -244,9 +268,15 @@ bool megamol::thermodyn::ParticlesToPaths::getExtentCallback(core::Call& c) {
 
     if (!(*inCall)(1)) return false;
 
-    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
-    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());
-    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    if (this->bboxSlot.Param<core::param::BoolParam>()->Value()) {
+        outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+        outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox); //< TODO Not the right bbox
+        outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    } else {
+        outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
+        outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+        outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    }
 
     outCall->SetFrameCount(1);
 
