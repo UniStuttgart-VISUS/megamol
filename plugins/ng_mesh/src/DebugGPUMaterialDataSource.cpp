@@ -19,13 +19,18 @@ megamol::ngmesh::DebugGPUMaterialDataSource::~DebugGPUMaterialDataSource()
 {
 }
 
+bool megamol::ngmesh::DebugGPUMaterialDataSource::create()
+{
+	load();
+
+	return true;
+}
+
 bool megamol::ngmesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & caller)
 {
 	GPUMaterialDataCall* matl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
 	if (matl_call == NULL)
 		return false;
-
-	load();
 
 	matl_call->setMaterialStorage(m_gpu_materials);
 

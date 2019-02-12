@@ -33,9 +33,16 @@ namespace megamol {
 
 			void addMaterial(std::shared_ptr<GLSLShader> const& shader);
 
+			inline std::vector<Material> const& getMaterials();
+
 		private:
 			std::vector<Material> m_materials;
 		};
+
+		inline std::vector<megamol::ngmesh::GPUMaterialDataStorage::Material> const & megamol::ngmesh::GPUMaterialDataStorage::getMaterials()
+		{
+			return m_materials;
+		}
 	}
 }
 

@@ -44,11 +44,22 @@ namespace megamol
 			virtual bool getDataCallback(core::Call& caller) = 0;
 
 			/**
+			* Gets the data from the source.
+			*
+			* @param caller The calling call.
+			*
+			* @return 'true' on success, 'false' on failure.
+			*/
+			virtual bool getExtentCallback(core::Call& caller);
+
+			/**
 			* Implementation of 'Release'.
 			*/
 			virtual void release();
 
-		private:
+			/**
+			* 
+			*/
 			std::shared_ptr<GPURenderTaskDataStorage> m_gpu_render_tasks;
 
 			/** The slot for requesting data */

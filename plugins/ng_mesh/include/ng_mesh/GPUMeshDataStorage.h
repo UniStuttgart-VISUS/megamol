@@ -25,21 +25,15 @@ namespace megamol {
 			template<typename T>
 			using IteratorPair = std::pair< T, T>;
 
-			template<
-				typename VertexBufferIterator,
-				typename IndexBufferIterator>
-				void addMesh(
-					VertexLayout                                           vertex_descriptor,
-					std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
-					IteratorPair<IndexBufferIterator>                      index_buffer,
-					GLenum                                                 index_type,
-					GLenum                                                 usage,
-					GLenum                                                 primitive_type,
-					bool                                                   store_seperate = false);
-
-		private:
 			struct BatchedMeshes
 			{
+				BatchedMeshes()
+					: mesh(nullptr),
+					vertices_allocated(0),
+					vertices_used(0),
+					indices_allocated(0),
+					indices_used(0) {}
+
 				BatchedMeshes(
 					unsigned int vertices_allocated,
 					unsigned int indices_allocated)
@@ -62,6 +56,26 @@ namespace megamol {
 				DrawElementsCommand sub_mesh_draw_command;
 			};
 
+			GPUMeshDataStorage() = default;
+			~GPUMeshDataStorage() = default;
+
+			template<
+				typename VertexBufferIterator,
+				typename IndexBufferIterator>
+				void addMesh(
+					VertexLayout                                           vertex_descriptor,
+					std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
+					IteratorPair<IndexBufferIterator>                      index_buffer,
+					GLenum                                                 index_type,
+					GLenum                                                 usage,
+					GLenum                                                 primitive_type,
+					bool                                                   store_seperate = false);
+
+			std::vector<BatchedMeshes> const& getMeshes();
+
+			std::vector<SubMeshData> const& getSubMeshData();
+
+		private:
 			std::vector<BatchedMeshes> m_batched_meshes;
 			std::vector<SubMeshData>   m_sub_mesh_data;
 		};
@@ -116,7 +130,7 @@ namespace megamol {
 				{
 					bool layout_check = (vertex_descriptor == it->mesh->getVertexLayout());
 					//TODO check interleaved vs non-interleaved
-					bool idx_type_check = (index_type == it->mesh_data.index_type);
+					bool idx_type_check = (index_type == it->mesh->getIndicesType());
 
 					if (layout_check && idx_type_check)
 					{
@@ -139,39 +153,47 @@ namespace megamol {
 			// if either no batch was found or mesh is requested to be stored seperated, create a new GPU mesh batch
 			if (it == m_batched_meshes.end())
 			{
-				size_t new_allocation_vertex_cnt = store_seperate ? req_vertex_cnt : std::max<size_t>(req_vert_cnt, 800000);
+				size_t new_allocation_vertex_cnt = store_seperate ? req_vertex_cnt : std::max<size_t>(req_vertex_cnt, 800000);
 				size_t new_allocation_index_cnt = store_seperate ? req_index_cnt : std::max<size_t>(req_index_cnt, 3200000);
 
-				m_batched_meshes.push_back(BatchedMeshes());
+				m_batched_meshes.push_back(BatchedMeshes(new_allocation_vertex_cnt, new_allocation_index_cnt));
+				m_batched_meshes.back().vertices_used = 0;
+				m_batched_meshes.back().indices_used = 0;
 
-				std::vector<GLvoid*> alloc_data(vertex_buffers.size(),NULL);
+				std::vector<GLvoid*> alloc_data(vertex_buffers.size(), nullptr);
 				std::vector<size_t> alloc_vb_byte_sizes;
 				for (size_t attrib_byte_size : vb_attrib_byte_sizes) {
-					vb_byte_sizes.push_back(attrib_byte_size * req_vertex_cnt);
+					alloc_vb_byte_sizes.push_back(attrib_byte_size * req_vertex_cnt);
 				}
 
 				m_batched_meshes.back().mesh = std::make_shared<Mesh>(
 					alloc_data,
 					alloc_vb_byte_sizes,
-					NULL,
+					nullptr,
 					req_index_cnt * computeByteSize(index_type),
 					vertex_descriptor,
 					index_type,
 					usage,
 					primitive_type);
 
-				m_batched_meshes.back().vertices_allocated = new_allocation_vertex_cnt;
-				m_batched_meshes.back().vertices_used = 0;
-				m_batched_meshes.back().indices_allocated = new_allocation_index_cnt;
-				m_batched_meshes.back().indices_used = 0;
+				it = m_batched_meshes.end();
+				--it;
 			}
+
+			m_sub_mesh_data.emplace_back(SubMeshData());
+			m_sub_mesh_data.back().batch_index = std::distance(m_batched_meshes.begin(), it);
+			m_sub_mesh_data.back().sub_mesh_draw_command.first_idx = it->indices_used;
+			m_sub_mesh_data.back().sub_mesh_draw_command.base_vertex = it->vertices_used;
+			m_sub_mesh_data.back().sub_mesh_draw_command.cnt = req_index_cnt;
+			m_sub_mesh_data.back().sub_mesh_draw_command.instance_cnt = 1;
+			m_sub_mesh_data.back().sub_mesh_draw_command.base_instance = 0;
 
 			// upload data to GPU
 			for (size_t i = 0; i < vb_data.size(); ++i)
 			{
 				// at this point, it should be guaranteed that it points at a mesh with matching vertex layout,
 				// hence it's legal to multiply requested attrib byte sizes with vertex used count
-				it->mesh->loadVertexSubData(i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * it->vertices_used);
+				it->mesh->loadVertexSubData(i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (it->vertices_used));
 			}
 
 			it->mesh->loadIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size, computeByteSize(index_type) * it->indices_used);

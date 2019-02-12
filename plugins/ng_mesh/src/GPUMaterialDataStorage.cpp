@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "GPUMaterialDataStorage.h"
+#include "ng_mesh/GPUMaterialDataStorage.h"
 
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"

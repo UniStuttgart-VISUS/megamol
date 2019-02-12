@@ -64,9 +64,10 @@ namespace megamol
 			 */
 			std::array<float, 6> m_bbox;
 
-		private:
 
 			std::shared_ptr<GPUMeshDataStorage> m_gpu_meshes;
+
+		private:
 
 			/** The slot for requesting data */
 			megamol::core::CalleeSlot m_getData_slot;

@@ -70,6 +70,8 @@ namespace megamol {
 				IteratorPair<DrawCommandIterator>  draw_commands,
 				IteratorPair<PerTaskDataIterator>  per_draw_data);
 
+			std::set<RenderTasks> const& getRenderTasks() { return m_render_tasks; }
+
 		private:
 			/**
 			 * Render tasks storage. Store tasks sorted by shader program and mesh.

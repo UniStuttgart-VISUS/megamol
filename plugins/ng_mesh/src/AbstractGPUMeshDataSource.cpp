@@ -25,17 +25,18 @@ megamol::ngmesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource()
 
 bool megamol::ngmesh::AbstractGPUMeshDataSource::create(void)
 {
-	// intentionally empty ?
+	m_gpu_meshes = std::make_shared<GPUMeshDataStorage>();
+
 	return true;
 }
 
 bool megamol::ngmesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call & caller)
 {
-	GPUMeshDataCall* render_batches_call = dynamic_cast<GPUMeshDataCall*>(&caller);
-	if (render_batches_call == NULL)
+	GPUMeshDataCall* mc = dynamic_cast<GPUMeshDataCall*>(&caller);
+	if (mc == NULL)
 		return false;
 
-	render_batches_call->SetExtent(
+	mc->SetExtent(
 		1,
 		this->m_bbox[0],
 		this->m_bbox[1],
@@ -43,6 +44,8 @@ bool megamol::ngmesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call & 
 		this->m_bbox[3],
 		this->m_bbox[4],
 		this->m_bbox[5]);
+
+	return true;
 }
 
 void megamol::ngmesh::AbstractGPUMeshDataSource::release()

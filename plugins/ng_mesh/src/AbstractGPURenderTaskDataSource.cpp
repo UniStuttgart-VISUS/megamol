@@ -18,6 +18,7 @@ megamol::ngmesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSourc
 	m_material_callerSlot("getMaterialData", "Connects the renderer with a material data source")
 {
 	this->m_getData_slot.SetCallback(GPURenderTaskDataCall::ClassName(), "GetData", &AbstractGPURenderTaskDataSource::getDataCallback);
+	this->m_getData_slot.SetCallback(GPURenderTaskDataCall::ClassName(), "GetExtent", &AbstractGPURenderTaskDataSource::getExtentCallback);
 	this->MakeSlotAvailable(&this->m_getData_slot);
 
 	this->m_mesh_callerSlot.SetCompatibleCall<GPUMeshDataCallDescription>();
@@ -35,6 +36,28 @@ megamol::ngmesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSour
 bool megamol::ngmesh::AbstractGPURenderTaskDataSource::create(void)
 {
 	// intentionally empty ?
+
+	m_gpu_render_tasks = std::make_shared<GPURenderTaskDataStorage>();
+
+	return true;
+}
+
+bool megamol::ngmesh::AbstractGPURenderTaskDataSource::getExtentCallback(core::Call & caller)
+{
+	GPURenderTaskDataCall* rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
+	if (rtc == NULL)
+		return false;
+
+	GPUMeshDataCall* mc = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+	if (mc == NULL)
+		return false;
+
+	if (!(*mc)(1))
+		return false;
+
+	rtc->SetFrameCount(mc->FrameCount());
+	rtc->AccessBoundingBoxes() = mc->GetBoundingBoxes();
+
 	return true;
 }
 

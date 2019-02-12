@@ -23,7 +23,7 @@ namespace megamol
 		{
 		public:
 			inline GPURenderTaskDataCall() : AbstractGetData3DCall(), m_gpu_render_tasks(nullptr) {}
-			~GPURenderTaskDataCall() = default;
+			~GPURenderTaskDataCall() {};
 
 			/**
 			* Answer the name of the objects of this description.
@@ -49,7 +49,7 @@ namespace megamol
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return AbstractGetDataCall::FunctionCount();
+				return AbstractGetData3DCall::FunctionCount();
 			}
 
 			/**
@@ -60,7 +60,7 @@ namespace megamol
 			* @return The name of the requested function.
 			*/
 			static const char * FunctionName(unsigned int idx) {
-				return AbstractGetDataCall::FunctionName(idx);
+				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
 			void setRenderTaskData(GPURenderTaskDataStorage* render_tasks) {

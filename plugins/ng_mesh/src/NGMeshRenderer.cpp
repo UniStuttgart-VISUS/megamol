@@ -136,13 +136,15 @@ bool NGMeshRenderer::create()
 
 void NGMeshRenderer::release()
 {
-	m_render_batches.clear();
+	//m_render_batches.clear();
+	m_per_frame_data.reset();
 }
 
 bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 {
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-	if (cr == NULL) return false;
+	if (cr == NULL)
+		return false;
 
 	//CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
 	//
@@ -157,17 +159,17 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 
-	//BatchedMeshesDataCall* mesh_call = this->m_mesh_callerSlot.CallAs<BatchedMeshesDataCall>();
-	//
-	//if (mesh_call == NULL)
-	//	return false;
-	//
-	//if (!(*mesh_call)(1))
-	//	return false;
-	//
-	//cr->SetTimeFramesCount(mesh_call->FrameCount());
-	//cr->AccessBoundingBoxes() = mesh_call->GetBoundingBoxes();
-	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+	GPURenderTaskDataCall* rtc = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
+	
+	if (rtc == NULL)
+		return false;
+	
+	if (!(*rtc)(1))
+		return false;
+
+	cr->SetTimeFramesCount(rtc->FrameCount());
+	cr->AccessBoundingBoxes() = rtc->GetBoundingBoxes();
+	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
 }
@@ -402,132 +404,133 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 //   }
 //   
 
-void megamol::ngmesh::NGMeshRenderer::updateMeshes(BatchedMeshesDataAccessor const & meshes, uint32_t update_flags)
-{
-	if (update_flags == UPDATE_ALL_BIT)
-	{
-		m_meshes.clear();
-		m_meshes.reserve(meshes.batch_cnt);
+//void megamol::ngmesh::NGMeshRenderer::updateMeshes(BatchedMeshesDataAccessor const & meshes, uint32_t update_flags)
+//{
+//	if (update_flags == UPDATE_ALL_BIT)
+//	{
+//		m_meshes.clear();
+//		m_meshes.reserve(meshes.batch_cnt);
+//
+//		for (size_t i = 0; i < meshes.batch_cnt; i++)
+//		{
+//			auto mesh = createMesh(meshes, i);
+//
+//			m_meshes.push_back(BatchedMeshes());
+//			m_meshes.back().mesh = mesh;
+//
+//			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+//			auto dest = m_meshes.back().submesh_draw_commands.data();
+//			auto src_first = meshes.draw_command_batches[i].draw_commands;
+//			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+//			std::copy(src_first, src_last, dest);
+//		}
+//	}
+//	else if (update_flags == UPDATE_INDVIDUAL_BIT)
+//	{
+//		for (size_t i = 0; i < meshes.batch_cnt; i++)
+//		{
+//			if (/* update for batch required*/true)
+//			{
+//				auto mesh = createMesh(meshes, i);
+//				m_meshes[i].mesh = mesh;
+//
+//				m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+//				auto dest = m_meshes.back().submesh_draw_commands.data();
+//				auto src_first = meshes.draw_command_batches[i].draw_commands;
+//				auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+//				std::copy(src_first, src_last, dest);
+//			}
+//		}
+//	}
+//	else if (update_flags == DATA_ADDED_BIT)
+//	{
+//		size_t start_idx = m_meshes.size();
+//
+//		for (size_t i = start_idx; i < meshes.batch_cnt; i++)
+//		{
+//			auto mesh = createMesh(meshes, i);
+//
+//			m_meshes.push_back(BatchedMeshes());
+//			m_meshes.back().mesh = mesh;
+//
+//			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
+//			auto dest = m_meshes.back().submesh_draw_commands.data();
+//			auto src_first = meshes.draw_command_batches[i].draw_commands;
+//			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
+//			std::copy(src_first, src_last, dest);
+//		}
+//	}
+//}
+//
+//void megamol::ngmesh::NGMeshRenderer::updateMaterials(std::shared_ptr<MaterialsDataStorage> const & materials, uint32_t update_flags)
+//{
+//	for (auto& material : materials->m_materials)
+//	{
+//		// Create shader program
+//		m_shader_programs.push_back(std::make_unique<GLSLShader>());
+//
+//		vislib::graphics::gl::ShaderSource vert_shader_src;
+//		vislib::graphics::gl::ShaderSource frag_shader_src;
+//		// TODO get rid of vislib StringA...
+//		vislib::StringA shader_base_name(material.btf_filename.c_str());
+//		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
+//		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
+//
+//		m_shader_programs.back()->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+//
+//		m_materials.push_back(Material());
+//		m_materials.back().btf_name = material.btf_filename;
+//		m_materials.back().shader = m_shader_programs.back();
+//	}
+//}
+//
+//void megamol::ngmesh::NGMeshRenderer::updateRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks, uint32_t update_flags)
+//{
+//	for (auto& task_batch : render_tasks->m_batched_render_task)
+//	{
+//		m_render_batches.push_back(RenderBatch());
+//		RenderBatch& render_batch = m_render_batches.back();
+//
+//		render_batch.draw_cnt = task_batch.total_draw_cnt;
+//		render_batch.shader_prgm = m_materials.at(task_batch.material_idx).shader;
+//
+//		size_t mesh_batch_idx = 0/* task_batch.mesh_idx*/;
+//
+//		render_batch.mesh = m_meshes.at(mesh_batch_idx).mesh;
+//
+//		// Create GPU buffer for per object shader parameters
+//	 	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
+//	 		GL_SHADER_STORAGE_BUFFER,
+//			task_batch.per_object_data,
+//	 		GL_DYNAMIC_DRAW);
+//
+//		//TODO material parameter for shader
+//		std::array<uint64_t, 4> dummy_texture_handles;
+//		m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
+//			GL_SHADER_STORAGE_BUFFER,
+//			dummy_texture_handles,
+//			GL_DYNAMIC_DRAW);
+//
+//		std::vector<DrawElementsCommand> draw_command_data;
+//		draw_command_data.reserve(render_batch.draw_cnt);
+//		for (auto& task : task_batch.render_tasks)
+//		{
+//			size_t base_idx = task.draw_commands_base_offset;
+//			for (size_t i = 0; i < task.draw_commands_cnt; i++)
+//			{
+//				draw_command_data.push_back(m_meshes[task_batch.mesh_idx].submesh_draw_commands[base_idx + i]);
+//			}
+//		}
+//
+//		// Create GPU buffer for draw commands
+//	 	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
+//	 		GL_DRAW_INDIRECT_BUFFER,
+//	 		draw_command_data,
+//	 		GL_DYNAMIC_DRAW
+//	 		);
+//	}
+//}
 
-		for (size_t i = 0; i < meshes.batch_cnt; i++)
-		{
-			auto mesh = createMesh(meshes, i);
-
-			m_meshes.push_back(BatchedMeshes());
-			m_meshes.back().mesh = mesh;
-
-			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
-			auto dest = m_meshes.back().submesh_draw_commands.data();
-			auto src_first = meshes.draw_command_batches[i].draw_commands;
-			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
-			std::copy(src_first, src_last, dest);
-		}
-	}
-	else if (update_flags == UPDATE_INDVIDUAL_BIT)
-	{
-		for (size_t i = 0; i < meshes.batch_cnt; i++)
-		{
-			if (/* update for batch required*/true)
-			{
-				auto mesh = createMesh(meshes, i);
-				m_meshes[i].mesh = mesh;
-
-				m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
-				auto dest = m_meshes.back().submesh_draw_commands.data();
-				auto src_first = meshes.draw_command_batches[i].draw_commands;
-				auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
-				std::copy(src_first, src_last, dest);
-			}
-		}
-	}
-	else if (update_flags == DATA_ADDED_BIT)
-	{
-		size_t start_idx = m_meshes.size();
-
-		for (size_t i = start_idx; i < meshes.batch_cnt; i++)
-		{
-			auto mesh = createMesh(meshes, i);
-
-			m_meshes.push_back(BatchedMeshes());
-			m_meshes.back().mesh = mesh;
-
-			m_meshes.back().submesh_draw_commands.resize(meshes.draw_command_batches[i].draw_cnt);
-			auto dest = m_meshes.back().submesh_draw_commands.data();
-			auto src_first = meshes.draw_command_batches[i].draw_commands;
-			auto src_last = meshes.draw_command_batches[i].draw_commands + meshes.draw_command_batches[i].draw_cnt;
-			std::copy(src_first, src_last, dest);
-		}
-	}
-}
-
-void megamol::ngmesh::NGMeshRenderer::updateMaterials(std::shared_ptr<MaterialsDataStorage> const & materials, uint32_t update_flags)
-{
-	for (auto& material : materials->m_materials)
-	{
-		// Create shader program
-		m_shader_programs.push_back(std::make_unique<GLSLShader>());
-
-		vislib::graphics::gl::ShaderSource vert_shader_src;
-		vislib::graphics::gl::ShaderSource frag_shader_src;
-		// TODO get rid of vislib StringA...
-		vislib::StringA shader_base_name(material.btf_filename.c_str());
-		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
-		instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
-
-		m_shader_programs.back()->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-
-		m_materials.push_back(Material());
-		m_materials.back().btf_name = material.btf_filename;
-		m_materials.back().shader = m_shader_programs.back();
-	}
-}
-
-void megamol::ngmesh::NGMeshRenderer::updateRenderTasks(std::shared_ptr<RenderTaskDataStorage> const & render_tasks, uint32_t update_flags)
-{
-	for (auto& task_batch : render_tasks->m_batched_render_task)
-	{
-		m_render_batches.push_back(RenderBatch());
-		RenderBatch& render_batch = m_render_batches.back();
-
-		render_batch.draw_cnt = task_batch.total_draw_cnt;
-		render_batch.shader_prgm = m_materials.at(task_batch.material_idx).shader;
-
-		size_t mesh_batch_idx = 0/* task_batch.mesh_idx*/;
-
-		render_batch.mesh = m_meshes.at(mesh_batch_idx).mesh;
-
-		// Create GPU buffer for per object shader parameters
-	 	m_render_batches.back().obj_shader_params = std::make_unique<BufferObject>(
-	 		GL_SHADER_STORAGE_BUFFER,
-			task_batch.per_object_data,
-	 		GL_DYNAMIC_DRAW);
-
-		//TODO material parameter for shader
-		std::array<uint64_t, 4> dummy_texture_handles;
-		m_render_batches.back().mtl_shader_params = std::make_unique<BufferObject>(
-			GL_SHADER_STORAGE_BUFFER,
-			dummy_texture_handles,
-			GL_DYNAMIC_DRAW);
-
-		std::vector<DrawElementsCommand> draw_command_data;
-		draw_command_data.reserve(render_batch.draw_cnt);
-		for (auto& task : task_batch.render_tasks)
-		{
-			size_t base_idx = task.draw_commands_base_offset;
-			for (size_t i = 0; i < task.draw_commands_cnt; i++)
-			{
-				draw_command_data.push_back(m_meshes[task_batch.mesh_idx].submesh_draw_commands[base_idx + i]);
-			}
-		}
-
-		// Create GPU buffer for draw commands
-	 	m_render_batches.back().draw_commands = std::make_unique<BufferObject>(
-	 		GL_DRAW_INDIRECT_BUFFER,
-	 		draw_command_data,
-	 		GL_DYNAMIC_DRAW
-	 		);
-	}
-}
 
 bool NGMeshRenderer::Render(megamol::core::Call& call)
 {
@@ -656,26 +659,27 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
+
+	auto gpu_render_tasks = task_call->getRenderTaskData();
 	
 	// loop through "registered" render batches
-	for (auto const& render_batch : m_render_batches)
+	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
-		render_batch.shader_prgm->Enable();
+		render_task.shader_program->Enable();
 	
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
-		glUniformMatrix4fv(render_batch.shader_prgm->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
+		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
+		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
 	
-		render_batch.obj_shader_params->bind(0);
-		render_batch.mtl_shader_params->bind(1);
+		render_task.per_draw_data->bind(0);
 	
-		render_batch.draw_commands->bind();
-		render_batch.mesh->bindVertexArray();
+		render_task.draw_commands->bind();
+		render_task.mesh->bindVertexArray();
 	
-		glMultiDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
-			render_batch.mesh->getIndicesType(),
+		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
+			render_task.mesh->getIndicesType(),
 			(GLvoid*)0,
-			render_batch.draw_cnt,
+			render_task.draw_cnt,
 			0);
 
 		//CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
