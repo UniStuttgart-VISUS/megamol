@@ -1,5 +1,5 @@
 /*
- * AbstractInputScope.h
+ * Input.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -68,32 +68,32 @@ enum class Key : int {
     KEY_BACKSLASH = 92,     /* \ */
     KEY_RIGHT_BRACKET = 93, /* ] */
     KEY_GRAVE_ACCENT = 96,  /* ` */
-    //KEY_A = 97,
-    //KEY_B = 98,
-    //KEY_C = 99,
-    //KEY_D = 100,
-    //KEY_E = 101,
-    //KEY_F = 102,
-    //KEY_G = 103,
-    //KEY_H = 104,
-    //KEY_I = 105,
-    //KEY_J = 106,
-    //KEY_K = 107,
-    //KEY_L = 108,
-    //KEY_M = 109,
-    //KEY_N = 110,
-    //KEY_O = 111,
-    //KEY_P = 112,
-    //KEY_Q = 113,
-    //KEY_R = 114,
-    //KEY_S = 115,
-    //KEY_T = 116,
-    //KEY_U = 117,
-    //KEY_V = 118,
-    //KEY_W = 119,
-    //KEY_X = 120,
-    //KEY_Y = 121,
-    //KEY_Z = 122,
+    //KEY_a = 97,
+    //KEY_b = 98,
+    //KEY_c = 99,
+    //KEY_d = 100,
+    //KEY_e = 101,
+    //KEY_f = 102,
+    //KEY_g = 103,
+    //KEY_h = 104,
+    //KEY_i = 105,
+    //KEY_j = 106,
+    //KEY_k = 107,
+    //KEY_l = 108,
+    //KEY_m = 109,
+    //KEY_n = 110,
+    //KEY_o = 111,
+    //KEY_p = 112,
+    //KEY_q = 113,
+    //KEY_r = 114,
+    //KEY_s = 115,
+    //KEY_t = 116,
+    //KEY_u = 117,
+    //KEY_v = 118,
+    //KEY_w = 119,
+    //KEY_x = 120,
+    //KEY_y = 121,
+    //KEY_z = 122,
     KEY_WORLD_1 = 161,      /* non-US #1 */
     KEY_WORLD_2 = 162,      /* non-US #2 */
     KEY_ESCAPE = 256,

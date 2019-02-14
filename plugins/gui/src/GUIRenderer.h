@@ -1,5 +1,22 @@
+/*
+ * GUIRenderer.h
+ *
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+
 #ifndef MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#    pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#if defined(_WIN32) && defined(_MANAGED)
+#    pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
+
+
+#include <iomanip> // setprecision
+#include <sstream> // stringstream
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -88,12 +105,17 @@ private:
     /**
      * Draws the main menu bar.
      */
-    void drawMainMenu();
+    void drawMainMenu(void);
 
     /**
-     * Draws a parameter window.
+     * Draws the menu bar.
      */
-    void drawParameterWindow();
+    void drawMenu(void);
+
+    /**
+     * Draws the parameter window.
+     */
+    void drawParameterWindow(void);
 
     /**
      * Draws a parameter for the parameter window.
@@ -108,7 +130,14 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decoratedRendererSlot;
 
+    // Global ImGui Stata Variables  ------------------------------------------
+
     bool parameterWindowOpen;
+    float fpsDelay;
+    std::string fps;
+
+
+    // ------------------------------------------------------------------------
 };
 
 
@@ -151,10 +180,11 @@ template <class M, class C> GUIRenderer<M, C>::~GUIRenderer() { this->Release();
 
 template <class M, class C> bool GUIRenderer<M, C>::create() {
 
-    const char* glsl_version = "#version 150";
-
+    // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+
+    // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
 
     // ImGui Key Map
@@ -180,8 +210,24 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     // io.KeyMap[ImGuiKey_::ImGuiKey_Y] = -1;
     // io.KeyMap[ImGuiKey_::ImGuiKey_Z] = -1;
 
+    // Style settings ---------------------------------------------------------
     ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.FrameRounding = 5.0f;
+    style.WindowBorderSize = 1.0f;
+    style.FrameBorderSize = 1.0f;
+    style.PopupBorderSize = 1.0f;
+    style.AntiAliasedLines = true;
+    style.AntiAliasedFill = true;
+
+    // Init OpenGL for ImGui --------------------------------------------------
+    const char* glsl_version = "#version 150";
     ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Init state variables ---------------------------------------------------
+    this->parameterWindowOpen = true;
+    this->fpsDelay = 1.0f;
+    this->fps = "";
 
     return true;
 }
@@ -191,135 +237,6 @@ template <class M, class C> void GUIRenderer<M, C>::release() {
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext();
-}
-
-
-template <class M, class C>
-bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    auto keyIndex = static_cast<size_t>(key); // TODO: Verify mapping!
-    switch (action) {
-    case core::view::KeyAction::PRESS:
-        io.KeysDown[keyIndex] = true;
-        break;
-    case core::view::KeyAction::RELEASE:
-        io.KeysDown[keyIndex] = false;
-        break;
-    default:
-        break;
-    }
-    io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
-    io.KeyShift = mods.test(core::view::Modifier::SHIFT);
-    io.KeyAlt = mods.test(core::view::Modifier::ALT);
-    io.KeySuper = mods.test(core::view::Modifier::SUPER);
-
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
-    if (cr) {
-        core::view::InputEvent evt;
-        evt.tag = core::view::InputEvent::Tag::Key;
-        evt.keyData.key = key;
-        evt.keyData.action = action;
-        evt.keyData.mods = mods;
-        cr->SetInputEvent(evt);
-        if ((*cr)(core::view::InputCall::FnOnKey)) return true;
-    }
-
-    // Ignore 'ESC' and 'q'
-    if ((ImGui::IsKeyDown(io.KeyMap[ImGuiKey_::ImGuiKey_Escape])) ||
-        (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Q)))) {
-        return false;
-    }
-
-    return true;
-}
-
-
-template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoint) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    io.ClearInputCharacters();
-    if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
-
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
-    if (cr) {
-        core::view::InputEvent evt;
-        evt.tag = core::view::InputEvent::Tag::Char;
-        evt.charData.codePoint = codePoint;
-        cr->SetInputEvent(evt);
-        if ((*cr)(core::view::InputCall::FnOnChar)) return true;
-    }
-
-    return true;
-}
-
-
-template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(x, y); // TODO: This is broken, since x and y are transformed by View2D class
-                                // => will be fixed when screen2world transformation is available in CallRender.
-    if (!ImGui::IsAnyWindowHovered()) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
-        if (cr == NULL) return false;
-
-        core::view::InputEvent evt;
-        evt.tag = core::view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(core::view::InputCall::FnOnMouseMove)) return false;
-    }
-
-    return true;
-}
-
-
-template <class M, class C>
-bool GUIRenderer<M, C>::OnMouseButton(
-    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-
-    bool down = (action == core::view::MouseButtonAction::PRESS);
-    auto buttonIndex = static_cast<size_t>(button);
-    ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[buttonIndex] = down;
-
-    if (!ImGui::IsAnyWindowHovered()) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
-        if (cr == NULL) return false;
-
-        core::view::InputEvent evt;
-        evt.tag = core::view::InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(core::view::InputCall::FnOnMouseButton)) return false;
-    }
-
-    return true;
-}
-
-
-template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += (float)dx;
-    io.MouseWheel += (float)dy;
-
-    if (!ImGui::IsAnyWindowHovered()) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
-        if (cr == NULL) return false;
-
-        core::view::InputEvent evt;
-        evt.tag = core::view::InputEvent::Tag::MouseScroll;
-        evt.mouseScrollData.dx = dx;
-        evt.mouseScrollData.dy = dy;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(core::view::InputCall::FnOnMouseScroll)) return false;
-    }
-
-    return true;
 }
 
 
@@ -374,21 +291,22 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     auto viewportWidth = call.GetViewport().Width();
     auto viewportHeight = call.GetViewport().Height();
 
-    // Start the frame
+    // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(viewportWidth, viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
     io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // in milliseconds
 
+    // Start the frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    // Construct frame, i.e., geometry and stuff.
-    // XXX: drawOtherStuff();
-    drawMainMenu();
-    drawParameterWindow();
+    // Construct frame
+    // this->drawMainMenu();
+    // ImGui::ShowMetricsWindow(nullptr);
+    this->drawParameterWindow();
 
-    // Render frame.
+    // Render the frame
     glViewport(0, 0, viewportWidth, viewportHeight);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -397,59 +315,44 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 }
 
 
-template <class M, class C> void GUIRenderer<M, C>::drawMainMenu() {
+template <class M, class C> void GUIRenderer<M, C>::drawMainMenu(void) {
 
-    bool a, b, c;
-    bool d, e, f, g;
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            ImGui::MenuItem("New", "x", false);
-            ImGui::MenuItem("Open", nullptr, &a);
-            ImGui::MenuItem("Save", nullptr, &a);
-            ImGui::MenuItem("Save as...", nullptr, &a);
-            ImGui::MenuItem("Exit", nullptr, &a);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Edit")) {
-            ImGui::MenuItem("Cut", nullptr, &a);
-            ImGui::MenuItem("Copy", nullptr, &a);
-            ImGui::MenuItem("Paste", nullptr, &a);
-            ImGui::MenuItem("Delete", nullptr, &a);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Parameter inspector", nullptr, &a);
-            ImGui::MenuItem("Node editor", nullptr, &b);
-            ImGui::MenuItem("Console", nullptr, &c);
-            ImGui::Separator();
-            ImGui::MenuItem("Settings...", nullptr, &c);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Help")) {
-            ImGui::MenuItem("MegaMol Help...", nullptr, &e);
-            ImGui::MenuItem("Report Issue...", nullptr, &e);
-            ImGui::Separator();
-            ImGui::MenuItem("About...", nullptr, &f);
-            ImGui::EndMenu();
-        }
+        this->drawMenu();
         ImGui::EndMainMenuBar();
     }
 }
 
 
-template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow() {
+template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow(void) {
 
-    ImGui::Begin("Parameters", &this->parameterWindowOpen, ImGuiWindowFlags_AlwaysAutoResize);
+    // Window -----------------------------------------------------------------
+    ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    bool* p_open = nullptr; // &this->parameterWindowOpen;
+    std::stringstream stream;
+    stream << "MegaMol (Dear ImGUI" << IMGUI_VERSION << ")";
+    std::string title = stream.str();
+    ImGui::Begin(title.data(), p_open, window_flags);
 
+    // Menu -------------------------------------------------------------------
+    if (ImGui::BeginMenuBar()) {
+        this->drawMenu();
+        ImGui::EndMenuBar();
+    }
+
+    // Parameters -------------------------------------------------------------
+    ImGui::Text("Parameters: ");
     const core::Module* currentMod = nullptr;
     bool currentModOpen = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (currentMod != &mod) {
             currentMod = &mod;
             // Set to "open" by default.
-            auto headerId = ImGui::GetID(mod.FullName());
-            int headerState = ImGui::GetStateStorage()->GetInt(headerId, 1);
-            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            // auto headerId = ImGui::GetID(mod.FullName());
+            // int headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
+            // ImGui::GetStateStorage()->SetInt(headerId, headerState);
+
             currentModOpen = ImGui::CollapsingHeader(mod.FullName());
         }
         if (currentModOpen) {
@@ -457,91 +360,95 @@ template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow() {
         }
     });
 
-    // TEMP ///////////////////////////////////////////////////////////////////////////////////////////
-    ImGuiIO& io = ImGui::GetIO();
-    if (ImGui::TreeNode("Keyboard, Mouse & Navigation State")) {
-        if (ImGui::IsMousePosValid())
-            ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
-        else
-            ImGui::Text("Mouse pos: <INVALID>");
-        ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
-        ImGui::Text("Mouse down:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
-            if (io.MouseDownDuration[i] >= 0.0f) {
-                ImGui::SameLine();
-                ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
-            }
-        ImGui::Text("Mouse clicked:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
-            if (ImGui::IsMouseClicked(i)) {
-                ImGui::SameLine();
-                ImGui::Text("b%d", i);
-            }
-        ImGui::Text("Mouse dbl-clicked:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
-            if (ImGui::IsMouseDoubleClicked(i)) {
-                ImGui::SameLine();
-                ImGui::Text("b%d", i);
-            }
-        ImGui::Text("Mouse released:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
-            if (ImGui::IsMouseReleased(i)) {
-                ImGui::SameLine();
-                ImGui::Text("b%d", i);
-            }
-        ImGui::Text("Mouse wheel: %.1f", io.MouseWheel);
-
-        ImGui::Text("Keys down:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++)
-            if (io.KeysDownDuration[i] >= 0.0f) {
-                ImGui::SameLine();
-                ImGui::Text("%d (%.02f secs)", i, io.KeysDownDuration[i]);
-            }
-        ImGui::Text("Keys pressed:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++)
-            if (ImGui::IsKeyPressed(i)) {
-                ImGui::SameLine();
-                ImGui::Text("%d", i);
-            }
-        ImGui::Text("Keys release:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++)
-            if (ImGui::IsKeyReleased(i)) {
-                ImGui::SameLine();
-                ImGui::Text("%d", i);
-            }
-        ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "",
-            io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-
-        ImGui::Text("NavInputs down:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
-            if (io.NavInputs[i] > 0.0f) {
-                ImGui::SameLine();
-                ImGui::Text("[%d] %.2f", i, io.NavInputs[i]);
-            }
-        ImGui::Text("NavInputs pressed:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
-            if (io.NavInputsDownDuration[i] == 0.0f) {
-                ImGui::SameLine();
-                ImGui::Text("[%d]", i);
-            }
-        ImGui::Text("NavInputs duration:");
-        for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
-            if (io.NavInputsDownDuration[i] >= 0.0f) {
-                ImGui::SameLine();
-                ImGui::Text("[%d] %.2f", i, io.NavInputsDownDuration[i]);
-            }
-
-        ImGui::Button("Hovering me sets the\nkeyboard capture flag");
-        if (ImGui::IsItemHovered()) ImGui::CaptureKeyboardFromApp(true);
-        ImGui::SameLine();
-        ImGui::Button("Holding me clears the\nthe keyboard capture flag");
-        if (ImGui::IsItemActive()) ImGui::CaptureKeyboardFromApp(false);
-
-        ImGui::TreePop();
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
     ImGui::End();
+}
+
+
+template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    bool selected = false;
+
+    // FPS
+    this->fpsDelay += io.DeltaTime;
+    if (this->fpsDelay >= 1.0f) { // update every second
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(2) << std::setw(7)
+               << ((io.Framerate > 10000.0f) ? (0.0f) : (io.Framerate));
+        this->fps = stream.str();
+        this->fpsDelay = 0.0f;
+    }
+    if (ImGui::BeginMenu("FPS")) {
+        // ImGui::MenuItem("Show FPS in Window Caption", nullptr, &selected);
+        // ImGui::MenuItem("Show Samples passed in Window Caption", nullptr, &selected);
+        // ImGui::MenuItem("Show Primitives generated in Window Caption", nullptr, &selected);
+        // ImGui::MenuItem("Copy FPS List to Clipboard", nullptr, &selected);
+        if (ImGui::Button("Copy to Clipboard")) {
+            ImGui::SetClipboardText(fps.data());
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::Text("%s", this->fps.data());
+    ImGui::Separator();
+
+    // if (ImGui::BeginMenu("Window")) {
+    //     ImGui::MenuItem("Left", nullptr, &selected);
+    //     ImGui::MenuItem("Top", nullptr, &selected);
+    //     ImGui::MenuItem("Width", nullptr, &selected);
+    //     ImGui::MenuItem("Height", nullptr, &selected);
+    //     ImGui::Separator();
+    //     ImGui::MenuItem("Get Values", nullptr, &selected);
+    //     ImGui::MenuItem("Set Values", nullptr, &selected);
+    //     ImGui::Separator();
+    //     if (ImGui::BeginMenu("Size presets")) {
+    //        ImGui::MenuItem("256 x 256", nullptr, &selected);
+    //        ImGui::MenuItem("512 x 512", nullptr, &selected);
+    //        ImGui::MenuItem("1024 x 1024", nullptr, &selected);
+    //        ImGui::MenuItem("1280 x 720", nullptr, &selected);
+    //        ImGui::MenuItem("1920 x 1080", nullptr, &selected);
+    //        ImGui::EndMenu();
+    //    }
+    //    ImGui::EndMenu();
+    //}
+    // ImGui::Separator();
+
+    if (ImGui::BeginMenu("Parameters")) {
+        // char filename[256];
+        // if (ImGui::InputText("File Name", filename, IM_ARRAYSIZE(filename))) {
+        //    // console::utility::ParamFileManager::Instance().filename = vislib::StringA(filename);
+        //}
+        // if (ImGui::MenuItem("Load ParamFile", nullptr, &selected)) {
+        //    // console::utility::ParamFileManager::Instance().Load();
+        //}
+        // if (ImGui::MenuItem("Save ParamFile", nullptr, &selected)) {
+        //    // console::utility::ParamFileManager::Instance().Save();
+        //}
+        // ImGui::Separator();
+        ImGui::MenuItem("Shortcuts", nullptr, &selected);
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    if (ImGui::BeginMenu("Help")) {
+        ImGui::MenuItem("MegaMol Help...", "h", &selected);
+        ImGui::MenuItem("Report Issue...", nullptr, &selected);
+        ImGui::Separator();
+        ImGui::MenuItem("About...", nullptr, &selected);
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    bool quit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_::ImGuiKey_Escape])) ||                    // Escape
+                (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Q))) ||                 // 'q'
+                ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
+    if (ImGui::Button("Exit") || quit) {
+        vislib::sys::Log::DefaultLog.WriteInfo(">>> GuiRenderer: Initialised shutdown of core ...");
+        this->GetCoreInstance()->Shutdown();
+    }
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Exit program.");
+    }
 }
 
 
@@ -638,7 +545,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (ImGui::InputFloat4(label, value.PeekComponents())) {
                 p->SetValue(value);
             }
-        } else {
+        } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
@@ -655,6 +562,129 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             delete[] buffer;
         }
     }
+}
+
+
+template <class M, class C>
+bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    auto keyIndex = static_cast<size_t>(key); // TODO: Verify mapping!
+    switch (action) {
+    case core::view::KeyAction::PRESS:
+        io.KeysDown[keyIndex] = true;
+        break;
+    case core::view::KeyAction::RELEASE:
+        io.KeysDown[keyIndex] = false;
+        break;
+    default:
+        break;
+    }
+    io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
+    io.KeyShift = mods.test(core::view::Modifier::SHIFT);
+    io.KeyAlt = mods.test(core::view::Modifier::ALT);
+    io.KeySuper = mods.test(core::view::Modifier::SUPER);
+
+    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+    if (cr) {
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(core::view::InputCall::FnOnKey)) return true;
+    }
+
+    return true;
+}
+
+
+template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoint) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ClearInputCharacters();
+    if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
+
+    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+    if (cr) {
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        cr->SetInputEvent(evt);
+        if ((*cr)(core::view::InputCall::FnOnChar)) return true;
+    }
+
+    return true;
+}
+
+
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.MousePos = ImVec2(x, y); // TODO: This is broken, since x and y are transformed by View2D class
+                                // => will be fixed when screen2world transformation is available in CallRender.
+    if (!ImGui::IsAnyWindowHovered()) {
+        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        if (cr == NULL) return false;
+
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(core::view::InputCall::FnOnMouseMove)) return false;
+    }
+
+    return true;
+}
+
+
+template <class M, class C>
+bool GUIRenderer<M, C>::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    bool down = (action == core::view::MouseButtonAction::PRESS);
+    auto buttonIndex = static_cast<size_t>(button);
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseDown[buttonIndex] = down;
+
+    if (!ImGui::IsAnyWindowHovered()) {
+        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        if (cr == NULL) return false;
+
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(core::view::InputCall::FnOnMouseButton)) return false;
+    }
+
+    return true;
+}
+
+
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseWheelH += (float)dx;
+    io.MouseWheel += (float)dy;
+
+    if (!ImGui::IsAnyWindowHovered()) {
+        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        if (cr == NULL) return false;
+
+        core::view::InputEvent evt;
+        evt.tag = core::view::InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(core::view::InputCall::FnOnMouseScroll)) return false;
+    }
+
+    return true;
 }
 
 
