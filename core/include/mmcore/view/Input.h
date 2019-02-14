@@ -68,6 +68,32 @@ enum class Key : int {
     KEY_BACKSLASH = 92,     /* \ */
     KEY_RIGHT_BRACKET = 93, /* ] */
     KEY_GRAVE_ACCENT = 96,  /* ` */
+    //KEY_A = 97,
+    //KEY_B = 98,
+    //KEY_C = 99,
+    //KEY_D = 100,
+    //KEY_E = 101,
+    //KEY_F = 102,
+    //KEY_G = 103,
+    //KEY_H = 104,
+    //KEY_I = 105,
+    //KEY_J = 106,
+    //KEY_K = 107,
+    //KEY_L = 108,
+    //KEY_M = 109,
+    //KEY_N = 110,
+    //KEY_O = 111,
+    //KEY_P = 112,
+    //KEY_Q = 113,
+    //KEY_R = 114,
+    //KEY_S = 115,
+    //KEY_T = 116,
+    //KEY_U = 117,
+    //KEY_V = 118,
+    //KEY_W = 119,
+    //KEY_X = 120,
+    //KEY_Y = 121,
+    //KEY_Z = 122,
     KEY_WORLD_1 = 161,      /* non-US #1 */
     KEY_WORLD_2 = 162,      /* non-US #2 */
     KEY_ESCAPE = 256,
@@ -160,7 +186,7 @@ enum class MouseButton : int {
 
 enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 
-enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1 };
+enum class Modifier : int { SUPER = 8, ALT = 4, CTRL = 2, SHIFT = 1 };
 
 class Modifiers {
     typedef std::bitset<3> Bits;

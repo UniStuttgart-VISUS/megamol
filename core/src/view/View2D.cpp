@@ -164,6 +164,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     cr2d->SetTime(time);
     cr2d->SetInstanceTime(instTime);
     cr2d->SetGpuAffinity(context.GpuAffinity);
+    cr2d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();

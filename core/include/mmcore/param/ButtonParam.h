@@ -88,6 +88,10 @@ namespace param {
             this->key = code;
         }
 
+        inline vislib::sys::KeyCode GetKeyCode(void) const {
+            return this->key;
+        }
+
     private:
 
 #ifdef _WIN32
