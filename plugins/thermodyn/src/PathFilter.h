@@ -6,6 +6,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -13,6 +14,11 @@ namespace thermodyn {
 
 class PathFilter : public core::Module {
 public:
+    enum class FilterType : uint8_t {
+        MainDirection = 0,
+        Interface
+    };
+
     /** Return module class name */
     static const char* ClassName(void) { return "PathFilter"; }
 
@@ -41,6 +47,16 @@ private:
 
     /** output of a subset of particle pathlines */
     core::CalleeSlot dataOutSlot_;
+
+    core::param::ParamSlot filterTypeSlot_;
+
+    core::param::ParamSlot filterAxisSlot_;
+
+    core::param::ParamSlot filterThresholdSlot_;
+
+    core::param::ParamSlot maxIntSlot_;
+
+    core::param::ParamSlot minIntSlot_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 
