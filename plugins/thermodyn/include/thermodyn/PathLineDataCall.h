@@ -52,6 +52,8 @@ public:
 
     std::vector<pathline_store_t> const* GetPathStore() const { return pathStore_; }
 
+    size_t GetTimeSteps() const { return numTimeSteps_; }
+
     void SetEntrySizes(std::vector<int> const& entrySizes) { entrySizes_ = entrySizes; }
 
     void SetColorFlags(std::vector<bool> const& colsPresent) { colsPresent_ = colsPresent; }
@@ -59,6 +61,8 @@ public:
     void SetDirFlags(std::vector<bool> const& dirsPresent) { dirsPresent_ = dirsPresent; }
 
     void SetPathStore(std::vector<pathline_store_t> const* pathStore) { pathStore_ = pathStore; }
+
+    void SetTimeSteps(size_t numTimeSteps) { numTimeSteps_ = numTimeSteps; }
 
 private:
     std::vector<int> entrySizes_;
@@ -68,6 +72,8 @@ private:
     std::vector<bool> colsPresent_;
 
     std::vector<pathline_store_t> const* pathStore_ = nullptr;
+
+    size_t numTimeSteps_;
 }; // end class PathLineDataCall
 
 /** Call Descriptor.  */

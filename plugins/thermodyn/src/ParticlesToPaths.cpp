@@ -254,6 +254,7 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     outCall->SetColorFlags(colsPresent_);
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
+    outCall->SetTimeSteps(inCall->FrameCount());
 
     return true;
 }
