@@ -449,6 +449,14 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     // }
     this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
+    //cam_type::snapshot_type camsnap;
+    //cam_type::matrix_type viewCam, projCam;
+    //this->cam.calc_matrices(camsnap, viewCam, projCam);
+    //
+    //glm::mat4 view = viewCam;
+    //glm::mat4 proj = projCam;
+    //glm::mat4 mvp = projCam * viewCam;
+
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
         (*cr3d)(view::AbstractCallRender::FnRender);

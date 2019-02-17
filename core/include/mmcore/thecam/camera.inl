@@ -626,28 +626,22 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
 template<class M, template<class> class P>
 megamol::core::thecam::camera<M, P>&
 megamol::core::thecam::camera<M, P>::operator =(const minimal_state_type& rhs) {
-    // TODO
-    //this->centre_offset(rhs.centre_offset[0], rhs.centre_offset[1]);
+    this->centre_offset({ rhs.centre_offset[0], rhs.centre_offset[1] }); // TODO is this correct for all template possibilities?
     this->convergence_plane(rhs.convergence_plane);
     this->eye(rhs.eye);
     this->far_clipping_plane(rhs.far_clipping_plane);
-    //rhs.film_gate[0] = this->film_gate().width();
-    //rhs.film_gate[1] = this->film_gate().height();
+    this->film_gate({ rhs.film_gate[0], rhs.film_gate[1] }); // TODO is this correct for all template possibilities?
     this->gate_scaling(rhs.gate_scaling);
     this->half_aperture_angle_radians(rhs.half_aperture_angle_radians);
     this->half_disparity(rhs.half_disparity);
-    //rhs.image_tile[0] = this->image_tile().left();
-    //rhs.image_tile[1] = this->image_tile().top();
-    //rhs.image_tile[2] = this->image_tile().right();
-    //rhs.image_tile[3] = this->image_tile().bottom();
+    this->image_tile({ rhs.image_tile[0], rhs.image_tile[1], rhs.image_tile[2], rhs.image_tile[3] }); // TODO is this correct for all template possibilities?
     this->near_clipping_plane(rhs.near_clipping_plane);
     this->orientation(quaternion_type(rhs.orientation[0], rhs.orientation[1],
         rhs.orientation[2], rhs.orientation[3]));
     this->position(vector_type(rhs.position[0], rhs.position[1],
         rhs.position[2], 1.0f));
     this->projection_type(rhs.projection_type);
-    //rhs.resolution_gate[0] = this->resolution_gate().width();
-    //rhs.resolution_gate[1] = this->resolution_gate().height();
+    this->resolution_gate({ rhs.resolution_gate[0], rhs.resolution_gate[1] }); // TODO is this correct for all template possibilities?
     return *this;
 }
 
