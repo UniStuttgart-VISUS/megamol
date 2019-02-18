@@ -15,9 +15,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <iomanip> // setprecision
-#include <sstream> // stringstream
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -39,6 +36,9 @@
 #include "mmcore/view/Renderer3DModule.h"
 
 #include "vislib/UTF8Encoder.h"
+
+#include <iomanip> // setprecision
+#include <sstream> // stringstream
 
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
@@ -140,16 +140,21 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     /** The decorated renderer caller slot */
-    core::CallerSlot decoratedRendererSlot;
+    core::CallerSlot decorated_renderer_slot;
 
     // Global ImGui Stata Variables  ------------------------------------------
-    bool show_main_param_win;
-    bool show_hotkey_win;
-
+    bool main_param_win_show;
     ImVec2 main_param_win_pos;
     ImVec2 main_param_win_size;
+
+    bool hotkey_win_show;
+
     std::string fps_string;
     float fps_delay;
+
+    // ------------------------------------------------------------------------
+
+    enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 };
 
 
@@ -159,19 +164,19 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
 
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : decoratedRendererSlot("decoratedRenderer", "Connects to another 2D Renderer being decorated") {
+    : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated") {
 
-    this->decoratedRendererSlot.SetCompatibleCall<core::view::CallRender2DDescription>();
-    this->MakeSlotAvailable(&this->decoratedRendererSlot);
+    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
+    this->MakeSlotAvailable(&this->decorated_renderer_slot);
 }
 
 
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : decoratedRendererSlot("decoratedRenderer", "Connects to another 3D Renderer being decorated") {
+    : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated") {
 
-    this->decoratedRendererSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->decoratedRendererSlot);
+    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->decorated_renderer_slot);
 }
 
 
@@ -200,27 +205,28 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGuiIO& io = ImGui::GetIO();
 
     // ImGui Key Map
-    io.KeyMap[ImGuiKey_::ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
-    io.KeyMap[ImGuiKey_::ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
-    io.KeyMap[ImGuiKey_::ImGuiKey_RightArrow] = static_cast<int>(core::view::Key::KEY_RIGHT);
-    io.KeyMap[ImGuiKey_::ImGuiKey_UpArrow] = static_cast<int>(core::view::Key::KEY_UP);
-    io.KeyMap[ImGuiKey_::ImGuiKey_DownArrow] = static_cast<int>(core::view::Key::KEY_DOWN);
-    io.KeyMap[ImGuiKey_::ImGuiKey_PageUp] = static_cast<int>(core::view::Key::KEY_PAGE_UP);
-    io.KeyMap[ImGuiKey_::ImGuiKey_PageDown] = static_cast<int>(core::view::Key::KEY_PAGE_DOWN);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Home] = static_cast<int>(core::view::Key::KEY_HOME);
-    io.KeyMap[ImGuiKey_::ImGuiKey_End] = static_cast<int>(core::view::Key::KEY_END);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Insert] = static_cast<int>(core::view::Key::KEY_INSERT);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Delete] = static_cast<int>(core::view::Key::KEY_DELETE);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Backspace] = static_cast<int>(core::view::Key::KEY_BACKSPACE);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Space] = static_cast<int>(core::view::Key::KEY_SPACE);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Enter] = static_cast<int>(core::view::Key::KEY_ENTER);
-    io.KeyMap[ImGuiKey_::ImGuiKey_Escape] = static_cast<int>(core::view::Key::KEY_ESCAPE);
-    // io.KeyMap[ImGuiKey_::ImGuiKey_A] = -1;
-    // io.KeyMap[ImGuiKey_::ImGuiKey_C] = -1;
-    // io.KeyMap[ImGuiKey_::ImGuiKey_V] = -1;
-    // io.KeyMap[ImGuiKey_::ImGuiKey_X] = -1;
-    // io.KeyMap[ImGuiKey_::ImGuiKey_Y] = -1;
-    // io.KeyMap[ImGuiKey_::ImGuiKey_Z] = -1;
+    io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
+    io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
+    io.KeyMap[ImGuiKey_RightArrow] = static_cast<int>(core::view::Key::KEY_RIGHT);
+    io.KeyMap[ImGuiKey_UpArrow] = static_cast<int>(core::view::Key::KEY_UP);
+    io.KeyMap[ImGuiKey_DownArrow] = static_cast<int>(core::view::Key::KEY_DOWN);
+    io.KeyMap[ImGuiKey_PageUp] = static_cast<int>(core::view::Key::KEY_PAGE_UP);
+    io.KeyMap[ImGuiKey_PageDown] = static_cast<int>(core::view::Key::KEY_PAGE_DOWN);
+    io.KeyMap[ImGuiKey_Home] = static_cast<int>(core::view::Key::KEY_HOME);
+    io.KeyMap[ImGuiKey_End] = static_cast<int>(core::view::Key::KEY_END);
+    io.KeyMap[ImGuiKey_Insert] = static_cast<int>(core::view::Key::KEY_INSERT);
+    io.KeyMap[ImGuiKey_Delete] = static_cast<int>(core::view::Key::KEY_DELETE);
+    io.KeyMap[ImGuiKey_Backspace] = static_cast<int>(core::view::Key::KEY_BACKSPACE);
+    io.KeyMap[ImGuiKey_Space] = static_cast<int>(core::view::Key::KEY_SPACE);
+    io.KeyMap[ImGuiKey_Enter] = static_cast<int>(core::view::Key::KEY_ENTER);
+    io.KeyMap[ImGuiKey_Escape] = static_cast<int>(core::view::Key::KEY_ESCAPE);
+    // Arbitrary assignment for text manipulation hotkeys
+    io.KeyMap[ImGuiKey_A] = TextModHotkeys::CTRL_A;
+    io.KeyMap[ImGuiKey_C] = TextModHotkeys::CTRL_C;
+    io.KeyMap[ImGuiKey_V] = TextModHotkeys::CTRL_V;
+    io.KeyMap[ImGuiKey_X] = TextModHotkeys::CTRL_X;
+    io.KeyMap[ImGuiKey_Y] = TextModHotkeys::CTRL_Y;
+    io.KeyMap[ImGuiKey_Z] = TextModHotkeys::CTRL_Z;
 
     // Style settings ---------------------------------------------------------
     ImGui::StyleColorsDark();
@@ -231,6 +237,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.PopupBorderSize = 1.0f;
     style.AntiAliasedLines = true;
     style.AntiAliasedFill = true;
+    style.DisplayWindowPadding = ImVec2(20, 20);
+    style.DisplaySafeAreaPadding =  ImVec2(3,3)
 
     // Init OpenGL for ImGui --------------------------------------------------
     const char* glsl_version = "#version 150";
@@ -238,8 +246,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Init state variables ---------------------------------------------------
 
-    this->show_main_param_win = true;
-    this->show_hotkey_win = false;
+    this->main_param_win_show = true;
+    this->hotkey_win_show = false;
 
     this->main_param_win_pos = ImVec2(0.0f, 0.0f);
     this->main_param_win_size = ImVec2(0.0f, 0.0f);
@@ -261,7 +269,7 @@ template <class M, class C>
 bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
     ImGuiIO& io = ImGui::GetIO();
-    auto keyIndex = static_cast<size_t>(key); // TODO: Verify mapping!
+    auto keyIndex = static_cast<size_t>(key);
     switch (action) {
     case core::view::KeyAction::PRESS:
         io.KeysDown[keyIndex] = true;
@@ -277,8 +285,37 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     io.KeyAlt = mods.test(core::view::Modifier::ALT);
     io.KeySuper = mods.test(core::view::Modifier::SUPER);
 
+    // Check for additional text modification hotkeys
+    if (action == core::view::KeyAction::RELEASE) {
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_A)] = false;
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_C)] = false;
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_V)] = false;
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_X)] = false;
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Y)] = false;
+        io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Z)] = false;
+    }
+    bool hotkeyPressed = true;
+    if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_A))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_A);
+    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_C))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_C);
+    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_V))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_V);
+    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_X))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_X);
+    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Y))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_Y);
+    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Z))) {
+        keyIndex = static_cast<size_t>(TextModHotkeys::CTRL_Z);
+    } else {
+        hotkeyPressed = false;
+    }
+    if (hotkeyPressed && (action == core::view::KeyAction::PRESS)) {
+        io.KeysDown[keyIndex] = true;
+    }
+
     // Exit megamol
-    bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_::ImGuiKey_Escape])) ||                    // Escape
+    bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
                 (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Q))) ||                 // 'q'
                 ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
     if (exit) {
@@ -288,18 +325,18 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
 
     // Show/hide main parameter window
     if ((ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F12)))) {
-        this->show_main_param_win = !this->show_main_param_win;
+        this->main_param_win_show = !this->main_param_win_show;
         return true;
     }
 
     // Show/hide hotkey window
     if ((ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F11)))) {
-        this->show_hotkey_win = !this->show_hotkey_win;
+        this->hotkey_win_show = !this->hotkey_win_show;
         return true;
     }
 
     // Check for pressed arameter hotkeys
-    bool hotkeyPressed = false;
+    hotkeyPressed = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
         if (!param.IsNull()) {
@@ -316,7 +353,8 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     });
     if (hotkeyPressed) return true;
 
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+
+    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr == nullptr) return false;
 
     core::view::InputEvent evt;
@@ -337,7 +375,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
 
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr) {
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::Char;
@@ -358,7 +396,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
                                     // => will be fixed when screen2world transformation is available in CallRender.
 
     if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == NULL) return false;
 
         core::view::InputEvent evt;
@@ -382,6 +420,16 @@ bool GUIRenderer<M, C>::OnMouseButton(
     ImGuiIO& io = ImGui::GetIO();
     io.MouseDown[buttonIndex] = down;
 
+    // Clear text modification hotkeys activated via mouse click in menu
+    // if (!down) {
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_A)] = false;
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_C)] = false;
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_V)] = false;
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_X)] = false;
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Y)] = false;
+    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Z)] = false;
+    //}
+
     /// Fix for ignored IsWindowHovered() when menu item in menu bar is expanded but mouse click happens not on menu
     /// item but on other poition within window -> mouse click would be propagated to view ...
     auto x = io.MousePos.x;
@@ -390,7 +438,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
                                (y > main_param_win_pos.y) && (y < (main_param_win_pos.y + main_param_win_size.y));
 
     if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !mainParamWinHovered) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == NULL) return false;
 
         core::view::InputEvent evt;
@@ -413,7 +461,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
     io.MouseWheel += (float)dy;
 
     if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
-        auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+        auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == NULL) return false;
 
         core::view::InputEvent evt;
@@ -432,7 +480,7 @@ template <>
 inline bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(
     core::view::CallRender2D& call) {
 
-    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender2D>();
+    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender2D>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
@@ -450,7 +498,7 @@ template <>
 inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(
     core::view::CallRender3D& call) {
 
-    auto* cr = this->decoratedRendererSlot.CallAs<core::view::CallRender3D>();
+    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender3D>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
@@ -468,7 +516,7 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
 
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
-    auto* cr = this->decoratedRendererSlot.template CallAs<C>();
+    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != NULL) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnRender)) {
@@ -490,10 +538,8 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     ImGui::NewFrame();
 
     // Construct frame
-    // ImGui::ShowMetricsWindow(); // for debug
-    // if (this->show_main_menu) this->drawMainMenu();
-    if (this->show_main_param_win) this->drawMainParameterWindow();
-    if (this->show_hotkey_win) this->drawHotkeyWindow();
+    if (this->main_param_win_show) this->drawMainParameterWindow();
+    if (this->hotkey_win_show) this->drawHotkeyWindow();
 
     // Render the frame
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -521,28 +567,62 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     this->fps_delay += io.DeltaTime;
     if (this->fps_delay >= 1.0f) { // only update every second
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(2) << std::setw(7)
-               << ((io.Framerate > 10000.0f) ? (0.0f) : (io.Framerate));
+        stream << std::fixed << std::setprecision(2) //<< std::setw(7)
+               << io.Framerate;
         this->fps_string = stream.str();
         this->fps_delay = 0.0f;
     }
     ImGui::Separator();
-    if (ImGui::BeginMenu("FPS")) {
-        if (ImGui::MenuItem("Copy to Clipboard", nullptr, false)) {
+
+    // Parameters
+    if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("FPS")) {
             ImGui::SetClipboardText(fps_string.data());
         }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Copy to Clipboard");
+        }
+        ImGui::SameLine(75.0f);
+        ImGui::Text(this->fps_string.data());
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Exit", "   (Esc, Alt + F4, 'q')")) {
+            this->shutdown();
+        }
+        // if (ImGui::MenuItem("Select All Text", "Ctrl + 'a'", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_A)] = true;
+        //}
+        // if (ImGui::MenuItem("Copy Text", "Ctrl + 'c'", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_C)] = true;
+        //}
+        // if (ImGui::MenuItem("Paste Text", "Ctrl + 'v'", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_V)] = true;
+        //}
+        // if (ImGui::MenuItem("Cut Text", "Ctrl + 'x'", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_X)] = true;
+        //}
+        // ImGui::Separator();
+        // if (ImGui::MenuItem("Undo Text Edit", "Ctrl + 'z' (DE: 'y')", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Y)] = true;
+        //}
+        // if (ImGui::MenuItem("Redo Text Edit", "Ctrl + 'y' (DE: 'z')", false)) {
+        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Z)] = true;
+        //}
         // ImGui::MenuItem("Show FPS in Window Caption", nullptr, false);
         // ImGui::MenuItem("Show Samples passed in Window Caption", nullptr, false);
         // ImGui::MenuItem("Show Primitives generated in Window Caption", nullptr, false);
         // ImGui::MenuItem("Copy FPS List to Clipboard", nullptr, false);
         ImGui::EndMenu();
     }
-    ImGui::Text("%s", this->fps_string.data());
     ImGui::Separator();
 
-    if (ImGui::BeginMenu("Window")) {
-        if (ImGui::MenuItem("Show/Hide Window", "F12", false)) {
-            this->show_main_param_win = !this->show_main_param_win;
+
+    if (ImGui::BeginMenu("View")) {
+        if (ImGui::MenuItem("Show/Hide this Window", "   (F12)")) {
+            this->main_param_win_show = !this->main_param_win_show;
+        }
+        if (ImGui::MenuItem("Show/Hide Hotkey Window", "   (F11)")) {
+            this->hotkey_win_show = true;
         }
         // ImGui::MenuItem("Left", nullptr, false);
         // ImGui::MenuItem("Top", nullptr, false);
@@ -565,24 +645,21 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     ImGui::Separator();
 
     // Parameters
-    if (ImGui::BeginMenu("Parameters")) {
-        if (ImGui::MenuItem("Show Hotkey Window", "F11", false)) {
-            this->show_hotkey_win = true;
-        }
-        // char filename[256];
-        // if (ImGui::InputText("File Name", filename, IM_ARRAYSIZE(filename))) {
-        //    // console::utility::ParamFileManager::Instance().filename = vislib::StringA(filename);
-        // }
-        // if (ImGui::MenuItem("Load ParamFile", nullptr, false)) {
-        //    // console::utility::ParamFileManager::Instance().Load();
-        // }
-        // if (ImGui::MenuItem("Save ParamFile", nullptr, false)) {
-        //    // console::utility::ParamFileManager::Instance().Save();
-        // }
-        // ImGui::Separator();
-        ImGui::EndMenu();
-    }
-    ImGui::Separator();
+    // if (ImGui::BeginMenu("Parameters")) {
+    // char filename[256];
+    // if (ImGui::InputText("File Name", filename, IM_ARRAYSIZE(filename))) {
+    //    // console::utility::ParamFileManager::Instance().filename = vislib::StringA(filename);
+    // }
+    // if (ImGui::MenuItem("Load ParamFile", nullptr, false)) {
+    //    // console::utility::ParamFileManager::Instance().Load();
+    // }
+    // if (ImGui::MenuItem("Save ParamFile", nullptr, false)) {
+    //    // console::utility::ParamFileManager::Instance().Save();
+    // }
+    // ImGui::Separator();
+    // ImGui::EndMenu();
+    // }
+    // ImGui::Separator();
 
     // Help
     bool open_popup = false;
@@ -590,16 +667,29 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
+        const std::string tooltiptext = "Copy Link to Clipboard";
 
-        if (ImGui::MenuItem("GitHub", "Copy Link to Clipboard", false)) {
+        if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.data());
         }
-        if (ImGui::MenuItem("Readme", "Copy Link to Clipboard", false)) {
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip(tooltiptext.data());
+        }
+
+        if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.data());
         }
-        if (ImGui::MenuItem("Web Page", "Copy Link to Clipboard", false)) {
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip(tooltiptext.data());
+        }
+
+        if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.data());
         }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip(tooltiptext.data());
+        }
+
         ImGui::Separator();
 
         if (ImGui::MenuItem("About...")) {
@@ -623,22 +713,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
     }
-
-    // Exit
-    if (ImGui::MenuItem("Exit")) {
-        this->shutdown();
-    }
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Exit Program ('Esc', 'q', 'Alt + F4')");
-    }
-    ImGui::Separator();
 }
 
 
 template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindow(void) {
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    ImGui::Begin("Hotkeys", &this->show_hotkey_win, window_flags);
+    ImGui::Begin("Hotkeys", &this->hotkey_win_show, window_flags);
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
