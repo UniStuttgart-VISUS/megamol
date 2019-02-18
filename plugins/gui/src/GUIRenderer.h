@@ -108,14 +108,19 @@ private:
     void drawMainMenu(void);
 
     /**
+     * Draws the parameter window.
+     */
+    void drawMainParameterWindow(void);
+
+    /**
      * Draws the menu bar.
      */
     void drawMenu(void);
 
     /**
-     * Draws the parameter window.
+     * Draw hotkey window.
      */
-    void drawParameterWindow(void);
+    void drawHotkeyWindow(void);
 
     /**
      * Draws a parameter for the parameter window.
@@ -134,14 +139,19 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
+    /** Parameter names and corresponding hotkeys. */
+    std::unordered_map<std::string, std::string> paramHotkeys;
+
     /** The decorated renderer caller slot */
     core::CallerSlot decoratedRendererSlot;
 
     // Global ImGui Stata Variables  ------------------------------------------
+    bool show_main_menu;
+    bool show_main_parameter_window;
+    bool show_hotkey_window;
 
-    bool parameterWindowOpen;
-    float fpsDelay;
-    std::string fps;
+    std::string fps_string;
+    float fps_delay;
 };
 
 
@@ -229,9 +239,14 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Init state variables ---------------------------------------------------
-    this->parameterWindowOpen = true;
-    this->fpsDelay = 1.0f;
-    this->fps = "";
+
+    this->show_main_parameter_window = true;
+    this->show_main_menu = false;
+    this->show_hotkey_window = false;
+
+    this->fps_delay = 1.0f;
+    this->fps_string = "";
+    this->paramHotkeys.clear();
 
     return true;
 }
@@ -454,9 +469,10 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     ImGui::NewFrame();
 
     // Construct frame
-    // this->drawMainMenu();
-    // ImGui::ShowMetricsWindow(nullptr);
-    this->drawParameterWindow();
+    // ImGui::ShowMetricsWindow(); // for debug
+    if (this->show_main_menu) this->drawMainMenu();
+    if (this->show_main_parameter_window) this->drawMainParameterWindow();
+    if (this->show_hotkey_window) this->drawHotkeyWindow();
 
     // Render the frame
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -481,13 +497,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     ImGuiIO& io = ImGui::GetIO();
 
     // fps
-    this->fpsDelay += io.DeltaTime;
-    if (this->fpsDelay >= 1.0f) { // update every second
+    this->fps_delay += io.DeltaTime;
+    if (this->fps_delay >= 1.0f) { // update every second
         std::stringstream stream;
         stream << std::fixed << std::setprecision(2) << std::setw(7)
                << ((io.Framerate > 10000.0f) ? (0.0f) : (io.Framerate));
-        this->fps = stream.str();
-        this->fpsDelay = 0.0f;
+        this->fps_string = stream.str();
+        this->fps_delay = 0.0f;
     }
     if (ImGui::BeginMenu("FPS")) {
         // ImGui::MenuItem("Show FPS in Window Caption", nullptr, false);
@@ -495,11 +511,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         // ImGui::MenuItem("Show Primitives generated in Window Caption", nullptr, false);
         // ImGui::MenuItem("Copy FPS List to Clipboard", nullptr, false);
         if (ImGui::MenuItem("Copy to Clipboard", nullptr, false)) {
-            ImGui::SetClipboardText(fps.data());
+            ImGui::SetClipboardText(fps_string.data());
         }
         ImGui::EndMenu();
     }
-    ImGui::Text("%s", this->fps.data());
+    ImGui::Text("%s", this->fps_string.data());
     ImGui::Separator();
 
     // Window
@@ -538,6 +554,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         // }
         // ImGui::Separator();
         if (ImGui::MenuItem("Show hotkey window", nullptr, false)) {
+            this->show_hotkey_window = true;
         }
         ImGui::EndMenu();
     }
@@ -567,6 +584,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         ImGui::EndMenu();
     }
     ImGui::Separator();
+
     // PopUp
     std::string about = "MegaMol is GREAT!";
     if (open_popup) {
@@ -592,7 +610,39 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 }
 
 
-template <class M, class C> void GUIRenderer<M, C>::drawParameterWindow(void) {
+template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindow(void) {
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    ImGui::Begin("Hotkeys", &this->show_hotkey_window, window_flags);
+
+    if (ImGui::Button("Update") || this->paramHotkeys.empty()) {
+        this->paramHotkeys.clear();
+        this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto param = slot.Parameter();
+            if (!param.IsNull()) {
+                if (auto* p = slot.Param<core::param::ButtonParam>()) {
+                    auto label = std::string(slot.Name().PeekBuffer());
+                    auto keycode = std::string(p->GetKeyCode().ToStringA().PeekBuffer());
+
+                    this->paramHotkeys.emplace(label, keycode);
+                }
+            }
+        });
+    }
+    ImGui::Separator();
+
+    for (auto pair : this->paramHotkeys) {
+        ImGui::Text(pair.first.data());
+        ImGui::SameLine(200);
+        ImGui::Text(pair.second.data());
+        ImGui::Separator();
+    }
+
+    ImGui::End();
+}
+
+
+template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void) {
 
     // Window -----------------------------------------------------------------
     ImGuiWindowFlags window_flags =
