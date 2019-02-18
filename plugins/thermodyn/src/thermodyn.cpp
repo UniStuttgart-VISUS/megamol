@@ -16,6 +16,7 @@
 #include "PathsToLines.h"
 #include "PathFilter.h"
 #include "PathDMD.h"
+#include "PathPCA.h"
 
 #include "thermodyn/PathLineDataCall.h"
 
@@ -49,6 +50,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathToLines>();
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathDMD>();
+            this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathPCA>();
             //
             // TODO: Register your plugin's modules here
             // like:
