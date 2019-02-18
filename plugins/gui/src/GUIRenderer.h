@@ -154,6 +154,7 @@ private:
 
     // ------------------------------------------------------------------------
 
+    // Arbitrary assignment for text manipulation hotkeys
     enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 };
 
@@ -220,7 +221,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     io.KeyMap[ImGuiKey_Space] = static_cast<int>(core::view::Key::KEY_SPACE);
     io.KeyMap[ImGuiKey_Enter] = static_cast<int>(core::view::Key::KEY_ENTER);
     io.KeyMap[ImGuiKey_Escape] = static_cast<int>(core::view::Key::KEY_ESCAPE);
-    // Arbitrary assignment for text manipulation hotkeys
     io.KeyMap[ImGuiKey_A] = TextModHotkeys::CTRL_A;
     io.KeyMap[ImGuiKey_C] = TextModHotkeys::CTRL_C;
     io.KeyMap[ImGuiKey_V] = TextModHotkeys::CTRL_V;
@@ -237,8 +237,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.PopupBorderSize = 1.0f;
     style.AntiAliasedLines = true;
     style.AntiAliasedFill = true;
-    style.DisplayWindowPadding = ImVec2(20, 20);
-    style.DisplaySafeAreaPadding =  ImVec2(3,3)
+    style.DisplayWindowPadding = ImVec2(20.0f, 20.0f);
+    style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
 
     // Init OpenGL for ImGui --------------------------------------------------
     const char* glsl_version = "#version 150";
@@ -420,16 +420,6 @@ bool GUIRenderer<M, C>::OnMouseButton(
     ImGuiIO& io = ImGui::GetIO();
     io.MouseDown[buttonIndex] = down;
 
-    // Clear text modification hotkeys activated via mouse click in menu
-    // if (!down) {
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_A)] = false;
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_C)] = false;
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_V)] = false;
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_X)] = false;
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Y)] = false;
-    //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Z)] = false;
-    //}
-
     /// Fix for ignored IsWindowHovered() when menu item in menu bar is expanded but mouse click happens not on menu
     /// item but on other poition within window -> mouse click would be propagated to view ...
     auto x = io.MousePos.x;
@@ -561,9 +551,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainMenu(void) {
 
 template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
-    ImGuiIO& io = ImGui::GetIO();
-
     // fps
+    ImGuiIO& io = ImGui::GetIO();
     this->fps_delay += io.DeltaTime;
     if (this->fps_delay >= 1.0f) { // only update every second
         std::stringstream stream;
@@ -572,9 +561,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         this->fps_string = stream.str();
         this->fps_delay = 0.0f;
     }
-    ImGui::Separator();
 
-    // Parameters
+    // File
+    ImGui::Separator();
     if (ImGui::BeginMenu("File")) {
         if (ImGui::MenuItem("FPS")) {
             ImGui::SetClipboardText(fps_string.data());
@@ -585,38 +574,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         ImGui::SameLine(75.0f);
         ImGui::Text(this->fps_string.data());
         ImGui::Separator();
-
         if (ImGui::MenuItem("Exit", "   (Esc, Alt + F4, 'q')")) {
             this->shutdown();
         }
-        // if (ImGui::MenuItem("Select All Text", "Ctrl + 'a'", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_A)] = true;
-        //}
-        // if (ImGui::MenuItem("Copy Text", "Ctrl + 'c'", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_C)] = true;
-        //}
-        // if (ImGui::MenuItem("Paste Text", "Ctrl + 'v'", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_V)] = true;
-        //}
-        // if (ImGui::MenuItem("Cut Text", "Ctrl + 'x'", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_X)] = true;
-        //}
-        // ImGui::Separator();
-        // if (ImGui::MenuItem("Undo Text Edit", "Ctrl + 'z' (DE: 'y')", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Y)] = true;
-        //}
-        // if (ImGui::MenuItem("Redo Text Edit", "Ctrl + 'y' (DE: 'z')", false)) {
-        //    io.KeysDown[static_cast<size_t>(TextModHotkeys::CTRL_Z)] = true;
-        //}
-        // ImGui::MenuItem("Show FPS in Window Caption", nullptr, false);
-        // ImGui::MenuItem("Show Samples passed in Window Caption", nullptr, false);
-        // ImGui::MenuItem("Show Primitives generated in Window Caption", nullptr, false);
-        // ImGui::MenuItem("Copy FPS List to Clipboard", nullptr, false);
         ImGui::EndMenu();
     }
     ImGui::Separator();
 
-
+    // View
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Show/Hide this Window", "   (F12)")) {
             this->main_param_win_show = !this->main_param_win_show;
@@ -624,42 +589,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         if (ImGui::MenuItem("Show/Hide Hotkey Window", "   (F11)")) {
             this->hotkey_win_show = true;
         }
-        // ImGui::MenuItem("Left", nullptr, false);
-        // ImGui::MenuItem("Top", nullptr, false);
-        // ImGui::MenuItem("Width", nullptr, false);
-        // ImGui::MenuItem("Height", nullptr, false);
-        // ImGui::Separator();
-        // ImGui::MenuItem("Get Values", nullptr, false);
-        // ImGui::MenuItem("Set Values", nullptr, false);
-        // ImGui::Separator();
-        // if (ImGui::BeginMenu("Size presets")) {
-        //    ImGui::MenuItem("256 x 256", nullptr, false);
-        //    ImGui::MenuItem("512 x 512", nullptr, false);
-        //    ImGui::MenuItem("1024 x 1024", nullptr, false);
-        //    ImGui::MenuItem("1280 x 720", nullptr, false);
-        //    ImGui::MenuItem("1920 x 1080", nullptr, false);
-        //    ImGui::EndMenu();
-        //}
         ImGui::EndMenu();
     }
     ImGui::Separator();
-
-    // Parameters
-    // if (ImGui::BeginMenu("Parameters")) {
-    // char filename[256];
-    // if (ImGui::InputText("File Name", filename, IM_ARRAYSIZE(filename))) {
-    //    // console::utility::ParamFileManager::Instance().filename = vislib::StringA(filename);
-    // }
-    // if (ImGui::MenuItem("Load ParamFile", nullptr, false)) {
-    //    // console::utility::ParamFileManager::Instance().Load();
-    // }
-    // if (ImGui::MenuItem("Save ParamFile", nullptr, false)) {
-    //    // console::utility::ParamFileManager::Instance().Save();
-    // }
-    // ImGui::Separator();
-    // ImGui::EndMenu();
-    // }
-    // ImGui::Separator();
 
     // Help
     bool open_popup = false;
@@ -668,30 +600,25 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
         const std::string tooltiptext = "Copy Link to Clipboard";
-
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.data());
         }
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip(tooltiptext.data());
         }
-
         if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.data());
         }
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip(tooltiptext.data());
         }
-
         if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.data());
         }
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip(tooltiptext.data());
         }
-
         ImGui::Separator();
-
         if (ImGui::MenuItem("About...")) {
             open_popup = true;
         }
@@ -719,6 +646,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindow(void) {
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    ImGui::SetNextWindowPos(
+        ImVec2(this->main_param_win_pos.x + this->main_param_win_size.x + 5.0f, 5.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin("Hotkeys", &this->hotkey_win_show, window_flags);
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
@@ -742,17 +672,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindow(void) {
 
 template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void) {
 
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImGui::SetNextWindowPos(ImVec2(2.0f, 2.0f), ImGuiCond_Once);
-
     // Window -----------------------------------------------------------------
     ImGuiWindowFlags window_flags =
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     bool* p_open = nullptr; // &this->parameterWindowOpen;
     std::stringstream stream;
-    stream << "MegaMol (Dear ImGUI" << IMGUI_VERSION << ")";
+    stream << "MegaMol (Dear ImGui " << IMGUI_VERSION << ")";
     std::string title = stream.str();
+    ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(title.data(), p_open, window_flags);
 
     this->main_param_win_pos = ImGui::GetWindowPos();
@@ -767,15 +695,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void
 
     // Parameters -------------------------------------------------------------
     ImGui::Text("Parameters by Modules: ");
-    ImGui::SameLine(180.0f);
 
     int overrideState = -1;
-    if (ImGui::Button("Collapse All")) {
-        overrideState = 0;
-    }
-    ImGui::SameLine();
+    ImGui::SameLine(180.0f);
     if (ImGui::Button("Expand All")) {
         overrideState = 1;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Collapse All")) {
+        overrideState = 0;
     }
     ImGui::Separator();
 
@@ -804,8 +732,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void
 
 template <class M, class C>
 void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
-
-    ImGuiIO& io = ImGui::GetIO();
 
     auto param = slot.Parameter();
     if (!param.IsNull()) {
@@ -909,6 +835,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
 
 
 template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
+
     vislib::sys::Log::DefaultLog.WriteInfo(">>>>> GUIRenderer: Initialising megamol core instance shutdown ...");
     this->GetCoreInstance()->Shutdown();
 }
