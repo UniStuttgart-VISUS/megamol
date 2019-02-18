@@ -139,17 +139,15 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    /** Parameter names and corresponding hotkeys. */
-    std::unordered_map<std::string, std::string> paramHotkeys;
-
     /** The decorated renderer caller slot */
     core::CallerSlot decoratedRendererSlot;
 
     // Global ImGui Stata Variables  ------------------------------------------
-    bool show_main_menu;
-    bool show_main_parameter_window;
-    bool show_hotkey_window;
+    bool show_main_param_win;
+    bool show_hotkey_win;
 
+    ImVec2 main_param_win_pos;
+    ImVec2 main_param_win_size;
     std::string fps_string;
     float fps_delay;
 };
@@ -227,7 +225,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     // Style settings ---------------------------------------------------------
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 5.0f;
+    style.FrameRounding = 3.0f;
     style.WindowBorderSize = 1.0f;
     style.FrameBorderSize = 1.0f;
     style.PopupBorderSize = 1.0f;
@@ -240,13 +238,13 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Init state variables ---------------------------------------------------
 
-    this->show_main_parameter_window = true;
-    this->show_main_menu = false;
-    this->show_hotkey_window = false;
+    this->show_main_param_win = true;
+    this->show_hotkey_win = false;
 
+    this->main_param_win_pos = ImVec2(0.0f, 0.0f);
+    this->main_param_win_size = ImVec2(0.0f, 0.0f);
     this->fps_delay = 1.0f;
     this->fps_string = "";
-    this->paramHotkeys.clear();
 
     return true;
 }
@@ -279,7 +277,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     io.KeyAlt = mods.test(core::view::Modifier::ALT);
     io.KeySuper = mods.test(core::view::Modifier::SUPER);
 
-    // Exit
+    // Exit megamol
     bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_::ImGuiKey_Escape])) ||                    // Escape
                 (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Q))) ||                 // 'q'
                 ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
@@ -287,22 +285,36 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         this->shutdown();
         return true;
     }
-    // Parameter hotkeys
+
+    // Show/hide main parameter window
+    if ((ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F12)))) {
+        this->show_main_param_win = !this->show_main_param_win;
+        return true;
+    }
+
+    // Show/hide hotkey window
+    if ((ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F11)))) {
+        this->show_hotkey_win = !this->show_hotkey_win;
+        return true;
+    }
+
+    // Check for pressed arameter hotkeys
+    bool hotkeyPressed = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
         if (!param.IsNull()) {
             if (auto* p = slot.Param<core::param::ButtonParam>()) {
                 auto keyCode = p->GetKeyCode();
                 auto noModKey = this->getNoModKey(keyCode);
-                auto hotkeyPressed = (ImGui::IsKeyDown(noModKey)) && (keyCode.IsAltMod() == io.KeyAlt) &&
-                                     (keyCode.IsCtrlMod() == io.KeyCtrl) && (keyCode.IsShiftMod() == io.KeyShift);
+                hotkeyPressed = (ImGui::IsKeyDown(noModKey)) && (keyCode.IsAltMod() == io.KeyAlt) &&
+                                (keyCode.IsCtrlMod() == io.KeyCtrl) && (keyCode.IsShiftMod() == io.KeyShift);
                 if (hotkeyPressed) {
                     p->setDirty();
-                    return true;
                 }
             }
         }
     });
+    if (hotkeyPressed) return true;
 
     auto* cr = this->decoratedRendererSlot.template CallAs<C>();
     if (cr == nullptr) return false;
@@ -341,9 +353,11 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(x, y); // TODO: This is broken, since x and y are transformed by View2D class
-                                // => will be fixed when screen2world transformation is available in CallRender.
-    if (!ImGui::IsAnyWindowHovered()) {
+    io.MousePos =
+        ImVec2((float)x, (float)y); // TODO: This is broken, since x and y are transformed by View2D class
+                                    // => will be fixed when screen2world transformation is available in CallRender.
+
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
         auto* cr = this->decoratedRendererSlot.template CallAs<C>();
         if (cr == NULL) return false;
 
@@ -368,7 +382,14 @@ bool GUIRenderer<M, C>::OnMouseButton(
     ImGuiIO& io = ImGui::GetIO();
     io.MouseDown[buttonIndex] = down;
 
-    if (!ImGui::IsAnyWindowHovered()) {
+    /// Fix for ignored IsWindowHovered() when menu item in menu bar is expanded but mouse click happens not on menu
+    /// item but on other poition within window -> mouse click would be propagated to view ...
+    auto x = io.MousePos.x;
+    auto y = io.MousePos.y;
+    bool mainParamWinHovered = (x > main_param_win_pos.x) && (x < (main_param_win_pos.x + main_param_win_size.x)) &&
+                               (y > main_param_win_pos.y) && (y < (main_param_win_pos.y + main_param_win_size.y));
+
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && !mainParamWinHovered) {
         auto* cr = this->decoratedRendererSlot.template CallAs<C>();
         if (cr == NULL) return false;
 
@@ -391,7 +412,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
     io.MouseWheelH += (float)dx;
     io.MouseWheel += (float)dy;
 
-    if (!ImGui::IsAnyWindowHovered()) {
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
         auto* cr = this->decoratedRendererSlot.template CallAs<C>();
         if (cr == NULL) return false;
 
@@ -460,7 +481,7 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
     // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(viewportWidth, viewportHeight);
+    io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
     io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // in milliseconds
 
@@ -470,9 +491,9 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
     // Construct frame
     // ImGui::ShowMetricsWindow(); // for debug
-    if (this->show_main_menu) this->drawMainMenu();
-    if (this->show_main_parameter_window) this->drawMainParameterWindow();
-    if (this->show_hotkey_window) this->drawHotkeyWindow();
+    // if (this->show_main_menu) this->drawMainMenu();
+    if (this->show_main_param_win) this->drawMainParameterWindow();
+    if (this->show_hotkey_win) this->drawHotkeyWindow();
 
     // Render the frame
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -498,50 +519,56 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // fps
     this->fps_delay += io.DeltaTime;
-    if (this->fps_delay >= 1.0f) { // update every second
+    if (this->fps_delay >= 1.0f) { // only update every second
         std::stringstream stream;
         stream << std::fixed << std::setprecision(2) << std::setw(7)
                << ((io.Framerate > 10000.0f) ? (0.0f) : (io.Framerate));
         this->fps_string = stream.str();
         this->fps_delay = 0.0f;
     }
+    ImGui::Separator();
     if (ImGui::BeginMenu("FPS")) {
+        if (ImGui::MenuItem("Copy to Clipboard", nullptr, false)) {
+            ImGui::SetClipboardText(fps_string.data());
+        }
         // ImGui::MenuItem("Show FPS in Window Caption", nullptr, false);
         // ImGui::MenuItem("Show Samples passed in Window Caption", nullptr, false);
         // ImGui::MenuItem("Show Primitives generated in Window Caption", nullptr, false);
         // ImGui::MenuItem("Copy FPS List to Clipboard", nullptr, false);
-        if (ImGui::MenuItem("Copy to Clipboard", nullptr, false)) {
-            ImGui::SetClipboardText(fps_string.data());
-        }
         ImGui::EndMenu();
     }
     ImGui::Text("%s", this->fps_string.data());
     ImGui::Separator();
 
-    // Window
-    // if (ImGui::BeginMenu("Window")) {
-    //     ImGui::MenuItem("Left", nullptr, false);
-    //     ImGui::MenuItem("Top", nullptr, false);
-    //     ImGui::MenuItem("Width", nullptr, false);
-    //     ImGui::MenuItem("Height", nullptr, false);
-    //     ImGui::Separator();
-    //     ImGui::MenuItem("Get Values", nullptr, false);
-    //     ImGui::MenuItem("Set Values", nullptr, false);
-    //     ImGui::Separator();
-    //     if (ImGui::BeginMenu("Size presets")) {
-    //        ImGui::MenuItem("256 x 256", nullptr, false);
-    //        ImGui::MenuItem("512 x 512", nullptr, false);
-    //        ImGui::MenuItem("1024 x 1024", nullptr, false);
-    //        ImGui::MenuItem("1280 x 720", nullptr, false);
-    //        ImGui::MenuItem("1920 x 1080", nullptr, false);
-    //        ImGui::EndMenu();
-    //    }
-    //    ImGui::EndMenu();
-    // }
-    // ImGui::Separator();
+    if (ImGui::BeginMenu("Window")) {
+        if (ImGui::MenuItem("Show/Hide Window", "F12", false)) {
+            this->show_main_param_win = !this->show_main_param_win;
+        }
+        // ImGui::MenuItem("Left", nullptr, false);
+        // ImGui::MenuItem("Top", nullptr, false);
+        // ImGui::MenuItem("Width", nullptr, false);
+        // ImGui::MenuItem("Height", nullptr, false);
+        // ImGui::Separator();
+        // ImGui::MenuItem("Get Values", nullptr, false);
+        // ImGui::MenuItem("Set Values", nullptr, false);
+        // ImGui::Separator();
+        // if (ImGui::BeginMenu("Size presets")) {
+        //    ImGui::MenuItem("256 x 256", nullptr, false);
+        //    ImGui::MenuItem("512 x 512", nullptr, false);
+        //    ImGui::MenuItem("1024 x 1024", nullptr, false);
+        //    ImGui::MenuItem("1280 x 720", nullptr, false);
+        //    ImGui::MenuItem("1920 x 1080", nullptr, false);
+        //    ImGui::EndMenu();
+        //}
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
 
     // Parameters
     if (ImGui::BeginMenu("Parameters")) {
+        if (ImGui::MenuItem("Show Hotkey Window", "F11", false)) {
+            this->show_hotkey_win = true;
+        }
         // char filename[256];
         // if (ImGui::InputText("File Name", filename, IM_ARRAYSIZE(filename))) {
         //    // console::utility::ParamFileManager::Instance().filename = vislib::StringA(filename);
@@ -553,9 +580,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    // console::utility::ParamFileManager::Instance().Save();
         // }
         // ImGui::Separator();
-        if (ImGui::MenuItem("Show hotkey window", nullptr, false)) {
-            this->show_hotkey_window = true;
-        }
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -563,9 +587,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     // Help
     bool open_popup = false;
     if (ImGui::BeginMenu("Help")) {
-        std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
-        std::string mmLink = "https://megamol.org/";
-        std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
+        const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
+        const std::string mmLink = "https://megamol.org/";
+        const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
 
         if (ImGui::MenuItem("GitHub", "Copy Link to Clipboard", false)) {
             ImGui::SetClipboardText(gitLink.data());
@@ -586,7 +610,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     ImGui::Separator();
 
     // PopUp
-    std::string about = "MegaMol is GREAT!";
+    const std::string about = "MegaMol is GREAT!";
     if (open_popup) {
         ImGui::OpenPopup("About");
     }
@@ -605,44 +629,41 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         this->shutdown();
     }
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Exit program.");
+        ImGui::SetTooltip("Exit Program ('Esc', 'q', 'Alt + F4')");
     }
+    ImGui::Separator();
 }
 
 
 template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindow(void) {
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    ImGui::Begin("Hotkeys", &this->show_hotkey_window, window_flags);
+    ImGui::Begin("Hotkeys", &this->show_hotkey_win, window_flags);
 
-    if (ImGui::Button("Update") || this->paramHotkeys.empty()) {
-        this->paramHotkeys.clear();
-        this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
-            auto param = slot.Parameter();
-            if (!param.IsNull()) {
-                if (auto* p = slot.Param<core::param::ButtonParam>()) {
-                    auto label = std::string(slot.Name().PeekBuffer());
-                    auto keycode = std::string(p->GetKeyCode().ToStringA().PeekBuffer());
+    this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+        auto param = slot.Parameter();
+        if (!param.IsNull()) {
+            if (auto* p = slot.Param<core::param::ButtonParam>()) {
+                auto label = std::string(slot.Name().PeekBuffer());
+                auto keycode = std::string(p->GetKeyCode().ToStringA().PeekBuffer());
 
-                    this->paramHotkeys.emplace(label, keycode);
-                }
+                ImGui::Text(label.data());
+                ImGui::SameLine(200.0f);
+                ImGui::Text(keycode.data());
+                ImGui::Separator();
             }
-        });
-    }
-    ImGui::Separator();
-
-    for (auto pair : this->paramHotkeys) {
-        ImGui::Text(pair.first.data());
-        ImGui::SameLine(200);
-        ImGui::Text(pair.second.data());
-        ImGui::Separator();
-    }
+        }
+    });
 
     ImGui::End();
 }
 
 
 template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui::SetNextWindowPos(ImVec2(2.0f, 2.0f), ImGuiCond_Once);
 
     // Window -----------------------------------------------------------------
     ImGuiWindowFlags window_flags =
@@ -653,21 +674,26 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainParameterWindow(void
     std::string title = stream.str();
     ImGui::Begin(title.data(), p_open, window_flags);
 
+    this->main_param_win_pos = ImGui::GetWindowPos();
+    this->main_param_win_size = ImGui::GetWindowSize();
+
     // Menu -------------------------------------------------------------------
     if (ImGui::BeginMenuBar()) {
         this->drawMenu();
         ImGui::EndMenuBar();
     }
+    ImGui::Separator();
 
     // Parameters -------------------------------------------------------------
-    ImGui::Text("Parameters: ");
+    ImGui::Text("Parameters by Modules: ");
+    ImGui::SameLine(180.0f);
 
     int overrideState = -1;
-    if (ImGui::Button("Collapse")) {
+    if (ImGui::Button("Collapse All")) {
         overrideState = 0;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Expand")) {
+    if (ImGui::Button("Expand All")) {
         overrideState = 1;
     }
     ImGui::Separator();
