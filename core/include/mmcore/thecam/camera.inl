@@ -453,9 +453,9 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         auto tr = static_cast<world_type>(this->image_tile().right());
         auto tb = static_cast<world_type>(this->image_tile().bottom());
         if (this->image_tile().width() == 0 || this->image_tile().height() == 0) {
-            tl = tt = static_cast<world_type>(0);
+            tl = tb = static_cast<world_type>(0);
             tr = iw;
-            tb = ih;
+            tt = ih;
         }
 
         snapshot.frustum_near = this->near_clipping_plane();
