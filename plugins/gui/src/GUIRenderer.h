@@ -399,7 +399,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         return true;
     }
 
-    // Window hotkeys
+    // Hotkeys of window(s)
     for (auto& win : this->windows) {
         if ((ImGui::IsKeyDown(static_cast<int>(win.hotkey)))) {
             win.open = !win.open;
@@ -613,7 +613,7 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-    io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // in milliseconds
+    io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // given in milliseconds
 
     // Start the frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -639,16 +639,17 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void) {
 
     // Menu -------------------------------------------------------------------
+    /// requires window flag ImGuiWindowFlags_MenuBar
     if (ImGui::BeginMenuBar()) {
         this->drawMenu();
         ImGui::EndMenuBar();
     }
 
     // Parameters -------------------------------------------------------------
-    ImGui::Text("Parameters by Modules: ");
+    ImGui::Text("PARAMETERS");
 
     int overrideState = -1;
-    ImGui::SameLine(180.0f);
+    ImGui::SameLine(150.0f);
     if (ImGui::Button("Expand All")) {
         overrideState = 1;
     }
@@ -756,19 +757,19 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     const float delay = 1.0f; // only update every second
     this->fps_delay += io.DeltaTime;
     if (this->fps_delay >= delay) {
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(2) //<< std::setw(7)
-               << io.Framerate;
-        this->fps_string = stream.str();
+        std::stringstream fps_stream;
+        fps_stream << std::fixed << std::setprecision(2) //<< std::setw(7)
+                   << io.Framerate;
+        this->fps_string = fps_stream.str();
         this->fps_delay = 0.0f;
     }
 
     // File
     if (ImGui::BeginMenu("File")) {
-        ImGui::Text(this->fps_string.data());
-        ImGui::SameLine();
-        std::string hint = "Copy to Clipboard";
-        if (ImGui::MenuItem("fps", hint.data())) {
+        std::string label;
+        label.append(this->fps_string);
+        label.append(" fps");
+        if (ImGui::MenuItem(label.data(), "Copy to Clipboard")) {
             ImGui::SetClipboardText(fps_string.data());
         }
         ImGui::Separator();
@@ -812,9 +813,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // PopUp
-    std::stringstream stream;
-    stream << "MegaMol is GREAT!" << std::endl << "Using Dear ImGui " << IMGUI_VERSION << std::endl;
-    std::string about = stream.str();
+    std::stringstream about_stream;
+    about_stream << "MegaMol is GREAT!" << std::endl << "Using Dear ImGui " << IMGUI_VERSION << std::endl;
+    std::string about = about_stream.str();
     if (open_popup) {
         ImGui::OpenPopup("About");
     }
