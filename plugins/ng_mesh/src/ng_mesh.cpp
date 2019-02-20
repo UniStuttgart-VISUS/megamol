@@ -28,6 +28,9 @@
 #include "DebugGPUMaterialDataSource.h"
 #include "DebugGPURenderTaskDataSource.h"
 #include "gltf/glTFFileLoader.h"
+#include "gltf/glTFMaterialDataSource.h"
+#include "gltf/glTFMeshesDataSource.h"
+#include "gltf/glTFRenderTasksDataSource.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -61,6 +64,8 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMaterialDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPURenderTaskDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFFileLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFMeshesDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFRenderTasksDataSource>();
 
             //
             // TODO: Register your plugin's modules here

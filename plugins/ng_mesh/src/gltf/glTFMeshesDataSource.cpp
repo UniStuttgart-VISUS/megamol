@@ -2,6 +2,7 @@
 
 #include "glTFMeshesDataSource.h"
 #include "tiny_gltf.h"
+#include "ng_mesh/GPUMeshDataCall.h"
 
 megamol::ngmesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
 	: m_glTF_callerSlot("getGlTFFile","Connects the data source with a loaded glTF file")
@@ -14,10 +15,19 @@ megamol::ngmesh::GlTFMeshesDataSource::~GlTFMeshesDataSource()
 {
 }
 
+bool megamol::ngmesh::GlTFMeshesDataSource::create()
+{
+	m_gpu_meshes = std::make_shared<GPUMeshDataStorage>();
+
+	m_bbox = { -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
+
+	return true;
+}
+
 bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 {
-	BatchedMeshesDataCall* mesh_call = dynamic_cast<BatchedMeshesDataCall*>(&caller);
-	if (mesh_call == NULL)
+	GPUMeshDataCall* mc = dynamic_cast<GPUMeshDataCall*>(&caller);
+	if (mc == NULL)
 		return false;
 
 	GlTFDataCall* gltf_call = this->m_glTF_callerSlot.CallAs<GlTFDataCall>();
@@ -29,8 +39,6 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 
 	if (gltf_call->getUpdateFlag())
 	{
-		BatchedMeshesDataAccessor retval;
-
 		auto model = gltf_call->getGlTFModel();
 
 		for (size_t mesh_idx = 0; mesh_idx < model->meshes.size(); mesh_idx++)
@@ -75,14 +83,14 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 			}
 
 			VertexLayout vertex_descriptor(0, attribs);
-			m_mesh_data_storage.addMesh(vertex_descriptor, vb_iterators, ib_iterators, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+			m_gpu_meshes->addMesh(vertex_descriptor, vb_iterators, ib_iterators, indices_accessor.componentType, GL_STATIC_DRAW, GL_TRIANGLES);
 			
 		}
 
-		m_mesh_data_accessor = m_mesh_data_storage.generateDataAccessor();
-
 		// set update_all_flag?
 	}
+
+	mc->setGPUMeshes(m_gpu_meshes.get());
 
 	return true;
 }

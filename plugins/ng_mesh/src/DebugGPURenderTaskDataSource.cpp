@@ -50,7 +50,7 @@ bool megamol::ngmesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call &
 
 	//TODO nullptr check
 
-	std::mt19937 generator(42115);
+	std::mt19937 generator(m_gpu_render_tasks->getTotalDrawCount());
 	std::uniform_real_distribution<float> distr(0.01f, 0.03f);
 	std::uniform_real_distribution<float> loc_distr(-0.9f, 0.9f);
 
@@ -59,27 +59,34 @@ bool megamol::ngmesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call &
 		auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 		auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1);
-		typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >>::iterator PerTaskDataItr;
+		std::vector<DrawElementsCommand> draw_commands(1000, sub_mesh.sub_mesh_draw_command);
 
-		GLfloat scale = distr(generator);
-		scale = 0.1f;
-		object_transform.front().SetAt(0, 0, scale);
-		object_transform.front().SetAt(1, 1, scale);
-		object_transform.front().SetAt(2, 2, scale);
+		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1000);
+		typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> PerTaskData;
 
-		object_transform.front().SetAt(3, 3, 1.0f);
+		for (int i = 0; i < 1000; ++i)
+		{
+			GLfloat scale = distr(generator);
+			scale = 0.1f;
+			object_transform[i].SetAt(0, 0, scale);
+			object_transform[i].SetAt(1, 1, scale);
+			object_transform[i].SetAt(2, 2, scale);
 
-		object_transform.front().SetAt(0, 3, loc_distr(generator));
-		object_transform.front().SetAt(1, 3, loc_distr(generator));
-		object_transform.front().SetAt(2, 3, loc_distr(generator));
+			object_transform[i].SetAt(3, 3, 1.0f);
 
-		m_gpu_render_tasks->addSingleRenderTask<PerTaskDataItr>(
-			shader,
-			gpu_batch_mesh,
-			sub_mesh.sub_mesh_draw_command,
-			{ object_transform.begin(),object_transform.end()}
-		);
+			object_transform[i].SetAt(0, 3, loc_distr(generator));
+			object_transform[i].SetAt(1, 3, loc_distr(generator));
+			object_transform[i].SetAt(2, 3, loc_distr(generator));
+		}
+
+		m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
+
+		//m_gpu_render_tasks->addSingleRenderTask<PerTaskData>(
+		//	shader,
+		//	gpu_batch_mesh,
+		//	sub_mesh.sub_mesh_draw_command,
+		//	object_transform
+		//);
 	}
 
 	rtc->setRenderTaskData(m_gpu_render_tasks.get());

@@ -655,7 +655,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
 	//glDisable(GL_BLEND);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
@@ -666,16 +666,16 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
 		render_task.shader_program->Enable();
-	
+		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
 		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
 		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
-	
+		
 		render_task.per_draw_data->bind(0);
-	
+		
 		render_task.draw_commands->bind();
 		render_task.mesh->bindVertexArray();
-	
+		
 		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
 			render_task.mesh->getIndicesType(),
 			(GLvoid*)0,

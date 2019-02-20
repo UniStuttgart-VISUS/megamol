@@ -13,9 +13,9 @@ bool megamol::ngmesh::DebugGPUMeshDataSource::create()
 {
 	m_gpu_meshes = std::make_shared<GPUMeshDataStorage>();
 
-	return load();
-
 	m_bbox = { -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
+
+	return load();
 }
 
 bool megamol::ngmesh::DebugGPUMeshDataSource::getDataCallback(core::Call & caller)

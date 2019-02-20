@@ -118,7 +118,7 @@ namespace megamol {
 
 			size_t req_vb_byte_size = sizeof(VertexBufferType) * std::distance(std::get<0>(vertex_buffers.front()), std::get<1>(vertex_buffers.front()));
 			size_t req_vert_cnt = req_vb_byte_size / req_vertex_byte_size;
-			size_t req_index_byte_size = sizeof(VertexBufferType) * std::distance(std::get<0>(index_buffer), std::get<1>(index_buffer));
+			size_t req_index_byte_size = sizeof(IndexBufferType) * std::distance(std::get<0>(index_buffer), std::get<1>(index_buffer));
 			size_t req_index_cnt = req_index_byte_size/computeByteSize(index_type);
 
 			// check if a mesh batch with matching vertex layout and index type already exists
@@ -129,7 +129,7 @@ namespace megamol {
 
 				bool layout_check = it->mesh_data.vertex_descriptor == vertex_descriptor;
 				bool buffer_cnt_check = it->mesh_data.vertex_data.size() == vertex_buffers.size();
-				bool idx_type_check = index_byte_size == sizeof(std::iterator_traits<IndexBufferIterator>::value_type);
+				bool idx_type_check = index_byte_size == sizeof(IndexBufferType);
 
 				if (layout_check && buffer_cnt_check && idx_type_check)
 				{

@@ -79,6 +79,8 @@ namespace megamol
 		private:
 			std::shared_ptr<tinygltf::Model> m_gltf_model;
 
+			int                              m_update_flag;
+
 			/** The gltf file name */
 			core::param::ParamSlot           m_glTFFilename_slot;
 

@@ -13,15 +13,14 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "ng_mesh/AbstractBatchedMeshesDataSource.h"
+#include "ng_mesh/AbstractGPUMeshDataSource.h"
 #include "ng_mesh/glTFDataCall.h"
-#include "ng_mesh/MeshDataStorage.h"
 
 namespace megamol
 {
 	namespace ngmesh
 	{
-		class GlTFMeshesDataSource : public AbstractBatchedMeshesDataSource
+		class GlTFMeshesDataSource : public AbstractGPUMeshDataSource
 		{
 		public:
 			/**
@@ -39,7 +38,7 @@ namespace megamol
 			* @return A human readable description of this module.
 			*/
 			static const char *Description(void) {
-				return "Data source for passing through mesh data from a glTF file";
+				return "Data source for uploading mesh data from a glTF file";
 			}
 
 			/**
@@ -56,12 +55,11 @@ namespace megamol
 			~GlTFMeshesDataSource();
 
 		protected:
+			virtual bool create();
 
 			virtual bool getDataCallback(core::Call& caller);
 
 		private:
-			BatchedMeshesDataAccessor m_mesh_data_accessor;
-			MeshDataStorage           m_mesh_data_storage;
 			megamol::core::CallerSlot m_glTF_callerSlot;
 		};
 	}

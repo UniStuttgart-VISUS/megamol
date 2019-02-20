@@ -13,16 +13,14 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "ng_mesh/AbstractRenderTasksDataSource.h"
+#include "ng_mesh/AbstractGPURenderTaskDataSource.h"
 #include "ng_mesh/glTFDataCall.h"
-#include "ng_mesh/RenderTaskDataStorage.h"
-
 
 namespace megamol
 {
 	namespace ngmesh
 	{
-		class GlTFRenderTasksDataSource : public AbstractRenderTasksDataSource
+		class GlTFRenderTasksDataSource : public AbstractGPURenderTaskDataSource
 		{
 		public:
 			/**
@@ -62,8 +60,7 @@ namespace megamol
 
 		private:
 
-			std::shared_ptr<RenderTaskDataStorage> m_render_task_data;
-			megamol::core::CallerSlot              m_glTF_callerSlot;
+			megamol::core::CallerSlot m_glTF_callerSlot;
 		};
 	}
 }

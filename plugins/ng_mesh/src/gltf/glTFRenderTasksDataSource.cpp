@@ -5,6 +5,9 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
+#include "ng_mesh/GPURenderTaskDataCall.h"
+#include "ng_mesh/GPUMaterialDataCall.h"
+#include "ng_mesh/GPUMeshDataCall.h"
 #include "ng_mesh/RenderTasksDataCall.h"
 
 megamol::ngmesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
@@ -20,8 +23,22 @@ megamol::ngmesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource()
 
 bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & caller)
 {
-	RenderTasksDataCall* mesh_call = dynamic_cast<RenderTasksDataCall*>(&caller);
-	if (mesh_call == NULL)
+	GPURenderTaskDataCall* rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
+	if (rtc == NULL)
+		return false;
+
+	GPUMaterialDataCall* mtlc = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
+	if (mtlc == NULL)
+		return false;
+
+	if (!(*mtlc)(0))
+		return false;
+
+	GPUMeshDataCall* mc = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+	if (mc == NULL)
+		return false;
+
+	if (!(*mc)(0))
 		return false;
 
 	GlTFDataCall* gltf_call = this->m_glTF_callerSlot.CallAs<GlTFDataCall>();
@@ -31,18 +48,20 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 	if (!(*gltf_call)(0))
 		return false;
 
+	auto gpu_mtl_storage = mtlc->getMaterialStorage();
+	auto gpu_mesh_storage = mc->getGPUMeshes();
+
+	//TODO nullptr check
+
 	if (gltf_call->getUpdateFlag())
 	{
 		auto model = gltf_call->getGlTFModel();
-
-		// reserve enough room to theoretically store a render task per node
-		m_render_task_data->reserveBatch(0, 0, model->nodes.size(), model->nodes.size() * 64);
 
 		for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++)
 		{
 			if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1)
 			{
-				vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR > object_transform;
+				std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1);
 
 				if (model->nodes[node_idx].matrix.size() != 0) // has matrix transform
 				{
@@ -55,7 +74,9 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					auto& rotation = model->nodes[node_idx].rotation;
 
 					if (translation.size() != 0) {
-						
+						object_transform[0].SetAt(0, 3, translation[0]);
+						object_transform[0].SetAt(1, 3, translation[1]);
+						object_transform[0].SetAt(2, 3, translation[2]);
 					}
 
 					if (scale.size() != 0) {
@@ -67,16 +88,24 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					}
 				}
 
-				m_render_task_data->addRenderTask<GLfloat*>(
-					model->nodes[node_idx].mesh, 
-					0, 
-					1, 
-					0, 
-					{ object_transform.PeekComponents(),object_transform.PeekComponents() + 16 }
-				);
+				//TODO bounding box ?
+
+				auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
+				auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+				auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+
+				m_gpu_render_tasks->addSingleRenderTask(
+					shader,
+					gpu_batch_mesh,
+					sub_mesh.sub_mesh_draw_command,
+					object_transform);
 			}
 		}
+
+		gltf_call->clearUpdateFlag();
 	}
+
+	rtc->setRenderTaskData(m_gpu_render_tasks.get());
 
 	return true;
 }
