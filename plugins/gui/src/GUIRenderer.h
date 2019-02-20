@@ -32,6 +32,7 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -39,6 +40,13 @@
 
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
+
+#include <filesystem> // directory_iterator
+#if _HAS_CXX17
+namespace ns_fs = std::filesystem;
+#else
+namespace ns_fs = std::experimental::filesystem;
+#endif
 
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
@@ -125,13 +133,12 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    /** Current fps as string. */
+    /** Menu: Current fps as string. */
     std::string fps_string;
-
-    /** Current time delay since last time fps have been updated. */
+    /** Menu: Current time delay since last time fps have been updated. */
     float fps_delay;
 
-    /** Spacing of parameter name and hotkey in hotkey window. */
+    /** Hotkey Window: Spacing of parameter name and hotkey. */
     float hotkey_spacing;
 
     /** Array holding window states. */
@@ -188,7 +195,7 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
 
 
 /**
- * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::
+ * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
@@ -282,7 +289,32 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     io.IniSavingRate = 5.0f; //  in seconds
     io.IniFilename = "imgui.ini";
     io.LogFilename = "imgui_log.txt";
+
+    // Loading additional fonts
+    io.FontAllowUserScaling = true;
     io.Fonts->AddFontDefault();
+    float font_size = 15.0f;
+    std::string ext = ".ttf";
+    ImFontConfig config;
+    config.OversampleH = 5;
+    config.OversampleV = 1;
+    const vislib::Array<vislib::StringW>& searchPaths = this->GetCoreInstance()->Configuration().ResourceDirectories();
+    for (int i = 0; i < searchPaths.Count(); ++i) {
+        for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
+            if (entry.path().extension().generic_string() == ext) {
+                std::string file_path = entry.path().generic_string();
+                std::string file_name = entry.path().filename().generic_string();
+                if (file_name == "Proggy_Tiny.ttf") {
+                    font_size = 10.0f;
+                } else if (file_name == "Roboto_Regular.ttf") {
+                    font_size = 17.0f;
+                } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
+                    font_size = 14.0f;
+                }
+                io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
+            }
+        }
+    }
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -323,7 +355,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     return true;
-}
+} // namespace gui
 
 
 /**
@@ -522,8 +554,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
 
 
 /**
- * GUIRenderer<M, C>::template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
-
+ * GUIRenderer<M, C>::OnMouseScroll
  */
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
 
@@ -691,13 +722,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindowCallback(voi
                 auto label = std::string(slot.Name().PeekBuffer());
                 auto keycode = std::string(p->GetKeyCode().ToStringA().PeekBuffer());
 
-                ImGui::Text(label.data());
+                ImGui::Text(label.c_str());
                 // Adapt spacing between label and hotkey string
                 auto labelLength = ImGui::GetFontSize() * (float)label.length() * 0.8f;
                 this->hotkey_spacing = (labelLength > this->hotkey_spacing) ? (labelLength) : (this->hotkey_spacing);
                 ImGui::SameLine(this->hotkey_spacing);
 
-                ImGui::Text(keycode.data());
+                ImGui::Text(keycode.c_str());
                 ImGui::Separator();
             }
         }
@@ -710,25 +741,16 @@ template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindowCallback(voi
  */
 template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(void) {
 
-    char buffer[4096];
-    if (ImGui::InputText("Filename", buffer, IM_ARRAYSIZE(buffer))) {
-    }
-    if (ImGui::Button("Load Font")) {
-    }
+    ImGuiIO& io = ImGui::GetIO();
 
-
-    // ImFontConfig config;
-    // config.OversampleH = 5;
-    // config.OversampleV = 1;
-    // float font_size = 15.0f;
-    //// ASSERT if file is not found!
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", font_size, &config);
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("Karla-Regular.ttf", font_size, &config);
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("DroidSans.ttf", font_size, &config);
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("Cousine-Regular.ttf", font_size, &config);
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("ProggyTiny.ttf", font_size, &config);
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("ProggyClean.ttf", font_size, &config);
-    // ImGui::PushFont(font);
+    ImFont* font_current = ImGui::GetFont();
+    if (ImGui::BeginCombo("Select Font", font_current->GetDebugName())) {
+        for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
+            if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
+                io.FontDefault = io.Fonts->Fonts[n];
+        }
+        ImGui::EndCombo();
+    }
 }
 
 
@@ -739,8 +761,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
 
     if (win.open) {
         ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
-        ImGui::Begin(win.label.data(), &win.open, win.flags);
+        ImGui::Begin(win.label.c_str(), &win.open, win.flags);
+
         (this->*win.func)();
+
         ImGui::End();
     }
 }
@@ -753,7 +777,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    // fps
+    // FPS
     const float delay = 1.0f; // only update every second
     this->fps_delay += io.DeltaTime;
     if (this->fps_delay >= delay) {
@@ -766,13 +790,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // File
     if (ImGui::BeginMenu("File")) {
-        std::string label;
-        label.append(this->fps_string);
+        std::string label = this->fps_string;
         label.append(" fps");
-        if (ImGui::MenuItem(label.data(), "Copy to Clipboard")) {
-            ImGui::SetClipboardText(fps_string.data());
+        if (ImGui::MenuItem(label.c_str(), "Copy to Clipboard")) {
+            ImGui::SetClipboardText(fps_string.c_str());
         }
         ImGui::Separator();
+
         if (ImGui::MenuItem("Exit", "Alt + F4, 'q', Esc")) {
             this->shutdown();
         }
@@ -782,7 +806,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     // Windows
     if (ImGui::BeginMenu("Windows")) {
         for (auto& win : this->windows) {
-            if (ImGui::MenuItem(win.label.data(), win.hotkey_str.data(), &win.open)) {
+            bool win_open = win.open;
+            if (ImGui::MenuItem(win.label.c_str(), win.hotkey_str.c_str(), &win_open)) {
                 win.open = !win.open;
             }
         }
@@ -796,14 +821,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
         const std::string hint = "Copy Link to Clipboard";
-        if (ImGui::MenuItem("GitHub", hint.data())) {
-            ImGui::SetClipboardText(gitLink.data());
+        if (ImGui::MenuItem("GitHub", hint.c_str())) {
+            ImGui::SetClipboardText(gitLink.c_str());
         }
-        if (ImGui::MenuItem("Readme", hint.data())) {
-            ImGui::SetClipboardText(helpLink.data());
+        if (ImGui::MenuItem("Readme", hint.c_str())) {
+            ImGui::SetClipboardText(helpLink.c_str());
         }
-        if (ImGui::MenuItem("Web Page", hint.data())) {
-            ImGui::SetClipboardText(mmLink.data());
+        if (ImGui::MenuItem("Web Page", hint.c_str())) {
+            ImGui::SetClipboardText(mmLink.c_str());
         }
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
@@ -820,7 +845,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         ImGui::OpenPopup("About");
     }
     if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text(about.data());
+        ImGui::Text(about.c_str());
         ImGui::Separator();
         if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
@@ -851,7 +876,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             hotkeyLabel.append(p->GetKeyCode().ToStringA().PeekBuffer());
             hotkeyLabel.append(")");
 
-            if (ImGui::Button(hotkeyLabel.data())) {
+            if (ImGui::Button(hotkeyLabel.c_str())) {
                 p->setDirty();
             }
         } else if (auto* p = slot.Param<core::param::ColorParam>()) {
@@ -1064,7 +1089,7 @@ template <class M, class C> int GUIRenderer<M, C>::getNoModKey(vislib::sys::KeyC
     return key;
 }
 
-} // end namespace gui
+} // namespace gui
 } // end namespace megamol
 
 #endif // MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
