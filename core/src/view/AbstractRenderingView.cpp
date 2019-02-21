@@ -96,8 +96,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
     this->bkgndCol[1] = 0.0f;
     this->bkgndCol[2] = 0.125f;
 
-    this->bkgndColSlot << new param::ColorParam(utility::ColourParser::ToString(
-        this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
+    this->bkgndColSlot << new param::ColorParam(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2], 1.0f);
     this->MakeSlotAvailable(&this->bkgndColSlot);
 
     this->softCursorSlot << new param::BoolParam(this->softCursor);
@@ -122,9 +121,7 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
 const float *view::AbstractRenderingView::BkgndColour(void) const {
     if (this->bkgndColSlot.IsDirty()) {
         this->bkgndColSlot.ResetDirty();
-        utility::ColourParser::FromString(
-            this->bkgndColSlot.Param<param::ColorParam>()->ValueString(),
-            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+        this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
     }
     return this->bkgndCol;
 }

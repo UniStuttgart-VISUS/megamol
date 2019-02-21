@@ -47,8 +47,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     this->showBBoxSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBoxSlot);
 
-    this->bboxColSlot << new param::ColorParam(utility::ColourParser::ToString(
-		this->bboxCol[0],this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
+    this->bboxColSlot << new param::ColorParam(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
@@ -232,7 +231,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
 	if (this->bboxColSlot.IsDirty()) {
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::ColorParam>()->ValueString(), 4, this->bboxCol);
+        this->bboxColSlot.Param<param::ColorParam>()->Value(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
         this->bboxColSlot.ResetDirty();
     }
 

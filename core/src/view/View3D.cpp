@@ -162,12 +162,10 @@ view::View3D::View3D(void)
     this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
     this->lightColAmb[3] = 1.0f;
 
-    this->lightColDifSlot << new param::ColorParam(
-        utility::ColourParser::ToString(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
+    this->lightColDifSlot << new param::ColorParam(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2], 1.0f);
     this->MakeSlotAvailable(&this->lightColDifSlot);
 
-    this->lightColAmbSlot << new param::ColorParam(
-        utility::ColourParser::ToString(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
+    this->lightColAmbSlot << new param::ColorParam(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2], 1.0f);
     this->MakeSlotAvailable(&this->lightColAmbSlot);
 
     this->ResetView();
@@ -264,8 +262,7 @@ view::View3D::View3D(void)
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
-    this->bboxColSlot << new param::ColorParam(
-        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
+    this->bboxColSlot << new param::ColorParam(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot << new param::BoolParam(true);
@@ -453,7 +450,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     if (this->bboxColSlot.IsDirty()) {
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::ColorParam>()->ValueString(), 4, this->bboxCol);
+        this->bboxColSlot.Param<param::ColorParam>()->Value(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
         this->bboxColSlot.ResetDirty();
     }
 
@@ -468,13 +465,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
     if (this->lightColAmbSlot.IsDirty()) {
         this->lightColAmbSlot.ResetDirty();
-        utility::ColourParser::FromString(this->lightColAmbSlot.Param<param::ColorParam>()->ValueString(),
-            this->lightColAmb[0], lightColAmb[1], lightColAmb[2]);
+        this->lightColAmbSlot.Param<param::ColorParam>()->Value(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]);
     }
     if (this->lightColDifSlot.IsDirty()) {
         this->lightColDifSlot.ResetDirty();
-        utility::ColourParser::FromString(this->lightColDifSlot.Param<param::ColorParam>()->ValueString(),
-            this->lightColDif[0], lightColDif[1], lightColDif[2]);
+        this->lightColDifSlot.Param<param::ColorParam>()->Value(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]);
     }
     ::glEnable(GL_LIGHTING); // TODO: check renderer capabilities
     ::glEnable(GL_LIGHT0);
