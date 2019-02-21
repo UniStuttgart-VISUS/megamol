@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/Trace.h"
@@ -46,7 +47,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     this->showBBoxSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBoxSlot);
 
-    this->bboxColSlot << new param::StringParam(utility::ColourParser::ToString(
+    this->bboxColSlot << new param::ColorParam(utility::ColourParser::ToString(
 		this->bboxCol[0],this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
     this->MakeSlotAvailable(&this->bboxColSlot);
 
@@ -231,7 +232,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
 	if (this->bboxColSlot.IsDirty()) {
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::ColorParam>()->ValueString(), 4, this->bboxCol);
         this->bboxColSlot.ResetDirty();
     }
 

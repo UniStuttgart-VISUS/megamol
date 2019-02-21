@@ -11,6 +11,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/String.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/special/TitleRenderer.h"
@@ -95,7 +96,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
     this->bkgndCol[1] = 0.0f;
     this->bkgndCol[2] = 0.125f;
 
-    this->bkgndColSlot << new param::StringParam(utility::ColourParser::ToString(
+    this->bkgndColSlot << new param::ColorParam(utility::ColourParser::ToString(
         this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
     this->MakeSlotAvailable(&this->bkgndColSlot);
 
@@ -122,7 +123,7 @@ const float *view::AbstractRenderingView::BkgndColour(void) const {
     if (this->bkgndColSlot.IsDirty()) {
         this->bkgndColSlot.ResetDirty();
         utility::ColourParser::FromString(
-            this->bkgndColSlot.Param<param::StringParam>()->Value(),
+            this->bkgndColSlot.Param<param::ColorParam>()->ValueString(),
             this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
     }
     return this->bkgndCol;

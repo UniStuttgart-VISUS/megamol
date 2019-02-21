@@ -881,8 +881,9 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.Param<core::param::ColorParam>()) {
             core::param::ColorParam::Type value;
+            auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
             std::memcpy(value, p->Value(), sizeof(core::param::ColorParam::Type));
-            if (ImGui::ColorEdit4(label, value)) {
+            if (ImGui::ColorEdit4(label, (float*)&value, color_flags)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.Param<core::param::EnumParam>()) {
