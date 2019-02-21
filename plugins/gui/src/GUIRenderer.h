@@ -177,6 +177,16 @@ private:
     void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
+     * Show tooltip.
+     */
+    void showToolTip(std::string desc);
+
+    /**
+     * Show help marker.
+     */
+    void showHelpMarker(std::string desc);
+
+    /**
      * Shutdown megmol core.
      */
     void shutdown(void);
@@ -307,9 +317,9 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
                 if (file_name == "Proggy_Tiny.ttf") {
                     font_size = 10.0f;
                 } else if (file_name == "Roboto_Regular.ttf") {
-                    font_size = 17.0f;
+                    font_size = 18.0f;
                 } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
-                    font_size = 14.0f;
+                    font_size = 15.0f;
                 }
                 io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
             }
@@ -350,12 +360,17 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.AntiAliasedFill = true;
     style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
 
+    // Global settings ---------------------------------------------------------
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
+                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
+
+
     // Init OpenGL for ImGui --------------------------------------------------
     const char* glsl_version = "#version 150";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     return true;
-} // namespace gui
+}
 
 
 /**
@@ -792,9 +807,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     if (ImGui::BeginMenu("File")) {
         std::string label = this->fps_string;
         label.append(" fps");
-        if (ImGui::MenuItem(label.c_str(), "Copy to Clipboard")) {
+        if (ImGui::MenuItem(label.c_str())) {
             ImGui::SetClipboardText(fps_string.c_str());
         }
+        this->showToolTip("Copy to Clipboard");
         ImGui::Separator();
 
         if (ImGui::MenuItem("Exit", "Alt + F4, 'q', Esc")) {
@@ -821,15 +837,18 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
         const std::string hint = "Copy Link to Clipboard";
-        if (ImGui::MenuItem("GitHub", hint.c_str())) {
+        if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
-        if (ImGui::MenuItem("Readme", hint.c_str())) {
+        this->showToolTip(hint);
+        if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.c_str());
         }
-        if (ImGui::MenuItem("Web Page", hint.c_str())) {
+        this->showToolTip(hint);
+        if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.c_str());
         }
+        this->showToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
             open_popup = true;
@@ -886,6 +905,10 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (ImGui::ColorEdit4(label, (float*)&value, color_flags)) {
                 p->SetValue(value);
             }
+            std::string color_param_help = "[Click] on the colored square to open a color picker.\n"
+                                           "[CTRL+click] on individual component to input value.\n"
+                                           "[Right-click] on the individual color widget to show options.";
+            this->showHelpMarker(color_param_help);
         } else if (auto* p = slot.Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -961,6 +984,32 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             delete[] buffer;
         }
     }
+}
+
+
+/**
+ * GUIRenderer<M, C>::showToolTip
+ */
+template <class M, class C> void GUIRenderer<M, C>::showToolTip(std::string desc) {
+
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+
+/**
+ * GUIRenderer<M, C>::showHelpMarker
+ */
+template <class M, class C> void GUIRenderer<M, C>::showHelpMarker(std::string desc) {
+
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    this->showToolTip(desc);
 }
 
 
