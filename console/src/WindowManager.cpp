@@ -236,15 +236,17 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     w->AddUILayer(std::make_shared<gl::ATBToggleHotKeyUILayer>(*w.get(), *atbLayer.get()));
 #endif /* HAS_ANTTWEAKBAR */
 
-    w->AddUILayer(std::make_shared<ViewUILayer>(*w.get(), w->Handle()));
+    //w->AddUILayer(std::make_shared<ViewUILayer>(*w.get(), w->Handle()));
 
     std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(*w.get(), hCore, w->Handle());
     w->AddUILayer(btnLayer);
+
 #ifdef HAS_ANTTWEAKBAR
     btnLayer->SetMaskingLayer(atbLayer.get());
 #endif /* HAS_ANTTWEAKBAR */
 
     w->AddUILayer(std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get())); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
+
     if (utility::HotFixes::Instance().IsHotFixed("EnableFileNameFix")) {
         w->AddUILayer(std::make_shared<utility::HotFixFileName>(*w.get(), hCore));
     }

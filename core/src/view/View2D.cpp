@@ -40,7 +40,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    this->resetViewSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam(core::view::Key::KEY_HOME);
     this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 

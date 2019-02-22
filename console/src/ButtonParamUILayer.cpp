@@ -38,51 +38,9 @@ bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action
 
     if (action == core::view::KeyAction::RELEASE) return false;
 
-    uint16_t cleanKey;
-    switch (key) {
-    case core::view::Key::KEY_ENTER: cleanKey = vislib::sys::KeyCode::KEY_ENTER; break;
-    case core::view::Key::KEY_ESCAPE: cleanKey = vislib::sys::KeyCode::KEY_ESC; break;
-    case core::view::Key::KEY_TAB: cleanKey = vislib::sys::KeyCode::KEY_TAB; break;
-    case core::view::Key::KEY_LEFT: cleanKey = vislib::sys::KeyCode::KEY_LEFT; break;
-    case core::view::Key::KEY_UP: cleanKey = vislib::sys::KeyCode::KEY_UP; break;
-    case core::view::Key::KEY_RIGHT: cleanKey = vislib::sys::KeyCode::KEY_RIGHT; break;
-    case core::view::Key::KEY_DOWN: cleanKey = vislib::sys::KeyCode::KEY_DOWN; break;
-    case core::view::Key::KEY_PAGE_UP: cleanKey = vislib::sys::KeyCode::KEY_PAGE_UP; break;
-    case core::view::Key::KEY_PAGE_DOWN: cleanKey = vislib::sys::KeyCode::KEY_PAGE_DOWN; break;
-    case core::view::Key::KEY_HOME: cleanKey = vislib::sys::KeyCode::KEY_HOME; break;
-    case core::view::Key::KEY_END: cleanKey = vislib::sys::KeyCode::KEY_END; break;
-    case core::view::Key::KEY_INSERT: cleanKey = vislib::sys::KeyCode::KEY_INSERT; break;
-    case core::view::Key::KEY_DELETE: cleanKey = vislib::sys::KeyCode::KEY_DELETE; break;
-    case core::view::Key::KEY_BACKSPACE: cleanKey = vislib::sys::KeyCode::KEY_BACKSPACE; break;
-    case core::view::Key::KEY_F1: cleanKey = vislib::sys::KeyCode::KEY_F1; break;
-    case core::view::Key::KEY_F2: cleanKey = vislib::sys::KeyCode::KEY_F2; break;
-    case core::view::Key::KEY_F3: cleanKey = vislib::sys::KeyCode::KEY_F3; break;
-    case core::view::Key::KEY_F4: cleanKey = vislib::sys::KeyCode::KEY_F4; break;
-    case core::view::Key::KEY_F5: cleanKey = vislib::sys::KeyCode::KEY_F5; break;
-    case core::view::Key::KEY_F6: cleanKey = vislib::sys::KeyCode::KEY_F6; break;
-    case core::view::Key::KEY_F7: cleanKey = vislib::sys::KeyCode::KEY_F7; break;
-    case core::view::Key::KEY_F8: cleanKey = vislib::sys::KeyCode::KEY_F8; break;
-    case core::view::Key::KEY_F9: cleanKey = vislib::sys::KeyCode::KEY_F9; break;
-    case core::view::Key::KEY_F10: cleanKey = vislib::sys::KeyCode::KEY_F10; break;
-    case core::view::Key::KEY_F11: cleanKey = vislib::sys::KeyCode::KEY_F11; break;
-    case core::view::Key::KEY_F12: cleanKey = vislib::sys::KeyCode::KEY_F12; break;
-    default: cleanKey = static_cast<uint16_t>(key);
-    }
+    core::view::KeyCode keyCode(key, mods);
 
-    cleanKey = cleanKey & ~vislib::sys::KeyCode::KEY_MOD;
-
-    if (mods.test(core::view::Modifier::ALT)) {
-        cleanKey |= vislib::sys::KeyCode::KEY_MOD_ALT;
-    }
-    if (mods.test(core::view::Modifier::CTRL)) {
-        cleanKey |= vislib::sys::KeyCode::KEY_MOD_CTRL;
-    }
-    if (mods.test(core::view::Modifier::SHIFT)) {
-        cleanKey |= vislib::sys::KeyCode::KEY_MOD_SHIFT;
-    }
-    vislib::sys::KeyCode keycode(cleanKey);
-
-    auto hotkey = hotkeys.find(keycode);
+    auto hotkey = hotkeys.find(keyCode);
     if (hotkey == hotkeys.end()) return false;
 
     CoreHandle hParam;
@@ -98,7 +56,7 @@ namespace {
     struct enumData {
         void *hCore;
         void *hView;
-        std::map<vislib::sys::KeyCode, vislib::TString> hotKeys;
+        std::map<core::view::KeyCode, vislib::TString> hotKeys;
     };
 
     void MEGAMOLCORE_CALLBACK enumParameters(const TCHAR *name, struct enumData *data) {
@@ -118,13 +76,15 @@ namespace {
         if (memcmp(buffer.data(), "MMBUTN", 6) != 0) return;
 
         // extract key
-        uint16_t key;
-        if (buffer.size() == 7) key = *reinterpret_cast<char*>(buffer.data() + 6);
-        else if (buffer.size() == 8) key = *reinterpret_cast<uint16_t*>(buffer.data() + 6);
+        int key, mods;
+        if (buffer.size() == (6 + (2 * sizeof(WORD)))) {
+            key = *reinterpret_cast<int*>(buffer.data() + 6);
+            mods = *reinterpret_cast<int*>(buffer.data() + 6 + sizeof(WORD));
+        }
         else return; // something is strange with the hotkey
 
         // store param handle as part of the key codes
-        vislib::sys::KeyCode keyCode(key);
+        core::view::KeyCode keyCode(static_cast<core::view::Key>((int)key), core::view::Modifiers((int)mods));
         data->hotKeys[keyCode] = name;
     }
 

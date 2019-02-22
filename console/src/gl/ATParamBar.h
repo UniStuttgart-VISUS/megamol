@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include "mmcore/api/MegaMolCore.h"
+#include "mmcore/view/Input.h"
 #include "CoreHandle.h"
 #include "vislib/String.h"
 

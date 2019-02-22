@@ -71,7 +71,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable( &this->toggleKeyParam);
     
     // param slot for key toggling
-    this->clearResSelectionParam.SetParameter( new param::ButtonParam('c'));
+    this->clearResSelectionParam.SetParameter( new param::ButtonParam(core::view::Key::KEY_C));
     this->MakeSlotAvailable( &this->clearResSelectionParam);
     
 }

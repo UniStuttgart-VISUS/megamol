@@ -6,8 +6,9 @@
  */
 
 /**
- * TODO: Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything...)
- *
+ * TODO: Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
+ * TODO: Fix x and y transformation by View2D class (will be fixed when screen2world transformation is available in
+ * CallRender)
  *
  *
  *
@@ -41,6 +42,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/view/Input.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -207,11 +209,6 @@ private:
      * Shutdown megmol core.
      */
     void shutdown(void);
-
-    /**
-     * Convert vislib::sys::KeyCode to megamol::core::view::Key as integer without modifiers.
-     */
-    int getNoModKey(vislib::sys::KeyCode keycode);
 
     // ------------------------------------------------------------------------
 };
@@ -431,7 +428,6 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
     io.KeyShift = mods.test(core::view::Modifier::SHIFT);
     io.KeyAlt = mods.test(core::view::Modifier::ALT);
-    io.KeySuper = mods.test(core::view::Modifier::SUPER);
 
     // Check for additional text modification hotkeys
     if (action == core::view::KeyAction::RELEASE) {
@@ -485,9 +481,10 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         if (!param.IsNull()) {
             if (auto* p = slot.Param<core::param::ButtonParam>()) {
                 auto keyCode = p->GetKeyCode();
-                auto noModKey = this->getNoModKey(keyCode);
-                hotkeyPressed = (ImGui::IsKeyDown(noModKey)) && (keyCode.IsAltMod() == io.KeyAlt) &&
-                                (keyCode.IsCtrlMod() == io.KeyCtrl) && (keyCode.IsShiftMod() == io.KeyShift);
+                hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
+                                (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+                                (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+                                (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
                 if (hotkeyPressed) {
                     p->setDirty();
                 }
@@ -540,9 +537,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos =
-        ImVec2((float)x, (float)y); // TODO: This is broken, since x and y are transformed by View2D class
-                                    // => will be fixed when screen2world transformation is available in CallRender.
+    io.MousePos = ImVec2((float)x, (float)y);
 
     auto hoverFlags =
         ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
@@ -780,7 +775,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindowCallback(voi
         if (!param.IsNull()) {
             if (auto* p = slot.Param<core::param::ButtonParam>()) {
                 auto label = std::string(slot.Name().PeekBuffer());
-                auto keycode = std::string(p->GetKeyCode().ToStringA().PeekBuffer());
+                auto keycode = p->GetKeyCode().ToString();
 
                 ImGui::Text(label.c_str());
                 // Adapt spacing between label and hotkey string
@@ -868,8 +863,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // File
     if (ImGui::BeginMenu("File")) {
-
-
         if (ImGui::MenuItem("Exit", "Alt + F4, 'q', Esc")) {
             this->shutdown();
         }
@@ -949,9 +942,9 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.Param<core::param::ButtonParam>()) {
             std::string hotkeyLabel(label.c_str());
-            hotkeyLabel.append(" (");
-            hotkeyLabel.append(p->GetKeyCode().ToStringA().PeekBuffer());
-            hotkeyLabel.append(")");
+            hotkeyLabel += " (";
+            hotkeyLabel += p->GetKeyCode().ToString();
+            hotkeyLabel += ")";
 
             if (ImGui::Button(hotkeyLabel.c_str())) {
                 p->setDirty();
@@ -1033,10 +1026,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             char* buffer = new char[bufferLength];
             memcpy(buffer, valueString, valueString.Length() + 1);
 
-            if (ImGui::InputText(slot.Name().PeekBuffer(), buffer, bufferLength)) {
+            if (ImGui::InputText(
+                    slot.Name().PeekBuffer(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
                 param->ParseValue(valueString);
             }
+
+            std::string string_param_help = "Press [Return] to confirm changes.";
+            this->helpMarkerToolTip(string_param_help);
 
             delete[] buffer;
         }
@@ -1082,122 +1079,6 @@ template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
     this->GetCoreInstance()->Shutdown();
 }
 
-
-/**
- * GUIRenderer<M, C>::getNoModKey
- */
-template <class M, class C> int GUIRenderer<M, C>::getNoModKey(vislib::sys::KeyCode keycode) {
-
-    auto key = static_cast<int>(keycode.NoModKeys());
-
-    switch (key) {
-    case (97):
-        return static_cast<int>(core::view::Key::KEY_A);
-    case (98):
-        return static_cast<int>(core::view::Key::KEY_B);
-    case (99):
-        return static_cast<int>(core::view::Key::KEY_C);
-    case (100):
-        return static_cast<int>(core::view::Key::KEY_D);
-    case (101):
-        return static_cast<int>(core::view::Key::KEY_E);
-    case (102):
-        return static_cast<int>(core::view::Key::KEY_F);
-    case (103):
-        return static_cast<int>(core::view::Key::KEY_G);
-    case (104):
-        return static_cast<int>(core::view::Key::KEY_H);
-    case (105):
-        return static_cast<int>(core::view::Key::KEY_I);
-    case (106):
-        return static_cast<int>(core::view::Key::KEY_J);
-    case (107):
-        return static_cast<int>(core::view::Key::KEY_K);
-    case (108):
-        return static_cast<int>(core::view::Key::KEY_L);
-    case (109):
-        return static_cast<int>(core::view::Key::KEY_M);
-    case (110):
-        return static_cast<int>(core::view::Key::KEY_N);
-    case (111):
-        return static_cast<int>(core::view::Key::KEY_O);
-    case (112):
-        return static_cast<int>(core::view::Key::KEY_P);
-    case (113):
-        return static_cast<int>(core::view::Key::KEY_Q);
-    case (114):
-        return static_cast<int>(core::view::Key::KEY_R);
-    case (115):
-        return static_cast<int>(core::view::Key::KEY_S);
-    case (116):
-        return static_cast<int>(core::view::Key::KEY_T);
-    case (117):
-        return static_cast<int>(core::view::Key::KEY_U);
-    case (118):
-        return static_cast<int>(core::view::Key::KEY_V);
-    case (119):
-        return static_cast<int>(core::view::Key::KEY_W);
-    case (120):
-        return static_cast<int>(core::view::Key::KEY_X);
-    case (121):
-        return static_cast<int>(core::view::Key::KEY_Y);
-    case (122):
-        return static_cast<int>(core::view::Key::KEY_Z);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_ESC)):
-        return static_cast<int>(core::view::Key::KEY_ESCAPE);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_ENTER)):
-        return static_cast<int>(core::view::Key::KEY_ENTER);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_TAB)):
-        return static_cast<int>(core::view::Key::KEY_TAB);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_BACKSPACE)):
-        return static_cast<int>(core::view::Key::KEY_BACKSPACE);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_INSERT)):
-        return static_cast<int>(core::view::Key::KEY_INSERT);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_DELETE)):
-        return static_cast<int>(core::view::Key::KEY_DELETE);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_RIGHT)):
-        return static_cast<int>(core::view::Key::KEY_RIGHT);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_LEFT)):
-        return static_cast<int>(core::view::Key::KEY_LEFT);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_DOWN)):
-        return static_cast<int>(core::view::Key::KEY_DOWN);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_UP)):
-        return static_cast<int>(core::view::Key::KEY_UP);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_PAGE_UP)):
-        return static_cast<int>(core::view::Key::KEY_PAGE_UP);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_PAGE_DOWN)):
-        return static_cast<int>(core::view::Key::KEY_PAGE_DOWN);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_HOME)):
-        return static_cast<int>(core::view::Key::KEY_HOME);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_END)):
-        return static_cast<int>(core::view::Key::KEY_END);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F1)):
-        return static_cast<int>(core::view::Key::KEY_F1);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F2)):
-        return static_cast<int>(core::view::Key::KEY_F2);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F3)):
-        return static_cast<int>(core::view::Key::KEY_F3);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F4)):
-        return static_cast<int>(core::view::Key::KEY_F4);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F5)):
-        return static_cast<int>(core::view::Key::KEY_F5);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F6)):
-        return static_cast<int>(core::view::Key::KEY_F6);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F7)):
-        return static_cast<int>(core::view::Key::KEY_F7);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F8)):
-        return static_cast<int>(core::view::Key::KEY_F8);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F9)):
-        return static_cast<int>(core::view::Key::KEY_F9);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F10)):
-        return static_cast<int>(core::view::Key::KEY_F10);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F11)):
-        return static_cast<int>(core::view::Key::KEY_F11);
-    case (static_cast<int>(vislib::sys::KeyCode::KEY_F12)):
-        return static_cast<int>(core::view::Key::KEY_F12);
-    }
-    return key;
-}
 
 } // namespace gui
 } // end namespace megamol

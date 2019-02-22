@@ -13,11 +13,13 @@
 
 #include <bitset>
 #include <type_traits>
+#include <sstream> // stringstream
 
 namespace megamol {
 namespace core {
 namespace view {
 
+// GLFW keyboard keys
 enum class Key : int {
     KEY_UNKNOWN = -1,
     KEY_SPACE = 32,
@@ -186,7 +188,7 @@ enum class MouseButton : int {
 
 enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 
-enum class Modifier : int { SUPER = 8, ALT = 4, CTRL = 2, SHIFT = 1 };
+enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1 };
 
 class Modifiers {
     typedef std::bitset<3> Bits;
@@ -231,6 +233,7 @@ public:
         bits = other.bits;
         return *this;
     }
+
 };
 
 inline Modifiers operator|(Modifiers lhs, Modifiers rhs) {
@@ -247,6 +250,175 @@ inline Modifiers operator^(Modifiers lhs, Modifiers rhs) {
     Modifiers ans = lhs;
     return (ans ^= rhs);
 }
+
+
+class  KeyCode {
+public:
+    Modifiers mods;
+    Key key;
+
+    /** Ctor. */
+    KeyCode(void) { 
+        this->key = core::view::Key::KEY_UNKNOWN;
+        this->mods = core::view::Modifiers(0);
+    }
+
+    /** Ctor. */
+    KeyCode(Key key, Modifiers mods) {
+        this->mods = mods;
+        this->key = key;
+    }
+
+    /**
+     * Generates a human-readable ASCII String representing the key code.
+     *
+     * @return A human-readable ASCII String
+     */
+    std::string ToString(void) const {
+
+        std::string msg;
+        if (this->mods.test(core::view::Modifier::SHIFT)) msg += "SHIFT + ";
+        if (this->mods.test(core::view::Modifier::CTRL)) msg += "CTRL + ";
+        if (this->mods.test(core::view::Modifier::ALT)) msg += "ALT + ";
+
+        switch (this->key) {
+            case (core::view::Key::KEY_UNKNOWN) : msg += "'Unknown Key'"; break;
+            case (core::view::Key::KEY_SPACE) : msg += "'Space'"; break;
+            case (core::view::Key::KEY_APOSTROPHE) : msg += "'''"; break;
+            case (core::view::Key::KEY_COMMA) : msg += "','"; break;    
+            case (core::view::Key::KEY_MINUS) : msg += "'-'"; break;     
+            case (core::view::Key::KEY_PERIOD) : msg += "'.'"; break;   
+            case (core::view::Key::KEY_SLASH) : msg += "'/'"; break;   
+            case (core::view::Key::KEY_0) : msg += "'0'"; break;
+            case (core::view::Key::KEY_1) : msg += "'1'"; break;
+            case (core::view::Key::KEY_2) : msg += "'2'"; break;
+            case (core::view::Key::KEY_3) : msg += "'3'"; break;
+            case (core::view::Key::KEY_4) : msg += "'4'"; break;
+            case (core::view::Key::KEY_5) : msg += "'5'"; break;
+            case (core::view::Key::KEY_6) : msg += "'6'"; break;
+            case (core::view::Key::KEY_7) : msg += "'7'"; break;
+            case (core::view::Key::KEY_8) : msg += "'8'"; break;
+            case (core::view::Key::KEY_9) : msg += "'9'"; break;
+            case (core::view::Key::KEY_SEMICOLON) : msg += "':'"; break;
+            case (core::view::Key::KEY_EQUAL) : msg += "'='"; break; 
+            case (core::view::Key::KEY_A) : msg += "'a'"; break;
+            case (core::view::Key::KEY_B) : msg += "'b'"; break;
+            case (core::view::Key::KEY_C) : msg += "'c'"; break;
+            case (core::view::Key::KEY_D) : msg += "'d'"; break;
+            case (core::view::Key::KEY_E) : msg += "'e'"; break;
+            case (core::view::Key::KEY_F) : msg += "'f'"; break;
+            case (core::view::Key::KEY_G) : msg += "'g'"; break;
+            case (core::view::Key::KEY_H) : msg += "'h'"; break;
+            case (core::view::Key::KEY_I) : msg += "'i'"; break;
+            case (core::view::Key::KEY_J) : msg += "'j'"; break;
+            case (core::view::Key::KEY_K) : msg += "'k'"; break;
+            case (core::view::Key::KEY_L) : msg += "'l'"; break;
+            case (core::view::Key::KEY_M) : msg += "'m'"; break;
+            case (core::view::Key::KEY_N) : msg += "'n'"; break;
+            case (core::view::Key::KEY_O) : msg += "'o'"; break;
+            case (core::view::Key::KEY_P) : msg += "'p'"; break;
+            case (core::view::Key::KEY_Q) : msg += "'q'"; break;
+            case (core::view::Key::KEY_R) : msg += "'r'"; break;
+            case (core::view::Key::KEY_S) : msg += "'s'"; break;
+            case (core::view::Key::KEY_T) : msg += "'t'"; break;
+            case (core::view::Key::KEY_U) : msg += "'u'"; break;
+            case (core::view::Key::KEY_V) : msg += "'v'"; break;
+            case (core::view::Key::KEY_W) : msg += "'w'"; break;
+            case (core::view::Key::KEY_X) : msg += "'x'"; break;
+            case (core::view::Key::KEY_Y) : msg += "'y'"; break;
+            case (core::view::Key::KEY_Z) : msg += "'z'"; break;
+            case (core::view::Key::KEY_LEFT_BRACKET) : msg += "'['"; break; 
+            case (core::view::Key::KEY_BACKSLASH) : msg += "'\\'"; break;  
+            case (core::view::Key::KEY_RIGHT_BRACKET) : msg += "']'"; break; 
+            case (core::view::Key::KEY_GRAVE_ACCENT) : msg += "'`'"; break; 
+            case (core::view::Key::KEY_WORLD_1) : msg += "'World 1'"; break;  
+            case (core::view::Key::KEY_WORLD_2) : msg += "'Worls 2'"; break; 
+            case (core::view::Key::KEY_ESCAPE) : msg += "'Esc'"; break;
+            case (core::view::Key::KEY_ENTER) : msg += "'Enter'"; break;
+            case (core::view::Key::KEY_TAB) : msg += "'Tab'"; break;
+            case (core::view::Key::KEY_BACKSPACE) : msg += "'Backspace'"; break;
+            case (core::view::Key::KEY_INSERT) : msg += "'Insert'"; break;
+            case (core::view::Key::KEY_DELETE) : msg += "'Delete'"; break;
+            case (core::view::Key::KEY_RIGHT) : msg += "'Right'"; break;
+            case (core::view::Key::KEY_LEFT) : msg += "'Left'"; break;
+            case (core::view::Key::KEY_DOWN) : msg += "'Down'"; break;
+            case (core::view::Key::KEY_UP) : msg += "'Up'"; break;
+            case (core::view::Key::KEY_PAGE_UP) : msg += "'Page Up'"; break;
+            case (core::view::Key::KEY_PAGE_DOWN) : msg += "'Page Down'"; break;
+            case (core::view::Key::KEY_HOME) : msg += "'Home'"; break;
+            case (core::view::Key::KEY_END) : msg += "'End'"; break;
+            case (core::view::Key::KEY_CAPS_LOCK) : msg += "'Caps Lock'"; break;
+            case (core::view::Key::KEY_SCROLL_LOCK) : msg += "'Scroll Lock'"; break;
+            case (core::view::Key::KEY_NUM_LOCK) : msg += "'Num Lock'"; break;
+            case (core::view::Key::KEY_PRINT_SCREEN) : msg += "'Print Screen'"; break;
+            case (core::view::Key::KEY_PAUSE) : msg += "'Pause'"; break;
+            case (core::view::Key::KEY_F1) : msg += "'F1'"; break;
+            case (core::view::Key::KEY_F2) : msg += "'F2'"; break;
+            case (core::view::Key::KEY_F3) : msg += "'F3'"; break;
+            case (core::view::Key::KEY_F4) : msg += "'F4'"; break;
+            case (core::view::Key::KEY_F5) : msg += "'F5'"; break;
+            case (core::view::Key::KEY_F6) : msg += "'F6'"; break;
+            case (core::view::Key::KEY_F7) : msg += "'F7'"; break;
+            case (core::view::Key::KEY_F8) : msg += "'F8'"; break;
+            case (core::view::Key::KEY_F9) : msg += "'F9'"; break;
+            case (core::view::Key::KEY_F10) : msg += "'F10'"; break;
+            case (core::view::Key::KEY_F11) : msg += "'F11'"; break;
+            case (core::view::Key::KEY_F12) : msg += "'F12'"; break;
+            case (core::view::Key::KEY_F13) : msg += "'F13'"; break;
+            case (core::view::Key::KEY_F14) : msg += "'F14'"; break;
+            case (core::view::Key::KEY_F15) : msg += "'F15'"; break;
+            case (core::view::Key::KEY_F16) : msg += "'F16'"; break;
+            case (core::view::Key::KEY_F17) : msg += "'F17'"; break;
+            case (core::view::Key::KEY_F18) : msg += "'F18'"; break;
+            case (core::view::Key::KEY_F19) : msg += "'F19'"; break;
+            case (core::view::Key::KEY_F20) : msg += "'F20'"; break;
+            case (core::view::Key::KEY_F21) : msg += "'F21'"; break;
+            case (core::view::Key::KEY_F22) : msg += "'F22'"; break;
+            case (core::view::Key::KEY_F23) : msg += "'F23'"; break;
+            case (core::view::Key::KEY_F24) : msg += "'F24'"; break;
+            case (core::view::Key::KEY_F25) : msg += "'F25'"; break;
+            case (core::view::Key::KEY_KP_0) : msg += "'Num 0'"; break;
+            case (core::view::Key::KEY_KP_1) : msg += "'Num 1'"; break;
+            case (core::view::Key::KEY_KP_2) : msg += "'Num 2'"; break;
+            case (core::view::Key::KEY_KP_3) : msg += "'Num 3'"; break;
+            case (core::view::Key::KEY_KP_4) : msg += "'Num 4'"; break;
+            case (core::view::Key::KEY_KP_5) : msg += "'Num 5'"; break;
+            case (core::view::Key::KEY_KP_6) : msg += "'Num 6'"; break;
+            case (core::view::Key::KEY_KP_7) : msg += "'Num 7'"; break;
+            case (core::view::Key::KEY_KP_8) : msg += "'Num 8'"; break;
+            case (core::view::Key::KEY_KP_9) : msg += "'Num 9'"; break;
+            case (core::view::Key::KEY_KP_DECIMAL) : msg += "'Num ,'"; break;
+            case (core::view::Key::KEY_KP_DIVIDE) : msg += "'Num /'"; break;
+            case (core::view::Key::KEY_KP_MULTIPLY) : msg += "'Num *'"; break;
+            case (core::view::Key::KEY_KP_SUBTRACT) : msg += "'Num -'"; break;
+            case (core::view::Key::KEY_KP_ADD) : msg += "'Num +'"; break;
+            case (core::view::Key::KEY_KP_ENTER) : msg += "'Num Enter'"; break;
+            case (core::view::Key::KEY_KP_EQUAL) : msg += "'Num Equal'"; break;
+            case (core::view::Key::KEY_LEFT_SHIFT) : msg += "'Left Shift'"; break;
+            case (core::view::Key::KEY_LEFT_CONTROL) : msg += "'Left Ctrl'"; break;
+            case (core::view::Key::KEY_LEFT_ALT) : msg += "'Left Alt'"; break;
+            case (core::view::Key::KEY_LEFT_SUPER) : msg += "'Left Super'"; break;
+            case (core::view::Key::KEY_RIGHT_SHIFT) : msg += "'Right Shift'"; break;
+            case (core::view::Key::KEY_RIGHT_CONTROL) : msg += "'Right Ctrl'"; break;
+            case (core::view::Key::KEY_RIGHT_ALT) : msg += "'Right Alt'"; break;
+            case (core::view::Key::KEY_RIGHT_SUPER) : msg += "'Right Super'"; break;
+            case (core::view::Key::KEY_MENU): msg += "'Menu'"; break;
+        default: {
+                std::stringstream key_stream;
+                key_stream << "[" << static_cast<int>(this->key) << "]";
+                msg += key_stream.str();
+            } break;
+        }
+
+        return msg;
+    }
+};
+
+// Only needed for "hotkeys" in ButtonParamUILayer.cpp
+inline bool operator < (KeyCode lhs, KeyCode rhs) {
+    return (((int)lhs.key < (int)rhs.key) && (lhs.mods.toInt() < rhs.mods.toInt()));
+}
+
 
 } /* end namespace view */
 } /* end namespace core */
