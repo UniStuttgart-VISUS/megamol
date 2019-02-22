@@ -143,10 +143,16 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    /** Menu: Current fps as string. */
-    std::string fps_string;
-    /** Menu: Current time delay since last time fps have been updated. */
+    /** FPS window: Current time delay since last time fps have been updated. */
     float fps_delay;
+    /** FPS window: Maximum delay when fps value should be renewd. */
+    float fps_max_delay;
+    /** FPS window: Array holding last fps values. */
+    std::vector<float> fps_values;
+    /** FPS window: Maximum count of values in value array. */
+    size_t fps_values_count;
+    /** FPS window: Maximum value in fps_values. */
+    float fps_value_scale;
 
     /** Hotkey Window: Spacing of parameter name and hotkey. */
     float hotkey_spacing;
@@ -223,7 +229,14 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated") {
+    : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , hotkey_spacing(0.0f)
+    , fps_delay(0.0f)
+    , fps_values()
+    , fps_value_scale(0.0f)
+    , fps_max_delay(0.5f)  // update every X second(s)
+    , fps_values_count(25) // max count of stored fps values
+    , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -235,7 +248,14 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated") {
+    : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
+    , hotkey_spacing(0.0f)
+    , fps_delay(0.0f)
+    , fps_values()
+    , fps_value_scale(0.0f)
+    , fps_max_delay(0.5f)  // update every X second(s)
+    , fps_values_count(25) // max count of stored fps values
+    , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -306,11 +326,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
     this->windows.push_back(tmp_win);
-
-    // Other state variables ---------------------------------------------------
-    this->hotkey_spacing = 0.0f;
-    this->fps_delay = 0.0f;
-    this->fps_string = "";
 
     // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
@@ -672,18 +687,6 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
         }
     }
 
-    // Disable depth and blending
-    // bool depth_enabled = glIsEnabled(GL_DEPTH_TEST);
-    // if (depth_enabled) {
-    glDisable(GL_DEPTH_TEST);
-    //}
-    // bool blend_enabled = glIsEnabled(GL_BLEND);
-    // if (blend_enabled) {
-    glDisable(GL_BLEND);
-    //}
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     auto viewportWidth = call.GetViewport().Width();
     auto viewportHeight = call.GetViewport().Height();
 
@@ -707,13 +710,21 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    // reset depth and blend status
-    // if (depth_enabled) {
-    glEnable(GL_DEPTH_TEST);
-    //}
-    // if (blend_enabled) {
-    glEnable(GL_BLEND);
-    //}
+    // Update FPS (after firt frame)
+    this->fps_delay += io.DeltaTime;
+    if (this->fps_delay >= this->fps_max_delay) {
+        this->fps_delay = 0.0f;
+        if (this->fps_values.size() > this->fps_values_count) {
+            this->fps_values.erase(this->fps_values.begin());
+        }
+        this->fps_values.push_back(io.Framerate);
+
+        float value_max = 0.0f;
+        for (auto& v : this->fps_values) {
+            value_max = (v > value_max) ? (v) : (value_max);
+        }
+        this->fps_value_scale = value_max * 1.333f;
+    }
 
     return true;
 }
@@ -816,24 +827,23 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
 
     ImGuiIO& io = ImGui::GetIO();
 
-    // FPS
-    const float delay = 1.0f; // only update every second
-    this->fps_delay += io.DeltaTime;
-    if (this->fps_delay >= delay) {
+    std::string fps;
+    if (!this->fps_values.empty()) {
         std::stringstream fps_stream;
         fps_stream << std::fixed << std::setprecision(2) //<< std::setw(7)
-                   << io.Framerate;
-        this->fps_string = fps_stream.str();
-        this->fps_delay = 0.0f;
+                   << this->fps_values.back();
+        fps = fps_stream.str();
     }
 
-    std::string label = this->fps_string;
-    label.append(" fps");
-    if (ImGui::Button(label.c_str())) {
-        ImGui::SetClipboardText(fps_string.c_str());
-    }
-    this->toolTip("Copy to Clipboard");
-    ImGui::Separator();
+    ImGui::PlotHistogram("fps", this->fps_values.data(), (int)this->fps_values.size(), 0, fps.c_str(), 0.0f,
+        this->fps_value_scale, ImVec2(0, 100));
+
+    // std::string label = this->fps_string;
+    // label.append(" fps");
+    // if (ImGui::Button(label.c_str())) {
+    //    ImGui::SetClipboardText(fps_string.c_str());
+    //}
+    // this->toolTip("Copy to Clipboard");
 }
 
 
@@ -1038,7 +1048,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             delete[] buffer;
         }
 
-        std::string tooltip_label = "(desc)";
+        std::string tooltip_label = "[DESC]";
         this->helpMarkerToolTip(desc, tooltip_label);
     }
 }

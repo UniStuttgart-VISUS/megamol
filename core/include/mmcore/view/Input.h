@@ -271,26 +271,13 @@ public:
         this->key = key;
     }
 
-    /**
-     * Assignment operator.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @return A reference to 'this'
-     */
+    /// ONLY for map in ButtonParamUILayer ....
     inline KeyCode& operator=(const KeyCode& rhs) {
         this->key = rhs.key;
         this->mods = rhs.mods;
         return *this;
     }
-
-    /**
-     * Test for equality
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @return 'true' if 'this' and 'rhs' are equal, 'false' if not.
-     */
+    /// ONLY for map in ButtonParamUILayer ....
     inline bool operator==(const KeyCode& rhs) const {
         return ((this->key == rhs.key) && (this->mods.test(rhs.mods)));
     }
@@ -441,28 +428,15 @@ public:
 };
 
 
-/**
- * Less than operator.
- *
- * @param rhs The right hand side operand.
- *
- * @return 'true' if 'this' is less than 'rhs', 'false' if not.
- */
+/// ONLY for map in ButtonParamUILayer ....
 inline bool operator<(KeyCode lhs, KeyCode rhs) {
     return (((int)lhs.key < (int)rhs.key) && (lhs.mods.toInt() < rhs.mods.toInt()));
 }
-
-
-/**
- * Greater than operator.
- *
- * @param rhs The right hand side operand.
- *
- * @return 'true' if 'this' is greater than 'rhs', 'false' if not.
- */
+/// ONLY for map in ButtonParamUILayer ....
 inline bool operator>(KeyCode lhs, KeyCode rhs) {
     return (((int)lhs.key > (int)rhs.key) && (lhs.mods.toInt() > rhs.mods.toInt()));
 }
+
 
 } /* end namespace view */
 } /* end namespace core */
