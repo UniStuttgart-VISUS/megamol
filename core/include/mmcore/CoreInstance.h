@@ -422,13 +422,19 @@ public:
      */
     inline void EnumModulesNoLock(const std::string& entry_point, std::function<void(Module*)> cb) {
         auto thingy = this->namespaceRoot->FindNamedObject(entry_point.c_str());
-        auto mod = dynamic_cast<Module *>(thingy.get());
-        auto ns = dynamic_cast<ModuleNamespace *>(thingy.get());
-        if (mod) {
-            this->EnumModulesNoLock(mod, cb);
-        } else if (ns) {
-            this->EnumModulesNoLock(ns, cb);
-        } else {
+        bool success = false;
+        if (thingy) {
+            auto mod = dynamic_cast<Module*>(thingy.get());
+            auto ns = dynamic_cast<ModuleNamespace*>(thingy.get());
+            if (mod) {
+                success = true;
+                this->EnumModulesNoLock(mod, cb);
+            } else if (ns) {
+                success = true;
+                this->EnumModulesNoLock(ns, cb);
+            }
+        }
+        if (!success) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                 "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
