@@ -76,15 +76,15 @@ namespace {
         if (memcmp(buffer.data(), "MMBUTN", 6) != 0) return;
 
         // extract key
-        int key, mods;
-        if (buffer.size() == (6 + (2 * sizeof(WORD)))) {
-            key = *reinterpret_cast<int*>(buffer.data() + 6);
-            mods = *reinterpret_cast<int*>(buffer.data() + 6 + sizeof(WORD));
+        WORD key, mods;
+        if (buffer.size() == descLen) {
+            key = *reinterpret_cast<WORD*>(buffer.data() + 6);
+            mods = *reinterpret_cast<WORD*>(buffer.data() + 6 + sizeof(WORD));
         }
         else return; // something is strange with the hotkey
 
         // store param handle as part of the key codes
-        core::view::KeyCode keyCode(static_cast<core::view::Key>((int)key), core::view::Modifiers((int)mods));
+        core::view::KeyCode keyCode(static_cast<core::view::Key>(static_cast<int>(key)), core::view::Modifiers(static_cast<int>(mods)));
         data->hotKeys[keyCode] = name;
     }
 

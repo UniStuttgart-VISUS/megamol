@@ -201,11 +201,13 @@ public:
 
     explicit Modifiers(int bits) : bits(bits) {}
 
-    inline int toInt() { return static_cast<int>(bits.to_ulong()); }
+    inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
 
     inline bool none() const { return bits.none(); }
 
     inline bool test(Modifier mod) const { return (bits & Modifiers(mod).bits).any(); }
+
+    inline bool test(Modifiers mods) const { return (bits & mods.bits).any(); }
 
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
@@ -267,6 +269,30 @@ public:
     KeyCode(Key key, Modifiers mods) {
         this->mods = mods;
         this->key = key;
+    }
+
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return A reference to 'this'
+     */
+    inline KeyCode& operator=(const KeyCode& rhs) {
+        this->key = rhs.key;
+        this->mods = rhs.mods;
+        return *this;
+    }
+
+    /**
+     * Test for equality
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return 'true' if 'this' and 'rhs' are equal, 'false' if not.
+     */
+    inline bool operator==(const KeyCode& rhs) const {
+        return ((this->key == rhs.key) && (this->mods.test(rhs.mods)));
     }
 
     /**
@@ -414,11 +440,29 @@ public:
     }
 };
 
-// Only needed for "hotkeys" in ButtonParamUILayer.cpp
-inline bool operator < (KeyCode lhs, KeyCode rhs) {
+
+/**
+ * Less than operator.
+ *
+ * @param rhs The right hand side operand.
+ *
+ * @return 'true' if 'this' is less than 'rhs', 'false' if not.
+ */
+inline bool operator<(KeyCode lhs, KeyCode rhs) {
     return (((int)lhs.key < (int)rhs.key) && (lhs.mods.toInt() < rhs.mods.toInt()));
 }
 
+
+/**
+ * Greater than operator.
+ *
+ * @param rhs The right hand side operand.
+ *
+ * @return 'true' if 'this' is greater than 'rhs', 'false' if not.
+ */
+inline bool operator>(KeyCode lhs, KeyCode rhs) {
+    return (((int)lhs.key > (int)rhs.key) && (lhs.mods.toInt() > rhs.mods.toInt()));
+}
 
 } /* end namespace view */
 } /* end namespace core */

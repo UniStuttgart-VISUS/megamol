@@ -214,16 +214,16 @@ gl::ATParamBar::Param::Param(Param && src) : id(src.id), name(std::move(src.name
 gl::ATParamBar::ButtonParam::ButtonParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc) : Param(std::move(*src.get())) {
 
     // extract key
-    int key, mods;
+    WORD key, mods;
     if (desc.size() == (6 + (2 * sizeof(WORD)))) {
-        key = *reinterpret_cast<const int*>(desc.data() + 6);
-        mods = *reinterpret_cast<const int*>(desc.data() + 6 + sizeof(WORD));
+        key = *reinterpret_cast<const WORD*>(desc.data() + 6);
+        mods = *reinterpret_cast<const WORD*>(desc.data() + 6 + sizeof(WORD));
     }
     else return; // something is strange with the hotkey
 
-    core::view::KeyCode keyCode(static_cast<core::view::Key>((int)key), core::view::Modifiers((int)mods));
+    core::view::KeyCode keyCode(static_cast<core::view::Key>(static_cast<int>(key)), core::view::Modifiers(static_cast<int>(mods)));
 
-    if (keyCode.key !=core::view::Key::KEY_UNKNOWN) {
+    if (keyCode.key != core::view::Key::KEY_UNKNOWN) {
         vislib::StringA keyStr;
         switch (keyCode.key) {
             case core::view::Key::KEY_ENTER: keyStr = "RET"; break;
@@ -294,9 +294,12 @@ gl::ATParamBar::ButtonParam::ButtonParam(std::shared_ptr<Param> src, TwBar* bar,
             }
         }
 
-        if (!keyStr.IsEmpty()) def << " key='" << keyStr.PeekBuffer() << "' ";
+        if (!keyStr.IsEmpty()) {
+            def << " key='" << keyStr.PeekBuffer() << "' ";
+        }
     }
 
+    // ATB ignores hotkeys starting/containing ALT + [a-z] ! ...
     ::TwAddButton(bar, GetKey().c_str(), reinterpret_cast<TwButtonCallback>(&ButtonParam::twCallback), this, def.str().c_str());
 
 }
