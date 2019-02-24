@@ -92,6 +92,8 @@
 #include "ProteinExploder.h"
 #include "MolecularNeighborhood.h"
 #include "HydroBondFilter.h"
+#include "SolventCounter.h"
+#include "MSMSMeshLoader.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -186,6 +188,8 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventCounter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
