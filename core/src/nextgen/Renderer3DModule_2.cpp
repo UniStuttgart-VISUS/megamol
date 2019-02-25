@@ -41,7 +41,7 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
         *chainedCall = call;
 
         // chain through the the get extents call
-        (*chainedCall)(1);
+        (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     }
 
     // TODO extents magic
@@ -62,7 +62,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         *chainedCall = call;
 
         // chain through the the render call
-        (*chainedCall)(0);
+        (*chainedCall)(view::AbstractCallRender::FnRender);
     } else {
         // TODO move this behind the fbo magic?
 
