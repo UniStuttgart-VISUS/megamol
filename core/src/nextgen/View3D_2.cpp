@@ -75,18 +75,6 @@ View3D_2::View3D_2(void)
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
-    , viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)")
-    , viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)")
-    , viewKeyRotUpSlot("viewKey::RotUp", "Rotates the view to the top (around the right-axis)")
-    , viewKeyRotDownSlot("viewKey::RotDown", "Rotates the view to the bottom (around the right-axis)")
-    , viewKeyRollLeftSlot("viewKey::RollLeft", "Rotates the view counter-clockwise (around the view-axis)")
-    , viewKeyRollRightSlot("viewKey::RollRight", "Rotates the view clockwise (around the view-axis)")
-    , viewKeyZoomInSlot("viewKey::ZoomIn", "Zooms in (moves the camera)")
-    , viewKeyZoomOutSlot("viewKey::ZoomOut", "Zooms out (moves the camera)")
-    , viewKeyMoveLeftSlot("viewKey::MoveLeft", "Moves to the left")
-    , viewKeyMoveRightSlot("viewKey::MoveRight", "Moves to the right")
-    , viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top")
-    , viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom")
     , toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
     , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
     , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
@@ -192,34 +180,31 @@ View3D_2::View3D_2(void)
     this->viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    this->viewKeyRotLeftSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL));
+    /*this->viewKeyRotLeftSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_LEFT));
     this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
 
-    this->viewKeyRotRightSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotRightSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_RIGHT));
     this->viewKeyRotRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
 
-    this->viewKeyRotUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP));
     this->viewKeyRotUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
 
-    this->viewKeyRotDownSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL));
+    this->viewKeyRotDownSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_DOWN));
     this->viewKeyRotDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
 
-    this->viewKeyRollLeftSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollLeftSlot.SetParameter(new param::ButtonParam('q'));
     this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
 
-    this->viewKeyRollRightSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyRollRightSlot.SetParameter(new param::ButtonParam('e'));
     this->viewKeyRollRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
 
-    this->viewKeyZoomInSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
+    this->viewKeyZoomInSlot.SetParameter(new param::ButtonParam(KeyCode('w')));
     this->viewKeyZoomInSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
 
@@ -246,7 +231,7 @@ View3D_2::View3D_2(void)
     this->viewKeyMoveDownSlot.SetParameter(
         new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
     this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
+    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);*/
 
     this->toggleBBoxSlot.SetParameter(new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT));
     this->toggleBBoxSlot.SetUpdateCallback(&View3D_2::onToggleButton);
@@ -270,11 +255,14 @@ View3D_2::View3D_2(void)
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
     }
 
-    //this->MakeSlotAvailable(&this->slotGetCamParams);
-    //this->MakeSlotAvailable(&this->slotSetCamParams);
+    // this->MakeSlotAvailable(&this->slotGetCamParams);
+    // this->MakeSlotAvailable(&this->slotSetCamParams);
 
     this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
+
+    this->translateManipulator.set_target(this->cam);
+    this->translateManipulator.enable();
 }
 
 /*
@@ -337,7 +325,8 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
             (this->overrideViewport[3] >= 0)) {
             /*glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
                 this->overrideViewport[3]);*/
-            currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2], this->overrideViewport[3]);
+            currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1],
+                this->overrideViewport[2], this->overrideViewport[3]);
         }
     } else {
         // this is correct in non-override mode,
@@ -449,13 +438,13 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     // }
     this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
-    //cam_type::snapshot_type camsnap;
-    //cam_type::matrix_type viewCam, projCam;
-    //this->cam.calc_matrices(camsnap, viewCam, projCam);
-    //
-    //glm::mat4 view = viewCam;
-    //glm::mat4 proj = projCam;
-    //glm::mat4 mvp = projCam * viewCam;
+    cam_type::snapshot_type camsnap;
+    cam_type::matrix_type viewCam, projCam;
+    this->cam.calc_matrices(camsnap, viewCam, projCam);
+
+    glm::mat4 view = viewCam;
+    glm::mat4 proj = projCam;
+    glm::mat4 mvp = projCam * viewCam;
 
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
@@ -480,6 +469,7 @@ void View3D_2::ResetView(void) {
     this->cam.near_clipping_plane(0.1f);
     this->cam.far_clipping_plane(100.0f);
     this->cam.aperture_angle(30.0f);
+    this->cam.disparity(0.05f);
     this->cam.eye(thecam::eye::mono);
     this->cam.projection_type(thecam::projection_type::perspective);
     // TODO set distance between eyes
@@ -545,6 +535,69 @@ void View3D_2::UpdateFreeze(bool freeze) {
 bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
+
+    float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+    const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
+    if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
+        step *= runFactor;
+    }
+
+    bool movementDetected = false;
+    if (mods.none()) {
+        if (key == view::Key::KEY_W && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_forward(step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_S && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_forward(-step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_A && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_horizontally(-step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_D && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_horizontally(step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_SPACE && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_vertically(step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_V && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            this->translateManipulator.move_vertically(-step);
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_Q && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_E && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_UP && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_DOWN && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_LEFT && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+        else if (key == view::Key::KEY_RIGHT && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+            // TODO
+            movementDetected = true;
+        }
+    }
+
+    // do not propagate events if the key was used to move the camera
+    if (movementDetected) {
+        return true;
+    }
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Key;
@@ -716,7 +769,7 @@ bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
 /*
  * View3D_2::OnGetCamParams
  */
-//bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
+// bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
 //    // TODO implement
 //    return true;
 //}
@@ -742,14 +795,6 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
  */
 bool View3D_2::onResetView(param::ParamSlot& p) {
     this->ResetView();
-    return true;
-}
-
-/*
- * View3D_2::viewKeyPressed
- */
-bool View3D_2::viewKeyPressed(param::ParamSlot& p) {
-    // TODO implement
     return true;
 }
 
