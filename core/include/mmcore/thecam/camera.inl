@@ -184,19 +184,21 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
     }
 
     //https://msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
+    //EDIT by schatzkn: the signs have been adapted to comply with the opengl coordinate system with inversed z-axis
+    //this is hacky because it does not work for direct3D anymore.
     outMat(0, 0) = xAxis.x();
     outMat(1, 0) = xAxis.y();
     outMat(2, 0) = xAxis.z();
-    outMat(3, 0) = math::dot(xAxis, snapshot.position);
+    outMat(3, 0) = -math::dot(xAxis, snapshot.position);
 
     outMat(0, 1) = yAxis.x();
     outMat(1, 1) = yAxis.y();
     outMat(2, 1) = yAxis.z();
-    outMat(3, 1) = math::dot(yAxis, snapshot.position);
+    outMat(3, 1) = -math::dot(yAxis, snapshot.position);
 
-    outMat(0, 2) = zAxis.x();
-    outMat(1, 2) = zAxis.y();
-    outMat(2, 2) = zAxis.z();
+    outMat(0, 2) = -zAxis.x();
+    outMat(1, 2) = -zAxis.y();
+    outMat(2, 2) = -zAxis.z();
     outMat(3, 2) = math::dot(zAxis, snapshot.position);
 
     outMat(0, 3) = ZERO;

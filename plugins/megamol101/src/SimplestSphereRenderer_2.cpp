@@ -134,14 +134,6 @@ bool SimplestSphereRenderer_2::GetExtents(core::nextgen::CallRender3D_2& call) {
     if (cs == nullptr) return false;
     if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
 
-    // TUTORIAL: This scaling here might be crucial
-    float scale;
-    if (!vislib::math::IsEqual(cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
     cr3d->SetTimeFramesCount(cs->FrameCount());
 
@@ -223,7 +215,6 @@ bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
 
     cam_type::snapshot_type camsnap;
     cam_type::matrix_type viewCam, projCam;
-    //localCam.take_snapshot(camsnap);
     localCam.calc_matrices(camsnap, viewCam, projCam);
 
     glm::mat4 view = viewCam;
