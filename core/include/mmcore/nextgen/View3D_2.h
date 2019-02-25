@@ -200,7 +200,7 @@ protected:
      *
      * @return true in case of success, false otherwise.
      */
-    //virtual bool OnGetCamParams(view::CallCamParamSync& c);
+    // virtual bool OnGetCamParams(view::CallCamParamSync& c);
 
     /**
      * Stores the current camera settings
@@ -340,42 +340,6 @@ protected:
 
     /** The point around which the view will be roateted */
     param::ParamSlot viewKeyRotPointSlot;
-
-    /** Rotates the view to the left (around the up-axis) */
-    param::ParamSlot viewKeyRotLeftSlot;
-
-    /** Rotates the view to the right (around the up-axis) */
-    param::ParamSlot viewKeyRotRightSlot;
-
-    /** Rotates the view to the top (around the right-axis) */
-    param::ParamSlot viewKeyRotUpSlot;
-
-    /** Rotates the view to the bottom (around the right-axis) */
-    param::ParamSlot viewKeyRotDownSlot;
-
-    /** Rotates the view counter-clockwise (around the view-axis) */
-    param::ParamSlot viewKeyRollLeftSlot;
-
-    /** Rotates the view clockwise (around the view-axis) */
-    param::ParamSlot viewKeyRollRightSlot;
-
-    /** Zooms in */
-    param::ParamSlot viewKeyZoomInSlot;
-
-    /** Zooms out */
-    param::ParamSlot viewKeyZoomOutSlot;
-
-    /** Moves to the left */
-    param::ParamSlot viewKeyMoveLeftSlot;
-
-    /** Moves to the right */
-    param::ParamSlot viewKeyMoveRightSlot;
-
-    /** Moves to the top */
-    param::ParamSlot viewKeyMoveUpSlot;
-
-    /** Moves to the bottom */
-    param::ParamSlot viewKeyMoveDownSlot;
 
     param::ParamSlot toggleBBoxSlot;
 
