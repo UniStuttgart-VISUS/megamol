@@ -34,7 +34,7 @@ void ospErrorCallback(OSPError err, const char* details) {
 
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     : core::view::Renderer3DModule()
-    , extraSamles("extraSamples", "Extra sampling when camera is not moved")
+    , accumulateSlot("accumulate", "Activates the accumulation buffer")
     ,
     // general renderer parameters
     rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
@@ -78,11 +78,11 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     this->AOtransparencyEnabled << new core::param::BoolParam(false);
     this->AOsamples << new core::param::IntParam(1);
     this->AOdistance << new core::param::FloatParam(1e20f);
-    this->extraSamles << new core::param::BoolParam(true);
+    this->accumulateSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->AOtransparencyEnabled);
     this->MakeSlotAvailable(&this->AOsamples);
     this->MakeSlotAvailable(&this->AOdistance);
-    this->MakeSlotAvailable(&this->extraSamles);
+    this->MakeSlotAvailable(&this->accumulateSlot);
 
 
     // General Renderer
@@ -432,7 +432,7 @@ OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 
 bool AbstractOSPRayRenderer::AbstractIsDirty() {
     if (this->AOsamples.IsDirty() || this->AOtransparencyEnabled.IsDirty() || this->AOdistance.IsDirty() ||
-        this->extraSamles.IsDirty() || this->shadows.IsDirty() || this->rd_type.IsDirty() ||
+        this->accumulateSlot.IsDirty() || this->shadows.IsDirty() || this->rd_type.IsDirty() ||
         this->rd_epsilon.IsDirty() || this->rd_spp.IsDirty() || this->rd_maxRecursion.IsDirty() ||
         this->rd_ptBackground.IsDirty() || this->useDB.IsDirty() || this->framebufferIsDirty) {
         return true;
@@ -445,7 +445,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->AOsamples.ResetDirty();
     this->AOtransparencyEnabled.ResetDirty();
     this->AOdistance.ResetDirty();
-    this->extraSamles.ResetDirty();
+    this->accumulateSlot.ResetDirty();
     this->shadows.ResetDirty();
     this->rd_type.ResetDirty();
     this->rd_epsilon.ResetDirty();
@@ -756,8 +756,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         auto const& element = entry.second;
 
         // custom material settings
-        OSPMaterial material;
-        material = NULL;
+        OSPMaterial material = NULL;
         if (element.materialContainer != NULL &&
             this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
             switch (element.materialContainer->materialType) {
