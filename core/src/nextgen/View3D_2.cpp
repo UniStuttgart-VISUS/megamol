@@ -406,6 +406,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
                                       !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
+            glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
+            this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
+            
 
             if (this->firstImg) {
                 this->ResetView();
@@ -642,6 +645,16 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
             this->cursor2d.SetButtonState(0, down);
+            if (action == view::MouseButtonAction::PRESS) {
+                if (!this->arcballManipulator.manipulating()) {
+                    glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
+                    glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
+                    this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
+                    this->arcballManipulator.on_drag_start(this->cursor2d.X(), this->cursor2d.Y());
+                }
+            } else if (action == view::MouseButtonAction::RELEASE) {
+                this->arcballManipulator.on_drag_stop();
+            }
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
             this->cursor2d.SetButtonState(1, down);
@@ -677,6 +690,9 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
     // This mouse handling/mapping is so utterly weird and should die!
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
+        if (this->arcballManipulator.manipulating()) {
+            this->arcballManipulator.on_drag(this->cursor2d.X(), this->cursor2d.Y());
+        }
     } else {
         auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
         if (cr) {

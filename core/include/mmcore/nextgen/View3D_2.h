@@ -229,15 +229,6 @@ protected:
      */
     bool onResetView(param::ParamSlot& p);
 
-    /**
-     * Event handler for view keys
-     *
-     * @param p The parameter slot of the view key hit
-     *
-     * @return true
-     */
-    bool viewKeyPressed(param::ParamSlot& p);
-
     bool onToggleButton(param::ParamSlot& p);
 
 #ifdef _WIN32

@@ -137,8 +137,8 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
         if (!axis.empty()) {
             // Compute angle and rotation quaternion.
             quaternion_type quat;
-            auto dp = the::math::dot(this->startVector, this->currentVector);
-            the::math::set_from_angle_axis(quat, dp, axis);
+            auto dp = thecam::math::dot(this->startVector, this->currentVector);
+            thecam::math::set_from_angle_axis(quat, dp, axis);
 
             // Apply the rotation.
             auto rot = quat * this->startRot;
@@ -146,8 +146,8 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
 
             // Compute the new position of the camera.
             auto pos = this->startPos - this->rotCentre;
-            pos = the::math::rotate(pos, this->startRot);
-            pos = the::math::rotate(pos, rot);
+            pos = thecam::math::rotate(pos, this->startRot);
+            pos = thecam::math::rotate(pos, rot);
             pos += this->rotCentre;
             cam->position(pos);
         }
