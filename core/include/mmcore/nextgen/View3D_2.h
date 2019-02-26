@@ -252,6 +252,8 @@ protected:
     /** The translation manipulator for the camera */
     xlate_type translateManipulator;
 
+    /** the 2d cursor of this view */
+    vislib::graphics::Cursor2D cursor2d;
 #ifdef _WIN32
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */

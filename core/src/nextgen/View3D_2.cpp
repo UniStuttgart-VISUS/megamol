@@ -50,6 +50,7 @@ using namespace megamol::core::nextgen;
 View3D_2::View3D_2(void)
     : view::AbstractRenderingView()
     /*, view::AbstractCamParamSync()*/
+    , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , lightDir(0.5f, -1.0f, -1.0f)
     , isCamLight(true)
@@ -559,7 +560,7 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
             this->translateManipulator.move_horizontally(step);
             movementDetected = true;
         }
-        else if (key == view::Key::KEY_C && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        else if (key == view::Key::KEY_SPACE && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_vertically(step);
             movementDetected = true;
         }
@@ -642,13 +643,13 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
     if (!this->toggleMouseSelection) {
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
-            // TODO
+            this->cursor2d.SetButtonState(0, down);
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
-            // TODO
+            this->cursor2d.SetButtonState(1, down);
             break;
         case megamol::core::view::MouseButton::BUTTON_MIDDLE:
-            // TODO
+            this->cursor2d.SetButtonState(2, down);
             break;
         default:
             break;
@@ -677,7 +678,7 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
 
     // This mouse handling/mapping is so utterly weird and should die!
     if (!this->toggleMouseSelection) {
-        // TODO
+        this->cursor2d.SetPosition(x, y, true);
     } else {
         auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
         if (cr) {
