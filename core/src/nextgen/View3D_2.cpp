@@ -263,6 +263,11 @@ View3D_2::View3D_2(void)
 
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
+
+    this->arcballManipulator.set_rotation_centre(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    this->arcballManipulator.set_target(this->cam);
+    this->arcballManipulator.set_radius(1.0f);
+    this->arcballManipulator.enable();
 }
 
 /*
@@ -547,48 +552,41 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         if (key == view::Key::KEY_W && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_forward(step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_S && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_S && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_forward(-step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_A && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_A && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_horizontally(-step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_D && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_D && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_horizontally(step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_SPACE && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_C && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_vertically(step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_V && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_V && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             this->translateManipulator.move_vertically(-step);
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_Q && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_Q && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_E && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_E && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_UP && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_UP &&
+                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_DOWN && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_DOWN &&
+                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_LEFT && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_LEFT &&
+                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
-        }
-        else if (key == view::Key::KEY_RIGHT && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        } else if (key == view::Key::KEY_RIGHT &&
+                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
             // TODO
             movementDetected = true;
         }
