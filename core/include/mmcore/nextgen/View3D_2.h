@@ -243,6 +243,9 @@ protected:
     /** The translation manipulator for the camera */
     xlate_type translateManipulator;
 
+    /** The rotation manipulator for the camera */
+    rotate_type rotateManipulator;
+
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
 #ifdef _WIN32

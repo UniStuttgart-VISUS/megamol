@@ -16,6 +16,7 @@
 #include "mmcore/thecam/camera_maths.h"
 #include "mmcore/thecam/arcball_manipulator.h"
 #include "mmcore/thecam/translate_manipulator.h"
+#include "mmcore/thecam/rotate_manipulator.h"
 
 #include "mmcore/BoundingBoxes_2.h"
 
@@ -23,6 +24,7 @@ typedef megamol::core::thecam::glm_camera_maths<> cam_maths_type;
 typedef megamol::core::thecam::camera<cam_maths_type> cam_type;
 typedef megamol::core::thecam::arcball_manipulator<cam_type> arcball_type;
 typedef megamol::core::thecam::translate_manipulator<cam_type> xlate_type;
+typedef megamol::core::thecam::rotate_manipulator<cam_type> rotate_type;
 
 namespace megamol {
 namespace core {
