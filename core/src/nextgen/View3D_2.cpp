@@ -160,13 +160,13 @@ View3D_2::View3D_2(void)
     // this->stereoFocusDistSlot << new param::FloatParam(this->camParams->FocalDistance(false), 0.0f);
     // this->MakeSlotAvailable(&this->stereoFocusDistSlot);
 
-    this->viewKeyMoveStepSlot.SetParameter(new param::FloatParam(0.1f, 0.001f));
+    this->viewKeyMoveStepSlot.SetParameter(new param::FloatParam(0.5f, 0.001f));
     this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
 
     this->viewKeyRunFactorSlot.SetParameter(new param::FloatParam(2.0f, 0.1f));
     this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
 
-    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(1.0f, 0.001f, 360.0f));
+    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(0.5f, 0.001f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
@@ -333,17 +333,12 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     if (this->overrideViewport != nullptr) {
         if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0) &&
             (this->overrideViewport[3] >= 0)) {
-            /*glViewport(this->overrideViewport[0], this->overrideViewport[1], this->overrideViewport[2],
-                this->overrideViewport[3]);*/
             currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1],
                 this->overrideViewport[2], this->overrideViewport[3]);
         }
     } else {
         // this is correct in non-override mode,
         //  because then the tile will be whole viewport
-        // TODO
-        // glViewport(0, 0, static_cast<GLsizei>(this->camParams->TileRect().Width()),
-        // static_cast<GLsizei>(this->camParams->TileRect().Height()));
         auto camRes = this->cam.resolution_gate();
         currentViewport = glm::ivec4(0, 0, camRes.width(), camRes.height());
     }

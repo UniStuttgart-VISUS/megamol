@@ -40,14 +40,27 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
         // copy the incoming call to the output
         *chainedCall = call;
 
-        // chain through the the get extents call
+        // chain through the get extents call
         (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     }
 
     // TODO extents magic
 
+
     // get our own extents
     this->GetExtents(call);
+
+    if (chainedCall != nullptr) {
+        auto mybb = call.AccessBoundingBoxes().BoundingBox();
+        mybb.Union(chainedCall->AccessBoundingBoxes().BoundingBox());
+        auto mycb = call.AccessBoundingBoxes().ClipBox();
+        mycb.Union(chainedCall->AccessBoundingBoxes().ClipBox());
+        call.AccessBoundingBoxes().SetBoundingBox(mybb);
+        call.AccessBoundingBoxes().SetClipBox(mycb);
+
+        // TODO machs richtig
+        call.SetTimeFramesCount(chainedCall->TimeFramesCount());
+    }
 
     return true;
 }
@@ -61,7 +74,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         // copy the incoming call to the output
         *chainedCall = call;
 
-        // chain through the the render call
+        // chain through the render call
         (*chainedCall)(view::AbstractCallRender::FnRender);
     } else {
         // TODO move this behind the fbo magic?
@@ -74,6 +87,10 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
     }
 
     // TODO FBO magic
+
+    if (chainedCall != nullptr) {
+        call = *chainedCall;
+    }
 
     // render our own stuff
     this->Render(call);
