@@ -188,7 +188,7 @@ enum class MouseButton : int {
 
 enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 
-enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1 };
+enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1, NONE = 0 };
 
 class Modifiers {
     typedef std::bitset<3> Bits;
@@ -262,13 +262,17 @@ public:
     /** Ctor. */
     KeyCode(void) { 
         this->key = core::view::Key::KEY_UNKNOWN;
-        this->mods = core::view::Modifiers(0);
+        this->mods = core::view::Modifiers(core::view::Modifier::NONE);
     }
 
     /** Ctor. */
     KeyCode(Key key, Modifiers mods) {
         this->mods = mods;
         this->key = key;
+    }
+    KeyCode(Key key) {
+        this->key = key;
+        this->mods = core::view::Modifiers(core::view::Modifier::NONE);
     }
 
     /// ONLY for map in ButtonParamUILayer ....

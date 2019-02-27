@@ -6,11 +6,19 @@
  */
 
 /**
- * TODO: Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
- * TODO: Fix x and y transformation by View2D class (will be fixed when screen2world transformation is available in
+ * TODO
+ *
+ * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
+ * - Fix x and y transformation by View2D class (will be fixed when screen2world transformation is available in
  * CallRender)
  *
+ */
+
+/**
+ * USED HOKEYS:
  *
+ * - Show/hide Windows: F12 - F8
+ * - Quit program:      Esc, Alt+F4
  *
  */
 
@@ -128,9 +136,8 @@ private:
     /** Type for holding window definition. */
     typedef struct _gui_window {
         std::string label;      // window label
-        bool open;              // open/close state of window
+        bool show;              // show/hide window
         core::view::Key hotkey; // hotkey for opening/closing window
-        std::string hotkey_str; // human readable text for hotkey
         ImGuiWindowFlags flags; // imgui window flags
         GuiFunc func;           // pointer to function drawing window content
     } GUIWindow;
@@ -143,21 +150,30 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    /** FPS window: Current time delay since last time fps have been updated. */
-    float fps_delay;
-    /** FPS window: Maximum delay when fps value should be renewd. */
-    float fps_max_delay;
-    /** FPS window: Array holding last fps values. */
-    std::vector<float> fps_values;
-    /** FPS window: Maximum count of values in value array. */
-    size_t fps_values_count;
-    /** FPS window: Maximum value in fps_values. */
-    float fps_value_scale;
-
-    /** Hotkey Window: Spacing of parameter name and hotkey. */
+    // Hotkey Window
+    /** Spacing of parameter name and hotkey. */
     float hotkey_spacing;
 
-    /** Array holding window states. */
+    // FPS window
+    /** Current time delay since last time fps have been updated. */
+    float current_delay;
+    /** Maximum delay when fps/ms value should be renewed. */
+    float max_delay;
+    /** Array holding last fps values. */
+    std::vector<float> fps_values;
+    std::vector<float> ms_values;
+    /** Maximum value in fps_values. */
+    float fps_value_scale;
+    float ms_value_scale;
+    /** Toggle display fps or ms.  */
+    int fps_ms_mode;
+    /** Maximum count of values in value array. */
+    size_t max_value_count;
+
+    /** Float precision for parameter format. */
+    int float_prec;
+
+    /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -173,14 +189,19 @@ private:
     void drawHotkeyWindowCallback(void);
 
     /**
-     * Callback for drawing font selection window.
+     * Draws console window.
      */
-    void drawFontSelectionWindowCallback(void);
+    void drawConsoleWindowCallback(void);
 
     /**
      * Draws fps overlay window.
      */
     void drawFpsWindowCallback(void);
+
+    /**
+     * Callback for drawing font selection window.
+     */
+    void drawFontSelectionWindowCallback(void);
 
     // ------------------------------------------------------------------------
 
@@ -209,6 +230,11 @@ private:
      */
     void helpMarkerToolTip(std::string desc, std::string label = "(?)");
 
+    /**
+     * Update fps and ms value arrays.
+     */
+    void updateFps(void);
+
     // ------------------------------------------------------------------------
 
     /**
@@ -231,11 +257,15 @@ template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , hotkey_spacing(0.0f)
-    , fps_delay(0.0f)
+    , current_delay(0.0f)
+    , max_delay(0.5f) // update every X second(s)
     , fps_values()
+    , ms_values()
     , fps_value_scale(0.0f)
-    , fps_max_delay(0.5f)  // update every X second(s)
-    , fps_values_count(25) // max count of stored fps values
+    , ms_value_scale(0.0f)
+    , fps_ms_mode(0)
+    , max_value_count(50) // max count of stored fps values
+    , float_prec(6)       // float format
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -250,11 +280,15 @@ template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
     , hotkey_spacing(0.0f)
-    , fps_delay(0.0f)
+    , current_delay(0.0f)
+    , max_delay(0.5f) // update every X second(s)
     , fps_values()
+    , ms_values()
     , fps_value_scale(0.0f)
-    , fps_max_delay(0.5f)  // update every X second(s)
-    , fps_values_count(25) // max count of stored fps values
+    , ms_value_scale(0.0f)
+    , fps_ms_mode(0)
+    , max_value_count(50) // max count of stored fps values
+    , float_prec(6)       // float format
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -296,36 +330,40 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     GUIWindow tmp_win;
     // Main Window ------------------------------------------------------------
     tmp_win.label = "MegaMol";
-    tmp_win.open = true;
+    tmp_win.show = true;
     tmp_win.hotkey = core::view::Key::KEY_F12;
-    tmp_win.hotkey_str = "F12";
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     this->windows.push_back(tmp_win);
     // Hotkey Window ----------------------------------------------------------
     tmp_win.label = "Hotkeys";
-    tmp_win.open = false;
+    tmp_win.show = false;
     tmp_win.hotkey = core::view::Key::KEY_F11;
-    tmp_win.hotkey_str = "F11";
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawHotkeyWindowCallback;
     this->windows.push_back(tmp_win);
-    // Font Selection Window --------------------------------------------------
-    tmp_win.label = "Font Selection";
-    tmp_win.open = false;
+    // Console Window -----------------------------------------------------
+    tmp_win.label = "Console";
+    tmp_win.show = false;
     tmp_win.hotkey = core::view::Key::KEY_F10;
-    tmp_win.hotkey_str = "F10";
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
-    tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
+    tmp_win.func = &GUIRenderer<M, C>::drawConsoleWindowCallback;
     this->windows.push_back(tmp_win);
     // FPS overlay Window -----------------------------------------------------
     tmp_win.label = "FPS";
-    tmp_win.open = false;
+    tmp_win.show = false;
     tmp_win.hotkey = core::view::Key::KEY_F9;
-    tmp_win.hotkey_str = "F09";
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
     this->windows.push_back(tmp_win);
+    // Font Selection Window --------------------------------------------------
+    tmp_win.label = "Font Selection";
+    tmp_win.show = false;
+    tmp_win.hotkey = core::view::Key::KEY_F8;
+    tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
+    this->windows.push_back(tmp_win);
+
 
     // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
@@ -475,7 +513,6 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
 
     // Exit megamol
     bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
-                (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Q))) ||                 // 'q'
                 ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
     if (exit) {
         this->shutdown();
@@ -485,7 +522,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     // Hotkeys of window(s)
     for (auto& win : this->windows) {
         if ((ImGui::IsKeyDown(static_cast<int>(win.hotkey)))) {
-            win.open = !win.open;
+            win.show = !win.show;
         }
     }
 
@@ -710,21 +747,8 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    // Update FPS (after firt frame)
-    this->fps_delay += io.DeltaTime;
-    if (this->fps_delay >= this->fps_max_delay) {
-        this->fps_delay = 0.0f;
-        if (this->fps_values.size() > this->fps_values_count) {
-            this->fps_values.erase(this->fps_values.begin());
-        }
-        this->fps_values.push_back(io.Framerate);
-
-        float value_max = 0.0f;
-        for (auto& v : this->fps_values) {
-            value_max = (v > value_max) ? (v) : (value_max);
-        }
-        this->fps_value_scale = value_max * 1.333f;
-    }
+    // Update fps and ms data (after first frame, otherwise first value is flt_max ...)
+    this->updateFps();
 
     return true;
 }
@@ -736,14 +760,18 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void) {
 
     // Menu -------------------------------------------------------------------
-    /// requires window flag ImGuiWindowFlags_MenuBar
+    /// Requires window flag ImGuiWindowFlags_MenuBar
     if (ImGui::BeginMenuBar()) {
         this->drawMenu();
         ImGui::EndMenuBar();
     }
 
+
     // Parameters -------------------------------------------------------------
     ImGui::Text("PARAMETERS");
+    ImGui::SameLine();
+    std::string color_param_help = "Press [Alt] and hover parameter to see description.";
+    this->helpMarkerToolTip(color_param_help);
 
     int overrideState = -1;
     ImGui::SameLine(150.0f);
@@ -781,24 +809,124 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
  */
 template <class M, class C> void GUIRenderer<M, C>::drawHotkeyWindowCallback(void) {
 
+    const core::Module* currentMod = nullptr;
+    bool currentModOpen = false;
+
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
-        auto param = slot.Parameter();
-        if (!param.IsNull()) {
-            if (auto* p = slot.Param<core::param::ButtonParam>()) {
-                auto label = std::string(slot.Name().PeekBuffer());
-                auto keycode = p->GetKeyCode().ToString();
+        if (currentMod != &mod) {
+            currentMod = &mod;
 
-                ImGui::Text(label.c_str());
-                // Adapt spacing between label and hotkey string
-                auto labelLength = ImGui::GetFontSize() * (float)label.length() * 0.8f;
-                this->hotkey_spacing = (labelLength > this->hotkey_spacing) ? (labelLength) : (this->hotkey_spacing);
-                ImGui::SameLine(this->hotkey_spacing);
+            auto headerId = ImGui::GetID(mod.FullName());
+            auto headerState = -1; // overrideState;
+            if (headerState == -1) {
+                headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
+            }
+            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            currentModOpen = ImGui::CollapsingHeader(mod.FullName());
+        }
+        if (currentModOpen) {
+            auto param = slot.Parameter();
+            if (!param.IsNull()) {
+                if (auto* p = slot.Param<core::param::ButtonParam>()) {
+                    auto label = std::string(slot.Name().PeekBuffer());
+                    auto desc = std::string(slot.Description().PeekBuffer());
+                    auto keycode = p->GetKeyCode().ToString();
 
-                ImGui::Text(keycode.c_str());
-                ImGui::Separator();
+                    std::string tooltip_label = "[DESC]";
+                    this->helpMarkerToolTip(desc, tooltip_label);
+                    ImGui::SameLine();
+
+                    ImGui::Text(label.c_str());
+                    // Adapt spacing between label and hotkey string
+                    auto labelLength = ImGui::GetFontSize() * (float)label.length();
+                    this->hotkey_spacing =
+                        (labelLength > this->hotkey_spacing) ? (labelLength) : (this->hotkey_spacing);
+                    ImGui::SameLine(this->hotkey_spacing);
+
+                    ImGui::Text(keycode.c_str());
+                    ImGui::Separator();
+                }
             }
         }
     });
+}
+
+
+/**
+ * GUIRenderer<M, C>::drawConsoleWindowCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawConsoleWindowCallback(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui::Text("Under construction ...");
+}
+
+
+/**
+ * GUIRenderer<M, C>::drawFpsWindowCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (ImGui::RadioButton("fps", (this->fps_ms_mode == 0))) {
+        this->fps_ms_mode = 0;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("ms", (this->fps_ms_mode == 1))) {
+        this->fps_ms_mode = 1;
+    }
+
+    // Default for this->fps_ms_mode == 0
+    std::string label = "Frames per Second";
+    std::vector<float>* arr = &this->fps_values;
+    float val_scale = this->fps_value_scale;
+    if (this->fps_ms_mode == 1) {
+        label = "Milliseconds per Frame";
+        arr = &this->ms_values;
+        val_scale = this->ms_value_scale;
+    }
+    float* data = arr->data();
+    int count = (int)arr->size();
+
+    std::string val;
+    if (!arr->empty()) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(2); //<< std::setw(7)
+        stream << arr->back();
+        val = stream.str();
+    }
+    ImGui::PlotHistogram(label.c_str(), data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50));
+
+    std::stringstream float_stream;
+    float_stream << "%." << this->float_prec << "f";
+    std::string float_format = float_stream.str();
+    if (ImGui::InputFloat(
+            "Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+        this->fps_values.clear();
+        this->ms_values.clear();
+    }
+
+    ImGui::InputInt("Last Value Count", &(int)this->max_value_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+
+    if (ImGui::Button("Current Value")) {
+        ImGui::SetClipboardText(val.c_str());
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("All Values")) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(2); //<< std::setw(7)
+
+        for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != (*arr).rend(); ++i) {
+            stream << (*i) << "\n";
+        }
+
+        ImGui::SetClipboardText(stream.str().c_str());
+    }
+    ImGui::SameLine(220.0f);
+    ImGui::Text("Copy to Clipborad");
 }
 
 
@@ -821,41 +949,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
 
 
 /**
- * GUIRenderer<M, C>::drawFpsWindowCallback
- */
-template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) {
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    std::string fps;
-    if (!this->fps_values.empty()) {
-        std::stringstream fps_stream;
-        fps_stream << std::fixed << std::setprecision(2) //<< std::setw(7)
-                   << this->fps_values.back();
-        fps = fps_stream.str();
-    }
-
-    ImGui::PlotHistogram("fps", this->fps_values.data(), (int)this->fps_values.size(), 0, fps.c_str(), 0.0f,
-        this->fps_value_scale, ImVec2(0, 100));
-
-    // std::string label = this->fps_string;
-    // label.append(" fps");
-    // if (ImGui::Button(label.c_str())) {
-    //    ImGui::SetClipboardText(fps_string.c_str());
-    //}
-    // this->toolTip("Copy to Clipboard");
-}
-
-
-/**
  * GUIRenderer<M, C>::drawWindow
  */
 template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
 
-    if (win.open) {
+    if (win.show) {
         ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowBgAlpha(1.0f);
-        ImGui::Begin(win.label.c_str(), &win.open, win.flags);
+        ImGui::Begin(win.label.c_str(), &win.show, win.flags);
 
         (this->*win.func)();
 
@@ -873,7 +974,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // File
     if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("Exit", "Alt + F4, 'q', Esc")) {
+        if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             this->shutdown();
         }
         ImGui::EndMenu();
@@ -882,9 +983,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     // Windows
     if (ImGui::BeginMenu("Windows")) {
         for (auto& win : this->windows) {
-            bool win_open = win.open;
-            if (ImGui::MenuItem(win.label.c_str(), win.hotkey_str.c_str(), &win_open)) {
-                win.open = !win.open;
+            bool win_open = win.show;
+            auto keycode = core::view::KeyCode(win.hotkey);
+            if (ImGui::MenuItem(win.label.c_str(), keycode.ToString().c_str(), &win_open)) {
+                win.show = !win.show;
             }
         }
         ImGui::EndMenu();
@@ -896,7 +998,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
-        const std::string hint = "Copy Link to Clipboard";
+        const std::string hint = "Copy Link";
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
@@ -941,10 +1043,17 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 template <class M, class C>
 void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
 
+    ImGuiIO& io = ImGui::GetIO();
+
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         std::string label = slot.Name().PeekBuffer();
         std::string desc = slot.Description().PeekBuffer();
+
+        std::stringstream float_stream;
+        float_stream << "%." << this->float_prec << "f";
+        std::string float_format = float_stream.str();
+
         if (auto* p = slot.Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -961,14 +1070,18 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.Param<core::param::ColorParam>()) {
             core::param::ColorParam::ColorType value = p->Value();
-            auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
-            if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
-                p->SetValue(value);
-            }
+
             std::string color_param_help = "[Click] on the colored square to open a color picker.\n"
                                            "[CTRL+click] on individual component to input value.\n"
                                            "[Right-click] on the individual color widget to show options.";
             this->helpMarkerToolTip(color_param_help);
+            ImGui::SameLine();
+
+            auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
+            if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
+                p->SetValue(value);
+            }
+
         } else if (auto* p = slot.Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1004,52 +1117,113 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.Param<core::param::FloatParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat(label.c_str(), &value)) {
+            if (ImGui::InputFloat(
+                    label.c_str(), &value, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.Param<core::param::IntParam>()) {
             auto value = p->Value();
-            if (ImGui::InputInt(label.c_str(), &value)) {
+            if (ImGui::InputInt(label.c_str(), &value, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.Param<core::param::Vector2fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat2(label.c_str(), value.PeekComponents())) {
+            if (ImGui::InputFloat2(label.c_str(), value.PeekComponents(), float_format.c_str(),
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.Param<core::param::Vector3fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat3(label.c_str(), value.PeekComponents())) {
+            if (ImGui::InputFloat3(label.c_str(), value.PeekComponents(), float_format.c_str(),
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.Param<core::param::Vector4fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat4(label.c_str(), value.PeekComponents())) {
+            if (ImGui::InputFloat4(label.c_str(), value.PeekComponents(), float_format.c_str(),
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
+
+            std::string string_param_help = "Press [Return] to confirm changes.";
+            this->helpMarkerToolTip(string_param_help);
+            ImGui::SameLine();
+
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
 
             size_t bufferLength = std::min(4096, (valueString.Length() + 1) * 2);
             char* buffer = new char[bufferLength];
-            memcpy(buffer, valueString, valueString.Length() + 1);
+            memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
 
             if (ImGui::InputText(
                     slot.Name().PeekBuffer(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
                 param->ParseValue(valueString);
             }
-
-            std::string string_param_help = "Press [Return] to confirm changes.";
-            this->helpMarkerToolTip(string_param_help);
-
             delete[] buffer;
         }
 
-        std::string tooltip_label = "[DESC]";
-        this->helpMarkerToolTip(desc, tooltip_label);
+        if (io.KeyAlt) {
+            this->toolTip(desc);
+        }
+    }
+}
+
+
+/**
+ * GUIRenderer<M, C>::updateFps
+ */
+template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    this->current_delay += io.DeltaTime;
+    if (this->current_delay >= this->max_delay) {
+
+        const float scale_fac = 1.5f;
+
+        size_t size = this->fps_values.size();
+        if (size != this->max_value_count) {
+            if (size > this->max_value_count) {
+                this->fps_values.erase(
+                    this->fps_values.begin(), this->fps_values.begin() + (size - this->max_value_count));
+            } else if (size < this->max_value_count) {
+                this->fps_values.insert(this->fps_values.begin(), (this->max_value_count - size), 0.0f);
+            }
+        }
+        if (size > 0) {
+            this->fps_values.erase(this->fps_values.begin());
+            this->fps_values.push_back(io.Framerate);
+            float value_max = 0.0f;
+            for (auto& v : this->fps_values) {
+                value_max = (v > value_max) ? (v) : (value_max);
+            }
+            this->fps_value_scale = value_max * scale_fac;
+        }
+
+        size = this->ms_values.size();
+        if (size != this->max_value_count) {
+            if (size > this->max_value_count) {
+                this->ms_values.erase(
+                    this->ms_values.begin(), this->ms_values.begin() + (size - this->max_value_count));
+            } else if (size < this->max_value_count) {
+                this->ms_values.insert(this->ms_values.begin(), (this->max_value_count - size), 0.0f);
+            }
+        }
+        if (size > 0) {
+            this->ms_values.erase(this->ms_values.begin());
+            this->ms_values.push_back(io.DeltaTime * 1000.0f); // scale to milliseconds
+            float value_max = 0.0f;
+            for (auto& v : this->ms_values) {
+                value_max = (v > value_max) ? (v) : (value_max);
+            }
+            this->ms_value_scale = value_max * scale_fac;
+        }
+
+        this->current_delay = 0.0f;
     }
 }
 
@@ -1072,9 +1246,8 @@ template <class M, class C> void GUIRenderer<M, C>::toolTip(std::string desc) {
 /**
  * GUIRenderer<M, C>::helpMarkerToolTip
  */
-template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string desc, std::string label = "(?)") {
+template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string desc, std::string label) {
 
-    ImGui::SameLine();
     ImGui::TextDisabled(label.c_str());
     this->toolTip(desc);
 }
@@ -1091,6 +1264,6 @@ template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
 
 
 } // namespace gui
-} // end namespace megamol
+} // namespace megamol
 
 #endif // MEGAMOL_GUI_GUIRENDERER_H_INCLUDED
