@@ -16,7 +16,6 @@ template <class T> megamol::core::thecam::rotate_manipulator<T>::~rotate_manipul
 template<class T>
 void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle) {
     if (this->enabled()) {
-        // TODO make it correct
         auto cam = this->camera();
         quaternion_type rotquat;
         auto right = cam->right_vector();
@@ -31,7 +30,6 @@ void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle)
 template<class T>
 void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
     if (this->enabled()) {
-        // TODO make it correct
         auto cam = this->camera();
         quaternion_type rotquat;
         auto up = cam->up_vector();
@@ -46,7 +44,6 @@ void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
 template<class T>
 void megamol::core::thecam::rotate_manipulator<T>::roll(const world_type angle) {
     if (this->enabled()) {
-        // TODO make it correct
         auto cam = this->camera();
         quaternion_type rotquat;
         auto dir = cam->view_vector();
