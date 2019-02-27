@@ -8,8 +8,11 @@
 #ifndef MEGAMOLCORE_BOUNDINGBOXRENDERER_H_INCLUDED
 #define MEGAMOLCORE_BOUNDINGBOXRENDERER_H_INCLUDED
 
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/nextgen/Renderer3DModule_2.h"
+#include "mmcore/view/RendererModule.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
@@ -18,8 +21,10 @@ namespace nextgen {
 
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
+ * This is a special renderer without the typical structure of other renderers, since it does not inherit from 
+ * Renderer3DModule_2.
  */
-class MEGAMOLCORE_API BoundingBoxRenderer : public Renderer3DModule_2 {
+class MEGAMOLCORE_API BoundingBoxRenderer : public view::RendererModule<CallRender3D_2> {
 public:
     /**
      * Answer the name of this module.
@@ -63,30 +68,47 @@ protected:
 
 private:
     /**
-     * The get extents callback. The module should set the members of
+     * The chained get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
+     * and times). This version of the method calls the respective method of alle chained renderers
      *
      * @param call The calling call.
+     *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::nextgen::CallRender3D_2& call);
+    virtual bool GetExtentsChain(core::nextgen::CallRender3D_2& call) override final;
+
+    /** Needed override that never gets actually calleds */
+    virtual bool GetExtents(core::nextgen::CallRender3D_2& call) override;
 
     /**
-     * The Open GL Render callback.
+     * The callback that triggers the rendering of all chained render modules
+     * as well as the own rendering
      *
      * @param call The calling call.
-     * @return The return value of the function.
+     *
+     * @return True on success, false otherwise
      */
-    virtual bool Render(core::nextgen::CallRender3D_2& call);
+    virtual bool RenderChain(core::nextgen::CallRender3D_2& call) override final;
+
+    /** Needed override that never gets actually called */
+    virtual bool Render(core::nextgen::CallRender3D_2& call) override final;
 
     /**
-     * Render function for the bounding box
+     * Render function for the bounding box front
      *
      * @param call The incoming render call
      * @return True on success, false otherwise.
      */
-    bool RenderBoundingBox(core::nextgen::CallRender3D_2& call);
+    bool RenderBoundingBoxFront(core::nextgen::CallRender3D_2& call);
+
+    /**
+     * Render function for the bounding box back
+     *
+     * @param call The incoming render call
+     * @return True on success, false otherwise.
+     */
+    bool RenderBoundingBoxBack(core::nextgen::CallRender3D_2& call);
 
     /**
      * Render function for the view cube

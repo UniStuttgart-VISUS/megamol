@@ -55,6 +55,7 @@ protected:
      */
     virtual bool Render(CallRender3D_2& call) = 0;
 
+private:
     /**
      * The chained get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
@@ -77,7 +78,6 @@ protected:
     virtual bool RenderChain(CallRender3D_2& call) override final;
 
     // TODO events
-
 };
 
 } // namespace nextgen
