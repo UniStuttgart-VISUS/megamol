@@ -482,6 +482,8 @@ bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
     tfd->SetDataHash(this->dataHash);
     tfd->SetUnlocker(nullptr);
 
+    tfd->SetFrameCount(1);
+    tfd->SetFrameID(0);
     return true;
 }
 

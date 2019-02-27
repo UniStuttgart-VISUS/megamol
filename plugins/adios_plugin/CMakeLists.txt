@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
   option(USE_EXTERNAL_ADIOS "Option to externally include ADIOS2" ON)
   if (USE_EXTERNAL_ADIOS)
@@ -60,9 +60,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   if(USE_EXTERNAL_ADIOS)
-    target_link_libraries(${PROJECT_NAME} PRIVATE core adios2::adios2)
+    target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools adios2::adios2)
   else()
-    target_link_libraries(${PROJECT_NAME} PRIVATE core adios2)
+    target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools adios2)
   endif()
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
