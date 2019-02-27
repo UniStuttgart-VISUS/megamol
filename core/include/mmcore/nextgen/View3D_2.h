@@ -232,6 +232,11 @@ protected:
 
     bool onToggleButton(param::ParamSlot& p);
 
+    /*
+     * Performs the actual camera movement based on the pressed keys
+     */
+    void handleCameraMovement(void);
+
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */

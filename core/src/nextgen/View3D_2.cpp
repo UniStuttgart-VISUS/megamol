@@ -322,6 +322,8 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
         cr3d->SetMouseSelection(this->toggleMouseSelection);
     }
 
+    this->handleCameraMovement();
+
     AbstractRenderingView::beginFrame();
 
     // TODO Conditionally synchronise camera from somewhere else.
@@ -550,73 +552,19 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         this->pressedKeyMap[key] = false;
     }
 
+    auto down = action == view::KeyAction::PRESS;
+    if (mods.test(view::Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    }
+    else if (mods.test(view::Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    }
+    else if (mods.test(view::Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
     auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
-
-    float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
-    const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
-    if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
-        step *= runFactor;
-    }
-
-    float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
-
-    bool movementDetected = false;
-    if (mods.none()) {
-        if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
-            this->translateManipulator.move_forward(step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_S) > 0 && this->pressedKeyMap[view::Key::KEY_S]) {
-            this->translateManipulator.move_forward(-step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_A) > 0 && this->pressedKeyMap[view::Key::KEY_A]) {
-            this->translateManipulator.move_horizontally(-step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_D) > 0 && this->pressedKeyMap[view::Key::KEY_D]) {
-            this->translateManipulator.move_horizontally(step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_C) > 0 && this->pressedKeyMap[view::Key::KEY_C]) {
-            this->translateManipulator.move_vertically(step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_V) > 0 && this->pressedKeyMap[view::Key::KEY_V]) {
-            this->translateManipulator.move_vertically(-step);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_Q) > 0 && this->pressedKeyMap[view::Key::KEY_Q]) {
-            this->rotateManipulator.roll(-rotationStep);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_E) > 0 && this->pressedKeyMap[view::Key::KEY_E]) {
-            this->rotateManipulator.roll(rotationStep);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_UP) > 0 && this->pressedKeyMap[view::Key::KEY_UP]) {
-            this->rotateManipulator.pitch(-rotationStep);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_DOWN) > 0 && this->pressedKeyMap[view::Key::KEY_DOWN]) {
-            this->rotateManipulator.pitch(rotationStep);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_LEFT) > 0 && this->pressedKeyMap[view::Key::KEY_LEFT]) {
-            this->rotateManipulator.yaw(rotationStep);
-            movementDetected = true;
-        }
-        if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
-            this->rotateManipulator.yaw(-rotationStep);
-            movementDetected = true;
-        }
-    }
-
-    // do not propagate events if the key was used to move the camera
-    if (movementDetected) {
-        return true;
-    }
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Key;
@@ -866,4 +814,60 @@ bool View3D_2::onResetView(param::ParamSlot& p) {
 bool View3D_2::onToggleButton(param::ParamSlot& p) {
     // TODO implement
     return true;
+}
+
+/*
+ * View3D_2::handleCameraMovement
+ */
+void View3D_2::handleCameraMovement(void) {
+    float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+    const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
+    if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
+        step *= runFactor;
+    }
+
+    bool anymodpressed = this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT) ||
+                         this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT) ||
+                         this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL);
+
+    float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
+
+    if (!(this->arcballDefault ^ this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT))) {
+        if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
+            this->translateManipulator.move_forward(step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_S) > 0 && this->pressedKeyMap[view::Key::KEY_S]) {
+            this->translateManipulator.move_forward(-step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_A) > 0 && this->pressedKeyMap[view::Key::KEY_A]) {
+            this->translateManipulator.move_horizontally(-step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_D) > 0 && this->pressedKeyMap[view::Key::KEY_D]) {
+            this->translateManipulator.move_horizontally(step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_C) > 0 && this->pressedKeyMap[view::Key::KEY_C]) {
+            this->translateManipulator.move_vertically(step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_V) > 0 && this->pressedKeyMap[view::Key::KEY_V]) {
+            this->translateManipulator.move_vertically(-step);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_Q) > 0 && this->pressedKeyMap[view::Key::KEY_Q]) {
+            this->rotateManipulator.roll(-rotationStep);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_E) > 0 && this->pressedKeyMap[view::Key::KEY_E]) {
+            this->rotateManipulator.roll(rotationStep);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_UP) > 0 && this->pressedKeyMap[view::Key::KEY_UP]) {
+            this->rotateManipulator.pitch(-rotationStep);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_DOWN) > 0 && this->pressedKeyMap[view::Key::KEY_DOWN]) {
+            this->rotateManipulator.pitch(rotationStep);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_LEFT) > 0 && this->pressedKeyMap[view::Key::KEY_LEFT]) {
+            this->rotateManipulator.yaw(rotationStep);
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
+            this->rotateManipulator.yaw(-rotationStep);
+        }
+    }
 }
