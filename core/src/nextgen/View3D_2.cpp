@@ -411,7 +411,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
             this->bboxs = cr3d->AccessBoundingBoxes();
             glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
             this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
-            
+
 
             if (this->firstImg) {
                 this->ResetView();
@@ -544,6 +544,12 @@ void View3D_2::UpdateFreeze(bool freeze) {
  * View3D_2::OnKey
  */
 bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+    if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
+        this->pressedKeyMap[key] = true;
+    } else if (action == view::KeyAction::RELEASE) {
+        this->pressedKeyMap[key] = false;
+    }
+
     auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
 
@@ -557,44 +563,51 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
 
     bool movementDetected = false;
     if (mods.none()) {
-        if (key == view::Key::KEY_W && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_S && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_S) > 0 && this->pressedKeyMap[view::Key::KEY_S]) {
             this->translateManipulator.move_forward(-step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_A && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_A) > 0 && this->pressedKeyMap[view::Key::KEY_A]) {
             this->translateManipulator.move_horizontally(-step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_D && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_D) > 0 && this->pressedKeyMap[view::Key::KEY_D]) {
             this->translateManipulator.move_horizontally(step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_C && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_C) > 0 && this->pressedKeyMap[view::Key::KEY_C]) {
             this->translateManipulator.move_vertically(step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_V && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_V) > 0 && this->pressedKeyMap[view::Key::KEY_V]) {
             this->translateManipulator.move_vertically(-step);
             movementDetected = true;
-        } else if (key == view::Key::KEY_Q && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
-            this->rotateManipulator.roll(rotationStep);
-            movementDetected = true;
-        } else if (key == view::Key::KEY_E && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_Q) > 0 && this->pressedKeyMap[view::Key::KEY_Q]) {
             this->rotateManipulator.roll(-rotationStep);
             movementDetected = true;
-        } else if (key == view::Key::KEY_UP &&
-                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_E) > 0 && this->pressedKeyMap[view::Key::KEY_E]) {
+            this->rotateManipulator.roll(rotationStep);
+            movementDetected = true;
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_UP) > 0 && this->pressedKeyMap[view::Key::KEY_UP]) {
             this->rotateManipulator.pitch(-rotationStep);
             movementDetected = true;
-        } else if (key == view::Key::KEY_DOWN &&
-                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_DOWN) > 0 && this->pressedKeyMap[view::Key::KEY_DOWN]) {
             this->rotateManipulator.pitch(rotationStep);
             movementDetected = true;
-        } else if (key == view::Key::KEY_LEFT &&
-                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_LEFT) > 0 && this->pressedKeyMap[view::Key::KEY_LEFT]) {
             this->rotateManipulator.yaw(rotationStep);
             movementDetected = true;
-        } else if (key == view::Key::KEY_RIGHT &&
-                   (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
+        }
+        if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
             this->rotateManipulator.yaw(-rotationStep);
             movementDetected = true;
         }
@@ -636,6 +649,12 @@ bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
  * View3D_2::OnMouseButton
  */
 bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+    if (action == view::MouseButtonAction::PRESS) {
+        this->pressedMouseMap[button] = true;
+    } else if (action == view::MouseButtonAction::RELEASE) {
+        this->pressedMouseMap[button] = false;
+    }
+
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
     if (mods.test(view::Modifier::SHIFT)) {
@@ -646,18 +665,20 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
+    bool altPressed = mods.test(view::Modifier::ALT);
+
     if (!this->toggleMouseSelection) {
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
             this->cursor2d.SetButtonState(0, down);
-            if (action == view::MouseButtonAction::PRESS) {
+            if (action == view::MouseButtonAction::PRESS && (altPressed ^ this->arcballDefault)) {
                 if (!this->arcballManipulator.manipulating()) {
                     glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
                     this->arcballManipulator.on_drag_start(this->cursor2d.X(), this->cursor2d.Y());
                 }
-            } else if (action == view::MouseButtonAction::RELEASE) {
+            } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
                 this->arcballManipulator.on_drag_stop();
             }
             break;
@@ -763,6 +784,28 @@ bool View3D_2::create(void) {
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
         return false;
+    }
+
+    mmcValueType wpType;
+    this->arcballDefault = false;
+    auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T("arcball"), &wpType);
+    if (value != nullptr) {
+        try {
+            switch (wpType) {
+            case MMC_TYPE_BOOL:
+                this->arcballDefault = *static_cast<const bool*>(value);
+                break;
+
+            case MMC_TYPE_CSTR:
+                this->arcballDefault = vislib::CharTraitsA::ParseBool(static_cast<const char*>(value));
+                break;
+
+            case MMC_TYPE_WSTR:
+                this->arcballDefault = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(value));
+                break;
+            }
+        } catch (...) {
+        }
     }
 
     // TODO implement

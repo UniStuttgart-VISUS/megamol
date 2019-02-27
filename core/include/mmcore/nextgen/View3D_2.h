@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
+#include <map>
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -371,6 +372,15 @@ protected:
 
     /** Shader program for lines */
     vislib::graphics::gl::GLSLShader lineShader;
+
+    /** Map storing the pressed state of all keyboard buttons */
+    std::map<view::Key, bool> pressedKeyMap;
+
+    /** Map storing the pressed state of all mouse buttons */
+    std::map<view::MouseButton, bool> pressedMouseMap;
+
+    /** Flag determining whether the arcball is the default steering method of the camera */
+    bool arcballDefault;
 };
 
 } // namespace nextgen
