@@ -576,10 +576,10 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
             this->translateManipulator.move_vertically(-step);
             movementDetected = true;
         } else if (key == view::Key::KEY_Q && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
-            this->rotateManipulator.roll(-rotationStep);
+            this->rotateManipulator.roll(rotationStep);
             movementDetected = true;
         } else if (key == view::Key::KEY_E && (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
-            this->rotateManipulator.roll(rotationStep);
+            this->rotateManipulator.roll(-rotationStep);
             movementDetected = true;
         } else if (key == view::Key::KEY_UP &&
                    (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
@@ -591,11 +591,11 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
             movementDetected = true;
         } else if (key == view::Key::KEY_LEFT &&
                    (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
-            this->rotateManipulator.yaw(-rotationStep);
+            this->rotateManipulator.yaw(rotationStep);
             movementDetected = true;
         } else if (key == view::Key::KEY_RIGHT &&
                    (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT)) {
-            this->rotateManipulator.yaw(rotationStep);
+            this->rotateManipulator.yaw(-rotationStep);
             movementDetected = true;
         }
     }
