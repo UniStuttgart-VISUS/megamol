@@ -253,6 +253,24 @@ inline Modifiers operator^(Modifiers lhs, Modifiers rhs) {
     return (ans ^= rhs);
 }
 
+inline Modifiers operator|(Modifier lhs, Modifier rhs) {
+    Modifiers ansl(lhs);
+    Modifiers ansr(rhs);
+    return (ansl |= ansr);
+}
+
+inline Modifiers operator&(Modifier lhs, Modifier rhs) {
+    Modifiers ansl(lhs);
+    Modifiers ansr(rhs);
+    return (ansl &= ansr);
+}
+
+inline Modifiers operator^(Modifier lhs, Modifier rhs) {
+    Modifiers ansl(lhs);
+    Modifiers ansr(rhs);
+    return (ansl ^= ansr);
+}
+
 
 class  KeyCode {
 public:

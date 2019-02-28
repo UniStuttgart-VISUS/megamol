@@ -59,13 +59,6 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
-#include <filesystem> // directory_iterator
-#if _HAS_CXX17
-namespace ns_fs = std::filesystem;
-#else
-namespace ns_fs = std::experimental::filesystem;
-#endif
-
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 
@@ -202,7 +195,7 @@ private:
      */
     void drawFontSelectionWindowCallback(void);
 
-    // ------------------------------------------------------------------------
+    // ---------------------------------
 
     /**
      * Draws the menu bar.
@@ -243,8 +236,6 @@ private:
      * Update fps and ms value arrays.
      */
     void updateFps(void);
-
-    // ------------------------------------------------------------------------
 
     /**
      * Shutdown megmol core.
@@ -345,7 +336,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.label = "MegaMol";
     tmp_win.show = true;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar;
+    tmp_win.flags = ImGuiWindowFlags_MenuBar; // | ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     this->windows.push_back(tmp_win);
 
@@ -392,23 +383,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImFontConfig config;
     config.OversampleH = 4;
     config.OversampleV = 1;
-    const vislib::Array<vislib::StringW>& searchPaths = this->GetCoreInstance()->Configuration().ResourceDirectories();
-    for (int i = 0; i < searchPaths.Count(); ++i) {
-        for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
-            if (entry.path().extension().generic_string() == ext) {
-                std::string file_path = entry.path().generic_string();
-                std::string file_name = entry.path().filename().generic_string();
-                if (file_name == "Proggy_Tiny.ttf") {
-                    font_size = 10.0f;
-                } else if (file_name == "Roboto_Regular.ttf") {
-                    font_size = 17.0f;
-                } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
-                    font_size = 15.0f;
-                }
-                io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
-            }
-        }
-    }
+
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -450,7 +425,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
 
     // Init OpenGL for ImGui --------------------------------------------------
-    const char* glsl_version = "#version 150";
+    const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     return true;
@@ -544,7 +519,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
         if (!param.IsNull()) {
-            if (auto* p = slot.Param<core::param::ButtonParam>()) {
+            if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                 auto keyCode = p->GetKeyCode();
                 hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
                                 (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
@@ -608,7 +583,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
         ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-        if (cr == NULL) return false;
+        if (cr == nullptr) return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseMove;
@@ -638,7 +613,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
         ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-        if (cr == NULL) return false;
+        if (cr == nullptr) return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseButton;
@@ -666,7 +641,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
         ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-        if (cr == NULL) return false;
+        if (cr == nullptr) return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseScroll;
@@ -688,7 +663,7 @@ inline bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>:
     core::view::CallRender2D& call) {
 
     auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender2D>();
-    if (cr != NULL) {
+    if (cr != nullptr) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
             call = (*cr);
@@ -709,7 +684,7 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
     core::view::CallRender3D& call) {
 
     auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender3D>();
-    if (cr != NULL) {
+    if (cr != nullptr) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
             call = (*cr);
@@ -730,7 +705,7 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-    if (cr != NULL) {
+    if (cr != nullptr) {
         (*cr) = call;
         if ((*cr)(core::view::AbstractCallRender::FnRender)) {
             call = (*cr);
@@ -881,7 +856,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
         std::string help = "Changes clear all values";
         this->helpMarkerToolTip(help);
 
-        ImGui::InputInt("Stored Values Count", &(int)this->max_value_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+        int val_count = (int)this->max_value_count;
+        ImGui::InputInt("Stored Values Count", &val_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
 
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
@@ -1031,12 +1007,12 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
 
-        if (auto* p = slot.Param<core::param::BoolParam>()) {
+        if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::ButtonParam>()) {
+        } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             std::string hotkeyLabel(label.c_str());
             hotkeyLabel += " (";
             hotkeyLabel += p->GetKeyCode().ToString();
@@ -1045,7 +1021,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (ImGui::Button(hotkeyLabel.c_str())) {
                 p->setDirty();
             }
-        } else if (auto* p = slot.Param<core::param::ColorParam>()) {
+        } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
             core::param::ColorParam::ColorType value = p->Value();
             auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
             if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
@@ -1055,7 +1031,8 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                                "[CTRL+Click] on individual component to input value.\n"
                                "[Right-Click] on the individual color widget to show options.";
             this->helpMarkerToolTip(help);
-        } else if (auto* p = slot.Param<core::param::EnumParam>()) {
+
+        } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
             auto key = p->Value();
@@ -1073,7 +1050,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 }
                 ImGui::EndCombo();
             }
-        } else if (auto* p = slot.Param<core::param::FlexEnumParam>()) {
+        } else if (auto* p = slot.template Param<core::param::FlexEnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto value = p->Value();
             if (ImGui::BeginCombo(label.c_str(), value.c_str())) {
@@ -1088,30 +1065,30 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 }
                 ImGui::EndCombo();
             }
-        } else if (auto* p = slot.Param<core::param::FloatParam>()) {
+        } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
             auto value = p->Value();
             if (ImGui::InputFloat(
                     label.c_str(), &value, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::IntParam>()) {
+        } else if (auto* p = slot.template Param<core::param::IntParam>()) {
             auto value = p->Value();
             if (ImGui::InputInt(label.c_str(), &value, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::Vector2fParam>()) {
+        } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
             auto value = p->Value();
             if (ImGui::InputFloat2(label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::Vector3fParam>()) {
+        } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
             auto value = p->Value();
             if (ImGui::InputFloat3(label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::Vector4fParam>()) {
+        } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
             auto value = p->Value();
             if (ImGui::InputFloat4(label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -1136,7 +1113,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             delete[] buffer;
         }
 
-        this->contextToolTip(desc, label);
+        // this->contextToolTip(desc, label);
     }
 }
 
@@ -1149,7 +1126,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
 
     auto param = slot.Parameter();
     if (!param.IsNull()) {
-        if (auto* p = slot.Param<core::param::ButtonParam>()) {
+        if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             auto label = std::string(slot.Name().PeekBuffer());
             std::string desc = "Description: ";
             desc += slot.Description().PeekBuffer();
