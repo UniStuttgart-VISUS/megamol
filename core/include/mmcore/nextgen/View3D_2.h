@@ -272,9 +272,6 @@ protected:
     /** flag whether or not the light is a camera relative light */
     bool isCamLight;
 
-    /** Bool flag showing the bounding box */
-    param::ParamSlot showBBox;
-
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
 
@@ -340,15 +337,7 @@ protected:
     /** The point around which the view will be roateted */
     param::ParamSlot viewKeyRotPointSlot;
 
-    param::ParamSlot toggleBBoxSlot;
-
     param::ParamSlot hookOnChangeOnlySlot;
-
-    /** The colour of the bounding box */
-    float bboxCol[4];
-
-    /** Parameter slot for the bounding box colour */
-    param::ParamSlot bboxColSlot;
 
     /** Enable selecting mode of mouse (disables camera movement) */
     param::ParamSlot enableMouseSelectionSlot;

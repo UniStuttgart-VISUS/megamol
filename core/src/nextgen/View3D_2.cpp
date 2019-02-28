@@ -55,7 +55,6 @@ View3D_2::View3D_2(void)
     , lightDir(0.5f, -1.0f, -1.0f)
     , isCamLight(true)
     , bboxs()
-    , showBBox("showBBox", "Bool parameter to show/hide the bounding box")
     , showLookAt("showLookAt", "Flag showing the look at point")
     , cameraSettingsSlot("camsettings", "The stored camera settings")
     , storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings")
@@ -75,9 +74,6 @@ View3D_2::View3D_2(void)
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
-    , toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
-    , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
-    , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
@@ -106,9 +102,6 @@ View3D_2::View3D_2(void)
 
     // this triggers the initialization
     this->bboxs.Clear();
-
-    this->showBBox.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->showBBox);
 
     this->showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showLookAt);
@@ -180,20 +173,12 @@ View3D_2::View3D_2(void)
     this->viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    this->toggleBBoxSlot.SetParameter(new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT));
-    this->toggleBBoxSlot.SetUpdateCallback(&View3D_2::onToggleButton);
-    this->MakeSlotAvailable(&this->toggleBBoxSlot);
-
     this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_TAB));
     this->enableMouseSelectionSlot.SetUpdateCallback(&View3D_2::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
     this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
-
-    this->bboxColSlot.SetParameter(new param::StringParam(
-        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3])));
-    this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->showViewCubeSlot);
