@@ -17,6 +17,7 @@
 #include "PathColor.h"
 #include "PathDMD.h"
 #include "PathFilter.h"
+#include "PathIColSplice.h"
 #include "PathPCA.h"
 #include "PathsToLines.h"
 
@@ -55,6 +56,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathPCA>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathColor>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathClustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathIColSplice>();
         //
         // TODO: Register your plugin's modules here
         // like:
