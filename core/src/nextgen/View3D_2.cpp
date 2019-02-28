@@ -166,7 +166,7 @@ View3D_2::View3D_2(void)
     this->viewKeyRunFactorSlot.SetParameter(new param::FloatParam(2.0f, 0.1f));
     this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
 
-    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(0.5f, 0.001f, 360.0f));
+    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(1.0f, 0.001f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
@@ -497,11 +497,9 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
     auto down = action == view::KeyAction::PRESS;
     if (mods.test(view::Modifier::SHIFT)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    }
-    else if (mods.test(view::Modifier::CTRL)) {
+    } else if (mods.test(view::Modifier::CTRL)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    }
-    else if (mods.test(view::Modifier::ALT)) {
+    } else if (mods.test(view::Modifier::ALT)) {
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
@@ -756,6 +754,12 @@ void View3D_2::handleCameraMovement(void) {
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
 
     if (!(this->arcballDefault ^ this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT))) {
+        auto resolution = this->cam.resolution_gate();
+        glm::vec2 midpoint(resolution.width() / 2.0f, resolution.height() / 2.0f);
+        glm::vec2 mouseDirection = glm::vec2(this->mouseX, this->mouseY) - midpoint;
+        mouseDirection.x = -mouseDirection.x;
+        mouseDirection /= midpoint;
+
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
         }
@@ -791,6 +795,11 @@ void View3D_2::handleCameraMovement(void) {
         }
         if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
             this->rotateManipulator.yaw(-rotationStep);
+        }
+
+        if (this->pressedMouseMap.count(view::MouseButton::BUTTON_LEFT) > 0 && this->pressedMouseMap[view::MouseButton::BUTTON_LEFT]) {
+            this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
+            this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
         }
     }
 }
