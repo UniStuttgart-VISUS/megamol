@@ -34,7 +34,6 @@
 #include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/graphicstypes.h"
@@ -374,9 +373,6 @@ protected:
 
     /** Flag whether mouse control is to be handed over to the renderer */
     bool toggleMouseSelection;
-
-    /** Shader program for lines */
-    vislib::graphics::gl::GLSLShader lineShader;
 
     /** Map storing the pressed state of all keyboard buttons */
     std::map<view::Key, bool> pressedKeyMap;

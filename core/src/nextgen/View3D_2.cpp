@@ -180,59 +180,6 @@ View3D_2::View3D_2(void)
     this->viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    /*this->viewKeyRotLeftSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_LEFT));
-    this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
-
-    this->viewKeyRotRightSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_RIGHT));
-    this->viewKeyRotRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
-
-    this->viewKeyRotUpSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_UP));
-    this->viewKeyRotUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
-
-    this->viewKeyRotDownSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_DOWN));
-    this->viewKeyRotDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
-
-    this->viewKeyRollLeftSlot.SetParameter(new param::ButtonParam('q'));
-    this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
-
-    this->viewKeyRollRightSlot.SetParameter(new param::ButtonParam('e'));
-    this->viewKeyRollRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
-
-    this->viewKeyZoomInSlot.SetParameter(new param::ButtonParam(KeyCode('w')));
-    this->viewKeyZoomInSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
-
-    this->viewKeyZoomOutSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT));
-    this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
-
-    this->viewKeyMoveLeftSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
-    this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
-
-    this->viewKeyMoveRightSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
-    this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
-
-    this->viewKeyMoveUpSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
-    this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
-
-    this->viewKeyMoveDownSlot.SetParameter(
-        new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT));
-    this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D_2::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);*/
-
     this->toggleBBoxSlot.SetParameter(new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT));
     this->toggleBBoxSlot.SetUpdateCallback(&View3D_2::onToggleButton);
     this->MakeSlotAvailable(&this->toggleBBoxSlot);
@@ -710,25 +657,6 @@ void View3D_2::unpackMouseCoordinates(float& x, float& y) {
  * View3D_2::create
  */
 bool View3D_2::create(void) {
-    // TODO the vislib shaders have to die a slow and painful death
-    vislib::graphics::gl::ShaderSource lineVertSrc;
-    vislib::graphics::gl::ShaderSource lineFragSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::vertex", lineVertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("lines::fragment", lineFragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
-    }
-    try {
-        if (!this->lineShader.Create(
-                lineVertSrc.Code(), lineVertSrc.Count(), lineFragSrc.Code(), lineFragSrc.Count())) {
-            throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
-        return false;
-    }
-
     mmcValueType wpType;
     this->arcballDefault = false;
     auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T("arcball"), &wpType);

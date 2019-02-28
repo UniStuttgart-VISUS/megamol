@@ -9,6 +9,7 @@
 #include "mmcore/nextgen/Renderer3DModule_2.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/view/InputCall.h"
+#include "mmcore/view/AbstractView.h"
 
 using namespace megamol::core;
 using namespace megamol::core::nextgen;
@@ -69,16 +70,11 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
  * Renderer3DModule_2::RenderChain
  */
 bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
-    if (chainedCall != nullptr) {
-        // copy the incoming call to the output
-        *chainedCall = call;
+    auto leftSlotParent = call.PeekCallerSlot()->Parent();
+    std::shared_ptr<const view::AbstractView> viewptr = std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
-        // chain through the render call
-        (*chainedCall)(view::AbstractCallRender::FnRender);
-    } else {
+    if (viewptr != nullptr) {
         // TODO move this behind the fbo magic?
-
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = call.BackgroundColor();
@@ -86,11 +82,19 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    // TODO FBO magic
+    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
 
     if (chainedCall != nullptr) {
+        // copy the incoming call to the output
+        *chainedCall = call;
+
+        // chain through the render call
+        (*chainedCall)(view::AbstractCallRender::FnRender);
+
         call = *chainedCall;
     }
+
+    // TODO FBO magic
 
     // render our own stuff
     this->Render(call);

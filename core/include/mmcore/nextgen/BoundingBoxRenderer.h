@@ -14,6 +14,7 @@
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace core {
@@ -97,10 +98,10 @@ private:
     /**
      * Render function for the bounding box front
      *
-     * @param call The incoming render call
+     * @param call The used mvp matrix
      * @return True on success, false otherwise.
      */
-    bool RenderBoundingBoxFront(core::nextgen::CallRender3D_2& call);
+    bool RenderBoundingBoxFront(const glm::mat4& mvp, const BoundingBoxes_2& bb);
 
     /**
      * Render function for the bounding box back
@@ -108,7 +109,7 @@ private:
      * @param call The incoming render call
      * @return True on success, false otherwise.
      */
-    bool RenderBoundingBoxBack(core::nextgen::CallRender3D_2& call);
+    bool RenderBoundingBoxBack(const glm::mat4& mvp, const BoundingBoxes_2& bb);
 
     /**
      * Render function for the view cube
@@ -130,8 +131,14 @@ private:
     /** Handle of the vertex buffer object */
     GLuint vbo;
 
+    /** Handle of the index buffer object */
+    GLuint ibo;
+
     /** Handle of the vertex array to be rendered */
     GLuint va;
+
+    /** Shader program for lines */
+    vislib::graphics::gl::GLSLShader lineShader;
 };
 } // namespace nextgen
 } // namespace core
