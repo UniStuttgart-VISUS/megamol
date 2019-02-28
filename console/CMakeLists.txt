@@ -88,6 +88,9 @@ if(BUILD_CONSOLE)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
 
+  # install mmconsole executable
+  install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
+
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
       install(TARGETS ${PROJECT_NAME} DESTINATION "bin")

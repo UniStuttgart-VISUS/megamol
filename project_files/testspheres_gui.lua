@@ -1,0 +1,7 @@
+mmCreateView("testspheres", "View3D", "::testview")
+mmCreateModule("GUIRenderer3D", "::gui")
+mmCreateModule("SimpleSphereRenderer", "::rnd")
+mmCreateModule("TestSpheresDataSource", "::dat")
+mmCreateCall("CallRender3D", "::testview::rendering", "::gui::rendering")
+mmCreateCall("CallRender3D", "::gui::decoratedRenderer", "::rnd::rendering")
+mmCreateCall("MultiParticleDataCall", "::rnd::getData", "::dat::getData")

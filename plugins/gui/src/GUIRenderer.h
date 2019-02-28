@@ -59,11 +59,13 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
+#ifdef _WIN32
 #include <filesystem> // directory_iterator
 #if _HAS_CXX17
 namespace ns_fs = std::filesystem;
 #else
 namespace ns_fs = std::experimental::filesystem;
+#endif
 #endif
 
 #include <imgui.h>
@@ -392,6 +394,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImFontConfig config;
     config.OversampleH = 4;
     config.OversampleV = 1;
+#ifdef _WIN32
     const vislib::Array<vislib::StringW>& searchPaths = this->GetCoreInstance()->Configuration().ResourceDirectories();
     for (int i = 0; i < searchPaths.Count(); ++i) {
         for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
@@ -409,7 +412,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
             }
         }
     }
-
+#endif
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
     io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
@@ -450,7 +453,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
 
     // Init OpenGL for ImGui --------------------------------------------------
-    const char* glsl_version = "#version 150";
+    const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     return true;
@@ -544,7 +547,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
         if (!param.IsNull()) {
-            if (auto* p = slot.Param<core::param::ButtonParam>()) {
+	    if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                 auto keyCode = p->GetKeyCode();
                 hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
                                 (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
@@ -881,7 +884,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
         std::string help = "Changes clear all values";
         this->helpMarkerToolTip(help);
 
-        ImGui::InputInt("Stored Values Count", &(int)this->max_value_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+	int mvc = this->max_value_count;
+        ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
 
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
@@ -1036,7 +1040,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (ImGui::Checkbox(label.c_str(), &value)) {
                 p->SetValue(value);
             }
-        } else if (auto* p = slot.Param<core::param::ButtonParam>()) {
+        } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             std::string hotkeyLabel(label.c_str());
             hotkeyLabel += " (";
             hotkeyLabel += p->GetKeyCode().ToString();
@@ -1149,7 +1153,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
 
     auto param = slot.Parameter();
     if (!param.IsNull()) {
-        if (auto* p = slot.Param<core::param::ButtonParam>()) {
+        if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             auto label = std::string(slot.Name().PeekBuffer());
             std::string desc = "Description: ";
             desc += slot.Description().PeekBuffer();

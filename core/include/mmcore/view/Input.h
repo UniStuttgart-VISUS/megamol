@@ -190,6 +190,12 @@ enum class MouseButtonAction : int { PRESS = 0, RELEASE };
 
 enum class Modifier : int { ALT = 4, CTRL = 2, SHIFT = 1, NONE = 0 };
 
+inline Modifier operator | (Modifier lhs, Modifier rhs)
+{
+    using T = std::underlying_type_t<Modifier>;
+    return static_cast<Modifier>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
 class Modifiers {
     typedef std::bitset<3> Bits;
     Bits bits;
