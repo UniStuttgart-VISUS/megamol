@@ -114,9 +114,9 @@ void BoundingBoxRenderer::release(void) {
 }
 
 /*
- * BoundingBoxRenderer::GetExtentsChain
+ * BoundingBoxRenderer::GetExtents
  */
-bool BoundingBoxRenderer::GetExtentsChain(CallRender3D_2& call) {
+bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (chainedCall == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -130,14 +130,9 @@ bool BoundingBoxRenderer::GetExtentsChain(CallRender3D_2& call) {
 }
 
 /*
- * BoundingBoxRenderer::GetExtentsChain
+ * BoundingBoxRenderer::Render
  */
-bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) { return true; }
-
-/*
- * BoundingBoxRenderer::RenderChain
- */
-bool BoundingBoxRenderer::RenderChain(CallRender3D_2& call) {
+bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr = std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
@@ -169,13 +164,15 @@ bool BoundingBoxRenderer::RenderChain(CallRender3D_2& call) {
     glm::mat4 proj = projT;
     glm::mat4 mvp = proj * view;
 
+    auto boundingBoxes = chainedCall->AccessBoundingBoxes();
+
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxBack(mvp, call.AccessBoundingBoxes());
+        renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes);
     }
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxFront(mvp, call.AccessBoundingBoxes());
+        renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes);
     }
     if (this->enableViewCubeSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderViewCube(call);
@@ -183,11 +180,6 @@ bool BoundingBoxRenderer::RenderChain(CallRender3D_2& call) {
 
     return renderRes;
 }
-
-/*
- * BoundingBoxRenderer::Render
- */
-bool BoundingBoxRenderer::Render(CallRender3D_2& call) { return true; }
 
 /*
  * BoundingBoxRenderer::RenderBoundingBoxFront

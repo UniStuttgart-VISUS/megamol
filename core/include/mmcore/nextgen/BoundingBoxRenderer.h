@@ -68,31 +68,20 @@ protected:
     virtual void release(void);
 
 private:
-    /**
-     * The chained get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times). This version of the method calls the respective method of alle chained renderers
+    /*
+     * Copies the incoming call to the outgoing one to pass the extents
      *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetExtentsChain(core::nextgen::CallRender3D_2& call) override final;
-
-    /** Needed override that never gets actually calleds */
-    virtual bool GetExtents(core::nextgen::CallRender3D_2& call) override;
-
-    /**
-     * The callback that triggers the rendering of all chained render modules
-     * as well as the own rendering
-     *
-     * @param call The calling call.
-     *
+     * @param call The call containing all relevant parameters
      * @return True on success, false otherwise
      */
-    virtual bool RenderChain(core::nextgen::CallRender3D_2& call) override final;
+    virtual bool GetExtents(core::nextgen::CallRender3D_2& call) override;
 
-    /** Needed override that never gets actually called */
+    /*
+     * Renders the bounding box and the viewcube on top of the other rendered things
+     *
+     * @param call The call containing the camera and other parameters
+     * @return True on success, false otherwise
+     */
     virtual bool Render(core::nextgen::CallRender3D_2& call) override final;
 
     /**
