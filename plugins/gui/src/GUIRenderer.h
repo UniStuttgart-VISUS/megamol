@@ -17,9 +17,8 @@
 /**
  * USED HOKEYS:
  *
- * - Show/hide Windows:                    F12 - F8
- * - Quit program:                         Esc, Alt+F4
- * - Toggle parameter description tooltip: Alt
+ * - Show/hide Windows: F12 - F10
+ * - Quit program:      Esc, Alt+F4
  *
  */
 
@@ -154,12 +153,12 @@ private:
     // ----- Main Parameter Window -----
     /** Spacing of parameter name and hotkey. */
     float hotkey_spacing;
-    /** Show/hode parmaeter description tooltip. */
-    bool show_param_desc_tooltip;
     /** Show/hide only hotkey parameter. */
     bool show_hotkey_params;
 
     // ----- FPS window -----
+    /** Show/hide fps/ms options. */
+    bool show_fps_ms_options;
     /** Current time delay since last time fps have been updated. */
     float current_delay;
     /** Maximum delay when fps/ms value should be renewed. */
@@ -176,7 +175,7 @@ private:
     size_t max_value_count;
 
     /** Float precision for parameter format. */
-    int float_prec;
+    int float_print_prec;
 
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
@@ -226,14 +225,19 @@ private:
     void drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
-     * Show tooltip.
+     * Show tooltip on hover.
      */
-    void toolTip(std::string desc);
+    void hoverToolTip(std::string text);
+
+    /**
+     * Show tooltip in context (right-click).
+     */
+    void contextToolTip(std::string text, std::string label);
 
     /**
      * Show help marker.
      */
-    void helpMarkerToolTip(std::string desc, std::string label = "(?)");
+    void helpMarkerToolTip(std::string text, std::string label = "(?)");
 
     /**
      * Update fps and ms value arrays.
@@ -262,8 +266,8 @@ template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , hotkey_spacing(0.0f)
-    , show_param_desc_tooltip(false)
     , show_hotkey_params(false)
+    , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(0.5f) // update fps/ms every X second(s)
     , fps_values()
@@ -272,7 +276,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
     , max_value_count(50) // max count of stored fps/ms values
-    , float_prec(3)       // float format
+    , float_print_prec(3) // float format
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -287,8 +291,8 @@ template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
     , hotkey_spacing(0.0f)
-    , show_param_desc_tooltip(false)
     , show_hotkey_params(false)
+    , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(0.5f) // update fps/ms every X second(s)
     , fps_values()
@@ -297,7 +301,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
     , max_value_count(50) // max count of stored fps/ms values
-    , float_prec(3)       // float format
+    , float_print_prec(3) // float format
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -344,27 +348,30 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     this->windows.push_back(tmp_win);
-    // Console Window -----------------------------------------------------
-    tmp_win.label = "Console";
+
+    // FPS overlay Window -----------------------------------------------------
+    tmp_win.label = "fps/ms";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
-    tmp_win.func = &GUIRenderer<M, C>::drawConsoleWindowCallback;
-    this->windows.push_back(tmp_win);
-    // FPS overlay Window -----------------------------------------------------
-    tmp_win.label = "FPS";
-    tmp_win.show = false;
-    tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
     this->windows.push_back(tmp_win);
+
     // Font Selection Window --------------------------------------------------
-    tmp_win.label = "Font Selection";
+    tmp_win.label = "Fonts";
     tmp_win.show = false;
-    tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
     this->windows.push_back(tmp_win);
+
+    // Console Window -----------------------------------------------------
+    // tmp_win.label = "Console";
+    // tmp_win.show = false;
+    // tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    // tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    // tmp_win.func = &GUIRenderer<M, C>::drawConsoleWindowCallback;
+    // this->windows.push_back(tmp_win);
 
 
     // Create ImGui context ---------------------------------------------------
@@ -394,9 +401,9 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
                 if (file_name == "Proggy_Tiny.ttf") {
                     font_size = 10.0f;
                 } else if (file_name == "Roboto_Regular.ttf") {
-                    font_size = 16.0f;
+                    font_size = 17.0f;
                 } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
-                    font_size = 14.0f;
+                    font_size = 15.0f;
                 }
                 io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
             }
@@ -531,9 +538,6 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
             win.show = !win.show;
         }
     }
-
-    // Parameter description tooltip
-    this->show_param_desc_tooltip = io.KeyAlt;
 
     // Check for pressed arameter hotkeys
     hotkeyPressed = false;
@@ -778,8 +782,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
 
     // Parameters -------------------------------------------------------------
     ImGui::Text("PARAMETERS");
-    ImGui::SameLine();
-    std::string color_param_help = "Press [Alt] and hover parameter to see description.";
+    std::string color_param_help = "[Richt-Click] on parameter for description";
     this->helpMarkerToolTip(color_param_help);
 
     int overrideState = -1;
@@ -791,7 +794,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
         overrideState = 0;
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Only Hotkeys", &this->show_hotkey_params);
+    ImGui::Checkbox("Hotkeys", &this->show_hotkey_params);
     ImGui::Separator();
 
     const core::Module* currentMod = nullptr;
@@ -842,13 +845,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
     if (ImGui::RadioButton("ms", (this->fps_ms_mode == 1))) {
         this->fps_ms_mode = 1;
     }
+    ImGui::SameLine(140.0f);
+    ImGui::Checkbox("Options", &this->show_fps_ms_options);
 
     // Default for this->fps_ms_mode == 0
-    std::string label = "Frames per Second";
+    std::string label = "###fps_ms"; /// use hidden label
     std::vector<float>* arr = &this->fps_values;
     float val_scale = this->fps_value_scale;
     if (this->fps_ms_mode == 1) {
-        label = "Milliseconds per Frame";
         arr = &this->ms_values;
         val_scale = this->ms_value_scale;
     }
@@ -858,40 +862,48 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
     std::string val;
     if (!arr->empty()) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_prec); //<< std::setw(7)
+        stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
         stream << arr->back();
         val = stream.str();
     }
     ImGui::PlotHistogram(label.c_str(), data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50));
 
-    std::stringstream float_stream;
-    float_stream << "%." << this->float_prec << "f";
-    std::string float_format = float_stream.str();
-    if (ImGui::InputFloat(
-            "Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        this->fps_values.clear();
-        this->ms_values.clear();
-    }
+    if (this->show_fps_ms_options) {
 
-    ImGui::InputInt("Last Value Count", &(int)this->max_value_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+        std::stringstream float_stream;
+        float_stream << "%." << this->float_print_prec << "f";
+        std::string float_format = float_stream.str();
+        if (ImGui::InputFloat("Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(),
+                ImGuiInputTextFlags_EnterReturnsTrue)) {
+            this->fps_values.clear();
+            this->ms_values.clear();
+        }
+        std::string help = "Changes clear all values";
+        this->helpMarkerToolTip(help);
 
-    if (ImGui::Button("Current Value")) {
-        ImGui::SetClipboardText(val.c_str());
-    }
-    ImGui::SameLine();
+        ImGui::InputInt("Stored Values Count", &(int)this->max_value_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
 
-    if (ImGui::Button("All Values")) {
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_prec); //<< std::setw(7)
+        if (ImGui::Button("Current Value")) {
+            ImGui::SetClipboardText(val.c_str());
+        }
+        ImGui::SameLine();
 
-        for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != (*arr).rend(); ++i) {
-            stream << (*i) << "\n";
+        if (ImGui::Button("All Values")) {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
+
+            for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != (*arr).rend(); ++i) {
+                stream << (*i) << "\n";
+            }
+
+            ImGui::SetClipboardText(stream.str().c_str());
         }
 
-        ImGui::SetClipboardText(stream.str().c_str());
+        ImGui::SameLine(220.0f);
+        ImGui::Text("Copy to Clipborad");
+        help = "Values are copied in chronological order (newest first)";
+        this->helpMarkerToolTip(help);
     }
-    ImGui::SameLine(220.0f);
-    ImGui::Text("Copy to Clipborad");
 }
 
 
@@ -921,7 +933,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
     if (win.show) {
         ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowBgAlpha(1.0f);
-        ImGui::Begin(win.label.c_str(), &win.show, win.flags);
+
+        if (!ImGui::Begin(win.label.c_str(), &win.show, win.flags)) {
+            ImGui::End();
+            return;
+        }
 
         (this->*win.func)();
 
@@ -964,15 +980,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
-        this->toolTip(hint);
+        this->hoverToolTip(hint);
         if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.c_str());
         }
-        this->toolTip(hint);
+        this->hoverToolTip(hint);
         if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.c_str());
         }
-        this->toolTip(hint);
+        this->hoverToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
             open_popup = true;
@@ -1008,10 +1024,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         std::string label = slot.Name().PeekBuffer();
-        std::string desc = slot.Description().PeekBuffer();
+        std::string desc = "Description: ";
+        desc += slot.Description().PeekBuffer();
 
         std::stringstream float_stream;
-        float_stream << "%." << this->float_prec << "f";
+        float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
 
         if (auto* p = slot.Param<core::param::BoolParam>()) {
@@ -1030,18 +1047,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.Param<core::param::ColorParam>()) {
             core::param::ColorParam::ColorType value = p->Value();
-
-            std::string color_param_help = "[Click] on the colored square to open a color picker.\n"
-                                           "[CTRL+click] on individual component to input value.\n"
-                                           "[Right-click] on the individual color widget to show options.";
-            this->helpMarkerToolTip(color_param_help);
-            ImGui::SameLine();
-
             auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
             if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
                 p->SetValue(value);
             }
-
+            std::string help = "[Click] on the colored square to open a color picker.\n"
+                               "[CTRL+Click] on individual component to input value.\n"
+                               "[Right-Click] on the individual color widget to show options.";
+            this->helpMarkerToolTip(help);
         } else if (auto* p = slot.Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1105,11 +1118,6 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-
-            std::string string_param_help = "Press [Return] to confirm changes.";
-            this->helpMarkerToolTip(string_param_help);
-            ImGui::SameLine();
-
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
@@ -1118,17 +1126,17 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             char* buffer = new char[bufferLength];
             memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
 
-            if (ImGui::InputText(
-                    slot.Name().PeekBuffer(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (ImGui::InputText(label.c_str(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
                 param->ParseValue(valueString);
             }
+            std::string help = "Press [Return] to confirm changes.";
+            this->helpMarkerToolTip(help);
+
             delete[] buffer;
         }
 
-        if (this->show_param_desc_tooltip) {
-            this->toolTip(desc);
-        }
+        this->contextToolTip(desc, label);
     }
 }
 
@@ -1143,13 +1151,12 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
     if (!param.IsNull()) {
         if (auto* p = slot.Param<core::param::ButtonParam>()) {
             auto label = std::string(slot.Name().PeekBuffer());
-            auto desc = std::string(slot.Description().PeekBuffer());
+            std::string desc = "Description: ";
+            desc += slot.Description().PeekBuffer();
             auto keycode = p->GetKeyCode().ToString();
 
             ImGui::Text(label.c_str());
-            if (this->show_param_desc_tooltip) {
-                this->toolTip(desc);
-            }
+            this->contextToolTip(desc, label);
 
             // Adapt spacing between label and hotkey string
             auto labelLength = ImGui::GetFontSize() * (float)label.length();
@@ -1157,9 +1164,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::SameLine(this->hotkey_spacing);
 
             ImGui::Text(keycode.c_str());
-            if (this->show_param_desc_tooltip) {
-                this->toolTip(desc);
-            }
+            this->contextToolTip(desc, keycode.c_str());
 
             ImGui::Separator();
         }
@@ -1223,14 +1228,14 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
 
 
 /**
- * GUIRenderer<M, C>::toolTip
+ * GUIRenderer<M, C>::hoverToolTip
  */
-template <class M, class C> void GUIRenderer<M, C>::toolTip(std::string desc) {
+template <class M, class C> void GUIRenderer<M, C>::hoverToolTip(std::string text) {
 
     if (ImGui::IsItemHovered()) {
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc.c_str());
+        ImGui::TextUnformatted(text.c_str());
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
@@ -1238,12 +1243,27 @@ template <class M, class C> void GUIRenderer<M, C>::toolTip(std::string desc) {
 
 
 /**
+ * GUIRenderer<M, C>::contextToolTip
+ */
+template <class M, class C> void GUIRenderer<M, C>::contextToolTip(std::string text, std::string label) {
+
+    if (ImGui::BeginPopupContextItem(label.c_str())) {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(text.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndPopup();
+    }
+}
+
+
+/**
  * GUIRenderer<M, C>::helpMarkerToolTip
  */
-template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string desc, std::string label) {
+template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string text, std::string label) {
 
+    ImGui::SameLine();
     ImGui::TextDisabled(label.c_str());
-    this->toolTip(desc);
+    this->hoverToolTip(text);
 }
 
 
