@@ -17,6 +17,7 @@
  * USED HOKEYS:
  *
  * - Show/hide Windows: F12 - F10
+ * - Reset window size: Shift+F12
  * - Quit program:      Esc, Alt+F4
  *
  */
@@ -132,7 +133,7 @@ private:
     // TYPES, ENUMS -----------------------------------------------------------
 
     // Type for
-    typedef void (GUIRenderer<M, C>::*GuiFunc)(void);
+    typedef void (GUIRenderer<M, C>::*GuiFunc)(std::string);
 
     /** Type for holding window configuration. */
     typedef struct _gui_window {
@@ -156,6 +157,8 @@ private:
     float hotkey_spacing;
     /** Show/hide only hotkey parameter. */
     bool show_hotkey_params;
+    /** Reset main parameter window. */
+    bool reset_main_param_win_size;
 
     // ----- FPS window -----
     /** Show/hide fps/ms options. */
@@ -191,17 +194,17 @@ private:
     /**
      * Callback for drawing the parameter window.
      */
-    void drawMainWindowCallback(void);
+    void drawMainWindowCallback(std::string win_label);
 
     /**
      * Draws fps overlay window.
      */
-    void drawFpsWindowCallback(void);
+    void drawFpsWindowCallback(std::string win_label);
 
     /**
      * Callback for drawing font selection window.
      */
-    void drawFontSelectionWindowCallback(void);
+    void drawFontSelectionWindowCallback(std::string win_label);
 
     // ---------------------------------
 
@@ -224,6 +227,11 @@ private:
      * Draws only button parameters and their hotkeys for the parameter window.
      */
     void drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot);
+
+    /**
+     * Reset size and position of main window.
+     */
+    void resetSizePosMainWindow(std::string win_label);
 
     /**
      * Show tooltip on hover.
@@ -261,6 +269,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , hotkey_spacing(0.0f)
     , show_hotkey_params(false)
+    , reset_main_param_win_size(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f) // update fps/ms every X second(s)
@@ -288,6 +297,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
     , hotkey_spacing(0.0f)
     , show_hotkey_params(false)
+    , reset_main_param_win_size(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f) // update fps/ms every X second(s)
@@ -436,6 +446,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.PopupBorderSize = 1.0f;
     style.AntiAliasedLines = true;
     style.AntiAliasedFill = true;
+    style.DisplayWindowPadding = ImVec2(5.0f, 5.0f);
     style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
 
     // Global settings ---------------------------------------------------------
@@ -522,6 +533,12 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         return true;
     }
 
+    // Reset main window
+    hotkeyPressed = ((io.KeyShift) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F12))));
+    if (hotkeyPressed) {
+        this->reset_main_param_win_size = true;
+    }
+
     // Hotkeys of window(s)
     for (auto& win : this->windows) {
         hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(win.hotkey.key))) &&
@@ -530,6 +547,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
                         (win.hotkey.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
         if (hotkeyPressed) {
             win.show = !win.show;
+            return true;
         }
     }
 
@@ -546,12 +564,11 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
                                 (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
                 if (hotkeyPressed) {
                     p->setDirty();
+                    return true;
                 }
             }
         }
     });
-    if (hotkeyPressed) return true;
-
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr == nullptr) return false;
@@ -731,12 +748,20 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
         }
     }
 
-    auto viewportWidth = call.GetViewport().Width();
-    auto viewportHeight = call.GetViewport().Height();
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    auto viewportXOff = viewport[0];
+    auto viewportYOff = viewport[1];
+    auto viewportWidth = viewport[2];
+    auto viewportHeight = viewport[3];
+    auto viewportWidthMax = call.GetViewport().Width();
+    auto viewportHeightMax = call.GetViewport().Height();
 
     // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
+    io.DisplayVisibleMin = ImVec2((float)viewportXOff, (float)viewportYOff);
+    io.DisplayVisibleMax = ImVec2((float)(viewportWidthMax - viewportXOff), (float)(viewportHeightMax - viewportYOff));
+    io.DisplaySize = ImVec2((float)viewportWidthMax, (float)viewportHeightMax);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
     io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // given in milliseconds
 
@@ -764,7 +789,13 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 /**
  * GUIRenderer<M, C>::drawMainWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void) {
+template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::string win_label) {
+
+    // Trigger window size reset outside of menu window to get right position
+    if (this->reset_main_param_win_size) {
+        this->resetSizePosMainWindow(win_label);
+        this->reset_main_param_win_size = false;
+    }
 
     // Menu -------------------------------------------------------------------
     /// Requires window flag ImGuiWindowFlags_MenuBar
@@ -823,7 +854,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
 /**
  * GUIRenderer<M, C>::drawFpsWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) {
+template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::string win_label) {
 
     if (ImGui::RadioButton("fps", (this->fps_ms_mode == 0))) {
         this->fps_ms_mode = 0;
@@ -896,7 +927,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
 /**
  * GUIRenderer<M, C>::drawFontSelectionWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(void) {
+template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(std::string win_label) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -928,7 +959,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
             return;
         }
 
-        (this->*win.func)();
+        (this->*win.func)(win.label);
 
         ImGui::End();
     }
@@ -949,7 +980,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // Windows
+    bool reset_win_size = false;
     if (ImGui::BeginMenu("Windows")) {
+        if (ImGui::MenuItem("Reset Window Size", "SHIFT + 'F12'")) {
+            this->reset_main_param_win_size = true;
+        }
+        ImGui::Separator();
+
         for (auto& win : this->windows) {
             bool win_open = win.show;
             if (ImGui::MenuItem(win.label.c_str(), win.hotkey.ToString().c_str(), &win_open)) {
@@ -1108,7 +1145,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+                 // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
 
@@ -1159,6 +1196,37 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::Separator();
         }
     }
+}
+
+
+/**
+ * GUIRenderer<M, C>::resetCurrentWindow
+ */
+template <class M, class C> void GUIRenderer<M, C>::resetSizePosMainWindow(std::string win_label) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    auto win_pos = ImGui::GetWindowPos();
+    if (win_pos.x < 0) {
+        win_pos.x = style.DisplayWindowPadding.x;
+    }
+    if (win_pos.y < 0) {
+        win_pos.y = style.DisplayWindowPadding.y;
+    }
+
+    const float min_height = 100.0f;
+
+    auto win_width = 0.0f; // width = 0 means auto resize
+    auto win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
+    if (win_height < min_height) {
+        win_height = min_height;
+        win_pos.y = io.DisplaySize.y - (min_height + style.DisplayWindowPadding.y);
+    }
+
+    ImGui::SetWindowSize(win_label.c_str(), ImVec2(win_width, win_height), ImGuiCond_Always);
+
+    ImGui::SetWindowPos(win_label.c_str(), win_pos, ImGuiCond_Always);
 }
 
 
