@@ -88,17 +88,21 @@ private:
      * Render function for the bounding box front
      *
      * @param call The used mvp matrix
+     * @param bb The bounding box to render
+     * @param smoothLines Determines whether the lines of the box should get smoothed. default = true
      * @return True on success, false otherwise.
      */
-    bool RenderBoundingBoxFront(const glm::mat4& mvp, const BoundingBoxes_2& bb);
+    bool RenderBoundingBoxFront(const glm::mat4& mvp, const BoundingBoxes_2& bb, bool smoothLines = true);
 
     /**
      * Render function for the bounding box back
      *
      * @param call The incoming render call
+     * @param bb The bounding box to render
+     * @param smoothLines Determines whether the lines of the box should get smoothed. default = true
      * @return True on success, false otherwise.
      */
-    bool RenderBoundingBoxBack(const glm::mat4& mvp, const BoundingBoxes_2& bb);
+    bool RenderBoundingBoxBack(const glm::mat4& mvp, const BoundingBoxes_2& bb, bool smoothLines = true);
 
     /**
      * Render function for the view cube
@@ -113,6 +117,9 @@ private:
 
     /** Parameter storing the desired color of the bounding box */
     param::ParamSlot boundingBoxColorSlot;
+
+    /** Parameter enabling or disabling the smoothing of lines */
+    param::ParamSlot smoothLineSlot;
 
     /** Parameter that enables or disables the view cube rendering */
     param::ParamSlot enableViewCubeSlot;

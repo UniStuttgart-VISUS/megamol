@@ -24,6 +24,7 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
     : RendererModule<CallRender3D_2>()
     , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
     , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
+    , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
     , enableViewCubeSlot("enableViewCube", "Enables the rendering of the view cube")
     , vbo(0)
     , ibo(0)
@@ -34,6 +35,9 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
 
     this->boundingBoxColorSlot.SetParameter(new param::ColorParam("#ffffffff"));
     this->MakeSlotAvailable(&this->boundingBoxColorSlot);
+
+    this->smoothLineSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->smoothLineSlot);
 
     this->enableViewCubeSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableViewCubeSlot);
@@ -85,7 +89,8 @@ bool BoundingBoxRenderer::create(void) {
     glEnableVertexAttribArray(0);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCoords.size(), vertexCoords.data(), GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * vertexIndices.size(), vertexIndices.data(), GL_STATIC_DRAW);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * vertexIndices.size(), vertexIndices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
@@ -134,7 +139,8 @@ bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
  */
 bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr = std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) {
         // TODO move this behind the fbo magic?
@@ -165,14 +171,15 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     glm::mat4 mvp = proj * view;
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
+    auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
 
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes);
+        renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes);
+        renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }
     if (this->enableViewCubeSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderViewCube(call);
@@ -184,7 +191,7 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
 /*
  * BoundingBoxRenderer::RenderBoundingBoxFront
  */
-bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const BoundingBoxes_2& bb) {
+bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const BoundingBoxes_2& bb, bool smoothLines) {
     glm::vec3 bbmin = glm::vec3(bb.BoundingBox().Left(), bb.BoundingBox().Bottom(), bb.BoundingBox().Back());
     glm::vec3 bbmax = glm::vec3(bb.BoundingBox().Right(), bb.BoundingBox().Top(), bb.BoundingBox().Front());
 
@@ -199,7 +206,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const Bou
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glEnable(GL_LINE_SMOOTH);
+    if (smoothLines) glEnable(GL_LINE_SMOOTH);
     glLineWidth(1.75f);
     glPolygonMode(GL_FRONT, GL_LINE);
 
@@ -221,20 +228,20 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const Bou
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glDisable(GL_LINE_SMOOTH);
+    if (smoothLines) glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
 
     this->lineShader.Disable();
 
-    return true; 
+    return true;
 }
 
 /*
  * BoundingBoxRenderer::RenderBoundingBoxBack
  */
-bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const BoundingBoxes_2& bb) { 
+bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const BoundingBoxes_2& bb, bool smoothLines) {
     glm::vec3 bbmin = glm::vec3(bb.BoundingBox().Left(), bb.BoundingBox().Bottom(), bb.BoundingBox().Back());
     glm::vec3 bbmax = glm::vec3(bb.BoundingBox().Right(), bb.BoundingBox().Top(), bb.BoundingBox().Front());
 
@@ -248,7 +255,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    glEnable(GL_LINE_SMOOTH);
+    if (smoothLines) glEnable(GL_LINE_SMOOTH);
     glLineWidth(1.25f);
     glPolygonMode(GL_BACK, GL_LINE);
 
@@ -269,7 +276,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LINE_SMOOTH);
+    if (smoothLines) glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_BACK, GL_FILL);
