@@ -207,7 +207,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     // new framebuffer at resize action
     //bool triggered = false;
-    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height() || extraSamles.IsDirty()) {
+    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() ||
+        imgSize.y != cr->GetCameraParameters()->TileRect().Height() || accumulateSlot.IsDirty()) {
         //triggered = true;
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
@@ -247,11 +248,11 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         light_has_changed ||
         cam_has_changed ||
         renderer_has_changed ||
-        !(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
+        !(this->accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         frameID != static_cast<size_t>(cr->Time()) ||
         this->InterfaceIsDirty()) {
 
-        if (data_has_changed || frameID != static_cast<size_t>(cr->Time()) ) {
+        if (data_has_changed || frameID != static_cast<size_t>(cr->Time()) || renderer_has_changed) {
 			// || this->InterfaceIsDirty()) {
             if (!this->fillWorld()) return false;
 

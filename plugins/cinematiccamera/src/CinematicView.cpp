@@ -84,10 +84,10 @@ CinematicView::CinematicView(void)
     this->fpsParam.SetParameter(new param::IntParam(static_cast<int>(this->fps), 1));
     this->MakeSlotAvailable(&this->fpsParam);
 
-    this->renderParam.SetParameter(new param::ButtonParam('r'));
+    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R));
     this->MakeSlotAvailable(&this->renderParam);
 
-    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(' '));
+    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE));
     this->MakeSlotAvailable(&this->toggleAnimPlayParam);
 
     param::EnumParam* enp = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
@@ -181,10 +181,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     bool loadNewCamParams = false;
 
-    // Disabling enableMouseSelectionSlot for this view
-    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer for mouse selection of
-    // manipulators
-    this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
     // Disabling toggleAnimPlaySlot in the parent view3d
     // -> 'SPACE'-key is needed to be available here for own control of animation time
     this->SetSlotUnavailable(static_cast<AbstractSlot*>(this->timeCtrl.GetSlot(3)));
