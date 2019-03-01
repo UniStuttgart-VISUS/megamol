@@ -263,7 +263,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , show_hotkey_params(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(0.5f) // update fps/ms every X second(s)
+    , max_delay(2.0f) // update fps/ms every X second(s)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
@@ -290,7 +290,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , show_hotkey_params(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(0.5f) // update fps/ms every X second(s)
+    , max_delay(2.0f) // update fps/ms every X second(s)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
@@ -778,6 +778,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
     std::string color_param_help = "Hover parameter for description tooltip";
     this->helpMarkerToolTip(color_param_help);
 
+
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
+
     int overrideState = -1;
     if (ImGui::Button("Expand All")) {
         overrideState = 1;
@@ -787,7 +790,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
         overrideState = 0;
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Hotkeys", &this->show_hotkey_params);
+    ImGui::Checkbox("Show Hotkeys", &this->show_hotkey_params);
     ImGui::Separator();
 
     const core::Module* currentMod = nullptr;
@@ -812,6 +815,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
             }
         }
     });
+
+    ImGui::PopItemWidth();
 }
 
 
@@ -870,7 +875,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
             ImGui::SetClipboardText(val.c_str());
         }
         ImGui::SameLine();
-
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
@@ -881,8 +885,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
 
             ImGui::SetClipboardText(stream.str().c_str());
         }
-
-        ImGui::SameLine(220.0f);
+        ImGui::SameLine();
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
         this->helpMarkerToolTip(help);
@@ -898,6 +901,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     ImGuiIO& io = ImGui::GetIO();
 
     ImFont* font_current = ImGui::GetFont();
+
     if (ImGui::BeginCombo("Select Font", font_current->GetDebugName())) {
         for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
@@ -915,8 +919,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
 
     if (win.show) {
 
-        ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Once); // apply autoresize only once at startup
-        ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_Once);  /// ImGuiCond_FirstUseEver
+        ImGui::SetNextWindowSize(ImVec2(400.0f, 300.0f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowBgAlpha(1.0f);
 
         if (!ImGui::Begin(win.label.c_str(), &win.show, win.flags)) {
@@ -924,11 +928,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
             return;
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set proportional item width
-
         (this->*win.func)();
-
-        ImGui::PopItemWidth();
 
         ImGui::End();
     }
@@ -1142,8 +1142,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
     if (!param.IsNull()) {
         if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             auto label = std::string(slot.Name().PeekBuffer());
-            std::string desc = "Description: ";
-            desc += slot.Description().PeekBuffer();
+            std::string desc = slot.Description().PeekBuffer();
             auto keycode = p->GetKeyCode().ToString();
 
             ImGui::Text(label.c_str());
@@ -1155,7 +1154,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::SameLine(this->hotkey_spacing);
 
             ImGui::Text(keycode.c_str());
-            this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
+            this->hoverToolTip(desc, ImGui::GetID(keycode.c_str()), 0.75f);
 
             ImGui::Separator();
         }
