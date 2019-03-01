@@ -9,8 +9,7 @@
  * TODO
  *
  * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
- * - Fix x and y transformation by View2D class (will be fixed when screen2world transformation is available in
- * CallRender)
+ * - Fix x and y transformation by View2D class (will be fixed when new CallRender is available)
  *
  */
 
@@ -58,6 +57,15 @@
 
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
+
+#ifdef _WIN32
+#    include <filesystem> // directory_iterator
+#    if _HAS_CXX17
+namespace ns_fs = std::filesystem;
+#    else
+namespace ns_fs = std::experimental::filesystem;
+#    endif
+#endif
 
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
@@ -170,6 +178,11 @@ private:
     /** Float precision for parameter format. */
     int float_print_prec;
 
+    /** Current tooltip hover time. */
+    float tooltip_time;
+    /** Current hovered tooltip item. */
+    ImGuiID tooltip_id;
+
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
@@ -179,11 +192,6 @@ private:
      * Callback for drawing the parameter window.
      */
     void drawMainWindowCallback(void);
-
-    /**
-     * Draws console window.
-     */
-    void drawConsoleWindowCallback(void);
 
     /**
      * Draws fps overlay window.
@@ -220,12 +228,7 @@ private:
     /**
      * Show tooltip on hover.
      */
-    void hoverToolTip(std::string text);
-
-    /**
-     * Show tooltip in context (right-click).
-     */
-    void contextToolTip(std::string text, std::string label);
+    void hoverToolTip(std::string text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
 
     /**
      * Show help marker.
@@ -268,6 +271,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , fps_ms_mode(0)
     , max_value_count(50) // max count of stored fps/ms values
     , float_print_prec(3) // float format
+    , tooltip_time(0.0f)
+    , tooltip_id(0)
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -293,6 +298,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , fps_ms_mode(0)
     , max_value_count(50) // max count of stored fps/ms values
     , float_print_prec(3) // float format
+    , tooltip_time(0.0f)
+    , tooltip_id(0)
     , windows() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -336,7 +343,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.label = "MegaMol";
     tmp_win.show = true;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    tmp_win.flags = ImGuiWindowFlags_MenuBar; // | ImGuiWindowFlags_AlwaysAutoResize;
+    tmp_win.flags =
+        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar; /// | ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     this->windows.push_back(tmp_win);
 
@@ -356,14 +364,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
     this->windows.push_back(tmp_win);
 
-    // Console Window -----------------------------------------------------
-    // tmp_win.label = "Console";
-    // tmp_win.show = false;
-    // tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    // tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
-    // tmp_win.func = &GUIRenderer<M, C>::drawConsoleWindowCallback;
-    // this->windows.push_back(tmp_win);
-
 
     // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
@@ -375,6 +375,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     io.IniFilename = "imgui.ini";
     io.LogFilename = "imgui_log.txt";
 
+#ifdef _WIN32
     // Loading additional fonts
     io.FontAllowUserScaling = true;
     io.Fonts->AddFontDefault();
@@ -384,6 +385,24 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     config.OversampleH = 4;
     config.OversampleV = 1;
 
+    const vislib::Array<vislib::StringW>& searchPaths = this->GetCoreInstance()->Configuration().ResourceDirectories();
+    for (int i = 0; i < searchPaths.Count(); ++i) {
+        for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
+            if (entry.path().extension().generic_string() == ext) {
+                std::string file_path = entry.path().generic_string();
+                std::string file_name = entry.path().filename().generic_string();
+                if (file_name == "Proggy_Tiny.ttf") {
+                    font_size = 10.0f;
+                } else if (file_name == "Roboto_Regular.ttf") {
+                    font_size = 17.0f;
+                } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
+                    font_size = 15.0f;
+                }
+                io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
+            }
+        }
+    }
+#endif
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -425,7 +444,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
 
     // Init OpenGL for ImGui --------------------------------------------------
-    const char* glsl_version = "#version 130";
+    const char* glsl_version = "#version 130"; /// "#version 150"
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     return true;
@@ -754,10 +773,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
         ImGui::EndMenuBar();
     }
 
-
     // Parameters -------------------------------------------------------------
     ImGui::Text("PARAMETERS");
-    std::string color_param_help = "[Richt-Click] on parameter for description";
+    std::string color_param_help = "Hover parameter for description tooltip";
     this->helpMarkerToolTip(color_param_help);
 
     int overrideState = -1;
@@ -794,17 +812,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(void)
             }
         }
     });
-}
-
-
-/**
- * GUIRenderer<M, C>::drawConsoleWindowCallback
- */
-template <class M, class C> void GUIRenderer<M, C>::drawConsoleWindowCallback(void) {
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImGui::Text("Under construction ...");
 }
 
 
@@ -856,8 +863,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(void) 
         std::string help = "Changes clear all values";
         this->helpMarkerToolTip(help);
 
-        int val_count = (int)this->max_value_count;
-        ImGui::InputInt("Stored Values Count", &val_count, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+        int mvc = (int)this->max_value_count;
+        ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
 
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
@@ -907,15 +914,21 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
 template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
 
     if (win.show) {
-        ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_FirstUseEver);
+
+        ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_Once); // apply autoresize only once at startup
+        ImGui::SetNextWindowPos(ImVec2(5.0f, 5.0f), ImGuiCond_Once);  /// ImGuiCond_FirstUseEver
         ImGui::SetNextWindowBgAlpha(1.0f);
 
         if (!ImGui::Begin(win.label.c_str(), &win.show, win.flags)) {
-            ImGui::End();
+            ImGui::End(); // early ending
             return;
         }
 
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set proportional item width
+
         (this->*win.func)();
+
+        ImGui::PopItemWidth();
 
         ImGui::End();
     }
@@ -952,7 +965,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
         const std::string mmLink = "https://megamol.org/";
         const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
-        const std::string hint = "Copy Link";
+        const std::string hint = "Copy Link to Clipboard";
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
@@ -997,11 +1010,12 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 template <class M, class C>
 void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
 
+    std::string help;
+
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         std::string label = slot.Name().PeekBuffer();
-        std::string desc = "Description: ";
-        desc += slot.Description().PeekBuffer();
+        std::string desc = slot.Description().PeekBuffer();
 
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
@@ -1027,11 +1041,10 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
                 p->SetValue(value);
             }
-            std::string help = "[Click] on the colored square to open a color picker.\n"
-                               "[CTRL+Click] on individual component to input value.\n"
-                               "[Right-Click] on the individual color widget to show options.";
-            this->helpMarkerToolTip(help);
 
+            help = "[Click] on the colored square to open a color picker.\n"
+                   "[CTRL+Click] on individual component to input value.\n"
+                   "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1107,13 +1120,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
                 param->ParseValue(valueString);
             }
-            std::string help = "Press [Return] to confirm changes.";
-            this->helpMarkerToolTip(help);
-
             delete[] buffer;
+
+            help = "Press [Return] to confirm changes.";
         }
 
-        // this->contextToolTip(desc, label);
+        this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
+
+        this->helpMarkerToolTip(help);
     }
 }
 
@@ -1133,7 +1147,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             auto keycode = p->GetKeyCode().ToString();
 
             ImGui::Text(label.c_str());
-            this->contextToolTip(desc, label);
+            this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
 
             // Adapt spacing between label and hotkey string
             auto labelLength = ImGui::GetFontSize() * (float)label.length();
@@ -1141,7 +1155,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::SameLine(this->hotkey_spacing);
 
             ImGui::Text(keycode.c_str());
-            this->contextToolTip(desc, keycode.c_str());
+            this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
 
             ImGui::Separator();
         }
@@ -1157,7 +1171,7 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
     ImGuiIO& io = ImGui::GetIO();
 
     this->current_delay += io.DeltaTime;
-    if (this->current_delay >= this->max_delay) {
+    if (this->current_delay >= (1.0f / this->max_delay)) {
 
         const float scale_fac = 1.5f;
 
@@ -1207,28 +1221,38 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
 /**
  * GUIRenderer<M, C>::hoverToolTip
  */
-template <class M, class C> void GUIRenderer<M, C>::hoverToolTip(std::string text) {
+template <class M, class C>
+void GUIRenderer<M, C>::hoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
+
+    ImGuiIO& io = ImGui::GetIO();
 
     if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(text.c_str());
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
+        bool show_tooltip = false;
+        if (time_start > 0.0f) {
+            if (this->tooltip_id != id) {
+                this->tooltip_time = 0.0f;
+                this->tooltip_id = id;
+            } else {
+                if ((this->tooltip_time > time_start) && (this->tooltip_time < (time_start + time_end))) {
+                    show_tooltip = true;
+                }
+                this->tooltip_time += io.DeltaTime;
+            }
+        } else {
+            show_tooltip = true;
+        }
 
-
-/**
- * GUIRenderer<M, C>::contextToolTip
- */
-template <class M, class C> void GUIRenderer<M, C>::contextToolTip(std::string text, std::string label) {
-
-    if (ImGui::BeginPopupContextItem(label.c_str())) {
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(text.c_str());
-        ImGui::PopTextWrapPos();
-        ImGui::EndPopup();
+        if (show_tooltip) {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(text.c_str());
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    } else {
+        if ((time_start > 0.0f) && (this->tooltip_id == id)) {
+            this->tooltip_time = 0.0f;
+        }
     }
 }
 
@@ -1238,9 +1262,11 @@ template <class M, class C> void GUIRenderer<M, C>::contextToolTip(std::string t
  */
 template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string text, std::string label) {
 
-    ImGui::SameLine();
-    ImGui::TextDisabled(label.c_str());
-    this->hoverToolTip(text);
+    if (!text.empty()) {
+        ImGui::SameLine();
+        ImGui::TextDisabled(label.c_str());
+        this->hoverToolTip(text);
+    }
 }
 
 
