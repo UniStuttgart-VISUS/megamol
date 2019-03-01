@@ -18,6 +18,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/Input.h"
 #include "vislib/Array.h"
 #include "vislib/forceinline.h"
 #include "vislib/sys/Log.h"
@@ -849,7 +850,7 @@ IMDAtomDataSource::IMDAtomDataSource(void) : core::Module(),
     this->maxColumnValSlot << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->maxColumnValSlot);
 
-    this->posXFilterNow << new core::param::ButtonParam('f');
+    this->posXFilterNow << new core::param::ButtonParam(core::view::Key::KEY_F);
     this->posXFilterNow.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
     this->MakeSlotAvailable(&this->posXFilterNow);
     this->posXFilter << new core::param::BoolParam(false);

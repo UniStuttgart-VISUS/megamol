@@ -134,7 +134,7 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
     this->MakeSlotAvailable(&this->doVolumeRenderingParam);
 
     // --- set up parameter for volume rendering ---
-    this->doVolumeRenderingToggleParam.SetParameter(new param::ButtonParam('V'));
+    this->doVolumeRenderingToggleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_V));
     this->MakeSlotAvailable(&this->doVolumeRenderingToggleParam);
     
 }
