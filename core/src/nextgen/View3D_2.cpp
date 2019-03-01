@@ -203,6 +203,11 @@ View3D_2::View3D_2(void)
     this->arcballManipulator.set_target(this->cam);
     this->arcballManipulator.set_radius(1.0f);
     this->arcballManipulator.enable();
+
+    // none of the saved camera states are valid right now
+    for (auto& e : this->savedCameras) {
+        e.second = false;
+    }
 }
 
 /*
@@ -488,6 +493,22 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
     }
 
+    if (action == view::KeyAction::PRESS && (key >= view::Key::KEY_0 && key <= view::Key::KEY_9)) {
+        int index =
+            static_cast<int>(key) - static_cast<int>(view::Key::KEY_0); // ugly hack, maybe this can be done better
+        index = (index - 1) % 10;                                       // put key '1' at index 0
+        index = index < 0 ? index + 10 : index;                         // wrap key '0' to a positive index '9'
+
+        if (mods.test(view::Modifier::CTRL)) {
+            this->savedCameras[index].first = this->cam.get_minimal_state(this->savedCameras[index].first);
+            this->savedCameras[index].second = true;
+        } else {
+            if (this->savedCameras[index].second) {
+                this->cam = this->savedCameras[index].first;
+            }
+        }
+    }
+
     auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
     if (cr == NULL) return false;
 
@@ -665,7 +686,7 @@ bool View3D_2::create(void) {
     // TODO implement
 
 
-    // TODO cursor stuff
+    this->cursor2d.SetButtonCount(3);
 
     this->firstImg = true;
 
@@ -782,7 +803,8 @@ void View3D_2::handleCameraMovement(void) {
             this->rotateManipulator.yaw(-rotationStep);
         }
 
-        if (this->pressedMouseMap.count(view::MouseButton::BUTTON_LEFT) > 0 && this->pressedMouseMap[view::MouseButton::BUTTON_LEFT]) {
+        if (this->pressedMouseMap.count(view::MouseButton::BUTTON_LEFT) > 0 &&
+            this->pressedMouseMap[view::MouseButton::BUTTON_LEFT]) {
             this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
             this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
         }

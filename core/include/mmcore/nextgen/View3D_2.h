@@ -11,6 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
 #include <memory>
 #include <map>
 #include "mmcore/BoundingBoxes_2.h"
@@ -368,6 +369,9 @@ protected:
 
     /** Map storing the pressed state of all mouse buttons */
     std::map<view::MouseButton, bool> pressedMouseMap;
+
+    /** Array that holds the saved camera states */
+    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> savedCameras;
 
     /** Flag determining whether the arcball is the default steering method of the camera */
     bool arcballDefault;
