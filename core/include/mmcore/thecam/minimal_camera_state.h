@@ -40,6 +40,7 @@
 #include "mmcore/thecam/utility/config.h"
 
 #include "mmcore/thecam/types.h"
+#include <array>
 
 
 namespace megamol {
@@ -62,7 +63,7 @@ namespace thecam {
         typedef typename M::world_type world_type;
 
         /** The relative offset (x, y) of the projection centre. */
-        fractional_type centre_offset[2];
+		std::array<fractional_type, 2> centre_offset;
 
         /** The distance of the plane of zero parallax.*/
         world_type convergence_plane;
@@ -74,7 +75,7 @@ namespace thecam {
         world_type far_clipping_plane;
 
         /** With and height of the film gate. */
-        world_type film_gate[2];
+        std::array<world_type, 2> film_gate;
 
         /** The gate scaling method. */
         gate_scaling gate_scaling;
@@ -86,22 +87,22 @@ namespace thecam {
         world_type half_disparity;
 
         /** Left, top, right, bottom of the image tile. */
-        screen_type image_tile[4];
+        std::array<screen_type, 4> image_tile;
 
         /** The distance of the near clipping plane. */
         world_type near_clipping_plane;
 
         /** The components (x, y, z, w) of the orientation quaternion. */
-        world_type orientation[4];
+        std::array<world_type, 4> orientation;
 
         /** The position of the camera. */
-        world_type position[3];
+        std::array<world_type, 3> position;
 
         /** The projection type. */
         projection_type projection_type;
 
         /** Width and height of the resolution gate. */
-        screen_type resolution_gate[2];
+        std::array<screen_type, 2> resolution_gate;
     };
 
 } /* end namespace thecam */
