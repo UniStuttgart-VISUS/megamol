@@ -163,6 +163,19 @@ if(BUILD_CORE)
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
+  #include nlohmann/json
+  add_external_project(json_ext
+      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
+      GIT_TAG "v3.5.0"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      TEST_COMMAND ""
+      CMAKE_ARGS -DBUILD_TESTING=OFF)
+  add_external_library(json INTERFACE
+    DEPENDS json_ext
+    INCLUDE_DIR "src/json_ext/")
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -191,7 +204,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm zlib libpng ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm json zlib libpng ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
