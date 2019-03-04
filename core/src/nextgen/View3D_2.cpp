@@ -110,15 +110,15 @@ View3D_2::View3D_2(void)
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
 
     this->storeCameraSettingsSlot.SetParameter(
-        new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | vislib::sys::KeyCode::KEY_MOD_SHIFT | 'C'));
+        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
     this->storeCameraSettingsSlot.SetUpdateCallback(&View3D_2::onStoreCamera);
     this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
 
-    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 'c'));
+    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
     this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D_2::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
-    this->resetViewSlot.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME));
+    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
     this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -173,7 +173,7 @@ View3D_2::View3D_2(void)
     this->viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(KeyCode::KEY_TAB));
+    this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(view::Key::KEY_TAB));
     this->enableMouseSelectionSlot.SetUpdateCallback(&View3D_2::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
