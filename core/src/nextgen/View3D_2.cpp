@@ -484,13 +484,27 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         this->pressedKeyMap[key] = false;
     }
 
-    auto down = action == view::KeyAction::PRESS;
-    if (mods.test(view::Modifier::SHIFT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    } else if (mods.test(view::Modifier::CTRL)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    } else if (mods.test(view::Modifier::ALT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    if (key == view::Key::KEY_LEFT_ALT || key == view::Key::KEY_RIGHT_ALT) {
+        if (action == view::KeyAction::PRESS) {
+            this->modkeys.set(view::Modifier::ALT);
+        } else if (action == view::KeyAction::RELEASE) {
+            this->modkeys.reset(view::Modifier::ALT);
+        }
+    }
+    if (key == view::Key::KEY_LEFT_SHIFT || key == view::Key::KEY_RIGHT_SHIFT) {
+        if (action == view::KeyAction::PRESS) {
+            this->modkeys.set(view::Modifier::SHIFT);
+        } else if (action == view::KeyAction::RELEASE) {
+            this->modkeys.reset(view::Modifier::SHIFT);
+        }
+    }
+    if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
+        if (action == view::KeyAction::PRESS) {
+            this->modkeys.set(view::Modifier::CTRL);
+        }
+        else if (action == view::KeyAction::RELEASE) {
+            this->modkeys.reset(view::Modifier::CTRL);
+        }
     }
 
     if (action == view::KeyAction::PRESS && (key >= view::Key::KEY_0 && key <= view::Key::KEY_9)) {
@@ -551,15 +565,7 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
 
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
-    if (mods.test(view::Modifier::SHIFT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    } else if (mods.test(view::Modifier::CTRL)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    } else if (mods.test(view::Modifier::ALT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
-    }
-
-    bool altPressed = mods.test(view::Modifier::ALT);
+    bool altPressed = this->modkeys.test(view::Modifier::ALT);
 
     if (!this->toggleMouseSelection) {
         switch (button) {
@@ -749,17 +755,14 @@ bool View3D_2::onToggleButton(param::ParamSlot& p) {
 void View3D_2::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
     const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
-    if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
+    if (this->modkeys.test(view::Modifier::SHIFT)) {
         step *= runFactor;
     }
 
-    bool anymodpressed = this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT) ||
-                         this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT) ||
-                         this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL);
-
+    bool anymodpressed = !this->modkeys.none();
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
 
-    if (!(this->arcballDefault ^ this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT))) {
+    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT))) {
         auto resolution = this->cam.resolution_gate();
         glm::vec2 midpoint(resolution.width() / 2.0f, resolution.height() / 2.0f);
         glm::vec2 mouseDirection = glm::vec2(this->mouseX, this->mouseY) - midpoint;
