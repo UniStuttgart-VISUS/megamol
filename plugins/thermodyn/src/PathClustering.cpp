@@ -87,9 +87,9 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
 
             // initialize ds with frame 0
             prepareFrameData(db_input, paths, 0, entrySize, tempOffset);
-            stdplugin::datatools::DBSCAN<float, 4>::cluster_set_t clusters;
+            stdplugin::datatools::DBSCAN<float, true, 4>::cluster_set_t clusters;
             {
-                stdplugin::datatools::DBSCAN<float, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
+                stdplugin::datatools::DBSCAN<float, true, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
                 clusters = db.Scan();
             }
 
@@ -104,8 +104,9 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
                 // progressClusterAssoc(cluster_assoc, assigned);
                 // assigned.clear();
                 // continue with the rest of the frames
+                db_input.clear();
                 prepareFrameData(db_input, paths, fidx, entrySize, tempOffset);
-                stdplugin::datatools::DBSCAN<float, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
+                stdplugin::datatools::DBSCAN<float, true, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
                 auto clusters = db.Scan();
                 createClusterAssoc(vertexSet.size(), clusters, cluster_assoc);
                 auto localVset = getVertexList(clusters);
@@ -131,6 +132,10 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
     outCall->SetDirFlags(outDirsPresent_);
     outCall->SetEntrySizes(outEntrySizes_);
     outCall->SetTimeSteps(inCall->GetTimeSteps());
+
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
 }
