@@ -15,6 +15,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/Input.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {

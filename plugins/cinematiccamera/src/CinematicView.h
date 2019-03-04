@@ -31,6 +31,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Input.h"
 
 #include "vislib/Serialisable.h"
 #include "vislib/Trace.h"

@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 #include "vislib/types.h"
-#include "vislib/sys/KeyCode.h"
+#include "mmcore/view/Input.h"
 
 
 namespace megamol {
@@ -33,22 +33,52 @@ namespace param {
         /**
          * Ctor.
          *
-         * @param title The human readable title of the button.
-         * @param key The prefered key for the button (if any). Be away, that
-         *            if you do not assign a key, the button will not be
-         *            available from viewers without a GUI.
+         * Be aware, that if you do not assign a key, the button will not be
+         * available from viewers without a GUI.
          */
-        ButtonParam(WORD key = 0);
+        ButtonParam(void);
 
         /**
          * Ctor.
          *
-         * @param title The human readable title of the button.
-         * @param key The prefered key for the button (if any). Be away, that
+         * @param keycode The prefered key code for the button (if any). Be aware, that
+         *                if you do not assign a key, the button will not be
+         *                available from viewers without a GUI.
+         */
+        ButtonParam(const core::view::KeyCode &keycode);
+
+        /**
+         * Ctor.
+         *
+         * @param keycode The prefered key code for the button (if any). Be aware, that
+         *                if you do not assign a key, the button will not be
+         *                available from viewers without a GUI.
+         */
+        ButtonParam(const core::view::Key &key);
+
+        /**
+         * Ctor.
+         *
+         * @param key  The prefered key for the button (if any). Be aware, that
+         *             if you do not assign a key, the button will not be
+         *             available from viewers without a GUI.
+         * @param mods The prefered modifier for the button (if any). Be aware, that
+         *             if you do not assign a key, the button will not be
+         *             available from viewers without a GUI.
+         */
+        ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods);
+
+        /**
+         * Ctor.
+         *
+         * @param key The prefered key for the button (if any). Be aware, that
+         *            if you do not assign a key, the button will not be
+         *            available from viewers without a GUI.
+         * @param mod The prefered modifier for the button (if any). Be aware, that
          *            if you do not assign a key, the button will not be
          *            available from viewers without a GUI.
          */
-        ButtonParam(const vislib::sys::KeyCode &key);
+        ButtonParam(const core::view::Key &key, const core::view::Modifier &mod);
 
         /**
          * Dtor.
@@ -81,23 +111,30 @@ namespace param {
          */
         virtual vislib::TString ValueString(void) const;
 
-        inline void SetKeyCode(const vislib::sys::KeyCode& code) {
-            this->key = code;
+        inline void SetKeyCode(const core::view::KeyCode& keycode) {
+            this->keycode = keycode;
         }
-        inline void SetKeyCode(WORD code) {
-            this->key = code;
+
+        inline void SetKey(const core::view::Key& key) {
+            this->keycode.key = key;
+        }
+
+        inline void SetModifiers(const core::view::Modifiers& mods) {
+            this->keycode.mods = mods;
+        }
+
+        inline void SetModifier(const core::view::Modifier& mod) {
+            this->keycode.mods = core::view::Modifiers(mod);
+        }
+
+        inline core::view::KeyCode GetKeyCode(void) const {
+            return this->keycode;
         }
 
     private:
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
         /** The key of this button */
-        vislib::sys::KeyCode key;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        core::view::KeyCode keycode;
 
     };
 
