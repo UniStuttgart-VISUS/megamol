@@ -30,6 +30,7 @@ bool ButtonParamUILayer::Enabled() {
 }
 
 bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+
     if ((std::chrono::system_clock::now() - last_update) > std::chrono::seconds(1)) {
         // update list periodically
         updateHotkeyList();
@@ -40,7 +41,7 @@ bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action
 
     core::view::KeyCode keyCode(key, mods);
 
-    auto hotkey = hotkeys.find(keyCode);
+    auto hotkey = hotkeys.find(keyCode.ToString());
     if (hotkey == hotkeys.end()) return false;
 
     CoreHandle hParam;
@@ -56,7 +57,7 @@ namespace {
     struct enumData {
         void *hCore;
         void *hView;
-        std::map<core::view::KeyCode, vislib::TString> hotKeys;
+        std::map<std::string, vislib::TString> hotKeys;
     };
 
     void MEGAMOLCORE_CALLBACK enumParameters(const TCHAR *name, struct enumData *data) {
@@ -85,7 +86,7 @@ namespace {
 
         // store param handle as part of the key codes
         core::view::KeyCode keyCode(static_cast<core::view::Key>(static_cast<int>(key)), core::view::Modifiers(static_cast<int>(mods)));
-        data->hotKeys[keyCode] = name;
+        data->hotKeys[keyCode.ToString()] = name;
     }
 
 }
