@@ -428,6 +428,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 #endif
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
         cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+
+        cr3d->SetInstanceTime(instTime);
     }
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
     // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
@@ -514,16 +516,6 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->renderLookAt();
     }
     ::glPushMatrix();
-
-    if (this->overrideCall) {
-        (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
-        cr3d->SetInstanceTime(instTime);
-#ifndef ROTATOR_HACK
-        cr3d->SetTime(time);
-#else
-        cr3d->SetTime(0);
-#endif
-    }
 
     // call for render
     if (cr3d != NULL) {

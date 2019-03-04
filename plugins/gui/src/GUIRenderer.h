@@ -158,7 +158,7 @@ private:
     /** Show/hide only hotkey parameter. */
     bool show_hotkey_params;
     /** Reset main parameter window. */
-    bool reset_main_param_win_size;
+    bool reset_main_window;
 
     // ----- FPS window -----
     /** Show/hide fps/ms options. */
@@ -188,6 +188,9 @@ private:
 
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
+
+    /** */
+    double lastInstTime;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -231,7 +234,7 @@ private:
     /**
      * Reset size and position of main window.
      */
-    void resetSizePosMainWindow(std::string win_label);
+    void resetWindowSizePos(std::string win_label, float min_height);
 
     /**
      * Show tooltip on hover.
@@ -269,7 +272,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , hotkey_spacing(0.0f)
     , show_hotkey_params(false)
-    , reset_main_param_win_size(false)
+    , reset_main_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f) // update fps/ms every X second(s)
@@ -282,7 +285,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , float_print_prec(3) // float format
     , tooltip_time(0.0f)
     , tooltip_id(0)
-    , windows() {
+    , windows()
+    , lastInstTime(0.0) {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -297,7 +301,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
     , hotkey_spacing(0.0f)
     , show_hotkey_params(false)
-    , reset_main_param_win_size(false)
+    , reset_main_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f) // update fps/ms every X second(s)
@@ -310,7 +314,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , float_print_prec(3) // float format
     , tooltip_time(0.0f)
     , tooltip_id(0)
-    , windows() {
+    , windows()
+    , lastInstTime(0.0) {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -359,7 +364,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->windows.push_back(tmp_win);
 
     // FPS overlay Window -----------------------------------------------------
-    tmp_win.label = "fps/ms";
+    tmp_win.label = "FPS";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
@@ -525,6 +530,10 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         io.KeysDown[keyIndex] = true;
     }
 
+    // ------------------------------------------------------------------------
+    // NB: Hotkey processing is stopped after first occurence. Order of hotkey processing is crucial.
+    // Hotkeys always trigger just oneevent.
+
     // Exit megamol
     bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
                 ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
@@ -536,7 +545,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     // Reset main window
     hotkeyPressed = ((io.KeyShift) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F12))));
     if (hotkeyPressed) {
-        this->reset_main_param_win_size = true;
+        this->reset_main_window = true;
     }
 
     // Hotkeys of window(s)
@@ -551,7 +560,13 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         }
     }
 
-    // Check for pressed arameter hotkeys
+    // Always consume keyboard input if requested by any imgui widget (e.g. text input).
+    // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
+    if (io.WantCaptureKeyboard) {
+        return true;
+    }
+
+    // Check for pressed parameter hotkeys
     hotkeyPressed = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         auto param = slot.Parameter();
@@ -569,6 +584,8 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
             }
         }
     });
+    // ------------------------------------------------------------------------
+
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr == nullptr) return false;
@@ -748,22 +765,17 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
         }
     }
 
-    int viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    auto viewportXOff = viewport[0];
-    auto viewportYOff = viewport[1];
-    auto viewportWidth = viewport[2];
-    auto viewportHeight = viewport[3];
-    auto viewportWidthMax = call.GetViewport().Width();
-    auto viewportHeightMax = call.GetViewport().Height();
+    auto viewportWidth = call.GetViewport().Width();
+    auto viewportHeight = call.GetViewport().Height();
 
     // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplayVisibleMin = ImVec2((float)viewportXOff, (float)viewportYOff);
-    io.DisplayVisibleMax = ImVec2((float)(viewportWidthMax - viewportXOff), (float)(viewportHeightMax - viewportYOff));
-    io.DisplaySize = ImVec2((float)viewportWidthMax, (float)viewportHeightMax);
+    io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
-    io.DeltaTime = static_cast<float>(call.LastFrameTime() / 1000.0); // given in milliseconds
+
+    auto instTime = call.InstanceTime(); // given in seconds
+    io.DeltaTime = static_cast<float>(instTime - this->lastInstTime);
+    this->lastInstTime = instTime;
 
     // Start the frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -792,9 +804,9 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::string win_label) {
 
     // Trigger window size reset outside of menu window to get right position
-    if (this->reset_main_param_win_size) {
-        this->resetSizePosMainWindow(win_label);
-        this->reset_main_param_win_size = false;
+    if (this->reset_main_window) {
+        this->resetWindowSizePos(win_label, 100.0f);
+        this->reset_main_window = false;
     }
 
     // Menu -------------------------------------------------------------------
@@ -867,7 +879,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     ImGui::Checkbox("Options", &this->show_fps_ms_options);
 
     // Default for this->fps_ms_mode == 0
-    std::string label = "###fps_ms"; /// use hidden label
+    std::string label = "###fpsms"; /// use hidden label
     std::vector<float>* arr = &this->fps_values;
     float val_scale = this->fps_value_scale;
     if (this->fps_ms_mode == 1) {
@@ -982,9 +994,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     // Windows
     bool reset_win_size = false;
     if (ImGui::BeginMenu("Windows")) {
-        if (ImGui::MenuItem("Reset Window Size", "SHIFT + 'F12'")) {
-            this->reset_main_param_win_size = true;
+        if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
+            this->reset_main_window = true;
         }
+        this->hoverToolTip("Reset size and position of main window");
         ImGui::Separator();
 
         for (auto& win : this->windows) {
@@ -1049,9 +1062,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
 
     std::string help;
 
+    std::string modname = mod.FullName().PeekBuffer();
+
     auto param = slot.Parameter();
     if (!param.IsNull()) {
-        std::string label = slot.Name().PeekBuffer();
+        std::string paramname = slot.Name().PeekBuffer();
+        std::string label = paramname + "###" + modname + "::" + paramname;
+
         std::string desc = slot.Description().PeekBuffer();
 
         std::stringstream float_stream;
@@ -1202,7 +1219,7 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
 /**
  * GUIRenderer<M, C>::resetCurrentWindow
  */
-template <class M, class C> void GUIRenderer<M, C>::resetSizePosMainWindow(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::resetWindowSizePos(std::string win_label, float min_height) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -1214,8 +1231,6 @@ template <class M, class C> void GUIRenderer<M, C>::resetSizePosMainWindow(std::
     if (win_pos.y < 0) {
         win_pos.y = style.DisplayWindowPadding.y;
     }
-
-    const float min_height = 100.0f;
 
     auto win_width = 0.0f; // width = 0 means auto resize
     auto win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);

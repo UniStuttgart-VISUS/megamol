@@ -11,7 +11,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/graphics/ColourParser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
@@ -31,7 +30,7 @@ splitOriSlot("split.orientation", "The split orientation"),
 splitSlot("split.pos", "The split position"),
 splitWidthSlot("split.width", "The split border width"),
 splitColourSlot("split.colour", "The split border colour"),
-splitColour(192, 192, 192, 255), overrideCall(NULL),
+overrideCall(NULL),
 clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
 focus(0), mouseX(0.0f), mouseY(0.0f) {
 
@@ -53,8 +52,8 @@ focus(0), mouseX(0.0f), mouseY(0.0f) {
     this->splitWidthSlot << new param::FloatParam(4.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->splitWidthSlot);
 
-    vislib::StringA s;
-    this->splitColourSlot << new param::StringParam(vislib::graphics::ColourParser::ToString(s, this->splitColour));
+    this->splitColour = { 0.75f, 0.75f, 0.75f, 1.0f };
+    this->splitColourSlot << new param::ColorParam(this->splitColour);
     this->splitColourSlot.SetUpdateCallback(&SplitView::splitColourUpdated);
     this->MakeSlotAvailable(&this->splitColourSlot);
 
@@ -211,7 +210,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     ::glDisable(GL_DEPTH_TEST);
     ::glDisable(GL_TEXTURE_2D);
     ::glBegin(GL_QUADS);
-    ::glColor4ubv(this->splitColour.PeekComponents());
+    ::glColor4fv(this->splitColour.data());
     float sx1, sx2, sy1, sy2;
     float sp = this->splitSlot.Param<param::FloatParam>()->Value();
     float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
@@ -579,9 +578,7 @@ void view::SplitView::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::SplitView::splitColourUpdated(param::ParamSlot& sender) {
     try {
-        vislib::graphics::ColourParser::FromString(
-            this->splitColourSlot.Param<param::StringParam>()->Value(),
-            this->splitColour);
+        this->splitColour = this->splitColourSlot.Param<param::ColorParam>()->Value();
     }
     catch (...) {
         Log::DefaultLog.WriteError("Unable to parse splitter colour");
