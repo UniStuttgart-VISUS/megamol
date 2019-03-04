@@ -131,7 +131,7 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 	this->blending.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->blending);
 
-	this->computeButton.SetParameter(new param::ButtonParam('c'));
+	this->computeButton.SetParameter(new param::ButtonParam(view::Key::KEY_C));
 	this->MakeSlotAvailable(&this->computeButton);
 
 	this->computed_map = false;
@@ -259,12 +259,12 @@ MapGenerator::MapGenerator(void) : Renderer3DModule(),
 	this->radius_offset_param.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
 	this->MakeSlotAvailable(&this->radius_offset_param);
 
-	this->shaderReloadButtonParam << new param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
+	this->shaderReloadButtonParam << new param::ButtonParam(view::Key::KEY_F5);
 	this->MakeSlotAvailable(&this->shaderReloadButtonParam);
 
     this->store_new_mesh = false;
 
-	this->store_png_button.SetParameter(new param::ButtonParam('s'));
+	this->store_png_button.SetParameter(new param::ButtonParam(view::Key::KEY_S));
 	this->MakeSlotAvailable(&this->store_png_button);
 
 	this->store_png_path.SetParameter(new param::FilePathParam(""));

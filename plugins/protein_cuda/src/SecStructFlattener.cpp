@@ -95,15 +95,15 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->playParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->playParam);
 
-	this->playButtonParam << new param::ButtonParam('p');
+	this->playButtonParam << new param::ButtonParam(core::view::Key::KEY_P);
 	this->playButtonParam.SetUpdateCallback(this, &SecStructFlattener::onPlayToggleButton);
 	this->MakeSlotAvailable(&this->playButtonParam);
 
-	this->singleStepButtonParam << new param::ButtonParam('o');
+	this->singleStepButtonParam << new param::ButtonParam(core::view::Key::KEY_O);
 	this->singleStepButtonParam.SetUpdateCallback(this, &SecStructFlattener::onSingleStepButton);
 	this->MakeSlotAvailable(&this->singleStepButtonParam);
 
-	this->resetButtonParam << new param::ButtonParam('r');
+	this->resetButtonParam << new param::ButtonParam(core::view::Key::KEY_R);
 	this->resetButtonParam.SetUpdateCallback(this, &SecStructFlattener::onResetButton);
 	this->MakeSlotAvailable(&this->resetButtonParam);
 
