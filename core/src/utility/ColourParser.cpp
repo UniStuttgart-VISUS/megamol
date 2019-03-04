@@ -256,6 +256,9 @@ vislib::StringA utility::ColourParser::ToStringA(float r, float g, float b, floa
 bool utility::ColourParser::FromString(const vislib::StringA& str, float &outR, float &outG, float &outB, float &outA) {
     vislib::StringA s(str);
     s.TrimSpaces();
+    if (s.IsEmpty()) {
+        return false;
+    }
 
     if (s[0] == '#') {
         // byte colour

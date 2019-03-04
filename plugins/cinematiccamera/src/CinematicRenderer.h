@@ -31,6 +31,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/View3D.h"
+#include "mmcore/view/Input.h"
 
 #include "vislib/Trace.h"
 #include "vislib/String.h"
@@ -151,12 +152,6 @@ namespace megamol {
             /** The mouse movement callback. */
             virtual bool OnMouseMove(double x, double y) override;
 
-            //virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
-
-            //virtual bool OnChar(unsigned int codePoint) override;
-
-            //virtual bool OnMouseScroll(double dx, double dy) override;
-
 		private:
 
             /**********************************************************************
@@ -173,7 +168,6 @@ namespace megamol {
 
             KeyframeManipulator              manipulator;
             bool                             manipulatorGrabbed;
-            bool                             showMode;
 
             vislib::graphics::gl::FramebufferObject fbo;
 

@@ -61,7 +61,7 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&commSelectSlot_);
     this->view_name_slot_ << new megamol::core::param::StringParam{"::inst::view"};
     this->MakeSlotAvailable(&this->view_name_slot_);
-    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{vislib::sys::KeyCode::KEY_MOD_ALT | 't'};
+    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{ core::view::Key::KEY_T, core::view::Modifier::ALT};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
     this->MakeSlotAvailable(&this->trigger_button_slot_);
     this->target_machine_slot_ << new megamol::core::param::StringParam{"127.0.0.1"};

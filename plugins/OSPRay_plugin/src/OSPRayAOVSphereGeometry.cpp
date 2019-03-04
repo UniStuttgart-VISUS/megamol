@@ -370,15 +370,20 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     cd->SetFrameID(os->FrameID());
     (*cd)(1);
     os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
-
+    
     return true;
 }
 
 bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
+    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
+    if (cd == nullptr) return false;
     if (this->InterfaceIsDirtyNoReset()) {
         os->setDirty();
+    }
+    if (this->datahash != cd->DataHash()) {
+        os->SetDataHash(cd->DataHash());
     }
     return true;
 }
