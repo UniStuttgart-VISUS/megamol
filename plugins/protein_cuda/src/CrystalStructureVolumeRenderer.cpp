@@ -42,6 +42,8 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+#include "mmcore/view/Input.h"
+
 #include <thrust/version.h>
 #include "cuda_gl_interop.h"
 
@@ -557,10 +559,10 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
     this->meshFileParam.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->meshFileParam);
 
-    this->toggleIsoSurfaceSlot.SetParameter(new core::param::ButtonParam('I'));
+    this->toggleIsoSurfaceSlot.SetParameter(new core::param::ButtonParam(core::view::Key::KEY_I));
     this->MakeSlotAvailable(&this->toggleIsoSurfaceSlot);
 
-    this->toggleCurlFilterSlot.SetParameter(new core::param::ButtonParam('C'));
+    this->toggleCurlFilterSlot.SetParameter(new core::param::ButtonParam(core::view::Key::KEY_C));
     this->MakeSlotAvailable(&this->toggleCurlFilterSlot);
 }
 
