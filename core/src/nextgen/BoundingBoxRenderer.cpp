@@ -216,9 +216,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const Bou
     glUniformMatrix4fv(this->lineShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     glUniform3fv(this->lineShader.ParameterLocation("bbMin"), 1, glm::value_ptr(bbmin));
     glUniform3fv(this->lineShader.ParameterLocation("bbMax"), 1, glm::value_ptr(bbmax));
-    if (colptr != nullptr) {
-        glUniform3f(this->lineShader.ParameterLocation("color"), colptr[0], colptr[1], colptr[2]);
-    }
+    glUniform3f(this->lineShader.ParameterLocation("color"), colptr[0], colptr[1], colptr[2]);
 
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
@@ -245,7 +243,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glm::vec3 bbmin = glm::vec3(bb.BoundingBox().Left(), bb.BoundingBox().Bottom(), bb.BoundingBox().Back());
     glm::vec3 bbmax = glm::vec3(bb.BoundingBox().Right(), bb.BoundingBox().Top(), bb.BoundingBox().Front());
 
-    auto colptr = this->boundingBoxColorSlot.Param<param::ColorParam>()->Value();
+    auto color = this->boundingBoxColorSlot.Param<param::ColorParam>()->Value();
 
     this->lineShader.Enable();
 
@@ -265,9 +263,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glUniformMatrix4fv(this->lineShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     glUniform3fv(this->lineShader.ParameterLocation("bbMin"), 1, glm::value_ptr(bbmin));
     glUniform3fv(this->lineShader.ParameterLocation("bbMax"), 1, glm::value_ptr(bbmax));
-    if (colptr != nullptr) {
-        glUniform3f(this->lineShader.ParameterLocation("color"), colptr[0], colptr[1], colptr[2]);
-    }
+    glUniform3f(this->lineShader.ParameterLocation("color"), color[0], color[1], color[2]);
 
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);

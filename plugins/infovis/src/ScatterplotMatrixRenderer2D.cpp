@@ -342,7 +342,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
     glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
-        this->axisColorParam.Param<core::param::ColorParam>()->Value());
+        this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
     glUniform1ui(this->minimalisticAxisShader.ParameterLocation("numTicks"), numTicks);
     glUniform1f(this->minimalisticAxisShader.ParameterLocation("tickLength"), tickLength);
     glUniform1i(this->minimalisticAxisShader.ParameterLocation("redundantTicks"),
@@ -368,7 +368,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
 
     this->axisFont.ClearBatchDrawCache();
 
-    const auto* axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
@@ -379,7 +379,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(axisColor, xyBL, xyTL, size, size, nameSize, false, label.c_str(),
+        this->axisFont.DrawString(axisColor.data(), xyBL, xyTL, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         const float tickStart = i * (size + margin);
@@ -391,12 +391,12 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
             const std::string pLabel = to_string(pValue);
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(axisColor, p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor.data(), p, xyTL + tickLength, tickSize, false, pLabel.c_str(),
                     core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             if (i > 0) {
-                this->axisFont.DrawString(axisColor, xyBL - margin + tickLength, p, tickSize, false, pLabel.c_str(),
-                    core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+                this->axisFont.DrawString(axisColor.data(), xyBL - margin + tickLength, p, tickSize, false,
+                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -405,7 +405,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
 }
 
 void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
-    const auto* axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
+    const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
@@ -447,7 +447,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
     // Other uniforms.
     glUniform1ui(this->scientificAxisShader.ParameterLocation("depth"), recursiveDepth);
     glUniform4fv(this->scientificAxisShader.ParameterLocation("axisColor"), 1,
-        this->axisColorParam.Param<core::param::ColorParam>()->Value());
+        this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
 
     // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle());
@@ -473,7 +473,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
 
         // Labels
         std::string label = columnInfos[i].Name();
-        this->axisFont.DrawString(axisColor, cellStart, cellEnd, size, size, nameSize, false, label.c_str(),
+        this->axisFont.DrawString(axisColor.data(), cellStart, cellEnd, size, size, nameSize, false, label.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 
         float delta = columnInfos[i].MaximumValue() - columnInfos[i].MinimumValue();
@@ -491,12 +491,12 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
 
             // Tick labels for x axis
             if (i < columnCount - 1) {
-                this->axisFont.DrawString(axisColor, pos, cellEnd + tickLength, tickLabelSize, false, pLabel.c_str(),
-                    core::utility::AbstractFont::ALIGN_CENTER_TOP);
+                this->axisFont.DrawString(axisColor.data(), pos, cellEnd + tickLength, tickLabelSize, false,
+                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
             // Tick labels for y axis
             if (i > 0) {
-                this->axisFont.DrawString(axisColor, cellStart - margin + tickLength, pos, tickLabelSize, false,
+                this->axisFont.DrawString(axisColor.data(), cellStart - margin + tickLength, pos, tickLabelSize, false,
                     pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }

@@ -181,8 +181,8 @@ protected:
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
-    /** the input modifiers corresponding to this cursor. */
-    vislib::graphics::InputModifiers modkeys;
+    /** the set input modifiers*/
+    core::view::Modifiers modkeys;
 #ifdef _WIN32
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */

@@ -28,7 +28,6 @@ view::AbstractCallRender3D& view::AbstractCallRender3D::operator=(
 
     this->camParams = rhs.camParams;
     this->bboxs = rhs.bboxs;
-    this->lastFrameTime = rhs.lastFrameTime;
 
     return *this;
 }
@@ -38,6 +37,6 @@ view::AbstractCallRender3D& view::AbstractCallRender3D::operator=(
  * view::AbstractCallRender3D::AbstractCallRender3D
  */
 view::AbstractCallRender3D::AbstractCallRender3D(void) : AbstractCallRender(),
-        camParams(), bboxs(), lastFrameTime(0.0) {
+        camParams(), bboxs() {
     // intentionally empty
 }

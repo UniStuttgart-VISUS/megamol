@@ -15,7 +15,14 @@
 
 using namespace megamol::core::param;
 
-ColorParam::ColorParam(const Type& initVal) { std::memcpy(val, initVal, sizeof(Type)); }
+ColorParam::ColorParam(const ColorType& initVal) { this->val = initVal; }
+
+ColorParam::ColorParam(const float& initR, const float& initG, const float& initB, const float& initA) {
+    this->val[0] = initR;
+    this->val[1] = initG;
+    this->val[2] = initB;
+    this->val[3] = initA;
+}
 
 ColorParam::ColorParam(const vislib::TString& initVal) { ParseValue(initVal); }
 
@@ -30,7 +37,8 @@ bool ColorParam::ParseValue(vislib::TString const& v) {
     try {
         float vParsed[4];
         if (core::utility::ColourParser::FromString(v, 4, vParsed)) {
-            this->SetValue(vParsed);
+            ColorType vConverted = { vParsed[0], vParsed[1], vParsed[2], vParsed[3] };
+            this->SetValue(vConverted);
             return true;
         }
     } catch (...) {
@@ -42,9 +50,9 @@ vislib::TString ColorParam::ValueString(void) const {
     return core::utility::ColourParser::ToString(this->val[0], this->val[1], this->val[2], this->val[3]);
 }
 
-void ColorParam::SetValue(const Type& v, bool setDirty) {
-    if (std::memcmp(this->val, v, sizeof(Type))) {
-        std::memcpy(this->val, v, sizeof(Type));
+void ColorParam::SetValue(const ColorType& v, bool setDirty) {
+    if (v != this->val) {
+        this->val = v;
         if (setDirty) this->setDirty();
     }
 }
