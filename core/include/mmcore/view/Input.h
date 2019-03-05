@@ -1,5 +1,5 @@
 /*
- * AbstractInputScope.h
+ * Input.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
