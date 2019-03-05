@@ -79,6 +79,7 @@
 #include "ParticleVisibilityFromVolume.h"
 #include "IColToIdentity.h"
 #include "ParticleIdentitySort.h"
+#include "LocalBoundingBoxExtractor.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -220,6 +221,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
+
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
