@@ -24,10 +24,11 @@
 #include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
+using namespace megamol::core::nextgen;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
-#define RENDER_ATOMS_AS_SPHERES 1
+#define RENDER_ATOMS_AS_SPHERES 0
 
 #define MAP_BUFFER_LOCALLY
 #define DEBUG_BLAHBLAH
@@ -430,6 +431,17 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
     clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
     clipCol[3] = 1.0f;
 
+    Camera_2 cam;
+    cr->GetCamera(cam);
+
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewT, projT;
+    cam.calc_matrices(snapshot, viewT, projT);
+
+    glm::mat4 view = viewT;
+    glm::mat4 proj = projT;
+    glm::mat4 mvp = proj * view;
+
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -442,29 +454,15 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glScalef(scaling, scaling, scaling);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
     // matrices
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    // Compute modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = modelViewMatrix;
-    modelViewMatrixInv.Invert();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixInv = modelViewProjMatrix;
-    modelViewProjMatrixInv.Invert();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
-    modelViewProjMatrixTransp.Transpose();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInvTrans = modelViewMatrixInv;
-    modelViewMatrixInvTrans.Transpose();
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projectionMatrixInv = projMatrix;
-    projectionMatrixInv.Invert();
+    auto viewInv = glm::inverse(view);
+    auto mvpInv = glm::inverse(mvp);
+    auto mvpTrans = glm::transpose(mvp);
+    auto mvpInvTrans = glm::transpose(mvpInv);
+    auto projInv = glm::transpose(proj);
 
     GLfloat lightPos[4];
     glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
@@ -677,14 +675,11 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
             // cr->GetCameraParameters()->Up().PeekComponents());
             glUniform4fv(this->splineShader.ParameterLocation("clipDat"), 1, clipDat);
             glUniform4fv(this->splineShader.ParameterLocation("clipCol"), 1, clipCol);
+            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(viewInv));
+            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp));
+            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(mvpInv));
             glUniformMatrix4fv(
-                this->splineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-            glUniformMatrix4fv(
-                this->splineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-            glUniformMatrix4fv(
-                this->splineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE,
-                modelViewProjMatrixTransp.PeekComponents());
+                this->splineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(mvpTrans));
             glUniform1f(this->splineShader.ParameterLocation("scaling"),
                 this->scalingParam.Param<param::FloatParam>()->Value());
             float minC = 0.0f, maxC = 0.0f;
@@ -751,19 +746,13 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
         // cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
-        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
-        glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(viewInv));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(mvpInv));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(mvpTrans));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, glm::value_ptr(mvpInvTrans));
+        glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, glm::value_ptr(projInv));
         glUniform1f(
             this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
         glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"),
