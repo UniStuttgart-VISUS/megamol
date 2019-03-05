@@ -56,7 +56,10 @@ std::string CameraSerializer::serialize(const std::vector<Camera_2::minimal_stat
  * CameraSerializer::deserialize
  */
 bool CameraSerializer::deserialize(Camera_2::minimal_state_type& outCamera, const std::string text) const {
-    return false; // TODO
+    nlohmann::json obj = nlohmann::json::parse(text);
+    bool result = this->getCamFromJsonObject(outCamera, obj);
+    if (!result) outCamera = {};
+    return result;
 }
 
 /*
@@ -64,7 +67,23 @@ bool CameraSerializer::deserialize(Camera_2::minimal_state_type& outCamera, cons
  */
 bool CameraSerializer::deserialize(
     std::vector<Camera_2::minimal_state_type>& outCameras, const std::string text) const {
-    return false; // TODO
+    nlohmann::json obj = nlohmann::json::parse(text);
+    outCameras.clear();
+    if (!obj.is_array()) {
+        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        return false;
+    }
+    for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
+        size_t index = static_cast<size_t>(it - obj.begin());
+        auto cur = *it;
+        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        bool result = this->getCamFromJsonObject(cam, cur);
+        if (!result) {
+            cam = {}; // empty the cam if it is garbage
+        }
+        outCameras.push_back(cam);
+    }
+    return true;
 }
 
 /*
@@ -90,4 +109,94 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, const Camera_2
     outObj["position"] = cam.position;
     outObj["projection_type"] = cam.projection_type;
     outObj["resolution_gate"] = cam.resolution_gate;
+}
+
+/*
+ * CameraSerializer::getCamFromJsonObject
+ */
+bool CameraSerializer::getCamFromJsonObject(
+    Camera_2::minimal_state_type& cam, const nlohmann::json::value_type& val) const {
+    // If we would be sure that the read file is valid we could omit the sanity checks.
+    // In fact, one sanity check is missing but very time consuming. We should check each array element for the correct
+    // data type.
+    if (!val.is_object()) return false;
+    if (val.at("centre_offset").is_array() && val.at("centre_offset").size() == cam.centre_offset.size()) {
+        val.at("centre_offset").get_to(cam.centre_offset);
+    } else {
+        return false;
+    }
+    if (val.at("convergence_plane").is_number_float()) {
+        val.at("convergence_plane").get_to(cam.convergence_plane);
+    } else {
+        return false;
+    }
+    if (val.at("eye").is_number_integer()) {
+        val.at("eye").get_to(cam.eye);
+    } else {
+        return false;
+    }
+    if (val.at("far_clipping_plane").is_number_float()) {
+        val.at("far_clipping_plane").get_to(cam.far_clipping_plane);
+    } else {
+        return false;
+    }
+    if (val.at("film_gate").is_array() && val.at("film_gate").size() == cam.film_gate.size()) {
+        val.at("film_gate").get_to(cam.film_gate);
+    } else {
+        return false;
+    }
+    if (val.at("gate_scaling").is_number_integer()) {
+        val.at("gate_scaling").get_to(cam.gate_scaling);
+    } else {
+        return false;
+    }
+    if (val.at("half_aperture_angle").is_number_float()) {
+        val.at("half_aperture_angle").get_to(cam.half_aperture_angle_radians);
+    } else {
+        return false;
+    }
+    if (val.at("half_disparity").is_number_float()) {
+        val.at("half_disparity").get_to(cam.half_disparity);
+    } else {
+        return false;
+    }
+    if (val.at("image_tile").is_array() && val.at("image_tile").size() == cam.image_tile.size()) {
+        val.at("image_tile").get_to(cam.image_tile);
+    } else {
+        return false;
+    }
+    if (val.at("near_clipping_plane").is_number_float()) {
+        val.at("near_clipping_plane").get_to(cam.near_clipping_plane);
+    } else {
+        return false;
+    }
+    if (val.at("orientation").is_array() && val.at("orientation").size() == cam.orientation.size()) {
+        val.at("orientation").get_to(cam.orientation);
+    } else {
+        return false;
+    }
+    if (val.at("position").is_array() && val.at("position").size() == cam.position.size()) {
+        val.at("position").get_to(cam.position);
+    } else {
+        return false;
+    }
+    if (val.at("projection_type").is_number_integer()) {
+        val.at("projection_type").get_to(cam.projection_type);
+    } else {
+        return false;
+    }
+    if (val.at("resolution_gate").is_array() && val.at("resolution_gate").size() == cam.resolution_gate.size()) {
+        val.at("resolution_gate").get_to(cam.resolution_gate);
+    } else {
+        return false;
+    }
+
+    // try to read the additional "valid" value
+    if (val.at("valid").is_boolean()) {
+        bool valid;
+        val.at("valid").get_to(valid);
+        return valid;
+    }
+
+    return true;
 }

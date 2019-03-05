@@ -10,6 +10,7 @@
 
 #include "json.hpp"
 #include "mmcore/nextgen/Camera_2.h"
+#include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace core {
@@ -84,8 +85,9 @@ public:
 
     /**
      * Deserializes multiple camera at once when given a text containing a vector of camera descriptions
+     * The input vector will be cleared before writing to it
      *
-     * @param outCamera Output parameter that will contain a vector of camera if this method was successful
+     * @param outCamera Output parameter that will contain a vector of cameras if this method was successful
      * @param text The input text to deserialize
      * @return True on success, false otherwise.
      */
@@ -134,6 +136,16 @@ private:
      * @param cam The camera description that will be stored in the json object
      */
     void addCamToJsonObject(nlohmann::json& outObj, const Camera_2::minimal_state_type& cam) const;
+
+    /**
+     * Extracts camera information from a json object that shall contain the camera.
+     *
+     * @param cam The read camera object
+     * @param val The json value the camera object is read from
+     * @param True if the reading was successful and either a 'true' valid flag is present or none at all. False
+     * otherwise.
+     */
+    bool getCamFromJsonObject(Camera_2::minimal_state_type& cam, const nlohmann::json::value_type& val) const;
 
     /** The indentation for the pretty mode */
     const int prettyIndent = 2;

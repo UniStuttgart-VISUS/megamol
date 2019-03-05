@@ -51,9 +51,27 @@ template <size_t N>
 bool megamol::core::nextgen::CameraSerializer::deserialize(
     std::array<megamol::core::nextgen::Camera_2::minimal_state_type, N>& outCameras, std::array<bool, N>& outValidity,
     const std::string text) const {
-
-    // TODO
-    return false;
+    nlohmann::json obj = nlohmann::json::parse(text);
+    if (!obj.is_array()) {
+        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        return false;
+    }
+    if (obj.size() > N) {
+        vislib::sys::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        return false;
+    }
+    for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
+        size_t index = static_cast<size_t>(it - obj.begin());
+        auto cur = *it;
+        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        bool result = this->getCamFromJsonObject(cam, cur);
+        if (!result) {
+            cam = {}; // empty the cam if it is garbage
+        }
+        outCameras[index] = cam;
+        outValidity[index] = result;
+    }
+    return true;
 }
 
 /*
@@ -63,7 +81,25 @@ template <size_t N>
 bool megamol::core::nextgen::CameraSerializer::deserialize(
     std::array<std::pair<megamol::core::nextgen::Camera_2::minimal_state_type, bool>, N>& outCameras,
     const std::string text) const {
-
-    // TODO
-    return false;
+    nlohmann::json obj = nlohmann::json::parse(text);
+    if (!obj.is_array()) {
+        vislib::sys::Log::DefaultLog.WriteError("The input text does not contain a json array");
+        return false;
+    }
+    if (obj.size() > N) {
+        vislib::sys::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        return false;
+    }
+    for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
+        size_t index = static_cast<size_t>(it - obj.begin());
+        auto cur = *it;
+        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        bool result = this->getCamFromJsonObject(cam, cur);
+        if (!result) {
+            cam = {}; // empty the cam if it is garbage
+        }
+        outCameras[index].first = cam;
+        outCameras[index].second = result;
+    }
+    return true;
 }
