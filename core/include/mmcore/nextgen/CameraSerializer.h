@@ -8,6 +8,7 @@
 #ifndef MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
 #define MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
 
+#include "json.hpp"
 #include "mmcore/nextgen/Camera_2.h"
 
 namespace megamol {
@@ -61,6 +62,17 @@ public:
         const std::array<Camera_2::minimal_state_type, N>& camVec, const std::array<bool, N>& validityFlags) const;
 
     /**
+     * Serializes an array of cameras into a string containing a json array.
+     * This method exists for the special case of serializing the cameras of a View.
+     * These contain an additional validity flag.
+     *
+     * @param camVec The array containing the camera information
+     * @return A json string containing the information of the serialized cameras
+     */
+    template <size_t N>
+    std::string serialize(const std::array<std::pair<Camera_2::minimal_state_type, bool>, N>& camVec) const;
+
+    /**
      * Deserializes a text containing a single camera description.
      * Please only use this method when you know the text contains only a single camera
      *
@@ -83,9 +95,8 @@ public:
      * Deserializes a predetermined amount of cameras at once, also reading the additionally stored validity flags.
      * This method exists predominantly to deserialize previously stored checkpoints of a View.
      * It will only be successful if the text to deserialize contains at least the specified amount of camera
-     descriptions.
-     * If there are no validity flags present in the input data, a flag of 'true' will be assumed.
-
+     * descriptions. If there are no validity flags present in the input data, a flag of 'true' will be assumed.
+     *
      * @param outCameras Output parameter that will contain the deserialized cameras
      * @param outValidity Output parameter that will contain the additionally read validity flags
      * @param text The input text to deserialize
@@ -96,6 +107,19 @@ public:
         const std::string text) const;
 
     /**
+     * Deserializes a predetermined amount of cameras at once, also reading the additionally stored validity flags.
+     * This method exists predominantly to deserialize previously stored checkpoints of a View.
+     * If there are no validity flags present in the input data, a flag of 'true' will be assumed.
+     *
+     * @param outCameras Output parameter that will contain the deserialized cameras alongside with the validity flags
+     * @param text The input text to deserialize
+     * @return True on success, false otherwise
+     */
+    template <size_t N>
+    bool deserialize(
+        std::array<std::pair<Camera_2::minimal_state_type, bool>, N>& outCameras, const std::string text) const;
+
+    /**
      * Enables or disables the pretty serialization mode.
      *
      * @param pretty True if the pretty mode should be enabled, false otherwise. Default value is 'true'.
@@ -103,6 +127,17 @@ public:
     void setPrettyMode(bool prettyMode = true);
 
 private:
+    /*
+     * Adds a camera description to the given json object.
+     *
+     * @param outObj The json object that wil contain the camera description
+     * @param cam The camera description that will be stored in the json object
+     */
+    void addCamToJsonObject(nlohmann::json& outObj, const Camera_2::minimal_state_type& cam) const;
+
+    /** The indentation for the pretty mode */
+    const int prettyIndent = 2;
+
     /** Flag indication if the pretty mode is enabled for this serializer */
     bool prettyMode;
 };
@@ -110,5 +145,7 @@ private:
 } // namespace nextgen
 } // namespace core
 } // namespace megamol
+
+#include "mmcore/nextgen/CameraSerializer.inl"
 
 #endif /* MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED */

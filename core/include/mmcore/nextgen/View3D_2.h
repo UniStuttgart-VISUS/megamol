@@ -12,12 +12,13 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
-#include <memory>
 #include <map>
+#include <memory>
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/nextgen/CameraSerializer.h"
 #include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender.h"
@@ -156,6 +157,13 @@ public:
 
 protected:
     /**
+     * This method determines the file path the camera file should have
+     * 
+     * @return The file path of the camera file as string
+     */
+    std::string determineCameraFilePath(void) const;
+
+    /**
      * Unpacks the mouse coordinates, which are relative to the virtual
      * viewport size.
      *
@@ -254,6 +262,9 @@ protected:
 
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
+
+    /** The object responsible for camera serialization */
+    CameraSerializer serializer;
 #ifdef _WIN32
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */
@@ -276,14 +287,20 @@ protected:
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
 
-    /** The stored camera settings */
-    param::ParamSlot cameraSettingsSlot;
-
     /** Triggers the storage of the camera settings */
     param::ParamSlot storeCameraSettingsSlot;
 
     /** Triggers the restore of the camera settings */
     param::ParamSlot restoreCameraSettingsSlot;
+
+    /** Slot activating or deactivating the override of already present camera settings */
+    param::ParamSlot overrideCamSettingsSlot;
+
+    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
+    param::ParamSlot autoSaveCamSettingsSlot;
+
+    /** Slot activating or deactivating the automatic load of camera parameters at program startup */
+    param::ParamSlot autoLoadCamSettingsSlot;
 
     /** Triggers the reset of the view */
     param::ParamSlot resetViewSlot;

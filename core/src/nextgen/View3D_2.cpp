@@ -11,6 +11,7 @@
 #ifdef _WIN32
 #    include <windows.h>
 #endif /* _WIN32 */
+#include <fstream>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
@@ -56,9 +57,19 @@ View3D_2::View3D_2(void)
     , isCamLight(true)
     , bboxs()
     , showLookAt("showLookAt", "Flag showing the look at point")
-    , cameraSettingsSlot("camsettings", "The stored camera settings")
-    , storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings")
-    , restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings")
+    , storeCameraSettingsSlot("camstore::storecam",
+          "Triggers the storage of the camera settings. This only works if you use .lua project files")
+    , restoreCameraSettingsSlot("camstore::restorecam",
+          "Triggers the restore of the camera settings. This only works if you use .lua project files")
+    , overrideCamSettingsSlot("camstore::overrideSettings",
+          "When activated, existing camera settings files will be overwritten by this "
+          "module. This only works if you use .lua project files")
+    , autoSaveCamSettingsSlot("camstore::autoSaveSettings",
+          "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or MegaMol "
+          "is closed. This only works if you use .lua project files")
+    , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
+          "When activated, the view will load the camera settings from disk at startup. "
+          "This only works if you use .lua project files")
     , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
     , isCamLightSlot(
@@ -106,9 +117,6 @@ View3D_2::View3D_2(void)
     this->showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showLookAt);
 
-    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
-    this->MakeSlotAvailable(&this->cameraSettingsSlot);
-
     this->storeCameraSettingsSlot.SetParameter(
         new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
     this->storeCameraSettingsSlot.SetUpdateCallback(&View3D_2::onStoreCamera);
@@ -117,6 +125,15 @@ View3D_2::View3D_2(void)
     this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
     this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D_2::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+
+    this->overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->overrideCamSettingsSlot);
+
+    this->autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->autoSaveCamSettingsSlot);
+
+    this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
 
     this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
     this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
@@ -231,7 +248,7 @@ unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
  * View3D_2::SerialiseCamera
  */
 void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    // TODO implement
+    // TODO currently emtpy because the old serialization sucks
 }
 
 
@@ -239,7 +256,7 @@ void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
  * View3D_2::DeserialiseCamera
  */
 void nextgen::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    // TODO implement
+    // TODO currently empty because the old serialization sucks
 }
 
 /*
@@ -351,9 +368,10 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                 this->ResetView();
                 this->firstImg = false;
 
-                if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+                // TODO
+                /*if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
                     this->onRestoreCamera(this->restoreCameraSettingsSlot);
-                }
+                }*/
             } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
                 this->ResetView();
             }
@@ -501,8 +519,7 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
     if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
         if (action == view::KeyAction::PRESS) {
             this->modkeys.set(view::Modifier::CTRL);
-        }
-        else if (action == view::KeyAction::RELEASE) {
+        } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::CTRL);
         }
     }
@@ -516,6 +533,9 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         if (mods.test(view::Modifier::CTRL)) {
             this->savedCameras[index].first = this->cam.get_minimal_state(this->savedCameras[index].first);
             this->savedCameras[index].second = true;
+            if (this->autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+                this->onStoreCamera(this->storeCameraSettingsSlot); // manually trigger the storing
+            }
         } else {
             if (this->savedCameras[index].second) {
                 this->cam = this->savedCameras[index].first;
@@ -691,7 +711,6 @@ bool View3D_2::create(void) {
 
     // TODO implement
 
-
     this->cursor2d.SetButtonCount(3);
 
     this->firstImg = true;
@@ -721,7 +740,46 @@ bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
  * View3D_2::onStoreCamera
  */
 bool View3D_2::onStoreCamera(param::ParamSlot& p) {
-    // TODO implement
+    auto path = this->determineCameraFilePath();
+    if (path.empty()) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
+            "files. Please use a .lua project file instead");
+        return false;
+    }
+
+    if (!this->overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+        // check if the file already exists
+        std::ifstream file(path);
+        if (file.good()) {
+            file.close();
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "The camera output file path already contains a camera file with the name '%s'. Override mode is "
+                "deactivated, so no camera is stored",
+                path.c_str());
+            return false;
+        }
+    }
+
+    // save the current camera, too
+    Camera_2::minimal_state_type minstate;
+    this->cam.get_minimal_state(minstate);
+    this->savedCameras[10].first = minstate;
+    this->savedCameras[10].second = true;
+    this->serializer.setPrettyMode();
+    auto outString = this->serializer.serialize(this->savedCameras);
+
+    std::ofstream file(path);
+    if (file.is_open()) {
+        file << outString;
+        file.close();
+    } else {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
+        return false;
+    }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
     return true;
 }
 
@@ -747,6 +805,18 @@ bool View3D_2::onResetView(param::ParamSlot& p) {
 bool View3D_2::onToggleButton(param::ParamSlot& p) {
     // TODO implement
     return true;
+}
+
+/*
+ * View3D_2::determineCameraFilePath
+ */
+std::string View3D_2::determineCameraFilePath(void) const {
+    auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
+    if (path.empty()) return path; // early exit for mmprj projects
+    auto dotpos = path.find_last_of('.');
+    path = path.substr(0, dotpos);
+    path.append("_cam.json");
+    return path;
 }
 
 /*
