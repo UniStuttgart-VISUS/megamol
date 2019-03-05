@@ -189,7 +189,7 @@ private:
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
-    /** */
+    /** Last instance time.  */
     double lastInstTime;
 
     // FUNCTIONS --------------------------------------------------------------
@@ -821,18 +821,20 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     std::string color_param_help = "Hover parameter for description tooltip";
     this->helpMarkerToolTip(color_param_help);
 
-
     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
 
     int overrideState = -1;
+
     if (ImGui::Button("Expand All")) {
         overrideState = 1;
     }
     ImGui::SameLine();
+
     if (ImGui::Button("Collapse All")) {
         overrideState = 0;
     }
-    ImGui::SameLine();
+    ImGui::SameLine(0.0f, 50.0f);
+
     ImGui::Checkbox("Show Hotkeys", &this->show_hotkey_params);
     ImGui::Separator();
 
@@ -841,14 +843,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (currentMod != &mod) {
             currentMod = &mod;
+            std::string label = mod.FullName().PeekBuffer();
 
-            auto headerId = ImGui::GetID(mod.FullName());
+            auto headerId = ImGui::GetID(label.c_str());
             auto headerState = overrideState;
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            currentModOpen = ImGui::CollapsingHeader(mod.FullName());
+            currentModOpen = ImGui::CollapsingHeader(label.c_str());
         }
         if (currentModOpen) {
             if (this->show_hotkey_params) {
@@ -872,14 +875,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         this->fps_ms_mode = 0;
     }
     ImGui::SameLine();
+
     if (ImGui::RadioButton("ms", (this->fps_ms_mode == 1))) {
         this->fps_ms_mode = 1;
     }
-    ImGui::SameLine(140.0f);
+    ImGui::SameLine(0.0f, 50.0f);
+
     ImGui::Checkbox("Options", &this->show_fps_ms_options);
 
     // Default for this->fps_ms_mode == 0
-    std::string label = "###fpsms"; /// use hidden label
     std::vector<float>* arr = &this->fps_values;
     float val_scale = this->fps_value_scale;
     if (this->fps_ms_mode == 1) {
@@ -896,13 +900,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         stream << arr->back();
         val = stream.str();
     }
-    ImGui::PlotHistogram(label.c_str(), data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50));
+    ImGui::PlotHistogram("###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50)); /// use hidden label
 
     if (this->show_fps_ms_options) {
 
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
+
         if (ImGui::InputFloat("Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(),
                 ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->fps_values.clear();
@@ -912,23 +917,25 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         this->helpMarkerToolTip(help);
 
         int mvc = (int)this->max_value_count;
-        ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
+        if (ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            this->max_value_count = (size_t)mvc;
+        }
 
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
         }
         ImGui::SameLine();
+
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
-
             for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != (*arr).rend(); ++i) {
                 stream << (*i) << "\n";
             }
-
             ImGui::SetClipboardText(stream.str().c_str());
         }
         ImGui::SameLine();
+
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
         this->helpMarkerToolTip(help);
