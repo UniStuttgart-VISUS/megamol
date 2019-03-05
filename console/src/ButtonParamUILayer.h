@@ -20,7 +20,7 @@ namespace console {
      */
     class ButtonParamUILayer : public AbstractUILayer {
     public:
-        ButtonParamUILayer(gl::Window& wnd, void * coreHandle, void * viewHandle);
+        ButtonParamUILayer(void * coreHandle, void * viewHandle);
         virtual ~ButtonParamUILayer();
 
         inline void SetMaskingLayer(AbstractUILayer *layer) {

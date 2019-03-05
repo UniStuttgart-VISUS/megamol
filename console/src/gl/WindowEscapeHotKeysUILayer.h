@@ -12,6 +12,8 @@
 #include "AbstractUILayer.h"
 #include "gl/Window.h"
 
+#include <functional>
+
 namespace megamol {
 namespace console {
 namespace gl {
@@ -20,8 +22,13 @@ namespace gl {
     class WindowEscapeHotKeysUILayer : public AbstractUILayer {
     public:
         WindowEscapeHotKeysUILayer(Window& wnd);
+        WindowEscapeHotKeysUILayer(std::function<void()> func);
         virtual ~WindowEscapeHotKeysUILayer();
         virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
+
+	private:
+        Window* wndPtr = nullptr;
+        std::function<void()> actionFunc;
     };
 
 } /* end namespace gl */

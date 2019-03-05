@@ -14,8 +14,8 @@
 using namespace megamol;
 using namespace megamol::console;
 
-ButtonParamUILayer::ButtonParamUILayer(gl::Window& wnd, void * coreHandle, void * viewHandle)
-        : AbstractUILayer(wnd), hCore(coreHandle), hView(viewHandle), last_update(), hotkeys(), maskingLayer(nullptr){
+ButtonParamUILayer::ButtonParamUILayer(void * coreHandle, void * viewHandle)
+        : hCore(coreHandle), hView(viewHandle), last_update(), hotkeys(), maskingLayer(nullptr){
     last_update = std::chrono::system_clock::now() - std::chrono::hours(1);
 }
 

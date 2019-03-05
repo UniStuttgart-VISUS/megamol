@@ -22,8 +22,8 @@ using namespace megamol::console;
 
 int gl::ATBUILayer::nextWinID = 0;
 
-gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *hCore)
-        : AbstractUILayer(wnd), atb(), atbWinID(-1), atbKeyMod(0), hView(hView), winBar(), paramBar(), enabled(true), lastParamUpdateTime() {
+gl::ATBUILayer::ATBUILayer(const char* wndName, void* hView, void *hCore)
+        : atb(), atbWinID(-1), atbKeyMod(0), hView(hView), winBar(), paramBar(), enabled(true), lastParamUpdateTime(), wndName(wndName) {
     atb = atbInst::Instance();
     if (atb->OK()) {
         atbWinID = nextWinID++;
@@ -37,7 +37,7 @@ gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *
             ::TwDefine(def.str().c_str());
         }
 
-        winBar = std::make_shared<ATWinBar>(wnd, *this, wndName);
+        winBar = std::make_shared<ATWinBar>(*this, this->wndName.c_str());
         paramBar = std::make_shared<ATParamBar>(hCore);
     }
     lastParamUpdateTime = std::chrono::system_clock::now() - std::chrono::seconds(1);
@@ -57,7 +57,7 @@ bool gl::ATBUILayer::Enabled() {
 
 void gl::ATBUILayer::ToggleEnable() {
     enabled = !enabled;
-    vislib::sys::Log::DefaultLog.WriteInfo("ATB GUI Layer in Window '%s' %sabled. F12 to toggle.", wnd.Name(), enabled ? "en" : "dis");
+    vislib::sys::Log::DefaultLog.WriteInfo("ATB GUI Layer in Window '%s' %sabled. F12 to toggle.", this->wndName.c_str(), enabled ? "en" : "dis");
 }
 
 #if 1 /* REGION INPUT CONTROL */

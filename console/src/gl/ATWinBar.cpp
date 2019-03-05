@@ -16,7 +16,7 @@
 using namespace megamol;
 using namespace megamol::console;
 
-gl::ATWinBar::ATWinBar(Window& wnd, ATBUILayer& layer, const char* wndName) : ATBar("winBar"), wnd(wnd), layer(layer),
+gl::ATWinBar::ATWinBar(ATBUILayer& layer, const char* wndName) : ATBar("winBar"), layer(layer),
         winX(0), winY(0), winW(0), winH(0), winSizePresets() {
 
     winSizePresets[0] = std::tuple<ATWinBar*, unsigned int, unsigned int>(this, 256, 256);
