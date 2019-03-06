@@ -47,6 +47,10 @@ private:
 
     core::param::ParamSlot bboxSlot;
 
+    core::param::ParamSlot projectionSlot_;
+
+    core::param::ParamSlot frameSkipSlot_;
+
     std::vector<int> entrySizes_;
 
     std::vector<bool> colsPresent_;

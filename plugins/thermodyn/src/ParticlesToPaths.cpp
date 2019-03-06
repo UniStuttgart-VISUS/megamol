@@ -8,6 +8,8 @@
 
 #include <cfenv>
 #include "thermodyn/PathLineDataCall.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
 
 
 megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
@@ -16,7 +18,9 @@ megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
     , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
     , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
-    , bboxSlot("line_bbox", "True, if bbox of lines should be propagated") {
+    , bboxSlot("line_bbox", "True, if bbox of lines should be propagated")
+    , projectionSlot_("projection", "Select dimension for projection")
+    , frameSkipSlot_("frameSkip", "Frames to skip for sub-sampling") {
     dataInSlot_.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -37,6 +41,17 @@ megamol::thermodyn::ParticlesToPaths::ParticlesToPaths()
 
     this->bboxSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->bboxSlot);
+
+    auto ep = new core::param::EnumParam(-1);
+    ep->SetTypePair(-1, "None");
+    ep->SetTypePair(0, "x");
+    ep->SetTypePair(1, "y");
+    ep->SetTypePair(2, "z");
+    projectionSlot_ << ep;
+    MakeSlotAvailable(&projectionSlot_);
+
+    this->frameSkipSlot_ << new core::param::IntParam(1, 1, std::numeric_limits<int>::max());
+    MakeSlotAvailable(&frameSkipSlot_);
 }
 
 
@@ -58,8 +73,10 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
 
     if (!(*inCall)(0)) return false;
 
+    auto const frameSkip = frameSkipSlot_.Param<core::param::IntParam>()->Value();
+
     auto const plc = inCall->GetParticleListCount();
-    auto const frameCount = inCall->FrameCount();
+    auto const frameCount = inCall->FrameCount()/frameSkip;
 
     if (inCall->DataHash() != inDataHash_) {
         inDataHash_ = inCall->DataHash();
@@ -87,6 +104,8 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
         bool const cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
 
         bool const lBBoxFl = this->bboxSlot.Param<core::param::BoolParam>()->Value();
+
+        auto const projection = this->projectionSlot_.Param<core::param::EnumParam>()->Value();
 
         float xMax = std::numeric_limits<float>::lowest();
         float yMax = std::numeric_limits<float>::lowest();
@@ -156,9 +175,9 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
 
             for (unsigned int fidx = 0; fidx < frameCount; ++fidx) {
                 do {
-                    inCall->SetFrameID(fidx, true);
+                    inCall->SetFrameID(fidx*frameSkip, true);
                     (*inCall)(1);
-                } while (fidx != inCall->FrameID());
+                } while (fidx*frameSkip != inCall->FrameID());
 
                 if (!(*inCall)(0)) return false;
 
@@ -244,6 +263,29 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
             }
             fesetround(r_mode);
         }
+        if (projection > -1) {
+            for (unsigned int plidx = 0; plidx < plc; ++plidx) {
+                auto& storeEntry = pathStore_[plidx];
+                auto entrysize = entrySizes_[plidx];
+                for (auto& entry : storeEntry) {
+                    for (size_t idx = 0; idx < entry.second.size(); idx += entrysize) {
+                        entry.second[idx+projection] = 0.0f;
+                    }
+                }
+            }
+            if (projection == 0) {
+                xMin = -1.0f;
+                xMax = 1.0f;
+            }
+            if (projection == 1) {
+                yMin = -1.0f;
+                yMax = 1.0f;
+            }
+            if (projection == 2) {
+                zMin = -1.0f;
+                zMax = 1.0f;
+            }
+        }
         if (lBBoxFl) {
             this->bbox.Set(xMin, yMin, zMin, xMax, yMax, zMax);
         }
@@ -254,7 +296,14 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     outCall->SetColorFlags(colsPresent_);
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
-    outCall->SetTimeSteps(inCall->FrameCount());
+    outCall->SetTimeSteps(frameCount);
+    outCall->SetDataHash(inDataHash_);
+
+    if (this->bboxSlot.Param<core::param::BoolParam>()->Value()) {
+        outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+        outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox); //< TODO Not the right bbox
+        outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    }
 
     return true;
 }
