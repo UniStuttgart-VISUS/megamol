@@ -61,14 +61,14 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
     vislib::math::Cuboid<float> a = parts.GetBBox();
     typedef vislib::math::AbstractCuboid<float, float[6]> Super;
 
-    std::vector<float> lbf = {a.Front(), a.Left(), a.Bottom()};
-    std::vector<float> lbb = {a.Back(), a.Left(), a.Bottom()};
-    std::vector<float> ltf = {a.Front(), a.Left(), a.Top()};
-    std::vector<float> ltb = {a.Back(), a.Left(), a.Top()};
-    std::vector<float> rbf = {a.Front(), a.Right(), a.Bottom()};
-    std::vector<float> rbb = {a.Back(), a.Right(), a.Bottom()};
-    std::vector<float> rtf = {a.Front(), a.Right(), a.Top()};
-    std::vector<float> rtb = {a.Back(), a.Right(), a.Top()};
+    std::vector<float> lbf = { a.Left(), a.Bottom() ,a.Front()};
+    std::vector<float> lbb = {a.Left(), a.Bottom()  ,a.Back() };
+    std::vector<float> ltf = { a.Left(), a.Top()    ,a.Front()};
+    std::vector<float> ltb = {a.Left(), a.Top()     ,a.Back() };
+    std::vector<float> rbf = { a.Right(), a.Bottom(),a.Front()};
+    std::vector<float> rbb = {a.Right(), a.Bottom() ,a.Back() };
+    std::vector<float> rtf = { a.Right(), a.Top()   ,a.Front()};
+    std::vector<float> rtb = {a.Right(), a.Top()    ,a.Back() };
                                                     
     // set line data
     if (ldc != nullptr) {
