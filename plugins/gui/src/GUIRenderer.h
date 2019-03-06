@@ -11,9 +11,7 @@
  * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
  * - Fix x and y transformation by View2D class (will be fixed when new CallRender is available)
  *
- */
-
-/**
+ *
  * USED HOKEYS:
  *
  * - Show/hide Windows: F12 - F10
@@ -32,6 +30,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -50,6 +50,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/view/CallGUIRenderer.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -128,61 +129,58 @@ protected:
 
     virtual bool Render(C& call) override;
 
+    // Callbacks for CallGUIRenderer ------------------------------------------
+
+    bool OnGUIRenderCallback(core::Call& call);
+
+    bool OnGUIKeyCallback(core::Call& call);
+
+    bool OnGUICharCallback(core::Call& call);
+
+    bool OnGUIMouseButtonCallback(core::Call& call);
+
+    bool OnGUIMouseMoveCallback(core::Call& call);
+
+    bool OnGUIMouseScrollCallback(core::Call& call);
 
 private:
     // TYPES, ENUMS -----------------------------------------------------------
 
-    // Type for
+    /** Type for window draw callback functions */
     typedef void (GUIRenderer<M, C>::*GuiFunc)(std::string);
 
-    /** Type for holding window configuration. */
+    /** Type for holding a window configuration. */
     typedef struct _gui_window {
-        std::string label;          // window label
-        bool show;                  // open/close window
-        core::view::KeyCode hotkey; // hotkey for opening/closing window
-        ImGuiWindowFlags flags;     // imgui window flags
-        GuiFunc func;               // pointer to function drawing window content
+        std::string label;                 // window label
+        bool show;                         // open/close window
+        core::view::KeyCode hotkey;        // hotkey for opening/closing window
+        ImGuiWindowFlags flags;            // imgui window flags
+        GuiFunc func;                      // pointer to function drawing window content
+        bool param_hotkeys_show;           // flag to toggle parameter hotkeys
+        bool param_main;                   // flag indicating main parameter window
+        std::list<std::string> param_mods; // modules to show the parameters of
     } GUIWindow;
 
-    // (Arbitrary) ImGui key map assignment for text manipulation hotkeys (< 512)
-    enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
+    // ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512)
+    const enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     // VARIABLES --------------------------------------------------------------
+
+    /** The ImGui context created and used by this GUIRenderer */
+    ImGuiContext* imgui_context;
 
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    // ----- Main Parameter Window -----
-    /** Spacing of parameter name and hotkey. */
-    float hotkey_spacing;
-    /** Show/hide only hotkey parameter. */
-    bool show_hotkey_params;
-    /** Reset main parameter window. */
-    bool reset_main_window;
-
-    // ----- FPS window -----
-    /** Show/hide fps/ms options. */
-    bool show_fps_ms_options;
-    /** Current time delay since last time fps have been updated. */
-    float current_delay;
-    /** Maximum delay when fps/ms value should be renewed. */
-    float max_delay;
-    /** Array holding last fps values. */
-    std::vector<float> fps_values;
-    std::vector<float> ms_values;
-    /** Maximum value in fps_values. */
-    float fps_value_scale;
-    float ms_value_scale;
-    /** Toggle display fps or ms.  */
-    int fps_ms_mode;
-    /** Maximum count of values in value array. */
-    size_t max_value_count;
+    /** The split view callee slot */
+    core::CalleeSlot splitview_slot;
 
     /** Float precision for parameter format. */
     int float_print_prec;
 
     /** Current tooltip hover time. */
     float tooltip_time;
+
     /** Current hovered tooltip item. */
     ImGuiID tooltip_id;
 
@@ -192,20 +190,87 @@ private:
     /** Last instance time.  */
     double lastInstTime;
 
+    // ---------- Main Parameter Window ----------
+
+    /** Reset main parameter window. */
+    bool reset_main_window;
+
+    // ---------- FPS window ----------
+
+    /** Show/hide fps/ms options. */
+    bool show_fps_ms_options;
+
+    /** Current time delay since last time fps have been updated. */
+    float current_delay;
+
+    /** Maximum delay when fps/ms value should be renewed. */
+    float max_delay;
+
+    /** Array holding last fps values. */
+    std::vector<float> fps_values;
+    std::vector<float> ms_values;
+
+    /** Maximum value in fps_values. */
+    float fps_value_scale;
+    float ms_value_scale;
+
+    /** Toggle display fps or ms.  */
+    int fps_ms_mode;
+
+    /** Maximum count of values in value array. */
+    size_t max_value_count;
+
+    // ---------- Font Selection Window ----------
+
+    /** Flag for loading new font from ttf file. */
+    bool font_new_load;
+
+    /** File name of font file to load. */
+    std::string font_new_filename;
+
+    /** Font size of font to load. */
+    float font_new_size;
+
     // FUNCTIONS --------------------------------------------------------------
 
     /**
+     * Renders GUI.
+     *
+     * @param viewport      The currently available viewport.
+     * @param instanceTime  The current instance time.
+     *
+     */
+    bool renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime);
+
+    /**
      * Callback for drawing the parameter window.
+     *
+     * @param win_label  The label of the calling window.
+     *
      */
     void drawMainWindowCallback(std::string win_label);
 
     /**
+     * Draws parameters and options.
+     *
+     * @param win_label  The label of the calling window.
+     *
+     */
+    void drawParametersCallback(std::string win_label);
+
+    /**
      * Draws fps overlay window.
+     *
+     * @param win_label  The label of the calling window.
+     *
      */
     void drawFpsWindowCallback(std::string win_label);
 
     /**
      * Callback for drawing font selection window.
+     *
+     * @param win_label  The label of the calling window.
+     *
      */
     void drawFontSelectionWindowCallback(std::string win_label);
 
@@ -213,6 +278,9 @@ private:
 
     /**
      * Draws the menu bar.
+     *
+     * @param win  The window configuration to use.
+     *
      */
     void drawWindow(GUIWindow& win);
 
@@ -222,27 +290,49 @@ private:
     void drawMenu(void);
 
     /**
-     * Draws a parameter for the main parameter window.
+     * Draws a parameter.
+     *
+     * @param mod   Module the paramter belongs to.
+     * @param slot  The current parameter slot.
+     *
      */
     void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
-     * Draws only button parameters and their hotkeys for the parameter window.
+     * Draws only a button parameter's hotkey.
+     *
+     * @param mod   Module the paramter belongs to.
+     * @param slot  The current parameter slot.
+     *
      */
     void drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
      * Reset size and position of main window.
+     *
+     * @param win_label   The label of the current window.
+     * @param min_height  The minimum height the window should be reset.
+     *
      */
     void resetWindowSizePos(std::string win_label, float min_height);
 
     /**
      * Show tooltip on hover.
+     *
+     * @param text        The tooltip text.
+     * @param id          The id of the imgui item the tooltip belongs (only needed for delayed appearance of tooltip).
+     * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
+     * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
+     *
      */
     void hoverToolTip(std::string text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
 
     /**
      * Show help marker.
+     *
+     * @param text   The help tooltip text.
+     * @param label  The visible text for which the tooltip is enabled.
+     *
      */
     void helpMarkerToolTip(std::string text, std::string label = "(?)");
 
@@ -269,24 +359,49 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , hotkey_spacing(0.0f)
-    , show_hotkey_params(false)
+    : imgui_context(nullptr)
+    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , splitview_slot("splitViewRender", "Connected by SplitView")
+    , float_print_prec(3) // INIT: Float string format precision
+    , tooltip_time(0.0f)
+    , tooltip_id(0)
+    , windows()
+    , lastInstTime(0.0)
     , reset_main_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(2.0f) // update fps/ms every X second(s)
+    , max_delay(2.0f) // INIT: Update fps/ms every X second(s)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
-    , max_value_count(50) // max count of stored fps/ms values
-    , float_print_prec(3) // float format
-    , tooltip_time(0.0f)
-    , tooltip_id(0)
-    , windows()
-    , lastInstTime(0.0) {
+    , max_value_count(50) // INIT: Max count of stored fps/ms values
+    , font_new_load(false)
+    , font_new_filename()
+    , font_new_size(13.0f) {
+
+    // InputCall
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIKeyCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUICharCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseButtonCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseMoveCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseScrollCallback);
+    // CallGUIRenderer
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIRenderCallback);
+    this->MakeSlotAvailable(&this->splitview_slot);
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -298,24 +413,49 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : decorated_renderer_slot("decoratedRenderer", "Connects to another 3D Renderer being decorated")
-    , hotkey_spacing(0.0f)
-    , show_hotkey_params(false)
+    : imgui_context(nullptr)
+    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , splitview_slot("splitViewRender", "Connected by SplitView")
+    , float_print_prec(3) // INIT: Float string format precision
+    , tooltip_time(0.0f)
+    , tooltip_id(0)
+    , windows()
+    , lastInstTime(0.0)
     , reset_main_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(2.0f) // update fps/ms every X second(s)
+    , max_delay(2.0f) // INIT: Update fps/ms every X second(s)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
-    , max_value_count(50) // max count of stored fps/ms values
-    , float_print_prec(3) // float format
-    , tooltip_time(0.0f)
-    , tooltip_id(0)
-    , windows()
-    , lastInstTime(0.0) {
+    , max_value_count(50) // INIT: Max count of stored fps/ms values
+    , font_new_load(false)
+    , font_new_filename()
+    , font_new_size(13.0f) {
+
+    // InputCall
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIKeyCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUICharCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseButtonCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseMoveCallback);
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseScrollCallback);
+    // CallGUIRenderer
+    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+        core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIRenderCallback);
+    this->MakeSlotAvailable(&this->splitview_slot);
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -351,9 +491,31 @@ template <class M, class C> GUIRenderer<M, C>::~GUIRenderer() { this->Release();
  */
 template <class M, class C> bool GUIRenderer<M, C>::create() {
 
+    // Create ImGui context ---------------------------------------------------
+    bool other_context = (ImGui::GetCurrentContext() != nullptr);
+    // Check for existing context and share FontAtlas with new context (required by ImGui).
+    ImFontAtlas* current_fonts = nullptr;
+    if (other_context) {
+        ImGuiIO& current_io = ImGui::GetIO();
+        current_fonts = current_io.Fonts;
+    }
+    IMGUI_CHECKVERSION();
+    this->imgui_context = ImGui::CreateContext(current_fonts);
+    if (this->imgui_context == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Couldn't create ImGui context");
+        return false;
+    }
+    ImGui::SetCurrentContext(this->imgui_context);
+
+    // Init OpenGL for ImGui --------------------------------------------------
+    const char* glsl_version = "#version 130"; /// "#version 150"
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
     // Window configurations
     this->windows.clear();
     GUIWindow tmp_win;
+    tmp_win.param_hotkeys_show = false;
+    tmp_win.param_mods.clear();
     // Main Window ------------------------------------------------------------
     tmp_win.label = "MegaMol";
     tmp_win.show = true;
@@ -361,6 +523,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags =
         ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar; /// | ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
+    tmp_win.param_main = true;
     this->windows.push_back(tmp_win);
 
     // FPS overlay Window -----------------------------------------------------
@@ -369,6 +532,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
+    tmp_win.param_main = false;
     this->windows.push_back(tmp_win);
 
     // Font Selection Window --------------------------------------------------
@@ -377,47 +541,56 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
+    tmp_win.param_main = false;
     this->windows.push_back(tmp_win);
-
-
-    // Create ImGui context ---------------------------------------------------
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.IniSavingRate = 5.0f; //  in seconds
     io.IniFilename = "imgui.ini";
     io.LogFilename = "imgui_log.txt";
-
-#ifdef _WIN32
-    // Loading additional fonts
     io.FontAllowUserScaling = true;
-    io.Fonts->AddFontDefault();
-    float font_size = 15.0f;
-    std::string ext = ".ttf";
-    ImFontConfig config;
-    config.OversampleH = 4;
-    config.OversampleV = 1;
 
-    const vislib::Array<vislib::StringW>& searchPaths = this->GetCoreInstance()->Configuration().ResourceDirectories();
-    for (int i = 0; i < searchPaths.Count(); ++i) {
-        for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
-            if (entry.path().extension().generic_string() == ext) {
-                std::string file_path = entry.path().generic_string();
-                std::string file_name = entry.path().filename().generic_string();
-                if (file_name == "Proggy_Tiny.ttf") {
-                    font_size = 10.0f;
-                } else if (file_name == "Roboto_Regular.ttf") {
-                    font_size = 17.0f;
-                } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
-                    font_size = 15.0f;
+    // Load initial fonts only once for all imgui contexts
+    if (!other_context) {
+        io.Fonts->AddFontDefault();
+#ifdef _WIN32
+        // Loading additional known fonts
+        float font_size = 15.0f;
+        std::string ext = ".ttf";
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 1;
+        const vislib::Array<vislib::StringW>& searchPaths =
+            this->GetCoreInstance()->Configuration().ResourceDirectories();
+        for (int i = 0; i < searchPaths.Count(); ++i) {
+            for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
+                // Finds all ttf files present in any resource directories
+                if (entry.path().extension().generic_string() == ext) {
+                    std::string file_path = entry.path().generic_string();
+                    std::string file_name = entry.path().filename().generic_string();
+                    bool found_known_font = false;
+                    if (file_name == "Proggy_Tiny.ttf") {
+                        font_size = 10.0f;
+                        found_known_font = true;
+                    } else if (file_name == "Roboto_Regular.ttf") {
+                        font_size = 18.0f;
+                        found_known_font = true;
+                    } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
+                        font_size = 15.0f;
+                        found_known_font = true;
+                    } else if (file_name == "Evolventa-Regular.ttf") {
+                        font_size = 20.0f;
+                        found_known_font = true;
+                    }
+                    if (found_known_font) {
+                        io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
+                    }
                 }
-                io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
             }
         }
-    }
 #endif
+    }
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -458,13 +631,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
 
-
-    // Init OpenGL for ImGui --------------------------------------------------
-    const char* glsl_version = "#version 130"; /// "#version 150"
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
     return true;
-}
+} // namespace gui
 
 
 /**
@@ -474,8 +642,10 @@ template <class M, class C> void GUIRenderer<M, C>::release() {
 
     this->windows.clear();
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui::DestroyContext();
+    if (this->imgui_context != nullptr) {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui::DestroyContext(this->imgui_context);
+    }
 }
 
 
@@ -484,6 +654,8 @@ template <class M, class C> void GUIRenderer<M, C>::release() {
  */
 template <class M, class C>
 bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     auto keyIndex = static_cast<size_t>(key);
@@ -535,9 +707,9 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     // Hotkeys always trigger just oneevent.
 
     // Exit megamol
-    bool exit = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
-                ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
-    if (exit) {
+    hotkeyPressed = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
+                    ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
+    if (hotkeyPressed) {
         this->shutdown();
         return true;
     }
@@ -573,19 +745,22 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         if (!param.IsNull()) {
             if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                 auto keyCode = p->GetKeyCode();
+
+                if (hotkeyPressed) return;
+
                 hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
                                 (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
                                 (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
                                 (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
                 if (hotkeyPressed) {
                     p->setDirty();
-                    return true;
                 }
             }
         }
     });
-    // ------------------------------------------------------------------------
+    if (hotkeyPressed) return true;
 
+    // ------------------------------------------------------------------------
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr == nullptr) return false;
@@ -606,6 +781,8 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
  * GUIRenderer<M, C>::OnChar
  */
 template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoint) {
+
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
@@ -628,6 +805,8 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
  * GUIRenderer<M, C>::OnMouseMove
  */
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
+
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2((float)x, (float)y);
@@ -657,6 +836,8 @@ template <class M, class C>
 bool GUIRenderer<M, C>::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
+    ImGui::SetCurrentContext(this->imgui_context);
+
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
@@ -685,6 +866,8 @@ bool GUIRenderer<M, C>::OnMouseButton(
  * GUIRenderer<M, C>::OnMouseScroll
  */
 template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, double dy) {
+
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheelH += (float)dx;
@@ -757,6 +940,11 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
  */
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
+    if (core::AbstractSlot::SlotStatus::STATUS_CONNECTED == this->splitview_slot.GetStatus()) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        return false;
+    }
+
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != nullptr) {
         (*cr) = call;
@@ -764,18 +952,65 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
             call = (*cr);
         }
     }
+    return this->renderGUI(call.GetViewport(), call.InstanceTime());
+}
 
-    auto viewportWidth = call.GetViewport().Width();
-    auto viewportHeight = call.GetViewport().Height();
+
+/**
+ * GUIRenderer<M, C>::OnGUIRenderCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
+
+    if (core::AbstractSlot::SlotStatus::STATUS_CONNECTED == this->renderSlot.GetStatus()) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        return false;
+    }
+
+    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
+    if (cr != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
+    }
+
+    try {
+        core::view::CallGUIRenderer& cgr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
+    } catch (...) {
+        ASSERT("OnGUIRenderCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::renderGUI
+ */
+template <class M, class C>
+bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+
+    ImGui::SetCurrentContext(this->imgui_context);
+
+    auto viewportWidth = viewport.Width();
+    auto viewportHeight = viewport.Height();
 
     // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    auto instTime = call.InstanceTime(); // given in seconds
-    io.DeltaTime = static_cast<float>(instTime - this->lastInstTime);
-    this->lastInstTime = instTime;
+    io.DeltaTime = static_cast<float>(instanceTime - this->lastInstTime);
+    this->lastInstTime = instanceTime;
+
+    // Loading new font (before NewFrame!)
+    if (this->font_new_load) {
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 1;
+        io.Fonts->AddFontFromFileTTF(this->font_new_filename.c_str(), this->font_new_size, &config);
+        ImGui_ImplOpenGL3_CreateFontsTexture();
+        // Load last added font
+        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+        this->font_new_load = false;
+    }
 
     // Start the frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -818,49 +1053,147 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
 
     // Parameters -------------------------------------------------------------
     ImGui::Text("PARAMETERS");
-    std::string color_param_help = "Hover parameter for description tooltip";
+    std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
+                                   "Drop] Module's Parameters to other Parameter Window";
     this->helpMarkerToolTip(color_param_help);
+    this->drawParametersCallback(win_label);
+}
+
+
+/**
+ * GUIRenderer<M, C>::drawParametersCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::string win_label) {
+
+    // Get current window configuration
+    GUIWindow* win = nullptr;
+    for (auto& w : this->windows) {
+        if (win_label == w.label) win = &w;
+    }
+    if (win == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Window label not found.");
+        return;
+    }
 
     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
 
+    // Options
     int overrideState = -1;
-
     if (ImGui::Button("Expand All")) {
         overrideState = 1;
     }
     ImGui::SameLine();
-
     if (ImGui::Button("Collapse All")) {
         overrideState = 0;
     }
     ImGui::SameLine(0.0f, 50.0f);
 
-    ImGui::Checkbox("Show Hotkeys", &this->show_hotkey_params);
+    bool show_only_hotkeys = win->param_hotkeys_show;
+    ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
+    win->param_hotkeys_show = show_only_hotkeys;
     ImGui::Separator();
 
-    const core::Module* currentMod = nullptr;
-    bool currentModOpen = false;
+    // Listing parameters
+    const core::Module* current_mod = nullptr;
+    bool current_mod_open = false;
+    size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
+
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
-        if (currentMod != &mod) {
-            currentMod = &mod;
+        if (current_mod != &mod) {
+            current_mod = &mod;
+
+            // Consider only
+
+
             std::string label = mod.FullName().PeekBuffer();
+
+            // Main parameter window always draws all all module's parameters
+            if (!win->param_main) {
+                std::list<std::string>::iterator find_iter =
+                    std::find(win->param_mods.begin(), win->param_mods.end(), label);
+                // Break if module name is not contained in list
+                if (find_iter == win->param_mods.end()) {
+                    return;
+                }
+            }
 
             auto headerId = ImGui::GetID(label.c_str());
             auto headerState = overrideState;
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
+
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            currentModOpen = ImGui::CollapsingHeader(label.c_str());
+            current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
+
+            // Context menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Copy to new Window")) {
+                    GUIWindow tmp_win;
+                    std::stringstream stream;
+                    stream << std::fixed << std::setprecision(8) << this->lastInstTime;
+                    tmp_win.label = "Parameters##parameters" + stream.str(); /// using instance time as hidden unique id
+                    tmp_win.show = true;
+                    // tmp_win.hotkey = core::view::KeyCode();
+                    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
+                    tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
+                    tmp_win.param_hotkeys_show = false;
+                    tmp_win.param_mods.push_back(label);
+                    tmp_win.param_main = false;
+                    this->windows.push_back(tmp_win);
+                }
+                // Deleting module's parameters is not available in main parameter window.
+                if (!win->param_main) { // && (win->param_mods.size() > 1)) {
+                    if (ImGui::MenuItem("Delete from List")) {
+                        std::list<std::string>::iterator find_iter =
+                            std::find(win->param_mods.begin(), win->param_mods.end(), label);
+                        // Break if module name is not contained in list
+                        if (find_iter != win->param_mods.end()) {
+                            win->param_mods.erase(find_iter);
+                        }
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
+
+            // Drag source
+            label.resize(dnd_size);
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+                ImGui::SetDragDropPayload("DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
+                ImGui::Text(label.c_str());
+                ImGui::EndDragDropSource();
+            }
         }
-        if (currentModOpen) {
-            if (this->show_hotkey_params) {
+        if (current_mod_open) {
+            if (win->param_hotkeys_show) {
                 this->drawHotkeyParameter(mod, slot);
             } else {
                 this->drawParameter(mod, slot);
             }
         }
     });
+
+    // Drop target
+    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetFontSize()));
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
+
+            IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
+            std::string payload_id = (const char*)payload->Data;
+
+            // Nothing to add to main parameter window (draws always all module's parameters)
+            if (!win->param_main) {
+                std::list<std::string>::iterator find_iter =
+                    std::find(win->param_mods.begin(), win->param_mods.end(), payload_id);
+                // Insert dragged module name only if not contained in list
+                if (find_iter == win->param_mods.end()) {
+                    win->param_mods.push_back(payload_id);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 
     ImGui::PopItemWidth();
 }
@@ -900,7 +1233,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         stream << arr->back();
         val = stream.str();
     }
-    ImGui::PlotHistogram("###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50)); /// use hidden label
+    ImGui::PlotHistogram(
+        "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50)); /// use hidden label
 
     if (this->show_fps_ms_options) {
 
@@ -929,7 +1263,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
-            for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != (*arr).rend(); ++i) {
+            auto end = (*arr).rend();
+            for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
                 stream << (*i) << "\n";
             }
             ImGui::SetClipboardText(stream.str().c_str());
@@ -952,13 +1287,41 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
 
     ImFont* font_current = ImGui::GetFont();
 
-    if (ImGui::BeginCombo("Select Font", font_current->GetDebugName())) {
+    if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
         for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
                 io.FontDefault = io.Fonts->Fonts[n];
         }
         ImGui::EndCombo();
     }
+    ImGui::Separator();
+
+#ifdef _WIN32
+    std::string label = "Font Filename (.ttf)";
+    size_t bufferLength = 2048;
+    char* buffer = new char[bufferLength];
+    memcpy(buffer, this->font_new_filename.c_str(), this->font_new_filename.size() + 1);
+    ImGui::InputText(label.c_str(), buffer, bufferLength);
+    this->font_new_filename = buffer;
+    delete[] buffer;
+
+    label = "Font Size";
+    std::stringstream float_stream;
+    float_stream << "%." << this->float_print_prec << "f";
+    std::string float_format = float_stream.str();
+    ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+
+    // Check for valid font file before loading
+    if (ns_fs::exists(this->font_new_filename.c_str()) && (this->font_new_filename.find(".ttf") < std::string::npos)) {
+        if (ImGui::Button("Add Font")) {
+            this->font_new_load = true;
+        }
+    } else {
+        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "Please enter valid font file name");
+    }
+    std::string help = "Same font can be loaded multiple times using different font size";
+    this->helpMarkerToolTip(help);
+#endif
 }
 
 
@@ -978,7 +1341,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
             return;
         }
 
-        (this->*win.func)(win.label);
+        if (win.func != nullptr) {
+            (this->*win.func)(win.label);
+        }
 
         ImGui::End();
     }
@@ -1069,13 +1434,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
 
     std::string help;
 
-    std::string modname = mod.FullName().PeekBuffer();
-
     auto param = slot.Parameter();
     if (!param.IsNull()) {
-        std::string paramname = slot.Name().PeekBuffer();
-        std::string label = paramname + "###" + modname + "::" + paramname;
-
+        std::string modname = mod.FullName().PeekBuffer();
+        std::string pname = slot.Name().PeekBuffer();
+        std::string label = pname + "###" + modname + "::" + pname;
         std::string desc = slot.Description().PeekBuffer();
 
         std::stringstream float_stream;
@@ -1186,7 +1549,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "Press [Return] to confirm changes.";
         }
 
-        this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
+        this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->helpMarkerToolTip(help);
     }
@@ -1202,20 +1565,22 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            auto label = std::string(slot.Name().PeekBuffer());
+            std::string label = slot.Name().PeekBuffer();
             std::string desc = slot.Description().PeekBuffer();
-            auto keycode = p->GetKeyCode().ToString();
+            std::string keycode = p->GetKeyCode().ToString();
+
+            ImGui::Columns(2, "hotkey_columns", false);
 
             ImGui::Text(label.c_str());
-            this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 0.75f);
+            this->hoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
 
-            // Adapt spacing between label and hotkey string
-            auto labelLength = ImGui::GetFontSize() * (float)label.length();
-            this->hotkey_spacing = (labelLength > this->hotkey_spacing) ? (labelLength) : (this->hotkey_spacing);
-            ImGui::SameLine(this->hotkey_spacing);
+            ImGui::NextColumn();
 
             ImGui::Text(keycode.c_str());
-            this->hoverToolTip(desc, ImGui::GetID(keycode.c_str()), 0.75f);
+            this->hoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
+
+            // Reset colums
+            ImGui::Columns(1);
 
             ImGui::Separator();
         }
@@ -1364,8 +1729,88 @@ template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::strin
  */
 template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
 
-    vislib::sys::Log::DefaultLog.WriteInfo(">>>>> GUIRenderer: Initialising megamol core instance shutdown.");
+    vislib::sys::Log::DefaultLog.WriteInfo("[GUIRenderer] Initialising megamol core instance shutdown ...");
     this->GetCoreInstance()->Shutdown();
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnGUIKeyCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIKeyCallback(core::Call& call) {
+    try {
+        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::Key && "Callback invocation mismatched input event");
+        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+    } catch (...) {
+        ASSERT("OnGUIKeyCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnGUICharCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUICharCallback(core::Call& call) {
+    try {
+        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::Char && "Callback invocation mismatched input event");
+        return this->OnChar(evt.charData.codePoint);
+    } catch (...) {
+        ASSERT("OnGUICharCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnGUIMouseButtonCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseButtonCallback(core::Call& call) {
+    try {
+        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
+        return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
+    } catch (...) {
+        ASSERT("OnGUIMouseButtonCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnGUIMouseMoveCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseMoveCallback(core::Call& call) {
+    try {
+        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+    } catch (...) {
+        ASSERT("OnGUIMouseMoveCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnGUIMouseScrollCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseScrollCallback(core::Call& call) {
+    try {
+        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
+        return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
+    } catch (...) {
+        ASSERT("OnGUIMouseScrollCallback call cast failed\n");
+    }
+    return false;
 }
 
 

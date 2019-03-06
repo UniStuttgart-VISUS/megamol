@@ -309,7 +309,7 @@ public:
         if (this->mods.test(core::view::Modifier::ALT)) msg += "ALT + ";
 
         switch (this->key) {
-            case (core::view::Key::KEY_UNKNOWN) : msg += "'Unknown Key'"; break;
+            case (core::view::Key::KEY_UNKNOWN) : msg += ""; break; // 'Unknown Key'
             case (core::view::Key::KEY_SPACE) : msg += "'Space'"; break;
             case (core::view::Key::KEY_APOSTROPHE) : msg += "'''"; break;
             case (core::view::Key::KEY_COMMA) : msg += "','"; break;    
