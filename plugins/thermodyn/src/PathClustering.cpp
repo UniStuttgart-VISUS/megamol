@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "PathClustering.h"
 
+#include <variant>
+
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmstd_datatools/DBSCAN.h"
@@ -85,18 +87,28 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
             std::vector<float> db_input;
             db_input.reserve(paths.size() * frameCount * 5);
 
+#define DBSCAN_DIM 4
+
+            std::variant<DB_4DIM, DB_7DIM> db;
+            std::vector<std::vector<float>> clusters;
+
             // initialize ds with frame 0
-            prepareFrameData(db_input, paths, 0, entrySize, tempOffset);
-            stdplugin::datatools::DBSCAN<float, true, 4>::cluster_set_t clusters;
+            prepareFrameData(db_input, paths, 0, entrySize, tempOffset, inColsPresent[plidx], inDirsPresent[plidx]);
+            //stdplugin::datatools::DBSCAN<float, true, DBSCAN_DIM, true>::cluster_set_t clusters;
             {
-                stdplugin::datatools::DBSCAN<float, true, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
-                clusters = db.Scan();
+                if (inDirsPresent[plidx]) {
+                    db = DB_7DIM(paths.size(), 8, db_input, bbox, minPts, sigma);
+                    clusters = std::get<DB_7DIM>(db).Scan();
+                } else {
+                    db = DB_4DIM(paths.size(), 5, db_input, bbox, minPts, sigma);
+                    clusters = std::get<DB_4DIM>(db).Scan();
+                }
             }
 
             /*std::vector<size_t> assigned;
             assigned.reserve(paths.size());*/
             cluster_assoc_t cluster_assoc;
-            createClusterAssoc(0, clusters, cluster_assoc);
+            createClusterAssoc(0, clusters, cluster_assoc, inDirsPresent[plidx]);
             auto localVset = getVertexList(clusters);
             vertexSet.insert(vertexSet.end(), localVset.begin(), localVset.end());
 
@@ -105,10 +117,17 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
                 // assigned.clear();
                 // continue with the rest of the frames
                 db_input.clear();
-                prepareFrameData(db_input, paths, fidx, entrySize, tempOffset);
-                stdplugin::datatools::DBSCAN<float, true, 4> db(paths.size(), 5, db_input, bbox, minPts, sigma);
-                auto clusters = db.Scan();
-                createClusterAssoc(vertexSet.size(), clusters, cluster_assoc);
+                prepareFrameData(db_input, paths, fidx, entrySize, tempOffset, inColsPresent[plidx], inDirsPresent[plidx]);
+                {
+                    if (inDirsPresent[plidx]) {
+                        db = DB_7DIM(paths.size(), 8, db_input, bbox, minPts, sigma);
+                        clusters = std::get<DB_7DIM>(db).Scan();
+                    } else {
+                        db = DB_4DIM(paths.size(), 5, db_input, bbox, minPts, sigma);
+                        clusters = std::get<DB_4DIM>(db).Scan();
+                    }
+                }
+                createClusterAssoc(vertexSet.size(), clusters, cluster_assoc, inDirsPresent[plidx]);
                 auto localVset = getVertexList(clusters);
                 // auto localEset = getEdgeList(cluster_assoc);
                 vertexSet.insert(vertexSet.end(), localVset.begin(), localVset.end());

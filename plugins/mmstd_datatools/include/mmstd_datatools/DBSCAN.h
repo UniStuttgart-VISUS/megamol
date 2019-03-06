@@ -14,6 +14,8 @@ template <typename T, bool NOISE, int DIM = -1, bool NORMAL = false> class DBSCA
 public:
     using cluster_set_t = std::vector<std::vector<T>>;
 
+    DBSCAN() = default;
+
     DBSCAN(size_t const numPts, size_t const stride, std::vector<T>& pts, vislib::math::Cuboid<float> const& bbox,
         size_t const minPts, float const sigma)
         : minpts_(minPts), sigma_(sigma), numPts_(numPts), stride_(stride) /*, ptsC_(numPts, stride, pts, bbox)*/ {
@@ -51,6 +53,50 @@ public:
         kdTree_->buildIndex();
     }
 
+    DBSCAN(DBSCAN const& rhs ) {
+        minpts_ = rhs.minpts_;
+
+        sigma_ = rhs.sigma_;
+
+        numPts_ = rhs.numPts_;
+
+        stride_ = rhs.stride_;
+
+        ptsC_ = rhs.ptsC_;
+
+        mins = rhs.mins;
+
+        maxs = rhs.maxs;
+
+        n_pts = rhs.n_pts;
+
+        kdTree_ = std::make_shared<kd_tree_t>(DIM, ptsC_, nanoflann::KDTreeSingleIndexAdaptorParams());
+        kdTree_->buildIndex();
+    }
+
+    DBSCAN& operator=(DBSCAN const& rhs) {
+        minpts_ = rhs.minpts_;
+
+        sigma_ = rhs.sigma_;
+
+        numPts_ = rhs.numPts_;
+
+        stride_ = rhs.stride_;
+
+        ptsC_ = rhs.ptsC_;
+
+        mins = rhs.mins;
+
+        maxs = rhs.maxs;
+
+        n_pts = rhs.n_pts;
+
+        kdTree_ = std::make_shared<kd_tree_t>(DIM, ptsC_, nanoflann::KDTreeSingleIndexAdaptorParams());
+        kdTree_->buildIndex();
+
+        return *this;
+    }
+
     cluster_set_t Scan();
 
 private:
@@ -63,6 +109,7 @@ private:
     void fillCluster(std::vector<T>& cluster, size_t idx);
 
     std::shared_ptr<kd_tree_t> kdTree_;
+    //kd_tree_t kdTree_;
 
     size_t minpts_;
 

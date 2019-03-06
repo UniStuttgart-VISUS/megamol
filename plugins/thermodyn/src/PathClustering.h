@@ -10,6 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "thermodyn/PathLineDataCall.h"
+#include "mmstd_datatools/DBSCAN.h"
 
 namespace megamol {
 namespace thermodyn {
@@ -35,6 +36,9 @@ protected:
     void release() override;
 
 private:
+    using DB_4DIM = stdplugin::datatools::DBSCAN<float, true, 4, true>;
+    using DB_7DIM = stdplugin::datatools::DBSCAN<float, true, 7, true>;
+
     bool getDataCallback(core::Call& c);
 
     bool getExtentCallback(core::Call& c);
@@ -63,12 +67,46 @@ private:
         }
     }
 
+    static void prepareFrameData(std::vector<float>& data, thermodyn::PathLineDataCall::pathline_store_t const& input,
+        size_t const fidx, size_t const entrySize, size_t const tempOffset, bool const colsPresent, bool const dirsPresent) {
+        size_t dirOffset = 3;
+        if (colsPresent) dirOffset += 4;
+        for (auto const& el : input) {
+            auto const& path = el.second;
+            data.push_back(path[fidx * entrySize + 0]);
+            data.push_back(path[fidx * entrySize + 1]);
+            data.push_back(path[fidx * entrySize + 2]);
+            if (dirsPresent) {
+                data.push_back(path[fidx * entrySize + dirOffset + 0]);
+                data.push_back(path[fidx * entrySize + dirOffset + 1]);
+                data.push_back(path[fidx * entrySize + dirOffset + 2]);
+            }
+            // temperature
+            data.push_back(path[fidx * entrySize + tempOffset]);
+            // id
+            data.push_back(static_cast<float>(el.first));
+        }
+    }
+
     static void createClusterAssoc(size_t const idxOffset, std::vector<std::vector<float>> const& clusters,
         cluster_assoc_t& clusterAssoc) {
         for (size_t idx = 0; idx < clusters.size(); ++idx) {
             auto const& cluster = clusters[idx];
             for (size_t pidx = 0; pidx < cluster.size() / 5; ++pidx) {
                 auto const id = static_cast<size_t>(cluster[pidx * 5 + 4]);
+                clusterAssoc[id].push_back(idxOffset + idx);
+            }
+        }
+    }
+
+    static void createClusterAssoc(size_t const idxOffset, std::vector<std::vector<float>> const& clusters,
+        cluster_assoc_t& clusterAssoc, bool const dirsPresent) {
+        size_t off = 5;
+        if (dirsPresent) off = 8;
+        for (size_t idx = 0; idx < clusters.size(); ++idx) {
+            auto const& cluster = clusters[idx];
+            for (size_t pidx = 0; pidx < cluster.size() / off; ++pidx) {
+                auto const id = static_cast<size_t>(cluster[pidx * off + off - 1]);
                 clusterAssoc[id].push_back(idxOffset + idx);
             }
         }
