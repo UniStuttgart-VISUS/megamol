@@ -515,8 +515,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
     ::glPushMatrix();
 
-    if (this->overrideCall) {
-        (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
+    if (cr3d != NULL) {
         cr3d->SetInstanceTime(instTime);
 #ifndef ROTATOR_HACK
         cr3d->SetTime(time);
