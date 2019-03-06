@@ -7,6 +7,8 @@
 
 #include "Eigen/SVD"
 #include "Eigen/Eigenvalues"
+#include "vislib/math/mathtypes.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
@@ -37,6 +39,8 @@ private:
 
     bool getExtentCallback(core::Call& c);
 
+    Eigen::MatrixXf computeModes(Eigen::MatrixXf const& v1, Eigen::MatrixXf const& v2) const;
+
     /** input of particle pathlines */
     core::CallerSlot dataInSlot_;
 
@@ -49,6 +53,8 @@ private:
 
     std::vector<float> minV_;
     std::vector<float> maxV_;
+
+    vislib::math::Cuboid<float> bbox_;
 
     using svdsolver = Eigen::BDCSVD<Eigen::MatrixXf>;
 
