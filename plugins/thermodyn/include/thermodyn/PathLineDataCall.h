@@ -13,6 +13,11 @@ class thermodyn_API PathLineDataCall : public megamol::core::AbstractGetData3DCa
 public:
     using pathline_t = std::vector<float>;
     using pathline_store_t = std::unordered_map<uint64_t, pathline_t>;
+    using pathline_store_set_t = std::vector<pathline_store_t>;
+    using entrysizes_t = std::vector<int>;
+    using color_flags_t = std::vector<bool>;
+    using dir_flags_t = std::vector<bool>;
+
 
     /**
      * Answer the name of this module.
@@ -65,13 +70,13 @@ public:
     void SetTimeSteps(size_t numTimeSteps) { numTimeSteps_ = numTimeSteps; }
 
 private:
-    std::vector<int> entrySizes_;
+    entrysizes_t entrySizes_;
 
-    std::vector<bool> dirsPresent_;
+    dir_flags_t dirsPresent_;
 
-    std::vector<bool> colsPresent_;
+    color_flags_t colsPresent_;
 
-    std::vector<pathline_store_t> const* pathStore_ = nullptr;
+    pathline_store_set_t const* pathStore_ = nullptr;
 
     size_t numTimeSteps_;
 }; // end class PathLineDataCall
