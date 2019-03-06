@@ -45,6 +45,7 @@ private:
     std::vector<Lines> linesStore_;
 
     std::vector<std::vector<float>> linesData_;
+    std::vector<std::vector<float>> colsData_;
 
 }; // end class PathToLines
 

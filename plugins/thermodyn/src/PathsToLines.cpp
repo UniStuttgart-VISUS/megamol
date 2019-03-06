@@ -50,20 +50,40 @@ bool megamol::thermodyn::PathToLines::getDataCallback(core::Call& c) {
             auto const entrysize = entrySizes[plidx];
             auto const colPresent = colsPresent[plidx];
             auto const dirPresent = dirsPresent[plidx];
+
+            //f (pathlines.empty()) continue;
+
             linesStore_.reserve(linesStore_.size() + pathlines.size());
             linesData_.reserve(linesData_.size() + pathlines.size());
+            if (colPresent) {
+                colsData_.reserve(colsData_.size() + pathlines.size());
+            }
             for (auto const& el : pathlines) {
                 auto const& data = el.second;
                 std::vector<float> line;
+                std::vector<float> col;
                 line.reserve(data.size() / entrysize * 3);
+                if (colPresent) col.reserve(data.size() / entrysize * 4);
                 for (size_t idx = 0; idx < data.size(); idx += entrysize) {
                     line.push_back(data[idx + 0]);
                     line.push_back(data[idx + 1]);
                     line.push_back(data[idx + 2]);
+                    if (colPresent) {
+                        col.push_back(data[idx + 3]);
+                        col.push_back(data[idx + 4]);
+                        col.push_back(data[idx + 5]);
+                        col.push_back(data[idx + 6]);
+                    }
                 }
                 linesData_.push_back(line);
                 Lines l;
-                l.Set(line.size()/3, linesData_.back().data(), {255, 255, 255, 255});
+                if (!colPresent) {
+                    l.Set(line.size()/3, linesData_.back().data(), {255, 255, 255, 255});
+                } else {
+                    colsData_.push_back(col);
+                    l.Set(line.size()/3, linesData_.back().data(), colsData_.back().data(), true);
+                    //l.Set(line.size()/3, linesData_.back().data(), {255, 255, 255, 255});
+                }
                 linesStore_.push_back(l);
             }
         }
