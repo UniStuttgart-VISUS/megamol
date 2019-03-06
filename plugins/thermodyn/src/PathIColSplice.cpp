@@ -50,7 +50,7 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
     if (!(*inPathsCall)(0)) return false;
     if (!(*inIColCall)(0)) return false;
 
-    if (inPathsCall->DataHash() != inPathsHash_ || inIColCall->DataHash() != inIColHash_) {
+    if (inPathsCall->DataHash() != inPathsHash_ /* || inIColCall->DataHash() != inIColHash_*/) {
         inPathsHash_ = inPathsCall->DataHash();
         inIColHash_ = inIColCall->DataHash();
         ++outDataHash_;
@@ -58,9 +58,12 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
         auto const pathsFrameCount = inPathsCall->GetTimeSteps();
         auto const icolFrameCount = inIColCall->FrameCount();
 
+        size_t frameSkip = 1;
+
         if (pathsFrameCount != icolFrameCount) {
-            vislib::sys::Log::DefaultLog.WriteError("PathIColSplice: Framecounts of inputs do not match\n");
-            return false;
+            //vislib::sys::Log::DefaultLog.WriteError("PathIColSplice: Framecounts of inputs do not match\n");
+            //return false;
+            frameSkip = icolFrameCount/pathsFrameCount;
         }
 
         outPathStore_             = *inPathsCall->GetPathStore();
@@ -73,6 +76,10 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
             return false;
         }
 
+        outEntrySizes_.resize(outPathStore_.size());
+        outDirsPresent_.resize(outPathStore_.size());
+        outColsPresent_.resize(outPathStore_.size());
+
         for (size_t plidx = 0; plidx < outPathStore_.size(); ++plidx) {
 
             outEntrySizes_[plidx] = entrySizes[plidx]+1;
@@ -80,8 +87,8 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
             outColsPresent_[plidx] = inColsPresent[plidx];
 
             auto const& particlestore = inIColCall->AccessParticles(plidx).GetParticleStore();
-            auto const& idAcc = particlestore.GetIDAcc();
-            auto const& icolAcc = particlestore.GetCRAcc();
+            auto& idAcc = particlestore.GetIDAcc();
+            auto& icolAcc = particlestore.GetCRAcc();
             auto const parCount = inIColCall->AccessParticles(plidx).GetCount();
 
             auto stride = 3;
@@ -96,17 +103,21 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
 
             for (size_t fidx = 0; fidx < pathsFrameCount; ++fidx) {
                 do {
-                    inIColCall->SetFrameID(fidx, true);
+                    inIColCall->SetFrameID(fidx * frameSkip, true);
                     (*inIColCall)(1);
-                } while (fidx != inIColCall->FrameID());
+                } while (fidx * frameSkip != inIColCall->FrameID());
 
                 if (!(*inIColCall)(0)) return false;
 
                 for (size_t pidx = 0; pidx < parCount; ++pidx) {
                     auto const idx = idAcc->Get_u64(pidx);
                     auto const temp = icolAcc->Get_f(pidx);
-                    auto& pathline = paths[idx];
-                    pathline[fidx*(stride+1)+stride] = temp;
+                    PathLineDataCall::pathline_store_t::iterator it;
+                    if ((it = paths.find(idx)) != paths.end()) {
+                        //auto& pathline = paths[idx];
+                        auto& pathline = it->second;
+                        pathline[fidx * (stride + 1) + stride] = temp;
+                    }
                 }
             }
         }
@@ -118,22 +129,30 @@ bool megamol::thermodyn::PathIColSplice::getDataCallback(core::Call& c) {
     outCall->SetEntrySizes(outEntrySizes_);
     outCall->SetTimeSteps(inPathsCall->GetTimeSteps());
 
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inPathsCall->AccessBoundingBoxes().ObjectSpaceBBox());
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inPathsCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+
     return true;
 }
 
 
 bool megamol::thermodyn::PathIColSplice::getExtentCallback(core::Call& c) {
+    auto inPathsCall = pathsInSlot_.CallAs<PathLineDataCall>();
+    if (inPathsCall == nullptr) return false;
+
+    auto inIColCall = icolInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (inIColCall == nullptr) return false;
+
     auto outCall = dynamic_cast<PathLineDataCall*>(&c);
     if (outCall == nullptr) return false;
 
-    auto inCall = pathsInSlot_.CallAs<PathLineDataCall>();
-    if (inCall == nullptr) return false;
-
-    if (!(*inCall)(1)) return false;
+    if (!(*inPathsCall)(1)) return false;
+    if (!(*inIColCall)(1)) return false;
 
 
-    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
-    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inPathsCall->AccessBoundingBoxes().ObjectSpaceBBox());
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inPathsCall->AccessBoundingBoxes().ObjectSpaceClipBox());
     /*outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox_);
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox_);*/
     outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
