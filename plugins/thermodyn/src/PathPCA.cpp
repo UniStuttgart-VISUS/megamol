@@ -52,6 +52,8 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
 
         auto const pathStore = inCall->GetPathStore();
         auto const& entrySizes = inCall->GetEntrySize();
+        auto inDirsPresent = inCall->HasDirections();
+        auto inColsPresent = inCall->HasColors();
 
         par_data_.resize(pathStore->size());
         minV_.resize(pathStore->size());
@@ -73,6 +75,14 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
             auto const rows = paths.size();
             auto const columns = inCall->GetTimeSteps();
 
+            auto const dirPresent = inDirsPresent[plidx];
+            dirsPresent_[plidx]=dirPresent;
+            entrySizes_[plidx]=dirPresent?6:3;
+            int dirOff = 3;
+            if (inColsPresent[plidx]) {
+                dirOff += 4;
+            }
+
             data.resize(rows * columns * 4);
 
             Eigen::MatrixXf v1x(rows, columns);
@@ -84,6 +94,8 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
 
             size_t currow = 0;
 
+            std::vector<float> vel(rows*columns*3);
+
             for (auto const& path : paths) {
                 auto const& line = path.second;
 
@@ -93,6 +105,11 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
                     data[par_idx * 4 + 0] = line[fidx + 0];
                     data[par_idx * 4 + 1] = line[fidx + 1];
                     data[par_idx * 4 + 2] = line[fidx + 2];
+                    if (dirPresent) {
+                        vel[par_idx*3+0]=line[fidx+dirOff+0];
+                        vel[par_idx*3+1]=line[fidx+dirOff+1];
+                        vel[par_idx*3+2]=line[fidx+dirOff+2];
+                    }
 
 
                     v1x(currow, curcol) = line[fidx + 0];
@@ -154,18 +171,28 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
                 minV = std::min(minV, val);
                 maxV = std::max(maxV, val);*/
 
-                std::vector<float> poss((columns - 1) * 3);
+                int ec = 3;
+                std::vector<float> poss((columns) * ec);
+                if (dirPresent) {
+                    ec = 6;
+                    poss.resize((columns) * ec);
+                }
 
-                for (size_t fidx = 0; fidx < columns - 1; ++fidx) {
+                for (size_t fidx = 0; fidx < columns; ++fidx) {
                     auto const idx = ridx + fidx * rows;
                     data[idx * 4 + 0] = modesX(ridx, fidx);
                     data[idx * 4 + 1] = modesY(ridx, fidx);
                     data[idx * 4 + 2] = modesZ(ridx, fidx);
                     data[idx * 4 + 3] = 0.0f;
 
-                    poss[fidx * 3 + 0] = modesX(ridx, fidx);
-                    poss[fidx * 3 + 1] = modesY(ridx, fidx);
-                    poss[fidx * 3 + 2] = modesZ(ridx, fidx);
+                    poss[fidx * ec + 0] = modesX(ridx, fidx);
+                    poss[fidx * ec + 1] = modesY(ridx, fidx);
+                    poss[fidx * ec + 2] = modesZ(ridx, fidx);
+                    if (dirPresent) {
+                        poss[fidx * ec + 3] = vel[idx + 0];
+                        poss[fidx * ec + 4] = vel[idx + 1];
+                        poss[fidx * ec + 5] = vel[idx + 2];
+                    }
 
                     // data[idx * 4 + 3] = val;
                     minX = std::min(minX, modesX(ridx, fidx));
@@ -178,7 +205,7 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
 
                 paths_to_write[ridx] = poss;
             }
-            data.resize(rows * (columns - 1) * 4);
+            data.resize(rows * (columns) * 4);
             bbox_.Set(minX, minY, minZ, maxX, maxY, maxZ);
 
             minV_[plidx] = minV;
@@ -186,6 +213,10 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
 
             vislib::sys::Log::DefaultLog.WriteInfo("PathPCA: Recoloring done min: %f max: %f\n", minV, maxV);
         }
+
+        vislib::sys::Log::DefaultLog.WriteInfo("PathPCA: BBOX - %f, %f, %f, %f, %f, %f\n", this->bbox_.GetLeft(),
+            this->bbox_.GetBottom(), this->bbox_.GetBack(), this->bbox_.GetRight(), this->bbox_.GetTop(),
+            this->bbox_.Front());
     }
 
     // par_data_.erase(std::remove_if(par_data_.begin(), par_data_.end(), [](auto const& el){return el.size() == 0;}),
@@ -201,6 +232,12 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
     outCall->SetColorFlags(colsPresent_);
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
+
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox_);
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox_);
+    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+
+    outCall->SetDataHash(inDataHash_);
 
 
     //outCall->SetParticleListCount(par_data_.size());
