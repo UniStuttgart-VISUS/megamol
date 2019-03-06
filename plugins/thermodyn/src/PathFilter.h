@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <unordered_map>
 
 #include "mmcore/Module.h"
@@ -7,6 +8,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/StringTokeniser.h"
 
 
 namespace megamol {
@@ -16,7 +19,9 @@ class PathFilter : public core::Module {
 public:
     enum class FilterType : uint8_t {
         MainDirection = 0,
-        Interface
+        Interface,
+        Plane,
+        BoxFilter
     };
 
     /** Return module class name */
@@ -42,6 +47,25 @@ private:
 
     bool getExtentCallback(core::Call& c);
 
+    static vislib::math::Cuboid<float> getBoxFromString(vislib::TString const& str) {
+        if (!str.Contains(',')) {
+            return vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+        }
+
+        auto tokens = vislib::TStringTokeniser::Split(str, ',', true);
+
+        if (tokens.Count()<6) {
+            return vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+        }
+
+        std::array<float, 6> vals;
+        for (int i = 0; i < 6; ++i) {
+            vals[i] = vislib::TCharTraits::ParseDouble(tokens[i]);
+        }
+
+        return vislib::math::Cuboid<float>(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
+    }
+
     /** input of particle pathlines */
     core::CallerSlot dataInSlot_;
 
@@ -57,6 +81,10 @@ private:
     core::param::ParamSlot maxIntSlot_;
 
     core::param::ParamSlot minIntSlot_;
+
+    core::param::ParamSlot timeCutSlot_;
+
+    core::param::ParamSlot boxSlot_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 

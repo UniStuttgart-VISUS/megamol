@@ -4,6 +4,9 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "thermodyn/PathLineDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
+#include "vislib/math/ShallowPoint.h"
 
 
 megamol::thermodyn::PathFilter::PathFilter()
@@ -13,7 +16,9 @@ megamol::thermodyn::PathFilter::PathFilter()
     , filterAxisSlot_("axis", "Axis on which filter is applied")
     , filterThresholdSlot_("threshold", "Threshold of the filter")
     , maxIntSlot_("maxInt", "Max value of interface")
-    , minIntSlot_("minInt", "Min value of interface") {
+    , minIntSlot_("minInt", "Min value of interface")
+    , timeCutSlot_("timeCut", "Crop the time dimension")
+    , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)") {
     dataInSlot_.SetCompatibleCall<PathLineDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -26,6 +31,8 @@ megamol::thermodyn::PathFilter::PathFilter()
     auto ep = new core::param::EnumParam(static_cast<int>(FilterType::MainDirection));
     ep->SetTypePair(static_cast<int>(FilterType::MainDirection), "MainDirection");
     ep->SetTypePair(static_cast<int>(FilterType::Interface),"Interface");
+    ep->SetTypePair(static_cast<int>(FilterType::Plane), "Plane");
+    ep->SetTypePair(static_cast<int>(FilterType::BoxFilter), "BoxFilter");
     filterTypeSlot_ << ep;
     MakeSlotAvailable(&filterTypeSlot_);
 
@@ -47,6 +54,12 @@ megamol::thermodyn::PathFilter::PathFilter()
     minIntSlot_ << new core::param::FloatParam(
         0.0f, std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
     MakeSlotAvailable(&minIntSlot_);
+
+    timeCutSlot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&timeCutSlot_);
+    
+    boxSlot_ << new core::param::StringParam("0.0, 0.0, 0.0, 1.0, 1.0, 1.0");
+    MakeSlotAvailable(&boxSlot_);
 }
 
 
@@ -76,6 +89,7 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
         auto const filterThreshold = filterThresholdSlot_.Param<core::param::FloatParam>()->Value();
         auto const minInt = minIntSlot_.Param<core::param::FloatParam>()->Value();
         auto const maxInt = maxIntSlot_.Param<core::param::FloatParam>()->Value();
+        auto const timeCut = timeCutSlot_.Param<core::param::BoolParam>()->Value();
 
         pathStore_ = *inCall->GetPathStore(); //< this is a copy
         dirsPresent_ = inCall->HasDirections();
@@ -106,6 +120,69 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
                         if (p[eidx + filterAxis] > maxInt) rightInt2 = true;
                     }
                     if (!(leftInt1 && rightInt1) && !(leftInt2 && rightInt2)) {
+                        toRemove.push_back(path.first);
+                    }
+                }
+                auto& ps = pathStore_[plidx];
+                for (auto const& idx : toRemove) {
+                    ps.erase(idx);
+                }
+            }
+
+        } break;
+        case FilterType::Plane: {
+
+            for (size_t plidx = 0; plidx < pathStore_.size(); ++plidx) {
+                auto const hasDir = dirsPresent_[plidx];
+                auto const hasCol = colsPresent_[plidx];
+                auto const entrySize = entrySizes_[plidx];
+                int dirOff = 3;
+                if (hasCol) dirOff += 4;
+                std::vector<size_t> toRemove;
+                for (auto const& path : pathStore_[plidx]) {
+                    auto const pathsize = path.second.size();
+                    auto const& p = path.second;
+                    std::vector<bool> planeCon(pathsize/entrySize, false);
+                    for (size_t eidx = 0; eidx < pathsize; eidx += entrySize) {
+                        bool planeCon1 = false;
+                        bool planeCon2 = false;
+                        if (std::fabs(p[eidx+dirOff+0]) >= filterThreshold) planeCon1=true;
+                        if (std::fabs(p[eidx+dirOff+2]) >= filterThreshold) planeCon2=true;
+                        planeCon[eidx/entrySize] = planeCon1&&planeCon2;
+                    }
+                    auto count = std::count(planeCon.begin(), planeCon.end(),true);
+                    if (count > 0.9f*planeCon.size()) toRemove.push_back(path.first);
+                }
+                auto& ps = pathStore_[plidx];
+                for (auto const& idx : toRemove) {
+                    ps.erase(idx);
+                }
+            }
+
+
+        } break;
+        case FilterType::BoxFilter: {
+            auto const box = getBoxFromString(boxSlot_.Param<core::param::StringParam>()->Value());
+
+            for (size_t plidx = 0; plidx < pathStore_.size(); ++plidx) {
+                auto const hasDir = dirsPresent_[plidx];
+                auto const hasCol = colsPresent_[plidx];
+                auto const entrySize = entrySizes_[plidx];
+                int dirOff = 3;
+                if (hasCol) dirOff += 4;
+                std::vector<size_t> toRemove;
+                for (auto& path : pathStore_[plidx]) {
+                    auto const pathsize = path.second.size();
+                    auto& p = path.second;
+                    bool inBox = false;
+                    for (size_t eidx = 0; eidx < pathsize; eidx += entrySize) {
+                        vislib::math::ShallowPoint<float, 3> const pivot(p.data()+eidx);
+                        if (box.Contains(pivot)) {
+                            inBox=true;
+                            break;
+                        }
+                    }
+                    if (!inBox) {
                         toRemove.push_back(path.first);
                     }
                 }
@@ -153,6 +230,11 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
     outCall->SetEntrySizes(entrySizes_);
     outCall->SetPathStore(&pathStore_);
     outCall->SetTimeSteps(inCall->GetTimeSteps());
+    outCall->SetDataHash(inDataHash_);
+
+    outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
+    outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());
+    outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
 }
