@@ -1,9 +1,8 @@
 #include "LocalBoundingBoxExtractor.h"
-#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/param/StringParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/ColourParser.h"
 
 namespace megamol {
@@ -32,7 +31,7 @@ LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
     this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->colorSlot << new megamol::core::param::StringParam(_T("gray"));
+    this->colorSlot << new megamol::core::param::ColorParam(0.8 ,0.8, 0.8, 1.0);
     this->MakeSlotAvailable(&this->colorSlot);
 
 
@@ -103,11 +102,14 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
         lineMap["l12"] = rbb;
         lineMap["l12"].insert(lineMap["l12"].end(), rbf.begin(), rbf.end());
 
+        std::vector<unsigned char> rgba = { 
+            static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[0] * 255),
+            static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[1] * 255),
+            static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[2] * 255),
+            static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[3] * 255)};
+
         auto it = lineMap.begin();
         for (auto loop = 0; loop < lineMap.size(); loop++) {
-            unsigned char rgba[4];
-            core::utility::ColourParser::FromString(
-                this->colorSlot.Param<core::param::StringParam>()->Value(), 4, rgba);
             lines[loop].Set(static_cast<unsigned int>(it->second.size() / 3), it->second.data(),
                 vislib::graphics::ColourRGBAu8(rgba[0], rgba[1], rgba[2], rgba[3]));
             std::advance(it, 1);
@@ -122,7 +124,64 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
     // set trimesh data
     if (ctmd != nullptr) {
-    
+        int triCount = 12;
+        int vertCount = 8;
+
+        allVerts.clear();
+        allVerts.insert(allVerts.end(), lbf.begin(), lbf.end());
+        allVerts.insert(allVerts.end(), lbb.begin(), lbb.end());
+        allVerts.insert(allVerts.end(), ltf.begin(), ltf.end());
+        allVerts.insert(allVerts.end(), ltb.begin(), ltb.end());
+        allVerts.insert(allVerts.end(), rbf.begin(), rbf.end());
+        allVerts.insert(allVerts.end(), rbb.begin(), rbb.end());
+        allVerts.insert(allVerts.end(), rtf.begin(), rtf.end());
+        allVerts.insert(allVerts.end(), rtb.begin(), rtb.end());
+
+        enum cornerMap {
+            LBF = 0,
+            LBB = 1,
+            LTF = 2,
+            LTB = 3,
+            RBF = 4,
+            RBB = 5,
+            RTF = 6,
+            RTB = 7
+        };
+
+
+        allCols.clear();
+        int colCount = 3;
+        allCols.resize(colCount * vertCount);
+        for (auto i = 0; i < vertCount; i++) {
+            allCols[colCount * i + 0] = this->colorSlot.Param<core::param::ColorParam>()->Value()[0];
+            allCols[colCount * i + 1] = this->colorSlot.Param<core::param::ColorParam>()->Value()[1];
+            allCols[colCount * i + 2] = this->colorSlot.Param<core::param::ColorParam>()->Value()[2];
+           // allCols[colCount * i + 3] = this->colorSlot.Param<core::param::ColorParam>()->Value()[3];
+        }
+
+        allIdx.clear();
+        allIdx = {
+            LBF, RBF, LTF,
+            LBF, RBF, LBB,
+            LBF, LTF, LBB,
+            RTF, RBF, LTF,
+            RTF, RBF, RTB,
+            RTF, LTF, RTB,
+            RBB, RTB, RBF,
+            RBB, RTB, LBB,
+            RBB, RBF, LBB,
+            LTB, LBB, RTB,
+            LTB, LBB, LTF,
+            LTB, RTB, LTF
+        };
+
+        this->mesh.SetVertexData(vertCount, allVerts.data(), nullptr, allCols.data(), nullptr, false);
+        this->mesh.SetTriangleData(triCount, allIdx.data(), false);
+
+        ctmd->SetFrameCount(1);
+        ctmd->SetFrameID(0);
+        ctmd->SetObjects(1, &this->mesh);
+        ctmd->SetDataHash(mpdc->DataHash());
     }
 
 
@@ -144,7 +203,9 @@ bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
         ldc->SetExtent(1, globalBB.Left(),globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
     }
 
-
+    if (ctmd != nullptr) {
+        ctmd->SetExtent(1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
+     }
 
     return true;
 }

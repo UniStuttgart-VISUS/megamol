@@ -6,6 +6,7 @@
 #include "mmcore/CallerSlot.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include <map>
 
 namespace megamol {
@@ -65,11 +66,17 @@ private:
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;
 
-    std::vector<geocalls::LinesDataCall::Lines> lines;
-
     core::param::ParamSlot colorSlot;
 
+    std::vector<geocalls::LinesDataCall::Lines> lines;
     std::map<std::string, std::vector<float>> lineMap;
+    
+    
+    geocalls::CallTriMeshData::Mesh mesh;
+    std::vector<float> allVerts;
+    std::vector<float> allCols;
+    std::vector<unsigned int> allIdx;
+
 
 
     };
