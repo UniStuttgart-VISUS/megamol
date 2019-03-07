@@ -238,11 +238,14 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
 
     w->AddUILayer(std::make_shared<ViewUILayer>(*w.get(), w->Handle()));
 
-#ifdef HAS_ANTTWEAKBAR
     std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(*w.get(), hCore, w->Handle());
     w->AddUILayer(btnLayer);
 
-    btnLayer->SetMaskingLayer(atbLayer.get());
+#ifdef HAS_ANTTWEAKBAR
+    // Mask ButtonParamUILayer only if AntTweakBar is enabled
+    if (atbLayer->Enabled()) {
+        btnLayer->SetMaskingLayer(atbLayer.get());
+    }
 #endif /* HAS_ANTTWEAKBAR */
 
     w->AddUILayer(std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get())); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
