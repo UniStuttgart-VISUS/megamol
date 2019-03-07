@@ -128,7 +128,7 @@ bool adiosWriter::run() {
 
 
     if (!(*cad)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
+        vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: Error during GetHeader");
         return false;
     }
 
@@ -149,7 +149,7 @@ bool adiosWriter::run() {
         }
 
         if (!(*cad)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
+            vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: Error during GetData");
             return false;
         }
 
@@ -182,6 +182,17 @@ bool adiosWriter::run() {
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<float>(adiosVar, values.data());
+            } else if (cad->getData(var)->getType() == "double") {
+
+                std::vector<double>& values = dynamic_cast<DoubleContainer*>(cad->getData(var).get())->getVec();
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<double> adiosVar =
+                    io->DefineVariable<double>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<double>(adiosVar, values.data());
             } else if (cad->getData(var)->getType() == "int") {
 
                 std::vector<int>& values = dynamic_cast<IntContainer*>(cad->getData(var).get())->getVec();
@@ -193,9 +204,44 @@ bool adiosWriter::run() {
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<int>(adiosVar, values.data());
+            } else if (cad->getData(var)->getType() == "unsigned long long int") {
+
+                std::vector<unsigned long long int>& values =
+                    dynamic_cast<UInt64Container*>(cad->getData(var).get())->getVec();
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<unsigned long long int> adiosVar =
+                    io->DefineVariable<unsigned long long int>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<unsigned long long int>(adiosVar, values.data());
+            } else if (cad->getData(var)->getType() == "unsigned char") {
+
+                std::vector<unsigned char>& values =
+                    dynamic_cast<UCharContainer*>(cad->getData(var).get())->getVec();
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<unsigned char> adiosVar =
+                    io->DefineVariable<unsigned char>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
+            } else if (cad->getData(var)->getType() == "unsigned int") {
+
+                std::vector<unsigned int>& values = dynamic_cast<UInt32Container*>(cad->getData(var).get())->getVec();
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                adios2::Variable<unsigned int> adiosVar =
+                    io->DefineVariable<unsigned int>(var, {static_cast<size_t>(this->mpiSize * num)},
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                if (adiosVar) writer.Put<unsigned int>(adiosVar, values.data());
             }
-            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Trying to write - var: %s size: %d", var.c_str(), num);
-            
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "ADIOS2writer: Trying to write - var: %s size: %d", var.c_str(), num);
         }
 
         vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: EndStep");

@@ -157,6 +157,43 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader.Get<int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
+                        } else if (var.second["Type"] == "unsigned long long int") {
+                            auto fc = std::make_shared<UInt64Container>(UInt64Container());
+                            std::vector<unsigned long long int>& tmp_vec = fc->getVec();
+                            tmp_vec.resize(num);
+
+                            adios2::Variable<unsigned long long int> advar =
+                                io->InquireVariable<unsigned long long int>(var.first);
+                            if (this->MpiInitialized && !singleValue) {
+                                advar.SetSelection({{num * this->mpiRank}, {num}});
+                            }
+
+                            reader.Get<unsigned long long int>(advar, tmp_vec);
+                            dataMap[var.first] = std::move(fc);
+                        } else if (var.second["Type"] == "unsigned char") {
+                            auto fc = std::make_shared<UCharContainer>(UCharContainer());
+                            std::vector<unsigned char>& tmp_vec = fc->getVec();
+                            tmp_vec.resize(num);
+
+                            adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.first);
+                            if (this->MpiInitialized && !singleValue) {
+                                advar.SetSelection({{num * this->mpiRank}, {num}});
+                            }
+
+                            reader.Get<unsigned char>(advar, tmp_vec);
+                            dataMap[var.first] = std::move(fc);
+                        } else if (var.second["Type"] == "unsigned int") {
+                            auto fc = std::make_shared<UInt32Container>(UInt32Container());
+                            std::vector<unsigned int>& tmp_vec = fc->getVec();
+                            tmp_vec.resize(num);
+
+                            adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.first);
+                            if (this->MpiInitialized && !singleValue) {
+                                advar.SetSelection({{num * this->mpiRank}, {num}});
+                            }
+
+                            reader.Get<unsigned int>(advar, tmp_vec);
+                            dataMap[var.first] = std::move(fc);
                         }
                     }
                 }

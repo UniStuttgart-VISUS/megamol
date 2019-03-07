@@ -126,8 +126,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         std::vector<float> g;
         std::vector<float> b;
         std::vector<float> a;
-        std::vector<int> id;
-		std::vector<float> intensity;
+        std::vector<char> id;
+        std::vector<float> intensity;
 
         // Radius
         if (cad->isInVars("radius")) {
@@ -159,7 +159,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 		}
         // ID
         if (cad->isInVars("id")) {
-            id = cad->getData("id")->GetAsInt();
+            id = cad->getData("id")->GetAsChar();
         }
 
 
@@ -171,42 +171,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         // Set particles
         const size_t particleCount = p_count[0];
 
-        mix.clear();
-        mix.resize(particleCount * stride);
-
-        for (auto i = 0; i < particleCount; i++) {
-            int pos = 0;
-            if (cad->isInVars("xyz")) {
-                mix[stride * i + 0] = X[3 * i + 0];
-                mix[stride * i + 1] = X[3 * i + 1];
-                mix[stride * i + 2] = X[3 * i + 2];
-            } else {
-                mix[stride * i + 0] = X[i];
-                mix[stride * i + 1] = Y[i];
-                mix[stride * i + 2] = Z[i];
-			}
-            pos += 3;
-            if (cad->isInVars("radius")) {
-                mix[stride * i + pos] = radius[i];
-                pos += 1;
-            }
-            if (cad->isInVars("r")) {
-                mix[stride * i + pos + 0] = r[i];
-                mix[stride * i + pos + 1] = g[i];
-                mix[stride * i + pos + 2] = b[i];
-                mix[stride * i + pos + 3] = a[i];
-			} else if (cad->isInVars("i")) {
-				mix[stride * i + pos] = intensity[i];
-			}
-            // TODO
-            // if (cad->isInVars("id")) {
-        }
-
-        mpdc->SetFrameCount(cad->getFrameCount());
-        mpdc->SetDataHash(cad->getDataHash());
-        mpdc->SetParticleListCount(1);
-        mpdc->AccessParticles(0).SetCount(particleCount);
-
+        // Set types
         auto colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
         auto vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
         auto idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
@@ -215,28 +180,71 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             mpdc->AccessParticles(0).SetGlobalRadius(radius[0]);
         } else if (cad->isInVars("radius")) {
             vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
-		} else {
-			mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
-		}
+        } else {
+            mpdc->AccessParticles(0).SetGlobalRadius(1.0f);
+        }
         if (cad->isInVars("global_r")) {
             mpdc->AccessParticles(0).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
         } else if (cad->isInVars("r")) {
             colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
-		} else if (cad->isInVars("i")) {
-			colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I; 
-		} else {
-			mpdc->AccessParticles(0).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
-		}
+        } else if (cad->isInVars("i")) {
+            colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+        } else {
+            mpdc->AccessParticles(0).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
+        }
         if (cad->isInVars("id")) {
-            idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
+            if (cad->getData("id")->getType() == "unsigned long long int") {
+                idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT64;
+            } else if (cad->getData("id")->getType() == "int") {
+
+                vislib::sys::Log::DefaultLog.WriteError("IDs with type 'int' are not supported.");
+            }
+            mpdc->AccessParticles(0).SetIDData(idType, mix.data(), stride * sizeof(float));
         }
 
+        // Fill mmpld byte array
+        mix.clear();
+        for (size_t i = 0; i < particleCount; i++) {
+            int pos = 0;
+            if (cad->isInVars("xyz")) {
+                mix.insert(mix.end(), 3*sizeof(float), X[3 * i + 0]);
+            } else {
+                mix.insert(mix.end(), sizeof(float), X[i]);
+                mix.insert(mix.end(), sizeof(float), Y[i]);
+                mix.insert(mix.end(), sizeof(float), Z[i]);
+			}
+            pos += 3;
+            if (cad->isInVars("radius")) {
+                mix.insert(mix.end(), sizeof(float), radius[i]);
+                pos += 1;
+            }
+            if (cad->isInVars("r")) {
+                mix.insert(mix.end(), sizeof(float), r[i]);
+                mix.insert(mix.end(), sizeof(float), g[i]);
+                mix.insert(mix.end(), sizeof(float), b[i]);
+                mix.insert(mix.end(), sizeof(float), a[i]);
+			} else if (cad->isInVars("i")) {
+                mix.insert(mix.end(), sizeof(float), intensity[i]);
+			}
+            if (cad->isInVars("id")) {
+                if (idType == core::moldyn::SimpleSphericalParticles::IDDATA_UINT64) {
+                    mix.insert(mix.end(), sizeof(unsigned long long int), id[i * sizeof(unsigned long long int)]);
+                } else if (idType == core::moldyn::SimpleSphericalParticles::IDDATA_UINT32) {
+                    mix.insert(mix.end(), sizeof(unsigned int), id[i * sizeof(unsigned int)]);
+                }
+            }
+        }
+
+        mpdc->SetFrameCount(cad->getFrameCount());
+        mpdc->SetDataHash(cad->getDataHash());
+        mpdc->SetParticleListCount(1);
+        mpdc->AccessParticles(0).SetCount(particleCount);
 
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride * sizeof(float));
         mpdc->AccessParticles(0).SetColourData(colType,
             mix.data() + (vertType == core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ ? 3 : 4),
             stride * sizeof(float));
-        // mpdc->AccessParticles(0).SetIDData(idType, mix.data(), stride * sizeof(float));
+
 
         currentFrame = mpdc->FrameID();
     }

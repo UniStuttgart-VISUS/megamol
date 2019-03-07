@@ -72,7 +72,7 @@ private:
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
-    std::vector<float> mix;
+    std::vector<char> mix;
 
     int currentFrame = -1;
 
