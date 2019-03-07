@@ -162,7 +162,7 @@ private:
     } GUIWindow;
 
     // ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512)
-    const enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
+    enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     // VARIABLES --------------------------------------------------------------
 
@@ -311,7 +311,7 @@ private:
      * Reset size and position of main window.
      *
      * @param win_label   The label of the current window.
-     * @param min_height  The minimum height the window should be reset.
+     * @param min_height  The minimum height the window should at least be reset.
      *
      */
     void resetWindowSizePos(std::string win_label, float min_height);
@@ -337,7 +337,7 @@ private:
     void helpMarkerToolTip(std::string text, std::string label = "(?)");
 
     /**
-     * Update fps and ms value arrays.
+     * Update stored fps and ms values.
      */
     void updateFps(void);
 
@@ -492,8 +492,8 @@ template <class M, class C> GUIRenderer<M, C>::~GUIRenderer() { this->Release();
 template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Create ImGui context ---------------------------------------------------
-    bool other_context = (ImGui::GetCurrentContext() != nullptr);
     // Check for existing context and share FontAtlas with new context (required by ImGui).
+    bool other_context = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* current_fonts = nullptr;
     if (other_context) {
         ImGuiIO& current_io = ImGui::GetIO();
@@ -520,8 +520,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.label = "MegaMol";
     tmp_win.show = true;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    tmp_win.flags =
-        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar; /// | ImGuiWindowFlags_AlwaysAutoResize;
+    tmp_win.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     tmp_win.param_main = true;
     this->windows.push_back(tmp_win);
@@ -544,6 +543,23 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.param_main = false;
     this->windows.push_back(tmp_win);
 
+
+    // Style settings ---------------------------------------------------------
+    ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.FrameRounding = 3.0f;
+    style.WindowBorderSize = 1.0f;
+    style.FrameBorderSize = 1.0f;
+    style.PopupBorderSize = 1.0f;
+    style.AntiAliasedLines = true;
+    style.AntiAliasedFill = true;
+    style.DisplayWindowPadding = ImVec2(5.0f, 5.0f);
+    style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
+    style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.24f, 0.52f, 0.88f, 1.0f);
+
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
+                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
+
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.IniSavingRate = 5.0f; //  in seconds
@@ -564,7 +580,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
         for (int i = 0; i < searchPaths.Count(); ++i) {
-            for (auto& entry : ns_fs::recursive_directory_iterator(searchPaths[i].PeekBuffer())) {
+            for (auto& entry : ns_fs::recursive_directory_iterator(ns_fs::path(searchPaths[i].PeekBuffer()))) {
                 // Finds all ttf files present in any resource directories
                 if (entry.path().extension().generic_string() == ext) {
                     std::string file_path = entry.path().generic_string();
@@ -614,22 +630,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     io.KeyMap[ImGuiKey_X] = static_cast<int>(TextModHotkeys::CTRL_X);
     io.KeyMap[ImGuiKey_Y] = static_cast<int>(TextModHotkeys::CTRL_Y);
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(TextModHotkeys::CTRL_Z);
-
-    // Style settings ---------------------------------------------------------
-    ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 3.0f;
-    style.WindowBorderSize = 1.0f;
-    style.FrameBorderSize = 1.0f;
-    style.PopupBorderSize = 1.0f;
-    style.AntiAliasedLines = true;
-    style.AntiAliasedFill = true;
-    style.DisplayWindowPadding = ImVec2(5.0f, 5.0f);
-    style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
-
-    // Global settings ---------------------------------------------------------
-    ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
-                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
 
     return true;
 } // namespace gui
@@ -940,7 +940,7 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
  */
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
-    if (core::AbstractSlot::SlotStatus::STATUS_CONNECTED == this->splitview_slot.GetStatus()) {
+    if (this->splitview_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
         vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
         return false;
     }
@@ -961,7 +961,7 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
  */
 template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
 
-    if (core::AbstractSlot::SlotStatus::STATUS_CONNECTED == this->renderSlot.GetStatus()) {
+    if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
         vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
         return false;
     }
@@ -1098,21 +1098,29 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     bool current_mod_open = false;
     size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
 
+    // Get instance name the gui renderer belongs to.
+    /// Parent's name of a module is the name of the instance a module is part of.
+    std::string inst = this->Parent()->FullName().PeekBuffer();
+    inst.append("::"); // Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
+
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
             current_mod = &mod;
-
-            // Consider only
-
-
             std::string label = mod.FullName().PeekBuffer();
 
-            // Main parameter window always draws all all module's parameters
+            // Consider only modules belonging to same instance as gui renderer.
+            if (label.find(inst) == std::string::npos) {
+                current_mod_open = false;
+                return;
+            }
+
+            // Main parameter window always draws all module's parameters
             if (!win->param_main) {
                 std::list<std::string>::iterator find_iter =
                     std::find(win->param_mods.begin(), win->param_mods.end(), label);
-                // Break if module name is not contained in list
+                // Consider only modules contained in list
                 if (find_iter == win->param_mods.end()) {
+                    current_mod_open = false;
                     return;
                 }
             }
@@ -1247,6 +1255,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
             this->fps_values.clear();
             this->ms_values.clear();
         }
+        // Validate refresh rate
+        if (this->max_delay < 0.0f) {
+            this->max_delay = 0.0f;
+        }
         std::string help = "Changes clear all values";
         this->helpMarkerToolTip(help);
 
@@ -1254,7 +1266,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         if (ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->max_value_count = (size_t)mvc;
         }
-
+        // Validate refresh rate
+        if (this->max_value_count < 0) {
+            this->max_value_count = 0;
+        }
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
         }
@@ -1297,6 +1312,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     ImGui::Separator();
 
 #ifdef _WIN32
+    ImGui::Text("Load new Font from File");
+
     std::string label = "Font Filename (.ttf)";
     size_t bufferLength = 2048;
     char* buffer = new char[bufferLength];
@@ -1310,14 +1327,18 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     float_stream << "%." << this->float_print_prec << "f";
     std::string float_format = float_stream.str();
     ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+    // Validate font size
+    if (this->font_new_size <= 0.0f) {
+        this->font_new_size = 5.0f; /// min valid font size
+    }
 
-    // Check for valid font file before loading
+    // Validate font file before offering load button
     if (ns_fs::exists(this->font_new_filename.c_str()) && (this->font_new_filename.find(".ttf") < std::string::npos)) {
         if (ImGui::Button("Add Font")) {
             this->font_new_load = true;
         }
     } else {
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "Please enter valid font file name");
+        ImGui::TextColored(ImVec4(0.24f, 0.52f, 0.88f, 1.0f), "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->helpMarkerToolTip(help);
@@ -1451,12 +1472,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string hotkeyLabel(label.c_str());
-            hotkeyLabel += " (";
-            hotkeyLabel += p->GetKeyCode().ToString();
-            hotkeyLabel += ")";
+            std::string hotkey = " (";
+            hotkey.append(p->GetKeyCode().ToString());
+            hotkey.append(")");
+            auto insert_pos = label.find("###"); // no check if found -> should be present
+            label.insert(insert_pos, hotkey);
 
-            if (ImGui::Button(hotkeyLabel.c_str())) {
+            if (ImGui::Button(label.c_str())) {
                 p->setDirty();
             }
         } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
@@ -1623,44 +1645,54 @@ template <class M, class C> void GUIRenderer<M, C>::resetWindowSizePos(std::stri
 template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
 
     ImGuiIO& io = ImGui::GetIO();
-
     this->current_delay += io.DeltaTime;
-    if (this->current_delay >= (1.0f / this->max_delay)) {
 
+    if (this->max_delay <= 0.0f) {
+        return;
+    }
+    if (this->max_value_count == 0) {
+        this->fps_values.clear();
+        this->ms_values.clear();
+        return;
+    }
+
+    if (this->current_delay > (1.0f / this->max_delay)) {
+
+        // Leave some space in histogram for text of current value
         const float scale_fac = 1.5f;
+
+        if (this->fps_values.size() != this->ms_values.size()) {
+            vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Fps and ms value arrays don't have same size.");
+            return;
+        }
 
         size_t size = this->fps_values.size();
         if (size != this->max_value_count) {
             if (size > this->max_value_count) {
                 this->fps_values.erase(
                     this->fps_values.begin(), this->fps_values.begin() + (size - this->max_value_count));
+                this->ms_values.erase(
+                    this->ms_values.begin(), this->ms_values.begin() + (size - this->max_value_count));
+
             } else if (size < this->max_value_count) {
                 this->fps_values.insert(this->fps_values.begin(), (this->max_value_count - size), 0.0f);
+                this->ms_values.insert(this->ms_values.begin(), (this->max_value_count - size), 0.0f);
             }
         }
         if (size > 0) {
             this->fps_values.erase(this->fps_values.begin());
+            this->ms_values.erase(this->ms_values.begin());
+
             this->fps_values.push_back(io.Framerate);
+            this->ms_values.push_back(io.DeltaTime * 1000.0f); // scale to milliseconds
+
             float value_max = 0.0f;
             for (auto& v : this->fps_values) {
                 value_max = (v > value_max) ? (v) : (value_max);
             }
             this->fps_value_scale = value_max * scale_fac;
-        }
 
-        size = this->ms_values.size();
-        if (size != this->max_value_count) {
-            if (size > this->max_value_count) {
-                this->ms_values.erase(
-                    this->ms_values.begin(), this->ms_values.begin() + (size - this->max_value_count));
-            } else if (size < this->max_value_count) {
-                this->ms_values.insert(this->ms_values.begin(), (this->max_value_count - size), 0.0f);
-            }
-        }
-        if (size > 0) {
-            this->ms_values.erase(this->ms_values.begin());
-            this->ms_values.push_back(io.DeltaTime * 1000.0f); // scale to milliseconds
-            float value_max = 0.0f;
+            value_max = 0.0f;
             for (auto& v : this->ms_values) {
                 value_max = (v > value_max) ? (v) : (value_max);
             }
